@@ -35,6 +35,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fleetconf import CONF  # noqa: E402
+from install import planned  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 FLEET_REPO = HERE.parent
@@ -170,10 +171,19 @@ def main() -> int:
               "see what broke. Fix the template here, not the copy there.")
         return 1
 
+    # EXACTLY the files this deploy generated, plus the stamp. A prefix filter
+    # like "scripts/" was the first version and it was wrong for the same reason
+    # `git add -A` is wrong in a fold: the instance's own scripts live there too,
+    # and a deploy swept two owner-authored ones into a commit calling them
+    # generated. The set is knowable, so use it.
+    generated = {str(path.relative_to(target))
+                 for path, _, _ in planned(target)} | {STAMP}
     changed = [ln[3:] for ln in git(target, "status", "--porcelain").splitlines()]
-    ours = [p for p in changed
-            if p.startswith((".claude/", "scripts/", STAMP))
-            or p.endswith("README.md")]
+    ours = [p for p in changed if p in generated]
+    foreign = [p for p in changed if p not in generated]
+    if foreign:
+        print(f"\nleaving {len(foreign)} non-generated change(s) alone: "
+              + ", ".join(foreign[:5]))
 
     if args.no_commit:
         print(f"\n{len(ours)} generated path(s) left unstaged (--no-commit).")
