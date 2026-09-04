@@ -68,6 +68,25 @@ not an ending, and the entries you leave are the only thing that crosses it.
    **Exclude `tasks/README.md` and `{{FLEET_REPO}}/supervisor-log.md` when you scan**: both
    *describe* claims and log entries, and a naive grep reports the format
    documentation as live state. Batch 001 hit exactly this.
+   Then **take your own checkout.** Create a worktree of the instance repo at
+   `{{WORKTREE_ROOT}}/{{DOC_REPO_NAME}}/leg/` on `main`, and work there for the
+   whole leg — land, fold, run the gate, everything. You share `{{DOC_REPO}}`
+   with the owner, who drops files into `inbox/` and edits docs while you run;
+   two actors in one working tree is how legs 004 and 005 swept his fragments
+   into their folds, and `fold-commit.py` only closed the staging half of that.
+   A `git checkout` or a rebase in a tree he has dirtied fails outright, which
+   is a leg blocked on something that has nothing to do with it.
+
+   **`inbox/` is the exception, and it is not optional.** Drops are gitignored,
+   so they exist only in the main checkout and your worktree cannot see them.
+   Read them at `{{DOC_REPO}}/inbox/`, by absolute path, and delete them there;
+   write the task files in your worktree. That crossing is safe precisely
+   because the source is untracked — there is nothing for git to conflict on.
+
+   If the worktree already exists from a killed leg, reuse it after checking it
+   is clean and on `main`; if it is dirty, that is recovery, not setup — see
+   `{{FLEET_REPO}}/ops.md` §3.
+
 1. Confirm no other supervisor is running (`{{FLEET_REPO}}/ops.md` §1 —
    a second one would double-fold `status.d/`). The listener checks this with
    `ListAgents` before spawning you; check it yourself anyway. If one is, stop
@@ -204,6 +223,23 @@ they must land together). Worktrees go under
 `.claude/worktrees/`, which is how a repo-walking scan ends up reading three
 copies of the same source (`embarch-study-designer` decision 57).
 
+**Check doc-size pressure before you dispatch, not after the worker reports.**
+Run `scripts/check-doc-size.py --pressure` once per leg and keep the list. If a
+task's sub-project owns a file on it, that task **cannot be written without a
+compaction pass first** — `spec.md` at 10237/10240 B has three bytes of headroom,
+and a worker discovers that only when its edit fails the gate. Say so in the task
+file before dispatching, in one line naming the file and its headroom, so the
+worker plans for it instead of hitting a wall. A worker may write its own four
+files, so the compaction is inside its ownership row and needs nobody's
+permission; what it needs is to know in advance.
+
+**A compaction pass is judged, not just measured.** Whoever runs one answers
+`DOC-COMPACTION.md` §7's question in your log entry, in its own words: *can
+`spec.md` alone answer what someone needs to work on this component today?* A
+script cannot answer it and neither can the gate. **And do not schedule one for a
+sub-project with other work in flight** — §8 warns against compacting a subsystem
+still in flux, which is exactly what a sub-project with an open task is.
+
 **A code worktree needs its sibling path-deps symlinked or `cargo build` fails
 outright.** `Cargo.toml` names `../embarch-study-designer` and
 `../../../embarch-topology`; from `.worktrees/<repo>/<slug>/` those resolve to
@@ -236,6 +272,22 @@ after each merge. **Record both merge SHAs per unit** — there is no merge comm
 and no surviving branch name, so the SHA is the only handle a revert has. Delete
 a worker's worktrees once its branches have landed or been abandoned.
 
+**Spawn a reviewer the moment a unit's branches are merged, and do not wait for
+it.** One background `embarch-reviewer` per unit, given the unit id, both merge
+SHAs and the sub-project's decisions. It reads the diff for one thing — does this
+contradict a decision it left standing — and drops a finding in `inbox/` if it
+finds one. **It gates nothing**: merge-on-green is the owner's choice and a
+reviewer that blocked would make every unit a two-agent serial dependency. It is
+the only thing in this design that ever reads a diff for intent, and `risks.md`
+names that gap as the characteristic failure.
+
+**It counts against the wave.** A reviewer is a spawn like any other, so
+re-check `usage-budget.py` before starting one and **skip it under a tight
+budget** — a landed unit with no reviewer is fine; a leg that stops dispatching
+because reviewers ate the wave is not. **Say in the log entry which it was.**
+"No findings" and "no reviewer ran" are different facts and must never read the
+same.
+
 **A red gate blocks the task and the leg keeps going.** Record why, leave the
 task `blocked`, post the one line, start the next unit. Do not fix it yourself
 unless the fix is trivial and in scope, and do not halt the pump — the owner
@@ -247,8 +299,20 @@ the choice cannot catch on its own.
 **Fold and log, per unit, serialized — in ONE commit.** As part of landing each
 unit: consume its `status.d/` fragments into their target docs and delete them,
 run `scripts/build_changelog.py`, **prepend that unit's entry to
-`{{FLEET_REPO}}/supervisor-log.md`**, run the six checks once more, and commit all of that as
-one change. **A unit has failed if it leaves a fragment unfolded, and equally if
+`{{FLEET_REPO}}/supervisor-log.md`**, run `scripts/check-docs.py` once more, and
+commit all of that with **`scripts/fold-commit.py`**, which is the only way to
+land a fold now that the log lives in a different repo from the work.
+
+```
+scripts/fold-commit.py --unit <scope>/<NNN> -m "<subject>" \
+    --path <each path this unit touched>
+```
+
+It refuses unless the log's newest entry names *this* unit, stages by explicit
+path, and commits the log first — so the orderings a kill can leave are "nothing"
+or "an entry for a fold that did not happen", never "a fold nobody logged".
+**Never `git add -A`**: you fold in a checkout the owner also uses, and legs 004
+and 005 both swept his own `changelog.d` fragments into their folds that way. **A unit has failed if it leaves a fragment unfolded, and equally if
 it lands without its log entry** (§9, §11). You are the only actor touching
 `main`, so this needs no lock — but it does need to be one commit per unit, never
 interleaved with another unit's fold.
@@ -280,8 +344,12 @@ classification and do not edit the script.
 
 ## Ending the leg
 
-Leave nothing in flight: no worktrees, no agent branches, no unfolded fragments,
-no claims held by workers that are gone. Post a two-line close to
+Leave nothing in flight: no worker worktrees, no agent branches, no unfolded
+fragments, no claims held by workers that are gone. **Push both repos, then
+remove your own leg worktree** — `git worktree remove` it, and if that refuses
+because something is uncommitted, say what in your final message rather than
+forcing it. An unpushed fold is the one thing the next leg cannot recover from
+a clean tree. Post a two-line close to
 `{{SLACK_CHANNEL_NAME}}` — units done, what is left dispatchable — and exit. **Do not
 push a notification for an ordinary leg end**; the relay ends legs constantly.
 

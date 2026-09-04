@@ -88,7 +88,12 @@ Three words, and keeping them apart is most of understanding how this runs.
 
 The steps, in order, per leg:
 
-0. **Recover.** A previous leg may have been killed outright — closing VS Code is the owner's kill switch and is expected to be used ([running the fleet](ops.md) §3). Abort any in-progress merge or rebase, reclaim every stale claim, and delete dead worktrees **before** anything else. The exact rule and what a kill can leave behind: [running the fleet](ops.md) §3. Then read the newest [supervisor-log.md](supervisor-log.md) entries: under the relay they were written by a predecessor this leg has no memory of, and they are the only thing that crossed the boundary.
+0. **Take a checkout, then recover.** A leg works in its own worktree of this
+   repo, not in the checkout the owner uses — two actors in one working tree is
+   how legs 004 and 005 swept his `changelog.d` fragments into their folds, and
+   a rebase in a tree he has dirtied fails outright. `inbox/` is the exception:
+   drops are gitignored, so they live only in the main checkout and are read
+   there by absolute path. A previous leg may have been killed outright — closing VS Code is the owner's kill switch and is expected to be used ([running the fleet](ops.md) §3). Abort any in-progress merge or rebase, reclaim every stale claim, and delete dead worktrees **before** anything else. The exact rule and what a kill can leave behind: [running the fleet](ops.md) §3. Then read the newest [supervisor-log.md](supervisor-log.md) entries: under the relay they were written by a predecessor this leg has no memory of, and they are the only thing that crossed the boundary.
 1. **Refill, only if nothing is dispatchable.** Drain `inbox/`, then sweep the roadmap, every `open.md`, and the reversals follow-ups; write any new task files. Reconcile: a task whose source doc no longer says the thing is closed, not dispatched. **If refill also finds nothing**, dream three proposals and end the leg ([running the fleet](ops.md) §7) — do not pick one, and do not write a dreamt item into the queue.
 2. **Select and set up**, per free slot. `scripts/usage-budget.py --suggest` sets how many may be in flight ([running the fleet](ops.md) §2); it, not the cap, is the number. At most one task per sub-project, from `Hardware: none`/`verify-only` only. Claim it on `main` *before* dispatch — that commit is what stops a double-dispatch — then create the branch and both worktrees under `embarch/.worktrees/`, outside every repo tree and never inside `.claude/worktrees/` (`embarch-study-designer` decision 57).
 3. **Dispatch** as a background worker agent, without blocking on the one before it. Re-check the budget before refilling a slot, never only at the start of the leg.
@@ -139,6 +144,17 @@ The gate, run by the worker and then **re-run independently by the supervisor** 
 - **`check-ownership.py --scope <sub-project>`** on both branches — the mechanical form of §3. Either `core` or `embarch-core` is accepted; **`suite` is refused outright, because a cross-repo change is §8's, not a worker's.** Without it §3 is prose nothing reads: a worker's edit to [embarch.md](../embarch-doc/embarch.md)'s status table is *plausible by construction*, so `check-staleness.py` (which only flags a row disagreeing with a sub-project doc) passes it, and the collision §9 exists to prevent happens anyway.
 
 That is [embarch-dev-workflow.md](../embarch-doc/embarch-dev-workflow.md) §6's existing standard, unchanged, applied per branch instead of per commit. Nothing here licenses a lower bar because an agent wrote it.
+
+**A reviewer reads for intent, alongside landing, and gates nothing.** When a
+unit's branches merge, the supervisor spawns an `embarch-reviewer` on the diff
+against that sub-project's decisions and the reversals index, and does not wait
+for it. Findings land in `inbox/` and in the unit's log entry; a confirmed
+contradiction is reverted by SHA, which is the first thing that ever uses the
+SHAs §11 already requires. **Merge-on-green is unchanged** — a reviewer that
+blocked would make every unit a two-agent serial dependency, and the owner chose
+progress over caution here as elsewhere. It costs a spawn, so it is skipped under
+a tight budget, and **the log says which**: "no findings" and "no reviewer ran"
+are different facts.
 
 **The gate is mechanical and catches broken, not wrong.** The one judgement the supervisor adds: read the diff before merging when the change touches a shared crate (`embarch-study-designer`, `embarch-topology`, and `embarch-core-client` — which lives inside `embarch-api` but is path-depended on by `embarch-ui`, so an `api` worker can change `ui`'s dependency without owning `ui`), a wire type, or retires a decision. Those are where passing and correct diverge most expensively; everything else merges on green.
 

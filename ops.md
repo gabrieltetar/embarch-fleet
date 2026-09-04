@@ -47,8 +47,22 @@ Remote Control attaches a phone or browser to a Claude Code session on this mach
 | A repo mid-merge or mid-rebase | `main` is untouched until a merge completes | `git merge --abort` / `git rebase --abort` before anything else |
 | Unfolded `status.d/` fragments | A fragment is the request, not the edit | Left for the next leg — that is what they are for |
 | Uncommitted edits in the main checkout | A unit's fold is **one commit**, so it either happened or it did not | Restore the shared docs, leave the fragments, redo the fold |
+| A leg worktree at `.worktrees/embarch-doc/leg/` | Outside every repo tree; the owner's checkout is untouched | Clean and on `main` ⇒ reuse it. Dirty ⇒ inspect before resetting: an unpushed fold lives here and nowhere else |
+| A log entry with no matching fold | `fold-commit.py` commits the log first, so this is the *survivable* ordering | `fold-commit.py --check` names it. Redo the fold; **do not write a second entry** |
 
 **Reporting is different on a phone.** A narrow column and an all-day relay do not survive walls of tool output: **one line per unit** — dispatched, landed with its SHA, blocked with the reason. Never paste passing output; a green `cargo test` is the word "green". A leg's close is two lines pointing at [supervisor-log.md](supervisor-log.md).
+
+**A watchdog window detects the one failure nothing else can.** The listener
+cannot notice that it is wedged — a hung tick never returns to idle, so its own
+cron cannot fire and `fleet stop` cannot be delivered. A second window armed with
+`/fleet watch` reads the mtime of a tick file the listener touches at the end of
+every tick, and alerts when it goes stale by 25 minutes. **It has no hands at
+all**: it cannot spawn, write, or start anything, which is why it does not weaken
+the kill switch — closing the listener's window still ends every unit of work,
+and all that outlives it is an alarm telling the truth. It is not a stop channel:
+if the listener is wedged nobody can deliver a stop, and closing VS Code is still
+the backstop. What it buys is learning that within ten minutes instead of five
+hours.
 
 **Alert rarely, and through `scripts/fleet-alert.py`**, whose header carries why a Slack `@` from the fleet notifies nobody and the webhook setup that fixes it. Unconfigured it exits 2 and says so: post to the channel anyway and record that the alert did not send. `PushNotification` reaches a phone **only while Remote Control is connected**, so it supplements rather than replaces. **The set, closed**: leg blocked and stopped · budget HOLD · a failed spawn · the same failure blocking two units · a dream · a parked `suite` task. **Never per unit, never on an ordinary leg end** — legs end every twenty minutes, and an alert each time is a pager.
 

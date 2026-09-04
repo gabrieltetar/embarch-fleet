@@ -99,8 +99,8 @@ def audit(repo_root: str):
     """Every tracked top-level *.md must be classified, in one list or the other.
 
     RESERVED is a denylist of filenames, and that broke once already: the risk
-    register was §12 of embarch-parallel-agents.md until its size cap split it
-    into embarch-fleet-risks.md on 2026-09-03, and reserved content stopped
+    register was §12 of protocol.md until its size cap split it
+    into risks.md on 2026-09-03, and reserved content stopped
     being reserved purely by moving. Nothing noticed for a day. DOC-COMPACTION.md
     tells a doc to split at its cap and knows nothing about ownership, so the
     same split can happen again at any time.
@@ -167,7 +167,7 @@ def main() -> int:
         bad = reserved_hits(paths)
         if bad:
             print(f"{len(bad)} path(s) the supervisor may not write "
-                  f"(embarch-parallel-agents.md §2 reserves them to the owner):\n")
+                  f"(protocol.md §2 reserves them to the owner):\n")
             for p in bad:
                 print(f"  {p}")
             print("\nA supervisor that can edit its own constraints has none. If one of\n"
@@ -184,7 +184,7 @@ def main() -> int:
             for u in unclassified:
                 print(f"  {u}")
             print("\nAdd each to RESERVED or to FLEET_WRITABLE in this script, and to\n"
-                  "embarch-parallel-agents.md §3's table if it is reserved. A doc that\n"
+                  "protocol.md §3's table if it is reserved. A doc that\n"
                   "appears from a DOC-COMPACTION.md split carries its old file's rules\n"
                   "and none of its old file's protection -- that is how the risk register\n"
                   "stopped being owner-reserved on 2026-09-03.")
@@ -215,7 +215,7 @@ def main() -> int:
 
     if args.scope == "suite":
         print("REFUSED: `suite` is not a worker scope -- a cross-repo change is the")
-        print("supervisor's to execute in one sequenced pass (embarch-parallel-agents.md §8).")
+        print("supervisor's to execute in one sequenced pass (protocol.md §8).")
         return 1
     # Every doc that names this check writes it as `--scope <sub-project>`, which a
     # reader fills in as `embarch-core`, while the scope vocabulary is the bare
@@ -234,7 +234,7 @@ def main() -> int:
     bad = [p for p in paths if not allowed(p, args.scope)]
     if bad:
         print(f"{len(bad)} path(s) outside what an '{args.scope}' worker may write "
-              f"(embarch-parallel-agents.md §3):\n")
+              f"(protocol.md §3):\n")
         for p in bad:
             hint = ""
             if p in ("embarch.md", "embarch-features.md", "embarch-roadmap.md",

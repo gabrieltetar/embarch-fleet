@@ -3,7 +3,7 @@
 Claude.ai rate-limit numbers.
 
 Why this file exists: the supervisor's whole point is to keep the seat busy
-(embarch-parallel-agents.md §1), and the only way to do that safely is to know
+(protocol.md §1), and the only way to do that safely is to know
 how close to the ceiling it already is. Claude Code publishes exactly that --
 ``rate_limits.five_hour.used_percentage`` and ``rate_limits.seven_day.*`` -- but
 ONLY on the JSON it hands a status line command. Quota state arrives over the
@@ -57,13 +57,40 @@ from fleetconf import CONF  # noqa: E402
 import argparse
 import json
 import os
-import sys
 import time
 
 CACHE = os.path.expanduser("~/.claude/usage-cache.json")
 MAX_WORKERS = CONF['limits']['max_workers']          # ops.md §1's cap
 DEGRADED_WORKERS = CONF['limits']['degraded_workers']  # wave when percentages are unavailable
 TRANSCRIPTS = os.path.expanduser("~/.claude/projects")
+
+
+def check_feeder() -> str | None:
+    """Is the thing that WRITES the cache still the versioned copy?
+
+    risks.md: the budget's data source lived outside every repo, unversioned and
+    uncovered by any check. A machine reinstall or a settings edit silently turns
+    every leg DEGRADED -- and DEGRADED is the steady state on this machine, so
+    nothing would ever report it. The script is now in this repo; this asserts
+    that settings.json actually points at it.
+
+    Advisory, never fatal. A wrong statusLine is a reason to distrust a verdict,
+    not a reason to refuse to produce one -- the whole design of this gate is to
+    degrade rather than block.
+    """
+    settings = os.path.expanduser("~/.claude/settings.json")
+    versioned = str(Path(__file__).resolve().parent / "statusline-usage.py")
+    try:
+        with open(settings) as fh:
+            cmd = json.load(fh).get("statusLine", {}).get("command", "")
+    except (OSError, ValueError) as e:
+        return f"cannot read {settings}: {e}"
+    if not cmd:
+        return f"no statusLine configured in {settings}; nothing writes the cache"
+    if versioned not in cmd:
+        return (f"statusLine runs {cmd.split()[-1]!r}, not the versioned "
+                f"{versioned!r} -- an unversioned feeder can break silently")
+    return None
 
 
 def read_cache(path: str, max_age: int):
@@ -73,7 +100,7 @@ def read_cache(path: str, max_age: int):
                       "ran and its payload carried no rate_limits. Those are "
                       "indistinguishable from disk: statusline-usage.py writes "
                       "nothing unless rate_limits is present "
-                      "(embarch-parallel-agents-ops.md section 2)")
+                      "(ops.md section 2)")
     try:
         with open(path, encoding="utf-8") as f:
             data = json.load(f)
@@ -205,12 +232,18 @@ def main() -> int:
             else:
                 print(f"HOLD -- {throttled}")
             return 1
+        feeder = check_feeder()
         workers = 0 if args.strict else DEGRADED_WORKERS
         verdict = "HOLD" if args.strict else "DEGRADED"
         if args.as_json:
-            print(json.dumps({"verdict": verdict, "reason": why, "workers": workers}))
+            print(json.dumps({"verdict": verdict, "reason": why,
+                              "workers": workers, "feeder": feeder}))
         else:
             print(f"{verdict} -- {why}")
+            if feeder:
+                print(f"  FEEDER: {feeder}")
+                print("  DEGRADED and 'the feeder is broken' are indistinguishable on\n"
+                      "  disk, so this is the only thing that tells them apart.")
             if args.strict:
                 print("--strict: not dispatching without numbers.")
             else:

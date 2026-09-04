@@ -222,7 +222,7 @@ def main() -> int:
               "Refill runs on the next leg; say so rather than waiting for zero.")
     if not dispatchable:
         print("NOTHING DISPATCHABLE -- a leg would refill, and dream if refill also "
-              "finds nothing (embarch-parallel-agents-ops.md section 7).")
+              "finds nothing (ops.md section 7).")
     return 0 if dispatchable else 1
 
 

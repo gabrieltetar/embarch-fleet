@@ -150,6 +150,9 @@ def main() -> int:
     ap.add_argument("--message", "-m", help="commit subject for the doc repo")
     ap.add_argument("--path", action="append", default=[],
                     help="a path in the doc repo this fold may stage (repeatable)")
+    ap.add_argument("--doc-repo",
+                    help="the instance checkout to stage in -- pass a leg's own "
+                         "worktree; defaults to fleet.toml's doc_repo")
     ap.add_argument("--check", action="store_true", help="verify the two repos agree")
     ap.add_argument("--dry-run", action="store_true", help="print, commit nothing")
     args = ap.parse_args()
@@ -164,7 +167,10 @@ def main() -> int:
         print(f"--unit must look like 'api/007', got {args.unit!r}", file=sys.stderr)
         return 2
 
-    doc = CONF.doc_repo
+    doc = Path(args.doc_repo).resolve() if args.doc_repo else CONF.doc_repo
+    if not (doc / '.git').exists():
+        print(f'not a git checkout: {doc}', file=sys.stderr)
+        return 2
 
     bad = [p for p in args.path if not p.startswith(ALLOWED)]
     if bad:

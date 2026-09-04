@@ -8,6 +8,8 @@ register was doing both jobs, which is why several of these had nowhere to live.
 
 ## Detecting a wedged listener
 
+**Built 2026-09-04**: `/fleet watch`, a report-only second window reading a tick file's mtime. It detects silence within ~10 minutes; it cannot tell a hung tick from a closed window, and it is not a stop channel. **Still open:** nothing recovers a wedge, only reports it.
+
 `CronCreate` fires only while the REPL is idle, so a tick that *hangs* — rather
 than fails — takes the fleet dark with the pump still latched, and `fleet stop`
 cannot be delivered either, because a listener mid-query cannot read the
@@ -22,6 +24,8 @@ keeps its meaning. Decided in principle 2026-09-04, not built.
 
 ## The fold still runs in the instance's main checkout
 
+**Closed 2026-09-04**: a leg takes its own worktree at `.worktrees/embarch-doc/leg/`, and `fold-commit.py` stages by explicit path. `inbox/` is still read from the main checkout by absolute path, which is safe because drops are untracked.
+
 [scripts/fold-commit.py](scripts/fold-commit.py) removed the `git add -A` half
 of this — staging is by explicit path and a path outside the unit's set is an
 error. What remains is that a leg and the owner share one working tree, so a
@@ -34,6 +38,8 @@ and therefore exists only in the main checkout — the drain would read drops by
 absolute path and write task files in the worktree.
 
 ## Nothing reads a diff for intent before it lands
+
+**Built 2026-09-04**: `embarch-reviewer`, spawned alongside landing, non-blocking. **Still open:** whether it runs per unit or only on high-blast-radius diffs — it roughly doubles spawns, and the budget decides today by simply skipping it.
 
 `main` across eight repos moves on green alone; [protocol.md](protocol.md) §10's
 shared-crate carve-out is deliberately narrow and is a judgement the supervisor
@@ -51,6 +57,8 @@ roughly doubles agent spawns.
 
 ## Doc-size caps block work and nothing sees it coming
 
+**Half built 2026-09-04**: `check-doc-size.py --pressure` exists and a leg reads it before dispatch, annotating the task file. **Still open:** nothing files a compaction task, and 15 files sit above 95% — DOC-COMPACTION §8's 'still in flux' judgement is the reason it reports rather than files.
+
 Five files sit above 99% of `min(cap, baseline)`. A task that cannot be written
 without exceeding one becomes a compaction task wearing a feature task's
 clothes, and the supervisor discovers this only when a worker reports.
@@ -64,6 +72,8 @@ is a proxy, not an answer. Whatever runs it must record §7's human question in
 the log rather than skip it.
 
 ## The budget is calibrated against nothing, and its feeder is now versioned
+
+**Closed 2026-09-04 (the feeder half)**: `usage-budget.py` asserts `settings.json` points at the versioned copy, and it does. **Still open:** the thresholds remain uncalibrated, and no real percentages have ever arrived on this machine.
 
 [ops.md](ops.md) §2's thresholds and taper are guesses until many legs have run.
 Separately, the thing that feeds them — `statusline-usage.py` — had no history
