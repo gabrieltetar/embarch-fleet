@@ -12,7 +12,7 @@ undecided. It leaves when there is no question left, not when code exists.
 ## A wedge is reported, never recovered
 
 `/fleet watch` (2026-09-04) is a second window with no hands: the listener
-touches `{{STATE_DIR}}/tick` at the end of every tick and the watchdog alerts
+touches a `tick` file in the state directory at the end of every tick and the watchdog alerts
 when that mtime goes stale by 25 minutes. Five hours became about ten.
 
 **What is still open.** Nothing *recovers* a wedged listener — the alert tells
@@ -78,12 +78,24 @@ disappears once its `resets_at` passes.
 
 ## Whether a second instance is real
 
-This repo is shaped for portability and has exactly one instance. Until a second
-one exists, [fleet.toml](fleet.toml)'s division between framework and instance is
-a hypothesis — the likely discovery is that something suite-specific is still
-hard-coded in prose rather than in config, since only paths and identifiers were
-mechanically extracted.
+**Tested 2026-09-04** against a scratch repo with its own `fleet.toml` — a
+different root, doc-repo name, channel, owner, limits and reserved list. It
+rendered clean, the shims executed, and the ownership check read the *fake*
+reserved list and derived scopes from the *fake* repo tree. Nothing of this
+instance leaked into it.
 
-**What would close it:** standing one up somewhere else, even a scratch clone.
-`install.py --repo <path>` renders into any git repo, so the experiment is cheap
-and has not been run.
+It found three real defects, all now fixed, and the shape of them is worth
+keeping: **every one was a value derived from the wrong source.** `FLEET_REPO`
+was guessed as `<root>/embarch-fleet` while `FLEET_REL` was computed from
+`__file__`, so the two disagreed the moment the framework was not beside the
+instance's root. The shims baked in the installing machine's absolute path,
+which is committed to the instance repo and therefore wrong on any other
+checkout. And the reviewer template reached the reversals index through
+`{{FLEET_REL}}/../{{DOC_REPO_NAME}}/`, which resolved to nonsense.
+
+**What is still open.** The test used a scratch repo, not a real suite: nothing
+proves the *prose* is portable. `protocol.md` and `ops.md` still say "eight
+repos", name `embarch-core` and the probe, and describe a hardware topology that
+is this suite's. A second real fleet would have to rewrite paragraphs, not just
+`fleet.toml` — and none of that is mechanically detectable, which is why this
+entry stays open after the test passed.

@@ -57,13 +57,29 @@ SHIM = '''#!/usr/bin/env python3
 Written by `embarch-fleet/scripts/install.py`. Do not edit -- edit the framework
 copy and re-run the installer. A shim rather than a copy because there must be
 exactly one implementation: two that a checker holds equal is still two.
+
+The framework is located at RUN TIME, not baked in. This file is committed to
+the instance repo, so a second checkout on another machine would otherwise get a
+path that exists only where the installer ran.
 """
 import os, sys
-TARGET = {target!r}
-if not os.path.exists(TARGET):
-    sys.exit(f"fleet framework missing: {{TARGET}}\\n"
-             "Clone embarch-fleet beside this repo and re-run its scripts/install.py.")
-os.execv(sys.executable, [sys.executable, TARGET] + sys.argv[1:])
+
+NAME = {name!r}
+HERE = os.path.dirname(os.path.abspath(__file__))
+CANDIDATES = [
+    os.path.join(os.environ["EMBARCH_FLEET_ROOT"], "embarch-fleet", "scripts", NAME)
+    if os.environ.get("EMBARCH_FLEET_ROOT") else None,
+    # the documented layout: the framework cloned beside the instance
+    os.path.join(HERE, os.pardir, os.pardir, "embarch-fleet", "scripts", NAME),
+    # where the installer ran, as a last resort
+    {target!r},
+]
+for c in CANDIDATES:
+    if c and os.path.exists(c):
+        os.execv(sys.executable, [sys.executable, os.path.abspath(c)] + sys.argv[1:])
+sys.exit("fleet framework missing; tried:\\n  " +
+         "\\n  ".join(c for c in CANDIDATES if c) +
+         "\\nClone embarch-fleet beside this repo and re-run its scripts/install.py.")
 '''
 
 
@@ -113,7 +129,8 @@ def planned(target: Path) -> list[tuple[Path, str, bool]]:
         impl = HERE / "scripts" / name
         if not impl.exists():
             continue
-        out.append((target / "scripts" / name, SHIM.format(target=str(impl)), True))
+        out.append((target / "scripts" / name,
+                    SHIM.format(name=name, target=str(impl)), True))
 
     if problems:
         print("template placeholders with no value in fleet.toml:", file=sys.stderr)

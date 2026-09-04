@@ -93,7 +93,12 @@ class Conf:
             "FLEET_ROOT": str(self.root),
             "DOC_REPO": str(self.doc_repo),
             "DOC_REPO_NAME": f["doc_repo"],
-            "FLEET_REPO": str(self.root / "embarch-fleet"),
+            # This checkout, not a guess from the instance root. A second
+            # instance need not put the framework beside its own root, and
+            # when it did not, FLEET_REPO pointed at a directory that did
+            # not exist while FLEET_REL -- computed from __file__ -- pointed
+            # at the real one. Two placeholders for one thing, disagreeing.
+            "FLEET_REPO": str(_HERE.parent),
             "STATE_DIR": str(self.state_dir),
             "WORKTREE_ROOT": str(self.worktree_root),
             "SLACK_CHANNEL": s["channel"],
