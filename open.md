@@ -6,91 +6,84 @@ load-bearing: a **risk** is a cost the owner accepted and is not looking to
 remove; an **open question** is something nobody has decided yet. The risk
 register was doing both jobs, which is why several of these had nowhere to live.
 
-## Detecting a wedged listener
+An entry stays here after the work lands if something about it is still
+undecided. It leaves when there is no question left, not when code exists.
 
-**Built 2026-09-04**: `/fleet watch`, a report-only second window reading a tick file's mtime. It detects silence within ~10 minutes; it cannot tell a hung tick from a closed window, and it is not a stop channel. **Still open:** nothing recovers a wedge, only reports it.
+## A wedge is reported, never recovered
 
-`CronCreate` fires only while the REPL is idle, so a tick that *hangs* — rather
-than fails — takes the fleet dark with the pump still latched, and `fleet stop`
-cannot be delivered either, because a listener mid-query cannot read the
-channel. Nothing detects this from inside the process, and [ops.md](ops.md) §3
-rules out anything that survives the editor closing. On 2026-09-03 it cost five
-hours.
+`/fleet watch` (2026-09-04) is a second window with no hands: the listener
+touches `{{STATE_DIR}}/tick` at the end of every tick and the watchdog alerts
+when that mtime goes stale by 25 minutes. Five hours became about ten.
 
-**What would unblock it:** a second, report-only window. It observes a tick file
-the listener touches, and alerts when the mtime goes stale — it can never spawn
-work, so closing the fleet's window still stops everything and the kill switch
-keeps its meaning. Decided in principle 2026-09-04, not built.
+**What is still open.** Nothing *recovers* a wedged listener — the alert tells
+the owner to go close a window. A wedged listener also cannot be sent
+`fleet stop` by anyone, so the watchdog is not a second control plane and must
+not become one. And it cannot distinguish a hung tick from a closed window from
+a slept machine; all three want the same response, which is why it does not
+guess, but it means the alert is never diagnostic.
 
-## The fold still runs in the instance's main checkout
+**What would close it:** nothing safe, on current understanding. Anything that
+could restart a leg would have to survive the editor closing, which is the kill
+switch ([ops.md](ops.md) §3). This may simply be the floor.
 
-**Closed 2026-09-04**: a leg takes its own worktree at `.worktrees/embarch-doc/leg/`, and `fold-commit.py` stages by explicit path. `inbox/` is still read from the main checkout by absolute path, which is safe because drops are untracked.
+## The reviewer's scope is unsettled
 
-[scripts/fold-commit.py](scripts/fold-commit.py) removed the `git add -A` half
-of this — staging is by explicit path and a path outside the unit's set is an
-error. What remains is that a leg and the owner share one working tree, so a
-`git checkout`, a rebase or a stash during a fold still reaches the owner's
-uncommitted edits.
+`embarch-reviewer` (2026-09-04) reads one unit's diff against its decisions and
+the reversals index, spawned alongside landing and never waited for.
 
-**What would unblock it:** give a leg its own worktree of the instance repo, the
-way workers already get one. The complication is `inbox/`, which is gitignored
-and therefore exists only in the main checkout — the drain would read drops by
-absolute path and write task files in the worktree.
+**What is still open.** Whether it should run per unit at all. It roughly
+doubles agent spawns, and today the budget decides by skipping it under pressure
+— which means the units most likely to go unreviewed are the ones landing when
+the fleet is busiest. The alternative is a script that flags high-blast-radius
+diffs (shared crate, wire type, a retired decision, a deleted doc) and reviews
+only those, which is cheaper and catches less.
 
-## Nothing reads a diff for intent before it lands
+**What would settle it:** several legs' worth of findings. If per-unit review
+produces nothing over twenty units, the flagged-diff version is strictly better.
+Nobody has run it yet.
 
-**Built 2026-09-04**: `embarch-reviewer`, spawned alongside landing, non-blocking. **Still open:** whether it runs per unit or only on high-blast-radius diffs — it roughly doubles spawns, and the budget decides today by simply skipping it.
+## Compaction is detected but not scheduled
 
-`main` across eight repos moves on green alone; [protocol.md](protocol.md) §10's
-shared-crate carve-out is deliberately narrow and is a judgement the supervisor
-is told to make, not a mechanism. The characteristic failure is a change that
-passes every check and contradicts a locked-in decision, and it will not
-announce itself.
+`check-doc-size.py --pressure` (2026-09-04) reports files near their effective
+limit, and a leg reads it *before* dispatch so a task that cannot be written
+without a compaction pass says so in its own file.
 
-**What would unblock it, without giving up merge-on-green:** a reviewer agent
-spawned *alongside* landing, reading the diff against that sub-project's
-`decisions.md` and the reversals index. Findings go to `inbox/` and the unit's
-log entry; a confirmed contradiction is reverted by SHA — which is the first
-thing that would ever use the SHAs §11 already requires. Open: whether it runs
-per unit or only on diffs a script flags as high-blast-radius, since per unit
-roughly doubles agent spawns.
+**What is still open.** Nothing files the compaction task. **15 files sit above
+95%** of `min(cap, baseline)` — including `embarch-api/spec.md` with three bytes
+of headroom — so this is the queue's real blocker, not a future one.
 
-## Doc-size caps block work and nothing sees it coming
+The reason it reports rather than files is [DOC-COMPACTION.md](../embarch-doc/DOC-COMPACTION.md)
+§8: compacting a subsystem still in flux writes a clean statement of something
+about to be wrong and destroys the alternatives you are about to need. No script
+can tell. "No other task in flight for that sub-project" is a proxy and a weak
+one.
 
-**Half built 2026-09-04**: `check-doc-size.py --pressure` exists and a leg reads it before dispatch, annotating the task file. **Still open:** nothing files a compaction task, and 15 files sit above 95% — DOC-COMPACTION §8's 'still in flux' judgement is the reason it reports rather than files.
+**What would close it:** a decision about who judges §7's question — *can
+`spec.md` alone answer what someone needs to work on this component today* — for
+a pass the fleet ran unattended. Today the leg is told to record its answer in
+the log, which makes it reviewable but not verified.
 
-Five files sit above 99% of `min(cap, baseline)`. A task that cannot be written
-without exceeding one becomes a compaction task wearing a feature task's
-clothes, and the supervisor discovers this only when a worker reports.
+## The budget is calibrated against nothing
 
-**What would unblock it:** a `--pressure` mode on `check-doc-size.py` that
-refill reads, filing a compaction task per file above threshold. A worker may
-already write its own four files, so this needs no ownership change. Undecided:
-DOC-COMPACTION §8 warns against compacting a subsystem still in flux and a
-script cannot tell — restricting it to sub-projects with no other task in flight
-is a proxy, not an answer. Whatever runs it must record §7's human question in
-the log rather than skip it.
+[ops.md](ops.md) §2's thresholds and its taper are guesses until many legs have
+run. The feeder half is closed: `statusline-usage.py` is versioned in
+[scripts/](scripts/), and `usage-budget.py` asserts `settings.json` points at
+that copy rather than an unversioned one.
 
-## The budget is calibrated against nothing, and its feeder is now versioned
-
-**Closed 2026-09-04 (the feeder half)**: `usage-budget.py` asserts `settings.json` points at the versioned copy, and it does. **Still open:** the thresholds remain uncalibrated, and no real percentages have ever arrived on this machine.
-
-[ops.md](ops.md) §2's thresholds and taper are guesses until many legs have run.
-Separately, the thing that feeds them — `statusline-usage.py` — had no history
-and no check; it is now [scripts/statusline-usage.py](scripts/statusline-usage.py).
-
-**What would unblock the calibration:** legs that report real percentages. On
-this machine they never arrive, so every leg reports DEGRADED, and DEGRADED is
-indistinguishable from a broken feeder. Narrowing that needs a payload capture,
-not more code.
-
-**Still open:** `~/.claude/settings.json` must point `statusLine` at the
-versioned copy, and nothing asserts that it does.
+**What is still open.** Real percentages have never arrived on this machine, so
+every leg reports DEGRADED, and there is nothing to calibrate against. Narrowing
+*why* needs a payload capture, not more code — `rate_limits` arrives only for a
+Pro/Max seat, only after a session's first API response, and each window
+disappears once its `resets_at` passes.
 
 ## Whether a second instance is real
 
 This repo is shaped for portability and has exactly one instance. Until a second
-one exists, `fleet.toml`'s division between framework and instance is a
-hypothesis — the likely discovery is that something suite-specific is still
+one exists, [fleet.toml](fleet.toml)'s division between framework and instance is
+a hypothesis — the likely discovery is that something suite-specific is still
 hard-coded in prose rather than in config, since only paths and identifiers were
 mechanically extracted.
+
+**What would close it:** standing one up somewhere else, even a scratch clone.
+`install.py --repo <path>` renders into any git repo, so the experiment is cheap
+and has not been run.
