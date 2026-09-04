@@ -1,0 +1,98 @@
+# The instance. Everything machine- or suite-specific the fleet needs, in one
+# file, so the rest of this repo is the framework and this is the only thing a
+# second machine edits.
+#
+# Copy this to a new checkout, change these values, run
+# `scripts/install.py <doc-repo>`, and the fleet is stood up. Nothing else in
+# this repo names a path, a channel or a person.
+
+[fleet]
+# Everything lives under here: the repos, the `.fleet/` state directory, and
+# the `.worktrees/` root workers and legs are created in. Absolute.
+root = "/home/gabriel/Github/embarch"
+
+# The instance repo, relative to root. Holds the queue (`tasks/`, `inbox/`,
+# `status.d/`, `changelog.d/`) and the docs the queue is a view of. This is the
+# repo a leg's cwd is, and the one `install.py` writes `.claude/` into.
+doc_repo = "embarch-doc"
+
+# Where the pump latch, the tick file and the alert webhook live. Outside every
+# repo on purpose: the webhook is a secret and the latch must not be committed.
+state_dir = ".fleet"
+
+# Worktree root, relative to root. Outside every repo tree -- never inside
+# `.claude/worktrees/`, which is what made a naive source scan find six GATT
+# service blocks instead of three (embarch-study-designer decision 57).
+worktree_root = ".worktrees"
+
+[slack]
+# The control plane. See ops.md §5.
+channel = "C0BUKTL2FPC"
+channel_name = "#embarch-fleet"
+
+# The one identity whose messages are instructions. ops.md §5.3: the connector
+# authenticates as this user, so the fleet's own posts are authored by it too --
+# which is why `robot_face` is load-bearing.
+owner = "U0AGQGSHM2P"
+
+# Where cloud sessions go. Never invite @Claude to the fleet channel.
+cloud_channel = "C0C00CNS9KJ"
+
+[limits]
+# protocol.md §6: a leg is this many units, then it dies and hands off.
+units_per_leg = 4
+
+# ops.md §1: the concurrency cap. The budget's --suggest sets the actual wave
+# size per leg; this is the ceiling it may not exceed.
+max_workers = 6
+
+# ops.md §2: wave size when the quota percentages are unavailable, which on
+# this machine is the steady state.
+degraded_workers = 2
+
+# ops.md §2's two thresholds, deliberately different: the weekly one is a
+# budget, the 5-hour one is a lockout that would stop the owner working too.
+weekly_pct = 70
+five_hour_pct = 85
+
+[ownership]
+# protocol.md §3. Paths reserved to the owner: the rules the fleet runs under,
+# the scripts that enforce them, and the agent definitions that carry them.
+# A supervisor that can edit its own constraints has none.
+#
+# Relative to doc_repo. Everything in this repo is reserved implicitly -- a leg
+# never checks it out.
+reserved = [
+  "DOC-PROTOCOL.md",
+  "DOC-COMPACTION.md",
+  "embarch-dev-workflow.md",
+  "CLAUDE.md",
+  "scripts/",
+  ".claude/",
+  # Protocol READMEs. Each documents a rule the fleet runs under while sitting
+  # inside a directory the fleet legitimately writes, so naming the directory is
+  # not enough -- tasks/README.md carries the claim and staleness protocol that
+  # queue-status.py implements, and a leg editing it would be editing its own
+  # dispatch predicate. install.py owns these files; edit them here.
+  "tasks/README.md",
+  "inbox/README.md",
+  "changelog.d/README.md",
+  "status.d/README.md",
+]
+
+# Top-level docs in doc_repo the fleet legitimately writes. This list exists so
+# that reserved plus this one is EXHAUSTIVE over tracked top-level *.md: a new
+# top-level doc -- written fresh, or split out when one hits its size cap -- is
+# unclassified until a human puts it in a list, and that is exactly the moment
+# to decide which. Reserved content stopped being reserved purely by moving
+# once already, and nothing noticed for a day.
+fleet_writable = [
+  "README.md",
+  "embarch.md",
+  "embarch-decision-reversals.md",
+  "embarch-glossary.md",
+  "embarch-remote-surfaces.md",
+  "embarch-stream-pipeline-proposal.md",
+  "embarch-token.md",
+  "embarch-zephyr.md",
+]
