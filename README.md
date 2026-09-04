@@ -55,6 +55,7 @@ Then, in the instance repo: arm a listener window with `/fleet start`, and say
 | [protocol.md](protocol.md) | The design: roles, the ownership map, the queue, the worker contract, the leg, the gate, the log |
 | [ops.md](ops.md) | Running it: arming, the usage budget, driving it from a phone, Slack as a control plane, dreaming |
 | [risks.md](risks.md) | The risk register — what each choice traded away and what its failure looks like |
+| [DEVELOPING.md](DEVELOPING.md) | Changing this repo and deploying the change: what is authored vs generated, when a change takes effect, rollback |
 | [open.md](open.md) | Unresolved questions and known limitations, each with what would unblock it |
 | [supervisor-log.md](supervisor-log.md) | One entry per unit, newest first. The review surface, and the relay handoff |
 | [fleet.toml](fleet.toml) | The instance: paths, channel, identity, limits, the ownership lists |
@@ -62,7 +63,7 @@ Then, in the instance repo: arm a listener window with `/fleet start`, and say
 | [templates/](templates/) | What `install.py` renders into the instance repo |
 
 Read `protocol.md` first, then `ops.md`, then `risks.md` — in that order, and
-not `risks.md` instead of the protocol.
+not `risks.md` instead of the protocol. To change any of it, `DEVELOPING.md`.
 
 ## What stays in the instance repo, and why
 

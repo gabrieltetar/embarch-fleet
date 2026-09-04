@@ -69,6 +69,10 @@ reserved = [
   "CLAUDE.md",
   "scripts/",
   ".claude/",
+  # Written by deploy.py: which framework version rendered this instance.
+  # A leg must not touch it -- it is a fact about the install, and
+  # `git log .fleet-version` in the instance is the deploy history.
+  ".fleet-version",
   # Protocol READMEs. Each documents a rule the fleet runs under while sitting
   # inside a directory the fleet legitimately writes, so naming the directory is
   # not enough -- tasks/README.md carries the claim and staleness protocol that
