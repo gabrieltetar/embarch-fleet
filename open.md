@@ -54,9 +54,17 @@ Nobody has run it yet.
 limit, and a leg reads it *before* dispatch so a task that cannot be written
 without a compaction pass says so in its own file.
 
-**What is still open.** Nothing files the compaction task. **15 files sit above
-95%** of `min(cap, baseline)` — including `embarch-api/spec.md` with three bytes
-of headroom — so this is the queue's real blocker, not a future one.
+**Unblocked 2026-09-04 for `api` only.** `embarch-api/spec.md` (3 bytes free)
+and `open.md` (4) had their §10 pass by hand: cold narrative cut, and the module
+table *moved* to `interfaces/modules.md` rather than deleted, since §10 is
+explicit that a reference table is loaded deliberately rather than being cold.
+spec.md is at 84% of cap and `api/005` can now be written.
+
+**What is still open.** Nothing files a compaction task, and **11 files remain
+above 95%** — four more in `api`, plus `dev-bench`, `core`, `umbrella`,
+`suite/features.md`, and both `DOC-*.md`, which no worker may ever touch. The
+last two are the sharp case: they are owner-reserved, so the fleet cannot
+unblock its own protocol docs however pressured they get.
 
 The reason it reports rather than files is [DOC-COMPACTION.md](../embarch-doc/DOC-COMPACTION.md)
 §8: compacting a subsystem still in flux writes a clean statement of something
@@ -81,6 +89,23 @@ every leg reports DEGRADED, and there is nothing to calibrate against. Narrowing
 *why* needs a payload capture, not more code — `rate_limits` arrives only for a
 Pro/Max seat, only after a session's first API response, and each window
 disappears once its `resets_at` passes.
+
+## Whether the framework's prose is portable
+
+**Answered 2026-09-04, differently than asked.** The question was whether to
+genericize `protocol.md` and `ops.md`'s suite-specific prose. The owner's answer:
+EmbArch references are correct — the fleet *is* part of EmbArch — but **client
+names must never appear in any of these repos**, and they did.
+
+That turned into a scrub across all ten repos plus a history rewrite: an exported
+type, a config value, board identifiers, 43 files of prose, and 1,540 committed
+build artifacts leaking a client workspace path. Verified clean from fresh clones
+across every ref and tag.
+
+**What is still open.** Nothing prevents the next one. A name reaches these repos
+through ordinary work, and no check looks for one — the audit that found these
+was a grep somebody thought to run. A `check-client-names.py` in the doc gate,
+reading a denylist kept outside the repo, is the obvious shape and is not built.
 
 ## Whether a second instance is real
 
