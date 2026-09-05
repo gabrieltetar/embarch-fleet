@@ -108,7 +108,7 @@ gate fails on an unfiled file in reserve and names it.
     tasks/doc/<NNN>-compact-<scope>.md
 
 **One task may name several files**, and normally does: a compaction pass is a
-sub-project act, one commit per sub-project (`DOC-COMPACTION.md` §6). Three
+sub-project act, one commit per sub-project (`DOC-COMPACTION-PASS.md`). Three
 fields are required and they are not paperwork — **they are the judgements no
 script can make, recorded by the only actor with the context to make them:**
 
@@ -124,7 +124,7 @@ shortened.
   and nothing else: a path merely *mentioned* in a task body made five of one
   day's twelve files read as filed, because every task cites the doc it is about
   to edit.
-- **`In flux:`** is `DOC-COMPACTION.md` §8's warning, asked of whoever just
+- **`In flux:`** is `DOC-COMPACTION-PASS.md`'s warning, asked of whoever just
   worked in that subsystem. **Yes is a legitimate and cheap answer** — set
   `**State:** blocked` and name the milestone that unparks it. Compacting a
   subsystem still moving writes a clean statement of something about to be
@@ -134,7 +134,7 @@ shortened.
   not. Anything: a failure signature, a rejected alternative, a measurement that
   reads as an assumption once its date goes.
 
-**`Done when` carries `DOC-COMPACTION.md` §7's question**, answered in the
+**`Done when` carries `DOC-COMPACTION-PASS.md`'s human question**, answered in the
 compactor's own words in the commit message: *can `spec.md` alone answer what
 someone needs to work on this component today?* No script answers it and the
 gate does not either.

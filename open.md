@@ -59,8 +59,8 @@ open `tasks/` task — filed by whoever spends the reserve, in the same commit.
 `--pressure` lists both bands; `queue-status.py` gates out an `Owner: required`
 task so no worker is sent at a reserved path.
 
-**Why the filer and not a cron.** [DOC-COMPACTION.md](../embarch-doc/DOC-COMPACTION.md)
-§8 warns against compacting a subsystem still in flux — it writes a clean
+**Why the filer and not a cron.** [DOC-COMPACTION-PASS.md](../embarch-doc/DOC-COMPACTION-PASS.md)
+warns against compacting a subsystem still in flux — it writes a clean
 statement of something about to be wrong and destroys the alternatives you are
 about to need — and no script can tell. The actor who just worked in that
 subsystem can. So the task carries `**In flux:**`, and `yes` parks it naming

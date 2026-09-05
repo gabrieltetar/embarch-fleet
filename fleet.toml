@@ -65,6 +65,11 @@ five_hour_pct = 85
 reserved = [
   "DOC-PROTOCOL.md",
   "DOC-COMPACTION.md",
+  # DOC-COMPACTION.md §6-§9 became its own doc on 2026-09-04 when that file
+  # reached its cap. Reserved for the same reason its parent is: it is a rule
+  # the fleet runs under. This is the "next split is loud" case protocol.md §3
+  # predicted -- check-ownership.py --supervisor failed until it was listed.
+  "DOC-COMPACTION-PASS.md",
   "embarch-dev-workflow.md",
   "CLAUDE.md",
   "scripts/",

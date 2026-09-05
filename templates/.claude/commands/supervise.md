@@ -281,10 +281,10 @@ into it, or leaves one there that nothing has filed — it files
 `tasks/doc/<NNN>-compact-<scope>.md` in the same commit.** `tasks/README.md` has
 the shape. It is not the worker's job to *do* the compaction; it is its job to
 record the debt while it still holds the one piece of context nobody else will
-have, which is whether that subsystem is still in flux (`DOC-COMPACTION.md` §8).
+have, which is whether that subsystem is still in flux (`DOC-COMPACTION-PASS.md`).
 
 **A compaction task is dispatched like any other, and judged unlike any other.**
-Whoever runs one answers `DOC-COMPACTION.md` §7's question in your log entry, in
+Whoever runs one answers `DOC-COMPACTION-PASS.md`'s human question in your log entry, in
 its own words: *can `spec.md` alone answer what someone needs to work on this
 component today?* No script answers it and the gate does not either. **Never
 dispatch one whose `In flux:` field says yes** — that task should be `blocked`
