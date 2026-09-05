@@ -144,8 +144,8 @@ reader**, which is the state `embarch-topology`'s `validate_signal` and
 `embarch-study-designer`'s advertise-scoped decode surface are both already in.
 Unlike those two, this one has a named consumer and a queued task pointing at it.
 
-**Merged:** `agent/api/006-expose-compiled-host-schema-version` (api `1a396ba`,
-doc `26b22bd`). Both fast-forward after a clean rebase. Gate re-run on the merge
+**Merged:** `agent/api/006-expose-compiled-host-schema-version` (api `97427a4`,
+doc `3118212`). Both fast-forward after a clean rebase. Gate re-run on the merge
 result: build, 86 tests, `clippy --all-targets -D warnings`, six doc checks,
 ownership on both branches. **`crates/embarch-core-client/` untouched**, checked
 by path — nothing reaches `embarch-ui`.
@@ -234,7 +234,7 @@ from `embarch-core` decision 16 with the citation lost in a compaction, restored
 as a link. **So the numbering does not need a new rule on this evidence**, which
 is the answer I was hoping not to have to take on faith.
 
-**Merged:** `agent/umbrella/002-design-only-decisions-audit` (doc `35c9285`,
+**Merged:** `agent/umbrella/002-design-only-decisions-audit` (doc `20c1a8f`,
 **no code branch** — doc-only, the code worktree carried no commits, exactly as
 the task specified). Fast-forward after a clean rebase. Gate on the merge result:
 all six doc checks, ownership on the doc branch. **No `cargo` run**, because the
@@ -302,8 +302,8 @@ refuse together. **The fork `open.md` named was reject-or-splice and it rejected
 opaque hand-authored argv with no `-S` to add to it, so splicing means guessing
 another build system's flag grammar — which decision 5 exists to keep out.
 
-**Merged:** `agent/api/004-static-resolve-discards-selection` (api `4a07fb8`,
-doc `f926fd9`). Both fast-forward after I rebased the doc branch onto `main`;
+**Merged:** `agent/api/004-static-resolve-discards-selection` (api `7bbe53c`,
+doc `d87639a`). Both fast-forward after I rebased the doc branch onto `main`;
 that rebase was clean, unlike `umbrella/001`'s. Gate re-run by me on the merge
 result: build, 86 tests across three binaries, `clippy --all-targets -D
 warnings`, all six doc checks, ownership on both branches. **No Windows build:**
@@ -380,8 +380,8 @@ on it — it shells out. **This is not the `core/002` precedent** the last leg
 warned against: that one accepted a build a worker ran somewhere else, this one
 establishes that the cell was never in the gate.
 
-**Merged:** `agent/umbrella/001-doctor-check-11-is-a-stub` (umbrella `1aa0709`,
-doc `98f2a1a`). Both fast-forward, after I rebased the doc branch onto `main` —
+**Merged:** `agent/umbrella/001-doctor-check-11-is-a-stub` (umbrella `d717831`,
+doc `b69eb56`). Both fast-forward, after I rebased the doc branch onto `main` —
 it had diverged over this leg's own `api/004`/`api/005` task commits, and the
 task file conflicted because I had corrected the claim timestamp on `main` after
 branching. Gate re-run by me on the merge result: build, 102 tests, `clippy
@@ -444,8 +444,7 @@ judged — and it retired a decision, which §10 says warrants reading the diff 
 is gone. The shipped result is in `embarch-api/decisions.md` decision 50 and in
 `history/api.md`; the *reasoning* is not.
 
-**Merged:** `agent/api/003-schema-version-error-kind` (api `2b607f7`, doc
-`334583e`), folded in `1b0960b`. Both branches and both worktrees outlived the
+**Merged:** `agent/api/003-schema-version-error-kind` (api `2ae28b4`, doc `957fed6`), folded in `1b0960b`. Both branches and both worktrees outlived the
 unit and were still present at 09:00; the next leg's step 0 clears them.
 
 **Blocked:** none.
@@ -475,8 +474,8 @@ worker's task**, because the `code` enum is a wire contract `api`, `ui` and
 key set, so adding a field without moving `interfaces.md`'s `/status` row now
 fails the suite.
 
-**Merged:** `agent/core/002-status-versions-and-json-error-body` (core `d4fa396`,
-doc `df97ecd`). Both fast-forward; gate re-run by me on the merge result — build,
+**Merged:** `agent/core/002-status-versions-and-json-error-body` (core `98dedd6`,
+doc `9753a6d`). Both fast-forward; gate re-run by me on the merge result — build,
 171 tests, `clippy --all-targets -D warnings`, all six doc checks, ownership on
 both branches. Fold commit updates `suite/features.md`'s `GET /status` row to
 `unit, hw` and names both version fields.
@@ -554,9 +553,9 @@ SHA on any red. Nothing merged that had not already passed, and there was no
 second command that could run past a failure. That closes the thing batches 001
 and 002 both flagged; it is worth keeping the shape rather than the habit.
 
-**Merged:** `agent/core/001-events-route-doc-corrections` (doc `e3cdd4e`, **no
+**Merged:** `agent/core/001-events-route-doc-corrections` (doc `8ac9ba4`, **no
 code branch** — doc-only, the code worktree carried no commits) ·
-`agent/study-designer/003-alloc-only-test-build` (sd `dcefe37`, doc `c6b3c3b`).
+`agent/study-designer/003-alloc-only-test-build` (sd `dcefe37`, doc `b90a5a7`).
 Both fast-forward. On the sd merge result I ran the whole feature matrix myself,
 not just the default cell the script runs: `alloc` 109 passed, `std`, and
 `--all-features` 212 passed, plus `clippy --all-targets --features alloc`.
@@ -626,7 +625,7 @@ precedent that makes walking past the next one easier. Second batch running, and
 the gate has now been bypassed in both.
 
 **Merged:** `agent/study-designer/002-test-harness-stack-overflow` (sd `9add296`,
-doc `2a5573b`) · `agent/api/001-sse-client` (api `974e8f9`, doc `cda9df9`).
+doc `61e2c16`) · `agent/api/001-sse-client` (api `7dfea7c`, doc `44051f2`).
 All fast-forward.
 
 **Blocked:** none.
@@ -672,7 +671,7 @@ Refusing would have meant nothing can ever land in that crate. §10 cannot tell
 "you broke it" from "it was already broken", which is now `study-designer/002`.
 
 **Merged:** `agent/study-designer/001-dangling-gatt-records-link` (sd `e953489`,
-doc `cc92b8b`) · `agent/api/002-mocked-http-tests` (api `b397ca1`, doc `b411fab`).
+doc `7affd84`) · `agent/api/002-mocked-http-tests` (api `5b1a081`, doc `b613528`).
 All four fast-forward; post-merge gate green in both repos.
 
 **Blocked:** none.
