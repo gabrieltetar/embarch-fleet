@@ -56,6 +56,12 @@ to one sub-project needs nobody's approval. Number it per `DOC-PROTOCOL.md`
 3. Your sub-project's `spec.md` / `decisions.md` / `open.md` updated — edit the
    body, never append.
 4. A `changelog.d/` fragment (one line, 200 bytes, per its README).
+4b. **If you shipped, retired or changed the maturity of a capability, its row
+   in the feature inventory** — `features.d/<your scope>-<NNN>-<slug>.md`, one
+   table row, per `features.d/README.md`. It is **yours to write**, unlike
+   `suite/features.md` itself, which is assembled from those fragments. Do not
+   drop a `status.d/` fragment asking for the row; that was the old route and it
+   depended on somebody honouring it.
 5. **If `check-doc-size.py` names a file in reserve with no debt filed, file
    it** — `tasks/doc/<NNN>-compact-<scope>.md`, in this same commit, per
    `tasks/README.md`. A file in reserve is inside the last 10% of its cap: you

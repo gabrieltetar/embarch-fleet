@@ -15,9 +15,11 @@ that sub-project's worker is allowed to write.
 In embarch-doc a worker may write:
     embarch-<scope>/**        its own sub-project's four files
     changelog.d/<scope>-*     its own history fragment
+    features.d/<scope>-*      its own row in the assembled feature inventory
     status.d/<scope>-*        its request to change a shared suite-level doc
     tasks/<scope>/**          its own task file
-and nothing else -- notably not embarch.md, embarch-features.md,
+and nothing else -- notably not suite/features.md itself, which is assembled
+from those fragments and never hand-edited, nor embarch.md, embarch-features.md,
 embarch-roadmap.md, embarch-decision-reversals.md, embarch-glossary.md,
 embarch-user-guide.md, DOC-PROTOCOL.md, DOC-COMPACTION.md,
 embarch-dev-workflow.md, or scripts/. The fleet's own standing rules
@@ -54,6 +56,10 @@ def allowed(path: str, scope: str) -> bool:
         or path.startswith(f"tasks/{scope}/")
         or (path.startswith("changelog.d/") and _frag_scope(path, "changelog.d/") == scope)
         or (path.startswith("status.d/") and _frag_scope(path, "status.d/") == scope)
+        # A feature row is now a fragment, so a worker writes its OWN row rather
+        # than asking the supervisor to hand-fold it into suite/features.md --
+        # which is, and stays, outside every worker's row (build_features.py).
+        or (path.startswith("features.d/") and _frag_scope(path, "features.d/") == scope)
     )
 
 
@@ -256,7 +262,8 @@ def main() -> int:
                 hint = "  <- another sub-project's docs"
             print(f"  {p}{hint}")
         print(f"\nAllowed for '{args.scope}': embarch-{args.scope}/**, tasks/{args.scope}/**, "
-              f"changelog.d/{args.scope}-*, status.d/{args.scope}-*")
+              f"changelog.d/{args.scope}-*, features.d/{args.scope}-*, "
+              f"status.d/{args.scope}-*")
         if claims:
             # Named, never excused. The failure this guards against is a
             # supervisor waving a REAL violation through as "just the claim

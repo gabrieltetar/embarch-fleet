@@ -1,13 +1,19 @@
 # status.d
 
 One file per **pending edit to a shared suite-level doc**. A worker never edits
-[../embarch.md](../embarch.md), [../suite/features.md](../suite/features.md),
+[../embarch.md](../embarch.md),
 [../suite/roadmap.md](../suite/roadmap.md),
 [../embarch-decision-reversals.md](../embarch-decision-reversals.md),
 [../embarch-glossary.md](../embarch-glossary.md) or
 [../suite/user-guide.md](../suite/user-guide.md) directly; it drops a
 fragment here and the supervisor folds every fragment in one serialized commit
 at the end of a batch ([the protocol]({{FLEET_REL}}/protocol.md) §9).
+
+**A feature-inventory row is no longer one of these.**
+[../suite/features.md](../suite/features.md) is assembled from
+[../features.d/](../features.d/README.md), and a worker owns
+`features.d/<its own scope>-*` — so it writes the row itself, in the commit that
+earned it, rather than asking for one here.
 
     <scope>-<slug>.md
 
@@ -28,8 +34,8 @@ not the sentence: **write the truth, not the prose.** The supervisor writes the
 prose, because it is folding several fragments into one table and only it can
 see them together.
 
-Free prose may follow the three lines where the change needs it — a new
-features-table row, a roadmap bucket move. Keep it short; the account of the
+Free prose may follow the three lines where the change needs it — a roadmap
+bucket move, a status-table correction. Keep it short; the account of the
 change lives in the sub-project doc the worker already updated, and this
 fragment links there rather than restating it.
 

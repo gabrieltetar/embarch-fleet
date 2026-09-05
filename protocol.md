@@ -38,12 +38,14 @@ Branches are the backstop. **This table is the actual mechanism** — if it is h
 | `embarch-doc/<its own sub-project>/` | write | write | write |
 | `embarch-doc/<another sub-project>/` | **never** | write | write |
 | `changelog.d/` (new fragment) | write | write | write |
+| `features.d/<its own scope>-*` (new row) | write | write | write |
 | `status.d/` (new fragment) | write | write | write |
-| [embarch.md](../embarch-doc/embarch.md), [suite/features.md](../embarch-doc/suite/features.md), [suite/roadmap.md](../embarch-doc/suite/roadmap.md) | **never** | write | write |
+| [embarch.md](../embarch-doc/embarch.md), [suite/roadmap.md](../embarch-doc/suite/roadmap.md) | **never** | write | write |
+| [suite/features.md](../embarch-doc/suite/features.md) — **assembled, never edited** | **never** | **never** | via `build_features.py` |
 | [embarch-decision-reversals.md](../embarch-doc/embarch-decision-reversals.md), [embarch-glossary.md](../embarch-doc/embarch-glossary.md), [suite/user-guide.md](../embarch-doc/suite/user-guide.md) | **never** | write | write |
 | `tasks/` | claim + close its own | write | write |
 | [DOC-PROTOCOL.md](../embarch-doc/DOC-PROTOCOL.md), [DOC-COMPACTION.md](../embarch-doc/DOC-COMPACTION.md), this doc, [running the fleet](ops.md), [the risks](risks.md), [embarch-dev-workflow.md](../embarch-doc/embarch-dev-workflow.md), `CLAUDE.md` | **never** | **never** | write |
-| `tasks/README.md`, `inbox/README.md`, `changelog.d/README.md`, `status.d/README.md` | **never** | **never** | write |
+| `tasks/README.md`, `inbox/README.md`, `changelog.d/README.md`, `status.d/README.md`, `features.d/README.md` | **never** | **never** | write |
 | `scripts/`, `.claude/` | **never** | **never** | write |
 | Hardware (probe, DUT, dev-bench, live Core) | **never** | **never** | write |
 
@@ -139,7 +141,7 @@ Practically this means the supervisor's own hands do the riskiest work in the su
 
 [DOC-PROTOCOL.md](../embarch-doc/DOC-PROTOCOL.md) §5 requires the suite-level facts to move in the same pass as the change. With one engineer that is a rule against drift. With four workers it is a rule that puts four agents into [embarch.md](../embarch-doc/embarch.md) §3's table at once.
 
-The fix is the one this repo already proved with `changelog.d/`: **one file per pending edit, no shared file touched.** A worker writes `status.d/<scope>-<slug>.md` naming the target doc and the fact that changed; the supervisor folds a worker's fragments as it lands that worker's branches, and deletes them (§6 step 4). Format: [status.d/README.md](../embarch-doc/status.d/README.md).
+The fix is the one this repo already proved with `changelog.d/`: **one file per pending edit, no shared file touched.** [suite/features.md](../embarch-doc/suite/features.md) went one step further on 2026-09-04 and became *assembled* rather than folded — a worker writes `features.d/<its own scope>-<NNN>-<slug>.md` and `build_features.py` builds the table, so a feature's row lands in the commit that earned it instead of as a request somebody has to honour. A worker writes `status.d/<scope>-<slug>.md` naming the target doc and the fact that changed; the supervisor folds a worker's fragments as it lands that worker's branches, and deletes them (§6 step 4). Format: [status.d/README.md](../embarch-doc/status.d/README.md).
 
 The rule DOC-PROTOCOL §5 was protecting is unchanged — the suite-level docs still must not disagree with a sub-project's — it just now takes two actors and two commits instead of one actor and one. The window in which they *can* disagree is the length of **one unit**, because folding is part of landing it (§6). **A unit that lands with its fragments still sitting in `status.d/` has failed**, whatever else it shipped.
 
