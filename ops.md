@@ -56,12 +56,16 @@ Remote Control attaches a phone or browser to a Claude Code session on this mach
 cannot notice that it is wedged — a hung tick never returns to idle, so its own
 cron cannot fire and `fleet stop` cannot be delivered. A second window armed with
 `/fleet watch` reads the mtime of a tick file the listener touches at the end of
-every tick, and alerts when it goes stale by 25 minutes. **It has no hands at
-all**: it cannot spawn, write, or start anything, which is why it does not weaken
-the kill switch — closing the listener's window still ends every unit of work,
-and all that outlives it is an alarm telling the truth. It is not a stop channel:
-if the listener is wedged nobody can deliver a stop, and closing VS Code is still
-the backstop. What it buys is learning that within ten minutes instead of five
+every tick, and alerts when it goes stale by 25 minutes. **Its whole vocabulary points one way — stop, never start**: it
+cannot spawn, write a repo file, or launch a leg; when it declares a wedge it
+alerts and deletes the pump latch. That asymmetry is why it does not weaken the
+kill switch. §3's rule is that nothing may outlive the editor *in a way that
+takes away the stop*, and an action that only ever stops cannot; the worst a
+false positive costs is a `fleet start` typed by hand. Unlatching is not a
+graceful `fleet stop` — a wedged listener can relay nothing, so whatever is
+already running keeps running and closing VS Code remains the only thing that
+ends it. What it prevents is a fleet quietly resuming after a wedge nobody
+saw. What it buys is learning that within ten minutes instead of five
 hours.
 
 **Alert rarely, and through `scripts/fleet-alert.py`**, whose header carries why a Slack `@` from the fleet notifies nobody and the webhook setup that fixes it. Unconfigured it exits 2 and says so: post to the channel anyway and record that the alert did not send. `PushNotification` reaches a phone **only while Remote Control is connected**, so it supplements rather than replaces. **The set, closed**: leg blocked and stopped · budget HOLD · a failed spawn · the same failure blocking two units · a dream · a parked `suite` task. **Never per unit, never on an ordinary leg end** — legs end every twenty minutes, and an alert each time is a pager.

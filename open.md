@@ -15,16 +15,22 @@ undecided. It leaves when there is no question left, not when code exists.
 touches a `tick` file in the state directory at the end of every tick and the watchdog alerts
 when that mtime goes stale by 25 minutes. Five hours became about ten.
 
-**What is still open.** Nothing *recovers* a wedged listener — the alert tells
-the owner to go close a window. A wedged listener also cannot be sent
-`fleet stop` by anyone, so the watchdog is not a second control plane and must
-not become one. And it cannot distinguish a hung tick from a closed window from
-a slept machine; all three want the same response, which is why it does not
-guess, but it means the alert is never diagnostic.
+**Narrowed 2026-09-04:** the watchdog may now delete the pump latch as well as
+alert. That is safe in a way a restart never could be — **stop, never start** —
+and §3's rule bites on actions that take a stop away, not on actions that are
+one. It means a wedge no longer ends with the fleet quietly resuming on its own.
+
+**What is still open.** Nothing *recovers* a wedged listener; unlatching only
+stops the next leg from being spawned, and whatever is already running keeps
+running until the window is closed. The watchdog cannot deliver a graceful
+`fleet stop` either, because a wedged listener relays nothing. And it cannot
+distinguish a hung tick from a closed window from a slept machine; all three
+want the same response, which is why it does not guess, but the alert is never
+diagnostic.
 
 **What would close it:** nothing safe, on current understanding. Anything that
-could restart a leg would have to survive the editor closing, which is the kill
-switch ([ops.md](ops.md) §3). This may simply be the floor.
+could *resume* work would have to survive the editor closing, which is the kill
+switch ([ops.md](ops.md) §3). This is probably the floor.
 
 ## The reviewer's scope is unsettled
 

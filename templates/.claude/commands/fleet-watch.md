@@ -18,19 +18,22 @@ is therefore not suppressed by the listener being mid-query.
 
 ## Why this does not weaken the kill switch
 
-**It has no hands, and that is the whole argument.** It cannot spawn an agent,
-cannot write a file in any repo, cannot start a leg, cannot touch the pump. It
-reads one mtime and posts.
-
-So closing the *listener* window still stops every unit of work in flight —
-workers are subagents of a leg, a leg is a subagent of the listener, and they die
-together. Nothing outlives that close except an alarm, and an alarm that fires
-after the fleet is deliberately stopped is telling the truth. Closing this window
-too costs nothing and stops the alarm.
+**It can only ever reduce what the fleet is doing.** It cannot spawn an agent,
+cannot write a file in any repo, cannot start a leg. It reads one mtime, posts,
+and — when it declares a wedge — deletes the pump latch. That is its entire
+vocabulary, and every word of it points the same way: **stop, never start.**
 
 The rule `ops.md` §3 states is that **nothing may be arranged to outlive the
-editor in a way that takes away the stop**. A watchdog that could restart a leg
-would do that. One that can only speak does not.
+editor in a way that takes away the stop.** A watchdog that could restart a leg
+would take it away. One whose only action *is* a stop cannot: the worst it can
+do to you is stop a fleet that was fine, which costs a `fleet start` you type
+yourself.
+
+So closing the *listener* window still ends every unit of work in flight —
+workers are subagents of a leg, a leg is a subagent of the listener, and they
+die together. Nothing outlives that close except an alarm and, at worst, an
+unlatched pump. Both are the safe direction. Closing this window too costs
+nothing.
 
 ## Arming it
 
@@ -56,13 +59,21 @@ would do that. One that can only speak does not.
 > started and has not ticked yet).
 >
 > 3. If the mtime is **more than 25 minutes old** — two missed heartbeats, so a
-> single slow tick is not enough — the listener is wedged or dead. Run
-> `{{FLEET_REPO}}/scripts/fleet-alert.py "listener silent since <mtime>; pump
-> still latched"`, then post one line to `{{SLACK_CHANNEL_NAME}}` saying the same
-> and react `robot_face`. **Then read `{{STATE_DIR}}/alerted`: if it holds a
-> timestamp under 60 minutes old, skip both — you already said this.** Otherwise
-> write the current time there afterwards. A watchdog that repeats itself every
-> ten minutes is a pager, and `ops.md` §3's alert set is closed for that reason.
+> single slow tick is not enough — the listener is wedged or dead. **Delete
+> `{{STATE_DIR}}/pump`**, then run `{{FLEET_REPO}}/scripts/fleet-alert.py
+> "listener silent since <mtime>; pump unlatched"`, post one line to
+> `{{SLACK_CHANNEL_NAME}}` saying both, and react `robot_face`. **Then read
+> `{{STATE_DIR}}/alerted`: if it holds a timestamp under 60 minutes old, skip the
+> alert and the post — you already said this — but still delete the latch if it
+> is back.** Otherwise write the current time there afterwards. A watchdog that
+> repeats itself every ten minutes is a pager, and `ops.md` §3's alert set is
+> closed for that reason.
+>
+> **Deleting the latch is the only write this window ever makes, and the only
+> direction it may push.** It can stop a fleet; it can never start one. That
+> asymmetry is what keeps it from being a second control plane: the worst a
+> false positive costs is a `fleet start` you have to type, and the worst a
+> failure of this window costs is the silence you had before it existed.
 >
 > 4. If the mtime is fresh, do nothing and print nothing.
 >
@@ -81,10 +92,14 @@ on a tool call, the window was closed without stopping the pump, or the machine
 slept. All three want the same response from the owner — look at the listener
 window — so the alert does not guess.
 
-**It is not a stop channel.** If the listener is wedged, `fleet stop` cannot be
-delivered by anyone, including this window. Closing VS Code remains the backstop,
-and this exists so you learn you need to within ten minutes instead of five
-hours.
+**It is not a control plane, and unlatching is not `fleet stop`.** A graceful
+stop is delivered to a live supervisor, which finishes landing what is in
+flight, folds, logs and exits. This window cannot do that — a wedged listener
+cannot relay a message to anyone. Deleting the latch only stops the *next* leg
+from being spawned once the listener recovers. Whatever is already running is
+still running, and closing VS Code remains the only thing that ends it. What
+this buys is learning you need to within ten minutes instead of five hours, and
+not coming back to a fleet that quietly resumed on a rule you no longer wanted.
 
 ## Vocabulary
 
