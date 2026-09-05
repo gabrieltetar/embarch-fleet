@@ -189,6 +189,17 @@ wave of 2 means every reviewer costs a worker slot**, and on this machine DEGRAD
 steady state, so the accumulate-twenty-entries plan cannot complete under the current
 rule. Stated plainly because it is a fact about the mechanism, not about this leg.
 
+**The queue the next leg inherits is one unit deep, and `queue-status.py` does not say
+so.** It reports **5 dispatchable**, which reads healthy — but `suite/003` cannot run
+without a channel (see above), and **the other four are all `umbrella`**
+(`004-doctor-mcp-handshake`, `005-doctor-prune`, `006-doctor-probe-not-permitted`,
+`007-doctor-target-count-shellout`). At most one task per sub-project is in flight at a
+time, so the next leg can dispatch **one** of them and then has nothing. Expect it to
+land that unit, find nothing dispatchable, sweep the sources, and quite possibly dream.
+`006` is `Hardware: verify-only` and owes a hardware-verification debt when it runs.
+Three sub-projects were emptied tonight (`api`, `outpost`, `dev-bench`) and nothing
+refilled them.
+
 **Least sure about:** landing four units without a reviewer on three of them, on a night
 where two of the four were compaction passes — the one class of change whose whole risk is
 a deletion that reads fine. `api/008`'s reviewer is the only independent read of intent in
