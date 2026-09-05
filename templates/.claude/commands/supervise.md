@@ -284,9 +284,23 @@ names that gap as the characteristic failure.
 **It counts against the wave.** A reviewer is a spawn like any other, so
 re-check `usage-budget.py` before starting one and **skip it under a tight
 budget** — a landed unit with no reviewer is fine; a leg that stops dispatching
-because reviewers ate the wave is not. **Say in the log entry which it was.**
+because reviewers ate the wave is not.
+
+**Every unit's log entry carries a `**Reviewer:**` line, in exactly one of three
+forms**, because whether per-unit review earns its cost is an open question that
+only accumulated entries can answer:
+
+```
+**Reviewer:** no findings.
+**Reviewer:** 1 finding — inbox/api-contradicts-decision-41.md
+**Reviewer:** skipped (budget DEGRADED, wave 2).
+```
+
 "No findings" and "no reviewer ran" are different facts and must never read the
-same.
+same — one is evidence that review is cheap insurance, the other is a gap.
+`grep '^\*\*Reviewer:' supervisor-log.md` is the tally, and after about twenty
+units it settles whether this should stay per-unit or narrow to
+high-blast-radius diffs only.
 
 **A red gate blocks the task and the leg keeps going.** Record why, leave the
 task `blocked`, post the one line, start the next unit. Do not fix it yourself

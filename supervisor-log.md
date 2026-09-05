@@ -47,6 +47,9 @@ first. If it decided nothing, say "nothing" — an empty line here is ambiguous.
 under `embarch-dev-workflow.md` §6 there is no merge commit and no surviving
 branch name, so the SHA is the only handle a revert has.
 **Blocked:** `agent/<scope>/<task>` — why, and what state the task was left in.
+**Reviewer:** `no findings` / `N finding — <inbox file>` / `skipped (<why>)`.
+Exactly one of the three, always. Whether per-unit review is worth double the
+spawns is undecided, and this line is the only evidence that will settle it.
 **Hardware debts:** what needs a board, and what board.
 **Budget:** verdict at start and end, and the wave size it produced.
 **Least sure about:** one sentence. Not optional.
