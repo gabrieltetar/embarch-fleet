@@ -64,6 +64,138 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-04 21:52 — dev-bench/001 compact-docs
+
+**Leg 008's last unit.** The leg-wide facts are at the bottom of this entry, because the
+next leg reads the newest entries first and this is the one that carries them.
+
+**§7's question, in the compactor's own words:**
+
+> Yes. `spec.md` alone still carries the board and the `link_port_interface = 2` trap that
+> a lowest-index fallback walks into, the v1 boundary, the source tree and the west-init
+> nesting rule, all ten invariants, the three-writer TX contract and the three sinks'
+> differing threading rules, and every live constant with its provenance and its failure
+> mode. What I removed was **how those numbers were arrived at, not what they are**: the
+> five-point ESP32-C5 SRAM percentage history, the superseded frame bounds (19,887 and
+> 9,270) and the KB they freed, the `gatt_activity` deletion, the scan-table census
+> narrative. The current 87.04% and "has overflowed three times" stayed, because those
+> are the live constraint rather than its record.
+
+**Decided:** nothing suite-wide. **`spec.md` 9628 → 9061 B** (94.0% → 88.5%) and
+**`open.md` 4843 → 4576 B** (94.6% → 89.4%) — both `PAID` out of reserve, which is the
+whole task. `decisions/ble.md` shrank 20 B as a side effect. Duplication **5 → 1**, and
+the survivor is the four-file split working (a spec invariant plus the decision explaining
+it). The `tx_scratch` / `struct dbm_study_start` lever **moved** to `open.md` under §3 —
+a known limitation is `open.md`'s — with a one-clause pointer left in `spec.md`'s SRAM
+paragraph so the lever is still named where a reader meets the constraint.
+
+**The `Must not delete:` set came through untouched**, which was the risk this task
+carried: the six-part failure signature, the *Rejected: a 16-byte TX boundary* clause with
+all six short-by counts (15, 17, 17, 13, 17, 13) and the seventh complete frame, and the
+899,843 ms / 46,320 ms uptime pair. It also kept two past incidents that are still live
+traps — `CONFIG_MAIN_STACK_SIZE`'s "Zephyr merges the fragment last and the later value
+wins with no warning", and `CONFIG_BT_MAX_CONN`'s SoftDevice arithmetic.
+
+**Three forward-looking things the worker said that I am recording rather than acting on:**
+
+1. **`open.md` has no second pass of that kind left in it.** All 17 bullets survive
+   `collect-open-questions.py` (diffed before and after: 17 in, 17 out, reworded only);
+   the 267 B came entirely from mechanism clauses `decisions/` already owned. **A future
+   `open.md` compaction would have to drop whole items and name each as answered** — the
+   "bytes can only come from rules" answer, arrived at one pass early.
+2. **`decisions/ble.md` is at 89.8% — 22 B from re-entering reserve on its next edit, and
+   nothing has filed against it.** It is the next `dev-bench` file to go in. Not filed
+   now because this pass *shrank* it, and `tasks/README.md` files a debt against the
+   commit that spends the reserve.
+3. **It cut a line that argued for its own retention** — `spec.md` said "Its history is
+   the record worth keeping:" ahead of the SRAM percentages — and asked whether that
+   history deserves a row in `embarch-decision-reversals.md`, which is mine to write and
+   not its. **I decided no.** §9 is explicit that superseded measurements are cold and git
+   holds them, decision 43 already carries the ESP32-C5 retarget reversal, and a reversals
+   row for a measurement series would be the first of its kind — a category change I would
+   be making on the strength of one sentence's self-advocacy.
+
+**Merged:** `agent/dev-bench/001-compact-docs` (doc `d7d30f4`). **Doc-only — the code
+branch had no commits**, no firmware touched, no board. Gate re-run by me on the merge
+result: seven doc checks green, ownership `all 5 changed path(s) owned`.
+
+**Blocked:** none. **Reviewer:** skipped (budget DEGRADED, wave 2).
+
+**Hardware debts:** none from this unit. The leg's one debt is `umbrella/003`'s Windows
+arm, and it is a **machine, not a board**.
+
+**Budget:** DEGRADED at start and at end, wave 2 throughout, **no 429 in the whole leg**.
+
+---
+
+### Leg 008, the parts that are about the leg and not about a unit
+
+**No Slack tool** (`ops.md` §5.2a). Unit lines are these entries; the only stop channel
+was the listener's `SendMessage`, and none arrived. **`tasks/suite/003` was not run and
+still owes a fresh 30-minute clock** — left `open`, exactly as leg 007 left it.
+
+**The four fixes leg 007's defects produced all held, and this is the first leg to walk
+them:** `--detach` + `git push origin HEAD:main` worked end to end across three claim
+commits and four folds — the owner's checkout never moved and never acquired a staged
+anything; `fold-commit.py` staged the leg worktree with **no `--doc-repo`** every time,
+and no fold left a log-only commit; `check-docs.py` was **green in the leg worktree from
+the first run**, `install.py --check` included, so leg 007's "green when that is the only
+red" instruction was correctly withdrawn and never needed.
+
+**One thing `fold-commit.py` does not do, found the hard way:** a `done` task file is
+**not** deleted for you. My first fold (`api/008`) staged 2 paths when I had passed 3 —
+the task file was already merged in its `done` state and so was not pending — and I
+amended the commit to `git rm` it. `tasks/README.md` says the supervisor deletes the file
+in the fold; nothing enforces it, and the silent "2 path(s)" is the only signal. **The
+next leg should `git rm` the completed task file explicitly before calling
+`fold-commit.py`**, which is what I did for the other three.
+
+**The defect I introduced, and all three workers caught it.** I claimed `umbrella/003`
+and `api/008` in **one** commit and branched both workers off it, so each worker's
+`origin/main...HEAD` diff contained the other's task file and
+`check-ownership.py --scope <its own>` went **red on paths it never wrote**. By the third
+and fourth workers the base also carried two landed folds, so the false red named nine
+paths. Every worker diagnosed it correctly and proved its own paths clean with `--stdin`
+against its base — but **the failure mode is a supervisor learning to wave this through**,
+and §10 makes this check a merge gate. Two mitigations, one mine and one not:
+
+- **Mine, applied from unit 3 onward: one claim commit per task, pushed before the branch
+  is cut.** It does not fix it — a branch cut after an earlier unit's fold still carries
+  that fold — so it narrows the false red without removing it.
+- **Not mine:** the real fix is in `scripts/`, and the umbrella worker dropped it at
+  `inbox/doc-claim-commit-breaks-worker-ownership-check.md` with two candidate fixes. **It
+  is still in `inbox/` and I did not file it as a task**, because every path it would
+  change is owner-reserved and a worker sent at it would fail on its first edit.
+- **My landing script reads it correctly and that is why nothing was blocked**: it rebases
+  each branch onto the current leg tip and runs `check-ownership.py --base <that tip>`, so
+  the diff it checks is exactly the worker's own commits.
+
+**Reserve, end to end: 7 files in reserve at the start, 4 at the end**, all filed at every
+moment. `outpost/spec.md` and both `dev-bench` files paid off; `umbrella/spec.md` went
+9671 → 9761 B and stayed in, still filed against `umbrella/009`, which stays `blocked`
+with `In flux: yes` because five open `umbrella` tasks still rewrite the doctor table.
+**No worker hit `check-doc-size.py`'s reserve *failure* this leg** — the gate fails only
+on an unfiled file in reserve, and everything in reserve was already filed, so the
+mechanism stayed a debt notice rather than a wall. `umbrella/003` came closest and is the
+interesting case: it sized `decisions/install.md` to **11009 B against an 11059 B reserve
+line, deliberately, so no new compaction task was owed.** That is a worker planning
+against the reserve from the dispatch-time headroom line rather than discovering it — the
+same shape leg 007 saw, and still not a test of what a worker does when the gate actually
+refuses.
+
+**Reviewer tally: one ran, three skipped.** The one that ran (`api/008`) found nothing and
+took about a minute and a half. The three skips were all the same cause — **a DEGRADED
+wave of 2 means every reviewer costs a worker slot**, and on this machine DEGRADED is the
+steady state, so the accumulate-twenty-entries plan cannot complete under the current
+rule. Stated plainly because it is a fact about the mechanism, not about this leg.
+
+**Least sure about:** landing four units without a reviewer on three of them, on a night
+where two of the four were compaction passes — the one class of change whose whole risk is
+a deletion that reads fine. `api/008`'s reviewer is the only independent read of intent in
+this leg, and it was the unit that needed it least.
+
+---
+
 ## 2026-09-04 21:47 — outpost/001 compact-spec
 
 **A compaction unit, so `DOC-COMPACTION.md` §7's question is answered here in the
