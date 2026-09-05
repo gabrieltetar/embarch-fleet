@@ -303,7 +303,7 @@ rather than nowhere.
 outright.** `Cargo.toml` names `../embarch-study-designer` and
 `../../../embarch-topology`; from `.worktrees/<repo>/<slug>/` those resolve to
 nothing. After creating a code worktree, symlink into the worktree's **parent**,
-pointing at the main checkout — `ln -sfn {{REPO_ROOT}}/<sibling>
+pointing at the main checkout — `ln -sfn {{FLEET_ROOT}}/<sibling>
 {{WORKTREE_ROOT}}/<repo>/<sibling>`.
 
 **Link every sibling in the dependency *closure*, not the ones the crate's own
