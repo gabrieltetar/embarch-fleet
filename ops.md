@@ -162,6 +162,20 @@ connector — so it may work when the channel does not. Try it for a blocking
 condition; if it exits 2 it is unconfigured, and the log entry says the alert
 did not send.
 
+**This whole section is a contingency, and as of 2026-09-05 it is not the state
+of the world — a spawned leg does get the connector.** Tested directly rather
+than inferred: an `embarch-supervisor` spawned from the owner's window was asked
+only whether it had `mcp__claude_ai_Slack__*`, and it read this channel to prove
+it. **The tools arrive *deferred*** — absent from the agent's initial tool list,
+named in a `system-reminder`, and callable only after `ToolSearch` with
+`select:mcp__claude_ai_Slack__slack_read_channel`. That distinction is the whole
+reason this section existed for three legs: **legs 007, 008 and 009 each logged
+"the connector is not in this agent's toolset" and each was reading a tool list
+that would never have shown it.** Their logs are not evidence of anything — no
+session on the machine had the connector at the time, because connectors resolve
+at session start and this one was configured on claude.ai all along. *A leg that
+finds no Slack tool must run `ToolSearch` before concluding it has no channel.*
+
 ### 5.3 What a message can do, and what it cannot
 
 A message beginning `fleet` is a command; a question about fleet state is answered by an agent the listener spawns. **Anything else is treated as a normal request and acted on**, with the owner's authority, by a spawned agent: no task file, no ownership map, no branch, but the normal repo rules (build, test, clippy, the six doc checks, commit to `main`) still apply.
