@@ -64,6 +64,128 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-05 12:47 — umbrella/005 doctor-prune
+
+**Decided:** nothing suite-wide. Inside `umbrella` I accepted an answer the task did not
+offer, and it is the right one. The task said *build both halves of decision 26, or
+retire it*; the worker did **neither** — it built the reporting half as `doctor` **check
+16**, **deferred `--prune` with its blockers named**, and **amended decision 26 rather
+than retiring it**, because build-directory growth is still real even though the other
+half of the premise is dead. I would have taken the same third option, and the reasoning
+is worth carrying because none of it is visible from inside `embarch-umbrella`:
+
+1. **The `study_results/` half of decision 26's premise is dead.** `embarch-core`
+   already ships `sweep_study_results` / `EMBARCH_STUDY_RESULTS_KEEP` (default 50, `0`
+   disables), swept at `POST /study`, unit-tested, and documented as a user knob in
+   `suite/studies-guide.md`. Umbrella building a **second** retention policy for a
+   directory it does not own — and cannot reach at all on a `remote` topology — is the
+   mirror-that-drifts mistake decision 17's amendment already refused. What survives is
+   a real gap: the sweep bounds a **count**, so the bytes behind those 50 runs are still
+   nobody's bound, and that is what check 16 reports.
+2. **Nothing in this crate can name a valid build directory, only count directories.**
+   `crate::zephyr` returns a count and deliberately overcounts (decision 17); it models
+   neither variant names nor cpucluster, so it cannot produce `embarch-api`'s
+   `build_dir_name`. The oracle is `embarch-api list-targets`, and **wiring that
+   shell-out is decision 17's own amendment, which is itself unbuilt.** So `--prune` is
+   blocked behind another decision rather than behind effort — which is a much better
+   thing to have written down than "deferred".
+3. **The prune rule is under-specified against the name it would judge.** `embarch-api`
+   decision 19 folded snippets and an `extra_args` hash into the build-dir name and every
+   segment can contain `-` (`…-ble-shell_wdt31`), so a directory is not parseable back
+   into a target; and the per-directory `target.json` decision 19 promises **is written
+   by nothing** in `embarch-api`'s source. There is no provenance to read either way.
+
+**The refused checkbox is the best thing in this unit.** `Done when` box 2 asked for "a
+test that a currently-valid target's build directory is never deleted". Nothing in the
+change deletes anything, so the worker **declined to fake it green** and said what stands
+in its place instead: the measuring functions are pure over a path and every test hands
+them a temp directory, so `cargo test` never resolves a real Core data directory. I
+verified the no-deletion claim myself against the diff — no `remove_dir`, no
+`remove_file`, nothing.
+
+**Merged:** `agent/umbrella/005-doctor-prune` (code `ddd3e4d`, doc `da4aa4c`). Gate
+re-run by me on the merge result: `cargo build`, `cargo test` **131 passed / 0 failed**
+(10 new), `clippy --all-targets -D warnings` green, **8** doc checks green after the fold
+assembled `suite/features.md`, ownership green on both branches (`all 8 changed path(s)
+owned`). **No native Windows build** — `embarch-umbrella` shells out to `embarch-core`
+rather than depending on it, so §10's Windows clause does not reach it; `umbrella/001`'s
+reasoning, not a new one. I read the decision-26 amendment and the code diff before
+merging, because an amendment that declares half a decision's premise dead is §10's
+read-the-diff case even though no shared crate moved.
+
+**Blocked:** none.
+
+**Reviewer:** 1 finding — `inbox/api-retired-targets-error-tells-a-zephyr-project-to-store-what-decision-12-forbids.md`.
+**This is `api/010`'s reviewer, reported after that unit's fold, so it is recorded here** —
+the same §10/§11 ordering gap `core/003` hit. **It is the first real finding any reviewer
+has produced in this log**, and the tally to date is now: 5 ran, 4 no findings, 1 finding.
+What it found: decision 53's new `bail!` sits *above* the `match project.discovery`, so a
+**`zephyr-west`** project carrying retired rows is told to "Declare one `[[projects]]`
+entry per target instead, each with its own name/build_command/chip/artifact_path" —
+advice the same `validate()` **refuses thirty lines later** ("must not set
+build_command/chip/artifact_path — these are resolved per call instead"), and which is
+the exact snapshotted static schema decision 12 exists to prevent. **Message-only; a
+revert is the wrong remedy.** The commit's own zephyr-west test asserts only
+`contains("retired")`, so the gate is structurally blind to it — which is why nothing
+else would ever have caught this.
+
+**Two more things that reviewer established, and they answer questions I could not:**
+`decisions/zephyr.md`'s 96 B was real (12192/12288), so decision 53 genuinely could not
+go there — but **decision 51 was not amended to point at 53, and a pointer would have fit
+inside the 96 B**. A reader who loads `zephyr.md` for the static-project mission reads 51
+and sees no sign the menu is gone. And the losslessness claim **holds**: it checked
+`config.example.toml`, `interfaces/tools.md`, `interfaces/config.md`, `spec.md`,
+`open.md`, the MCP tool description, the CLI doc comment, `tests/json_surface.rs`,
+`suite/user-guide.md`, and `embarch-umbrella`'s two `list-targets` references — nothing
+stale was left behind. It also judged that **decision 12 needs no tombstone** (its text
+post-split never described the menu) and **no reversals row is owed** (nothing was
+overturned by a build, install or capture). I agree with all three.
+
+**Hardware debts:** none. **One verification debt, and it is a live install rather than a
+board:** check 16 has never resolved a real data directory, so nothing shows whether
+`setup::data_dir_for(WslHost, false)` lands on the Windows Core's `study_results/` from
+WSL2. It is the **same `embarch doctor` run** that `embarch-umbrella/open.md` already
+owes for checks 11 and 15 — one run on the real machine now discharges four things.
+
+**Reserve: `tasks/umbrella/009-compact-docs.md` is now urgent and it is still
+`blocked`.** `embarch-umbrella/open.md` is **5051/5120 B, 69 B left** (was 335) and
+`spec.md` is **10089/10240 B, 151 B left** (was 243). The worker replaced text rather
+than appending — the `doctor` row and check table were rewritten, which paid for most of
+check 16's new row — so this is as well-spent as reserve gets, and the next umbrella
+change still has effectively no room. `009` stays `blocked` with `In flux: yes` because
+four open `umbrella` tasks still rewrite that doctor table; **that is now a bet that the
+next umbrella unit fits in 69 bytes.** Together with `embarch-api/spec.md` at 135 B, two
+sub-projects are one edit from a wall.
+
+**Two `inbox/` drops from this worker, both `Scope: api`, both found while looking for a
+build directory's provenance** — I drained them into the queue this leg:
+`api-target-json-not-written.md` and `api-extra-args-hash-is-not-stable.md`. The second
+is the sharper one: `build_dir_name` hashes `extra_args` with
+`std::collections::hash_map::DefaultHasher`, whose output is **not stable across Rust
+releases**, so a toolchain bump silently orphans every `-args<hash>` build directory —
+and the orphan belongs to a *currently-valid* target, so a future `--prune` would protect
+it forever. That is `--prune`'s blocker discovered from the other side.
+
+**A setup defect of mine, caught by the worker.** `check-ownership.py` prefers the
+worktree's local `main`, which was stale at `180c2be` while the branch was cut from
+`origin/main` at `17c4669`, so the default-base check swept in this leg's *other* claim
+(`tasks/api/010-…`) and went red on a path the worker never wrote. It reported it rather
+than waving it through, and proved itself green against both `--base origin/main` and
+`--base 17c4669`. This is the leg-008 defect in a new dress: **one claim per commit is
+not enough on its own — the worktree's local `main` must also be fetched at setup**, and
+I did not do that. Same root cause, third leg running, and the fix is in `scripts/`.
+
+**Budget:** DEGRADED, wave 2, no 429.
+
+**Least sure about:** letting `tasks/umbrella/009` stay `blocked` while `open.md` sits at
+69 B. `In flux: yes` is honest — four queued tasks do still rewrite that table — but the
+reserve mechanism's whole promise is that a file in reserve is *writable-but-owed*, and
+69 B is not writable. The next umbrella worker will meet the wall the reserve was
+designed to replace, and it will meet it mid-task, which is exactly the outcome the
+mechanism exists to prevent.
+
+---
+
 ## 2026-09-05 12:32 — api/010 static-project-target-menu
 
 **Leg 010's first unit. I have Slack** — `ToolSearch` with
