@@ -64,6 +64,113 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-04 21:20 — api/005 build-log-head-and-tail
+
+**Read this one for the recovery mistake, not for the change.** The change is
+straightforward and the worker's judgement on it was good. What the next leg needs from
+this entry is that **I started recovery against a worker that was still alive, and only
+did not destroy its work because I looked at the work before deleting it.**
+
+**Decided:** nothing suite-wide. Within `api` the worker took `open.md`'s stated fork —
+split the cap, or accept tail-only — and **split it**, on the argument that decision 18
+already existed and already said head-and-tail: it was an intent nobody built, and unlike
+decision 16 nothing was blocked on another repo, the whole cost being a second boundary
+walk. First 16 KB, last 48 KB, middle behind one marker. **The cap bounds retained bytes,
+not each half**, so the split does not double a response an MCP client has to carry. It
+moved decision 18 from `decisions/surface.md` to `decisions/zephyr.md`, where build
+orchestration lives, and added the two calls the original entry never made.
+
+**The `[assumed]` provenance is the part I would keep if I could keep one sentence.** The
+worker explicitly **refused to mark the `capture cap` row measured**: nothing has measured
+a real Zephyr failure's log, so the 1:3 split is reasoned, not sized. `spec.md`'s row now
+says so in as many words and decision 18 names the observation that would move the
+number — if a real over-cap failure ever shows the first error past 16 KB. That is the
+opposite of the failure this suite keeps having, where a reasoned number ages into a
+measured-looking one.
+
+**One real piece of craft, recorded because it would be re-derived otherwise:** a both-ends
+UTF-8 boundary test against a pure 3-byte fixture proves only half of what it claims.
+`OUTPUT_HEAD_BYTES` = 16384 ≡ 1 (mod 3), so the head offset always lands mid-character in a
+run of `'€'` — but 49152 ≡ 0 (mod 3), so the tail offset always lands *on* a boundary. The
+fixture appends one ASCII byte purely to shift it. The worker found this and said so.
+
+**Merged:** `agent/api/005-build-log-head-and-tail` (api `f1fe90e`, doc `5a6d319`). Both
+fast-forward. Gate re-run by me on the merge result: `cargo build`, **116 tests**, `clippy
+--all-targets -D warnings`, six doc checks, ownership on both branches (7 paths). No
+Windows build — not `embarch-core`. **`crates/embarch-core-client/` untouched**, checked
+by path, so nothing reaches `embarch-ui`.
+
+**Blocked:** none.
+
+**Reviewer:** skipped (leg ending at its unit cap; a reviewer spawned here would outlive
+the leg that is supposed to read its finding).
+
+**I began recovery on a live worker, and the only thing that saved its work was looking
+before deleting.** I was told its worker was very likely gone and to treat it as recovery.
+`git rev-list --count main..<branch>` read **0 commits on both branches** with both
+worktrees dirty — which the `ops.md` §3 table does not have a row for, and which the
+instruction I was given read as "no commits means reclaim to `open` and delete the
+worktrees." **I did not delete them.** I read the diff, ran build/tests/clippy against the
+dirty tree, found it complete and green, and committed it to preserve it — at which point
+the worker, which had been in its final bookkeeping the whole time, committed the code side
+itself (`f1fe90e`) and pushed both branches. My doc commit `4b7a029` therefore carried a
+message asserting the worker "died after finishing the work and before committing", which
+was **false**. I amended it to `95b0b2f` stating what actually happened; that is what
+landed. Nothing was altered, reverted or duplicated — the trees were byte-identical.
+
+**Three things follow from that, and the third is the one that matters.**
+
+1. **`rev-list --count` against a working worker is a race, not a reading.** A worker in
+   its last minute has finished files and no commits. There is no observation of the
+   *branch* that distinguishes it from a dead one.
+2. **The worker caught my error and reported it back to me**, unprompted, in its own
+   completion report — it noticed the commit that appeared under it and said the message's
+   claim was false and that my log entry would need correcting if I had logged a death.
+   That is the honesty the worker contract asks for, working in the direction nobody
+   designed it for.
+3. **"Look at the work before deleting it" is not in the recovery table, and it is what
+   made this recoverable.** The table's arms are "no commits → `open`, delete worktrees"
+   and "commits → `blocked`, name the branch". A dirty worktree with no commits falls in
+   the first arm and the first arm destroys ~200 lines of finished, green work. **I think
+   the table is wrong here** and a third arm belongs in it — dirty tree, no commits,
+   preserve as a commit and mark `blocked` — but `ops.md` is the owner's, so this is a
+   finding and not an edit.
+
+**Queue reconciled, since this unit's landing changed what two other tasks were for:**
+
+- **`tasks/api/007-compact-docs.md` closed and deleted.** It was `blocked` on exactly
+  this task landing, and landing it **paid its whole debt**: `decisions/surface.md`
+  11305 → 10928 B (decision 18 moved out) and `open.md` 4821 → 4560 B (the bullet closed),
+  both now out of reserve, `--pressure` saying `PAID … close its item` for each. A
+  compaction task whose files are no longer in reserve is not a task.
+- **Its non-size half survived as `tasks/api/008-duplication-overlaps.md`.** `api/007`
+  carried a finding that was never about bytes: `check-duplication.py embarch-api` reports
+  **15 overlaps**, largest a 37-word run between `interfaces/modules.md` and `spec.md` §5.
+  Those are `DOC-PROTOCOL.md` §3 ownership questions, not §9 hot/cold ones, and deleting
+  `007` silently would have lost them — `check-duplication.py` is advisory and in nobody's
+  gate, so nothing re-surfaces it. `007`'s `Must not delete:` is carried verbatim.
+- **`tasks/umbrella/009` stays `blocked`, correctly.** Its `open.md` is now `PAID`, but its
+  `spec.md` went the other way — 9527 → **9671 B, 94.4%** — because `umbrella/008` wrote
+  the check-11 rewrite into it. Five open `umbrella` tasks still rewrite that doctor table,
+  so `In flux: yes` still holds.
+
+**The reserve mechanism, end to end this leg:** 12 files in reserve at start, all filed;
+**7 at the end**, all filed, three paid off and none left unfiled at any point. It never
+blocked anything and it never had to be argued with.
+
+**Hardware debts:** none.
+
+**Budget:** DEGRADED, wave 2, no 429 in the entire leg.
+
+**Least sure about:** committing another agent's uncommitted working tree at all. It was
+the right call against the alternative I was handed — deleting it — and the content was
+verified green before and after. But it means a commit exists whose author did not write
+its message, on a branch whose worker was still running, and the only reason that is
+visible at all is that the worker noticed and said so. **If it had died for real, nobody
+would ever have known the message was wrong.**
+
+---
+
 ## 2026-09-04 20:52 — umbrella/008 check-11-reads-embarch-api-versions
 
 **Decided:** nothing suite-wide. Two calls inside `umbrella`, both the worker's, both read
