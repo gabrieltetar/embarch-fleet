@@ -64,6 +64,79 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-04 23:32 — umbrella/004 doctor-mcp-handshake
+
+**Leg 009's first unit. No Slack tool** (`ops.md` §5.2a), same as legs 007 and 008 — the
+connector is not in this agent's toolset. Unit lines are these entries; **the only stop
+channel is the listener's `SendMessage`**, and none has arrived. `tasks/suite/003` was
+therefore not run and **still owes a fresh 30-minute clock**; left `open`, untouched.
+
+**Decided:** nothing suite-wide. Inside `umbrella`, I accepted the worker's judgement
+that two "cannot tell" states — no `claude` on `PATH`, and a registration whose output
+the parser cannot read — are **`Warn` rather than a verdict**. That is the same posture
+`umbrella/001` took when it found check 11 was a stub asserting a falsehood, so it is
+consistent rather than new.
+
+Check 10 now does what decision 23 always said: spawns the exact registered command,
+one JSON-RPC `initialize` over piped stdio, 10 s budget, kills the child either way,
+three distinguishable outcomes. It previously ran `claude mcp get embarch` and returned
+**Pass on a zero exit — reporting "registered but broken", the exact state it exists to
+catch, as healthy.** New decision 37 explains the `code` field that keeps the outcomes
+distinguishable in `--json` without matching on prose.
+
+**A real bug the worker's own test found, worth recording because it is a near-miss for
+this suite's most common shape.** The first version reported EPIPE as `couldn't write to
+its stdin: Broken pipe` when the registered command died on its own arguments — naming
+the symptom while the exit code and stderr sat one line away, and flaking about 1 run in
+30 on which of two messages appeared. EPIPE now falls through to the read loop, which
+sees EOF and reports the exit with stderr attached. 60 consecutive clean runs after.
+
+**Merged:** `agent/umbrella/004-doctor-mcp-handshake` (code `69eb1f1`, doc `a6d0635`).
+Gate re-run by me on the merge result: `cargo build` / `test` (121 passed) / `clippy
+--all-targets -D warnings` green, **8** doc checks green, ownership green on both
+branches — `--scope umbrella` with `--base`, no `--stdin` needed, which is the first
+clean read of that check since leg 008's batched-claim defect. One claim commit per
+task, pushed to `origin/main` before the branch was cut, held.
+
+**Blocked:** none.
+
+**Reviewer:** spawned on merge, did not count against the wave. *(Result folded into the
+leg summary below if it landed before the leg ended.)*
+
+**Hardware debts:** none — no board, no Core, no probe. What *is* owed is one
+`embarch doctor` run from an environment with the agent CLI installed and `embarch`
+registered: **nothing in this suite has ever seen `claude mcp get`'s output**, so the
+format `parse_registered_command` reads is assumed rather than measured — which is
+exactly why an unparsable entry is a `Warn`. The 10 s handshake budget is assumed too,
+against a real `embarch-api` cold start. Both are in `embarch-umbrella/open.md`.
+
+**A structural gate conflict the worker hit and refused to cross a boundary to fix, and
+it will hit every worker that ships a feature.** Adding a `features.d/` row makes
+`suite/features.md` stale by construction; `check-ownership.py` refuses
+`suite/features.md` for **every** worker scope, so assembling and committing it fails
+ownership while not assembling it fails `build_features.py --check`. The worker chose
+the second and said so — the right call, a boundary violation being worse than a
+mechanical red — and dropped
+`inbox/doc-features-gate-conflicts-with-ownership.md`. **The fold is where it resolves:**
+`python3 scripts/build_features.py` before `check-docs.py`, and `suite/features.md` in
+the fold's `--path` list, which is §3's "via `build_features.py`" working as written. I
+have added that step to my landing script. **Two related facts for whoever fixes it:**
+`protocol.md` §10 and `supervise.md` both say **six** doc checks and neither mentions
+`build_features.py --check`; `check-docs.py` runs **eight**. And
+`scripts/build_features.py` is mode **644**, so `scripts/build_features.py` as a bare
+command is `Permission denied` — it must be run as `python3 scripts/build_features.py`.
+Both are `scripts/`-and-standing-rule paths, so they are findings, not my edits.
+
+**Budget:** DEGRADED at start, wave 2, no 429.
+
+**Least sure about:** accepting a check whose input format has never been observed. The
+worker was honest that `claude mcp get`'s output shape is assumed, and it defended that
+with a `Warn`-not-Fail path — but this is a check that now *asserts* something about an
+environment nobody in this suite has run it in, and `umbrella/001` is the record of what
+that costs when the assertion ages.
+
+---
+
 ## 2026-09-04 21:52 — dev-bench/001 compact-docs
 
 **Leg 008's last unit.** The leg-wide facts are at the bottom of this entry, because the
