@@ -23,6 +23,7 @@ The work queue background agents pull from. One file per task, committed to
 **Source:** embarch-core/open.md — "api/CLI consumption of /study/{id}/events is not built"
 **Scope:** api                     <!-- one sub-project, or `suite` -->
 **Hardware:** none                 <!-- none | verify-only | required -->
+**Owner:** no                      <!-- `required` if every path it writes is reserved -->
 
 ## What
 
@@ -82,6 +83,66 @@ and unit-tested by a worker but its real behaviour needs a board; dispatchable,
 and it must leave a hardware-verification debt (§7). `required` — cannot be
 started without hardware; **not dispatchable**, it waits for the owner's own
 session. A task nobody has classified is treated as `required`.
+
+## Owner field
+
+`no` (the default, and what an absent line means) — any worker may take it.
+`required` — **every path this task must write is reserved to the owner**
+(`{{FLEET_REL}}/fleet.toml`'s `reserved` list, enforced by `check-ownership.py`),
+so dispatching it burns a worker that will fail the ownership check on its first
+edit. Not dispatchable; it waits for the owner's own session.
+
+Unlike `Hardware:`, a missing line here is **not** read as `required` — that
+would gate the whole queue on a field most tasks have no reason to carry, and
+`check-ownership.py` refuses the write either way. This field exists to stop the
+dispatch being wasted, not to be the enforcement.
+
+## Compaction tasks
+
+A doc within the last 10% of its size cap is **in reserve**
+(`scripts/check-doc-size.py`). The reserve is writable and the gate still
+passes, but the file must be named by an open task here, and **the commit that
+spends the reserve is the one that files it** — see `DOC-COMPACTION.md` §2. The
+gate fails on an unfiled file in reserve and names it.
+
+    tasks/doc/<NNN>-compact-<scope>.md
+
+**One task may name several files**, and normally does: a compaction pass is a
+sub-project act, one commit per sub-project (`DOC-COMPACTION.md` §6). Three
+fields are required and they are not paperwork — **they are the judgements no
+script can make, recorded by the only actor with the context to make them:**
+
+```markdown
+**Compacts:** embarch-core/spec.md, embarch-core/open.md
+**In flux:** no                    <!-- yes → State: blocked, and say what unparks it -->
+**Must not delete:** the 18-stale-records candidate fix in open.md; decision 36's
+probe-rs counterfactual, which is evidence and not proof and reads as proof once
+shortened.
+```
+
+- **`Compacts:`** is what `check-doc-size.py` matches on. It matches this field
+  and nothing else: a path merely *mentioned* in a task body made five of one
+  day's twelve files read as filed, because every task cites the doc it is about
+  to edit.
+- **`In flux:`** is `DOC-COMPACTION.md` §8's warning, asked of whoever just
+  worked in that subsystem. **Yes is a legitimate and cheap answer** — set
+  `**State:** blocked` and name the milestone that unparks it. Compacting a
+  subsystem still moving writes a clean statement of something about to be
+  wrong and destroys the alternatives you are about to need; a parked task is
+  the mechanism working.
+- **`Must not delete:`** is what the filer knows and the eventual compactor will
+  not. Anything: a failure signature, a rejected alternative, a measurement that
+  reads as an assumption once its date goes.
+
+**`Done when` carries `DOC-COMPACTION.md` §7's question**, answered in the
+compactor's own words in the commit message: *can `spec.md` alone answer what
+someone needs to work on this component today?* No script answers it and the
+gate does not either.
+
+When the paths are reserved — `DOC-PROTOCOL.md` and `DOC-COMPACTION.md` are the
+standing case — the task still lives here, because `inbox/` is not committed and
+a debt filed there would pass on the filer's machine and fail in CI. Mark it
+`**Owner:** required` so no worker is sent at it.
 
 ## Why the queue is a file and not the supervisor's head
 

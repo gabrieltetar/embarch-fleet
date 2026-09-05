@@ -49,15 +49,22 @@ to one sub-project needs nobody's approval. Number it per `DOC-PROTOCOL.md`
 
 1. `cargo build`, `cargo test`, `cargo clippy --all-targets -- -D warnings` in
    your repo — plus a native Windows build if it is `embarch-core`.
-2. All six `embarch-doc` checks: `check-links.py`, `check-staleness.py`,
-   `check-decision-refs.py`, `check-doc-conventions.py`, `check-doc-size.py`,
-   `build_changelog.py --check`.
+2. The whole `embarch-doc` gate in one command: `scripts/check-docs.py`.
 2b. `scripts/check-ownership.py --scope <your sub-project>` in your `embarch-doc`
    worktree, and `--code-repo` in the other. This is the mechanical form of the
    boundaries above; if it fails, you reached somewhere that is not yours.
 3. Your sub-project's `spec.md` / `decisions.md` / `open.md` updated — edit the
    body, never append.
 4. A `changelog.d/` fragment (one line, 200 bytes, per its README).
+5. **If `check-doc-size.py` names a file in reserve with no debt filed, file
+   it** — `tasks/doc/<NNN>-compact-<scope>.md`, in this same commit, per
+   `tasks/README.md`. A file in reserve is inside the last 10% of its cap: you
+   are not blocked and you are not being asked to compact anything. You are
+   being asked to record that the runway is nearly spent, and to answer the one
+   question that will be unanswerable later — **`In flux:`, is this subsystem
+   still moving?** You just worked in it; nobody who picks up the compaction
+   will know. `yes` is a fine answer and makes the task `blocked` until whatever
+   you name closes.
 5. A `status.d/` fragment for every suite-level fact your change made false.
 6. The task file's `Done when` boxes ticked, or an honest `## Blocked` section.
 

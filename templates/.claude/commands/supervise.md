@@ -223,22 +223,35 @@ they must land together). Worktrees go under
 `.claude/worktrees/`, which is how a repo-walking scan ends up reading three
 copies of the same source (`embarch-study-designer` decision 57).
 
-**Check doc-size pressure before you dispatch, not after the worker reports.**
-Run `scripts/check-doc-size.py --pressure` once per leg and keep the list. If a
-task's sub-project owns a file on it, that task **cannot be written without a
-compaction pass first** — `spec.md` at 10237/10240 B has three bytes of headroom,
-and a worker discovers that only when its edit fails the gate. Say so in the task
-file before dispatching, in one line naming the file and its headroom, so the
-worker plans for it instead of hitting a wall. A worker may write its own four
-files, so the compaction is inside its ownership row and needs nobody's
-permission; what it needs is to know in advance.
+**Check the doc-size reserve before you dispatch, not after the worker reports.**
+Run `scripts/check-doc-size.py --pressure` once per leg and keep the list. A file
+in reserve is inside the last 10% of its cap — **still writable, and the gate
+still passes**, which is the point: a cap used to be a wall a worker met only
+when its edit was refused, and that converted unrelated work into a compaction
+task mid-flight. Now it is a debt.
 
-**A compaction pass is judged, not just measured.** Whoever runs one answers
-`DOC-COMPACTION.md` §7's question in your log entry, in its own words: *can
-`spec.md` alone answer what someone needs to work on this component today?* A
-script cannot answer it and neither can the gate. **And do not schedule one for a
-sub-project with other work in flight** — §8 warns against compacting a subsystem
-still in flux, which is exactly what a sub-project with an open task is.
+**Tell the worker what is in reserve for its sub-project**, in one line in the
+task file naming each file and its headroom, so it plans instead of discovering.
+And tell it the rule it owes: **if its work spends the reserve — pushes a file
+into it, or leaves one there that nothing has filed — it files
+`tasks/doc/<NNN>-compact-<scope>.md` in the same commit.** `tasks/README.md` has
+the shape. It is not the worker's job to *do* the compaction; it is its job to
+record the debt while it still holds the one piece of context nobody else will
+have, which is whether that subsystem is still in flux (`DOC-COMPACTION.md` §8).
+
+**A compaction task is dispatched like any other, and judged unlike any other.**
+Whoever runs one answers `DOC-COMPACTION.md` §7's question in your log entry, in
+its own words: *can `spec.md` alone answer what someone needs to work on this
+component today?* No script answers it and the gate does not either. **Never
+dispatch one whose `In flux:` field says yes** — that task should be `blocked`
+and naming what unparks it, and if it is `open` and says yes, the filer got it
+wrong; fix the state rather than sending a worker.
+
+**A compaction task marked `Owner: required` is not yours to dispatch.**
+`DOC-PROTOCOL.md` and `DOC-COMPACTION.md` are reserved, so no agent can compact
+them and `queue-status.py` gates them out. Leave them; they are visible in the
+queue so the owner sees them, which is the whole reason they are filed there
+rather than nowhere.
 
 **A code worktree needs its sibling path-deps symlinked or `cargo build` fails
 outright.** `Cargo.toml` names `../embarch-study-designer` and

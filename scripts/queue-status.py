@@ -61,6 +61,12 @@ DISPATCHABLE_HW = ("none", "verify-only")
 STATE_RE = re.compile(r"^\*\*State:\*\*\s*(.+?)\s*$", re.M)
 HW_RE = re.compile(r"^\*\*Hardware:\*\*\s*([a-z-]+)", re.M)
 SCOPE_RE = re.compile(r"^\*\*Scope:\*\*\s*([a-z-]+)", re.M)
+# A task only the owner's own session can do -- every path it must write is
+# reserved (check-ownership.py). Dispatching one wastes a worker that will fail
+# the ownership check, so it is gated the way hardware gates one. Absent means
+# `no`, unlike Hardware: a missing line here must not gate the whole queue, and
+# check-ownership.py is the enforcement either way.
+OWNER_RE = re.compile(r"^\*\*Owner:\*\*\s*([a-z-]+)", re.M)
 CLAIM_RE = re.compile(r"^claimed by\s+(\S+?),\s*(\d{4}-\d{2}-\d{2} \d{2}:\d{2})")
 
 
@@ -87,6 +93,7 @@ def parse(path: str) -> dict:
 
     hw = HW_RE.search(body)
     scope = SCOPE_RE.search(body)
+    owner = OWNER_RE.search(body)
     return {
         "path": path,
         "state": state,
@@ -95,6 +102,7 @@ def parse(path: str) -> dict:
         "claim_at": claim_at,
         "hardware": hw.group(1) if hw else "required",
         "scope": scope.group(1) if scope else "unknown",
+        "owner": owner.group(1) if owner else "no",
     }
 
 
@@ -131,11 +139,14 @@ def stale_reason(task: dict, no_supervisor: bool, after_h: float,
 
 def classify(tasks: list[dict], no_supervisor: bool, after_h: float,
              now: dt.datetime) -> dict:
-    buckets = {"open": [], "recoverable": [], "claimed": [], "gated": [], "other": []}
+    buckets = {"open": [], "recoverable": [], "claimed": [], "gated": [],
+               "owner_gated": [], "other": []}
     for t in tasks:
         hw_ok = t["hardware"] in DISPATCHABLE_HW
         if t["state"] not in ("open", "claimed"):
             buckets["other"].append(t)
+        elif t["owner"] == "required":
+            buckets["owner_gated"].append(t)
         elif not hw_ok:
             buckets["gated"].append(t)
         elif t["state"] == "open":
@@ -196,6 +207,7 @@ def main() -> int:
             "claimed_respected": [t["path"] for t in b["claimed"]],
             "hardware_gated": [{"path": t["path"], "hardware": t["hardware"]}
                                for t in b["gated"]],
+            "owner_gated": [t["path"] for t in b["owner_gated"]],
             "other": [{"path": t["path"], "state": t["state"]} for t in b["other"]],
             "inbox": drops,
             "low": low,
@@ -214,6 +226,8 @@ def main() -> int:
         print(f"  claimed     {t['scope']:<14} {t['path']} (respected)")
     for t in b["gated"]:
         print(f"  hw-gated    {t['scope']:<14} {t['path']} ({t['hardware']})")
+    for t in b["owner_gated"]:
+        print(f"  owner-only  {t['scope']:<14} {t['path']} (reserved paths)")
     for t in b["other"]:
         print(f"  {t['state']:<11} {t['scope']:<14} {t['path']}")
 

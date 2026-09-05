@@ -48,34 +48,49 @@ only those, which is cheaper and catches less.
 produces nothing over twenty units, the flagged-diff version is strictly better.
 Nobody has run it yet.
 
-## Compaction is detected but not scheduled
+## Compaction is scheduled, and the reserve is calibrated against one pass
 
-`check-doc-size.py --pressure` (2026-09-04) reports files near their effective
-limit, and a leg reads it *before* dispatch so a task that cannot be written
-without a compaction pass says so in its own file.
+**Closed 2026-09-04.** A cap used to be a wall discovered by the worker whose
+edit it refused, which converted unrelated work into a compaction task
+mid-flight. It is now a **reserve**: the last 10% of a file's limit is writable,
+the gate still passes, and the file must be named on a `**Compacts:**` line of an
+open `tasks/` task — filed by whoever spends the reserve, in the same commit.
+`check-doc-size.py` fails on an unfiled file in reserve and names it;
+`--pressure` lists both bands; `queue-status.py` gates out an `Owner: required`
+task so no worker is sent at a reserved path.
 
-**Unblocked 2026-09-04 for `api` only.** `embarch-api/spec.md` (3 bytes free)
-and `open.md` (4) had their §10 pass by hand: cold narrative cut, and the module
-table *moved* to `interfaces/modules.md` rather than deleted, since §10 is
-explicit that a reference table is loaded deliberately rather than being cold.
-spec.md is at 84% of cap and `api/005` can now be written.
+**Why the filer and not a cron.** [DOC-COMPACTION.md](../embarch-doc/DOC-COMPACTION.md)
+§8 warns against compacting a subsystem still in flux — it writes a clean
+statement of something about to be wrong and destroys the alternatives you are
+about to need — and no script can tell. The actor who just worked in that
+subsystem can. So the task carries `**In flux:**`, and `yes` parks it naming
+what unparks it. Three of the seven filed on the day the mechanism landed are
+parked, which is the mechanism working rather than a backlog.
 
-**What is still open.** Nothing files a compaction task, and **11 files remain
-above 95%** — four more in `api`, plus `dev-bench`, `core`, `umbrella`,
-`suite/features.md`, and both `DOC-*.md`, which no worker may ever touch. The
-last two are the sharp case: they are owner-reserved, so the fleet cannot
-unblock its own protocol docs however pressured they get.
+**§7's question is still human, and now it is attached to something.** A
+compaction task's `Done when` requires it answered in the commit message, in the
+compactor's own words. That makes it reviewable, not verified — unchanged from
+before, and it is not clear anything could verify it.
 
-The reason it reports rather than files is [DOC-COMPACTION.md](../embarch-doc/DOC-COMPACTION.md)
-§8: compacting a subsystem still in flux writes a clean statement of something
-about to be wrong and destroys the alternatives you are about to need. No script
-can tell. "No other task in flight for that sub-project" is a proxy and a weak
-one.
+**What is still open, and it is two things.**
 
-**What would close it:** a decision about who judges §7's question — *can
-`spec.md` alone answer what someone needs to work on this component today* — for
-a pass the fleet ran unattended. Today the leg is told to record its answer in
-the log, which makes it reviewable but not verified.
+- **The reserve is one cycle of runway, not a steady state.** 10% of a 12 KB
+  decision group is ~1.2 KB and of a 5 KB `open.md` is ~512 B. The corpus grows
+  because work happens; this buys the crossing being recorded and judged, and
+  nothing about the growth rate.
+- **`suite/features.md` is in flux permanently** — it is an inventory of a suite
+  under development, so a row lands about as often as a task does, and there is
+  no quiet state to wait for. `tasks/suite/002` parks on the owner picking a
+  shape and lists the four candidates, none free.
+
+**The calibration is one pass deep.** 90% was chosen from a single 2026-09-04
+sitting across twelve files. Two findings from it that any future tuning should
+respect: a good pass **adds** bytes — the protocol-doc commit deleted ~900 gross
+and netted 335, because the read that finds cold prose is the read that finds the
+defects worth fixing — so a pass cannot be budgeted by expected yield; and the
+recoverable bytes were **not** cold sentences but a claim held in two of the four
+files, worth ~1.2 KB in `umbrella` alone. `check-duplication.py` reports that
+class, advisory only.
 
 ## The budget is calibrated against nothing
 
