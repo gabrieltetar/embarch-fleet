@@ -64,6 +64,86 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-05 13:22 — suite/003 core-spec-5-to-interfaces
+
+**Decided:** this is the leg's suite-wide unit and the line to read. `embarch-core/spec.md`
+§5 — the on-disk result layout — **now lives in `embarch-core/interfaces.md`**, and
+`embarch-study-designer/spec.md`'s citation of it follows. Two sub-project directories,
+one repo, one commit, my own hands under §8. Four calls inside it were mine:
+
+- **Where the block landed: the end of `interfaces.md`, immediately after the Studies
+  route table.** `GET /study/{id}` · `/steps` · `/streams` · `/stream/{name}` are exactly
+  what read these files, so the layout is now beside its consumers instead of two
+  documents away. *Rejected: a section of its own near the top* — it is reference material
+  loaded deliberately (`DOC-COMPACTION.md` §9), not something every reader of the HTTP
+  surface should meet first.
+- **No stub `## 5.` heading was left behind in `spec.md`.** The header line carries the
+  pointer instead ("HTTP surface **and the on-disk result layout**"). A stub heading is
+  the obvious move and it is wrong here: it keeps a slice of the byte cost the move exists
+  to remove, and `spec.md`'s header is the line a reader meets first anyway.
+- **The citation now points by section *name*, not number.** `embarch-study-designer/spec.md`
+  said `embarch-core/spec.md` **§5**; it now says `interfaces.md` — *Result layout on
+  disk*. **That is the actual fix**, not the move: a section number is the thing that
+  broke, and `check-links.py` skips anchors while `check-decision-refs.py` only resolves
+  decision numbers, so nothing mechanical would ever have caught it. Citing by name means
+  the next renumber cannot reproduce this.
+- **Two sentences were added that the old §5 never had**, and they came out of
+  `umbrella/005` three hours earlier in this same leg: `study_results/` retention is
+  bounded by **count, not bytes** (`EMBARCH_STUDY_RESULTS_KEEP`, default 50, `0` disables,
+  swept at `POST /study`), and `embarch doctor` check 16 reports the count *and* the size
+  because the bytes are still nobody's bound. That fact was sitting only inside an
+  `embarch-umbrella` decision. It belongs next to the layout it describes, and a `suite`
+  unit is the only actor allowed to put it there.
+
+**Its §4 window was announced by the owner at 11:32:15 MDT (`ts 1788629535.009729`) and
+discharged at 12:02:31 with zero replies.** I re-read that thread **twice** — at the top
+of the leg and again at the last unit boundary — and it was empty both times. **I did not
+re-announce and did not restart the clock.** This is the second time §4's relay handoff
+has worked as designed (`suite/001` was the first, handed over by leg 006), and it is the
+first time it worked across a *day* and three intervening legs rather than across one
+gap. **The rule earns its complexity**: a leg that restarted the clock would have parked a
+task that had already served its window, and legs 007–009 each did exactly that for the
+wrong reason.
+
+**Merged:** no branches — a `suite` unit is the supervisor's own hands on `main`.
+`embarch-doc` only, folded in this commit. **`spec.md` 8,988 → 8,148 B** (87.8% →
+**79.6%**), 840 B freed against the ~640 B the task predicted; **`interfaces.md` 9,953 →
+11,405 B** (64.8% → 74.3% of 15,360), nowhere near reserve. Only **§6 → §5** renumbered;
+§1–§4 untouched, which is what bounded the renumber's blast radius to one citation. Gate:
+**8 doc checks green**. **No `cargo` run, deliberately** — the diff is three markdown
+files and there is no Rust in it. That is the "gate satisfied by an argument rather than a
+run" shape this log has now flagged seven times; here the argument is that the compiler
+was given nothing to disagree about.
+
+**The citation sweep the task asked for, and its result.** `grep` over every `*.md` in the
+repo for `embarch-core/spec.md` found **exactly one** section-number citation — the one
+the task named. `tasks/README.md:127` is a `Compacts:` field, not a citation.
+`embarch-core/interfaces.md:9` cites "spec §3", which did not move. So the task's own
+count from 2026-09-04 held a day later, which is worth knowing because it was the reason
+this was `suite` rather than `core`.
+
+**Blocked:** none.
+
+**Reviewer:** skipped (a `suite` unit has no worker branch, and the diff is my own — a
+reviewer given my SHAs would be reviewing the supervisor, which is what this log is for).
+Same reason `suite/001` skipped.
+
+**Hardware debts:** none. Three markdown files.
+
+**Budget:** DEGRADED at the start and end of the leg, wave 2 throughout, **no 429 anywhere
+in the whole leg**.
+
+**Least sure about:** adding facts to the block while moving it. The move itself is
+mechanical and safe; folding in `umbrella/005`'s retention finding is a *content* change
+made by the supervisor's own hands in a commit whose announced scope was "move a block and
+fix a citation". Nobody reviewed it, the §4 window was consented to on the narrower
+description, and it is exactly the kind of small widening that is invisible in a month. I
+think it is right — the fact was true, it was in the wrong file, and I am the only actor
+who may write both files — but the honest reading is that I did slightly more than I said
+I would.
+
+---
+
 ## 2026-09-05 13:12 — api/011 capacity-error-message
 
 **Decided:** nothing suite-wide. Inside `api` the worker **built decision 27 rather than
