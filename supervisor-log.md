@@ -64,6 +64,68 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-04 21:47 — outpost/001 compact-spec
+
+**A compaction unit, so `DOC-COMPACTION.md` §7's question is answered here in the
+compactor's own words, as the protocol requires:**
+
+> **Can `spec.md` alone answer what someone needs to work on this component today?**
+> Yes, and on one point better than before: what it lost was evidence for numbers that
+> are not its own, and every one of those numbers is now exactly one file away, next to
+> the knob it sets.
+
+**Decided:** nothing suite-wide. The judgement inside `outpost` was where the bytes were
+allowed to come from, and it was constrained before the worker started: `embarch-outpost`
+is the only entry in `check-doc-size.py`'s `TIGHTENED` map, so §9 forbids a second
+hot/cold pass. The worker respected that and took the bytes from **duplication and from
+provenance that belongs to another file** instead.
+
+**`spec.md` 9235 → 8317 B** (90.2% → **81.2%**, 1923 B of headroom). Only `spec.md`
+changed — `decisions/`, `interfaces/` and `open.md` were never opened. Duplication 31 →
+29 overall, `spec.md`'s own share 9 → 7. Three cuts: §1's anecdote illustrating the
+question (a GATT write, forty context switches, a 9.9 µs ISR — the same fact as §4's
+resolution rows, told as a story); **four §4 rows that were each the measured provenance
+of a Kconfig default and already sat verbatim against their own symbol in
+`interfaces/integration.md`**; and §3's copy of decision 1's rejection argument, replaced
+by a pointer while the prohibition itself stays absolute in `spec.md`.
+
+**What it refused to cut is the better half of the judgement.** It kept the *anti-footgun
+clause of every invariant that has one* — the latency floor, the fabricated interpolation,
+the trace shifted by three frames, the relabelling manifest — on §9's reasoning that a
+constraint's reason is hot precisely because a reader who does not know it re-proposes the
+rejected fix. And it **declined the three `open.md` ↔ `decisions/` overlaps including the
+36-word one the task named**, because `open.md` is not under pressure and neither copy is
+wrong: a decision stating its own limits while `open.md` tracks them as live is
+`DOC-PROTOCOL.md` §3 working. Paying `spec.md`'s debt out of those would have cost either
+decision text or a known limitation.
+
+**One honesty note from the worker I am keeping rather than smoothing:** it shortened §3's
+manifest failure signature instead of deleting it, which breaks a 22-word overlap while
+keeping the teeth — but that also drops the overlap below the detector's threshold, so
+**if the count is to move only through deletions the honest number is 30, not 29.** It
+said so unprompted.
+
+**Merged:** `agent/outpost/001-compact-spec` (doc `3e5cdd3`). **Doc-only — the code
+branch had no commits**, no firmware touched, no board. Gate re-run by me on the merge
+result: seven doc checks green, ownership `all 3 changed path(s) owned`. The worker also
+diffed `collect-open-questions.py` before and after and got an identical list, which is
+the check that a compaction pass did not quietly answer an open question by deleting it.
+
+**Blocked:** none.
+
+**Reviewer:** skipped (budget DEGRADED, wave 2 — both slots were worker units so the leg
+could reach its cap).
+
+**Hardware debts:** none.
+
+**Budget:** DEGRADED, wave 2, no 429.
+
+**Least sure about:** that `31 → 29` is partly a threshold effect rather than two claims
+resolved, which the worker flagged and I am not able to check cheaply — the advisory
+report is now slightly better than the docs actually are.
+
+---
+
 ## 2026-09-04 21:40 — umbrella/003 setup-dry-run
 
 **Decided:** nothing suite-wide. One call inside `umbrella`, the worker's, read by me in
