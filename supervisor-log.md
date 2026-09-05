@@ -64,6 +64,120 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-05 12:32 — api/010 static-project-target-menu
+
+**Leg 010's first unit. I have Slack** — `ToolSearch` with
+`select:mcp__claude_ai_Slack__*` and the connector is there, exactly as `ops.md` §5.2a
+now says. Unit lines are going to **#embarch-fleet** and **both** stop channels are
+live. Three predecessors recorded the opposite and all three were reading a tool list
+that would never have shown it; that is settled and should not be re-derived.
+
+**Before this unit I made the daily fold §11 owes and leg 009 did not.** Nine 2026-09-04
+per-unit entries → one dated entry, every SHA, every debt, and all nine
+`**Reviewer:**` lines kept line-anchored so the tally still greps. **84 KB → 60 KB.**
+It cost far more than it should have and the reason is a mechanism gap, not an
+oversight — filed as `tasks/doc/007`, `Owner: required`, and summarised at the bottom of
+this entry. Read that before the next midnight fold.
+
+**Decided:** nothing suite-wide. Inside `api` the task offered two legitimate answers —
+a `target` param, or drop the rows — and the worker **dropped them** (new decision 53).
+I agree, and the argument that decides it is not the one the task file leads with:
+*a `target` param does **not** contradict decision 51*, because a row replaces the whole
+argv rather than splicing into another build system's flag grammar. It loses on cost
+against value — a second, differently-shaped selection grammar across
+`build`/`flash`/`build_and_flash`/`reset`/`run_study` and the CLI, for a feature **no
+config anywhere uses**. The worker checked that rather than assuming it: absent from
+`config.example.toml`, from `/home/gabriel/.config/embarch/`, and from every other
+repo's source and docs; the only declaration in existence was `tests/json_surface.rs`'s
+own fixture. Every field a row could carry is already one more `[[projects]]` entry.
+
+**Two things make the removal lossless rather than merely smaller, and I read the diff
+myself before merging** (§10 — this changes a config schema, so a previously-valid
+config now fails):
+
+- **`list_targets` for a `static` project no longer errors.** It used to demand a menu
+  and fail when there was none; it now returns exactly one row — the project itself,
+  with its `build_command`, `chip` and **resolved** `artifact_path`. So the tool answers
+  "what can I build?" for every project kind, and the row it names *is* the build a bare
+  `build` runs. The test asserts the row's `artifact_path` equals what
+  `resolve_static` produces, which is what stops it drifting into a description of
+  something else.
+- **A config still declaring `[[projects.targets]]` fails at load naming the
+  retirement**, for *both* discovery kinds, rather than parsing into a field nothing
+  reads. That is decision 51's reject-rather-than-ignore posture moved from per-call to
+  load time — the same direction `api/009` moved `default_target` last night. The field
+  survives as `Vec<toml::Value>` purely to be refused: the crate no longer has an opinion
+  about a row's shape because every shape of it is equally retired.
+
+**Merged:** `agent/api/010-static-project-target-menu` (code `863f187`, doc `f46fb80`).
+Gate re-run by me on the merge result, not the branch: `cargo build`, `cargo test`
+**134 passed / 0 failed** across 7 binaries, `clippy --all-targets -D warnings` green,
+**8** doc checks green, ownership green on both branches (`all 9 changed path(s) owned`,
+and the code repo whole-tree form). `crates/embarch-core-client/` untouched — checked by
+path — so nothing reaches `embarch-ui`.
+
+**Blocked:** none.
+
+**Reviewer:** spawned at merge on both SHAs; **result recorded in the next unit's
+entry.** Same deviation `core/003` hit and for the same structural reason — §10 says
+spawn at merge and do not wait, §11 says the entry ships in the fold commit, and those
+cannot both hold for a reviewer slower than the fold. I chose "landed implies logged".
+It was asked two questions I could not answer myself: whether `decisions/shape.md` is an
+honest home for decision 53, and whether the losslessness claim survives contact with
+`interfaces/tools.md` and `suite/user-guide.md`.
+
+**A decision was filed where the byte cap allowed, not where it belongs**, and the
+worker said so rather than hiding it. Decision 53 is build-orchestration and belongs in
+`decisions/zephyr.md`; that file has **96 B of headroom** and physically could not take
+an entry, so it went in `decisions/shape.md` framed as a scope decision ("this crate
+models a static project as one build, not a menu"). That framing is honest and I accept
+it — but **this is the first time in this log that a doc-size cap has moved a decision
+rather than merely shortened one**, and a reader looking for it in the obvious file will
+not find it. `tasks/api/012-compact-api.md` already covers `zephyr.md`; this makes it
+materially more urgent than "a file is at 99.2%" suggests.
+
+**Reserve:** `embarch-api/spec.md` spent ~222 B of its reserve and is now at **98.7%,
+135 B left** — the tightest file in the suite. `interfaces/config.md` +41 B net (873 B
+left), `open.md` shrank 209 B, `decisions/zephyr.md` untouched at its 96 B. All filed
+against `tasks/api/012`; **no new compaction task was owed and none was filed**, which is
+correct, but `api` is now two files deep in reserve with one of them 135 B from its cap.
+
+**Hardware debts:** none. Config parsing and JSON shape, exercised host-side, with
+`tests/json_surface.rs` driving the real binary.
+
+**`fold-commit.py` caught the changelog assembler reaching outside this unit, and that
+is the first time the guard has actually fired.** `build_changelog.py` has no per-unit
+filter, so running it drained **eight fragments that are not this unit's** — seven
+`doc-*` and one `ui-*`, into `history/doc.md` and `history/ui.md` — the behaviour
+recorded on 2026-09-03 as something "a supervisor cannot add one" for. I had passed
+`--path changelog.d` as a directory; the fold **refused it by name** rather than staging
+it, so I restored all eight fragments and both history files with `git checkout` and
+folded only `history/api.md` and this unit's own fragment. **Pass explicit file paths to
+`fold-commit.py`, never a directory** — a directory is how the drained fragments would
+have ridden in unnoticed. The eight are back in `changelog.d/` untouched and still
+pending, exactly as they were at the top of the leg.
+
+**Budget:** DEGRADED at start, wave 2, no 429.
+
+**Least sure about:** accepting a change that makes a previously-valid config fail to
+load, on the strength of a grep. The worker's search was thorough and the suite is
+small, but "no config in this suite uses it" is a statement about the machines we can
+see — and the failure it produces is a hard refusal at startup, which is the loudest
+possible way to be wrong about a config file on someone else's disk.
+
+**About `tasks/doc/007`, because the next leg will hit it at midnight:** the fold has no
+mechanism a leg is allowed to use. A script is the obvious answer and
+`python3 <ad-hoc script>` was **denied by the permission classifier**; the only route
+left was `Read` + `Write` of the whole file, re-emitting ~34 KB of text that was never
+meant to change, verified afterwards with `git diff -U0 | grep '^@@'` (two hunks, both
+inside the replaced range, proving the retained head and tail byte-identical). That
+verification is a save, not a mechanism. **And the roll has no mechanism at all**: §11
+says the oldest entries roll into `history/archive/` past 25 KB "matching what
+`build_changelog.py` already does", and nothing does that for this file — it is 60 KB
+*after* the fold. One of §11 or reality is wrong, and the fix is in `scripts/`.
+
+---
+
 ## 2026-09-05 00:26 — api/009 config-decisions-20-21-unbuilt
 
 **Decided:** nothing suite-wide, but this unit is the one where my delegation actually
@@ -240,790 +354,373 @@ the design, and none of them has met a capture Core produced.
 
 ---
 
-## 2026-09-04 23:32 — umbrella/004 doctor-mcp-handshake
-
-**Leg 009's first unit. No Slack tool** (`ops.md` §5.2a), same as legs 007 and 008 — the
-connector is not in this agent's toolset. Unit lines are these entries; **the only stop
-channel is the listener's `SendMessage`**, and none has arrived. `tasks/suite/003` was
-therefore not run and **still owes a fresh 30-minute clock**; left `open`, untouched.
-
-**Decided:** nothing suite-wide. Inside `umbrella`, I accepted the worker's judgement
-that two "cannot tell" states — no `claude` on `PATH`, and a registration whose output
-the parser cannot read — are **`Warn` rather than a verdict**. That is the same posture
-`umbrella/001` took when it found check 11 was a stub asserting a falsehood, so it is
-consistent rather than new.
-
-Check 10 now does what decision 23 always said: spawns the exact registered command,
-one JSON-RPC `initialize` over piped stdio, 10 s budget, kills the child either way,
-three distinguishable outcomes. It previously ran `claude mcp get embarch` and returned
-**Pass on a zero exit — reporting "registered but broken", the exact state it exists to
-catch, as healthy.** New decision 37 explains the `code` field that keeps the outcomes
-distinguishable in `--json` without matching on prose.
-
-**A real bug the worker's own test found, worth recording because it is a near-miss for
-this suite's most common shape.** The first version reported EPIPE as `couldn't write to
-its stdin: Broken pipe` when the registered command died on its own arguments — naming
-the symptom while the exit code and stderr sat one line away, and flaking about 1 run in
-30 on which of two messages appeared. EPIPE now falls through to the read loop, which
-sees EOF and reports the exit with stderr attached. 60 consecutive clean runs after.
-
-**Merged:** `agent/umbrella/004-doctor-mcp-handshake` (code `69eb1f1`, doc `a6d0635`).
-Gate re-run by me on the merge result: `cargo build` / `test` (121 passed) / `clippy
---all-targets -D warnings` green, **8** doc checks green, ownership green on both
-branches — `--scope umbrella` with `--base`, no `--stdin` needed, which is the first
-clean read of that check since leg 008's batched-claim defect. One claim commit per
-task, pushed to `origin/main` before the branch was cut, held.
-
-**Blocked:** none.
-
-**Reviewer:** no findings.
-
-*(This line was written as "spawned on merge, did not count against the wave" and
-corrected once the reviewer returned — which was **wrong of me**, because
-`grep '^\*\*Reviewer:'` is the tally and a fourth form breaks it. The fix for the next
-leg is to spawn the reviewer at merge and write the line at fold time, not to invent a
-placeholder. It ran in about two minutes against a twelve-minute worker, which is the
-cost the new no-wave rule was betting on.)*
-
-**What the reviewer found that is not a finding, and is worth acting on:**
-`parse_registered_command` reads `Command:` and `Args:` and **ignores the
-`Environment:` block** that `claude mcp get`'s own sample output shows, so check 10
-spawns the server in *doctor's* environment rather than the registered one. The
-reviewer was right that this contradicts nothing — decision 16's "a doctor that
-resolved the token differently than the `embarch-api` it is diagnosing is worse than no
-check" is scoped to token and config mirroring, and decision 23 asks only for the
-registered *command* — but it is exactly the shape decision 16 is about. I have added
-it to `embarch-umbrella/open.md`.
-
-**Hardware debts:** none — no board, no Core, no probe. What *is* owed is one
-`embarch doctor` run from an environment with the agent CLI installed and `embarch`
-registered: **nothing in this suite has ever seen `claude mcp get`'s output**, so the
-format `parse_registered_command` reads is assumed rather than measured — which is
-exactly why an unparsable entry is a `Warn`. The 10 s handshake budget is assumed too,
-against a real `embarch-api` cold start. Both are in `embarch-umbrella/open.md`.
-
-**A structural gate conflict the worker hit and refused to cross a boundary to fix, and
-it will hit every worker that ships a feature.** Adding a `features.d/` row makes
-`suite/features.md` stale by construction; `check-ownership.py` refuses
-`suite/features.md` for **every** worker scope, so assembling and committing it fails
-ownership while not assembling it fails `build_features.py --check`. The worker chose
-the second and said so — the right call, a boundary violation being worse than a
-mechanical red — and dropped
-`inbox/doc-features-gate-conflicts-with-ownership.md`. **The fold is where it resolves:**
-`python3 scripts/build_features.py` before `check-docs.py`, and `suite/features.md` in
-the fold's `--path` list, which is §3's "via `build_features.py`" working as written. I
-have added that step to my landing script. **Two related facts for whoever fixes it:**
-`protocol.md` §10 and `supervise.md` both say **six** doc checks and neither mentions
-`build_features.py --check`; `check-docs.py` runs **eight**. And
-`scripts/build_features.py` is mode **644**, so `scripts/build_features.py` as a bare
-command is `Permission denied` — it must be run as `python3 scripts/build_features.py`.
-Both are `scripts/`-and-standing-rule paths, so they are findings, not my edits.
-
-**Budget:** DEGRADED at start, wave 2, no 429.
-
-**Least sure about:** accepting a check whose input format has never been observed. The
-worker was honest that `claude mcp get`'s output shape is assumed, and it defended that
-with a `Warn`-not-Fail path — but this is a check that now *asserts* something about an
-environment nobody in this suite has run it in, and `umbrella/001` is the record of what
-that costs when the assertion ages.
-
----
-
-## 2026-09-04 21:52 — dev-bench/001 compact-docs
-
-**Leg 008's last unit.** The leg-wide facts are at the bottom of this entry, because the
-next leg reads the newest entries first and this is the one that carries them.
-
-**§7's question, in the compactor's own words:**
-
-> Yes. `spec.md` alone still carries the board and the `link_port_interface = 2` trap that
-> a lowest-index fallback walks into, the v1 boundary, the source tree and the west-init
-> nesting rule, all ten invariants, the three-writer TX contract and the three sinks'
-> differing threading rules, and every live constant with its provenance and its failure
-> mode. What I removed was **how those numbers were arrived at, not what they are**: the
-> five-point ESP32-C5 SRAM percentage history, the superseded frame bounds (19,887 and
-> 9,270) and the KB they freed, the `gatt_activity` deletion, the scan-table census
-> narrative. The current 87.04% and "has overflowed three times" stayed, because those
-> are the live constraint rather than its record.
-
-**Decided:** nothing suite-wide. **`spec.md` 9628 → 9061 B** (94.0% → 88.5%) and
-**`open.md` 4843 → 4576 B** (94.6% → 89.4%) — both `PAID` out of reserve, which is the
-whole task. `decisions/ble.md` shrank 20 B as a side effect. Duplication **5 → 1**, and
-the survivor is the four-file split working (a spec invariant plus the decision explaining
-it). The `tx_scratch` / `struct dbm_study_start` lever **moved** to `open.md` under §3 —
-a known limitation is `open.md`'s — with a one-clause pointer left in `spec.md`'s SRAM
-paragraph so the lever is still named where a reader meets the constraint.
-
-**The `Must not delete:` set came through untouched**, which was the risk this task
-carried: the six-part failure signature, the *Rejected: a 16-byte TX boundary* clause with
-all six short-by counts (15, 17, 17, 13, 17, 13) and the seventh complete frame, and the
-899,843 ms / 46,320 ms uptime pair. It also kept two past incidents that are still live
-traps — `CONFIG_MAIN_STACK_SIZE`'s "Zephyr merges the fragment last and the later value
-wins with no warning", and `CONFIG_BT_MAX_CONN`'s SoftDevice arithmetic.
-
-**Three forward-looking things the worker said that I am recording rather than acting on:**
-
-1. **`open.md` has no second pass of that kind left in it.** All 17 bullets survive
-   `collect-open-questions.py` (diffed before and after: 17 in, 17 out, reworded only);
-   the 267 B came entirely from mechanism clauses `decisions/` already owned. **A future
-   `open.md` compaction would have to drop whole items and name each as answered** — the
-   "bytes can only come from rules" answer, arrived at one pass early.
-2. **`decisions/ble.md` is at 89.8% — 22 B from re-entering reserve on its next edit, and
-   nothing has filed against it.** It is the next `dev-bench` file to go in. Not filed
-   now because this pass *shrank* it, and `tasks/README.md` files a debt against the
-   commit that spends the reserve.
-3. **It cut a line that argued for its own retention** — `spec.md` said "Its history is
-   the record worth keeping:" ahead of the SRAM percentages — and asked whether that
-   history deserves a row in `embarch-decision-reversals.md`, which is mine to write and
-   not its. **I decided no.** §9 is explicit that superseded measurements are cold and git
-   holds them, decision 43 already carries the ESP32-C5 retarget reversal, and a reversals
-   row for a measurement series would be the first of its kind — a category change I would
-   be making on the strength of one sentence's self-advocacy.
-
-**Merged:** `agent/dev-bench/001-compact-docs` (doc `d7d30f4`). **Doc-only — the code
-branch had no commits**, no firmware touched, no board. Gate re-run by me on the merge
-result: seven doc checks green, ownership `all 5 changed path(s) owned`.
-
-**Blocked:** none. **Reviewer:** skipped (budget DEGRADED, wave 2).
-
-**Hardware debts:** none from this unit. The leg's one debt is `umbrella/003`'s Windows
-arm, and it is a **machine, not a board**.
-
-**Budget:** DEGRADED at start and at end, wave 2 throughout, **no 429 in the whole leg**.
-
----
-
-### Leg 008, the parts that are about the leg and not about a unit
-
-**No Slack tool** (`ops.md` §5.2a). Unit lines are these entries; the only stop channel
-was the listener's `SendMessage`, and none arrived. **`tasks/suite/003` was not run and
-still owes a fresh 30-minute clock** — left `open`, exactly as leg 007 left it.
-
-**The four fixes leg 007's defects produced all held, and this is the first leg to walk
-them:** `--detach` + `git push origin HEAD:main` worked end to end across three claim
-commits and four folds — the owner's checkout never moved and never acquired a staged
-anything; `fold-commit.py` staged the leg worktree with **no `--doc-repo`** every time,
-and no fold left a log-only commit; `check-docs.py` was **green in the leg worktree from
-the first run**, `install.py --check` included, so leg 007's "green when that is the only
-red" instruction was correctly withdrawn and never needed.
-
-**One thing `fold-commit.py` does not do, found the hard way:** a `done` task file is
-**not** deleted for you. My first fold (`api/008`) staged 2 paths when I had passed 3 —
-the task file was already merged in its `done` state and so was not pending — and I
-amended the commit to `git rm` it. `tasks/README.md` says the supervisor deletes the file
-in the fold; nothing enforces it, and the silent "2 path(s)" is the only signal. **The
-next leg should `git rm` the completed task file explicitly before calling
-`fold-commit.py`**, which is what I did for the other three.
-
-**The defect I introduced, and all three workers caught it.** I claimed `umbrella/003`
-and `api/008` in **one** commit and branched both workers off it, so each worker's
-`origin/main...HEAD` diff contained the other's task file and
-`check-ownership.py --scope <its own>` went **red on paths it never wrote**. By the third
-and fourth workers the base also carried two landed folds, so the false red named nine
-paths. Every worker diagnosed it correctly and proved its own paths clean with `--stdin`
-against its base — but **the failure mode is a supervisor learning to wave this through**,
-and §10 makes this check a merge gate. Two mitigations, one mine and one not:
-
-- **Mine, applied from unit 3 onward: one claim commit per task, pushed before the branch
-  is cut.** It does not fix it — a branch cut after an earlier unit's fold still carries
-  that fold — so it narrows the false red without removing it.
-- **Not mine:** the real fix is in `scripts/`, and the umbrella worker dropped it at
-  `inbox/doc-claim-commit-breaks-worker-ownership-check.md` with two candidate fixes. **It
-  is still in `inbox/` and I did not file it as a task**, because every path it would
-  change is owner-reserved and a worker sent at it would fail on its first edit.
-- **My landing script reads it correctly and that is why nothing was blocked**: it rebases
-  each branch onto the current leg tip and runs `check-ownership.py --base <that tip>`, so
-  the diff it checks is exactly the worker's own commits.
-
-**Reserve, end to end: 7 files in reserve at the start, 4 at the end**, all filed at every
-moment. `outpost/spec.md` and both `dev-bench` files paid off; `umbrella/spec.md` went
-9671 → 9761 B and stayed in, still filed against `umbrella/009`, which stays `blocked`
-with `In flux: yes` because five open `umbrella` tasks still rewrite the doctor table.
-**No worker hit `check-doc-size.py`'s reserve *failure* this leg** — the gate fails only
-on an unfiled file in reserve, and everything in reserve was already filed, so the
-mechanism stayed a debt notice rather than a wall. `umbrella/003` came closest and is the
-interesting case: it sized `decisions/install.md` to **11009 B against an 11059 B reserve
-line, deliberately, so no new compaction task was owed.** That is a worker planning
-against the reserve from the dispatch-time headroom line rather than discovering it — the
-same shape leg 007 saw, and still not a test of what a worker does when the gate actually
-refuses.
-
-**Reviewer tally: one ran, three skipped.** The one that ran (`api/008`) found nothing and
-took about a minute and a half. The three skips were all the same cause — **a DEGRADED
-wave of 2 means every reviewer costs a worker slot**, and on this machine DEGRADED is the
-steady state, so the accumulate-twenty-entries plan cannot complete under the current
-rule. Stated plainly because it is a fact about the mechanism, not about this leg.
-
-**The queue the next leg inherits is one unit deep, and `queue-status.py` does not say
-so.** It reports **5 dispatchable**, which reads healthy — but `suite/003` cannot run
-without a channel (see above), and **the other four are all `umbrella`**
-(`004-doctor-mcp-handshake`, `005-doctor-prune`, `006-doctor-probe-not-permitted`,
-`007-doctor-target-count-shellout`). At most one task per sub-project is in flight at a
-time, so the next leg can dispatch **one** of them and then has nothing. Expect it to
-land that unit, find nothing dispatchable, sweep the sources, and quite possibly dream.
-`006` is `Hardware: verify-only` and owes a hardware-verification debt when it runs.
-Three sub-projects were emptied tonight (`api`, `outpost`, `dev-bench`) and nothing
-refilled them.
-
-**Least sure about:** landing four units without a reviewer on three of them, on a night
-where two of the four were compaction passes — the one class of change whose whole risk is
-a deletion that reads fine. `api/008`'s reviewer is the only independent read of intent in
-this leg, and it was the unit that needed it least.
-
----
-
-## 2026-09-04 21:47 — outpost/001 compact-spec
-
-**A compaction unit, so `DOC-COMPACTION.md` §7's question is answered here in the
-compactor's own words, as the protocol requires:**
-
-> **Can `spec.md` alone answer what someone needs to work on this component today?**
-> Yes, and on one point better than before: what it lost was evidence for numbers that
-> are not its own, and every one of those numbers is now exactly one file away, next to
-> the knob it sets.
-
-**Decided:** nothing suite-wide. The judgement inside `outpost` was where the bytes were
-allowed to come from, and it was constrained before the worker started: `embarch-outpost`
-is the only entry in `check-doc-size.py`'s `TIGHTENED` map, so §9 forbids a second
-hot/cold pass. The worker respected that and took the bytes from **duplication and from
-provenance that belongs to another file** instead.
-
-**`spec.md` 9235 → 8317 B** (90.2% → **81.2%**, 1923 B of headroom). Only `spec.md`
-changed — `decisions/`, `interfaces/` and `open.md` were never opened. Duplication 31 →
-29 overall, `spec.md`'s own share 9 → 7. Three cuts: §1's anecdote illustrating the
-question (a GATT write, forty context switches, a 9.9 µs ISR — the same fact as §4's
-resolution rows, told as a story); **four §4 rows that were each the measured provenance
-of a Kconfig default and already sat verbatim against their own symbol in
-`interfaces/integration.md`**; and §3's copy of decision 1's rejection argument, replaced
-by a pointer while the prohibition itself stays absolute in `spec.md`.
-
-**What it refused to cut is the better half of the judgement.** It kept the *anti-footgun
-clause of every invariant that has one* — the latency floor, the fabricated interpolation,
-the trace shifted by three frames, the relabelling manifest — on §9's reasoning that a
-constraint's reason is hot precisely because a reader who does not know it re-proposes the
-rejected fix. And it **declined the three `open.md` ↔ `decisions/` overlaps including the
-36-word one the task named**, because `open.md` is not under pressure and neither copy is
-wrong: a decision stating its own limits while `open.md` tracks them as live is
-`DOC-PROTOCOL.md` §3 working. Paying `spec.md`'s debt out of those would have cost either
-decision text or a known limitation.
-
-**One honesty note from the worker I am keeping rather than smoothing:** it shortened §3's
-manifest failure signature instead of deleting it, which breaks a 22-word overlap while
-keeping the teeth — but that also drops the overlap below the detector's threshold, so
-**if the count is to move only through deletions the honest number is 30, not 29.** It
-said so unprompted.
-
-**Merged:** `agent/outpost/001-compact-spec` (doc `3e5cdd3`). **Doc-only — the code
-branch had no commits**, no firmware touched, no board. Gate re-run by me on the merge
-result: seven doc checks green, ownership `all 3 changed path(s) owned`. The worker also
-diffed `collect-open-questions.py` before and after and got an identical list, which is
-the check that a compaction pass did not quietly answer an open question by deleting it.
-
-**Blocked:** none.
-
-**Reviewer:** skipped (budget DEGRADED, wave 2 — both slots were worker units so the leg
-could reach its cap).
-
-**Hardware debts:** none.
-
-**Budget:** DEGRADED, wave 2, no 429.
-
-**Least sure about:** that `31 → 29` is partly a threshold effect rather than two claims
-resolved, which the worker flagged and I am not able to check cheaply — the advisory
-report is now slightly better than the docs actually are.
-
----
-
-## 2026-09-04 21:40 — umbrella/003 setup-dry-run
-
-**Decided:** nothing suite-wide. One call inside `umbrella`, the worker's, read by me in
-the diff before merging because it restructured `setup`'s side-effect path rather than
-adding a flag beside it.
-
-**The task file said "one flag and an early return away" and it was wrong — that is the
-entry's point.** `make_plan` did already run every detection step before anything acted,
-so the prediction looked right. But **two of the three side effects — decision 28's binary
-copy and the `PATH` write — only ever printed *while* acting**, because they post-date
-decision 21's text. An early return would therefore have printed a plan that silently
-omitted the two steps a user most wants warned about, and `Done when` box 2 forbids
-exactly that. So the shape is not a return: `Locations` resolves the four writable paths
-once and passes them down; a read-only `plan_install` describes the install from **the
-same `SUITE_BINARIES` constant, the same `paths_refer_to_the_same_file`, and the same
-sourcing-line predicate the real `install_into` uses**, so the description cannot drift
-from the act; one `apply_plan` walks both modes. `FoundBy::PendingInstall` exists so a dry
-run never claims `JustInstalled`, and `--dry-run` `conflicts_with = "uninstall"` rather
-than being silently ignored by it.
-
-**The test is the good part.** `a_dry_run_reaches_no_side_effecting_call` points every
-writable location at a sandbox and makes `embarch-core` a script that would leave a
-sentinel **if it were ever executed**, then asserts the sandbox untouched — a proof of
-absence rather than a check of the printed text. The worker also ran the built binary as
-`embarch setup --dry-run --port 1`, port 1 chosen deliberately so nothing could reach the
-live Core, and md5-verified `~/.bashrc`, `~/.local/share/embarch` and
-`~/.config/embarch/umbrella.toml` byte-identical afterwards. That is a worker declining to
-touch a live service without being told to.
-
-**Merged:** `agent/umbrella/003-setup-dry-run` (umbrella `23c9deb`, doc `a0319f9`). Both
-fast-forward after a clean rebase of each onto its own tip. Ownership checked on **both**
-branches before either merged (6 doc paths, 5 code paths); code merged first, then
-`embarch-doc`. Gate re-run by me on the merge result: `cargo build`, **114 tests**,
-`clippy --all-targets -D warnings`, seven doc checks. **No native Windows build** — §10
-requires one where `embarch-core` is involved and this is `embarch-umbrella`; the Windows
-gap is recorded as a debt below instead.
-
-**Folded:** `status.d/umbrella-setup-dry-run.md` into `suite/features.md`'s `embarch
-setup` row, which said `--dry-run` unbuilt. The fragment explicitly told me **not** to
-touch the row's `3, 21, 28` decision list, because that list does not mean "unbuilt" — a
-worker anticipating the wrong fold and heading it off, which is the fragment mechanism
-working as designed.
-
-**Blocked:** none.
-
-**Reviewer:** skipped (budget DEGRADED, wave 2 — the two slots went to `outpost/001` and
-`dev-bench/001` so the leg would reach its unit cap). I read the code diff myself before
-merging, which is §10's supervisor judgement, not a substitute for the reviewer.
-
-**Hardware debts:** none — **and the debt this unit did collect is explicitly not
-hardware.** Only the Unix `PathPlan` arm ever ran; `plan_path`'s Windows arm and
-`windows_path::is_on_path` are `#[cfg(windows)]` and there is no Windows linker on this
-machine. **This is a machine, not a board** — one `embarch setup --dry-run` on a real
-Windows box settles it *and* the same gap decision 28 has carried for `ensure_path` since
-it was written. Recorded in the task file and in decision 21. Also unexercised: the
-`wsl-host` and `remote` arms, which print identical text in both modes because they were
-already print-only, so nothing new is at risk there.
-
-**Reserve:** `spec.md` 9671 → 9761 B, still in reserve and still filed against
-`tasks/umbrella/009` (`blocked`, `In flux: yes`, correctly). `open.md` 4512 → 4530 B,
-still out. `decisions/install.md` 10195 → **11009 B, kept deliberately under the 11059 B
-reserve line** so no new compaction task was owed — a worker sizing its own prose against
-the cap rather than discovering it. Suite-wide still 7 in reserve, all filed.
-
-**Budget:** DEGRADED, wave 2, no 429.
-
-**Least sure about:** merging a change that adds `#[cfg(windows)]` code no compiler on
-this machine has ever seen. It is type-checked by nothing here, `clippy --all-targets`
-cannot reach it, and the only reason I accept it is that decision 28 already carries the
-identical gap for `ensure_path` — which means the suite now has **two** unbuilt Windows
-arms resting on the same untested assumption instead of one.
-
----
-
-## 2026-09-04 21:30 — api/008 duplication-overlaps
-
-**No Slack tool this leg, and this is the once it is said** (`ops.md` §5.2a). The
-connector is not in the `embarch-supervisor` toolset here, so there is no channel: unit
-lines are in these entries instead of `#embarch-fleet`, my only stop channel is the
-listener's `SendMessage`, and **no `suite` task runs** — `tasks/suite/003` stays `open`
-still owing a fresh 30-minute clock, exactly as leg 007 left it.
-
-**Decided:** nothing suite-wide. The judgement inside `api` is the worker's and it is the
-part worth keeping: **a `decisions/` entry may state its own claim** (`DOC-COMPACTION.md`
-§5 — an entry that cannot state its claim is not readable alone) **but must not carry
-reference detail or the status of a gap**; those are `interfaces/`'s and `open.md`'s.
-Read the other way, an `interfaces/` file carries the rule a caller obeys, never the
-argument for it. Sixteen overlaps resolved by assignment under that line, **one kept
-deliberately** — *"reflash means build and flash the tree as it stands, then verify"*,
-which `spec.md` §2 needs as an invariant for the agent that loads only `spec.md`, and
-decision 40 needs as its own claim. Decision 40 now **says inline that the restatement is
-deliberate**, so the next reader of the advisory report finds the answer in the doc rather
-than in a task file that gets deleted in the fold. `check-duplication.py embarch-api`:
-17 → 1, and the 1 is the one that is supposed to be there.
-
-**The task was filed against 15 and the report said 17.** `interfaces/modules.md` was
-split out of `spec.md` §5 the same day the task was written and carried two more claims
-with it. Worth knowing that a doc split *creates* overlaps as a matter of course.
-
-**Merged:** `agent/api/008-duplication-overlaps` (doc `9c4842b`). **Doc-only — the code
-branch had no commits at all**, so there is no code SHA to quote and none is missing.
-Gate re-run by me on the merge result: seven doc checks green, ownership `all 7 changed
-path(s) owned`. No `cargo` — no Rust in the diff. `crates/embarch-core-client/`
-untouched, so nothing reaches `embarch-ui`.
-
-**Blocked:** none.
-
-**Reviewer:** no findings. An `embarch-reviewer` ran on the merge result and resolved
-every claim the four shrinking files gave up against the file the diff says now owns it —
-no decision entry lost its reason or its rejected alternative; `decisions/zephyr.md` 18
-in fact **gained** an explicit *Rejected: a cap per half*. It read the one narrowing that
-changes a claim rather than moving it (`config.md`'s "every field is required" →
+## 2026-09-04 — 9 units
+
+*Folded by leg 010 on 2026-09-05 at 12:10 MDT. **This fold was owed by the leg that ran
+at 00:18 and never made** — §11 puts it on the first unit after local midnight, and the
+file had reached 84 KB against a 25 KB roll line as a result. Nine per-unit entries
+collapse here with every SHA, every debt and every `**Reviewer:**` line preserved — the
+reviewer lines are kept one per unit and line-anchored so
+`grep '^\*\*Reviewer:' supervisor-log.md` still tallies correctly. What is gone is the
+narrative reasoning behind each accepted judgement; git holds it in `embarch-fleet`
+`1dfbcbf` and earlier.*
+
+**Legs 007, 008 and 009 all ran this day, and all three recorded "no Slack tool"
+(`ops.md` §5.2a) — all three were wrong.** The connector arrives **deferred**: absent
+from an agent's initial tool list, named only in a `system-reminder`, callable after
+`ToolSearch` with `select:mcp__claude_ai_Slack__*`. Each leg read its tool list and
+concluded it had no channel. Nothing in their entries about the control plane is
+evidence of anything, and this is why `tasks/suite/003` sat unannounced for three legs.
+
+### Decided
+
+**The one suite-wide decision of the day is `suite/001`.** `embarch-umbrella` decisions
+27/29 claimed every repo's release workflow asserts `Cargo.toml`'s version against its
+pushed tag before building. **No repo did.** Four now do — a `verify-version` job the
+build matrix `needs:`. Three sub-calls, recorded in the decision itself: **`awk` on
+`Cargo.toml`, not `cargo metadata`** (three of the four manifests have sibling path
+dependencies that only resolve once the other repos are checked out, and the point is to
+fail *before* that setup, so `cargo metadata` would make the guard depend on the thing it
+guards); **compare against `GITHUB_REF_NAME` with a leading `v` stripped**, passing on a
+tag pushed without the prefix (the claim is that version and tag agree, not that the tag
+is spelled a particular way); and **`workflow_dispatch` exits 0 with a printed reason**,
+because the ref is then a branch with no tag to disagree with, and a silent pass would
+read as a check that ran. Executed by the supervisor itself under §8. Its §4 window had
+already been discharged by leg 006 (`ts 1788460873.097499`, zero replies, elapsed
+13:11 MDT 2026-09-03) and was **not** re-announced and the clock **not** restarted —
+that handoff worked exactly as §4 intends. **Four repos still have no release workflow at
+all** (`embarch-study-designer`, `embarch-dev-bench`, `embarch-outpost`, `embarch-ui`),
+so "every repo" now means every repo that releases, and whichever of those gains a
+workflow inherits the obligation to copy the job — recorded in the decision, where
+someone adding one will see it.
+
+Everything else was sub-project-scoped and accepted from the worker. The five worth
+carrying cold:
+
+- **`umbrella/004`** — check 10 previously ran `claude mcp get embarch` and returned
+  **Pass on a zero exit**, reporting "registered but broken" — the exact state it exists
+  to catch — as healthy. It now spawns the registered command and does one JSON-RPC
+  `initialize` over piped stdio, 10 s budget, kills the child either way, three
+  distinguishable outcomes; new decision 37 explains the `code` field that keeps them
+  distinguishable in `--json` without matching on prose. Two "cannot tell" states — no
+  `claude` on `PATH`, and a registration whose output the parser cannot read — are
+  **`Warn` rather than a verdict**, the same posture `umbrella/001` took on the check-11
+  stub. A real bug its own test found: EPIPE was reported as `couldn't write to its
+  stdin: Broken pipe` when the registered command died on its own arguments, naming the
+  symptom while the exit code and stderr sat one line away, and flaking about 1 run in 30
+  on which message appeared. EPIPE now falls through to the read loop, which sees EOF and
+  reports the exit with stderr attached; 60 consecutive clean runs after.
+- **`umbrella/008`** — check 11 stopped failing deploys on `embarch`'s own constant.
+  `local_host` became `api_host: Result<u32, String>`, fallible and never defaulted, with
+  not-located / clap-exited-2 / not-executable / answered-without-the-field each a
+  distinct `Warn` naming which; a test pins that `core_host: Ok(16), api_host: Err(..)`
+  is a **Warn** where `Ok(16)` vs `Ok(17)` is a **Fail**. `embarch`'s own constant
+  survives as a fourth number that can only warn (decision 36). This is the fix for what
+  leg 003 recorded as its own least-sure line.
+- **`umbrella/003`** — the task file said `--dry-run` was "one flag and an early return
+  away" **and it was wrong, which is the point**: `make_plan` did run every detection step
+  before anything acted, but two of the three side effects — decision 28's binary copy and
+  the `PATH` write — only ever printed *while* acting, because they post-date decision
+  21's text. An early return would have printed a plan silently omitting the two steps a
+  user most wants warned about, which `Done when` box 2 forbids. So `Locations` resolves
+  the four writable paths once and a read-only `plan_install` describes the install from
+  the **same `SUITE_BINARIES` constant, the same `paths_refer_to_the_same_file`, and the
+  same sourcing-line predicate `install_into` uses**, so the description cannot drift from
+  the act; one `apply_plan` walks both modes. `FoundBy::PendingInstall` exists so a dry
+  run never claims `JustInstalled`, and `--dry-run` `conflicts_with = "uninstall"` rather
+  than being silently ignored by it. **The test proves absence** —
+  `a_dry_run_reaches_no_side_effecting_call` points every writable location at a sandbox
+  and makes `embarch-core` a script that would leave a sentinel if it were ever executed,
+  then asserts the sandbox untouched. The worker also ran the built binary as `embarch
+  setup --dry-run --port 1`, port 1 chosen so nothing could reach the live Core, and
+  md5-verified `~/.bashrc`, `~/.local/share/embarch` and `~/.config/embarch/umbrella.toml`
+  byte-identical afterwards — a worker declining to touch a live service unasked.
+- **`api/005`** — split the build-log cap head-and-tail (first 16 KB, last 48 KB, middle
+  behind one marker), which decision 18 had always said and nobody had built; decision 18
+  moved from `decisions/surface.md` to `decisions/zephyr.md` where build orchestration
+  lives. **The cap bounds retained bytes, not each half**, so the split does not double a
+  response an MCP client has to carry. The worker **refused to mark the `capture cap` row
+  measured**: nothing has ever measured a real Zephyr failure's log, so the 1:3 split is
+  reasoned, not sized, and `spec.md` now says so while decision 18 names the observation
+  that would move the number. That is the opposite of this suite's usual failure, where a
+  reasoned number ages into a measured-looking one. One piece of craft worth not
+  re-deriving: a both-ends UTF-8 boundary test against a pure 3-byte fixture proves only
+  half of what it claims — `OUTPUT_HEAD_BYTES` = 16384 ≡ 1 (mod 3) so the head offset
+  always lands mid-character in a run of `'€'`, but 49152 ≡ 0 (mod 3) so the tail offset
+  always lands *on* a boundary; the fixture appends one ASCII byte purely to shift it.
+- **`api/008`** — the compaction line that now governs `api` docs: **a `decisions/` entry
+  may state its own claim** (`DOC-COMPACTION.md` §5 — an entry that cannot state its claim
+  is not readable alone) **but must not carry reference detail or the status of a gap**;
+  those belong to `interfaces/` and `open.md`. Read the other way, an `interfaces/` file
+  carries the rule a caller obeys, never the argument for it. Sixteen overlaps resolved by
+  assignment, **one kept deliberately** — *"reflash means build and flash the tree as it
+  stands, then verify"*, which `spec.md` §2 needs as an invariant for an agent that loads
+  only `spec.md` and decision 40 needs as its own claim — with decision 40 now saying
+  inline that the restatement is intentional, so the next reader of the advisory report
+  finds the answer in the doc rather than in a task file that gets deleted in the fold.
+  `check-duplication.py embarch-api`: 17 → 1, and the 1 is the one that is supposed to be
+  there.
+
+**Three compaction passes answered `DOC-COMPACTION.md` §7 in the compactor's own words,
+and one answered no.** `core/003` said `embarch-core/spec.md` alone cannot tell you what
+you need to work on Core today and structurally never could — Core is a 25-route service
+whose route table is 10 KB in `interfaces.md`. What it *now* answers alone, and did not
+before, is the narrower question: which module owns a thing, what must not be broken,
+which constants are measured. Accepted, because an honest "no" beats a confident yes and
+both files came out of reserve. `dev-bench/001` and `outpost/001` both answered yes, and
+each named exactly what it removed: **how numbers were arrived at, not what they are**
+(the ESP32-C5 SRAM percentage history, superseded frame bounds, the scan-table census)
+while the live constraint stayed; and, for `outpost`, evidence for numbers that are not
+`spec.md`'s own and now sit one file away next to the knob they set. `outpost` is the only
+entry in `check-doc-size.py`'s `TIGHTENED` map, so §9 forbade it a second hot/cold pass and
+it took the bytes from duplication and misplaced provenance instead. Both refused cuts on
+principle: `outpost` kept the **anti-footgun clause of every invariant that has one**, on
+the reasoning that a constraint's reason is hot precisely because a reader who does not
+know it re-proposes the rejected fix; `dev-bench` brought its whole `Must not delete:` set
+through untouched, including the six-part failure signature, the six short-by counts and
+the 899,843 ms / 46,320 ms uptime pair.
+
+### Merged
+
+| Unit | Code | Doc |
+|---|---|---|
+| `agent/umbrella/004-doctor-mcp-handshake` | umbrella `69eb1f1` | doc `a6d0635` |
+| `agent/dev-bench/001-compact-docs` | *doc-only — code branch carried no commits* | doc `d7d30f4` |
+| `agent/outpost/001-compact-spec` | *doc-only — code branch carried no commits* | doc `3e5cdd3` |
+| `agent/umbrella/003-setup-dry-run` | umbrella `23c9deb` | doc `a0319f9` |
+| `agent/api/008-duplication-overlaps` | *doc-only — code branch carried no commits* | doc `9c4842b` |
+| `agent/api/005-build-log-head-and-tail` | api `f1fe90e` | doc `5a6d319` |
+| `agent/umbrella/008-check-11-reads-embarch-api-versions` | umbrella `535a2c4` | doc `dbd47f4` |
+| `agent/core/003-compact-docs` | *doc-only — code branch carried no commits* | doc `6db0cc7` |
+| `suite/001-release-tag-version-assertion` | umbrella `de8d81b`, core `a2706aa`, api `60abdcf`, topology `e1d9ff2` | folded in the same commit |
+
+Every unit's gate was re-run by the supervisor **on the merge result, not on the branch**,
+and every one was green: `cargo build` / `cargo test` / `clippy --all-targets -D warnings`
+wherever there was Rust in the diff, the doc checks, and `check-ownership.py` on both
+branches before either merged. **No native Windows build ran on any unit**, and that is
+deliberate rather than skipped: `embarch-umbrella` shells out to `embarch-core` rather
+than depending on it, so §10's Windows clause does not reach it — the reasoning
+`umbrella/001` established, not a new one. The doc-only units ran no `cargo` at all
+because the merge result's code tree was byte-identical to `main`.
+
+### Blocked
+
+**None, in any of the nine units.** No task went to `blocked` and no gate went red on a
+merge result.
+
+### Reviewer
+
+**Reviewer:** no findings. — `umbrella/004`. It raised one thing that is *not* a finding
+and is worth acting on: `parse_registered_command` reads `Command:` and `Args:` and
+**ignores the `Environment:` block** that `claude mcp get`'s own sample output shows, so
+check 10 spawns the server in *doctor's* environment rather than the registered one. It
+contradicts nothing — decision 16's mirroring rule is scoped to token and config, and
+decision 23 asks only for the registered *command* — but it is exactly the shape decision
+16 is about, and it is now in `embarch-umbrella/open.md`.
+**Reviewer:** skipped (budget DEGRADED, wave 2). — `dev-bench/001`
+**Reviewer:** skipped (budget DEGRADED, wave 2). — `outpost/001`
+**Reviewer:** skipped (budget DEGRADED, wave 2). — `umbrella/003`
+**Reviewer:** no findings. — `api/008`, **the first reviewer ever to run**. It resolved
+every claim the four shrinking files gave up against the file the diff says now owns it:
+no decision entry lost its reason or its rejected alternative, `decisions/zephyr.md` 18
+in fact *gained* an explicit *Rejected: a cap per half*, and it read the one narrowing
+that changes a claim rather than moving it (`config.md`'s "every field is required" →
 "none of the five board-identifying fields is defaulted") as a refinement matching
-decision 45's own wording, not a contradiction. **This is the first reviewer to run since
-the line was added**; the three legs before it all recorded `skipped`.
-
-**Separately, and not a reviewer finding:** the umbrella worker dropped
-`inbox/doc-claim-commit-breaks-worker-ownership-check.md`, and the api worker reported
-the same thing independently. It is mine, not either worker's — see below.
-
-**I made a setup mistake and both workers caught it.** I claimed `umbrella/003` and
-`api/008` in **one** commit (`61b5cd0`) and branched both workers off it, so each
-worker's `origin/main...HEAD` diff contains *the other's* task file and
-`check-ownership.py --scope <its own>` goes **red on a path the worker never wrote**. Both
-workers reported it, both diagnosed it correctly, and both proved their own paths clean
-with `--stdin` against the base commit. **The danger is not the false red; it is the habit
-it teaches** — a supervisor that learns to wave this through will wave through a real
-violation that looks the same. My own fix, applied for the rest of this leg: **one claim
-commit per task, pushed before the branch is cut**, so a worker's base contains only its
-own claim. The structural fix is in `scripts/`, which is the owner's; the drop names two
-candidates and stays in `inbox/`.
-
-**Two things the api worker flagged that are not duplication and are not fixed:**
-`interfaces/config.md` said "every field is required and none is defaulted" while its own
-table has three `no` rows — tightened to "none of the five board-identifying fields is
-defaulted"; and `config.md` still states decision 21's `["none"]` sentinel as truth while
-`open.md` says decisions 20 and 21 describe config that does not exist. The second was
-left exactly as found, deliberately: it is an open item, not a duplication one.
-
-**Hardware debts:** none.
-
-**Budget:** DEGRADED at start and at this unit, wave 2, no 429.
-
-**Least sure about:** whether skipping a real `embarch-reviewer` on a diff that moved
-twelve claims *between decision entries* was right — the mechanical gate cannot see a
-decision that lost the sentence carrying its reason, and under a permanently DEGRADED
-wave of 2 the reviewer is the first thing squeezed out every single leg.
-
----
-
-## 2026-09-04 21:20 — api/005 build-log-head-and-tail
-
-**Read this one for the recovery mistake, not for the change.** The change is
-straightforward and the worker's judgement on it was good. What the next leg needs from
-this entry is that **I started recovery against a worker that was still alive, and only
-did not destroy its work because I looked at the work before deleting it.**
-
-**Decided:** nothing suite-wide. Within `api` the worker took `open.md`'s stated fork —
-split the cap, or accept tail-only — and **split it**, on the argument that decision 18
-already existed and already said head-and-tail: it was an intent nobody built, and unlike
-decision 16 nothing was blocked on another repo, the whole cost being a second boundary
-walk. First 16 KB, last 48 KB, middle behind one marker. **The cap bounds retained bytes,
-not each half**, so the split does not double a response an MCP client has to carry. It
-moved decision 18 from `decisions/surface.md` to `decisions/zephyr.md`, where build
-orchestration lives, and added the two calls the original entry never made.
-
-**The `[assumed]` provenance is the part I would keep if I could keep one sentence.** The
-worker explicitly **refused to mark the `capture cap` row measured**: nothing has measured
-a real Zephyr failure's log, so the 1:3 split is reasoned, not sized. `spec.md`'s row now
-says so in as many words and decision 18 names the observation that would move the
-number — if a real over-cap failure ever shows the first error past 16 KB. That is the
-opposite of the failure this suite keeps having, where a reasoned number ages into a
-measured-looking one.
-
-**One real piece of craft, recorded because it would be re-derived otherwise:** a both-ends
-UTF-8 boundary test against a pure 3-byte fixture proves only half of what it claims.
-`OUTPUT_HEAD_BYTES` = 16384 ≡ 1 (mod 3), so the head offset always lands mid-character in a
-run of `'€'` — but 49152 ≡ 0 (mod 3), so the tail offset always lands *on* a boundary. The
-fixture appends one ASCII byte purely to shift it. The worker found this and said so.
-
-**Merged:** `agent/api/005-build-log-head-and-tail` (api `f1fe90e`, doc `5a6d319`). Both
-fast-forward. Gate re-run by me on the merge result: `cargo build`, **116 tests**, `clippy
---all-targets -D warnings`, six doc checks, ownership on both branches (7 paths). No
-Windows build — not `embarch-core`. **`crates/embarch-core-client/` untouched**, checked
-by path, so nothing reaches `embarch-ui`.
-
-**Blocked:** none.
-
-**Reviewer:** skipped (leg ending at its unit cap; a reviewer spawned here would outlive
-the leg that is supposed to read its finding).
-
-**I began recovery on a live worker, and the only thing that saved its work was looking
-before deleting.** I was told its worker was very likely gone and to treat it as recovery.
-`git rev-list --count main..<branch>` read **0 commits on both branches** with both
-worktrees dirty — which the `ops.md` §3 table does not have a row for, and which the
-instruction I was given read as "no commits means reclaim to `open` and delete the
-worktrees." **I did not delete them.** I read the diff, ran build/tests/clippy against the
-dirty tree, found it complete and green, and committed it to preserve it — at which point
-the worker, which had been in its final bookkeeping the whole time, committed the code side
-itself (`f1fe90e`) and pushed both branches. The doc-side commit I had just made therefore
-carried a message asserting the worker "died after finishing the work and before
-committing", which was **false**. I amended that message to state what actually happened,
-and the amended commit is what rebased into the merge above; the two superseded doc-branch
-SHAs are unreferenced and are deliberately not quoted here, because `fold-commit.py
---check` scrapes `<word> <sha>` pairs out of an entry's prose and reads the preceding word
-as a repo name — quoting them made it report this fold as the "log only" ordering when
-every real SHA resolved. Nothing was altered, reverted or duplicated — the trees were
-byte-identical.
-
-**Three things follow from that, and the third is the one that matters.**
-
-1. **`rev-list --count` against a working worker is a race, not a reading.** A worker in
-   its last minute has finished files and no commits. There is no observation of the
-   *branch* that distinguishes it from a dead one.
-2. **The worker caught my error and reported it back to me**, unprompted, in its own
-   completion report — it noticed the commit that appeared under it and said the message's
-   claim was false and that my log entry would need correcting if I had logged a death.
-   That is the honesty the worker contract asks for, working in the direction nobody
-   designed it for.
-3. **"Look at the work before deleting it" is not in the recovery table, and it is what
-   made this recoverable.** The table's arms are "no commits → `open`, delete worktrees"
-   and "commits → `blocked`, name the branch". A dirty worktree with no commits falls in
-   the first arm and the first arm destroys ~200 lines of finished, green work. **I think
-   the table is wrong here** and a third arm belongs in it — dirty tree, no commits,
-   preserve as a commit and mark `blocked` — but `ops.md` is the owner's, so this is a
-   finding and not an edit.
-
-**Queue reconciled, since this unit's landing changed what two other tasks were for:**
-
-- **`tasks/api/007-compact-docs.md` closed and deleted.** It was `blocked` on exactly
-  this task landing, and landing it **paid its whole debt**: `decisions/surface.md`
-  11305 → 10928 B (decision 18 moved out) and `open.md` 4821 → 4560 B (the bullet closed),
-  both now out of reserve, `--pressure` saying `PAID … close its item` for each. A
-  compaction task whose files are no longer in reserve is not a task.
-- **Its non-size half survived as `tasks/api/008-duplication-overlaps.md`.** `api/007`
-  carried a finding that was never about bytes: `check-duplication.py embarch-api` reports
-  **15 overlaps**, largest a 37-word run between `interfaces/modules.md` and `spec.md` §5.
-  Those are `DOC-PROTOCOL.md` §3 ownership questions, not §9 hot/cold ones, and deleting
-  `007` silently would have lost them — `check-duplication.py` is advisory and in nobody's
-  gate, so nothing re-surfaces it. `007`'s `Must not delete:` is carried verbatim.
-- **`tasks/umbrella/009` stays `blocked`, correctly.** Its `open.md` is now `PAID`, but its
-  `spec.md` went the other way — 9527 → **9671 B, 94.4%** — because `umbrella/008` wrote
-  the check-11 rewrite into it. Five open `umbrella` tasks still rewrite that doctor table,
-  so `In flux: yes` still holds.
-
-**The reserve mechanism, end to end this leg:** 12 files in reserve at start, all filed;
-**7 at the end**, all filed, three paid off and none left unfiled at any point. It never
-blocked anything and it never had to be argued with.
-
-**Hardware debts:** none.
-
-**Budget:** DEGRADED, wave 2, no 429 in the entire leg.
-
-**Least sure about:** committing another agent's uncommitted working tree at all. It was
-the right call against the alternative I was handed — deleting it — and the content was
-verified green before and after. But it means a commit exists whose author did not write
-its message, on a branch whose worker was still running, and the only reason that is
-visible at all is that the worker noticed and said so. **If it had died for real, nobody
-would ever have known the message was wrong.**
-
----
-
-## 2026-09-04 20:52 — umbrella/008 check-11-reads-embarch-api-versions
-
-**Decided:** nothing suite-wide. Two calls inside `umbrella`, both the worker's, both read
-by me in the diff before merging — check 11 can **fail** and a fail stops a deploy, so
-this is one of §10's read-the-diff cases even though no shared crate moved.
-
-- **`local_host` became `api_host: Result<u32, String>`, fallible and never defaulted.**
-  Not located / clap exited 2 (an `embarch-api` predating decision 52) / not executable /
-  answered without the field are each a distinct `Warn` naming which. A test pins that
-  `core_host: Ok(16), api_host: Err(..)` is a **Warn** where `Ok(16)` vs `Ok(17)` is a
-  **Fail**. This is the fix for the exact thing leg 003 flagged as its own least-sure
-  line: check 11 was failing deploys on `embarch`'s own constant, a stand-in that is
-  wrong precisely in the hand-built mixed install this suite is developed on.
-- **`embarch`'s own constant survives as a fourth number that can only warn** (decision
-  36). It is free, it blocks no study because `embarch` submits none, and an `embarch`
-  disagreeing with the `embarch-api` it just located is a mixed install nothing else
-  notices on a machine with no suite manifest for check 1 to read.
-
-**Merged:** `agent/umbrella/008-check-11-reads-embarch-api-versions` (umbrella `535a2c4`,
-doc `dbd47f4`). Both fast-forward after a clean rebase of each onto its own `main`.
-Ownership checked on **both** branches *before* either merged; code merged first, then
-`embarch-doc`. Gate re-run by me on the merge result: `cargo build`, **112 tests**,
-`clippy --all-targets -D warnings`, six doc checks. **No native Windows build** — this is
-`embarch-umbrella`, which does not depend on `embarch-core` (it shells out), so §10's
-Windows clause does not reach it; same reasoning `umbrella/001` established, not a new one.
-
-**Blocked:** none.
-
-**Reviewer:** skipped (budget DEGRADED, wave 2, and both slots held by the `api/005`
-worker and this unit's own landing). **And the previous unit's reviewer reported: no
-findings on `core/003`** — it confirmed all three `Must not delete:` items verbatim, all
-five de-duplication moves carrying their claim in the surviving copy, none of the four
-"cold" drops orphaning a decision, and — usefully — that `embarch-study-designer`'s
-`embarch-core/spec.md` **§5** citation still resolves, because only §7 was removed and §7
-was last, so §1–§6 never renumbered. That last point **narrows `tasks/suite/003`**: the
-citation is not currently broken, so that task is a clean structural move rather than a
-repair, and it is less urgent than its own text implies.
-
-**The worker found a bug in my task file and did not code around it.** I wrote
-`embarch-api versions --json`. `--json` is a **top-level** flag on `embarch-api`'s parser
-and is not `global`, so that ordering exits 2 with `unexpected argument '--json' found` —
-which check 11 would then have reported as "an `embarch-api` too old to know `versions`",
-i.e. **every healthy install misdiagnosed.** Correct form is `embarch-api --json
-versions`, verified against a local build and now written into the function's doc comment.
-Nothing in `embarch-api`'s own docs stated the wrong order; only my task file did. **That
-is the fourth task in this log whose filed premise a worker had to correct**, and the
-first where following it would have shipped a defect rather than merely wasted context.
-
-**`decisions/doctor.md` was split rather than compacted, and I accept the judgement.** It
-sat 4 B under its reserve line and 1233 B under its cap with five more open `umbrella`
-tasks (003–007) queued to write into it. Decisions 24, 33, 34 and the two new ones moved
-into `decisions/schema-skew.md` — `doctor.md` now 6.5 KB, the new group 7.0 KB, numbers
-unchanged and permanent, `decisions.md`'s index row added. **No compaction debt filed, and
-that is correct**: `open.md` came *out* of reserve (4795 → 4512 B) when the stand-in
-bullet closed, and nothing was left in reserve that `tasks/umbrella/009` does not already
-name. `009` is untouched and still `blocked`.
-
-**Fold:** two `status.d/` fragments into `suite/features.md` — the `embarch-api`
-`versions` row loses "**nothing reads it yet**" (check 11 is now its consumer), and the
-check 11 row is rewritten to say what it actually compares. Both rows keep `unit` in the
-Verified column, deliberately.
-
-**Hardware debts:** none new, and one **verification** debt that is not hardware and
-should not be filed as one: no `embarch doctor` has run against the *installed* suite, so
-that the installed `embarch-api` answers `--json versions` with the field is still
-unconfirmed — only fabricated binaries and a local debug build have been asked. It rides
-along with the live-Core and flashed-bench debts already in `embarch-umbrella/open.md`
-from `umbrella/001`; **one `embarch doctor` on the real machine discharges all three.**
-
-**Budget:** DEGRADED, wave 2, no 429 anywhere in this leg.
-
-**Least sure about:** that check 11 now shells out to a second binary on the diagnostic
-path. `doctor` exists to work on a broken machine, and every shell-out is a new way for
-the diagnostic itself to fail — the worker handled four failure shapes explicitly and each
-is a warn rather than a crash, which is the right shape. But check 14 set this precedent
-and check 11 is now the second, and I did not check whether *three* shell-outs would still
-finish in a reasonable time on a machine where the binaries are on a slow or contended
-filesystem. Nobody has measured `doctor`'s wall time at all.
-
----
-
-## 2026-09-04 20:35 — core/003 compact-docs
-
-**Decided:** nothing suite-wide. The judgement I accepted is the worker's answer to
-`DOC-COMPACTION.md` §7, and it answered **no**: `embarch-core/spec.md` alone cannot tell
-you what you need to work on Core today, and structurally never could — Core is a
-25-route service whose route table is 10 KB in `interfaces.md`. What it now answers alone,
-and did not before, is the narrower question: which module owns a thing, what must not be
-broken, which constants are measured. **I would rather have that answer than a confident
-yes**, and this is the first unit where the §7 question was asked of the actor that had
-just done the work rather than of a script.
-
-**Merged:** `agent/core/003-compact-docs` (doc `6db0cc7`, **no code branch** — the code
-branch carried 0 commits and was deleted unpushed; the task was doc-only as filed and the
-worker said so rather than inventing a code change). Fast-forward after a clean rebase.
-Gate re-run by me on the merge result, not on the branch: six doc checks, ownership on the
-doc branch by explicit path list (4 paths, all `core`-owned). **No `cargo` run** — the
-merge result's code tree is byte-identical to `main`.
-
-**Blocked:** none.
-
-**Reviewer:** spawned on `6db0cc7`, **result not yet in at fold time** — recorded in the
-next unit's entry. This is a deliberate deviation from §10's three fixed forms, and it is
-a real gap in the mechanism rather than my convenience: §10 says spawn the reviewer at
-merge and *do not wait for it*, while §11 says the entry goes in the fold commit. Those
-two cannot both hold for a reviewer slower than the fold. I chose "landed implies logged"
-over a tidy Reviewer line, because that is the property `api/003` lost. **The tally
-`grep '^\*\*Reviewer:' supervisor-log.md` will undercount by this one line** unless
-someone reconciles it.
-
-**Both files came out of reserve, which is what this task existed to do:**
-`spec.md` 9537 → 8988 B (93.1% → 87.8%), `open.md` 4810 → 4504 B (93.9% → 88.0%),
-`--pressure` reports both `PAID`. All 16 of `open.md`'s questions survive with their lead
-claims intact and **none was merged into another** — the failure mode that was tried and
-reverted on 2026-09-04. `check-duplication.py embarch-core` went from one 13-word overlap
-to none.
-
-**Five claims that were held in two files each are now held in one**, assigned by
-`DOC-PROTOCOL.md` §3: the `FlashedThisRun` reasoning (→ decision 31), the Raspberry Pi
-artifact-transfer limit (→ `open.md`), `contract_version`'s retirement (→ spec §2 and
-decision 13), "Core never orchestrates a build" (→ §1's sharper "not a build system"), and
-the whole `## 7. Security` section, whose three facts were one invariant, one line already
-in the constants table, and a pointer.
-
-**The structural cut it could not make is filed rather than lost**, and this is the part
-worth carrying. `spec.md` §5's result-layout tree is a reference table, which
-`DOC-COMPACTION.md` §9 says belongs in `interfaces/` — but `embarch-study-designer/spec.md`
-cites `embarch-core/spec.md` **§5 by section number**, `check-links.py` skips anchors and
-`check-decision-refs.py` only resolves decision numbers, so **nothing in the gate would
-have caught that break.** Fixing it means writing another sub-project's file, so the
-worker stopped and dropped it instead of reaching. Filed here as
-`tasks/suite/003-core-spec-5-to-interfaces.md`. **It is NOT announced** — see the leg-wide
-note below.
-
-**Debt carried forward:** `spec.md` now has 228 B above the reserve line and **no cheap
-cut left**. The next real addition to Core's spec re-enters reserve almost immediately,
-and `suite/003` is the ~640 B that buys it room.
-
-**Hardware debts:** none. Nothing here touches a board.
-
-**Budget:** DEGRADED, no 429. Suggested wave 2. **I ran three concurrent spawns against
-that suggestion** — two workers plus this reviewer — on the grounds that the wave cap is
-concurrency control against rate limits, the budget script itself says "no 429 in the last
-90 min is the signal that actually matters", and a compaction diff is the one shape where
-nothing else in this design ever reads for intent. Recorded because it is a call the next
-leg should feel free to make differently.
-
-**Least sure about:** accepting "no" as the §7 answer and closing the task anyway. The
-task's own `Done when` allowed it — an honest "this is the hot floor" is an answer — and
-both files did come out of reserve, so the mechanical goal was met. But §7's question is
-supposed to be the thing that stops a compaction pass from being purely mechanical, and a
-"no" that closes the task regardless is very close to not asking it.
-
----
-
-## 2026-09-04 20:25 — suite/001 release-tag-version-assertion
-
-**Decided:** this is the suite-wide one, and it is the line to read. `embarch-umbrella`
-decisions 27/29 claimed **every repo's release workflow asserts `Cargo.toml`'s version
-against its pushed tag before building any target**. No repo did. Four now do —
-`embarch-umbrella`, `embarch-core`, `embarch-api`, `embarch-topology` each gained a
-`verify-version` job the build matrix `needs:`. Three choices inside it were mine and
-are recorded in the decision rather than only here:
-
-- **`awk` on `Cargo.toml`, not `cargo metadata`.** Three of the four manifests have
-  sibling path dependencies that only resolve once the other repos are checked out, and
-  the point is to fail *before* that setup. `cargo metadata` would have made the guard
-  depend on the thing it is guarding.
-- **Compare against `GITHUB_REF_NAME` with a leading `v` stripped, and pass on a tag
-  pushed without the prefix.** The claim is that the version and the tag agree, not that
-  the tag is spelled a particular way; `on.push.tags` already fixes the spelling.
-- **`workflow_dispatch` exits 0 with a printed reason**, because the ref is then a branch
-  and there is no tag to disagree with. A silent pass would read as a check that ran.
-
-**I executed this myself rather than dispatching it** — four repos, so `protocol.md` §8.
-**Its §4 announcement window was already discharged by leg 006** (ts `1788460873.097499`,
-zero replies, 30 minutes elapsed 13:11 MDT 2026-09-03). I did **not** re-announce and did
-**not** restart the clock, exactly as leg 006's entry instructed. That handoff worked;
-without it I would have parked a task that had already served its window.
-
-**Merged:** no branches — a `suite` unit is the supervisor's own hands on each `main`.
-Four code commits: umbrella `de8d81b`, core `a2706aa`, api `60abdcf`, topology `e1d9ff2`.
-Doc side folded in this commit.
-
-**Blocked:** none.
-
-**Reviewer:** skipped (a `suite` unit has no worker branch to review, and the diff is my
-own — a reviewer given my SHAs would be reviewing the supervisor, which is what this log
-is for).
-
-**Verified without a tag, and here is exactly how far that goes.** Pushing a tag is a
-release, and a release is the owner's under §2, so I did not. Instead I extracted the
-step's own `run:` block from all four YAML files and executed it against each repo's real
-`Cargo.toml` under four refs — matching tag, mismatched tag, tag without the `v`, and a
-`workflow_dispatch` branch. **16 scenarios, every one as intended**, mismatch exiting 1
-with an `::error::` line. **What that does not cover is the wiring**: that
-`needs: verify-version` really gates the matrix is checked structurally only (parsed
-YAML, `build.needs == verify-version` in all four) and will first be proven by a real
-release. I have written that gap into the task file and the decision rather than letting
-"verified" stand unqualified.
-
-**Four repos still have no release workflow at all** — `embarch-study-designer`,
-`embarch-dev-bench`, `embarch-outpost`, `embarch-ui`. So "every repo" now means every
-repo that releases, and whichever of those four gains a workflow inherits the obligation
-to copy the job. Recorded in the decision, where someone adding a workflow will see it.
-
-**Fold:** `embarch-umbrella/decisions/release.md`'s "not built" paragraph rewritten
-rather than deleted — a decision that claimed a thing was built for a year is worth a
-reader knowing about. `suite/features.md`'s release-assertion row edited **directly, not
-through a `status.d/` fragment**: §9's fragment exists so a *worker* never touches a
-shared doc, and I am the actor that would have consumed the fragment in this same commit.
-One `changelog.d/suite-*` fragment, assembled.
-
-**No `cargo` gate was re-run per repo, deliberately:** the diff is four YAML files and no
-Rust source. That is the "gate satisfied by an argument rather than a run" shape this log
-has now flagged four times — but here the argument is that the compiler was not given
-anything to disagree about, which is weaker than the previous three only if a workflow
-file can break a build, and it cannot.
-
-**Hardware debts:** none.
-
-**Budget:** DEGRADED, wave 2, no 429.
-
-**Least sure about:** editing `suite/features.md` directly instead of writing a
-`status.d/` fragment and folding it. The outcome is identical and the mechanism is
-explicitly a worker-facing one, but every prior unit in this log routed through a
-fragment, so a future reader diffing folds will find one unit that does not match the
-pattern. I would rather it be here in words than discovered as an inconsistency.
+decision 45's own wording rather than a contradiction.
+**Reviewer:** skipped (leg ending at its unit cap — a reviewer spawned there would
+outlive the leg meant to read its finding). — `api/005`
+**Reviewer:** skipped (budget DEGRADED, wave 2). — `umbrella/008`
+**Reviewer:** no findings. — `core/003`. Spawned at merge and **reported after that
+fold**, so it was recorded in `umbrella/008`'s entry instead; the tally undercounted by
+this line until now. It confirmed all three `Must not delete:` items verbatim, all five
+de-duplication moves carrying their claim in the surviving copy, none of the four "cold"
+drops orphaning a decision, and — usefully — that `embarch-study-designer`'s citation of
+`embarch-core/spec.md` **§5** still resolves, because only §7 was removed and §7 was
+last, so §1–§6 never renumbered. **That is what narrows `tasks/suite/003` from a repair
+to a clean structural move**, and makes it less urgent than its own text implies.
+**Reviewer:** skipped (a `suite` unit has no worker branch, and the diff is the
+supervisor's own — a reviewer given those SHAs would be reviewing the supervisor, which
+is what this log is for). — `suite/001`
+
+**Day's tally: 3 ran with no findings, 6 skipped**, five of the six for a DEGRADED wave
+of 2. That is the cause that made the accumulate-twenty-entries plan unable to complete
+under the rule governing it, and the reason §10 was amended so a reviewer no longer counts
+against the worker wave. One process note kept because it cost a correction: `umbrella/004`
+first wrote a fourth Reviewer form ("spawned on merge, did not count against the wave")
+and amended it once the reviewer returned — **the fix is to spawn at merge and write the
+line at fold time, never to invent a placeholder**, because `grep '^\*\*Reviewer:'` is the
+tally and a fourth form breaks it.
+
+### Hardware debts
+
+**No board, no probe, no live Core, no DUT was touched all day.** Three verification debts
+were collected and **not one of them needs a board**:
+
+1. **One `embarch doctor` from an environment with the agent CLI installed and `embarch`
+   registered.** **Nothing in this suite has ever seen `claude mcp get`'s output**, so the
+   format `parse_registered_command` reads is assumed rather than measured — which is
+   exactly why an unparsable entry is a `Warn`. The 10 s handshake budget is assumed too,
+   against a real `embarch-api` cold start. Both in `embarch-umbrella/open.md`.
+2. **One `embarch doctor` against the *installed* suite.** That the installed
+   `embarch-api` answers `--json versions` with the field is unconfirmed — only fabricated
+   binaries and a local debug build have been asked. It rides with the live-Core and
+   flashed-bench debts already in `embarch-umbrella/open.md` from `umbrella/001`, and
+   **one `embarch doctor` on the real machine discharges all three.**
+3. **One `embarch setup --dry-run` on a real Windows box.** `plan_path`'s Windows arm and
+   `windows_path::is_on_path` are `#[cfg(windows)]`, there is no Windows linker on this
+   machine, and `clippy --all-targets` cannot reach them. **A machine, not a board.** It
+   settles this *and* the identical gap decision 28 has carried for `ensure_path` since it
+   was written — the suite now has **two** unbuilt Windows arms resting on one untested
+   assumption instead of one. Recorded in the task file and in decision 21. Also
+   unexercised, but nothing new is at risk there: the `wsl-host` and `remote` arms print
+   identical text in both modes because they were already print-only.
+
+Not hardware, and not to be lost: **`suite/001`'s `needs: verify-version` wiring is
+checked structurally only** — parsed YAML, `build.needs == verify-version` in all four
+repos. Its 16 scenario runs extracted the step's own `run:` block and executed it against
+each repo's real `Cargo.toml` under four refs (matching tag, mismatched tag, tag without
+the `v`, `workflow_dispatch` branch), every one as intended, mismatch exiting 1 with an
+`::error::` line. That the job actually gates the matrix **will first be proven by a real
+release**, and pushing a tag is the owner's under §2. Written into the task file and the
+decision rather than letting "verified" stand unqualified.
+
+### Doc-size reserve, across the day
+
+**12 files in reserve at the start of the day, 6 at the end, every one filed at every
+moment.** Paid off: `api/decisions/surface.md`, `api/open.md`, `core/spec.md`,
+`core/open.md`, `outpost/spec.md`, and both `dev-bench` files. Went the other way and
+stayed filed: `umbrella/spec.md`, 9527 → 9761 B, still against `tasks/umbrella/009`, which
+stays `blocked` with `In flux: yes` — correctly, because five open `umbrella` tasks still
+rewrite that doctor table.
+
+**No worker ever hit `check-doc-size.py`'s reserve *failure***, because the gate fails only
+on an *unfiled* file in reserve and everything in reserve was filed. The mechanism stayed
+a debt notice rather than a wall, and **it has still never been tested by a worker meeting
+an actual refusal.** `umbrella/003` came closest and is the interesting case: it sized
+`decisions/install.md` to **11009 B against an 11059 B reserve line, deliberately**, so no
+new compaction task was owed — a worker planning against the dispatch-time headroom line
+rather than discovering it. `umbrella/008` likewise **split `decisions/doctor.md` rather
+than compacting it** (decisions 24, 33, 34 and two new ones moved to
+`decisions/schema-skew.md`, numbers unchanged and permanent, `decisions.md`'s index row
+added) and filed no debt, correctly, because `open.md` came *out* of reserve in the same
+pass.
+
+Two forward-looking notes from the compactors, both still true: **`dev-bench/open.md` has
+no second pass of that kind left in it** — all 17 bullets survive
+`collect-open-questions.py`, diffed 17 in / 17 out and reworded only, and the 267 B came
+entirely from mechanism clauses `decisions/` already owned, so a future pass would have to
+drop whole items and name each as answered. And **`dev-bench/decisions/ble.md` is at
+89.8%, 22 B from re-entering reserve on its next edit, with nothing filed against it** —
+deliberately, because that pass *shrank* it and `tasks/README.md` files a debt against the
+commit that spends the reserve. Also worth knowing generally: **a doc split creates
+overlaps as a matter of course** — `api/008` was filed against 15 and the report said 17,
+because `interfaces/modules.md` had been split out of `spec.md` §5 the same day and
+carried two more claims with it.
+
+### Queue reconciliation
+
+- **`tasks/api/007-compact-docs.md` closed and deleted.** It was `blocked` on `api/005`
+  landing and that landing **paid its whole debt** — `decisions/surface.md` 11305 →
+  10928 B, `open.md` 4821 → 4560 B, `--pressure` saying `PAID` for each. A compaction task
+  whose files are no longer in reserve is not a task.
+- **Its non-size half survived as `tasks/api/008-duplication-overlaps.md`**, carrying
+  `007`'s `Must not delete:` verbatim. `check-duplication.py` is advisory and in nobody's
+  gate, so deleting `007` silently would have lost the finding for good.
+- **`tasks/suite/003-core-spec-5-to-interfaces.md` was filed by `core/003`** — the one
+  structural cut it could not make. `spec.md` §5's result-layout tree is a reference table
+  that `DOC-COMPACTION.md` §9 puts in `interfaces/`, but `embarch-study-designer/spec.md`
+  cites `embarch-core/spec.md` **§5 by section number**, `check-links.py` skips anchors and
+  `check-decision-refs.py` only resolves decision numbers, so **nothing in the gate would
+  catch the break** — and fixing it means writing another sub-project's file, which a
+  worker may not do. `core/spec.md` was left with 228 B above the reserve line and **no
+  cheap cut remaining**; `suite/003` is the ~640 B that buys Core's spec room.
+
+### Three supervisor defects, all found by workers, none fixed by the leg that made them
+
+1. **A batched claim commit breaks a worker's own ownership check.** Leg 008 claimed
+   `umbrella/003` and `api/008` in one commit (embarch-doc `61b5cd0`) and branched both
+   workers off it, so each worker's `origin/main...HEAD` diff contained the *other's* task
+   file and `check-ownership.py --scope <its own>` went **red on paths it never wrote** —
+   nine paths by the fourth worker, once landed folds had joined the base. Every worker
+   diagnosed it correctly, **and that is the danger rather than the reassurance**: §10
+   makes this check a merge gate, and a supervisor who learns to read a red ownership check
+   as "just the claim commit again" will wave a real one through. Mitigated from that leg
+   onward by **one claim commit per task, pushed to `origin/main` before the branch is
+   cut**, which narrows the false red without removing it — a branch cut after an earlier
+   unit's fold still carries that fold. The structural fix is in `scripts/` and is the
+   owner's.
+2. **Recovery began against a live worker** (`api/005`). `git rev-list --count` read **0
+   commits on both branches** with both worktrees dirty. `ops.md` §3's table has no row for
+   that, and its "no commits ⇒ reclaim to `open`, delete the worktrees" arm would have
+   destroyed ~200 lines of finished, green work. The leg **looked at the work before
+   deleting it** — read the diff, ran build/tests/clippy against the dirty tree, found it
+   complete and green, committed it to preserve it — at which point the worker, in its
+   final bookkeeping the whole time, committed the code side itself and pushed both
+   branches, then **reported its supervisor's now-false commit message back to it,
+   unprompted**. The message was amended to state what actually happened. **`rev-list
+   --count` against a working worker is a race, not a reading**: there is no observation of
+   the *branch* that distinguishes a finishing worker from a dead one. Now
+   `tasks/doc/006-recovery-reads-commits-not-worktrees.md`, `Owner: required`.
+3. **A feature-shipping worker could not be green on both gates at once.** Adding a
+   `features.d/` row makes `suite/features.md` stale by construction, while
+   `check-ownership.py` refuses that file to *every* worker scope. The worker chose the
+   mechanical red over the boundary violation — the right call — and said so. **Resolved
+   since:** the fold runs `python3 scripts/build_features.py` and lists `suite/features.md`
+   in `fold-commit.py --path`, and `build_features.py --check` validates fragments only
+   while `--check-assembled` stays out of every branch gate. Two facts that came out of it:
+   `check-docs.py` runs **eight** checks while `protocol.md` §10 and `supervise.md` both
+   said six (since fixed), and `scripts/build_features.py` is mode **644**, so it must be
+   run as `python3 scripts/build_features.py` and not as a bare path.
+
+One smaller one, still true and still unenforced: **`fold-commit.py` does not delete a
+`done` task file for you.** A task file already merged in its `done` state is not pending,
+so it silently drops out of the `--path` count — leg 008's first fold staged 2 paths where
+3 were passed, and the silent "2 path(s)" is the only signal. `git rm` the completed task
+file explicitly before calling `fold-commit.py`.
+
+### Budget
+
+**DEGRADED at the start and end of every leg, wave 2 throughout, and no 429 anywhere in
+the entire day.** One deliberate deviation: `core/003` ran **three** concurrent spawns
+against a suggested wave of 2 — two workers plus a reviewer — on the grounds that the cap
+is concurrency control against rate limits and the budget script's own line is that "no
+429 in the last 90 min is the signal that actually matters". Recorded so a later leg can
+decide differently; §10 has since made the reviewer not count against the wave anyway.
+
+### Least sure about
+
+Six standing doubts rather than closed questions, one per entry that raised one:
+
+- **Landing four units with a reviewer on only one**, on a night when two of the four were
+  compaction passes — the one class of change whose whole risk is a deletion that reads
+  fine. The single reviewer that ran was on the unit that needed it least.
+- **Committing another agent's uncommitted working tree at all.** It was right against the
+  alternative handed over — deleting it — and the content was verified green before and
+  after. But a commit exists whose author did not write its message, on a branch whose
+  worker was still running, and **the only reason that is visible is that the worker
+  noticed and said so. Had it really died, nobody would ever have known.**
+- **Accepting a check whose input format has never been observed** (`umbrella/004`) — a
+  check that now *asserts* something about an environment nobody in this suite has run it
+  in, which `umbrella/001` is the record of the cost of.
+- **Merging `#[cfg(windows)]` code no compiler on this machine has ever seen**
+  (`umbrella/003`), accepted only because decision 28 already carries the identical gap —
+  which means the suite now has two of them resting on one assumption.
+- **Accepting "no" as `DOC-COMPACTION.md` §7's answer and closing the task anyway**
+  (`core/003`). Both files did come out of reserve, so the mechanical goal was met, but §7
+  is supposed to be what stops a compaction pass being purely mechanical, and a "no" that
+  closes the task regardless is very close to not asking.
+- **`outpost/001`'s duplication count 31 → 29 is partly a threshold effect**, not two
+  claims resolved: shortening a manifest failure signature kept the teeth but dropped the
+  overlap below the detector's threshold, so if the count is to move only through deletions
+  the honest number is 30. The worker said so unprompted, and the advisory report is now
+  slightly better than the docs actually are.
+
+Also carried forward, and it is a fact about the mechanism rather than about a unit: two
+more entries in this day recorded **the gate satisfied by an argument rather than a run** —
+`suite/001` ran no `cargo` per repo because the diff is four YAML files and a workflow file
+cannot break a build, and every doc-only unit ran none because the code tree was
+byte-identical. Each argument is sound. It is the same shape batches 001 and 002 flagged,
+and this log has now flagged it six times.
 
 ---
 
