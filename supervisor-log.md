@@ -109,7 +109,27 @@ as designed — the worker could not write the guide, and said what had become f
 
 **Blocked:** none.
 
-**Reviewer:** spawned at merge; result in the leg summary below if it returned in time.
+**Reviewer:** no findings — and it earned its spawn here more than on either other unit,
+because this was the one that *changed a decision's premise*. It confirmed the
+correction is written into decision 21's own entry with the original wrong clause left
+standing and the correction appended (§5.4's licence) rather than silently edited away,
+and that no reversals row was added — correct, since §3 gives a worker `never` on
+`embarch-decision-reversals.md`. It also **checked the build-directory correction
+against the code rather than the worker's word** (`Target::build_dir_name` appends each
+trailing segment only when non-empty, and `zephyr.rs` is not in this commit — so the doc
+was corrected to match code that never changed).
+
+**Two things it raised that are not findings, and that I have written into
+`embarch-api/open.md` rather than lose:** the new collision error tells a caller to
+"omit `snippets` to take the project's configured `default_snippets`" while
+`Config::validate` in the same commit makes a `default_snippets` containing `"none"` a
+load error — **advice that cannot be followed**, though the call is refused loudly
+rather than mis-resolved. And the load-time refusal is **asymmetric**:
+`default_target` now fails at load on a `static` project while `default_snippets`,
+`default_extra_args` and `soc_chip_overrides` are equally unhonourable there and still
+load silently — reversals shape 7, "a rule that exists in some of the places it
+applies". Neither contradicts a locked decision; both are exactly the kind of thing
+that is invisible in a month.
 
 **Hardware debts:** none. Host-side config resolution with unit coverage.
 
@@ -170,8 +190,14 @@ assembled `suite/features.md`, ownership green on both branches.
 
 **Blocked:** none.
 
-**Reviewer:** spawned at merge; result in the leg summary at the bottom of this entry
-if it returned before the leg ended.
+**Reviewer:** no findings. Ran in about three minutes against a twenty-six minute
+worker. Worth recording *what* it checked, because this is the first reviewer in the
+tally that had a real chance of finding something: it verified against **reversal row
+100** (the lower-bound-plus-one-step-back defect) that the new binary search had not
+silently re-introduced a fixed bug, and confirmed the retained JavaScript reference is
+deliberately naive so the production search is under test rather than restated by
+itself. It also independently checked that nothing anywhere consumes `lane.spans`
+before agreeing the field could stop being serialized.
 
 **Hardware debts:** **one, and it is a machine rather than a board.** Nothing ran
 against a live Core or a real DUT capture: deploy the UI, open the Trace tab on a real
