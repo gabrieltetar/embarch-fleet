@@ -64,6 +64,90 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-05 13:12 — api/011 capacity-error-message
+
+**Decided:** nothing suite-wide. Inside `api` the worker **built decision 27 rather than
+retiring it**, and the design property that makes it safe is the one to keep: the new
+`src/capacity.rs` runs **only after `serde` has already refused the value**. It is a
+diagnostic on the error path, never a second gate — so a wrong entry in its bounds table
+can only *worsen a message*, never reject a study `serde` would have accepted. **That is
+what licenses the table being deliberately partial** instead of becoming a second,
+drifting copy of every limit in `embarch-study-designer`, which is the mirror-that-drifts
+failure this suite keeps re-deriving (`umbrella/005` refused the same shape three hours
+earlier, from the other direction). Lists are named by entry count, names by **byte**
+length — bytes are what `heapless::String<N>` actually bounds — with a closing line
+saying these are dev-bench's compile-time buffer sizes and cannot be raised per
+submission. `tools.rs` now deserializes from `&Value` so the value survives the failure
+without cloning a study on every *successful* submission.
+
+**The test pins what the caller used to get** rather than trusting anyone to remember it:
+`sequence exceeds its bound at line 1 column 8785`. It also asserts that 64 steps still
+deserializes, so the refusal under test is the bound and not the fixture.
+
+**Merged:** `agent/api/011-capacity-error-message` (code `4a4d541`, doc `f54d8ad`). Gate
+re-run by me on the merge result: `cargo build`, `cargo test` **141 passed / 0 failed**
+across 7 binaries (7 new), `clippy --all-targets -D warnings` green, **8** doc checks
+green, ownership green on both branches. `crates/embarch-core-client/` untouched, checked
+by path, so nothing reaches `embarch-ui`.
+
+**Blocked:** none.
+
+**Reviewer:** skipped (leg ending at its unit cap — `suite/003` is the last unit and a
+reviewer spawned here would outlive the leg meant to read its finding). Same reason
+`api/005` skipped. I read the diff myself before merging because it changes both
+front-ends' error path, which is §10's supervisor judgement and not a substitute.
+
+**The reserve warning I put in the task file was aimed at the wrong file, and the worker
+checked rather than believed me.** I warned that `decisions/zephyr.md` had 96 B and that
+it should not assume it could add an entry there. **Decision 27 does not live in
+`zephyr.md`** — it is in `decisions/studies.md`, which had room (10,640/12,288 B).
+Recording the change cost 609 B and pushed *that* file to 91.5%, into reserve, and the
+worker added it to `tasks/api/012` rather than filing a new task. Nothing was displaced
+into a file it does not belong in — the opposite of `api/010` this morning. `spec.md`,
+the tight one at 135 B, needed no change at all: the new module is a row in
+`interfaces/modules.md`, which `spec.md` §5 already delegates to. **`open.md` came *out*
+of reserve** (89.2%) when decision 27's bullet was answered and removed.
+
+**I re-blocked `tasks/api/012` after the worker unblocked it, and the disagreement is
+worth recording because the worker was right on everything it could see.** It moved 012
+from `blocked` to `open` on the correct ground that `tasks/api/010` — the thing 012 was
+parked behind — had landed, and it rewrote the task's premise carefully and well. **What
+it could not see is that I drained three `api` tasks out of `inbox/` twenty minutes
+earlier in the same leg**, and two of them put back in motion exactly what 012 compacts:
+`tasks/api/013` rewrites `interfaces/config.md`'s build-directory paragraph (decision
+19's `target.json`, stated as truth and written by nothing), and `tasks/api/014` rewrites
+the `-args<hash>` segment that is `decisions/zephyr.md`'s territory — the 96-byte file 012
+calls "the tight one and the natural target". So `In flux:` is **yes** again, 012 is
+`blocked`, and it now names 013 and 014 as what unparks it, plus the narrowing that would
+let it run today: **`decisions/studies.md` alone is settled and could be compacted now.**
+`supervise.md` is explicit that an `open` task saying `In flux: yes` is the filer getting
+it wrong and that the fix is the state, not a worker — this is that, with me as the filer
+who created the flux.
+
+**A worker edited another task's state, and I am letting the substance stand.** Under
+§3 a worker may "claim + close its own" task; rewriting `tasks/api/012`'s premise, title,
+`Compacts:` list and state is more than that. It offered to revert. I did not take the
+offer, because **the content was right and the alternative is a worker that notices a
+stale task and says nothing** — but the state transition is mine, and I have now made it.
+This is the second leg running in which a worker's reasonable deviation inside `tasks/`
+had to be adjudicated after the fact (`api/012`'s path, leg 009). The pattern is a worker
+having better information than the queue and no sanctioned way to write it down.
+
+**Hardware debts:** none. Deserialization diagnostics, verified end-to-end through the
+real CLI, plain and `--json`.
+
+**Budget:** DEGRADED, wave 2, no 429 anywhere in this leg.
+
+**Least sure about:** the bounds table being partial *and* hand-maintained. The error-path
+argument is sound and I believe it — a wrong bound can only mis-describe, never
+mis-reject. But the table's failure mode is silence: a limit that `embarch-study-designer`
+tightens and this table does not learn about produces a message that names every field
+except the one that actually overflowed, and there is no test that can notice, because
+the thing it would have to compare against is the crate the table exists to avoid
+depending on.
+
+---
+
 ## 2026-09-05 12:47 — umbrella/005 doctor-prune
 
 **Decided:** nothing suite-wide. Inside `umbrella` I accepted an answer the task did not
