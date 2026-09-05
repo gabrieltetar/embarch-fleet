@@ -64,6 +64,82 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-04 21:30 — api/008 duplication-overlaps
+
+**No Slack tool this leg, and this is the once it is said** (`ops.md` §5.2a). The
+connector is not in the `embarch-supervisor` toolset here, so there is no channel: unit
+lines are in these entries instead of `#embarch-fleet`, my only stop channel is the
+listener's `SendMessage`, and **no `suite` task runs** — `tasks/suite/003` stays `open`
+still owing a fresh 30-minute clock, exactly as leg 007 left it.
+
+**Decided:** nothing suite-wide. The judgement inside `api` is the worker's and it is the
+part worth keeping: **a `decisions/` entry may state its own claim** (`DOC-COMPACTION.md`
+§5 — an entry that cannot state its claim is not readable alone) **but must not carry
+reference detail or the status of a gap**; those are `interfaces/`'s and `open.md`'s.
+Read the other way, an `interfaces/` file carries the rule a caller obeys, never the
+argument for it. Sixteen overlaps resolved by assignment under that line, **one kept
+deliberately** — *"reflash means build and flash the tree as it stands, then verify"*,
+which `spec.md` §2 needs as an invariant for the agent that loads only `spec.md`, and
+decision 40 needs as its own claim. Decision 40 now **says inline that the restatement is
+deliberate**, so the next reader of the advisory report finds the answer in the doc rather
+than in a task file that gets deleted in the fold. `check-duplication.py embarch-api`:
+17 → 1, and the 1 is the one that is supposed to be there.
+
+**The task was filed against 15 and the report said 17.** `interfaces/modules.md` was
+split out of `spec.md` §5 the same day the task was written and carried two more claims
+with it. Worth knowing that a doc split *creates* overlaps as a matter of course.
+
+**Merged:** `agent/api/008-duplication-overlaps` (doc `9c4842b`). **Doc-only — the code
+branch had no commits at all**, so there is no code SHA to quote and none is missing.
+Gate re-run by me on the merge result: seven doc checks green, ownership `all 7 changed
+path(s) owned`. No `cargo` — no Rust in the diff. `crates/embarch-core-client/`
+untouched, so nothing reaches `embarch-ui`.
+
+**Blocked:** none.
+
+**Reviewer:** no findings. An `embarch-reviewer` ran on the merge result and resolved
+every claim the four shrinking files gave up against the file the diff says now owns it —
+no decision entry lost its reason or its rejected alternative; `decisions/zephyr.md` 18
+in fact **gained** an explicit *Rejected: a cap per half*. It read the one narrowing that
+changes a claim rather than moving it (`config.md`'s "every field is required" →
+"none of the five board-identifying fields is defaulted") as a refinement matching
+decision 45's own wording, not a contradiction. **This is the first reviewer to run since
+the line was added**; the three legs before it all recorded `skipped`.
+
+**Separately, and not a reviewer finding:** the umbrella worker dropped
+`inbox/doc-claim-commit-breaks-worker-ownership-check.md`, and the api worker reported
+the same thing independently. It is mine, not either worker's — see below.
+
+**I made a setup mistake and both workers caught it.** I claimed `umbrella/003` and
+`api/008` in **one** commit (`61b5cd0`) and branched both workers off it, so each
+worker's `origin/main...HEAD` diff contains *the other's* task file and
+`check-ownership.py --scope <its own>` goes **red on a path the worker never wrote**. Both
+workers reported it, both diagnosed it correctly, and both proved their own paths clean
+with `--stdin` against the base commit. **The danger is not the false red; it is the habit
+it teaches** — a supervisor that learns to wave this through will wave through a real
+violation that looks the same. My own fix, applied for the rest of this leg: **one claim
+commit per task, pushed before the branch is cut**, so a worker's base contains only its
+own claim. The structural fix is in `scripts/`, which is the owner's; the drop names two
+candidates and stays in `inbox/`.
+
+**Two things the api worker flagged that are not duplication and are not fixed:**
+`interfaces/config.md` said "every field is required and none is defaulted" while its own
+table has three `no` rows — tightened to "none of the five board-identifying fields is
+defaulted"; and `config.md` still states decision 21's `["none"]` sentinel as truth while
+`open.md` says decisions 20 and 21 describe config that does not exist. The second was
+left exactly as found, deliberately: it is an open item, not a duplication one.
+
+**Hardware debts:** none.
+
+**Budget:** DEGRADED at start and at this unit, wave 2, no 429.
+
+**Least sure about:** whether skipping a real `embarch-reviewer` on a diff that moved
+twelve claims *between decision entries* was right — the mechanical gate cannot see a
+decision that lost the sentence carrying its reason, and under a permanently DEGRADED
+wave of 2 the reviewer is the first thing squeezed out every single leg.
+
+---
+
 ## 2026-09-04 21:20 — api/005 build-log-head-and-tail
 
 **Read this one for the recovery mistake, not for the change.** The change is
