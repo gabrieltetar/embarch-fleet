@@ -67,6 +67,90 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-05 18:05 — api/013 target-json-not-written
+
+**Decided:** nothing suite-wide. Inside `api` the worker **built decision 19's
+`target.json` rather than retiring it**, and the reasoning that made it the right half of
+the fork is not visible from inside `embarch-api`: `embarch-umbrella` decision 26's
+`doctor --prune` is *already deferred on this file*, so the cheap doc-fix — drop the
+sentence, tombstone the promise — would have left another repo's decision blocked on
+something nobody was ever going to build. The claim had stood as current truth in
+`interfaces/config.md` for about three months with no source hit anywhere in the crate.
+
+**Four calls inside it, and the second is the one to keep:**
+
+- **`TargetManifest` carries the descriptor `serde_json::Value` itself**, the same object
+  the tool response echoes — so the provenance on disk and the answer the caller got are
+  one serialization, not two that can drift.
+- **Written *after* the build command, only into a directory that already exists, never
+  creating one.** A manifest beside a directory no build produced is manufactured
+  evidence; and writing *before* would put this crate's correctness ahead of
+  `west build -d`'s for a file that exists only to explain what west did. A **failed**
+  build's directory still gets one, which is right — the directory exists and something
+  produced it.
+- **Absence means "unattributable", never "orphaned"**, and the write is best-effort —
+  the second is only sound because of the first. Every directory built before today has
+  none, and `static` and dev-bench builds never get one.
+- **Routed through `json_out::pretty`, so it carries `schema_version`** like every other
+  JSON this crate emits. Decided after noticing the file is read by *another repo*, which
+  is precisely the case decision 50's promise exists for.
+
+**Rejected:** writing at `resolve()`'s return, which the task itself suggested — `resolve`
+also serves `flash` and `reset`, so it would create build directories for targets nobody
+built; a schema version of its own; and failing a build on a failed manifest write.
+
+**Merged:** `agent/api/013-target-json-not-written` — code `ac1e37c`, doc `353a03e`. Gate
+re-run by me on the merge result: `cargo build`, `cargo test` **145 passed / 0 failed**
+across 7 binaries (4 new), `clippy --all-targets -D warnings` green, **8** doc checks
+green, ownership green on both branches (`all 7 changed path(s) owned`). No native Windows
+build — this is `embarch-api`, not `embarch-core`. **`crates/embarch-core-client/` is
+untouched, verified by path against the code diff** (`src/build.rs`, `src/resolve.rs`,
+`src/dev_bench.rs`, `tests/build_capture.rs` and nothing else), so nothing reaches
+`embarch-ui` — §10's shared-crate read, done because an `api` worker *can* change `ui`'s
+dependency without owning `ui`.
+
+**Blocked:** none.
+
+**Reviewer:** no findings.
+
+**Ride-along compaction: yes, inside the same doc commit, and this is the second of two
+this leg — both worked.** `embarch-api/interfaces/config.md` **11,415 → 10,944 B** (92.9%
+→ **89.1%**), out of reserve, with the *corrected* build-directory paragraph already in
+it. Nothing on `tasks/api/012`'s `Must not delete:` list lives in that file. What went was
+reasoning restated from decisions that already carried the pointer, and the cwd-upward
+search's rationale **and its rejected alternative were moved into decision 25**
+(`decisions/shape.md`) rather than deleted. `spec.md` — 136 B left, the tightest file in
+the suite — was correctly not touched, because it says nothing about build directories.
+**`check-doc-size.py --pressure` at the end of this unit names two files, both `api`, both
+filed against `tasks/api/012`.** The leg started with four.
+
+**One `inbox/` drop, drained and filed as `tasks/umbrella/013`** (commit `f5a5d29`,
+separate from this fold on purpose — a drain is supervisor bookkeeping, not this unit's
+work). `embarch-umbrella` decision 26's third bullet now states a falsehood about another
+repo's shipped behaviour — "`target.json` … is not written by `embarch-api`" — and the
+consumer that would get the absence rule wrong is `--prune` itself. **It removes the
+second of `--prune`'s two blockers, not the first**: naming the currently-valid targets
+still needs decision 17's unbuilt `embarch-api list-targets` shell-out. I re-checked its
+`Hardware:` claim myself: `none`, correctly — it is one bullet in a decisions file.
+
+**Hardware debts: none.** The worker was explicit about one thing it could not verify and
+correctly declined to call it a hardware debt: that a real `west build -d` is unaffected.
+No board is involved, no Zephyr workspace is reachable from the worktree, and the write
+lands after west has already run and creates nothing west could trip over — the first real
+Zephyr build simply shows the file. The two `run_build` end-to-end tests are
+`#[cfg(unix)]`, matching that file's pre-existing platform gap.
+
+**Budget:** DEGRADED, wave 2, no 429.
+
+**Least sure about:** best-effort. A silently-skipped write means a directory that *should*
+be attributable reads as one that never could be, and the absence rule tells every
+consumer to treat those identically — so a filesystem hiccup degrades into "unattributable"
+with nothing logged and no test that could notice. It is the right default against failing
+a good build for a provenance file, but the honest version of the rule is "absence means
+unattributable *or* the write failed", and only the first half is written down.
+
+---
+
 ## 2026-09-05 17:48 — umbrella/006 doctor-probe-not-permitted
 
 **Leg 011's first unit, and the first real test of the ride-along compaction rule
