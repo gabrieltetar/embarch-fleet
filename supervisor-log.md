@@ -64,6 +64,80 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-04 20:35 — core/003 compact-docs
+
+**Decided:** nothing suite-wide. The judgement I accepted is the worker's answer to
+`DOC-COMPACTION.md` §7, and it answered **no**: `embarch-core/spec.md` alone cannot tell
+you what you need to work on Core today, and structurally never could — Core is a
+25-route service whose route table is 10 KB in `interfaces.md`. What it now answers alone,
+and did not before, is the narrower question: which module owns a thing, what must not be
+broken, which constants are measured. **I would rather have that answer than a confident
+yes**, and this is the first unit where the §7 question was asked of the actor that had
+just done the work rather than of a script.
+
+**Merged:** `agent/core/003-compact-docs` (doc `6db0cc7`, **no code branch** — the code
+branch carried 0 commits and was deleted unpushed; the task was doc-only as filed and the
+worker said so rather than inventing a code change). Fast-forward after a clean rebase.
+Gate re-run by me on the merge result, not on the branch: six doc checks, ownership on the
+doc branch by explicit path list (4 paths, all `core`-owned). **No `cargo` run** — the
+merge result's code tree is byte-identical to `main`.
+
+**Blocked:** none.
+
+**Reviewer:** spawned on `6db0cc7`, **result not yet in at fold time** — recorded in the
+next unit's entry. This is a deliberate deviation from §10's three fixed forms, and it is
+a real gap in the mechanism rather than my convenience: §10 says spawn the reviewer at
+merge and *do not wait for it*, while §11 says the entry goes in the fold commit. Those
+two cannot both hold for a reviewer slower than the fold. I chose "landed implies logged"
+over a tidy Reviewer line, because that is the property `api/003` lost. **The tally
+`grep '^\*\*Reviewer:' supervisor-log.md` will undercount by this one line** unless
+someone reconciles it.
+
+**Both files came out of reserve, which is what this task existed to do:**
+`spec.md` 9537 → 8988 B (93.1% → 87.8%), `open.md` 4810 → 4504 B (93.9% → 88.0%),
+`--pressure` reports both `PAID`. All 16 of `open.md`'s questions survive with their lead
+claims intact and **none was merged into another** — the failure mode that was tried and
+reverted on 2026-09-04. `check-duplication.py embarch-core` went from one 13-word overlap
+to none.
+
+**Five claims that were held in two files each are now held in one**, assigned by
+`DOC-PROTOCOL.md` §3: the `FlashedThisRun` reasoning (→ decision 31), the Raspberry Pi
+artifact-transfer limit (→ `open.md`), `contract_version`'s retirement (→ spec §2 and
+decision 13), "Core never orchestrates a build" (→ §1's sharper "not a build system"), and
+the whole `## 7. Security` section, whose three facts were one invariant, one line already
+in the constants table, and a pointer.
+
+**The structural cut it could not make is filed rather than lost**, and this is the part
+worth carrying. `spec.md` §5's result-layout tree is a reference table, which
+`DOC-COMPACTION.md` §9 says belongs in `interfaces/` — but `embarch-study-designer/spec.md`
+cites `embarch-core/spec.md` **§5 by section number**, `check-links.py` skips anchors and
+`check-decision-refs.py` only resolves decision numbers, so **nothing in the gate would
+have caught that break.** Fixing it means writing another sub-project's file, so the
+worker stopped and dropped it instead of reaching. Filed here as
+`tasks/suite/003-core-spec-5-to-interfaces.md`. **It is NOT announced** — see the leg-wide
+note below.
+
+**Debt carried forward:** `spec.md` now has 228 B above the reserve line and **no cheap
+cut left**. The next real addition to Core's spec re-enters reserve almost immediately,
+and `suite/003` is the ~640 B that buys it room.
+
+**Hardware debts:** none. Nothing here touches a board.
+
+**Budget:** DEGRADED, no 429. Suggested wave 2. **I ran three concurrent spawns against
+that suggestion** — two workers plus this reviewer — on the grounds that the wave cap is
+concurrency control against rate limits, the budget script itself says "no 429 in the last
+90 min is the signal that actually matters", and a compaction diff is the one shape where
+nothing else in this design ever reads for intent. Recorded because it is a call the next
+leg should feel free to make differently.
+
+**Least sure about:** accepting "no" as the §7 answer and closing the task anyway. The
+task's own `Done when` allowed it — an honest "this is the hot floor" is an answer — and
+both files did come out of reserve, so the mechanical goal was met. But §7's question is
+supposed to be the thing that stops a compaction pass from being purely mechanical, and a
+"no" that closes the task regardless is very close to not asking it.
+
+---
+
 ## 2026-09-04 20:25 — suite/001 release-tag-version-assertion
 
 **Decided:** this is the suite-wide one, and it is the line to read. `embarch-umbrella`
