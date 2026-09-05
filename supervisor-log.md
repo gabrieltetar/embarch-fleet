@@ -64,6 +64,87 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-05 00:18 — ui/001 trace-view-server-side-binning
+
+**Decided:** nothing suite-wide. Inside `ui` I accepted two judgement calls, both the
+worker's and both right. **Decision 18 went in a new file**
+(`embarch-ui/decisions/trace-transfer.md`) rather than as a section of
+`decisions/trace-chart.md`, on the argument that putting a load-time decision inside
+the navigation decision's file is *the same conflation `open.md` warned against, in the
+docs instead of the code* — `open.md` had said explicitly that conflating the redraw
+problem with the load-time one "is how a measured decision turns back into a guess",
+and the worker applied that to its own filing. And the `open.md` bullet is **narrowed,
+not closed**: the transfer is fixed, the 250,000-row cap is the only term left, and the
+reason the cap was set (the browser holding 112,801 spans) is gone while the remaining
+reason — server-side decode — has only ever been measured at 225,627 rows.
+
+`GET /api/trace/{study}/{tap}/bins?from&to&width` now does the aggregation the browser
+was doing, in Rust, at most `width` runs per lane. **`Lane.spans` is no longer
+serialized at all**; `span_count` replaces the two places `app.js` counted them. On a
+synthetic capture built to the reference's shape (225,627 rows / 112,804 spans / 26
+lanes), spans were **12.6 MB of a 12.6 MB payload**; first paint is now 12.7 KB + 30.5
+KB and a window costs 1–6 ms.
+
+**A defect found by driving it, which no test in this suite would have caught.** Zooming
+at the pointer computed its anchor from a pixel fraction, so **every wheel notch
+produced a fractional window** — invisible while the aggregation was in the same floats,
+a `400` against a `u64` query. Every Rust test passed with the bug present; it took
+headless Firefox against the real binary and a stub Core. The pinning test also keeps
+the shipped `traceAggregateLane` in `mod browser_reference` **deliberately in its naive
+shape**, so the production binary search is under test rather than restated by its own
+reference.
+
+**Merged:** `agent/ui/001-trace-view-server-side-binning` (code `f4bf4b3`, doc
+`33c1430`). Gate re-run by me on the merge result: `cargo build` / `test` (95 passed, 2
+ignored) / `clippy --all-targets -D warnings` green, 8 doc checks green after the fold
+assembled `suite/features.md`, ownership green on both branches.
+
+**Blocked:** none.
+
+**Reviewer:** spawned at merge; result in the leg summary at the bottom of this entry
+if it returned before the leg ended.
+
+**Hardware debts:** **one, and it is a machine rather than a board.** Nothing ran
+against a live Core or a real DUT capture: deploy the UI, open the Trace tab on a real
+recorded study's outpost tap, and confirm first paint, a wheel zoom and a drag pan
+against a capture *Core* rendered rather than one this task generated. The numbers in
+decision 18 are the synthetic capture's and are labelled as such; the feature row says
+`local`, not `hw`.
+
+**Budget:** DEGRADED, wave 2, no 429.
+
+**THE SAME GATE CONTRADICTION HIT THIS UNIT TOO, AND A SECOND ONE OF THE SAME SHAPE HIT
+`api/009`.** `protocol.md` §6 says a supervisor seeing one failure twice must say so
+loudly rather than continue quietly, so: **three worker-visible instances in one leg, of
+one root cause — a gate half that tells a worker to write a file the ownership half
+refuses.**
+
+1. **`features.d/` → `suite/features.md`** (umbrella/004, ui/001). Writing the row is
+   the worker's job; it is also what turns `build_features.py --check` red, and
+   `check-ownership.py` refuses `suite/features.md` for every scope.
+2. **The compaction debt's path** (api/009). `tasks/README.md` *and*
+   `check-doc-size.py`'s own failure message both name
+   `tasks/doc/<NNN>-compact-<scope>.md`; `check-ownership.py --scope api` refuses
+   `tasks/doc/**`. That worker filed at `tasks/api/012-compact-api.md` instead, which
+   works because `check-doc-size.py` matches the `**Compacts:**` field and rglobs all of
+   `tasks/`. **I am letting that stand** — it is correct against the scripts as they
+   are — but it is a deviation from a written rule, made by a worker, and it should be
+   the owner's call which of the two moves.
+
+**None of it blocked anything**, because the fold is where both resolve and the
+supervisor's hands are allowed there. That is exactly what makes it dangerous: a red
+every unit of a shape produces is a red that stops being read, which is the worker's own
+phrasing and is the risk `protocol.md` §10 names about this check being a merge gate.
+Filed as `tasks/doc/002` (`Owner: required`); api/009's variant is
+`inbox/doc-compaction-debt-path-conflicts-with-ownership.md`.
+
+**Least sure about:** merging a UI change whose every measurement comes from a capture
+the task itself generated. The worker was scrupulous about labelling it synthetic and
+sized it to the real reference's shape, but decision 18's numbers are the argument for
+the design, and none of them has met a capture Core produced.
+
+---
+
 ## 2026-09-04 23:32 — umbrella/004 doctor-mcp-handshake
 
 **Leg 009's first unit. No Slack tool** (`ops.md` §5.2a), same as legs 007 and 008 — the
