@@ -91,7 +91,15 @@ The steps, in order, per leg:
 0. **Take a checkout, then recover.** A leg works in its own worktree of this
    repo, not in the checkout the owner uses — two actors in one working tree is
    how legs 004 and 005 swept his `changelog.d` fragments into their folds, and
-   a rebase in a tree he has dirtied fails outright. `inbox/` is the exception:
+   a rebase in a tree he has dirtied fails outright. **Detached, never on
+   `main`**: `git worktree add --detach`, and push with `HEAD:main`. A worktree
+   that *checks out* `main` needs `--force` — git refuses precisely because the
+   owner's checkout holds that branch — and two worktrees sharing one branch ref
+   is worse than the problem this step solves. Every fold advances `main`, so
+   the owner's HEAD moves while his index and working tree stay at the leg's
+   start commit: leg 007 left his checkout holding **a staged inverse of the
+   whole leg**, 25 paths, where a `git commit` would have reverted four units
+   and looked like ordinary work. `inbox/` is the exception:
    drops are gitignored, so they live only in the main checkout and are read
    there by absolute path. A previous leg may have been killed outright — closing VS Code is the owner's kill switch and is expected to be used ([running the fleet](ops.md) §3). Abort any in-progress merge or rebase, reclaim every stale claim, and delete dead worktrees **before** anything else. The exact rule and what a kill can leave behind: [running the fleet](ops.md) §3. Then read the newest [supervisor-log.md](supervisor-log.md) entries: under the relay they were written by a predecessor this leg has no memory of, and they are the only thing that crossed the boundary.
 1. **Refill, only if nothing is dispatchable.** Drain `inbox/`, then sweep the roadmap, every `open.md`, and the reversals follow-ups; write any new task files. Reconcile: a task whose source doc no longer says the thing is closed, not dispatched. **If refill also finds nothing**, dream three proposals and end the leg ([running the fleet](ops.md) §7) — do not pick one, and do not write a dreamt item into the queue.

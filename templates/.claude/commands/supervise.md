@@ -68,14 +68,40 @@ not an ending, and the entries you leave are the only thing that crosses it.
    **Exclude `tasks/README.md` and `{{FLEET_REPO}}/supervisor-log.md` when you scan**: both
    *describe* claims and log entries, and a naive grep reports the format
    documentation as live state. Batch 001 hit exactly this.
-   Then **take your own checkout.** Create a worktree of the instance repo at
-   `{{WORKTREE_ROOT}}/{{DOC_REPO_NAME}}/leg/` on `main`, and work there for the
-   whole leg — land, fold, run the gate, everything. You share `{{DOC_REPO}}`
-   with the owner, who drops files into `inbox/` and edits docs while you run;
-   two actors in one working tree is how legs 004 and 005 swept his fragments
-   into their folds, and `fold-commit.py` only closed the staging half of that.
-   A `git checkout` or a rebase in a tree he has dirtied fails outright, which
-   is a leg blocked on something that has nothing to do with it.
+   Then **take your own checkout**, and take it **detached**:
+
+   ```sh
+   git -C {{DOC_REPO}} fetch origin
+   git -C {{DOC_REPO}} worktree add --detach {{WORKTREE_ROOT}}/{{DOC_REPO_NAME}}/leg origin/main
+   ln -sfn {{FLEET_REPO}} {{WORKTREE_ROOT}}/{{DOC_REPO_NAME}}/embarch-fleet
+   ```
+
+   Work there for the whole leg — land, fold, run the gate, everything. You
+   share `{{DOC_REPO}}` with the owner, who drops files into `inbox/` and edits
+   docs while you run; two actors in one working tree is how legs 004 and 005
+   swept his fragments into their folds. A `git checkout` or a rebase in a tree
+   he has dirtied fails outright, which is a leg blocked on something that has
+   nothing to do with it.
+
+   **`--detach` is load-bearing and `--force` is forbidden.** `worktree add
+   <path> main` *refuses* — the owner's checkout holds that branch — so the only
+   way to obey a literal "on `main`" is to override git's own protection. Leg
+   007 did, and two worktrees then shared one branch ref: every fold advanced
+   `main`, so the owner's HEAD moved while his index and working tree stayed at
+   the leg's start commit, leaving **a staged inverse of the entire leg** in his
+   checkout — 25 paths, where a `git commit` would have reverted four units and
+   looked like ordinary work. Detached, his checkout is untouched.
+
+   **Push after every claim and every fold, not only at the end.** On a detached
+   HEAD nothing you commit is visible anywhere until you push, and the claim
+   commit *is* the double-dispatch interlock — it has to reach `origin/main`
+   before you dispatch. `git push origin HEAD:main` each time. A non-fast-forward
+   means something else moved `main`: fetch and rebase, never force.
+
+   **The symlink is what makes the gate pass in a worktree.** Every cross-repo
+   link in the instance resolves to `<worktree parent>/embarch-fleet`, which
+   does not exist until you make it; without it `check-links.py` reports seven
+   broken links nobody wrote.
 
    **`inbox/` is the exception, and it is not optional.** Drops are gitignored,
    so they exist only in the main checkout and your worktree cannot see them.
@@ -84,8 +110,9 @@ not an ending, and the entries you leave are the only thing that crosses it.
    because the source is untracked — there is nothing for git to conflict on.
 
    If the worktree already exists from a killed leg, reuse it after checking it
-   is clean and on `main`; if it is dirty, that is recovery, not setup — see
-   `{{FLEET_REPO}}/ops.md` §3.
+   is clean, then `git fetch origin && git reset --hard origin/main` in it. If
+   it is dirty, that is recovery, not setup — an unpushed fold lives there and
+   nowhere else. See `{{FLEET_REPO}}/ops.md` §3.
 
 1. Confirm no other supervisor is running (`{{FLEET_REPO}}/ops.md` §1 —
    a second one would double-fold `status.d/`). The listener checks this with
@@ -151,6 +178,13 @@ not an ending, and the entries you leave are the only thing that crosses it.
   not. Honouring a stop means: finish landing what is in flight, fold `status.d/`,
   write your log entries, exit. A stop is never "drop everything" — the landing
   and the fold are what keep `main` and the docs consistent.
+- **If you have no Slack tool, that is a degraded control plane, not an error.**
+  Say so once — first log entry and final report — put your unit lines in the
+  log entry instead, and note that your only stop channel is the listener's
+  `SendMessage`. **Do not run a `suite` task**: §4's announcement window is real
+  and one nobody could see is not a window, so leave the task `open` with a
+  state line saying a fresh 30-minute clock is owed. Full rule:
+  `{{FLEET_REPO}}/ops.md` §5.2a.
 - **Alert sparingly, with `scripts/fleet-alert.py`.** A Slack `@` from the fleet
   notifies nobody — the connector posts as the owner, and Slack does not notify
   him about his own message — and `PushNotification` reaches a phone only while
@@ -335,6 +369,13 @@ scripts/fold-commit.py --unit <scope>/<NNN> -m "<subject>" \
     --path <each path this unit touched>
 ```
 
+Run it **from your leg worktree**: it stages in whichever instance checkout you
+are standing in, falling back to `fleet.toml`'s `doc_repo` only when you are
+nowhere near one, and `--doc-repo` overrides both. A completed task file you
+removed with `git rm` is already staged and needs no special handling — the
+script settles every path *before* it commits the log, so a bad path list now
+costs nothing instead of leaving a log-only commit to undo by hand.
+
 It refuses unless the log's newest entry names *this* unit, stages by explicit
 path, and commits the log first — so the orderings a kill can leave are "nothing"
 or "an entry for a fold that did not happen", never "a fold nobody logged".
@@ -372,8 +413,9 @@ classification and do not edit the script.
 ## Ending the leg
 
 Leave nothing in flight: no worker worktrees, no agent branches, no unfolded
-fragments, no claims held by workers that are gone. **Push both repos, then
-remove your own leg worktree** — `git worktree remove` it, and if that refuses
+fragments, no claims held by workers that are gone. **Push both repos** — the
+instance with `git push origin HEAD:main` from your detached leg worktree, the
+fleet repo normally — **then remove your own leg worktree** — `git worktree remove` it, and if that refuses
 because something is uncommitted, say what in your final message rather than
 forcing it. An unpushed fold is the one thing the next leg cannot recover from
 a clean tree. Post a two-line close to

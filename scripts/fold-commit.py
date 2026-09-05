@@ -79,6 +79,49 @@ def head(repo: Path) -> str:
     return git(repo, "rev-parse", "--short", "HEAD").strip()
 
 
+def common_git_dir(repo: Path) -> str | None:
+    r = subprocess.run(["git", "-C", str(repo), "rev-parse", "--path-format=absolute",
+                        "--git-common-dir"], capture_output=True, text=True)
+    return r.stdout.strip() or None if r.returncode == 0 else None
+
+
+def stage_plan(doc: Path, paths: list[str]) -> tuple[list[str], list[str], list[str]]:
+    """(addable, already_staged, missing) for exactly these paths.
+
+    A path git cannot match is not automatically an error: the supervisor
+    deletes a completed task file in the fold (tasks/README.md), and a `git rm`
+    leaves nothing in the worktree or the index to match while the deletion is
+    already staged. That path needs no action. One that matches nothing and is
+    not staged is a real mistake in the path list.
+    """
+    staged = {p for p in git(doc, "diff", "--cached", "--name-only").split("\n") if p}
+    addable, already, missing = [], [], []
+    for p in paths:
+        r = subprocess.run(["git", "-C", str(doc), "add", "-A", "--dry-run", "--", p],
+                           capture_output=True, text=True)
+        (addable if r.returncode == 0 else already if p in staged else missing).append(p)
+    return addable, already, missing
+
+
+def invoking_repo() -> Path | None:
+    """The instance checkout the caller is standing in, worktree or not.
+
+    protocol.md §6 step 0 puts a leg in its own worktree, but this script
+    defaulted to fleet.toml's `doc_repo` -- so the invocation documented in
+    supervise.md staged the OWNER'S checkout, which is the exact thing step 0
+    moved the leg out of. A worktree shares its parent's common git dir, so
+    that is what identifies the instance repo wherever it is checked out.
+    Anything else (a code repo, an unrelated tree) falls back to the config.
+    """
+    r = subprocess.run(["git", "rev-parse", "--show-toplevel"],
+                       capture_output=True, text=True)
+    if r.returncode != 0:
+        return None
+    top = Path(r.stdout.strip()).resolve()
+    canonical = common_git_dir(CONF.doc_repo)
+    return top if canonical and common_git_dir(top) == canonical else None
+
+
 def newest_unit_entry() -> tuple[str, str] | None:
     """The newest per-unit entry, as (unit, body).
 
@@ -167,7 +210,8 @@ def main() -> int:
         print(f"--unit must look like 'api/007', got {args.unit!r}", file=sys.stderr)
         return 2
 
-    doc = Path(args.doc_repo).resolve() if args.doc_repo else CONF.doc_repo
+    doc = (Path(args.doc_repo).resolve() if args.doc_repo
+           else invoking_repo() or CONF.doc_repo)
     if not (doc / '.git').exists():
         print(f'not a git checkout: {doc}', file=sys.stderr)
         return 2
@@ -201,11 +245,31 @@ def main() -> int:
               file=sys.stderr)
         return 1
 
+    # Stage-ability is settled BEFORE the log is committed. `git add` refuses a
+    # path that is in neither the worktree nor the index, and a `git rm`'d task
+    # file is exactly that -- already staged as a deletion, with nothing left to
+    # match. tasks/README.md guarantees every fold has one, so this aborted on
+    # every unit of leg 007, twice after the log commit had already landed and
+    # twice recovered by hand. The ordering was safe by design and manual every
+    # time; now the case is simply understood.
+    addable, already, missing = stage_plan(doc, args.path)
+    if missing:
+        print(f"{len(missing)} path(s) cannot be staged in {doc.name}, and they are\n"
+              "not already staged either -- so the log has NOT been committed:\n")
+        for m in missing:
+            print(f"  {m}")
+        print("\nFix the path list and retry. Nothing has been written.",
+              file=sys.stderr)
+        return 1
+
     if args.dry_run:
         print(f"would commit to {FLEET_REPO.name}: supervisor-log.md")
+        print(f"  staging in: {doc}")
         print(f"would commit to {doc.name}:")
-        for p in args.path:
+        for p in addable:
             print(f"  {p}")
+        for p in already:
+            print(f"  {p}  (already staged as a deletion)")
         return 0
 
     # Log first. If the machine dies between the two, the surviving state is an
@@ -215,7 +279,12 @@ def main() -> int:
     git(FLEET_REPO, "commit", "-m", f"Log {args.unit}: {args.message}")
     log_sha = head(FLEET_REPO)
 
-    git(doc, "add", "--", *args.path)
+    # -A with an EXPLICIT pathspec, never bare: it stages a deletion as well as
+    # an add or a modification, for exactly the listed paths and nothing else.
+    # Bare `git add -A` is what swept the owner's own fragments into legs 004
+    # and 005, and the path allowlist above is what replaces it.
+    if addable:
+        git(doc, "add", "-A", "--", *addable)
     staged = git(doc, "diff", "--cached", "--name-only").strip()
     if not staged:
         print(f"nothing staged in {doc.name}; the log commit {log_sha} stands alone.\n"

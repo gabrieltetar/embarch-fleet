@@ -43,12 +43,23 @@ Remote Control attaches a phone or browser to a Claude Code session on this mach
 | Left behind | Why it is harmless | Recovery |
 |---|---|---|
 | Tasks marked `claimed` | Their workers died with the leg | **No supervisor running ⇒ every claim is stale.** Reclaim to `open`, or to `blocked` naming the branch if it has commits worth salvaging |
-| Worktrees under `embarch/.worktrees/` | Outside every repo tree, so nothing reads them | Delete those with no commits; keep the rest for the `blocked` task |
+| Worktrees under `embarch/.worktrees/` | Outside every repo tree, so nothing reads them | **Look before deleting.** No commits *and* a clean tree ⇒ delete. No commits and a **dirty** tree ⇒ it may be a worker still finishing, or one that died with finished work; commit it to a branch and inspect. Keep the rest for the `blocked` task |
 | A repo mid-merge or mid-rebase | `main` is untouched until a merge completes | `git merge --abort` / `git rebase --abort` before anything else |
 | Unfolded `status.d/` fragments | A fragment is the request, not the edit | Left for the next leg — that is what they are for |
 | Uncommitted edits in the main checkout | A unit's fold is **one commit**, so it either happened or it did not | Restore the shared docs, leave the fragments, redo the fold |
-| A leg worktree at `.worktrees/embarch-doc/leg/` | Outside every repo tree; the owner's checkout is untouched | Clean and on `main` ⇒ reuse it. Dirty ⇒ inspect before resetting: an unpushed fold lives here and nowhere else |
+| A leg worktree at `.worktrees/embarch-doc/leg/` | Outside every repo tree; the owner's checkout is untouched | Clean ⇒ reuse it, `git fetch && git reset --hard origin/main` first. Dirty ⇒ inspect before resetting: an unpushed fold lives here and nowhere else |
 | A log entry with no matching fold | `fold-commit.py` commits the log first, so this is the *survivable* ordering | `fold-commit.py --check` names it. Redo the fold; **do not write a second entry** |
+
+**"No commits" does not mean "no work", and this table used to imply it did.**
+A worker's tree is uncommitted for its whole run and only becomes commits in its
+final bookkeeping, so `rev-list --count` reads zero for a worker that is
+finishing normally *and* for one that died with ~200 lines of green work in
+hand. Leg 007 was told a worker was very likely gone, read zero commits on both
+branches with dirty trees, and began recovery on a **live** worker; nothing was
+lost only because it committed the tree instead of deleting it. **The harness
+saying an agent has no live children is not proof its worker is dead** — check
+the tree, and when in doubt commit it to a branch, which is cheap and
+reversible. Deleting is neither.
 
 **Reporting is different on a phone.** A narrow column and an all-day relay do not survive walls of tool output: **one line per unit** — dispatched, landed with its SHA, blocked with the reason. Never paste passing output; a green `cargo test` is the word "green". A leg's close is two lines pointing at [supervisor-log.md](supervisor-log.md).
 
@@ -123,6 +134,33 @@ The listener has no hands **so that it can live all day**. Reading a doc to answ
 **A `fleet stop` lands promptly on the happy path, which it did not before.** A batch used to run inline in the listening session, so cron went quiet for its duration and the one message that most needed to land was stranded — hence the supervisor polling at every phase boundary. A leg is a background agent, the listener stays idle, the heartbeat keeps ticking, and the stop is delivered by `SendMessage`. The unit-boundary poll in [supervise.md](../embarch-doc/.claude/commands/supervise.md) is now a backstop rather than the only route.
 
 **That diagnosis was right with too narrow a scope.** "Cron went quiet for its duration" is a property of the listener being mid-query from *any* cause, not of running a batch inline — so a wedged tick strands a `fleet stop` the same way. The unit-boundary poll covers a *live* supervisor; nothing covers a wedged listener, and closing VS Code is the backstop ([the risks](risks.md)).
+
+### 5.2a When the channel is not reachable at all
+
+**An agent may have no Slack tool.** The connector is not part of the
+`embarch-supervisor` toolset in every environment — leg 007 had only
+`fleet-alert.py`'s webhook, which §3 reserves for blocking conditions — and when
+the connector is disconnected the owner's own session has none either. **This is
+not a failure to work around; it is a degraded control plane, and it degrades in
+one direction only.** A leg that finds it has no channel:
+
+- **Says so once**, in its first log entry and in its final report. Not per unit,
+  and never by retrying: there is nothing to retry.
+- **Puts its unit lines in the log entry instead.** [supervisor-log.md](supervisor-log.md)
+  is the durable record; the channel is a convenience on top of it.
+- **Loses one of its two stop channels.** The unit-boundary poll (§5.2) is gone,
+  so the stop arrives only as the listener's `SendMessage`. Say that in the log
+  rather than implying both were checked.
+- **Must not run a `suite` task.** §4's announcement is a real 30-minute window
+  for the owner to object, and a window nobody could see is not a window. Leave
+  the task `open` with a state line saying a fresh clock is owed. Leg 007 filed
+  `tasks/suite/003` exactly this way with no rule telling it to, which is what
+  put the rule here.
+
+**`fleet-alert.py` is a separate mechanism** — an outgoing webhook, not the
+connector — so it may work when the channel does not. Try it for a blocking
+condition; if it exits 2 it is unconfigured, and the log entry says the alert
+did not send.
 
 ### 5.3 What a message can do, and what it cannot
 

@@ -108,22 +108,36 @@ def planned(target: Path) -> list[tuple[Path, str, bool]]:
     out: list[tuple[Path, str, bool]] = []
     problems: list[str] = []
 
-    def add(src: Path, dst: Path):
+    def add(src: Path, rel: Path):
         # FLEET_REL is per-file: a markdown link has to resolve from the
         # directory the rendered file lands in, and `tasks/README.md` is one
         # level deeper than `.claude/commands/fleet.md`. Getting this wrong
         # would mean check-links.py fails on files nobody edited by hand.
-        subs = dict(base, FLEET_REL=os.path.relpath(HERE, dst.parent))
+        #
+        # It is computed from the file's CANONICAL location, never from
+        # `target`, because the rendered bytes are what gets committed and must
+        # not depend on where the render ran from. Computing it from `target`
+        # made `--check` fail in every leg and worker worktree -- those sit
+        # three levels below the canonical checkout, so the link came out
+        # different and the check reported three README files as drifted while
+        # `diff` said they were byte-identical. protocol.md §6 step 0 requires
+        # a leg to work in a worktree, so that was every leg and every worker:
+        # `check-docs.py` was permanently red for a whole class of correct
+        # trees, and leg 007 had to tell three workers which reds to ignore.
+        # A gate with a standing exception teaches an agent to triage reds,
+        # which is the judgement the gate exists to remove.
+        canonical = CONF.doc_repo / rel
+        subs = dict(base, FLEET_REL=os.path.relpath(HERE, canonical.parent))
         text, unknown = render(src.read_text(), subs)
         if unknown:
             problems.append(f"{src.relative_to(HERE)}: unknown {sorted(set(unknown))}")
-        out.append((dst, text, False))
+        out.append((target / rel, text, False))
 
     for src in sorted((TEMPLATES / ".claude").rglob("*.md")):
-        add(src, target / ".claude" / src.relative_to(TEMPLATES / ".claude"))
+        add(src, Path(".claude") / src.relative_to(TEMPLATES / ".claude"))
 
     for src in sorted((TEMPLATES / "protocol").glob("*.README.md")):
-        add(src, target / src.name.replace(".README.md", "") / "README.md")
+        add(src, Path(src.name.replace(".README.md", "")) / "README.md")
 
     for name in SHIMMED:
         impl = HERE / "scripts" / name
