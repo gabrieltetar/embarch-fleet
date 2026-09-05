@@ -100,8 +100,24 @@ task, pushed to `origin/main` before the branch was cut, held.
 
 **Blocked:** none.
 
-**Reviewer:** spawned on merge, did not count against the wave. *(Result folded into the
-leg summary below if it landed before the leg ended.)*
+**Reviewer:** no findings.
+
+*(This line was written as "spawned on merge, did not count against the wave" and
+corrected once the reviewer returned — which was **wrong of me**, because
+`grep '^\*\*Reviewer:'` is the tally and a fourth form breaks it. The fix for the next
+leg is to spawn the reviewer at merge and write the line at fold time, not to invent a
+placeholder. It ran in about two minutes against a twelve-minute worker, which is the
+cost the new no-wave rule was betting on.)*
+
+**What the reviewer found that is not a finding, and is worth acting on:**
+`parse_registered_command` reads `Command:` and `Args:` and **ignores the
+`Environment:` block** that `claude mcp get`'s own sample output shows, so check 10
+spawns the server in *doctor's* environment rather than the registered one. The
+reviewer was right that this contradicts nothing — decision 16's "a doctor that
+resolved the token differently than the `embarch-api` it is diagnosing is worse than no
+check" is scoped to token and config mirroring, and decision 23 asks only for the
+registered *command* — but it is exactly the shape decision 16 is about. I have added
+it to `embarch-umbrella/open.md`.
 
 **Hardware debts:** none — no board, no Core, no probe. What *is* owed is one
 `embarch doctor` run from an environment with the agent CLI installed and `embarch`
