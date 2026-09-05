@@ -11,6 +11,19 @@ read. So they are rendered from `templates/` with `{{PLACEHOLDER}}` expanded fro
 fleet.toml, and `--check` re-renders and diffs -- which is what stops the copy
 drifting from its source, the failure this repo exists to make impossible.
 
+**So does config, and `.claude/settings.json` is the only one.** It carries the
+`PermissionRequest` hook that alerts `#embarch-fleet` when an unattended agent is
+suspended on a prompt -- the fleet's one backstop for a condition that, by
+definition, the blocked agent cannot report itself. It lived in
+`.claude/settings.local.json` until 2026-09-05, which is `.gitignore`d and was
+not installed from anywhere, so the backstop was unversioned, undeployable and
+invisible to `--check`: a re-clone or a wiped settings file dropped it silently.
+**The split is by file, not by merge logic** -- Claude Code loads `settings.json`
+and `settings.local.json` together, so the fleet owns the first and the owner's
+machine-local permissions stay in the second, untouched by this installer. The
+hook must therefore never name an absolute path; it resolves the alert script
+through `$CLAUDE_PROJECT_DIR` and the committed shim.
+
 **Code gets a shim.** Every doc in the suite names `scripts/check-ownership.py`
 and every worker invokes it from a worktree whose depth varies, so the path has
 to keep working. A five-line shim that execs the framework copy keeps one
@@ -133,8 +146,9 @@ def planned(target: Path) -> list[tuple[Path, str, bool]]:
             problems.append(f"{src.relative_to(HERE)}: unknown {sorted(set(unknown))}")
         out.append((target / rel, text, False))
 
-    for src in sorted((TEMPLATES / ".claude").rglob("*.md")):
-        add(src, Path(".claude") / src.relative_to(TEMPLATES / ".claude"))
+    for src in sorted((TEMPLATES / ".claude").rglob("*")):
+        if src.is_file() and src.suffix in (".md", ".json"):
+            add(src, Path(".claude") / src.relative_to(TEMPLATES / ".claude"))
 
     for src in sorted((TEMPLATES / "protocol").glob("*.README.md")):
         add(src, Path(src.name.replace(".README.md", "")) / "README.md")

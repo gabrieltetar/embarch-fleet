@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import os,sys,json,subprocess\nd=json.load(sys.stdin) if not sys.stdin.isatty() else {}\nt=d.get('tool_name','?')\n# ops.md 3 forbids a leg asking mid-leg, so this prompt is the owner, in his own\n# window, with his terminal in front of him -- the one case this alert is not for.\nif t=='AskUserQuestion': sys.exit(0)\nc=str((d.get('tool_input') or {}).get('command',''))[:120]\n# Never an absolute path: this file is committed and a second checkout would get\n# a path that exists only where the installer ran. The shim resolves the rest.\nr=os.environ.get('CLAUDE_PROJECT_DIR') or d.get('cwd') or '.'\na=os.path.join(r,'scripts','fleet-alert.py')\nsubprocess.run([sys.executable,a,f'blocked on a permission prompt and cannot continue: {t} {c}'],capture_output=True)\" 2>/dev/null || true",
+            "async": true,
+            "timeout": 20,
+            "statusMessage": "Alerting #embarch-fleet that something is blocked..."
+          }
+        ]
+      }
+    ]
+  }
+}
