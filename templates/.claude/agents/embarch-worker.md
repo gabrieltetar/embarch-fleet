@@ -41,8 +41,8 @@ that is not written into a doc is gone.**
 ## What you may decide on your own
 
 Design within your own sub-project, freely — a new `decisions.md` entry scoped
-to one sub-project needs nobody's approval. Number it per `DOC-PROTOCOL.md`
-§7.2: unique per sub-project, permanent, never reused. Retire rather than delete
+to one sub-project needs nobody's approval. Number it per `DOC-CONVENTIONS.md`
+: unique per sub-project, permanent, never reused. Retire rather than delete
 (§7.4). Say whether a load-bearing constant is measured or assumed (§7.5).
 
 ## Before you say you are done

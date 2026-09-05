@@ -70,6 +70,8 @@ reserved = [
   # the fleet runs under. This is the "next split is loud" case protocol.md §3
   # predicted -- check-ownership.py --supervisor failed until it was listed.
   "DOC-COMPACTION-PASS.md",
+  # DOC-PROTOCOL.md §7 became its own doc the same day, same reason.
+  "DOC-CONVENTIONS.md",
   "embarch-dev-workflow.md",
   "CLAUDE.md",
   "scripts/",
