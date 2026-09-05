@@ -302,9 +302,36 @@ rather than nowhere.
 **A code worktree needs its sibling path-deps symlinked or `cargo build` fails
 outright.** `Cargo.toml` names `../embarch-study-designer` and
 `../../../embarch-topology`; from `.worktrees/<repo>/<slug>/` those resolve to
-nothing. After creating a code worktree, symlink each sibling the crate names
-into the worktree's parent, pointing at the main checkout. Batch 001's api worker
-hit this and fixed it by hand — do it in setup so no worker has to.
+nothing. After creating a code worktree, symlink into the worktree's **parent**,
+pointing at the main checkout — `ln -sfn {{REPO_ROOT}}/<sibling>
+{{WORKTREE_ROOT}}/<repo>/<sibling>`.
+
+**Link every sibling in the dependency *closure*, not the ones the crate's own
+`Cargo.toml` names.** That is the whole table, and it is short because only three
+repos are ever a link target:
+
+| worktree repo | link into its parent |
+|---|---|
+| `embarch-api` | `embarch-study-designer`, `embarch-topology` |
+| `embarch-core` | `embarch-study-designer`, `embarch-topology` |
+| `embarch-ui` | `embarch-study-designer`, `embarch-api`, **`embarch-topology`** |
+| `embarch-umbrella` | `embarch-topology`, `embarch-study-designer` |
+| `embarch-topology`, `embarch-study-designer`, `embarch-outpost`, `embarch-dev-bench` | none |
+
+The bolded one is the trap. `embarch-ui`'s manifest names only
+`embarch-study-designer` and `embarch-api/crates/embarch-core-client`, and
+*that crate* path-depends on `embarch-topology` — so reading one manifest gives
+a worktree that fails its first `cargo build` with
+`failed to read .../.worktrees/embarch-ui/embarch-topology/Cargo.toml`, an error
+naming a path inside the fleet's own scratch directory, which reads like a broken
+worktree rather than a missing link. Leg 009 did this to **both** its `ui` and
+`api` workers; batch 001's api worker hit the direct version of it. Each time the
+worker diagnosed it and made the symlink itself, which is a worker doing setup.
+
+If a `cargo build` in a fresh worktree still fails on a path that is not in this
+table, the table is out of date rather than the build: **the source of truth is
+`grep -rn 'path *= *"\.\.' --include=Cargo.toml embarch-*/`** in the suite root,
+run against the main checkouts. Say so in your log entry.
 
 **Dispatch.** One background `embarch-worker` agent per task, launched without
 blocking on the previous one. Give each: its task file path, **both** worktree
