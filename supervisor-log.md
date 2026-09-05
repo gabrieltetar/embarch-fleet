@@ -64,6 +64,75 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-05 00:26 — api/009 config-decisions-20-21-unbuilt
+
+**Decided:** nothing suite-wide, but this unit is the one where my delegation actually
+did something, so it is worth stating plainly. The task was *build or retire*, both
+answers legitimate; the worker **built both and retired neither**, on the ground that
+each was small and `interfaces/config.md`'s text was a faithful description of a design
+worth having, so the honest fix was to make it true rather than delete it. I agree with
+that and would have made the same call.
+
+**`[projects.default_target]`** (decision 20) is a `zephyr-west` base
+(board, variant, revision, app), applied **per field** before a call's own params
+narrow. Three sub-calls decision 20 had not made, all the worker's and all defensible:
+per-field rather than all-or-nothing (**rejected**: a call-time param discarding the
+whole default, which turns "narrow to the other revision" into "restate every axis");
+`NoMatch`/`Ambiguous` errors now **name which axes came from the default**, or decision
+20's own surprise reappears one layer down — a caller who passed one field reading a
+complaint about three values it never supplied; and it is refused at **config load** for
+a `static` project, which is decision 51's posture moved earlier.
+
+**`snippets = ["none"]`** (decision 21) forces zero snippets over a configured default.
+**The worker corrected decision 21's own premise while building it**, and this is the
+most important line in the unit: decision 21 argued the literal "cannot collide with a
+real snippet name", and that is **false** — a snippet name is just a directory under
+`app/<app>/snippets/` and nothing reserves `none`. So `["none"]` against an app that
+really declares one is now **refused naming the collision**, rather than the collision
+being assumed away. `"none"` inside `default_snippets` is a config-load error.
+
+It also found a **third** false statement in the same interface file: the build
+directory was documented as `…-<snippets-or-none>-<extra-args-hash>`, and
+`Target::build_dir_name` has never produced that — both trailing segments are *absent*,
+not spelled `none`, when empty.
+
+**Merged:** `agent/api/009-config-decisions-20-21-unbuilt` (code `9b961da`, doc
+`304b7db`). Gate re-run by me on the merge result: `cargo build` / `test` (131) /
+`clippy --all-targets -D warnings` green, 8 doc checks green, ownership green on both
+branches.
+
+**Folded by me, not the worker:** `status.d/api-none-snippet-now-exists.md` →
+`suite/user-guide.md`, which said in as many words that there is "**no way to force zero
+snippets** over a configured default". I replaced that clause and added a
+`default_target` bullet beside it. That fragment is the mechanism in §9 working exactly
+as designed — the worker could not write the guide, and said what had become false.
+
+**Blocked:** none.
+
+**Reviewer:** spawned at merge; result in the leg summary below if it returned in time.
+
+**Hardware debts:** none. Host-side config resolution with unit coverage.
+
+**Two setup defects in my own dispatch, both found by workers and both now fixed by
+hand rather than in the code that would prevent them.** The `embarch-api` code worktree
+was missing `../embarch-topology` — `embarch-core-client` path-depends on it, so
+`cargo build` failed outright before compiling anything; the same was true of
+`embarch-ui`. I had linked only the siblings each crate's *own* `Cargo.toml` names, and
+the transitive one is what bites. **Both workers created the symlink themselves and
+left it in place.** `supervise.md`'s setup step names two siblings by example; the real
+rule is *every* sibling in the dependency closure. `inbox/doc-ui-worktree-missing-topology-path-dep.md`
+carries it, and it is `embarch-fleet/`'s to fix, not mine.
+
+**Budget:** DEGRADED, wave 2, no 429.
+
+**Least sure about:** letting `tasks/api/012-compact-api.md` stand at a path
+`tasks/README.md` does not sanction. The worker's reasoning is right about the scripts
+as they are, and filing nowhere would have been worse — but a worker deviating from a
+written rule because two scripts disagree is precisely the drift the ownership map
+exists to stop, and I am the one who let it through.
+
+---
+
 ## 2026-09-05 00:18 — ui/001 trace-view-server-side-binning
 
 **Decided:** nothing suite-wide. Inside `ui` I accepted two judgement calls, both the
