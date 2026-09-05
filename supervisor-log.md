@@ -64,479 +64,202 @@ unit under **Merged** and **Blocked**:
 
 ---
 
-## 2026-09-03 13:15 — leg 006, zero units: stopped before the first dispatch
+## 2026-09-04 20:25 — suite/001 release-tag-version-assertion
 
-**Decided:** nothing. This entry exists because a leg with no units is exactly
-the case where the next one most needs a handoff, and it carries one fact that is
-not recoverable from anywhere else — see **suite/001** below.
+**Decided:** this is the suite-wide one, and it is the line to read. `embarch-umbrella`
+decisions 27/29 claimed **every repo's release workflow asserts `Cargo.toml`'s version
+against its pushed tag before building any target**. No repo did. Four now do —
+`embarch-umbrella`, `embarch-core`, `embarch-api`, `embarch-topology` each gained a
+`verify-version` job the build matrix `needs:`. Three choices inside it were mine and
+are recorded in the decision rather than only here:
 
-**Merged:** nothing. **Blocked:** nothing. **Hardware debts:** none — nothing ran.
+- **`awk` on `Cargo.toml`, not `cargo metadata`.** Three of the four manifests have
+  sibling path dependencies that only resolve once the other repos are checked out, and
+  the point is to fail *before* that setup. `cargo metadata` would have made the guard
+  depend on the thing it is guarding.
+- **Compare against `GITHUB_REF_NAME` with a leading `v` stripped, and pass on a tag
+  pushed without the prefix.** The claim is that the version and the tag agree, not that
+  the tag is spelled a particular way; `on.push.tags` already fixes the spelling.
+- **`workflow_dispatch` exits 0 with a printed reason**, because the ref is then a branch
+  and there is no tag to disagree with. A silent pass would read as a check that ran.
 
-**What happened.** Step 0 was clean: both code repos and `embarch-doc` already up
-to date at `193a1db`, no stale claims, no worktrees with commits, no unfolded
-`status.d/` fragments, `inbox/` empty but for its README. Budget DEGRADED, wave
-2, no 429. `queue-status.py --tasks-only` exited 0 at **8 dispatchable**, so no
-sweep and no dream. I had selected `api/005` and `umbrella/003` for the two
-slots and written both claim lines **in the working tree only** when the `fleet
-stop` arrived. I reverted both edits rather than committing them; **no task was
-ever claimed on `main` and no worker was ever spawned.** The queue is untouched
-at 8.
+**I executed this myself rather than dispatching it** — four repos, so `protocol.md` §8.
+**Its §4 announcement window was already discharged by leg 006** (ts `1788460873.097499`,
+zero replies, 30 minutes elapsed 13:11 MDT 2026-09-03). I did **not** re-announce and did
+**not** restart the clock, exactly as leg 006's entry instructed. That handoff worked;
+without it I would have parked a task that had already served its window.
 
-**`tasks/suite/001-release-tag-version-assertion.md`: its window is closed and
-this is the fact worth carrying.** Leg 005 announced it at ts
-`1788460873.097499` (12:41 MDT — its own log entry says 13:41, which is wrong;
-Slack renders 12:41 and the `ts` is authoritative) and ended before the 30
-minutes were up. I completed that window as instructed: read the thread, **zero
-replies**, and the 30 minutes elapsed at 13:11:13 MDT. So the §4 obligation is
-**discharged** — the state line in the task file now says so. I did not execute
-it, because the stop landed in the same minute and a stop dispatches nothing new.
-**The next supervisor runs it directly: no re-announcement, no new clock.**
-Without this entry the next leg would read a parked task with a two-hour-old `ts`
-and most likely restart a window that has already been served.
-
-**I did not run `build_changelog.py` and I did not fold.** There was nothing to
-fold, and `changelog.d/doc-legs-emit-allowlistable-shell.fixed.md` is **the
-owner's**, from his `193a1db`. Legs 004 and 005 both swept his fragments into
-their folds as a side effect of folding at all; with no unit to fold, the correct
-action was to leave it where he put it. It is still there.
-
-**The `git add -A` hazard did not bite this leg**, and not because it was fixed.
-I was told to stage by explicit path and did — this commit is `supervisor-log.md`
-and `tasks/suite/001-...md`, named. The underlying defect (`git add -A` in the
-fold while the owner edits the same checkout) is unchanged and still his to
-decide on.
-
-**Doc size is still binding in three files** and the next leg inherits it:
-`embarch-umbrella/decisions/doctor.md` 12245/12288, `embarch-umbrella/open.md`
-5108/5120, `embarch-api/spec.md` 10237/10240 — plus
-`embarch-api/interfaces/tools.md` at 12284/12288 and `open.md` at 5113/5120,
-which leg 005's entry did not name. **Five files, not three.** `api/005` cannot
-be done without writing into `spec.md` and `open.md`, so it is a compaction task
-wearing a feature task's clothes; say so in the task file before dispatching it.
-
-**Budget:** DEGRADED at start, wave 2, no 429. Unchanged at end — this leg spent
-almost nothing.
-
-**Least sure about:** reverting the two claim lines instead of committing them as
-`open`-again. Nothing was dispatched, so an uncommitted claim is genuinely just a
-dirty working tree and the queue reads correctly either way — but it means there
-is no committed trace that `api/005` and `umbrella/003` were the two tasks
-selected, and the only record that they were is this sentence.
-
----
-
-## 2026-09-03 14:05 — api/006 expose-compiled-host-schema-version
-
-**Decided:** one thing worth the owner's eye, and it is the worker's call which I
-accepted after checking the argument. **The task told it to put the number on
-`status --json`, and it refused, correctly.** That suggestion came from the
-`umbrella/001` worker's `inbox/` drop — from outside `api` — and it was cheap and
-wrong: `status` resolves config and needs a reachable, authenticated Core, so it
-answers "what is this binary" **only when nothing is broken**, handing the check
-that catches a mismatched install its number on exactly the machines least likely
-to have one. It shipped `embarch-api versions` instead, dispatched in `main`
-*before* config resolution, with a test pinning that it answers against a
-nonexistent config path and against none at all. **A diagnostic's input has to
-survive a broken machine** is the general form, and it is worth keeping.
-
-**I dispatched this task believing it had a live consumer, and it does — but the
-consumer does not read it yet.** `doctor` check 11 still compares `embarch`'s own
-constant, and closing that is `embarch-umbrella`'s work, filed as `umbrella/008`
-from the worker's own drop. So the honest state is a surface built with **no
-reader**, which is the state `embarch-topology`'s `validate_signal` and
-`embarch-study-designer`'s advertise-scoped decode surface are both already in.
-Unlike those two, this one has a named consumer and a queued task pointing at it.
-
-**Merged:** `agent/api/006-expose-compiled-host-schema-version` (api `97427a4`,
-doc `3118212`). Both fast-forward after a clean rebase. Gate re-run on the merge
-result: build, 86 tests, `clippy --all-targets -D warnings`, six doc checks,
-ownership on both branches. **`crates/embarch-core-client/` untouched**, checked
-by path — nothing reaches `embarch-ui`.
+**Merged:** no branches — a `suite` unit is the supervisor's own hands on each `main`.
+Four code commits: umbrella `de8d81b`, core `a2706aa`, api `60abdcf`, topology `e1d9ff2`.
+Doc side folded in this commit.
 
 **Blocked:** none.
 
-**Fold:** the `status.d/` fragment corrected [suite/features.md](../embarch-doc/suite/features.md)'s
-`embarch-api` table — **the CLI is a superset of the MCP surface, not a mirror**,
-which that row had claimed since it was written — and added a `versions` row
-carrying its own "nothing reads it yet".
+**Reviewer:** skipped (a `suite` unit has no worker branch to review, and the diff is my
+own — a reviewer given my SHAs would be reviewing the supervisor, which is what this log
+is for).
 
-**The doc-size wall I flagged last unit was real and it cost this worker a
-compaction pass.** All four `api` docs were at or within a few bytes of their
-caps; it compressed prose in `spec.md`, `interfaces/tools.md`,
-`decisions/surface.md` and `open.md` to fit, and says no argument was dropped.
-Naming the wall in the task file up front is what made that a planned step rather
-than a red gate — worth repeating for `umbrella`, whose `decisions/doctor.md` and
-`open.md` are in the same state.
+**Verified without a tag, and here is exactly how far that goes.** Pushing a tag is a
+release, and a release is the owner's under §2, so I did not. Instead I extracted the
+step's own `run:` block from all four YAML files and executed it against each repo's real
+`Cargo.toml` under four refs — matching tag, mismatched tag, tag without the `v`, and a
+`workflow_dispatch` branch. **16 scenarios, every one as intended**, mismatch exiting 1
+with an `::error::` line. **What that does not cover is the wiring**: that
+`needs: verify-version` really gates the matrix is checked structurally only (parsed
+YAML, `build.needs == verify-version` in all four) and will first be proven by a real
+release. I have written that gap into the task file and the decision rather than letting
+"verified" stand unqualified.
 
-**A worker wrote an `inbox/` drop inside its worktree again**, where it is
-gitignored and dies with the worktree. I rescued it before deleting — same as
-`core/002` last leg. **Two of five workers have now done this**, and the drop was
-the most valuable artefact of the unit both times. `inbox/README.md` telling
-workers to leave a drop uncommitted is exactly what makes a worktree the wrong
-place for it, and no worker can see that from where it sits.
+**Four repos still have no release workflow at all** — `embarch-study-designer`,
+`embarch-dev-bench`, `embarch-outpost`, `embarch-ui`. So "every repo" now means every
+repo that releases, and whichever of those four gains a workflow inherits the obligation
+to copy the job. Recorded in the decision, where someone adding a workflow will see it.
 
-**Hardware debts:** none. Nothing here touches a board, and the worker said so
-rather than inventing one.
+**Fold:** `embarch-umbrella/decisions/release.md`'s "not built" paragraph rewritten
+rather than deleted — a decision that claimed a thing was built for a year is worth a
+reader knowing about. `suite/features.md`'s release-assertion row edited **directly, not
+through a `status.d/` fragment**: §9's fragment exists so a *worker* never touches a
+shared doc, and I am the actor that would have consumed the fragment in this same commit.
+One `changelog.d/suite-*` fragment, assembled.
 
-**I swept two of the owner's uncommitted files into this fold commit.** `b2e7279`
-carries `scripts/check-docs.py` (new, 72 lines) and four lines of `.gitignore`,
-neither of them mine and neither of them this unit's — my fold does `git add -A`
-in the main checkout, and the owner was working there at the same time. It also
-consumed his `changelog.d/doc-fleet-alert-webhook.added.md` into `history/doc.md`,
-which is the same `build_changelog.py` behaviour `core/002` and `umbrella/001`
-both recorded. **Nothing is lost and I did not revert any of it** — reverting
-would delete his work — but the commit message lies about what the commit
-contains, and `check-ownership.py --supervisor` flags `scripts/check-docs.py`
-against my own leg because of it. This is step 0's "another session's `git add -A`
-swept this one's work into unrelated commits", with the fleet on the other side
-of it for the first time. **A `git add -A` fold is not safe while the owner is
-editing the same checkout**, and that is a rule change, so it is his to make and
-not mine.
+**No `cargo` gate was re-run per repo, deliberately:** the diff is four YAML files and no
+Rust source. That is the "gate satisfied by an argument rather than a run" shape this log
+has now flagged four times — but here the argument is that the compiler was not given
+anything to disagree about, which is weaker than the previous three only if a workflow
+file can break a build, and it cannot.
 
-**Budget:** DEGRADED, wave 2, no 429. Four units, no 429 in the whole leg — the
-529 storm that killed batch 004 did not recur.
-
-**Least sure about:** that this leg filed nine tasks and landed four. The queue
-went from 1 dispatchable to 8 plus a parked `suite` item, and **every one of the
-nine came from the fleet noticing something while working, not from the owner
-asking.** Each is individually well-evidenced and quoted from a doc that already
-said it — and that is precisely the drift `inbox/README.md` warns about, at four
-times batch 003's rate. The fleet is now substantially working on what the fleet
-found. If that is not what he wants, this is the leg where it became visible.
-
----
-
-## 2026-09-03 13:35 — umbrella/002 design-only-decisions-audit
-
-**Decided:** nothing suite-wide. The judgement worth recording is what I did
-**not** let this become: the task said *build nothing*, and the worker held to it
-across seven findings it could have started fixing. Every one came back as a
-finding plus an `inbox/` drop. That is the shape I want repeated — an audit that
-starts repairing what it finds stops being an audit halfway through.
-
-**All seven audited items are unbuilt**, each settled from source alone with a
-function or an absence named: `setup --dry-run` (21), the bind-address, firewall
-and disk checks (22a-c, checks 16-18), the MCP handshake spawn (23),
-`doctor --prune` (26), and the release version assertion (27/29). It found two
-more of the same class off-list: **decision 18** — check 5 has no `Fail` branch
-at all, while `spec.md` asserted the not-permitted branch twice — and
-**decision 17's amendment**, where check 8 still uses umbrella's own
-approximating target scanner rather than shelling out to `embarch-api`.
-
-**Four of these were claimed as *shipped* by `spec.md`, not merely left
-unmarked.** That is the finding under the findings, and it is why the task was
-worth running: the unbuilt pieces sit *inside* commands and checks that do ship,
-so a row saying "Shipped" was true about the command and false about the piece.
-The same shape produced the check-14 numbering collision `umbrella/001` fixed
-this morning.
-
-**On the numbering question I asked it to watch for: no second collision.**
-Decisions 1-34 are all present across the six group files, none duplicated,
-27/29 the recorded pair. One provenance gap only — `spec.md`'s check 19 descends
-from `embarch-core` decision 16 with the citation lost in a compaction, restored
-as a link. **So the numbering does not need a new rule on this evidence**, which
-is the answer I was hoping not to have to take on faith.
-
-**Merged:** `agent/umbrella/002-design-only-decisions-audit` (doc `20c1a8f`,
-**no code branch** — doc-only, the code worktree carried no commits, exactly as
-the task specified). Fast-forward after a clean rebase. Gate on the merge result:
-all six doc checks, ownership on the doc branch. **No `cargo` run**, because the
-branch changes no code and the merge result's tree is `main`'s, which unit 1 had
-already built and tested at `1aa0709`.
-
-**`main` moved under me mid-leg.** The rebase picked up the owner's `e55535a`
-("A Slack alert that can actually notify the owner, unwired for now"), committed
-during this leg. Step 0's warning about a repo that moves under a session is not
-hypothetical on this machine — it happened twice today.
-
-**Blocked:** none.
-
-**Fold:** four row changes in [suite/features.md](../embarch-doc/suite/features.md)'s umbrella
-table plus one new row. The `embarch doctor` row's caveat is now much larger than
-"checks 16-19"; the `setup` row names `--dry-run`; the live-target-discovery row
-names the unbuilt amendment; and the release version assertion gets a row of its
-own, which it never had — **designed, unbuilt in every repo.**
-
-**Six `inbox/` drops**, all written to the main checkout rather than the worktree
-(the `umbrella/001` lesson, applied without being told). Five are umbrella
-work — `setup --dry-run`, the MCP handshake spawn, `--prune`, check 5's
-not-permitted branch, and the target-count shellout. **The sixth,
-`suite-release-tag-version-assertion.md`, is `suite` scope across four repos and
-is not a worker's** (§8). **Announced and parked**, not started: `#embarch-fleet`
-ts `1788460873.097499` at 13:41 MDT, recorded in the task file. My leg ends before
-the 30 minutes are up, so **the next leg completes that window rather than
-restarting it** — read the thread on that `ts`, and if nothing objects and 30
-minutes have passed, run it as that leg's last unit.
-
-**Hardware debts:** none. Nothing here ran.
-
-**Doc size is now binding in three places, and this is the handoff line that
-matters.** `embarch-umbrella/decisions/doctor.md` sits at 12245 of 12288 and
-`open.md` at 5108 of 5120 — this worker trimmed its own notes twice to fit —
-and `embarch-api/spec.md` is at exactly 10240 from `api/004`. **A worker touching
-any of the three fails `check-doc-size.py` before it writes a sentence.** Whoever
-dispatches the next `umbrella` or `api` unit should either say so in the task
-file, as I did for `api/006`, or file a `DOC-COMPACTION.md` pass first. That is a
-decision for the owner, since the compaction rules are his.
+**Hardware debts:** none.
 
 **Budget:** DEGRADED, wave 2, no 429.
 
-**Least sure about:** accepting a doc-only unit with no `cargo` run in the gate.
-The reasoning is airtight — no code changed, so the merge result's code tree is
-byte-identical to a `main` I built two units ago — and it is *also* the exact
-"the gate was satisfied by an argument rather than a run" shape that batches 001
-and 002 flagged and that `core/002` flagged again last leg. Third time this
-argument has been made in this log. It has been right every time so far, and that
-is precisely what would make it easy to be wrong with.
+**Least sure about:** editing `suite/features.md` directly instead of writing a
+`status.d/` fragment and folding it. The outcome is identical and the mechanism is
+explicitly a worker-facing one, but every prior unit in this log routed through a
+fragment, so a future reader diffing folds will find one unit that does not match the
+pattern. I would rather it be here in words than discovered as an inconsistency.
 
 ---
 
-## 2026-09-03 13:05 — api/004 static-resolve-discards-selection
+## 2026-09-03 — 6 units landed, 1 leg stopped before dispatch
 
-**Decided:** nothing suite-wide, and one thing worth reviewing. **I let the
-worker widen the task's own scope**, and I think that was right: the task was
-filed from `open.md`'s bullet about `snippets` alone, and told the worker to
-verify the premise before widening. It did — `Selection` has five construction
-sites and every one of them does nothing but hand the struct to
-`resolve::resolve`, whose `static` arm never reads it — so `board`, `variant`,
-`revision`, `app` and `extra_args` were being discarded identically. All six now
-refuse together. **The fork `open.md` named was reject-or-splice and it rejected**
-(decision 51), on the argument that a `static` project's `build_command` is an
-opaque hand-authored argv with no `-S` to add to it, so splicing means guessing
-another build system's flag grammar — which decision 5 exists to keep out.
+Folded from seven per-unit entries on the first unit after midnight (`protocol.md` §11).
+Every SHA and every debt below is carried verbatim from those entries; the judgements
+kept are the ones not recoverable from the commits.
 
-**Merged:** `agent/api/004-static-resolve-discards-selection` (api `7bbe53c`,
-doc `d87639a`). Both fast-forward after I rebased the doc branch onto `main`;
-that rebase was clean, unlike `umbrella/001`'s. Gate re-run by me on the merge
-result: build, 86 tests across three binaries, `clippy --all-targets -D
-warnings`, all six doc checks, ownership on both branches. **No Windows build:**
-not `embarch-core`. **`crates/embarch-core-client/` is untouched** — I checked
-the diff by path rather than taking the report, because that carve-out is what
-bit batch 002, and with it clean nothing reaches `embarch-ui`'s path dependency.
+**Merged**
 
-**Blocked:** none.
+| Unit | Branches |
+|---|---|
+| `core/002` status-versions-and-json-error-body | core `98dedd6`, doc `9753a6d` |
+| `api/003` schema-version-error-kind | api `2ae28b4`, doc `957fed6`, folded in `1b0960b` |
+| `umbrella/001` doctor-check-11-is-a-stub | umbrella `d717831`, doc `b69eb56` |
+| `api/004` static-resolve-discards-selection | api `7bbe53c`, doc `d87639a` |
+| `umbrella/002` design-only-decisions-audit | doc `20c1a8f` — **no code branch**, doc-only by design |
+| `api/006` expose-compiled-host-schema-version | api `97427a4`, doc `3118212` |
 
-**Fold:** the worker's `status.d/` fragment went into
-[suite/user-guide.md](../embarch-doc/suite/user-guide.md) §5.2, and I fixed **two** false lines
-there rather than the one it flagged. It found `--snippet none forces zero
-regardless of the project default` — no such sentinel exists. The bullet above it
-carried the same defect from decision 20: "unless the project declares one" is
-`default_target`, also never built. Both are now gone, and the section says these
-flags are `zephyr-west`-only and that a static project refuses them.
+**Blocked:** none, in any unit. **Leg 006 ran zero units**: step 0 clean, queue at 8, two
+tasks selected (`api/005`, `umbrella/003`) with their claim lines written in the working
+tree only when a `fleet stop` arrived. Both edits were reverted; **nothing was ever
+claimed on `main` and no worker was spawned.**
 
-**Two findings recorded, not fixed** (`embarch-api/open.md`, both verified by
-grep rather than inferred): `[[projects.targets]]` rows are returned by
-`list_targets` and **read by nothing** — a build always runs the project-level
-`build_command` — and **decisions 20 and 21 describe config the crate does not
-have**. The second is the more awkward: `embarch-api/interfaces/config.md` still
-states the `["none"]` sentinel as truth in its snippets paragraph. `open.md` names
-that contradiction explicitly, so it is recorded rather than hidden, and closing
-it is a build-or-retire decision rather than a doc repair. **I did not fix it
-myself** — that file is `api`'s, not mine.
+**Hardware debts, all still open**
 
-**Hardware debts:** none. Nothing here touches a board.
+- **`umbrella/001`, two that are the same run.** Neither `doctor` check 11 nor check 15
+  has ever run against a live Core or a flashed bench — every number in both is injected
+  in tests. One `embarch doctor` against the real pair would establish that `/status`
+  really carries both fields on the deployed build, that `/dev-bench/hello` returns a
+  readable `compatible`, and that a healthy pair reads **pass** rather than warning on
+  some field-name detail no host test can see. Recorded in `embarch-umbrella/open.md`.
+  The stub this replaced reported "not available yet" straight through the 2026-08-26
+  v13-against-v14 incident, so a green there is the first evidence the check works at all.
+- **`core/002`.** That the live Windows service answers with the version of the binary
+  actually installed — the exact `deploy-core` footgun `core_version` exists to catch.
+  First thing to look at on the next real `deploy-core`.
+- **`api/004`.** The MCP surface was never exercised against a live client; both surfaces
+  render through one `format!("{e:#}")` and a test pins the flattened render, so it is
+  the CLI half plus an argument, not a round trip.
+- **`api/003`.** None recorded, and none recoverable — see below.
 
-**Not verified, and the worker said so:** the MCP surface against a live client —
-none available. Both surfaces render through one `format!("{e:#}")` on one
-`bail!` and a test pins the flattened render, so it is the CLI half plus an
-argument, not a round trip.
+**What was decided, that the commits do not say**
 
-**Doc size is now binding in this sub-project.** `embarch-api/spec.md` sits at
-exactly 10240 bytes, `interfaces/tools.md` at 3 bytes of headroom, `open.md` at
-9. This unit paid for its additions by compressing adjacent prose. **The next
-`api` unit has no room and must compress before it writes** — worth putting in
-that task's file rather than letting a worker discover it at gate time.
+- **`core/002`** retired `/status`'s hand-bumped `contract_version` (nothing forced the
+  bump, so it read "same" across contracts that differ) and **deferred the
+  `{code, message, cause}` error body with a trigger**, reclassifying it as cross-repo §8
+  work because the `code` enum is a wire contract `api`, `ui` and `doctor` all branch on.
+- **`umbrella/001`** made check 11 **fail rather than warn**, a change of kind — `doctor`
+  previously failed on almost nothing and this makes a deploy gate that can stop a
+  deploy. Check 15 became a separate check rather than a fourth number in 11. The spec's
+  check numbering had collided on `main`; built keeps 14, the four unbuilt ones moved to
+  16–19. `embarch-umbrella` gained a path dependency on `embarch-study-designer` (types
+  only); the shared crate itself is untouched.
+- **`api/004`** rejected splicing selection flags into a `static` project's opaque
+  hand-authored `build_command` (decision 51) — splicing means guessing another build
+  system's flag grammar, which decision 5 exists to keep out. All six discarded fields
+  now refuse together, not just `snippets`.
+- **`umbrella/002`** was told to **build nothing and held to it across seven findings**,
+  every one returned as a finding plus an `inbox/` drop. Four of the seven were claimed
+  as *shipped* by `spec.md` — the unbuilt pieces sit inside commands that do ship, so a
+  row was true about the command and false about the piece. On the numbering question:
+  **no second collision**, decisions 1–34 all present, 27/29 the recorded pair — so
+  numbering needed no new rule on that evidence.
+- **`api/006`** refused the task's own instruction to put the schema version on
+  `status --json`, and was right to: `status` resolves config and needs a reachable,
+  authenticated Core, so it would answer "what is this binary" only when nothing is
+  broken. It shipped `embarch-api versions` instead, dispatched before config resolution.
+  **A diagnostic's input has to survive a broken machine** is the general form. The
+  surface has a named consumer that does not read it yet — closing that is `umbrella/008`.
+- **`api/003`: decided is a gap, not "nothing".** That unit landed and left no entry —
+  its fold commit `1b0960b` did every other part correctly and never touched this log,
+  after the leg died on repeated HTTP 529. It retired a decision, which §10 says warrants
+  reading the diff, and whatever its supervisor judged is gone. The entry that exists was
+  reconstructed by the owner from commits and Slack: every SHA verified, every judgement
+  absent. §11 now puts the entry in the fold commit so the state cannot recur.
 
-**Budget:** DEGRADED, wave 2, no 429.
+**Recurring failures the day surfaced, none of them fixed by it**
 
-**Least sure about:** nothing about the change itself, which is well-evidenced.
-The thing to watch is that this is the second unit in a row whose worker found
-the filed task's premise **narrower than the truth** — `core/002`'s was wrong in
-the other direction last leg. Task files written from a sweep are turning out to
-be a lossy summary of the `open.md` bullet they came from, and the workers are
-catching it each time. That is the mechanism working, but it is working by
-spending a worker's context on re-deriving what the filer already read.
+- **`git add -A` in the fold swept the owner's uncommitted work into unit commits, twice.**
+  `api/006`'s fold `b2e7279` carries `scripts/check-docs.py` (new, 72 lines) and four
+  lines of `.gitignore`, neither of them that unit's. Nothing was lost and nothing was
+  reverted, but the commit message lies about what the commit contains. **A rule change,
+  and therefore the owner's.**
+- **`build_changelog.py` drains every fragment in `changelog.d/`**, so units repeatedly
+  assembled the owner's pending `doc-*` fragments into `history/doc.md` under their own
+  fold — seven in `umbrella/001`, five in `core/002`. Correct tool behaviour; there is no
+  per-unit filter and a supervisor cannot add one.
+- **Two of five workers wrote an `inbox/` drop inside their worktree**, where it is
+  gitignored and dies with the worktree. Both times the drop was the most valuable
+  artefact of the unit, and both times the supervisor rescued it by hand. `inbox/README.md`
+  tells workers to leave a drop uncommitted, which is exactly what makes a worktree the
+  wrong place for it, and no worker can see that from where it sits.
+- **`main` moved under a leg mid-run twice in one day**, including the owner's `e55535a`
+  landing between two of a leg's own units.
+- **Task files written from a sweep are a lossy summary of the `open.md` bullet they came
+  from.** `core/002`'s stated premise was wrong (check 11 was never blocked on it);
+  `api/004`'s and `api/006`'s were narrower than the truth. Workers caught all three — the
+  mechanism working, but working by spending a worker's context re-deriving what the filer
+  already read.
+- **The gate satisfied by an argument rather than a run, three times**: `core/002`
+  accepted a worker's native Windows build done on a Windows scratch tree rather than
+  re-running it; `umbrella/001`'s Windows skip was accepted after establishing
+  `aws-lc-sys` already fails on `main` and every added dependency is pure Rust;
+  `umbrella/002` skipped `cargo` entirely on a doc-only branch. Each argument was sound.
+  Each is the same shape batches 001 and 002 flagged.
 
----
+**Doc size went from a wall to a reserve, over this day and the next morning.** By the
+end of 2026-09-03 five files were at or within single-digit bytes of their caps
+(`embarch-umbrella/decisions/doctor.md`, `embarch-umbrella/open.md`, `embarch-api/spec.md`,
+`embarch-api/interfaces/tools.md`, `embarch-api/open.md`) and `api/006` spent a whole
+compaction pass just to fit its own additions. The owner's compaction pass and the
+reserve mechanism on 2026-09-04 replaced that: a file inside the last 10% of its cap is
+now writable-but-owed, and `check-doc-size.py` fails only when nothing has filed against
+it.
 
-## 2026-09-03 12:36 — umbrella/001 doctor-check-11-is-a-stub
+**Budget:** DEGRADED all day, wave 2, and **no 429 in any leg** — the 529 storm that
+killed batch 004 overnight did not recur.
 
-**Decided:** nothing suite-wide. Three calls inside `umbrella`, all the worker's
-and all read by me before merging. **Check 11 fails rather than warns** on a host
-schema disagreement, which is a change of kind: `doctor` previously failed on
-almost nothing, and this makes a deploy gate that can stop a deploy. It is right
-— `embarch-api` refuses to submit a study across that gap, so a warn would be
-describing a broken pair as a caution. **Check 15 is a separate check rather than
-a fourth number in 11**, which is exactly the split `core/002` asked for last
-leg. And **the spec's check numbering collided on `main`** — `spec.md` gave 14 to
-the design-only bind-address check while decision 31's flashing-backend check had
-shipped as 14 in code; built keeps 14, the four unbuilt ones moved to 16–19.
-
-**I accepted the worker's skip of the native Windows build, and I verified the
-argument instead of taking it.** `cargo check --target x86_64-pc-windows-msvc`
-dies in `aws-lc-sys`'s C build. Two facts settle it: `aws-lc-sys` is already in
-**`main`'s** `Cargo.lock` (so the failure predates this branch), and every
-dependency this branch adds is pure Rust — `embarch-study-designer`, `postcard`,
-`heapless`, `cobs`, `crc`, `byteorder`, `hash32`. §10 requires a native Windows
-build "where `embarch-core` is involved" and `embarch-umbrella` does not depend
-on it — it shells out. **This is not the `core/002` precedent** the last leg
-warned against: that one accepted a build a worker ran somewhere else, this one
-establishes that the cell was never in the gate.
-
-**Merged:** `agent/umbrella/001-doctor-check-11-is-a-stub` (umbrella `d717831`,
-doc `b69eb56`). Both fast-forward, after I rebased the doc branch onto `main` —
-it had diverged over this leg's own `api/004`/`api/005` task commits, and the
-task file conflicted because I had corrected the claim timestamp on `main` after
-branching. Gate re-run by me on the merge result: build, 102 tests, `clippy
---all-targets -D warnings`, all six doc checks, ownership on both branches.
-
-**`embarch-umbrella` now path-depends on `embarch-study-designer`** (types only,
-default features). A shared crate gained a consumer; the crate itself is
-untouched.
-
-**Blocked:** none.
-
-**Hardware debts:** two, and they are the same run. Neither check 11 nor check 15
-has been run against a live Core or a flashed bench — every number in both is
-injected in the tests. One `embarch doctor` against the real pair is what would
-establish that `/status` really carries both fields on the deployed build, that
-`/dev-bench/hello` returns a readable `compatible`, and that a healthy pair reads
-**pass** rather than warning on some field-name detail no host test can see.
-Recorded in `embarch-umbrella/open.md`. The stub this replaces reported "not
-available yet" straight through the 2026-08-26 v13-against-v14 incident, so a
-green there is the first evidence the check works at all.
-
-**One inbox drop, filed by the worker into the main checkout** (deliberately, so
-it survives the worktree deletion):
-`inbox/api-expose-compiled-host-schema-version.md`. Check 11 compares Core's
-served host version against **this `embarch` binary's** compiled constant, not
-the located `embarch-api`'s, because `embarch-api` exposes its own nowhere. Exact
-for a single-archive install; **wrong exactly in the hand-built mixed install,
-which is how this suite is actually developed.**
-
-**`build_changelog.py` again consumed seven of the owner's pending `doc-*`
-fragments** into `history/doc.md` under this unit's fold commit — the same
-correct-but-surprising behaviour `core/002` recorded. It drains everything in
-`changelog.d/`; there is no per-unit filter and a supervisor cannot add one.
-
-**Budget:** DEGRADED at start, wave 2, no 429.
-
-**Least sure about:** check 11 failing on a number that is a stand-in. A `Fail`
-stops a deploy, and the value it fails on is this binary's rather than the one
-`embarch-api` holds — so the exact case the drop describes is the case where a
-hard failure would be wrong. The worker documented it honestly in `open.md` and
-in decision 33, and the alternative (warn until the drop lands) would have
-shipped the same silence that let the v13/v14 incident run. I would not reverse
-it, but that is the line to look at first if `doctor` starts failing on a
-healthy machine.
-
----
-
-## 2026-09-03 07:50 — api/003 schema-version-error-kind
-
-**Reconstructed by the owner on 2026-09-03, not written by the supervisor that
-landed it.** This unit landed and left no entry: fold commit `1b0960b` consumed
-its `status.d/` fragment, assembled `history/api.md`, updated
-[suite/features.md](../embarch-doc/suite/features.md) and deleted the task file, and never
-touched this log. The leg had already died on repeated HTTP 529 (see the
-`batch 004` note in #embarch-fleet, 07:34); the landing was a hand-resume.
-§11 now puts the entry in the fold commit so this state cannot recur.
-
-**Decided:** unknown, and not recoverable. Whatever this unit's supervisor
-judged — and it retired a decision, which §10 says warrants reading the diff —
-is gone. The shipped result is in `embarch-api/decisions.md` decision 50 and in
-`history/api.md`; the *reasoning* is not.
-
-**Merged:** `agent/api/003-schema-version-error-kind` (api `2ae28b4`, doc `957fed6`), folded in `1b0960b`. Both branches and both worktrees outlived the
-unit and were still present at 09:00; the next leg's step 0 clears them.
-
-**Blocked:** none.
-
-**Hardware debts:** none recorded, and none can be recovered from the artefacts.
-
-**Budget:** not recorded. The leg reported DEGRADED, wave 2 at 01:29.
-
-**Least sure about:** this reconstruction. It is assembled from the commits, the
-task file's deletion diff and the Slack thread — every SHA is verified, and
-every judgement is absent. Treat the **Decided** line as a gap, not as "nothing
-was decided".
-
----
-
-## 2026-09-03 01:52 — core/002 status-versions-and-json-error-body
-
-**Decided:** nothing suite-wide. Within `core` the worker made three calls on one
-`open.md` bullet and I read the whole diff before merging (it retires a decision,
-which §10 requires): **built** `core_version` on `/status` from
-`env!("CARGO_PKG_VERSION")`, **retired** the hand-bumped `contract_version`
-(nothing forces the bump, so its failure mode is a number reading "same" across
-contracts that differ), and **deferred with a trigger** the `{code, message,
-cause}` error body — correctly reclassified as **cross-repo §8 work, not a
-worker's task**, because the `code` enum is a wire contract `api`, `ui` and
-`umbrella`'s `doctor` all branch on. Two tests pin `StatusResponse`'s serialized
-key set, so adding a field without moving `interfaces.md`'s `/status` row now
-fails the suite.
-
-**Merged:** `agent/core/002-status-versions-and-json-error-body` (core `98dedd6`,
-doc `9753a6d`). Both fast-forward; gate re-run by me on the merge result — build,
-171 tests, `clippy --all-targets -D warnings`, all six doc checks, ownership on
-both branches. Fold commit updates `suite/features.md`'s `GET /status` row to
-`unit, hw` and names both version fields.
-
-**Blocked:** none.
-
-**I did NOT re-run the native Windows build myself, and that is a gap.**
-`cargo check --target x86_64-pc-windows-msvc` cannot build this crate from WSL —
-it dies in `probe-rs`'s `hidapi` C sources on a missing `guiddef.h`, which is
-`embarch-dev-workflow.md` §4's documented cross-build failure class — and §4's
-"extract the Windows-gated module into a throwaway crate" does not apply to a
-diff with **no** Windows-gated code in it. The worker improvised: it rsynced the
-three crates to a scratch tree at `C:\Users\tmp12\embarch-agent-scratch\core-002`,
-deliberately not the `source/repos` deploy tree, and ran native `cargo.exe` —
-`build` and `test --no-run` both exit 0, tests compiled but not executed. The
-merge was fast-forward, so that tree is byte-identical to the merge result and
-the run was on the right content. I accepted it rather than repeating it,
-because repeating it means a supervisor writing outside the suite's own repos
-onto the Windows filesystem, which §2 reserves to the owner. **The next leg
-should not treat this as precedent** until the drop below is answered.
-
-**Hardware debts:** none from the change itself — `core_version` is a
-compile-time constant asserted through the real router. One thing only a deploy
-can show: that the live Windows service answers with the version of the binary
-actually installed, which is the exact `deploy-core` footgun the field exists to
-catch. First thing to look at on the next real `deploy-core`.
-
-**Two `inbox/` drops rescued into the main checkout** (they are gitignored and
-lived only in the worker's worktree, which I then deleted — a drop written in a
-worktree is lost unless the supervisor moves it):
-`inbox/doc-worker-native-windows-build-procedure.md` (owner-only: §10 makes a
-native Windows build a gate step and §4 cannot perform it for this crate; asks
-for a sanctioned procedure and a named scratch path) and
-`inbox/umbrella-doctor-check-11-fourth-number.md` (queue work — probably an
-amendment to the open `umbrella/001` rather than a new task).
-
-**The task file's stated premise was wrong and the worker said so.** `core/002`
-claimed `umbrella`'s `doctor` check 11 was "a named consumer waiting" on this
-change. It was not: `umbrella/open.md` names Core's served **host** version,
-which is `study_designer_schema_version` and has existed since 2026-08-25. Check
-11 could always have been built. `core_version` is newly *available* to it as a
-fourth number, not a dependency. **I wrote that premise into the task last leg
-from a sweep** — a filed task's "Why now" is not evidence, and this one was
-wrong in exactly the direction that makes a task look more urgent than it is.
-
-**`build_changelog.py` also consumed five of the owner's pending `doc-*`
-fragments** into `history/doc.md` in this fold — the fleet-listener, fleet-risks,
-remote-surfaces, open-questions-sweep and ownership-base entries. Correct tool
-behaviour (it drains everything in `changelog.d/`), but they were the owner's
-commits, not this unit's, and they landed under this unit's fold commit.
-
-**Budget:** DEGRADED at start, wave 2, no 429.
-
-**Least sure about:** accepting a worker's native Windows build instead of
-re-running it, and doing so on the reasoning that a fast-forward makes branch
-tip and merge result identical. That reasoning is sound and it is also the exact
-shape of "the gate was satisfied by an argument rather than a run" that batches
-001 and 002 flagged twice.
+**Least sure about, carried forward:** that the day filed nine tasks and landed six. The
+queue went from 1 dispatchable to 8 plus a parked `suite` item, and the filing was done
+from sweeps whose premises the workers then had to correct three times out of three.
 
 ---
 
