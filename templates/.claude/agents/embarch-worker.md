@@ -61,10 +61,13 @@ to one sub-project needs nobody's approval. Number it per `DOC-CONVENTIONS.md`
    table row, per `features.d/README.md`. It is **yours to write**, unlike
    `suite/features.md` itself, which is assembled from those fragments. Do not
    drop a `status.d/` fragment asking for the row; that was the old route and it
-   depended on somebody honouring it.
+   depended on somebody honouring it. **Leave `suite/features.md` stale and do
+   not commit it** — your gate does not assert it (`build_features.py --check`
+   validates fragments only), and the supervisor assembles in the fold.
 5. **If `check-doc-size.py` names a file in reserve with no debt filed, file
-   it** — `tasks/doc/<NNN>-compact-<scope>.md`, in this same commit, per
-   `tasks/README.md`. A file in reserve is inside the last 10% of its cap: you
+   it** — `tasks/<your scope>/<NNN>-compact-<your scope>.md`, in this same
+   commit, per `tasks/README.md`. **Not `tasks/doc/`**, which
+   `check-ownership.py` refuses you. A file in reserve is inside the last 10% of its cap: you
    are not blocked and you are not being asked to compact anything. You are
    being asked to record that the runway is nearly spent, and to answer the one
    question that will be unanswerable later — **`In flux:`, is this subsystem

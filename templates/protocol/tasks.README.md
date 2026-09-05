@@ -105,7 +105,18 @@ passes, but the file must be named by an open task here, and **the commit that
 spends the reserve is the one that files it** — see `DOC-COMPACTION.md` §2. The
 gate fails on an unfiled file in reserve and names it.
 
-    tasks/doc/<NNN>-compact-<scope>.md
+    tasks/<scope>/<NNN>-compact-<scope>.md
+
+**`<scope>` is the scope of the doc being compacted, not `doc`** — an
+`embarch-api` file in reserve is filed at `tasks/api/<NNN>-compact-api.md`, and
+`doc` is for this repo's own protocol docs and nothing else. That is a path the
+actor who spent the reserve owns, which is the whole point: until 2026-09-05 this
+said `tasks/doc/` for everyone, and `check-ownership.py` refuses `tasks/doc/**` to
+every worker scope — so the only actor told to file the debt was the one actor
+forbidden to. `check-doc-size.py` rglobs all of `tasks/` and matches on the
+`**Compacts:**` field, so it found the debt either way and the two rules had no
+mechanical collision to reveal them; `agent/api/009` found it by disobeying one of
+them on purpose and saying so (`tasks/doc/004`).
 
 **One task may name several files**, and normally does: a compaction pass is a
 sub-project act, one commit per sub-project (`DOC-COMPACTION-PASS.md`). Three

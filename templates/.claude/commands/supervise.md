@@ -158,7 +158,7 @@ not an ending, and the entries you leave are the only thing that crosses it.
   Two shapes can NEVER be allowlisted, whatever the mode: a `for ... done` loop,
   which has no command prefix to match, and a heredoc or `>` that writes a file,
   which is judged as a write regardless of the command it starts with. So:
-  **run the six checks as `scripts/check-docs.py`**, one command, not a loop;
+  **run the whole doc gate as `python3 scripts/check-docs.py`**, one command, not a loop;
   chain with `&&` or use separate calls instead of looping; and **edit files with
   the Edit/Write tools, never `python3 - <<'PY' ... open(p,'w')` or `cat >`** —
   that includes prepending your log entry. This is not style: a leg was blocked
@@ -278,8 +278,10 @@ task mid-flight. Now it is a debt.
 task file naming each file and its headroom, so it plans instead of discovering.
 And tell it the rule it owes: **if its work spends the reserve — pushes a file
 into it, or leaves one there that nothing has filed — it files
-`tasks/doc/<NNN>-compact-<scope>.md` in the same commit.** `tasks/README.md` has
-the shape. It is not the worker's job to *do* the compaction; it is its job to
+`tasks/<its own scope>/<NNN>-compact-<its own scope>.md` in the same commit.**
+`tasks/README.md` has the shape — and note the path changed on 2026-09-05: it
+used to say `tasks/doc/`, which `check-ownership.py` refuses to every worker
+(`tasks/doc/004`). `tasks/doc/` is yours and the owner's. It is not the worker's job to *do* the compaction; it is its job to
 record the debt while it still holds the one piece of context nobody else will
 have, which is whether that subsystem is still in flux (`DOC-COMPACTION-PASS.md`).
 
@@ -379,10 +381,17 @@ the choice cannot catch on its own.
 
 **Fold and log, per unit, serialized — in ONE commit.** As part of landing each
 unit: consume its `status.d/` fragments into their target docs and delete them,
-run `scripts/build_changelog.py`, **prepend that unit's entry to
-`{{FLEET_REPO}}/supervisor-log.md`**, run `scripts/check-docs.py` once more, and
-commit all of that with **`scripts/fold-commit.py`**, which is the only way to
-land a fold now that the log lives in a different repo from the work.
+run `python3 scripts/build_changelog.py`, run **`python3 scripts/build_features.py`**,
+**prepend that unit's entry to `{{FLEET_REPO}}/supervisor-log.md`**, run
+`python3 scripts/check-docs.py` once more, and commit all of that with
+**`scripts/fold-commit.py`**, which is the only way to land a fold now that the
+log lives in a different repo from the work.
+
+**The assembler is yours, not the worker's**, and `suite/features.md` goes in the
+`--path` list whenever the unit wrote a `features.d/` fragment. A worker owns its
+own fragment and leaves the assembled file stale on its branch by design — the
+file is `never` for it in §3's table. Both `build_*` scripts are mode 644, so
+`python3 scripts/...` and not a bare path.
 
 ```
 scripts/fold-commit.py --unit <scope>/<NNN> -m "<subject>" \
