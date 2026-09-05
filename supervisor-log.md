@@ -67,6 +67,112 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-05 17:48 — umbrella/006 doctor-probe-not-permitted
+
+**Leg 011's first unit, and the first real test of the ride-along compaction rule
+(`DOC-COMPACTION.md` §2). It worked, and the answer to the question is unambiguous: the
+worker performed the compaction inside its own commit.** One commit, `de8a381`, carrying
+both the change and the shortening. `embarch-umbrella/spec.md` **10,089 → 9,131 B**
+(98.5% → **89.2%**), out of reserve; `open.md` 4,412 → 4,525 B (88.4%), spent 526 B on the
+new hardware debt and gave 393 back, still out. **`check-doc-size.py --pressure` now names
+no `umbrella` file at all** — the sub-project that entered this leg with 151 B of headroom
+on an unsplittable 10 KB file left it with 1,109. This is the outcome the mechanism was
+designed for and the one leg 010 predicted it would miss: its final entry said "the next
+umbrella worker will meet the wall the reserve was designed to replace, and it will meet
+it mid-task." It did not, because the rule that arrived the same day put the compaction in
+the hands of the actor making the flux.
+
+**How it compacted matters more than that it did.** Two topics were **moved, not deleted**
+— `spec.md`'s "Committing a repo integration" section became decision 12 in
+`decisions/projects.md`, and `open.md`'s measured v17 reading became decision 35 in
+`decisions/schema-skew.md`. Only three things were deleted outright, all of them
+genuinely spent: the runtime-path half of the Shape diagram (an adjacent bullet already
+asserts it), the narrative of why the doc used to misstate the unbuilt set, and a question
+`open.md` itself marked closed. The doctor table's per-row designed-and-unbuilt
+distinction survives intact. **I answered `DOC-COMPACTION-PASS.md`'s human question against
+the merge result myself: yes — `embarch-umbrella/spec.md` alone still answers what someone
+needs to work on the doctor today.** The sixteen-row table, its per-row built/unbuilt
+marks and the topology classes are all still there; what left was prose about the
+document's own history.
+
+**Decided, inside `umbrella`:** decision 18's Linux probe-permission branch is built in
+`check_probes` as a `std::fs` scan of `/sys/bus/usb/devices/*/idVendor`. **The worker added
+one condition decision 18 never named and it is the right call: the scan runs only when
+Core enumerates on *this* machine** — Linux **and** `TopologyClass::Local`. Check 5's
+count comes off Core's `/status`, so under `wsl-host` — this suite's primary topology —
+the count describes the Windows box while the USB bus describes the WSL2 guest, and
+scanning anyway would reproduce check 14's failure signature (decision 31): a confident
+verdict about the wrong machine. `wsl-host` and `remote` keep the warn and now say which
+reason applies. It also picked up decision 37's `code` field, which decision 37 had
+already named check 5 as its next user: `probes-present`, `no-probe-found`,
+`no-probe-unchecked`, `probe-not-permitted`, `no-status` — two warns share a status and
+had to stay distinguishable in `--json`. `cfg!` rather than `#[cfg]`, so all three host
+branches compile and are tested here.
+
+**Rejected, and I agree with all three:** `0403` (FTDI) on the vendor list — several JTAG
+adapters use it and so does every third serial cable on this bench, so it would fail the
+check on a machine with no probe at all; a `probe.rs` udev-rules URL it could not verify
+(the fix line names the rules file and `udevadm` instead); and shelling out to `lsusb`,
+which needs `usbutils` while sysfs is always there. Nine vendor IDs kept.
+
+**Merged:** `agent/umbrella/006-doctor-probe-not-permitted` — code `66e4a78`, doc
+`de8a381`. Gate re-run by me on the merge result, not the branch: `cargo build`,
+`cargo test` **140 passed / 0 failed** (9 new), `clippy --all-targets -D warnings` green,
+**8** doc checks green, ownership green on both branches (`all 11 changed path(s) owned`).
+**No native Windows build** — `embarch-umbrella` shells out to `embarch-core` rather than
+depending on it, `umbrella/001`'s reasoning unchanged.
+
+**Blocked:** none.
+
+**Reviewer:** no findings.
+
+**Hardware debts: one, and it is the reason this task was `verify-only`.** The Fail branch
+has never met a real permission-denied probe. Settling it needs a **Linux machine running
+`embarch-core` natively** (class `local` — the primary `wsl-host` topology skips the scan
+by design and cannot exercise it at all) with a debug probe attached and its udev rules
+removed, where `embarch doctor` should read check 5 as **Fail** / `probe-not-permitted`
+naming the probe by product string and vendor ID, and **Warn** / `no-probe-found` once the
+rules are restored and the probe is unplugged. **This is a different machine from the one
+that owes the live `embarch doctor` run** for checks 11, 15 and 16 — that one is
+`wsl-host` and cannot discharge this.
+
+**A worker edited another task's header, and I am letting it stand.** It rewrote
+`tasks/umbrella/007`'s `Compacts:` block to say `spec.md` is paid and its worker should
+**not** compact, because my dispatch instruction had baked "151 B left" into 007 and the
+worker's own change made that false. Under §3 a worker may "claim + close its own" task;
+this is more than that, and it is the **third leg running** in which a worker's reasonable
+deviation inside `tasks/` had to be adjudicated after the fact (leg 009's path,
+leg 010's `api/012` state). The content is right and the alternative is a worker that
+notices a stale instruction and says nothing. **But note what is new here: the staleness
+was created by the ride-along rule itself.** A unit that compacts a file changes the
+reserve line in every *other* task file that quotes it, and nothing propagates that. That
+is a structural consequence of §2 worth watching, not a worker defect.
+
+**No `status.d/` fragment, correctly.** The worker checked `embarch.md` and
+`suite/roadmap.md` and found check 5's unbuilt branch mentioned only in
+`suite/features.md`, which is **assembled** — so it updated
+`features.d/umbrella-060-*` to drop it from the unbuilt list and added
+`features.d/umbrella-062-doctor-check-5-not-permitted.md`, leaving the assembled file for
+my fold. That is exactly the path §9's 2026-09-04 amendment opened, used correctly by a
+worker without being told to.
+
+**The fold drained all 16 pending `changelog.d` fragments**, not this unit's one —
+`build_changelog.py` has no per-unit filter and 15 were already waiting when the leg
+started. `history/fleet.md` is **new**, created by this run because `fleet-*` fragments
+had never been assembled before. Both are expected; neither is this unit's doing.
+
+**Budget:** DEGRADED, wave 2, no 429.
+
+**Least sure about:** the `TopologyClass::Local` gate on the scan. It is right for the
+verdict and I would have made the same call — but it means the branch decision 18 asked
+for is unreachable on the only topology this suite is actually used on, and the hardware
+debt above is therefore owed against a machine that does not currently exist in the
+owner's setup. A check whose new half can never run here is not obviously better than the
+warn it replaced; what makes it better is `--json`'s `code`, which now distinguishes the
+two warns on `wsl-host` too. I believe that, but it is a thinner win than the diff looks.
+
+---
+
 ## 2026-09-05 13:22 — suite/003 core-spec-5-to-interfaces
 
 **Decided:** this is the leg's suite-wide unit and the line to read. `embarch-core/spec.md`
