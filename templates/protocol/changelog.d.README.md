@@ -7,8 +7,11 @@ shared history file directly.
 
 - **scope** — a sub-project without the `embarch-` prefix (`core`, `api`,
   `dev-bench`, `study-designer`, `outpost`, `ui`, `topology`, `umbrella`,
-  `promptu`, `atlas`), or `suite` for something spanning several, or `doc` for
-  this repo's own practices.
+  `fleet`, `promptu`, `atlas`), or `suite` for something spanning several, or
+  `doc` for this repo's own practices. The list is derived from the `embarch-*`
+  directories rather than from this sentence, so a new sub-project needs no edit
+  here — but `fleet` is worth naming: its work lands in the framework repo and
+  only its fragment comes back here.
 - **slug** — any short unique hyphenated name for the change.
 - **category** — `added`, `changed`, `fixed`, `removed`, or `decided`.
 
