@@ -251,16 +251,23 @@ top it up, and he should hear it before it reaches zero:
 and `verify-only` tasks only. Claim it — commit the state line before dispatch,
 which is what stops a double-dispatch and what tells the listener a leg is live.
 
-**One claim commit per task, and push it before you branch.** Both halves, and
-neither is bookkeeping. A worker's `check-ownership.py --scope` diffs
-`origin/main...HEAD`, so a claim that is *batched* puts another scope's task file
-in its diff, and a claim that is *unpushed* puts its own there too. Leg 008 did
-both and its fourth worker reported nine out-of-scope paths it had never written.
-Every worker diagnosed it correctly — and that is the danger, not the reassurance:
-§10 makes this check a merge gate, and a supervisor who has learned to read a red
-ownership check as "just the claim commit again" will wave a real one through.
-`check-ownership.py` now names the case rather than leaving it to be recognised,
-but the fix is the ordering, here. Create branch `agent/<sub-project>/<NNN-slug>` and a worktree **in both
+**One claim commit per task, and push it before you branch.** A reclaim then
+reverts exactly one task, and the listener sees each claim as it happens.
+
+**And read a red `check-ownership.py` as real.** For three legs it was not: the
+check took its base from a ref, and the right ref differed per leg. A *batched or
+unpushed* claim put another scope's task file in every worker's diff (leg 008,
+nine such paths by its fourth worker); a *stale worktree `main`* swept in an
+earlier unit's fold (leg 010). One claim per task narrowed the first and did
+nothing for the second — they are the same defect from opposite directions. The
+check now derives its own base, the furthest-forward merge-base between HEAD and
+`main`/`origin/main`, and prints the commit it chose. Neither case can happen by
+construction any more, **so a worker reporting an out-of-scope path is reporting a
+real one** — which is what §10 needs, because a supervisor who had learned to read
+a red ownership check as "just the claim commit again" would wave a real one
+through.
+
+Create branch `agent/<sub-project>/<NNN-slug>` and a worktree **in both
 its code repo and `embarch-doc`** (§5.1 — almost every task changes both, and
 they must land together). Worktrees go under
 `embarch/.worktrees/<repo>/<NNN-slug>/`, outside every repo tree — never inside
@@ -292,6 +299,18 @@ component today?* No script answers it and the gate does not either. **Never
 dispatch one whose `In flux:` field says yes** — that task should be `blocked`
 and naming what unparks it, and if it is `open` and says yes, the filer got it
 wrong; fix the state rather than sending a worker.
+
+**A blocked compaction task does not park the reserve, only the pass.** If a file
+you are dispatching *into* is in reserve and its compaction task is blocked on
+`In flux: yes`, say so in the task file and **tell that worker to compact that
+file as part of its own unit**, carrying the parked task's `Must not delete:`
+list and closing only that file's item. It is the actor making the flux, so it is
+the only one who can shorten what it is rewriting without writing a clean
+statement of something about to be wrong. Left alone this ends one of two ways
+and both are silent: the worker meets the cap mid-flight, or — as `embarch-api`
+did on 2026-09-05 with 96 bytes left in `decisions/zephyr.md` — **it files its
+decision in the wrong topic file and nothing fails.** `DOC-COMPACTION.md` §2 is
+the rule, and it names a mission split as the cheaper move where one fits.
 
 **A compaction task marked `Owner: required` is not yours to dispatch.**
 `DOC-PROTOCOL.md` and `DOC-COMPACTION.md` are reserved, so no agent can compact
@@ -450,8 +469,15 @@ merely detectable. The entry is short, complete and readable cold: what it
 decided, what merged with SHAs, what blocked, any hardware debt.
 
 **On your first unit after local midnight, fold the previous day's unit entries
-into one dated entry first**, keeping every SHA and every debt; that is what
-stops per-unit logging from rolling the file every few days.
+into one dated entry first.** Do not do it yourself and do not open the log to
+do it: **spawn an `embarch-log-folder` subagent** with the date. It runs
+`scripts/fold-day.py <date>`, writes the entry, and `--apply`s it — which
+refuses any fold that dropped a SHA, a hardware debt or a `**Reviewer:**` line.
+You get two summary lines back; the day itself never enters your context. Leg
+010 did this inline and it cost ~35 K tokens as its first act, which is exactly
+what a four-unit bound exists to prevent. Then `python3 scripts/fold-day.py
+--roll` if `--status` says the file is over the line. Both land in that unit's
+own `fold-commit.py` commit, like everything else.
 
 **Then check your own hands**, once, before you exit:
 `git diff --name-only <leg-start-sha>...HEAD | python3

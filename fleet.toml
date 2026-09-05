@@ -89,6 +89,16 @@ reserved = [
   "inbox/README.md",
   "changelog.d/README.md",
   "status.d/README.md",
+  # The suite-level view of this repo, added 2026-09-05 because DOC-PROTOCOL.md
+  # §3 gives every sub-project a directory and the fleet had none. Reserved on
+  # sight: creating `embarch-doc/embarch-fleet/` also creates a `fleet` WORKER
+  # scope, and check-ownership.py's worker rule grants `embarch-<scope>/**`, so
+  # without this the directory split that exists to keep a leg away from its own
+  # rules would have handed one a door back in. check-ownership.py also refuses
+  # `fleet` as a worker scope outright, the way it refuses `suite`; this entry is
+  # the supervisor half of the same rule.
+  "embarch-fleet/",
+  "tasks/fleet/",
 ]
 
 # Top-level docs in doc_repo the fleet legitimately writes. This list exists so

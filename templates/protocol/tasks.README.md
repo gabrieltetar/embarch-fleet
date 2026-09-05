@@ -140,7 +140,13 @@ shortened.
   `**State:** blocked` and name the milestone that unparks it. Compacting a
   subsystem still moving writes a clean statement of something about to be
   wrong and destroys the alternatives you are about to need; a parked task is
-  the mechanism working.
+  the mechanism working. **But it parks the pass, not the reserve** — the next
+  unit to write that file still meets the cap mid-flight, and on 2026-09-05 a
+  96-byte remainder pushed an `embarch-api` decision into the wrong topic file
+  rather than refusing it. So a parked file's compaction **rides in the unit
+  that next writes it**, same commit, carrying this task's `Must not delete:`
+  list and closing only that file's item. `DOC-COMPACTION.md` §2 is the rule;
+  a mission split is the cheaper move where the file holds more than one.
 - **`Must not delete:`** is what the filer knows and the eventual compactor will
   not. Anything: a failure signature, a rejected alternative, a measurement that
   reads as an assumption once its date goes.

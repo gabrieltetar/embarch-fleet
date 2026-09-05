@@ -52,7 +52,10 @@ to one sub-project needs nobody's approval. Number it per `DOC-CONVENTIONS.md`
 2. The whole `embarch-doc` gate in one command: `scripts/check-docs.py`.
 2b. `scripts/check-ownership.py --scope <your sub-project>` in your `embarch-doc`
    worktree, and `--code-repo` in the other. This is the mechanical form of the
-   boundaries above; if it fails, you reached somewhere that is not yours.
+   boundaries above; if it fails, you reached somewhere that is not yours. It
+   prints the commit it took as your branch point — earlier legs saw false reds
+   from a mis-chosen base, and that is fixed, so report a red as a real finding
+   rather than assuming it is your leg's claim commit again.
 3. Your sub-project's `spec.md` / `decisions.md` / `open.md` updated — edit the
    body, never append.
 4. A `changelog.d/` fragment (one line, 200 bytes, per its README).
@@ -64,7 +67,12 @@ to one sub-project needs nobody's approval. Number it per `DOC-CONVENTIONS.md`
    depended on somebody honouring it. **Leave `suite/features.md` stale and do
    not commit it** — your gate does not assert it (`build_features.py --check`
    validates fragments only), and the supervisor assembles in the fold.
-5. **If `check-doc-size.py` names a file in reserve with no debt filed, file
+5. **If your task tells you to compact a file in reserve as part of this unit,
+   that is part of the unit** — a blocked compaction task parks the pass, not the
+   reserve, and you are the actor making the flux, so you are the only one who
+   can shorten what you are rewriting without stating something about to be
+   wrong. Honour that task's `Must not delete:` list and close only that file's
+   item. **Otherwise, if `check-doc-size.py` names a file in reserve with no debt filed, file
    it** — `tasks/<your scope>/<NNN>-compact-<your scope>.md`, in this same
    commit, per `tasks/README.md`. **Not `tasks/doc/`**, which
    `check-ownership.py` refuses you. A file in reserve is inside the last 10% of its cap: you

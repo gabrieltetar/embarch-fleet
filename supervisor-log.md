@@ -27,8 +27,11 @@ previous day's unit entries into one dated entry, keeping every SHA and every
 debt. Per-unit entries would otherwise hit the roll cap every few days and the
 handoff would get shorter and shorter — the opposite of what a relay needs.
 
-When this file passes 25 KB the oldest entries roll into `history/archive/`,
-matching what `scripts/build_changelog.py` already does for a history file.
+Past **40 KB** the oldest whole days roll into `log-archive/` —
+`scripts/fold-day.py --roll`, which never splits a day and always leaves the two
+newest. The line was 25 KB and named the instance's `history/archive/`; neither
+was right. This log lives in this repo, and 25 KB could not hold one folded day
+(the `2026-09-04` entry below is 25 KB on its own), so nothing ever rolled it.
 
 ## Entry shape
 

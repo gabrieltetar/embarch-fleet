@@ -33,7 +33,7 @@ The `suite` scope is not a worker scope: a cross-repo change is the supervisor's
 (§8), and this refuses it outright rather than granting it everything.
 
 Usage:
-  scripts/check-ownership.py --scope api                     # HEAD vs merge-base with main
+  scripts/check-ownership.py --scope api                     # HEAD vs its branch point
   scripts/check-ownership.py --scope api --base origin/main
   git diff --name-only main...HEAD | scripts/check-ownership.py --scope api --stdin
   scripts/check-ownership.py --scope api --code-repo         # in a code repo
@@ -128,24 +128,69 @@ def known_scopes(repo_root: str) -> set[str]:
     return {d.replace("embarch-", "") for d in out if d.startswith("embarch-") and "." not in d} | {"doc", "suite"}
 
 
+def _git(repo_root: str, *args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(["git", "-C", repo_root, *args],
+                          capture_output=True, text=True)
+
+
+def _merge_base(repo_root: str, ref: str) -> str | None:
+    """Where this branch actually left `ref`, or None if `ref` does not exist."""
+    if _git(repo_root, "rev-parse", "--verify", "-q", ref).returncode != 0:
+        return None
+    r = _git(repo_root, "merge-base", ref, "HEAD")
+    return r.stdout.strip() or None
+
+
+def pick_base(repo_root: str) -> str | None:
+    """The FURTHEST-FORWARD merge-base among the candidate refs -- not a fixed
+    preference between them.
+
+    Preferring one ref outright is wrong in both directions, and this check has
+    now been red on a clean branch for each of them:
+
+      * `origin/main` first is wrong when the supervisor's claim commit is still
+        unpushed. The branch is cut from local `main`, `origin/main` is behind
+        it, and every other task file in that claim shows up as a path the
+        worker "changed". Batch 003, on both workers.
+      * local `main` first is wrong when the worktree's `main` is STALE. A leg
+        worktree freezes local `main` at the leg's start commit, while a branch
+        cut later in the same leg is cut from `origin/main`, which an earlier
+        unit's fold has advanced. The diff then sweeps in that fold. Leg 010,
+        on the `umbrella/005` worker, red on `tasks/api/010-...`.
+
+    Both are the same question -- which ref is this branch actually descended
+    from -- and neither ref answers it; the merge-base does. Take each
+    candidate's merge-base with HEAD and keep the one the others are ancestors
+    of. It is the branch point in both cases above, and it needs no fetch to be
+    correct, so a stale worktree stops mattering rather than having to be
+    maintained.
+    """
+    bases = [b for b in (_merge_base(repo_root, ref) for ref in ("main", "origin/main")) if b]
+    if not bases:
+        return None
+    best = bases[0]
+    for b in bases[1:]:
+        if b != best and _git(repo_root, "merge-base", "--is-ancestor", best, b).returncode == 0:
+            best = b
+    return best
+
+
 def changed_paths(base: str | None, repo_root: str) -> list[str]:
-    if base is None:
-        # Local `main` FIRST. Worker worktrees are branched from local main, and
-        # the supervisor's claim commit is often still unpushed when a worker
-        # runs -- diffing against origin/main then shows every other task file
-        # in that commit as a foreign path the worker "changed". Batch 003 hit
-        # this on both workers (3 and 4 phantom violations).
-        for cand in ("main", "origin/main"):
-            r = subprocess.run(["git", "-C", repo_root, "rev-parse", "--verify", "-q", cand],
-                               capture_output=True, text=True)
-            if r.returncode == 0:
-                base = cand
-                break
-    if base is None:
-        print("cannot find a base ref (tried origin/main, main); pass --base", file=sys.stderr)
-        sys.exit(2)
-    r = subprocess.run(["git", "-C", repo_root, "diff", "--name-only", f"{base}...HEAD"],
-                       capture_output=True, text=True)
+    """An explicit --base keeps three-dot (`<base>...HEAD`), so the documented
+    invocations mean what they always did. The default resolves to a commit
+    rather than a ref, so two-dot is already the branch point."""
+    spec = f"{base}...HEAD" if base else None
+    if spec is None:
+        picked = pick_base(repo_root)
+        if picked is None:
+            print("cannot find a base ref (tried main, origin/main); pass --base", file=sys.stderr)
+            sys.exit(2)
+        # Say which commit, not which ref: the whole point is that the ref name
+        # is not the answer, and a reader who has to re-derive the branch point
+        # by hand is the reader who waves a red check through.
+        print(f"base: {picked[:12]} (merge-base of HEAD with main/origin/main)", file=sys.stderr)
+        spec = picked
+    r = _git(repo_root, "diff", "--name-only", spec)
     if r.returncode != 0:
         print(r.stderr.strip(), file=sys.stderr)
         sys.exit(2)
@@ -156,7 +201,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--scope", default="", help="sub-project, without the embarch- prefix")
-    ap.add_argument("--base", help="ref to diff against (default: origin/main, else main)")
+    ap.add_argument("--base", help="ref to diff against (default: the branch point -- see pick_base)")
     ap.add_argument("--repo", default=".", help="repo root (default: cwd)")
     ap.add_argument("--stdin", action="store_true", help="read changed paths from stdin instead of git")
     ap.add_argument("--supervisor", action="store_true",
@@ -223,6 +268,19 @@ def main() -> int:
         print("REFUSED: `suite` is not a worker scope -- a cross-repo change is the")
         print("supervisor's to execute in one sequenced pass (protocol.md §8).")
         return 1
+
+    if args.scope == "fleet":
+        # `embarch-doc/embarch-fleet/` exists because DOC-PROTOCOL.md §3 gives
+        # every sub-project a directory. It is the suite's view of this
+        # framework, and creating it also created a scope name that the
+        # `embarch-<scope>/**` rule would otherwise grant to a worker -- a door
+        # back into the fleet's own rules, opened by a doc-layout convention
+        # rather than by anyone deciding it. Refused here and reserved in
+        # fleet.toml, so neither a worker nor a supervisor can write it.
+        print("REFUSED: `fleet` is not a worker scope. `embarch-fleet/` is the suite's")
+        print("view of the framework the fleet runs under, and protocol.md §2 reserves")
+        print("the whole class to the owner -- as it does this repo itself.")
+        return 1
     # Every doc that names this check writes it as `--scope <sub-project>`, which a
     # reader fills in as `embarch-core`, while the scope vocabulary is the bare
     # `core`. Accept both: the prefixed form identifies exactly one scope, so
@@ -251,11 +309,11 @@ def main() -> int:
             elif p.startswith("scripts/") or p.startswith("DOC-"):
                 hint = "  <- supervisor or owner only"
             elif p.startswith("tasks/"):
-                # Almost certainly not this worker's edit: a leg that claims two
-                # tasks in one commit, or branches before pushing the claim,
-                # leaves the other task's claim inside every worker's
-                # `origin/main...HEAD`. Leg 008 did both and reported nine such
-                # paths by its fourth worker.
+                # This used to be almost certainly NOT the worker's edit: a
+                # mis-chosen base swept a leg's other claims into every worker's
+                # diff (leg 008, nine such paths by its fourth worker; leg 010
+                # again from the other direction). pick_base ended that class,
+                # so the note now says so rather than offering the excuse first.
                 claims.append(p)
                 hint = "  <- another scope's task file; see the note below"
             elif p.startswith("embarch-"):
@@ -270,13 +328,13 @@ def main() -> int:
             # commit again", and that only stays impossible while the two read
             # differently. So this says which it is; it does not decide.
             print(f"\n{len(claims)} of those are another scope's task file, which a worker\n"
-                  "normally cannot have written. If your own diff is clean, this is your\n"
-                  "leg's claim commit sitting in your base: it claimed more than one task\n"
-                  "at once, or branched you before pushing the claim to origin/main.\n"
-                  "Prove it with `git diff --name-only <your-branch-point>...HEAD |\n"
-                  "check-ownership.py --scope %s --stdin`, and say so in your report --\n"
-                  "do NOT treat a red ownership check as routine. Fixing it is the\n"
-                  "supervisor's (embarch-fleet protocol.md §6 step 2)." % args.scope)
+                  "normally cannot have written. The base printed above is this branch's\n"
+                  "own merge-base, so a leg's other claims are no longer swept in by\n"
+                  "construction -- which means this is far more likely to be REAL than it\n"
+                  "was for legs 008 and 010. Do NOT treat it as routine. Check your own\n"
+                  "diff (`git diff --name-only <the base above>..HEAD`); if it really is\n"
+                  "clean, say so in your report and name the base -- fixing it is the\n"
+                  "supervisor's (embarch-fleet protocol.md §6 step 2).")
         return 1
 
     print(f"OK: all {len(paths)} changed path(s) owned by the '{args.scope}' worker.")

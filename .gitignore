@@ -1,2 +1,5 @@
 __pycache__/
 *.pyc
+
+# fold-day.py's extract and ledger: an input to a fold, never a record of one.
+.fold/
