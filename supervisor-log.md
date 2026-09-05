@@ -64,6 +64,87 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-04 20:52 — umbrella/008 check-11-reads-embarch-api-versions
+
+**Decided:** nothing suite-wide. Two calls inside `umbrella`, both the worker's, both read
+by me in the diff before merging — check 11 can **fail** and a fail stops a deploy, so
+this is one of §10's read-the-diff cases even though no shared crate moved.
+
+- **`local_host` became `api_host: Result<u32, String>`, fallible and never defaulted.**
+  Not located / clap exited 2 (an `embarch-api` predating decision 52) / not executable /
+  answered without the field are each a distinct `Warn` naming which. A test pins that
+  `core_host: Ok(16), api_host: Err(..)` is a **Warn** where `Ok(16)` vs `Ok(17)` is a
+  **Fail**. This is the fix for the exact thing leg 003 flagged as its own least-sure
+  line: check 11 was failing deploys on `embarch`'s own constant, a stand-in that is
+  wrong precisely in the hand-built mixed install this suite is developed on.
+- **`embarch`'s own constant survives as a fourth number that can only warn** (decision
+  36). It is free, it blocks no study because `embarch` submits none, and an `embarch`
+  disagreeing with the `embarch-api` it just located is a mixed install nothing else
+  notices on a machine with no suite manifest for check 1 to read.
+
+**Merged:** `agent/umbrella/008-check-11-reads-embarch-api-versions` (umbrella `535a2c4`,
+doc `dbd47f4`). Both fast-forward after a clean rebase of each onto its own `main`.
+Ownership checked on **both** branches *before* either merged; code merged first, then
+`embarch-doc`. Gate re-run by me on the merge result: `cargo build`, **112 tests**,
+`clippy --all-targets -D warnings`, six doc checks. **No native Windows build** — this is
+`embarch-umbrella`, which does not depend on `embarch-core` (it shells out), so §10's
+Windows clause does not reach it; same reasoning `umbrella/001` established, not a new one.
+
+**Blocked:** none.
+
+**Reviewer:** skipped (budget DEGRADED, wave 2, and both slots held by the `api/005`
+worker and this unit's own landing). **And the previous unit's reviewer reported: no
+findings on `core/003`** — it confirmed all three `Must not delete:` items verbatim, all
+five de-duplication moves carrying their claim in the surviving copy, none of the four
+"cold" drops orphaning a decision, and — usefully — that `embarch-study-designer`'s
+`embarch-core/spec.md` **§5** citation still resolves, because only §7 was removed and §7
+was last, so §1–§6 never renumbered. That last point **narrows `tasks/suite/003`**: the
+citation is not currently broken, so that task is a clean structural move rather than a
+repair, and it is less urgent than its own text implies.
+
+**The worker found a bug in my task file and did not code around it.** I wrote
+`embarch-api versions --json`. `--json` is a **top-level** flag on `embarch-api`'s parser
+and is not `global`, so that ordering exits 2 with `unexpected argument '--json' found` —
+which check 11 would then have reported as "an `embarch-api` too old to know `versions`",
+i.e. **every healthy install misdiagnosed.** Correct form is `embarch-api --json
+versions`, verified against a local build and now written into the function's doc comment.
+Nothing in `embarch-api`'s own docs stated the wrong order; only my task file did. **That
+is the fourth task in this log whose filed premise a worker had to correct**, and the
+first where following it would have shipped a defect rather than merely wasted context.
+
+**`decisions/doctor.md` was split rather than compacted, and I accept the judgement.** It
+sat 4 B under its reserve line and 1233 B under its cap with five more open `umbrella`
+tasks (003–007) queued to write into it. Decisions 24, 33, 34 and the two new ones moved
+into `decisions/schema-skew.md` — `doctor.md` now 6.5 KB, the new group 7.0 KB, numbers
+unchanged and permanent, `decisions.md`'s index row added. **No compaction debt filed, and
+that is correct**: `open.md` came *out* of reserve (4795 → 4512 B) when the stand-in
+bullet closed, and nothing was left in reserve that `tasks/umbrella/009` does not already
+name. `009` is untouched and still `blocked`.
+
+**Fold:** two `status.d/` fragments into `suite/features.md` — the `embarch-api`
+`versions` row loses "**nothing reads it yet**" (check 11 is now its consumer), and the
+check 11 row is rewritten to say what it actually compares. Both rows keep `unit` in the
+Verified column, deliberately.
+
+**Hardware debts:** none new, and one **verification** debt that is not hardware and
+should not be filed as one: no `embarch doctor` has run against the *installed* suite, so
+that the installed `embarch-api` answers `--json versions` with the field is still
+unconfirmed — only fabricated binaries and a local debug build have been asked. It rides
+along with the live-Core and flashed-bench debts already in `embarch-umbrella/open.md`
+from `umbrella/001`; **one `embarch doctor` on the real machine discharges all three.**
+
+**Budget:** DEGRADED, wave 2, no 429 anywhere in this leg.
+
+**Least sure about:** that check 11 now shells out to a second binary on the diagnostic
+path. `doctor` exists to work on a broken machine, and every shell-out is a new way for
+the diagnostic itself to fail — the worker handled four failure shapes explicitly and each
+is a warn rather than a crash, which is the right shape. But check 14 set this precedent
+and check 11 is now the second, and I did not check whether *three* shell-outs would still
+finish in a reasonable time on a machine where the binaries are on a slow or contended
+filesystem. Nobody has measured `doctor`'s wall time at all.
+
+---
+
 ## 2026-09-04 20:35 — core/003 compact-docs
 
 **Decided:** nothing suite-wide. The judgement I accepted is the worker's answer to
