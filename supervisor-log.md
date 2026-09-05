@@ -64,6 +64,80 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-04 21:40 — umbrella/003 setup-dry-run
+
+**Decided:** nothing suite-wide. One call inside `umbrella`, the worker's, read by me in
+the diff before merging because it restructured `setup`'s side-effect path rather than
+adding a flag beside it.
+
+**The task file said "one flag and an early return away" and it was wrong — that is the
+entry's point.** `make_plan` did already run every detection step before anything acted,
+so the prediction looked right. But **two of the three side effects — decision 28's binary
+copy and the `PATH` write — only ever printed *while* acting**, because they post-date
+decision 21's text. An early return would therefore have printed a plan that silently
+omitted the two steps a user most wants warned about, and `Done when` box 2 forbids
+exactly that. So the shape is not a return: `Locations` resolves the four writable paths
+once and passes them down; a read-only `plan_install` describes the install from **the
+same `SUITE_BINARIES` constant, the same `paths_refer_to_the_same_file`, and the same
+sourcing-line predicate the real `install_into` uses**, so the description cannot drift
+from the act; one `apply_plan` walks both modes. `FoundBy::PendingInstall` exists so a dry
+run never claims `JustInstalled`, and `--dry-run` `conflicts_with = "uninstall"` rather
+than being silently ignored by it.
+
+**The test is the good part.** `a_dry_run_reaches_no_side_effecting_call` points every
+writable location at a sandbox and makes `embarch-core` a script that would leave a
+sentinel **if it were ever executed**, then asserts the sandbox untouched — a proof of
+absence rather than a check of the printed text. The worker also ran the built binary as
+`embarch setup --dry-run --port 1`, port 1 chosen deliberately so nothing could reach the
+live Core, and md5-verified `~/.bashrc`, `~/.local/share/embarch` and
+`~/.config/embarch/umbrella.toml` byte-identical afterwards. That is a worker declining to
+touch a live service without being told to.
+
+**Merged:** `agent/umbrella/003-setup-dry-run` (umbrella `23c9deb`, doc `a0319f9`). Both
+fast-forward after a clean rebase of each onto its own tip. Ownership checked on **both**
+branches before either merged (6 doc paths, 5 code paths); code merged first, then
+`embarch-doc`. Gate re-run by me on the merge result: `cargo build`, **114 tests**,
+`clippy --all-targets -D warnings`, seven doc checks. **No native Windows build** — §10
+requires one where `embarch-core` is involved and this is `embarch-umbrella`; the Windows
+gap is recorded as a debt below instead.
+
+**Folded:** `status.d/umbrella-setup-dry-run.md` into `suite/features.md`'s `embarch
+setup` row, which said `--dry-run` unbuilt. The fragment explicitly told me **not** to
+touch the row's `3, 21, 28` decision list, because that list does not mean "unbuilt" — a
+worker anticipating the wrong fold and heading it off, which is the fragment mechanism
+working as designed.
+
+**Blocked:** none.
+
+**Reviewer:** skipped (budget DEGRADED, wave 2 — the two slots went to `outpost/001` and
+`dev-bench/001` so the leg would reach its unit cap). I read the code diff myself before
+merging, which is §10's supervisor judgement, not a substitute for the reviewer.
+
+**Hardware debts:** none — **and the debt this unit did collect is explicitly not
+hardware.** Only the Unix `PathPlan` arm ever ran; `plan_path`'s Windows arm and
+`windows_path::is_on_path` are `#[cfg(windows)]` and there is no Windows linker on this
+machine. **This is a machine, not a board** — one `embarch setup --dry-run` on a real
+Windows box settles it *and* the same gap decision 28 has carried for `ensure_path` since
+it was written. Recorded in the task file and in decision 21. Also unexercised: the
+`wsl-host` and `remote` arms, which print identical text in both modes because they were
+already print-only, so nothing new is at risk there.
+
+**Reserve:** `spec.md` 9671 → 9761 B, still in reserve and still filed against
+`tasks/umbrella/009` (`blocked`, `In flux: yes`, correctly). `open.md` 4512 → 4530 B,
+still out. `decisions/install.md` 10195 → **11009 B, kept deliberately under the 11059 B
+reserve line** so no new compaction task was owed — a worker sizing its own prose against
+the cap rather than discovering it. Suite-wide still 7 in reserve, all filed.
+
+**Budget:** DEGRADED, wave 2, no 429.
+
+**Least sure about:** merging a change that adds `#[cfg(windows)]` code no compiler on
+this machine has ever seen. It is type-checked by nothing here, `clippy --all-targets`
+cannot reach it, and the only reason I accept it is that decision 28 already carries the
+identical gap for `ensure_path` — which means the suite now has **two** unbuilt Windows
+arms resting on the same untested assumption instead of one.
+
+---
+
 ## 2026-09-04 21:30 — api/008 duplication-overlaps
 
 **No Slack tool this leg, and this is the once it is said** (`ops.md` §5.2a). The
