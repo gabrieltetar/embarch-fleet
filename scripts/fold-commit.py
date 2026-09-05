@@ -85,22 +85,45 @@ def common_git_dir(repo: Path) -> str | None:
     return r.stdout.strip() or None if r.returncode == 0 else None
 
 
-def stage_plan(doc: Path, paths: list[str]) -> tuple[list[str], list[str], list[str]]:
-    """(addable, already_staged, missing) for exactly these paths.
+DONE_TASK = re.compile(r"^\*\*State:\*\*\s*done\b", re.M)
 
-    A path git cannot match is not automatically an error: the supervisor
-    deletes a completed task file in the fold (tasks/README.md), and a `git rm`
-    leaves nothing in the worktree or the index to match while the deletion is
-    already staged. That path needs no action. One that matches nothing and is
-    not staged is a real mistake in the path list.
+
+def finished_task(doc: Path, rel: str) -> bool:
+    """A task file this fold is supposed to retire: under tasks/, and `done`."""
+    if not rel.startswith("tasks/") or rel.endswith("README.md"):
+        return False
+    f = doc / rel
+    try:
+        return bool(DONE_TASK.search(f.read_text(encoding="utf-8", errors="replace")))
+    except OSError:
+        return False
+
+
+def stage_plan(doc: Path, paths: list[str]) -> tuple[list[str], list[str], list[str], list[str]]:
+    """(addable, to_delete, already_staged, missing) for exactly these paths.
+
+    Three cases that are not errors and used to look like one:
+
+    - **A finished task file.** tasks/README.md says the supervisor deletes it
+      in the fold, so it is always in a fold's path list. If the worker's branch
+      merged it in its `done` state it has no pending change at all, `git add`
+      stages nothing, and leg 008's first fold reported "2 path(s)" for three --
+      the task file silently surviving the fold that was meant to retire it.
+      This fold does the `git rm` itself rather than trusting the caller to.
+    - **One already `git rm`'d.** Nothing in the worktree or index to match,
+      deletion already staged, nothing to do.
+    - **A path matching nothing and not staged.** That one is a real mistake.
     """
     staged = {p for p in git(doc, "diff", "--cached", "--name-only").split("\n") if p}
-    addable, already, missing = [], [], []
+    addable, to_delete, already, missing = [], [], [], []
     for p in paths:
+        if finished_task(doc, p):
+            to_delete.append(p)
+            continue
         r = subprocess.run(["git", "-C", str(doc), "add", "-A", "--dry-run", "--", p],
                            capture_output=True, text=True)
         (addable if r.returncode == 0 else already if p in staged else missing).append(p)
-    return addable, already, missing
+    return addable, to_delete, already, missing
 
 
 def invoking_repo() -> Path | None:
@@ -252,7 +275,7 @@ def main() -> int:
     # every unit of leg 007, twice after the log commit had already landed and
     # twice recovered by hand. The ordering was safe by design and manual every
     # time; now the case is simply understood.
-    addable, already, missing = stage_plan(doc, args.path)
+    addable, to_delete, already, missing = stage_plan(doc, args.path)
     if missing:
         print(f"{len(missing)} path(s) cannot be staged in {doc.name}, and they are\n"
               "not already staged either -- so the log has NOT been committed:\n")
@@ -268,6 +291,8 @@ def main() -> int:
         print(f"would commit to {doc.name}:")
         for p in addable:
             print(f"  {p}")
+        for p in to_delete:
+            print(f"  {p}  (finished task, this fold deletes it)")
         for p in already:
             print(f"  {p}  (already staged as a deletion)")
         return 0
@@ -285,7 +310,18 @@ def main() -> int:
     # and 005, and the path allowlist above is what replaces it.
     if addable:
         git(doc, "add", "-A", "--", *addable)
+    if to_delete:
+        # tasks/README.md: a landed task leaves the queue in the same commit
+        # that folds its fragments. Git holds it, and a completed task left in
+        # the queue competes with the open ones for attention.
+        git(doc, "rm", "-q", "--", *to_delete)
     staged = git(doc, "diff", "--cached", "--name-only").strip()
+    # A path that produced no change at all is worth a line. The count on its
+    # own is not enough: leg 008 read "2 path(s)" for a three-path fold and had
+    # to notice the discrepancy by eye.
+    quiet = [p for p in args.path if p not in set(staged.split("\n"))]
+    for p in quiet:
+        print(f"note: {p} staged nothing -- it was already committed unchanged")
     if not staged:
         print(f"nothing staged in {doc.name}; the log commit {log_sha} stands alone.\n"
               "Investigate before retrying -- do not write a second entry.",
@@ -294,7 +330,8 @@ def main() -> int:
     git(doc, "commit", "-m", f"{args.message}\n\nLog: embarch-fleet@{log_sha}")
 
     print(f"{FLEET_REPO.name}  {log_sha}  supervisor-log.md")
-    print(f"{doc.name}  {head(doc)}  {len(staged.splitlines())} path(s)")
+    print(f"{doc.name}  {head(doc)}  {len(staged.splitlines())} path(s)"
+          f"{f', {len(to_delete)} task file(s) retired' if to_delete else ''}")
     print("\nPush both. A fold is not landed until the log is pushed too.")
     return 0
 

@@ -103,7 +103,7 @@ The steps, in order, per leg:
    drops are gitignored, so they live only in the main checkout and are read
    there by absolute path. A previous leg may have been killed outright — closing VS Code is the owner's kill switch and is expected to be used ([running the fleet](ops.md) §3). Abort any in-progress merge or rebase, reclaim every stale claim, and delete dead worktrees **before** anything else. The exact rule and what a kill can leave behind: [running the fleet](ops.md) §3. Then read the newest [supervisor-log.md](supervisor-log.md) entries: under the relay they were written by a predecessor this leg has no memory of, and they are the only thing that crossed the boundary.
 1. **Refill, only if nothing is dispatchable.** Drain `inbox/`, then sweep the roadmap, every `open.md`, and the reversals follow-ups; write any new task files. Reconcile: a task whose source doc no longer says the thing is closed, not dispatched. **If refill also finds nothing**, dream three proposals and end the leg ([running the fleet](ops.md) §7) — do not pick one, and do not write a dreamt item into the queue.
-2. **Select and set up**, per free slot. `scripts/usage-budget.py --suggest` sets how many may be in flight ([running the fleet](ops.md) §2); it, not the cap, is the number. At most one task per sub-project, from `Hardware: none`/`verify-only` only. Claim it on `main` *before* dispatch — that commit is what stops a double-dispatch — then create the branch and both worktrees under `embarch/.worktrees/`, outside every repo tree and never inside `.claude/worktrees/` (`embarch-study-designer` decision 57).
+2. **Select and set up**, per free slot. `scripts/usage-budget.py --suggest` sets how many may be in flight ([running the fleet](ops.md) §2); it, not the cap, is the number. At most one task per sub-project, from `Hardware: none`/`verify-only` only. Claim it *before* dispatch — that commit is what stops a double-dispatch — **one commit per task, pushed to `origin/main` before the branch is created**, because a worker's ownership check diffs `origin/main...HEAD` and a batched or unpushed claim puts paths in that diff the worker never wrote (§10 makes that check a merge gate, so a supervisor learning to discount it is the real cost). Then create the branch and both worktrees under `embarch/.worktrees/`, outside every repo tree and never inside `.claude/worktrees/` (`embarch-study-designer` decision 57).
 3. **Dispatch** as a background worker agent, without blocking on the one before it. Re-check the budget before refilling a slot, never only at the start of the leg.
 4. **Land, fold and log the moment a worker reports.** Run the gate (§10) independently — do not trust the worker's word for green — then merge both of its branches in the order §10 fixes, rebase the rest onto the new `main`, consume its `status.d/` fragments, and prepend its entry to the log (§11), as one serialized commit per unit. **A rebased branch's tip is never an ancestor of `main`** even when its content landed, so `merge-base --is-ancestor` cannot prove a rebased branch is safe to delete — check the commit it rebased *to*. Batch 003 correctly refused to delete one on this basis. **Record every merge commit's SHA**: there is no merge commit and no branch name left afterwards, so the SHA is the only handle a revert has (§11). Delete a worker's worktrees once its branches have landed or been abandoned.
 
@@ -160,9 +160,17 @@ for it. Findings land in `inbox/` and in the unit's log entry; a confirmed
 contradiction is reverted by SHA, which is the first thing that ever uses the
 SHAs §11 already requires. **Merge-on-green is unchanged** — a reviewer that
 blocked would make every unit a two-agent serial dependency, and the owner chose
-progress over caution here as elsewhere. It costs a spawn, so it is skipped under
-a tight budget, and **the log says which**: "no findings" and "no reviewer ran"
-are different facts.
+progress over caution here as elsewhere.
+
+**A reviewer does not count against the worker wave**, and the rule that said it
+did was self-defeating. It reads a diff for about ninety seconds against a
+worker's twenty minutes, but costing a whole slot out of a DEGRADED wave of two —
+this machine's steady state — meant it was almost never affordable: eight entries
+in, one ran and six were skipped for the wave alone. **The question the tally
+exists to answer could not be answered under the rule governing it.** Skip only
+on a HOLD, a recent 429, or a leg ending at its unit cap where the reviewer would
+outlive it, and **the log says which**: "no findings" and "no reviewer ran" are
+different facts.
 
 **The gate is mechanical and catches broken, not wrong.** The one judgement the supervisor adds: read the diff before merging when the change touches a shared crate (`embarch-study-designer`, `embarch-topology`, and `embarch-core-client` — which lives inside `embarch-api` but is path-depended on by `embarch-ui`, so an `api` worker can change `ui`'s dependency without owning `ui`), a wire type, or retires a decision. Those are where passing and correct diverge most expensively; everything else merges on green.
 

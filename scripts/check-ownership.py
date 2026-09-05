@@ -235,6 +235,7 @@ def main() -> int:
     if bad:
         print(f"{len(bad)} path(s) outside what an '{args.scope}' worker may write "
               f"(protocol.md §3):\n")
+        claims = []
         for p in bad:
             hint = ""
             if p in ("embarch.md", "embarch-features.md", "embarch-roadmap.md",
@@ -243,11 +244,32 @@ def main() -> int:
                 hint = "  <- drop a status.d/ fragment instead (§9)"
             elif p.startswith("scripts/") or p.startswith("DOC-"):
                 hint = "  <- supervisor or owner only"
+            elif p.startswith("tasks/"):
+                # Almost certainly not this worker's edit: a leg that claims two
+                # tasks in one commit, or branches before pushing the claim,
+                # leaves the other task's claim inside every worker's
+                # `origin/main...HEAD`. Leg 008 did both and reported nine such
+                # paths by its fourth worker.
+                claims.append(p)
+                hint = "  <- another scope's task file; see the note below"
             elif p.startswith("embarch-"):
                 hint = "  <- another sub-project's docs"
             print(f"  {p}{hint}")
         print(f"\nAllowed for '{args.scope}': embarch-{args.scope}/**, tasks/{args.scope}/**, "
               f"changelog.d/{args.scope}-*, status.d/{args.scope}-*")
+        if claims:
+            # Named, never excused. The failure this guards against is a
+            # supervisor waving a REAL violation through as "just the claim
+            # commit again", and that only stays impossible while the two read
+            # differently. So this says which it is; it does not decide.
+            print(f"\n{len(claims)} of those are another scope's task file, which a worker\n"
+                  "normally cannot have written. If your own diff is clean, this is your\n"
+                  "leg's claim commit sitting in your base: it claimed more than one task\n"
+                  "at once, or branched you before pushing the claim to origin/main.\n"
+                  "Prove it with `git diff --name-only <your-branch-point>...HEAD |\n"
+                  "check-ownership.py --scope %s --stdin`, and say so in your report --\n"
+                  "do NOT treat a red ownership check as routine. Fixing it is the\n"
+                  "supervisor's (embarch-fleet protocol.md §6 step 2)." % args.scope)
         return 1
 
     print(f"OK: all {len(paths)} changed path(s) owned by the '{args.scope}' worker.")

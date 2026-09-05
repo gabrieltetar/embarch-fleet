@@ -248,9 +248,19 @@ top it up, and he should hear it before it reaches zero:
 **Then run units until the cap.** For each free slot, while the wave size allows:
 
 **Select and set up.** At most one task per sub-project, from `Hardware: none`
-and `verify-only` tasks only. Claim it on `main` — commit the state line before
-dispatch, which is what stops a double-dispatch and what tells the listener a leg
-is live. Create branch `agent/<sub-project>/<NNN-slug>` and a worktree **in both
+and `verify-only` tasks only. Claim it — commit the state line before dispatch,
+which is what stops a double-dispatch and what tells the listener a leg is live.
+
+**One claim commit per task, and push it before you branch.** Both halves, and
+neither is bookkeeping. A worker's `check-ownership.py --scope` diffs
+`origin/main...HEAD`, so a claim that is *batched* puts another scope's task file
+in its diff, and a claim that is *unpushed* puts its own there too. Leg 008 did
+both and its fourth worker reported nine out-of-scope paths it had never written.
+Every worker diagnosed it correctly — and that is the danger, not the reassurance:
+§10 makes this check a merge gate, and a supervisor who has learned to read a red
+ownership check as "just the claim commit again" will wave a real one through.
+`check-ownership.py` now names the case rather than leaving it to be recognised,
+but the fix is the ordering, here. Create branch `agent/<sub-project>/<NNN-slug>` and a worktree **in both
 its code repo and `embarch-doc`** (§5.1 — almost every task changes both, and
 they must land together). Worktrees go under
 `embarch/.worktrees/<repo>/<NNN-slug>/`, outside every repo tree — never inside
@@ -328,10 +338,20 @@ reviewer that blocked would make every unit a two-agent serial dependency. It is
 the only thing in this design that ever reads a diff for intent, and `risks.md`
 names that gap as the characteristic failure.
 
-**It counts against the wave.** A reviewer is a spawn like any other, so
-re-check `usage-budget.py` before starting one and **skip it under a tight
-budget** — a landed unit with no reviewer is fine; a leg that stops dispatching
-because reviewers ate the wave is not.
+**A reviewer does not count against the worker wave.** It reads a diff for
+about ninety seconds; a worker runs for twenty minutes. Counting them equally
+made a reviewer cost a whole worker slot, and since DEGRADED — a wave of **2** —
+is this machine's steady state, that meant a reviewer could almost never be
+afforded: eight log entries in, the tally reads one ran, six skipped, one
+unresolved. **The open question this tally exists to settle could not settle
+under the rule that governed it.** So spawn the reviewer whenever a unit merges,
+and keep the wave for workers.
+
+Skip it only on a real signal, never on the wave size: a **HOLD** from
+`usage-budget.py`, a 429 in the last window, or a leg ending at its unit cap
+where a reviewer would outlive the leg that spawned it. Say which in the
+`**Reviewer:**` line — "skipped (budget DEGRADED, wave 2)" is no longer a reason
+and should not appear again.
 
 **Every unit's log entry carries a `**Reviewer:**` line, in exactly one of three
 forms**, because whether per-unit review earns its cost is an open question that
