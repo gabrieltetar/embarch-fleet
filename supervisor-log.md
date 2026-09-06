@@ -78,6 +78,103 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 02:35 — umbrella/021 bound-narrows-setup-clause-reads-a-host-that-is-not-setups
+
+**Leg 016's fourth and last unit**, and it closes a chain this leg made itself: `020` fixed a
+fix line, `020`'s reviewer found the fix rested on a false premise, I filed it as `021`, and
+`021` fixed the premise. **Three of this leg's four units are the same defect chased one path at
+a time**, which is worth noticing as a pattern rather than as three successes.
+
+**Decided:** nothing suite-wide. Three sub-project calls, and the first is the interesting one:
+
+- **The worker fixed the code rather than retracting the claim, and argued the cheap option
+  down.** Decision 22 asserted `doctor` and `setup` "can never disagree" because they share
+  `infer_class`; the truth was they shared the *callee* and not the *inputs*. It could have
+  retracted the sentence — one line, no code. It did not, and the argument is the keeper:
+  **nobody reads a decision at the moment of choosing. The `fix` line is what a human is
+  printed while deciding what to type**, so a doc that accurately describes a lie still ships
+  the lie. `setup_would_infer` is now `setup::infer_class(None, core.as_ref())` — the fix line
+  predicts one exact invocation, a bare `embarch setup`, so it is fed that invocation's own
+  arguments. The claim was *also* corrected in place, because "shared function" never bought it.
+- **Item 2's guard replaced a proxy with an exhaustive `match`.** The old gate,
+  `recommended_bind_address(setup_would_infer) == needed`, was standing in for "would a run here
+  install a wide-bound Core" and is not that. Now `WslHost` offers, `Local` withdraws with
+  *installs the narrow bind again*, `Remote` withdraws with *installs nothing at all*.
+- **Decision 37 got one reading**, which is what `020` left open: a reuse record is owed where a
+  code keeps its spelling for a state that **replaced** the one its decision described, and is
+  not owed where a fix stops it firing on states that decision never described. Mechanically —
+  if closing the change means rewriting the entry's description of what the code names, it is a
+  reuse. Count stays two; `bind.md`'s reading was right. And a change to a `fix` string is never
+  a reuse, because nothing is contracted to match on prose.
+
+**Merged:** `agent/umbrella/021-infer-class-inputs` (code `02a9c90`, doc `cdbd6d0`, the doc side
+rebased from `741d084` onto `205c07b` and ownership re-checked after). Gate on the merge result:
+`cargo build`, 183 tests, clippy, all 9 doc checks, ownership both branches, client-names clean.
+
+**Blocked:** none.
+
+**Reviewer:** no findings. Tally after this unit: **27 ran, 24 no findings, 3 findings.** It
+verified the unreachability claims from source rather than from the report and added two things
+neither the worker nor I had:
+
+- **"On every path" is not literally true and it does not matter, for a reason the worker did not
+  give.** `make_plan` short-circuits before `infer_class` when a live Core answers — but the
+  `bound-narrow` arm is only reached when nothing answered anything, and **`setup`'s candidate
+  set with `host = None` is a subset of `doctor`'s with `host = Some(_)`**, so doctor finding
+  nothing implies setup finds nothing. The prediction is sound *inside the arm's own firing
+  condition*, which is the only place it is printed.
+- **`Remote` is unreachable and the arm is still compulsory**, because `TopologyClass` is matched
+  exhaustively with no wildcard — so it is a guard, not dead code asserted as covered, and the
+  second test says which in its own name. It noted one uncovered *input* shape
+  (`infer_class(None, Some(non-windows core))`) while all reachable outputs are covered.
+- **One overstatement it flagged**: the `Remote` fix line says `setup` "installs nothing at all",
+  but `apply_plan` still installs the umbrella binaries and PATH on every class — it is the Core
+  *service* and its bind that are untouched. True in context, loose as written. Not filed.
+- **And `open.md` genuinely cannot be split**, for a mechanical reason nobody had cited:
+  `check-doc-size.py`'s `CAPS` has `decision-group` and `interface-group` patterns but **no
+  `open/` group role**, so `^embarch-[a-z-]+/open\.md$` is the only matcher and the 5 KB is a
+  hard single-file cap. The worker's conclusion was right; this is why.
+
+**Hardware debts:** none new and none discharged. `021` deliberately abstained from a *second*
+`saved.host` defect it found — `doctor` check 2 also infers the class from
+`config.core.host` or `saved.host`, so a stale `--host` makes it say `remote` on a `wsl-host`
+machine, and **one `doctor` run can now print two different inferred classes.** It recorded that
+in `open.md` **with the reason for abstaining**: the `or(saved.host)` fallback's intent is
+undocumented and clearing it would change check 2's answer on real machines on a guess. That is
+a deliberate abstention, and the reason is the part that must not be lost — without it the bullet
+reads as an oversight someone will "fix".
+
+**THE RESERVE IS NO LONGER A DEBT NOTICE HERE — `embarch-umbrella/open.md` is at
+5,080 / 5,120 B, 40 bytes left**, and `decisions/bind.md` at 11,409 / 12,288 (92.8%). Both
+verified byte-exact by the reviewer. Five files in reserve suite-wide, every one filed. The
+worker reopened `tasks/umbrella/009` for both rather than filing a second compaction task —
+correct, that file is the sub-project's standing debt and `017` and `020` set the precedent — and
+**it reports the ride-along is spent**: no cross-doc duplication remains, nothing can split, and
+what is left is the protected prose. **The next umbrella unit that writes `open.md` at all meets
+the cap mid-task. That is the first time in this log a reserve has become a wall rather than a
+notice**, and `DOC-COMPACTION.md` §2's ride-along — which kept this file writable for three
+consecutive units — has no fourth use in it.
+
+**I also wrote a supervisor note into `tasks/umbrella/009`, because that task now contradicts
+itself and the next leg would have had to find out the hard way.** Its "Why blocked" says it
+*unparks when the umbrella queue is down to one open task*; with `019`, `020` and `021` all
+closed the umbrella queue is at **zero** open tasks, so the condition is met twice over — while
+`In flux:` still reads `yes` and §6 forbids dispatching a compaction task whose flux field says
+yes. **Both facts are true**: nothing is competing for these docs, *and* check 17's entry is
+still owed a live narrow-bound Core. The note says explicitly not to resolve it by dispatching
+anyway and not to resolve it by flipping the field to make the queue move.
+
+**Budget:** DEGRADED at start and end, wave 2 throughout, **no 429 anywhere in the leg**.
+
+**Least sure about:** that three of this leg's four units were the same defect, and each one was
+found by the *previous* one's reviewer rather than by the unit itself. `018` fixed one arm,
+`020` fixed the arm beside it, `021` fixed the premise under `020`'s fix. Every step was a real
+improvement and every step shipped a claim its successor had to correct. **The reviewers are
+doing the work the units are not**, and the honest reading is either that check 17 is genuinely
+this subtle, or that a unit which fixes a fix line should be required to enumerate the other
+arms of the same predicate before it closes. I did not ask for that and cannot add it — it would
+be a rule, and rules are the owner's.
+
 ## 2026-09-06 02:20 — suite/006 no-repo-in-this-suite-is-rustfmt-clean-and-nothing-checks
 
 **Leg 016's third unit, and mine under §8.** Announced at `ts 1788678196.359869` (01:03 MDT),
