@@ -6,7 +6,7 @@
 
 **Three windows, and only one of them is armed.**
 
-1. **The listener** — a dedicated VS Code window running `/fleet start` ([.claude/commands/fleet.md](../embarch-doc/.claude/commands/fleet.md)). It reads #embarch-fleet on a 10-minute heartbeat — which fires **only while that window is idle** (§5.2, and it is why a tick must fail fast) — spawns agents, relays what they say, nothing else. Arming leaves the pump **off**.
+1. **The listener** — a dedicated VS Code window running `/fleet start` ([.claude/commands/fleet.md](../embarch-doc/.claude/commands/fleet.md)). It reads #embarch-fleet on a 10-minute heartbeat — which fires **only while that window is idle**, and it is not idle while a leg runs (§5.2) — spawns agents, relays what they say, nothing else. Arming leaves the pump **off**.
 2. **The pump** — `fleet start` in the channel: writes the latch, spawns the first leg, and from then on each leg's death spawns the next, the relay ([the protocol](protocol.md) §6). `fleet stop` ends it.
 3. **The owner's window** — an ordinary session for standing rules, `scripts/`, `.claude/`, hardware, and drops into `inbox/`. Not armed, and not the fleet.
 
@@ -14,7 +14,7 @@
 
 **Editing a rule no longer stops the fleet.** `deploy.py` still refuses to render into a live fleet, but the owner now commits and runs `deploy.py --queue`, which pins the framework SHA; the listener spawns an [`embarch-deployer`](../embarch-doc/.claude/agents/embarch-deployer.md) at the next leg boundary — where it has just proved with `ListAgents` that no leg is alive — and that agent renders the pinned commit and nothing else. It was worth building because the old loop was the largest measured hole in the fleet's uptime: ~3.7 h of a 14 h window, the fleet stopped so the owner could hold the pen. [DEVELOPING.md](DEVELOPING.md) §4.1 is the loop; a **re-arm stays the owner's** either way.
 
-**The relay is what `/loop /supervise` was going to be** — the pacing lives in the heartbeat and the latch rather than a `/loop` interval, each leg bounded at four units so nothing accumulates. **Cron and scheduled cloud agents stay ruled out**, and not on principle: a cloud runner cannot see `/mnt/c/…/embarch-core`, the west workspaces, or the local toolchains, so it could only ever do doc work.
+**The relay is what `/loop /supervise` was going to be** — pacing lives in the heartbeat and the latch rather than a `/loop` interval, each leg bounded at four units so nothing accumulates. **Cron and scheduled cloud agents stay ruled out**, and not on principle: a cloud runner cannot see `/mnt/c/…/embarch-core`, the west workspaces, or the local toolchains.
 
 **Concurrency cap: 6 workers**, at most one per sub-project, wave size set per leg by the budget (§2). The cap exists because rebase cost grows with the number of branches waiting behind a merge, not because of the seat.
 
@@ -26,7 +26,7 @@ The fleet exists because the seat is under-used (§1), so "how much is left" is 
 
 **On this machine the percentages never arrive, and that is the normal case.** Quota state arrives over the wire, so only a status line can see it; `~/.claude/usage-cache.json` has never appeared, which is why every leg so far has reported DEGRADED. A transcript carries token counts and `429`s but no quota state.
 
-**The reason this doc used to give was wrong.** It said the extension runs no status line. One *is* configured — `statusLine` running `scripts/statusline-usage.py` from this repo at `refreshInterval: 60`, versioned there since 2026-09-04 and asserted by `usage-budget.py` — and given a payload containing `rate_limits` it writes the cache correctly [verified 2026-09-03 against a sandboxed `HOME`]. What is missing is `rate_limits` in the payload, not the status line. **The two are indistinguishable on disk**, which is how the wrong reason survived: `write_cache` returns early unless `rate_limits` is a dict, so "never ran" and "ran with no numbers" both leave no file, and narrowing further needs a payload capture. Its docstring names the candidates — `rate_limits` arrives only for a Pro/Max seat, only after a session's first API response, and each window disappears once its `resets_at` passes, so an unconstrained window is *expected* to report nothing.
+**The reason this doc used to give was wrong.** It said the extension runs no status line. One *is* configured — `statusLine` running `scripts/statusline-usage.py` at `refreshInterval: 60`, versioned here since 2026-09-04 and asserted by `usage-budget.py` — and given a payload containing `rate_limits` it writes the cache correctly. What is missing is `rate_limits` in the payload, not the status line. **The two are indistinguishable on disk** — `write_cache` returns early unless `rate_limits` is a dict, so "never ran" and "ran with no numbers" both leave no file — which is how the wrong reason survived; narrowing further needs a payload capture. Its docstring names the candidates.
 
 None of that changes what a leg does: no numbers, DEGRADED, and `--check-429` is the real protection. `statusLine.refreshInterval` stays **required** — the event-driven triggers go quiet exactly while a session waits on background subagents, which is what a supervisor does.
 
@@ -56,33 +56,31 @@ Remote Control attaches a phone or browser to a Claude Code session on this mach
 A worker's tree is uncommitted for its whole run and only becomes commits in its
 final bookkeeping, so `rev-list --count` reads zero for a worker finishing
 normally *and* for one that died with ~200 lines of green work in hand. Leg 007
-was told a worker was very likely gone, read zero commits on both branches with
-dirty trees, and began recovery on a **live** worker; nothing was lost only
-because it committed the tree instead of deleting it. **The harness saying an
-agent has no live children is not proof its worker is dead** — check the tree,
-and when in doubt commit it to a branch, which is cheap and reversible.
+began recovery on a **live** worker that way, and nothing was lost only because
+it committed the tree rather than deleting it. **The harness saying an agent has
+no live children is not proof its worker is dead** — check the tree, and when in
+doubt commit it to a branch, which is cheap and reversible.
 
 **Reporting is different on a phone.** A narrow column and an all-day relay do not survive walls of tool output: **one line per unit** — dispatched, landed with its SHA, blocked with the reason. Never paste passing output; a green `cargo test` is the word "green". A leg's close is two lines pointing at the log.
 
-**A watchdog window detects the one failure nothing else can.** The listener
-cannot notice that it is wedged — a hung tick never returns to idle, so its own
-cron cannot fire and `fleet stop` cannot be delivered. A second window armed with
-`/fleet watch` reads the mtime of a tick file the listener touches at the end of
-every tick, and alerts when it goes stale by 25 minutes. **Its whole vocabulary points one way — stop, never start**: it
-cannot spawn, write a repo file, or launch a leg; declaring a wedge means an
-alert and deleting the pump latch. That asymmetry is why it does not weaken the
-kill switch — §3's rule bites on anything that *takes away* the stop, and an
-action that only ever stops cannot; the worst a false positive costs is a
-`fleet start` typed by hand. Unlatching is not a graceful `fleet stop`: a wedged
-listener relays nothing, so whatever is already running keeps running and closing
-VS Code remains the only thing that ends it. What it prevents is a fleet quietly
-resuming after a wedge nobody saw, and it turns five hours into ten minutes.
+**A watchdog window detects the one failure nothing else can.** The fleet cannot
+notice that it is wedged: a hung tick never returns to idle, so its own cron
+cannot fire and no `fleet stop` reaches it. A second window armed with
+`/fleet watch` reads the mtime of one file, `.fleet/tick`, and alerts when it
+goes stale by **45 minutes**. **Its whole vocabulary points one way — stop, never
+start**: it cannot spawn, write a repo file, or launch a leg, and a declared
+wedge means an alert and deleting the pump latch. That asymmetry is why it does
+not weaken the kill switch: this section's rule bites only on what *takes away*
+the stop. Unlatching is not a graceful stop: whatever is running keeps running,
+and closing VS Code is still what ends it.
+
+**`tick` means the fleet made progress, not that the listener's cron fired** — the listener touches it each tick, **a leg at every dispatch and fold**. The listener-only reading went dark exactly when the fleet was busiest (§5.2), so it was bound to fire on **every healthy leg**; on 2026-09-06 it did, unlatching a live pump and capping the relay at one leg. The fix leaves the logic untouched (one mtime, stop-only) and *widens* it: a hung leg now trips it too. **45 min because healthy fold-to-fold gaps were measured at 40.** The accepted cost and the rejected `.fleet/leg` alternative are in that command file.
 
 **Alert rarely, and through `scripts/fleet-alert.py`**, whose header carries why a Slack `@` from the fleet notifies nobody, and the webhook setup that fixes it. Unconfigured it exits 2 and says so: post to the channel anyway and record that the alert did not send. `PushNotification` reaches a phone **only while Remote Control is connected**, so it supplements rather than replaces. **The set, closed**: leg blocked and stopped · budget HOLD · a failed spawn · the same failure blocking two units · a dream · a parked `suite` task · **an agent suspended on a permission prompt**. **Never per unit, never on an ordinary leg end** — legs end every twenty minutes, and an alert each time is a pager.
 
-**That last one is a hook, not a call, and it is in the set because it was already firing outside it.** A suspended agent cannot alert for itself, so `.claude/settings.json`'s `PermissionRequest` hook does it — the one member of this set no supervisor decides to send. It is listed here because for two days it was a live alert source this closed set did not mention. **It excludes `AskUserQuestion` by design**: §3 forbids a leg asking mid-leg, so that prompt is the owner in his own window with his terminal in front of him — not an unattended agent. Nine of the channel's first eleven bot messages were exactly that false positive against zero true ones, with **not one** of the 194 `AskUserQuestion` calls on this machine coming from a subagent. **The rejected alternative was gating the hook on the caller being a subagent**: it needs the hook to tail `transcript_path` and read `isSidechain`, racy and undocumented, inside a hook that must stay async and swallow its own failures. Not worth it against a defect whose whole observed population is one tool.
+**That last one is a hook, not a call, and it is in the set because it was already firing outside it.** A suspended agent cannot alert for itself, so `.claude/settings.json`'s `PermissionRequest` hook does it — the one member of this set no supervisor decides to send, and for two days a live alert source this closed set did not mention. **It excludes `AskUserQuestion` by design**: §3 forbids a leg asking mid-leg, so that prompt is the owner in his own window, not an unattended agent. Nine of the channel's first eleven bot messages were that false positive against zero true ones, and **not one** of 194 `AskUserQuestion` calls here came from a subagent. Gating the hook on the caller being a subagent was rejected: it needs the hook to tail `transcript_path` and read `isSidechain`, racy and undocumented, in a hook that must stay async.
 
-**Steering works, and the supervisor must let it.** A `fleet stop` normally arrives as a `SendMessage` from the listener (§5.2), and a message sent mid-turn is queued either way, so the supervisor also checks between units. Honouring it: finish landing what is in flight, fold, write the log entries, exit. That *graceful* stop leaves nothing for step 0 to clean, and deleting the latch is what stops a respawn.
+**Steering works, and the supervisor must let it.** A `fleet stop` reaches a live leg because the supervisor reads the channel at **every unit boundary** (§5.2); the listener's `SendMessage` is the second route, not the first, and a message sent mid-turn is queued either way. Honouring it: finish landing what is in flight, fold, write the log entries, **delete the latch**, exit. That *graceful* stop leaves nothing for step 0 to clean, and deleting the latch is what stops a respawn — which is why it is the supervisor's job when the supervisor is the one who read the message.
 
 **Never ask a question mid-leg.** Prompts do not expire while a device is connected, so a question is eventually answered — but "eventually" is a frozen leg with workers in flight and a 5-hour window burning. End the leg and say so once.
 
@@ -130,11 +128,11 @@ The listener has no hands **so that it can live all day**. Reading a doc to answ
 
 **The heartbeat only fires while the listener is idle, and that is load-bearing.** `CronCreate`'s contract: a job fires only while the REPL is idle, never mid-query — so the fallback is unavailable for as long as a tick runs, and **a tick that retries a failure internally suppresses its own retry.** That cost five hours on 2026-09-03, when a 529 killed a leg and the respawn died too. So [fleet.md](../embarch-doc/.claude/commands/fleet.md)'s STEP 2 makes **one** attempt then ends the turn: a tick that gives up returns to idle, and the next heartbeat retries in about eleven minutes.
 
-**The latch is a file; the message watermark is reactions.** Two mechanisms for two jobs. Reactions (`eyes`, `white_check_mark`, `x`, `robot_face`) mark what has been *seen*, cannot drift out of sync with the channel, and double as progress visible from a phone before any work finishes — and **`robot_face` is load-bearing**, because the connector posts as the owner, so without a marker the next tick reads the fleet's own unit lines as fresh instructions (caught on the first real tick, before it did). The latch answers a question no reaction can — "is the pump still on, twenty legs later". It is a file because it must survive a leg ending, and arming deletes it so it does **not** survive a kill: otherwise closing VS Code would stop the fleet and re-arming would silently restart it.
+**The latch is a file; the message watermark is reactions.** Two mechanisms for two jobs. Reactions mark what has been *seen* and cannot drift out of sync with the channel — **`robot_face` is load-bearing**, because the connector posts as the owner, so without a marker the next tick reads the fleet's own unit lines as fresh instructions. The latch answers what no reaction can: "is the pump still on, twenty legs later". It is a file because it must survive a leg ending, and arming deletes it so it does **not** survive a kill — otherwise closing VS Code would stop the fleet and re-arming would silently restart it.
 
-**A `fleet stop` lands promptly on the happy path, which it did not before.** A batch used to run inline in the listening session, so cron went quiet for its duration and the one message that most needed to land was stranded — hence the supervisor polling at every phase boundary. A leg is a background agent, the listener stays idle, the heartbeat keeps ticking, and the stop is delivered by `SendMessage`. The unit-boundary poll in [supervise.md](../embarch-doc/.claude/commands/supervise.md) is now a backstop rather than the only route.
+**"Idle" also excludes holding a live background agent, so the cron is dark for a whole leg.** Measured 2026-09-06: one tick at 14:04:24, then nothing until **14:53:49**, four `3-59/10` slots suppressed while the leg landed 4/4 units and died at 14:47. **The cron is a *between-legs* heartbeat and nothing more**; the two rules built on the opposite claim are corrected here and in §3.
 
-**That diagnosis was right with too narrow a scope.** "Cron went quiet for its duration" is a property of the listener being mid-query from *any* cause, not of running a batch inline — so a wedged tick strands a `fleet stop` the same way. The unit-boundary poll covers a *live* supervisor; nothing covers a wedged listener, and closing VS Code is the backstop ([the risks](risks.md)).
+**A `fleet stop` reaches a live leg through the supervisor's own poll, and that is the primary route.** Until 2026-09-06 this doc said the reverse: that a background leg left the listener idle and ticking, so `SendMessage` delivered the stop and [supervise.md](../embarch-doc/.claude/commands/supervise.md)'s unit-boundary poll was a backstop. Backgrounding a leg moved the silence rather than removing it — a stop posted at 14:10 in that run went unread until 14:53. **So the poll is the route, `SendMessage` is opportunistic**, and **the supervisor deletes the latch itself**: otherwise its death wakes a listener that never saw the message, never unlatched, and starts the next leg. It leaves the message unreacted so the next tick still confirms it. Uncovered: a stop during a *wedged* leg or listener, where closing VS Code is the backstop ([risks](risks.md)).
 
 ### 5.2a When the channel is not reachable at all
 

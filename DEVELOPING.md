@@ -32,6 +32,7 @@ reverted — which is why `install.py --check` is a gate in that repo's
 | What the supervisor or worker agent does | `templates/.claude/agents/*.md` | a rendered copy |
 | The listener, its cron prompt, the Slack vocabulary | `templates/.claude/commands/fleet.md` | a rendered copy |
 | How a leg runs | `templates/.claude/commands/supervise.md` | a rendered copy |
+| The watchdog, its cron prompt, the staleness threshold | `templates/.claude/commands/fleet-watch.md` | a rendered copy |
 | The claim protocol, the drop format, fragment rules | `templates/protocol/*.README.md` | `tasks/README.md`, etc. |
 | Ownership, queue state, budget, alerting, the fold | `scripts/*.py` | a shim — no re-render needed |
 | A path, channel, identity or limit | `fleet.toml` | **both**, see §3 |
@@ -62,11 +63,15 @@ Not all at once, and the differences have bitten before.
 | `.claude/commands/supervise.md` | the next leg |
 | `.claude/commands/fleet.md` — vocabulary | the next tick, which re-reads the file |
 | `.claude/commands/fleet.md` — **the cron block** | **only after re-arming** |
+| `.claude/commands/fleet-watch.md` — **the cron block** | **only after re-arming `/fleet watch`** |
 
-That last row is the one to remember. Arming copies the heartbeat prompt into a
-cron job, so the live job keeps the wording it was created with however many
-times you edit the file. They drifted once already. `deploy.py` diffs that file
-and tells you when a re-arm is owed.
+Those last two rows are the ones to remember. Arming copies the heartbeat prompt
+into a cron job, so the live job keeps the wording it was created with however
+many times you edit the file. They drifted once already. `deploy.py` diffs that
+file and tells you when a re-arm is owed. **The watchdog's block is the same
+trap and `deploy.py` does not diff it** — a watchdog still running an older
+staleness threshold reports nothing unusual, so re-arm both windows whenever
+either block changes.
 
 ## 3. Changing fleet.toml is two changes
 

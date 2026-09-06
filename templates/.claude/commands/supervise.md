@@ -163,6 +163,19 @@ not an ending, and the entries you leave are the only thing that crosses it.
   the Edit/Write tools, never `python3 - <<'PY' ... open(p,'w')` or `cat >`** —
   that includes prepending your log entry. This is not style: a leg was blocked
   mid-fold on 2026-09-03 by a command containing both shapes.
+- **Touch `{{STATE_DIR}}/tick` at every dispatch and every fold** — literally
+  `touch {{STATE_DIR}}/tick`, one command, right after you spawn a worker and
+  again right after `fold-commit.py` returns. Also once when you finish step 0,
+  before your first dispatch. **This is the fleet's only liveness signal and
+  while you run you are its only writer.** The listener's cron is dark for your
+  whole life (see the stop-channel rule below), so the watchdog window
+  (`.claude/commands/fleet-watch.md`) reads that mtime and nothing else: fresh
+  means the fleet made progress, and stale by 45 minutes means it unlatches the
+  pump and alerts. Forget it and a healthy leg gets declared wedged — which is
+  what happened on 2026-09-06, when `tick` still meant "the listener ticked" and
+  a leg that landed 4/4 units was alerted on at 14:37 and had its relay cut. It
+  costs one command per boundary and it is the difference between the watchdog
+  catching a hung leg and the watchdog crying wolf at every healthy one.
 - **Report as if the owner is reading on a phone, because they probably are**
   (`{{FLEET_REPO}}/ops.md` §3). **One line per unit** — dispatched,
   landed with its SHA, blocked with the reason — posted to `{{SLACK_CHANNEL_NAME}}` as it
@@ -172,16 +185,39 @@ not an ending, and the entries you leave are the only thing that crosses it.
   flight and a 5-hour window burning. You are a full delegate; if something
   genuinely needs the owner, end the leg cleanly and say so once, at the end.
 - **Check both stop channels at every unit boundary** — a queued Remote Control
-  message and **{{SLACK_CHANNEL_NAME}}** (`{{SLACK_CHANNEL}}`). A `fleet stop` normally arrives
-  as a `SendMessage` from the listener, because the listener stays idle while you
-  run and its heartbeat keeps ticking; this poll is the backstop for when it does
-  not. Honouring a stop means: finish landing what is in flight, fold `status.d/`,
-  write your log entries, exit. A stop is never "drop everything" — the landing
-  and the fold are what keep `main` and the docs consistent.
+  message and **{{SLACK_CHANNEL_NAME}}** (`{{SLACK_CHANNEL}}`). **This poll is the
+  primary route a `fleet stop` reaches you, not a backstop.** The listener's
+  cron is dark for your entire life: measured 2026-09-06, it ticked once at
+  14:04, spawned a leg, and did not tick again until 14:53 — six minutes after
+  that leg died. A session holding a live background agent is not idle, and you
+  are that agent. So a `fleet stop` posted while you run is seen by **you**, or
+  by nobody until you are gone; a `SendMessage` from the listener is the
+  opportunistic route, not the reliable one. Skipping this poll because "the
+  listener will tell me" is up to a full leg of unwanted work after the owner
+  asked you to stop.
+- **Honouring a stop means: finish landing what is in flight, fold `status.d/`,
+  write your log entries, delete `{{STATE_DIR}}/pump`, exit.** A stop is never
+  "drop everything" — the landing and the fold are what keep `main` and the docs
+  consistent. **Deleting the latch is not optional and it is yours**: the
+  listener normally deletes it, but the listener did not read this message — you
+  did, and if it survives you, your death wakes the listener and the relay spawns
+  the next leg. That is the pump you were told to stop, restarting. Deleting it
+  is stop-direction only, the same asymmetry the watchdog runs under: it can end
+  a fleet, never start one.
+- **Do not react to the owner's stop message.** Leave it clean for the listener,
+  which will claim it (`eyes`), run `fleet stop` as usual — an absent latch and
+  no live supervisor — and confirm it in-thread. Reacting would mark it handled
+  and hide the stop from the one window that reports to the channel. Post your
+  own line saying you are stopping and why, in that message's thread, and react
+  `robot_face` to **your** post only.
 - **If you have no Slack tool, that is a degraded control plane, not an error.**
   Say so once — first log entry and final report — put your unit lines in the
-  log entry instead, and note that your only stop channel is the listener's
-  `SendMessage`. **Do not run a `suite` task**: §4's announcement window is real
+  log entry instead, and note that **your only stop channel is a queued Remote
+  Control message, and it may not reach you at all**: the listener's
+  `SendMessage` depends on a cron that is dark while you run, so a `fleet stop`
+  posted mid-leg is not seen until you are gone. Say plainly in that first entry
+  that closing VS Code is the owner's working kill switch for this leg. **Do not
+  run a `suite` task**: §4's announcement window is real
   and one nobody could see is not a window, so leave the task `open` with a
   state line saying a fresh 30-minute clock is owed. Full rule:
   `{{FLEET_REPO}}/ops.md` §5.2a.
@@ -446,7 +482,9 @@ re-run the guard with `--allow-existing`.
 blocking on the previous one. Give each: its task file path, **both** worktree
 paths, its branch name, and the one-line reminder that it owns exactly one
 sub-project. Re-run `scripts/usage-budget.py` before refilling a slot — never
-only at the start of the leg.
+only at the start of the leg. **Then `touch {{STATE_DIR}}/tick`** — a dispatch is
+the last progress the fleet makes for the next twenty minutes, so it is exactly
+the moment the watchdog needs on the clock.
 
 **Land, as each reports.** Re-run the gate yourself on the merge result, not on
 the branch (§10): the repo's `cargo build` / `test` / `clippy --all-targets --
@@ -583,6 +621,10 @@ required to run. Nothing failed, because the swept lines are well-formed entries
 in the right file. Pass the fragment names this unit actually wrote.
 `fold-commit.py` now refuses a fold that consumed a fragment outside its
 `--path` list, so forgetting is a blocked commit rather than a quiet one.
+
+**`touch {{STATE_DIR}}/tick` once the fold commit lands**, per the standing
+constraint. A fold is the fleet's clearest unit of progress and it is the one
+the watchdog's threshold was measured against.
 
 **The assembler is yours, not the worker's**, and `suite/features.md` goes in the
 `--path` list whenever the unit wrote a `features.d/` fragment. A worker owns its
