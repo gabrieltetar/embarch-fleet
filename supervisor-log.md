@@ -67,6 +67,103 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-05 19:06 — umbrella/010 doctor-check-1-fails-on-a-healthy-wsl-host
+
+**Leg 011's last unit. Decided, inside `umbrella`:** the task offered check 1 two readings —
+become topology-aware and find the Windows Core, or keep its shape and make the
+`embarch-core` half an explicit not-applicable on `wsl-host`. **The worker took the first
+and kept the second as its *fallback* rather than as its alternative**, which is a better
+answer than either option as written, and I would have taken it. Recorded as **decision 38**
+in `decisions/topology.md` (that file's mission is "Finding Core"), with **decision 31
+amended** in `decisions/doctor.md` for check 14's half.
+
+The reasoning that makes the pairing necessary rather than belt-and-braces: reading (b)
+alone clears the red *and leaves check 14 permanently unanswerable on the primary
+topology*, because decision 31 has check 14 shell out to Core's own binary precisely
+because nothing else can answer about the right machine. So both layers ship —
+`locate_core` consults `windows_core_service_binary_path()` (the service's own
+`BINARY_PATH_NAME`, which `deploy-core` has read since decision 32) in the WSL2 branch,
+**after `PATH`, ahead of both guesses**, with its own `FoundBy::WindowsServiceRegistration`
+because check 1 prints provenance and *a reading is not a guess*; and if that finds nothing,
+check 1 is **Warn / `core-not-local`** on `wsl-host` and `remote`, never a Fail where no
+local Core belongs. `remote` had the same false red and nobody had noticed.
+
+**Where decision 31 bit, and the worker caught it.** The path `sc.exe qc` names and
+`wslpath` translates *is* the file the Windows service runs, so resolving it is not a
+verdict about the wrong machine. **But the suite manifest sitting next to `embarch` is** —
+it describes the Linux archive `embarch` came from while Core is a Windows build from a
+different one. Check 1 no longer compares those two, says so in `detail`, and points at
+check 15 with code `manifest-partial`. **Without that, this unit would have replaced one
+FAIL on the owner's machine with a different one**, which is the entire failure mode the
+task existed to fix. Consistent with `umbrella/006` three hours earlier: gated on
+`TopologyClass`, every arm of checks 1 and 14 carrying a decision-37 `code`.
+
+**Three of sixteen dark checks becomes one, pending the live run.** Check 1 stops being a
+false red; check 14 becomes answerable and its skip arm no longer says "see check 1" — per
+class it names what is actually missing. **Check 15 stays degraded and the worker did not
+reach for it**: the running Core serves no `core_version`, which is `embarch-core`'s to fix,
+outside its ownership row, already in `open.md`. That restraint is worth recording, because
+the temptation on a task whose whole subject is "three checks are dark" is to fix all three.
+
+**A residual the worker declined to hide**, written into decision 38 and decision 31's
+amendment: the exe runs under the WSL user's environment while the service runs under the
+system account, so a vendor flashing tool on a user `PATH` only is visible to one and not
+the other. Narrower than decision 31's original bug, and open.
+
+**Merged:** `agent/umbrella/010-doctor-check-1-fails-on-a-healthy-wsl-host` — code
+`1b41853`, doc `1c87314`. Gate re-run by me on the merge result: `cargo build`,
+`cargo test` **145 passed / 0 failed** (5 new), `clippy --all-targets -D warnings` green,
+**8** doc checks green, ownership green on both branches (`all 9 changed path(s) owned`).
+No native Windows build — `embarch-umbrella` shells out to `embarch-core` rather than
+depending on it.
+
+**I made one fix of my own on top, and it is worth the line.** The new check-14 skip
+message carried **eighteen stray spaces** in the middle of its string literal — a wrapped
+source line written into a single-line `&str`, so it would have printed *"registered as
+the⎵⎵⎵⎵⎵⎵⎵⎵⎵⎵⎵⎵⎵⎵⎵⎵⎵⎵Windows service"*. Trivial and in scope, so I fixed it rather than
+filing it: `embarch-umbrella` **`81e20f4`**, a `\` line continuation, `cargo build` /
+`test` 145 passed / `clippy` re-run green after. **Nothing in the gate can see this** —
+it is valid Rust, the test asserts `contains("sc.exe qc")` and passes either way — and it
+is the *user-facing text of the check whose entire point in this unit was that its message
+stops saying "see check 1"*. Read the strings, not just the diff.
+
+**Blocked:** none.
+
+**Reviewer:** skipped (leg ending at its unit cap — a reviewer spawned on the last unit
+would outlive the leg meant to read its finding). I read the code diff myself, which is
+how the whitespace defect was found, and that is not a substitute for a reviewer.
+
+**Hardware debts: one, and it is free.** The `sc.exe qc com.embarch.core` shell-out has
+never run inside `doctor` on the live machine — only its parse is unit-tested. **The
+owner's next live `embarch doctor`, already owed for checks 11, 15 and 16, discharges it
+at no extra cost**, and the worker wrote what it should print: check 1 **PASS** naming
+`/mnt/c/Users/tmp12/embarch-setup/embarch-0.1.0-x86_64-pc-windows-msvc/embarch-core.exe`,
+and check 14 a real per-family PASS/FAIL rather than a WARN mentioning `sc.exe qc`. **A
+`WARN core-not-local` on check 1 instead means layer (a) missed and layer (b) caught it —
+the honest degraded state, not a regression.** That prediction, written before the run,
+is what makes the run worth something.
+
+**Reserve: no ride-along owed, and the worker checked rather than assumed.** `spec.md`
+9,131 → 9,192 B (89.8%), `open.md` 4,525 → 4,606 B (89.96%) — both paid for *inside the
+same files* by rewriting rows 1 and 14, the post-table paragraph, the exit-code line and
+an `open.md` parenthetical that restated changelog history. Both stay out of reserve.
+`decisions/topology.md` 5,699 → 8,891 B and `decisions/doctor.md` 10,182 → 10,566 B, well
+clear. **`check-doc-size.py --pressure` at leg end names two files, both `api`, both filed
+against `tasks/api/012`** — the leg started with four across two sub-projects.
+
+**Budget:** DEGRADED at the start and the end of the leg, wave 2 throughout, **no 429
+anywhere in the leg**.
+
+**Least sure about:** `open.md` at **89.96%** — four hundredths of a percent from reserve,
+on a file that came *out* of reserve one leg ago. It is technically out, so no ride-along
+was owed and the worker was right not to file one, and I am not going to invent a rule at
+19:06 unattended. But "out of reserve" and "0.04% from the threshold" are the same state
+to every mechanism here, and the next umbrella unit will trip it with a single sentence —
+which is exactly the mid-flight wall the reserve exists to replace, arrived at by staying
+just inside the line rather than by crossing it.
+
+---
+
 ## 2026-09-05 18:47 — api/015 retired-targets-error-misadvises-zephyr
 
 **Decided:** nothing suite-wide. This is the fleet's first unit that exists **because a
