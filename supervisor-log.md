@@ -78,6 +78,123 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-05 23:45 — api/016 decisions-20-21-loose-ends
+
+**Leg 013's fourth and last unit, and the only one it did not inherit** — swept out of
+`embarch-api/open.md` when the queue hit zero. **It ships a deliberate breaking config
+change**, which makes it the highest-blast-radius diff of the leg.
+
+**Decided:** nothing suite-wide, and one thing inside `api` that I want read as a real
+decision rather than a cleanup. The task's item 2 was a genuine either/or with three
+shapes and I chose none of them. **The worker extended the refusal**: five fields —
+`default_target`, `default_snippets`, `default_extra_args`, `west_binary`, `build_dir_root`
+— now fail at *config load* on a `static` project, in one message naming every one set. A
+config that loads today can stop loading, and the suite has no deprecation window
+(`embarch-dev-workflow.md` §6).
+
+**Both rejections are in decision 20's body, and both are arguments rather than
+preferences.** Against **narrowing**: it deletes the one member of the class already
+behaving correctly, and the cost of a silently dropped setting is not hypothetical —
+decision 44c is the *measured* case, a build reporting success having produced an image
+whose config said the option was unset. Against **warn-for-all-five**, which was the only
+consistent non-breaking shape: this binary's normal mode is an MCP server whose stderr
+nobody reads, so the warn lands nowhere for exactly the operator it exists for, and it
+would make a **third** posture for one class of config mistake beside this refusal and
+decision 53's. The break is accepted as bounded because it is loud, immediate, at load, and
+names the field and the remedies — unlike the silence it replaces.
+
+**I checked the blast radius myself rather than accepting the reasoning.** The worker said
+plainly it could not see the owner's real config and that `embarch-api` would refuse to
+start if a `static` project in it carried any of the five. It does not: the live
+`/home/gabriel/Github/embarch/embarch-api/config.toml` has one `[[projects]]` entry
+(`healthband-roadrunner`) setting `build_command`, `artifact_path`, `chip`, `flash_format`,
+`build_timeout_secs`, `probe_serial` and `artifact_path_for_core` — **none of the five**.
+The `west_binary` in that file is under `[dev_bench]`, which deserializes into
+`DevBenchConfig` and is never walked by `validate()`. **The live config still loads**, and
+the reviewer independently confirmed the `[dev_bench]` half of that reasoning. Reading a
+config file is not touching hardware, and it converted the one open risk in this unit from
+an argument into an observation.
+
+**The worker corrected my own reading of the source bullet, in two places, and it was
+right both times.** I wrote the task from `embarch-api/open.md` and got the mechanism of
+item 1 slightly wrong — the unfollowable advice is to omit the *call-time* `snippets`
+param, which is not itself a load error; the defect is that the advice is **conditional and
+stated unconditionally**, and the config edit a reader reaches for next is the load error.
+The conclusion holds one step downstream of where I pointed. And on item 2 the bullet's
+own list was wrong in both directions: **`west_binary` and `build_dir_root` are in the same
+class and were never named**, while **`soc_chip_overrides` does not exist at all** — no
+field on `ProjectConfig`, no `deny_unknown_fields`, so the key is silently ignored on
+*both* discovery kinds rather than being asymmetric. `embarch-api` decision 13 and
+`interfaces/config.md` state it as truth. Filed as `tasks/api/017`: build it or retire
+decision 13, not decidable inside this unit's brief. That is
+`embarch-decision-reversals.md` shape 1 — the same shape decision 20 was built to close for
+`default_target`.
+
+**Merged:** `agent/api/016-decisions-20-21-loose-ends` (code `4fd08d1`, doc `4e1c132`).
+Rebased once onto a moving `main`, clean. Gate on the merge result: full `cargo test`
+across 7 suites, clippy, all 9 doc checks, ownership both branches, client-names clean
+against 7 entries.
+
+**Blocked:** none.
+
+**Reviewer:** no findings. It verified the refusal is structurally inside the
+`Discovery::Static` arm and cannot catch a `zephyr-west` project; that no reader of the
+five fields is now dead code (every one is on a `zephyr-west` path, and `dev_bench.rs`'s
+`west_binary` is a different struct); that `grep -rn soc_chip_overrides` across the whole
+crate returns **zero hits**, which is what the new decision-13 correction rests on; and
+that decision 44c actually says what the unit cites it for. It also confirmed the three
+decisions were amended **in the heading as well as the body**, which is the part
+`umbrella/015` fixed earlier tonight. Tally after this leg: **15 ran, 14 no findings, 1
+finding.**
+
+**Its sub-threshold observation is the most useful thing in the review and it declined to
+file it, correctly.** The new refusal's second remedy is **one step short, in exactly the
+way `api/015` fixed for the retirement message**: a `static` project setting only
+`default_snippets` that follows the advice literally — drop `build_command`/`chip`/
+`artifact_path`, set `discovery = "zephyr-west"` — lands on `has no west_binary`, then
+`has no build_dir_root`, in the next arm of the same `validate()`. The advice never says
+`zephyr-west` *requires* those two. The reviewer's reason for not filing is the right
+distinction: decision 53 and reversals row 52 cover advice that **re-proposes a schema
+another decision forbids** — advice with no completion. **This advice is correct and
+incomplete**, a completion exists, and the next error names it precisely. A refinement gap,
+not a contradiction. It is one clause in one string. **`tasks/api/018`'s `Must not delete:`
+already asserts, slightly too strongly, that this remedy "stops a reader landing in the
+next branch of the same check" — so the overclaim is already written down and should be
+corrected by whoever takes 018.**
+
+**I closed one of the two loose suite-level docs the reviewer named and left the other,
+deliberately.** `suite/user-guide.md` described the refusal in its `default_target`-only
+scope; that is a suite-level doc, mine under §3, and it now names all five and says they
+fail at config load. **`suite/features.md:43` is the one I left**, and the reason is
+`tasks/suite/004`: that file is assembled by `build_features.py` and hand-editing it is
+forbidden to everyone. Its row comes from an `api` scope `features.d/` fragment, so the fix
+is a worker's, not mine.
+
+**Hardware debts:** none. Both changes are host-side config-load and string-resolution
+logic with unit coverage, and I verified the live-config question by reading a file.
+
+**Reserve, and it is the state the next `api` unit walks into.** This unit's own edits put
+two files back in: `embarch-api/interfaces/config.md` at **96.4%** and
+`embarch-api/open.md` at **90.0% — 512 B left**. Filed by the worker as
+`tasks/api/018-compact-api.md`, `In flux: yes`, blocked on `017` — which rewrites both, so
+the block is real rather than defensive. `decisions/zephyr.md` took the largest share of
+new text and landed at 89.2%, just under, and `018` names it as a third file if a pass runs
+anyway. **`api` went from nothing in reserve at the start of this leg to two files, in one
+unit** — which is the mechanism working, not failing, but the next `api` worker should
+expect to compact.
+
+**Budget:** DEGRADED at the start and end of the leg, wave 2, **no 429 anywhere**.
+
+**Least sure about:** merging a **breaking config change** unattended. I verified the one
+config on this machine and it survives, the reviewer agreed with the reasoning, and the
+failure mode is loud rather than silent. But **"the one config I can see still loads" is
+not "no config breaks"** — there is no inventory of `embarch-api` configs anywhere, the
+break lands at process start, and the operator most likely to meet it is running an MCP
+server whose stderr nobody reads, which is the *same* property the worker used to argue
+against warning. If that stderr is unreadable for a warn, it is unreadable for a refusal
+too; the difference is that a refusal stops the process, so it fails loudly *somewhere*.
+That is a good enough argument and it is not an airtight one.
+
 ## 2026-09-05 23:20 — umbrella/007 doctor-target-count-shellout
 
 **Leg 013's third unit.** The first this leg with a real code diff, and the first with a
