@@ -78,6 +78,107 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 01:05 — umbrella/018 check-17-fix-line-can-green-its-own-check
+
+**Leg 015's second unit.** `umbrella/017` shipped `doctor` check 17 hours earlier and its
+reviewer found two defects in one arm after the merge; this is that arm rebuilt.
+
+**Decided:** nothing suite-wide. Of the task's three shapes the worker chose **give the arm
+evidence**, and the argument it wrote against the cheap one is the part worth keeping:
+demoting `bind-too-narrow` to a warn "surrenders the one state the arm uniquely catches on
+every machine where one `sc.exe qc` — which `bound-narrow` already spends — would settle it
+outright. **Cheapest is not the same as least wrong.**" Against the expensive one it stopped
+where it was told to: probing the other candidates is `embarch-topology`'s resolve contract,
+another sub-project, **and it is also the weaker evidence** — a failed gateway probe indicts
+Windows Firewall and a narrow bind indistinguishably, while the registration states the bind
+outright. That second half was not in the task; it is the worker's own.
+
+**`bind-too-narrow` now Fails only when the service registration is also narrow.** A wide
+registration Passes `bind-matches-registered`; an unreadable one Warns `bind-unproven`, whose
+fix asks from the guest rather than asserting. The extra `sc.exe` is spent only where it can
+move the verdict, behind a new pure predicate
+`bind_registration_can_change_the_verdict(recorded, winner_base_url)` with its own five-case
+test. The fix line no longer offers `embarch setup`, and says why it is not an alternative on
+that path; `bound-narrow` keeps its `setup` half, verified. The unearned word "only" is gone
+from the detail string and a test asserts it stays gone.
+
+**Merged:** `agent/umbrella/018-check-17-evidence` (code `5f978e7`, doc `c793301`). Gate on the
+merge result: `cargo build`, 178 tests, clippy, all 9 doc checks, ownership both branches,
+client-names clean.
+
+**Blocked:** none.
+
+**Reviewer:** no findings. Tally after this unit: **21 ran, 20 no findings, 1 finding.** It
+checked `bound-narrow`'s `setup` claim against the cited source lines rather than the citation,
+read **every** shortened sentence in decisions 18/19/22(b)/22(c) against its predecessor and
+confirmed no conclusion or reversal condition was dropped, and settled the decision-37 question
+I put to it in the other direction from the one I expected: **`spec.md`'s table must *not*
+gain the two new code names**, because 37 explicitly refuses to hold a roster of code names —
+"the roster that used to sit here went stale within a day of check 5 landing". Nothing owed
+there. **Its three observations are now `tasks/umbrella/020`**, and two of them matter:
+
+- **`bound-narrow`'s own `setup` fix line has the same hole `018` just closed, one path over.**
+  Run `doctor` natively on the Windows side of a `wsl-host` machine and `infer_class` returns
+  `Local`, `setup` installs `--bind 127.0.0.1` and writes `topology: "local"`, after which
+  check 17 Passes `bind-matches` with the bind still narrow. Not a contradiction — the claim
+  was made in `018`'s own diff — which is exactly why it is a task and not a revert.
+- **Nothing has confirmed that `embarch-core install --bind 0.0.0.0` rewrites an existing
+  narrow registration** rather than failing on an already-registered service. That is the
+  load-bearing assumption under **both** Fail arms' fix lines, and if it is false the check's
+  diagnosis is right while its whole remedy errors. Needs the Windows side.
+
+**Hardware debts:** unchanged in kind and now sharper. **No arm of check 17 has met a real
+narrow-bound Core.** The experiment is written into `embarch-umbrella/open.md` — a Core
+installed `--bind 127.0.0.1` on a `wsl-host` machine, stopped for `bound-narrow`, running for
+`bind-too-narrow`, **plus a wide-registration control that must NOT Fail**, which is the half
+`017` lacked and the reason its plan could not fail. Add the `install --bind` rewrite question
+above to that same sitting. Second, new: `bind-too-narrow`'s Fail is now gated on `sc.exe qc`
+being readable from wherever `doctor` runs — on a WSL2 guest that means interop, and where it
+is unreadable the arm degrades to `bind-unproven` by design. Unverified live.
+
+**Also folded into this unit, both mine:**
+
+- **`tasks/umbrella/019` drained from `inbox/`.** The worker found
+  `doctor::tests::a_real_spawn_separates_answering_broken_and_hanging` fails **~1 run in 20**
+  with `ETXTBSY` — reproduced 3 times in ~90 runs, predating its branch (`4e48c77`). The test
+  writes shell fakes and spawns them while other test threads fork and inherit the write fd.
+  **Its final gate run was green and mine was too**, so this is a red that will land on
+  whatever unrelated unit is in flight when it next fires. The drop names the only fix that
+  beats the race rather than narrowing it (bounded retry on `ETXTBSY`).
+- **`suite/user-guide.md`'s check-17 troubleshooting row**, from the worker's `status.d/`
+  fragment — it gains all three new codes and, load-bearing, the instruction **not** to answer
+  `bind-too-narrow` with `embarch setup`. That file is mine, not the worker's, which is why it
+  came through `status.d/` and why the fragment is the right mechanism rather than a request
+  nobody actions.
+
+**Reserve:** `embarch-umbrella/open.md` is **paid and out** — 4,840 → 4,591 B (89.7%), the
+ride-along `009` was blocked on, with no bullet or open question removed and `009`'s `open.md`
+item ticked. **In exchange `decisions/doctor.md` went 10,634 → 11,519 B (93.7%) and is now in
+reserve**, filed on `009`'s `Compacts:` line in the same commit. The worker paid back ~900 B
+by shortening 18/19/22(a)/22(b)/22(c) first and said plainly it could go no further without
+deleting live reasoning — **so `020`'s ride-along is likely a mission split, not a squeeze**,
+the way `012` and `015` split that file before. `suite/features.md` moved the wrong way again,
+19,848 → **19,918 B, 97.3%, 562 B left**, which `suite/005` is this leg's last unit for.
+
+**A fold mechanism worth copying, because I got it wrong first.** `build_changelog.py` is
+all-or-nothing and the owner has 15 pending fragments sitting in `changelog.d/`. On `api/019`
+I ran it and then `git checkout`-ed back the four `history/` files and the fragments I did not
+own — which *worked* but is a revert of a completed write, and on this unit it silently
+re-consumed two `umbrella-*` fragments of his that I had to catch and undo. **The right shape
+is to move his 15 fragments out of `changelog.d/` first, run the assembler on what is left,
+and move them back**: the assembler then consumes exactly one fragment and no revert is needed.
+Verified by count on the way back in.
+
+**Budget:** DEGRADED at start and here, wave 2, no 429.
+
+**Least sure about:** merging a diff that adds two `doctor` codes when the reviewer's own read
+is that `spec.md` must not list them. I believe 37 and I believe the reviewer — the entry
+refuses a roster on the evidence of a roster that went stale in a day. But it means the only
+place `bind-matches-registered` and `bind-unproven` are written down is the decision entry and
+`suite/user-guide.md`'s row, which I wrote by hand from a `status.d/` fragment. **If that row
+is ever missed, a new code exists in shipped output and in no document a user reads.** That is
+a fine argument for 37's position and a bad property to have discovered by writing the row.
+
 ## 2026-09-06 00:50 — api/019 decision-20-remedy-says-remove-and-add-the-same-field
 
 **Leg 015's first unit.** The last loose end of the decision-20 thread that ran through
