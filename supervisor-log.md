@@ -78,6 +78,60 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 16:48 — topology/001 the CLI stopped printing a guess as a determination
+
+**Decided:** one thing, and it is a worker deviating from its task file toward canon, which I
+accepted. The task's Done-when box asked for `COM16 (guessed among 2)`; the worker rendered
+`COM16, guessed among 2` because **two canon docs state the comma form verbatim** — `spec.md`'s
+"Storage and roles" and decision 20's closing paragraph in `decisions/enrollment.md`. Rewriting a
+decision record's quoted example to match a task file's paraphrase is the wrong way round, and I
+would rather a worker follow the corpus loosely than a ticket exactly. **The reviewer checked the
+claim against the files rather than taking it**: both lines are there, both quote the comma form.
+
+**Merged:** `agent/topology/001-guessed-among` (code `347db0f`, doc `e3a24ca`). Gate on the merge
+result: `cargo build`, `cargo test --features bin` **55 lib + 5 bin passed / 0 failed**, clippy
+`--all-targets --features bin -D warnings`, all 9 doc checks, ownership green both branches (code:
+whole tree, base `9a569595bf26`; doc: 4 paths, base `5f51e3114185`), client-names clean.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**The byte-for-byte claim was the one worth verifying and it holds.** The determined path went from
+a `println!` pair to one `print!` with the guess as an empty string — same two-space indents, same
+field order, same single trailing newline, and a test pins the exact bytes. The reviewer confirmed
+it including whitespace, which is the part a reader skims.
+
+**And the measurement it must not have disturbed is intact.** `embarch-topology/spec.md` changed by
+exactly one line. `topology/006`'s 2026-09-06 two-probe bench paragraph — `COM17`,
+`segger-vid-match`, interface 2, no `guessed_among`, `COM5` eliminated by decision 17's
+`probe_serial` *fallback* — is byte-identical, and so is the corollary ending "Nothing here has yet
+observed it set." The appended sentence is a claim about code, not about a bench, and the
+`features.d` row says `unit`.
+
+**One thing folded here that is not this unit's:** `suite/features.md` in this commit also carries
+`outpost-060`, because `build_features.py` is a **full re-assembly with no `--only`** — unlike
+`build_changelog.py`, whose missing `--only` cost leg 016 fifteen of the owner's fragments. Nothing
+is wrong in the file; the row simply lands one fold earlier than its unit's. Recording it because
+the next leg reading this commit will otherwise wonder why an outpost row is in a topology fold.
+
+**Hardware debts:** one, unchanged and not incurred here. `guessed_among` has still never been
+observed set on a bench, and seeing it means **deliberately clearing the dev-bench link interface**
+(there is no `--interface` unset, so it means editing the enrollment file), running
+`embarch-topology dev-bench` with the DK attached, and **restoring interface 2 afterwards** — the
+restore is what keeps the bench working, per decision 20. Not casual, and the task file says so.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **that I let a worker's `features.d` row claim `unit` for a rendering whose
+only *live* trigger is a state nobody will deliberately create.** The row is honest — it says
+`unit` — but the effect is a feature that ships, is inventoried, and whose real-world path is
+gated behind an act (breaking the bench enrolment) that the corpus itself tells you not to do
+casually. **That is a feature verified only in the case that cannot happen**, and I do not have a
+way to say so in the inventory's vocabulary.
+
+---
+
 ## 2026-09-06 17:25 — api/028 the last unblocked compaction debt, and the reserve went 15 files to 10
 
 **Decided:** one thing, and it is the opposite of what the task's wording invites. **The worker
