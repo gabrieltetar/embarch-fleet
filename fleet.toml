@@ -25,6 +25,12 @@ state_dir = ".fleet"
 # service blocks instead of three (embarch-study-designer decision 57).
 worktree_root = ".worktrees"
 
+# The client-name denylist check-client-names.py reads, relative to state_dir
+# (absolute is honoured). It is outside every repo because a committed list of
+# the names you are hiding is the leak it exists to prevent -- see that script's
+# header, and open.md's "Whether the framework's prose is portable".
+client_denylist = "client-names"
+
 [slack]
 # The control plane. See ops.md §5.
 channel = "C0BUKTL2FPC"

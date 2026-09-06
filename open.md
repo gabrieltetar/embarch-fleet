@@ -90,6 +90,18 @@ before, and it is not clear anything could verify it.
   no quiet state to wait for. `tasks/suite/002` parks on the owner picking a
   shape and lists the four candidates, none free.
 
+**An advisory warn band below the reserve was measured and declined,
+2026-09-05.** `--pressure --reserve-pct 80` names **29 files** and 85% names
+about 23, against the **2** actually in reserve — a line firing on a third of
+the corpus permanently is a standing exception, and those teach an agent to
+triage reds. The corpus sits near its caps *by design*: the ratchet and every
+pass push files toward one, so "near the limit" carries no information. The case
+that prompted it also resolved itself — `embarch-umbrella/open.md` went 5051 B
+(leg 011's 69-byte reading) to 4412 in the next ordinary commit and sits at 4606
+today, with nothing built. **What would un-defer it:** a unit that actually
+loses work to a cap, as `embarch-api/decisions/zephyr.md` did when 96 bytes
+misfiled a decision. That has a signature; proximity does not.
+
 **The calibration is one pass deep.** 90% was chosen from a single 2026-09-04
 sitting across twelve files. Two findings from it that any future tuning should
 respect: a good pass **adds** bytes — the protocol-doc commit deleted ~900 gross
@@ -124,10 +136,25 @@ type, a config value, board identifiers, 43 files of prose, and 1,540 committed
 build artifacts leaking a client workspace path. Verified clean from fresh clones
 across every ref and tag.
 
-**What is still open.** Nothing prevents the next one. A name reaches these repos
-through ordinary work, and no check looks for one — the audit that found these
-was a grep somebody thought to run. A `check-client-names.py` in the doc gate,
-reading a denylist kept outside the repo, is the obvious shape and is not built.
+**Built 2026-09-05.** `scripts/check-client-names.py` reads a denylist from the
+state directory, refuses a name in a tracked file's contents or path or in a
+commit message on the branch under gate, and **never prints what it matched** —
+a red gate gets quoted into log entries and commit messages, which is the leak
+again. Contents are searched as bytes, so the 1,540 artifacts above are covered
+and no text-only scan would have seen them. Tested against all five 2026-09-04
+shapes in a fixture repo, and a clean one that stays green. **Per repo, not one
+pass over the siblings**: a worker and a leg run the gate from
+`embarch/.worktrees/`, where sibling resolution finds other worktrees, so a
+sibling walk would have scanned `main` instead of the branch under gate — the
+wrong-source shape the second-instance test found three of.
+
+**What is still open, and the script's header states both rather than hiding
+them.** It is **dark in CI**, which has no state directory and therefore no
+denylist, so it guards what the fleet lands locally and not a push made by hand;
+closing that needs a repository secret and a job, which is a separate decision
+about whether these repos ever go public. And **a denylist cannot catch a name
+nobody thought to add** — it makes the second leak of a known name impossible
+and leaves the first leak of a new one exactly where it was.
 
 ## Whether a second instance is real
 

@@ -66,6 +66,14 @@ class Conf:
         return self.root / self._d["fleet"]["worktree_root"]
 
     @property
+    def client_denylist(self) -> Path:
+        """Where check-client-names.py reads its names. Relative to state_dir --
+        which is outside every repo, and is the whole point: the file names the
+        clients, so committing it would be the leak the check exists to stop."""
+        v = self._d["fleet"].get("client_denylist", "client-names")
+        return Path(v) if Path(v).is_absolute() else self.state_dir / v
+
+    @property
     def owner(self) -> str:
         return self._d["slack"]["owner"]
 

@@ -361,8 +361,11 @@ only at the start of the leg.
 **Land, as each reports.** Re-run the gate yourself on the merge result, not on
 the branch (§10): the repo's `cargo build` / `test` / `clippy --all-targets --
 -D warnings`, plus a native Windows build where `embarch-core` is involved, plus
-all six `embarch-doc` scripts, plus `scripts/check-ownership.py --scope
-<sub-project>` on **both** of the worker's branches. **Do not trust a worker's
+`python3 scripts/check-docs.py` in `embarch-doc` — **the wrapper, never a count
+or a list of your own**, which said "six" here while it ran eight — plus
+`scripts/check-ownership.py --scope <sub-project>` on **both** of the worker's
+branches, plus `scripts/check-client-names.py --repo <code worktree>` on the
+code repo, which `check-docs.py` does not reach. **Do not trust a worker's
 report of green.** Run the checks and the merge as one script — pre-merge
 ownership, then `--ff-only`, then the full gate on the merge result, with an
 automatic `git reset --hard` back to the pre-merge SHA on any red. Batch 003

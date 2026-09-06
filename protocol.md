@@ -103,7 +103,7 @@ The steps, in order, per leg:
    whole leg**, 25 paths, where a `git commit` would have reverted four units
    and looked like ordinary work. `inbox/` is the exception:
    drops are gitignored, so they live only in the main checkout and are read
-   there by absolute path. A previous leg may have been killed outright — closing VS Code is the owner's kill switch and is expected to be used ([running the fleet](ops.md) §3). Abort any in-progress merge or rebase, reclaim every stale claim, and delete dead worktrees **before** anything else. The exact rule and what a kill can leave behind: [running the fleet](ops.md) §3. Then read the newest [supervisor-log.md](supervisor-log.md) entries: under the relay they were written by a predecessor this leg has no memory of, and they are the only thing that crossed the boundary.
+   there by absolute path. A previous leg may have been killed outright — closing VS Code is the owner's kill switch and is expected to be used. Abort any in-progress merge or rebase, reclaim every stale claim, and delete dead worktrees **before** anything else; the exact rule, and what a kill can leave behind, is [running the fleet](ops.md) §3. Then read the newest [supervisor-log.md](supervisor-log.md) entries: under the relay they were written by a predecessor this leg has no memory of, and they are the only thing that crossed the boundary.
 1. **Refill, only if nothing is dispatchable.** Drain `inbox/`, then sweep the roadmap, every `open.md`, and the reversals follow-ups; write any new task files. Reconcile: a task whose source doc no longer says the thing is closed, not dispatched. **If refill also finds nothing**, dream three proposals and end the leg ([running the fleet](ops.md) §7) — do not pick one, and do not write a dreamt item into the queue.
 2. **Select and set up**, per free slot. `scripts/usage-budget.py --suggest` sets how many may be in flight ([running the fleet](ops.md) §2); it, not the cap, is the number. At most one task per sub-project, from `Hardware: none`/`verify-only` only. Claim it *before* dispatch — that commit is what stops a double-dispatch — **one commit per task, pushed to `origin/main` before the branch is created**, so a reclaim reverts exactly one task and the listener sees each claim as it happens. It used to also be what kept a worker's ownership check honest, and it was never enough: `check-ownership.py` now derives its own base — the furthest-forward merge-base between HEAD and `main`/`origin/main` — so neither a batched claim (leg 008) nor a stale worktree `main` (leg 010) can put a path in a worker's diff it never wrote. **A red ownership check is now evidence, not noise** (§10 makes it a merge gate, and a supervisor who had learned to discount it was the real cost). Then create the branch and both worktrees under `embarch/.worktrees/`, outside every repo tree and never inside `.claude/worktrees/` (`embarch-study-designer` decision 57).
 3. **Dispatch** as a background worker agent, without blocking on the one before it. Re-check the budget before refilling a slot, never only at the start of the leg.
@@ -150,8 +150,9 @@ The rule DOC-PROTOCOL §5 was protecting is unchanged — the suite-level docs s
 The gate, run by the worker and then **re-run independently by the supervisor** on the merge result — not on the branch:
 
 - `cargo build`, `cargo test`, `cargo clippy --all-targets -- -D warnings` in the touched repo, plus a native Windows build where `embarch-core` is involved ([embarch-dev-workflow.md](../embarch-doc/embarch-dev-workflow.md) §4).
-- The whole `embarch-doc` gate as **one command, `python3 scripts/check-docs.py`** — eight checks: `check-links.py`, `check-staleness.py`, `check-decision-refs.py`, `check-doc-conventions.py`, `check-doc-size.py`, `build_changelog.py --check`, `build_features.py --check`, and `install.py --check` (which asserts this repo's generated `.claude/`, protocol READMEs and shims match their templates). **Run the wrapper, not the list**: it named six until 2026-09-05 while `check-docs.py` ran eight, and a supervisor triaging a red against a list that is missing two entries is triaging blind.
-- **`build_features.py --check` validates the fragments only.** The byte-equality assertion against `suite/features.md` is `--check-assembled`, which is deliberately **not** in anyone's branch gate: that file is `never` for a worker in §3's table, so asserting it per branch left a feature-shipping worker unable to be green on both this gate and `check-ownership.py`, and two workers hit that in leg 009 alone (`tasks/doc/002`). It is asserted on `main` — by CI, and by the fold below, which runs the assembler.
+- The whole `embarch-doc` gate as **one command, `python3 scripts/check-docs.py`** — **which names its own checks, and this doc does not.** The enumeration here went stale twice in two days, and a supervisor triaging a red against a short list is triaging blind. `CHECKS` in that file is the list; the count is not restated anywhere.
+- **`check-client-names.py --repo <path>` on the code repo too**, alongside `cargo`. The wrapper covers only `embarch-doc`, a fifth of the suite's bytes, and 2026-09-04's leak was mostly on the other side. Per repo, not one pass over the siblings: a leg and a worker run from `embarch/.worktrees/`. It reads a denylist kept outside every repo and **never prints what it matched**; its header carries the rest, and the two gaps it leaves.
+- **`build_features.py --check` validates the fragments only.** The byte-equality assertion, `--check-assembled`, is deliberately **not** in anyone's branch gate: `suite/features.md` is `never` for a worker in §3's table, so asserting it per branch left a feature-shipping worker unable to be green on this gate and `check-ownership.py` at once (two workers hit that in leg 009). It is asserted on `main`, by CI and by the fold.
 - **`check-ownership.py --scope <sub-project>`** on both branches — the mechanical form of §3. Either `core` or `embarch-core` is accepted; **`suite` is refused outright, because a cross-repo change is §8's, not a worker's.** Without it §3 is prose nothing reads: a worker's edit to [embarch.md](../embarch-doc/embarch.md)'s status table is *plausible by construction*, so `check-staleness.py` (which only flags a row disagreeing with a sub-project doc) passes it, and the collision §9 exists to prevent happens anyway.
 
 That is [embarch-dev-workflow.md](../embarch-doc/embarch-dev-workflow.md) §6's existing standard, unchanged, applied per branch instead of per commit. Nothing here licenses a lower bar because an agent wrote it.
@@ -170,20 +171,19 @@ caution here as elsewhere.
 with §11: the `**Reviewer:**` line rides *inside* the fold commit, the fold
 lands a minute or two after the merge, and a reviewer reports in ninety seconds
 to three minutes. The line was therefore required to state a fact that did not
-exist yet, and leg 011 wrote it into two entries before its reviewer reported
-and into a third before it had spawned one — all three true by luck. Two earlier
-legs had each improvised their own way around it. So the merge does not wait and
-the *entry* does: spawn at merge, do the rest of the fold, collect the reviewer
+exist yet, and three of leg 011's were true by luck ([open.md](open.md) has the
+count and what it does to the tally). So the merge does not wait and the
+*entry* does: spawn at merge, do the rest of the fold, collect the reviewer
 immediately before writing the entry. The wait is under a minute against a
 twenty-minute worker; what it buys is that the one tally that can ever settle
 [open.md](open.md)'s reviewer question is evidence rather than a guess.
 
-**A reviewer does not count against the worker wave**, and the rule that said it
-did was self-defeating. It reads a diff for about ninety seconds against a
-worker's twenty minutes, but costing a whole slot out of a DEGRADED wave of two —
-this machine's steady state — meant it was almost never affordable: eight entries
-in, one ran and six were skipped for the wave alone. **The question the tally
-exists to answer could not be answered under the rule governing it.** Skip only
+**A reviewer does not count against the worker wave**, because the rule that
+said it did was self-defeating: it reads a diff for ninety seconds against a
+worker's twenty minutes, but a whole slot out of a DEGRADED wave of two — this
+machine's steady state — was almost never affordable, so eight entries in, one
+had run and six were skipped for the wave alone. **The question the tally exists
+to answer could not be answered under the rule governing it.** Skip only
 on a HOLD, a recent 429, or a leg ending at its unit cap where the reviewer would
 outlive it, and **the log says which**: "no findings" and "no reviewer ran" are
 different facts.
@@ -204,7 +204,7 @@ Canon is a doc; Slack is the ping.
 
 **Neither the subagent nor the script is decoration.** `scripts/fold-day.py <yyyy-mm-dd>` extracts the day and a ledger of what it carries; `--apply` splices the folded entry back over exactly those entries and **refuses one that dropped a SHA, a debt line, or a reviewer line.** The alternative was `Read` the whole file and `Write` it back, because an ad-hoc `python3 <script>` is refused by the permission classifier — that is what leg 010 had to do, ~35 K tokens re-emitting text nobody meant to change, with a transcription error anywhere in it silently corrupting this file. And the fold goes to an `embarch-log-folder` subagent rather than to the leg itself: **a leg is bounded at four units precisely so it does not accumulate context**, and handing it a day's worth as its first act is the opposite of that. Its context dies with it; the leg pays two summary lines. The fold still lands in the unit's own `fold-commit.py` commit.
 
-**Past 40 KB the oldest whole days roll into `log-archive/`** — `scripts/fold-day.py --roll`, which never splits a day and always leaves the two newest, since a relay's step 0 reads the current day and the one before it. It is *this* repo's `log-archive/`, not the instance's `history/archive/`, because this log lives here. And **the old 25 KB line was never reachable**: leg 010's folded `2026-09-04` entry is 25 KB on its own, so the line could not hold one folded day, let alone the current one beside it. A line nothing could satisfy is why nothing ever rolled this file.
+**Every day but the two newest rolls into `log-archive/`** — `scripts/fold-day.py --roll`, which never splits a day. Two, because a relay's step 0 reads the current day and the one before it; it is *this* repo's `log-archive/`, not the instance's `history/archive/`, because this log lives here. **There is deliberately no byte line: two were written and neither was reachable** — 25 KB could not hold one folded day, and 40 KB could not hold two (50,203 B on the two smallest days it has had). A second unsatisfiable number means the *quantity* is wrong: a day's size is the fold's job, and this rule needs a count of days.
 
 Slack gets **one line per unit** as it happens — dispatched, landed with its SHA, or blocked with the reason — and nothing on an ordinary leg end. Under the relay legs end constantly; a push notification per leg would be a pager rather than a notification.
 
@@ -212,7 +212,7 @@ Slack gets **one line per unit** as it happens — dispatched, landed with its S
 
 ## 12. Known risks
 
-Fifteen of them, stated rather than designed away, in [risks.md](risks.md) — split out when this doc hit its size cap. The two worth knowing before reading anything else: **nothing reads a diff for intent before it lands, most of the time**, and **nobody watches the relay** — a leg hands off to a successor through a written entry, and what the entry omits is gone.
+Stated rather than designed away, in [risks.md](risks.md), split out when this doc hit its size cap. No count here: it said fifteen while that file held seventeen. The two worth knowing before reading anything else: **nothing reads a diff for intent before it lands, most of the time**, and **nobody watches the relay.** That file says what each costs.
 
 ## 13. Running it
 

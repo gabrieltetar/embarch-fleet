@@ -50,6 +50,11 @@ to one sub-project needs nobody's approval. Number it per `DOC-CONVENTIONS.md`
 1. `cargo build`, `cargo test`, `cargo clippy --all-targets -- -D warnings` in
    your repo — plus a native Windows build if it is `embarch-core`.
 2. The whole `embarch-doc` gate in one command: `scripts/check-docs.py`.
+2a. From your `embarch-doc` worktree, where the shim lives:
+   `scripts/check-client-names.py --repo <your code worktree>`. Step 2 covers
+   `embarch-doc` only, and a client's name must never appear in any of these
+   repos. It never prints what it matched — open the denylist it names, and do
+   not paste the name into a commit message, a task file or your report.
 2b. `scripts/check-ownership.py --scope <your sub-project>` in your `embarch-doc`
    worktree, and `--code-repo` in the other. This is the mechanical form of the
    boundaries above; if it fails, you reached somewhere that is not yours. It

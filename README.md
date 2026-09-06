@@ -30,8 +30,24 @@ git clone <this repo>                 # beside the repo the fleet will work in
 cd embarch-fleet
 $EDITOR fleet.toml                    # root, doc_repo, scopes, Slack ids
 python3 scripts/install.py            # writes .claude/ and the protocol READMEs
-python3 scripts/install.py --check    # verify; wire this into the instance's CI
+python3 scripts/install.py --check    # verify
+umask 077 && $EDITOR .fleet/client-names   # names that must never reach a repo
 ```
+
+The last line is not optional: `check-client-names.py` is in the doc gate and
+**fails while the denylist is absent or empty**, because a check that silently
+scans nothing is the muted-alarm failure this repo has already written down
+once. It lives outside every repo — a committed list of the names you are hiding
+is the leak it exists to prevent.
+
+**Do not wire `--check` into the instance's CI**, which this line told you to do
+until 2026-09-05 and nobody ever did. CI checks out one repo, so there is no
+framework beside it to diff against; `check-docs.py` skips the check for exactly
+that reason. The real guard is local and already in place — `--check` is one of
+that wrapper's checks, every worker runs the wrapper before it reports and every
+fold runs it again on the merge result, so a hand-edit of a generated file is
+caught within one unit. An instruction nobody followed for a check that already
+had a home was worse than no instruction: it read as a gap.
 
 `install.py` writes into the instance repo the things that only work in place:
 `.claude/commands/` and `.claude/agents/`, which load only from the working
@@ -59,7 +75,7 @@ Then, in the instance repo: arm a listener window with `/fleet start`, and say
 | [open.md](open.md) | Unresolved questions and known limitations, each with what would unblock it |
 | [supervisor-log.md](supervisor-log.md) | One entry per unit, newest first. The review surface, and the relay handoff |
 | [fleet.toml](fleet.toml) | The instance: paths, channel, identity, limits, the ownership lists |
-| [scripts/](scripts/) | The enforcement — ownership, queue state, usage budget, alerting, the fold |
+| [scripts/](scripts/) | The enforcement — ownership, client names, queue state, usage budget, alerting, the fold |
 | [templates/](templates/) | What `install.py` renders into the instance repo |
 
 Read `protocol.md` first, then `ops.md`, then `risks.md` — in that order, and
@@ -86,3 +102,5 @@ that did not happen, never a fold nobody logged.
 Python 3.11+ (`tomllib`), `git`, and Claude Code. The Slack control plane is
 optional: without a webhook, `fleet-alert.py` exits 2 and says so, which is the
 intended failure — a muted alarm that looks fine is worse than no alarm.
+`check-client-names.py` applies the same rule to its denylist, with one
+difference: it is in the gate, so its absence is red rather than merely loud.

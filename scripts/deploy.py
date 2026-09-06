@@ -7,6 +7,10 @@ which framework version produced it, and commits the generated paths -- by
 explicit path, never `git add -A`, so a deploy cannot sweep up whatever else is
 mid-edit in that checkout.
 
+It also caps this repo's own docs before rendering anything
+(`check-fleet-doc-size.py`) -- `check-doc-size.py` covers the instance's corpus
+and never walked this one.
+
 It deliberately does NOT push and does NOT re-arm. Pushing the instance before
 the framework would leave a stamp naming a SHA nobody can fetch, and re-arming
 is a Claude Code session doing `/fleet start`, which no shell can do. It prints
@@ -147,6 +151,21 @@ def main() -> int:
         print(r.stdout or r.stderr)
         print(f"would stamp {STAMP} with {version['framework_sha'][:10]}")
         return 0
+
+    # This repo's own docs, before anything is rendered. `check-doc-size.py`
+    # caps the instance's corpus and has never walked this one, which is how
+    # protocol.md and ops.md came to sit at 2.7x the cap DOC-COMPACTION.md §2
+    # gives a protocol doc while risks.md's own opening line cited that rule as
+    # though it applied. deploy.py is where it belongs: every framework change
+    # passes through here, it always runs in the real checkout rather than a
+    # worktree, and a leg never runs it at all.
+    sz = subprocess.run([sys.executable, str(HERE / "check-fleet-doc-size.py")],
+                        capture_output=True, text=True)
+    if sz.returncode != 0:
+        sys.stdout.write(sz.stdout)
+        sys.stderr.write(sz.stderr)
+        print("\nNothing was rendered. Shorten the file and re-run.")
+        return 1
 
     print(f"deploying {version['framework_sha'][:10]} -> {target.name}\n")
     r = subprocess.run([sys.executable, str(HERE / "install.py"), "--repo", str(target)],

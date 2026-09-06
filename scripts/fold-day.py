@@ -42,21 +42,27 @@ the day had written mid-sentence. The bounded rules accept it unchanged. A
 refusal nobody can satisfy is not a guard; it is a habit of reaching for
 `--allow-debt-edit`, which switches the debt half off entirely.
 
-**The roll.** §11 said the oldest entries roll into `history/archive/` past
-25 KB, "matching what build_changelog.py already does". Nothing ever did it for
-this file, and 25 KB was never reachable: leg 010's folded 2026-09-04 entry is
-**25 KB on its own**, so the line could not hold one folded day, never mind the
-current one beside it. The line is ROLL_BYTES here, raised to 40 KB, and the roll
-moves WHOLE DAYS -- never part of one -- oldest first, into `log-archive/`. It
-lives in this repo rather than the instance's `history/archive/` because this log
-does; §11 says so now.
+**The roll, and why it has no byte line at all.** §11 said the oldest entries
+roll past 25 KB, "matching what build_changelog.py already does". Nothing ever
+did it, and 25 KB was never reachable: leg 010's folded 2026-09-04 entry is 25 KB
+on its own. Raising it to 40 KB on 2026-09-05 repeated the mistake one size up --
+two folded days plus this file's preamble is 50,203 B on the smallest days it has
+ever had, both of which predate that line. **A second unsatisfiable number is
+evidence the quantity is wrong, not the value.** What §11 actually requires is
+that a relay's step 0 can read the current day and the one before it, which is a
+count of days; a day's SIZE is the fold's job, and the byte line was asking the
+roll to do the fold's work. So the trigger is DAYS_KEPT: keep the two newest,
+archive every older one, whatever the file weighs, and report the size without
+judging it. The roll moves WHOLE DAYS -- never part of one -- oldest first, into
+`log-archive/`, which lives in this repo rather than the instance's
+`history/archive/` because this log does.
 
 Usage:
   scripts/fold-day.py --status                  what is unfolded, and roll pressure
   scripts/fold-day.py 2026-09-04                extract to .fold/2026-09-04.md
   scripts/fold-day.py 2026-09-04 --out PATH     extract somewhere else
   scripts/fold-day.py 2026-09-04 --apply PATH   splice, verifying the ledger
-  scripts/fold-day.py --roll                    roll whole days past ROLL_BYTES
+  scripts/fold-day.py --roll                    archive every day but the 2 newest
   scripts/fold-day.py --roll --dry-run          say what would move
 Exit status: 0 done / nothing to do, 1 refused, 2 misconfigured.
 """
@@ -76,8 +82,25 @@ LOG = FLEET_REPO / "supervisor-log.md"
 ARCHIVE = FLEET_REPO / "log-archive"
 SCRATCH = FLEET_REPO / ".fold"
 
-# See the docstring: 25 KB could not hold a single folded day.
-ROLL_BYTES = 40 * 1024
+# DAYS_KEPT, not a byte line, is what triggers the roll. Two byte lines have now
+# been written for this file and NEITHER was reachable: 25 KB could not hold one
+# folded day, and 40 KB cannot hold two -- 2026-09-03 and 2026-09-04 fold to
+# 18,213 and 26,976 B, the two smallest this log has ever had, and with the 5,014 B
+# preamble that is 50,203 B against a 40,960 B line. Both those days predate the
+# 40 KB line, so it was unsatisfiable on the day it was written, by data already
+# in the file.
+#
+# The mistake is the same both times: a byte count is a proxy for the thing §11
+# actually requires, which is that **a relay's step 0 reads the current day and
+# the one before it**. That is a count of days. Bytes were measuring a day's
+# SIZE, which is the FOLD's job -- so the byte line was asking the roll to do
+# something it structurally cannot, and its failure mode was a permanent OVER
+# verdict whose advice ("fold a day rather than rolling one") named no day that
+# existed. A gate with a standing exception teaches an agent to triage reds.
+#
+# So: the roll keeps the DAYS_KEPT newest days and archives every older one,
+# whatever the file weighs. The size is reported, never judged.
+DAYS_KEPT = 2
 
 # A per-unit heading carries a time; a folded day's does not. That difference is
 # the whole parser, and it is also what stops a fold from being applied twice.
@@ -168,8 +191,11 @@ def ledger_of(text: str) -> dict:
 def cmd_status(lines: list[str]) -> int:
     secs = sections(lines)
     size = LOG.stat().st_size
-    print(f"{LOG.name}: {size:,} B against a {ROLL_BYTES:,} B roll line "
-          f"({'OVER' if size > ROLL_BYTES else 'ok'})")
+    ndays = len({s[2] for s in secs})
+    rollable = max(0, ndays - DAYS_KEPT)
+    print(f"{LOG.name}: {size:,} B, {ndays} day(s); "
+          + (f"{rollable} rollable (--roll)" if rollable
+             else f"at its floor -- the {DAYS_KEPT} newest days always stay"))
     per_day: dict[str, list] = {}
     for s in secs:
         per_day.setdefault(s[2], []).append(s)
@@ -290,9 +316,6 @@ def cmd_roll(lines: list[str], dry: bool) -> int:
     and keep the history, which is the one direction this must never get wrong.
     """
     size = LOG.stat().st_size
-    if size <= ROLL_BYTES:
-        print(f"{size:,} B, under the {ROLL_BYTES:,} B line; nothing to roll.")
-        return 0
     secs = sections(lines)
     if not secs:
         sys.exit("no entries found; refusing to roll a file this cannot parse")
@@ -301,22 +324,16 @@ def cmd_roll(lines: list[str], dry: bool) -> int:
         lo, hi = days.get(d, (a, b))
         days[d] = (min(lo, a), max(hi, b))
     order = sorted(days)                      # oldest first
-    # The two newest days always stay: a relay's step 0 reads the current day
+    # The DAYS_KEPT newest always stay: a relay's step 0 reads the current day
     # and the one before it, and an archive that has to be opened to make the
-    # handoff readable is not an archive.
-    n, freed = 0, 0
-    while n < len(order) - 2:
-        d = order[n]
-        chunk = sum(len(l) for l in lines[days[d][0]:days[d][1]])
-        if size - freed - chunk < 0:
-            break
-        n += 1
-        freed += chunk
-        if size - freed <= ROLL_BYTES:
-            break
+    # handoff readable is not an archive. Everything older goes, in one pass --
+    # there is no byte target to stop short of, because there was never a byte
+    # target this file could reach.
+    n = max(0, len(order) - DAYS_KEPT)
     if not n:
-        print(f"{size:,} B is over the line, but only {len(order)} day(s) are here "
-              "and the two newest always stay. Fold a day rather than rolling one.")
+        print(f"{size:,} B in {len(order)} day(s); the {DAYS_KEPT} newest always "
+              "stay, so there is nothing older to roll. This is the floor: if the "
+              "file is still large, a day needs FOLDING, not rolling.")
         return 0
     rolled = order[:n]
     start = days[rolled[-1]][0]               # newest of the rolled set = earliest line

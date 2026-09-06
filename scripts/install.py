@@ -60,7 +60,8 @@ TEMPLATES = HERE / "templates"
 # Framework scripts the instance repo gets a shim for. Anything not listed is
 # framework-internal and is never invoked from the instance.
 SHIMMED = ("check-ownership.py", "queue-status.py", "usage-budget.py",
-           "fleet-alert.py", "fold-commit.py", "fold-day.py")
+           "fleet-alert.py", "fold-commit.py", "fold-day.py",
+           "check-client-names.py")
 
 PLACEHOLDER = re.compile(r"\{\{([A-Z_]+)\}\}")
 
