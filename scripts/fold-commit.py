@@ -315,6 +315,65 @@ def check() -> int:
     return 0
 
 
+def prune_landed_branches(doc: Path, scope: str, dry: bool) -> None:
+    """Delete pushed `agent/*` branches whose work is already on `origin/main`.
+
+    The fleet deleted a worker's worktrees and its local branches and never the
+    branch it pushed, so every unit left one behind in each of its two repos.
+    Five had accumulated from leg 011 alone -- and on 2026-09-05 they did real
+    damage rather than merely being untidy: an `embarch-api` history rewrite
+    looked complete from `main` and from a fresh clone's worktree, while
+    `origin/agent/api/013-...` still pinned the client name on GitHub.
+
+    **Against `origin/main`, never local `main`, and that is the whole safety
+    argument.** This script deliberately does not push (see the header), so at
+    fold time the merge exists locally and may not exist on the remote. Deleting
+    the remote branch then would leave the remote holding neither the branch nor
+    the merge, and a machine that died in that window would have lost the unit.
+    Gating on `origin/main` means the remote provably already has the content.
+
+    The cost is that a unit's own branches usually survive until the NEXT fold,
+    once the push has happened -- one unit late, self-healing, and it sweeps a
+    backlog left by earlier legs for free. That is strictly better than a rule
+    telling a tired supervisor to remember, which is what this replaces.
+
+    **`git cherry`, not `merge-base --is-ancestor`.** protocol.md §6: a rebased
+    branch's tip is never an ancestor of `main` even when its content landed, so
+    ancestry cannot prove a rebased branch safe to delete. Patch-id equivalence
+    can, and batch 003 correctly refused a delete on exactly this distinction.
+
+    Best-effort throughout: the fold is already committed when this runs, and a
+    network failure must never turn a landed unit into a failed one.
+    """
+    repos = [doc]
+    code = CONF.root / f"embarch-{scope}"
+    if code != doc and (code / ".git").exists():
+        repos.append(code)
+    for repo in repos:
+        refs = git(repo, "for-each-ref", "--format=%(refname:short)",
+                   "refs/remotes/origin/agent/", check=False).split()
+        for ref in refs:
+            branch = ref[len("origin/"):]
+            if not git(repo, "rev-parse", "--verify", "-q", "origin/main",
+                       check=False).strip():
+                continue
+            cherry = git(repo, "cherry", "origin/main", ref, check=False)
+            if any(l.startswith("+") for l in cherry.splitlines()):
+                continue          # not fully on origin/main yet -- leave it
+            if dry:
+                print(f"would delete {repo.name}: origin/{branch}")
+                continue
+            r = subprocess.run(["git", "-C", str(repo), "push", "origin",
+                                "--delete", branch], capture_output=True, text=True)
+            if r.returncode == 0:
+                git(repo, "update-ref", "-d", f"refs/remotes/origin/{branch}",
+                    check=False)
+                print(f"pruned {repo.name}: origin/{branch} (landed on origin/main)")
+            else:
+                print(f"note: could not prune {repo.name}: origin/{branch} -- "
+                      f"{r.stderr.strip().splitlines()[-1] if r.stderr.strip() else 'push failed'}")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -327,6 +386,8 @@ def main() -> int:
                          "worktree; defaults to fleet.toml's doc_repo")
     ap.add_argument("--check", action="store_true", help="verify the two repos agree")
     ap.add_argument("--dry-run", action="store_true", help="print, commit nothing")
+    ap.add_argument("--no-prune-branches", action="store_true",
+                    help="keep pushed agent/* branches already landed on origin/main")
     args = ap.parse_args()
 
     if args.check:
@@ -414,6 +475,8 @@ def main() -> int:
             print(f"  {p}  (finished task, this fold deletes it)")
         for p in already:
             print(f"  {p}  (already staged as a deletion)")
+        if not args.no_prune_branches:
+            prune_landed_branches(doc, args.unit.split("/")[0], dry=True)
         return 0
 
     # Log first. If the machine dies between the two, the surviving state is an
@@ -451,6 +514,11 @@ def main() -> int:
     print(f"{FLEET_REPO.name}  {log_sha}  supervisor-log.md")
     print(f"{doc.name}  {head(doc)}  {len(staged.splitlines())} path(s)"
           f"{f', {len(to_delete)} task file(s) retired' if to_delete else ''}")
+
+    # After both commits: the fold is landed, so nothing below may fail it.
+    if not args.no_prune_branches:
+        prune_landed_branches(doc, args.unit.split("/")[0], dry=False)
+
     print("\nPush both. A fold is not landed until the log is pushed too.")
     return 0
 
