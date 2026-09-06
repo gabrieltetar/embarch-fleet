@@ -78,6 +78,98 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 00:20 — core/004 chip-list-help-routes-to-a-retired-key
+
+**Leg 014's fourth and last unit**, and the only one that exists because a *reviewer* found it
+— `api/017`'s reviewer, three hours earlier, reporting it as an observation rather than
+dropping it in `inbox/` because help text is not a decision.
+
+**Decided:** nothing suite-wide. `embarch-core` decisions 8 and 34 are amended in place:
+`chip-list` is no longer grounded in "configuring an override for an unmapped SoC", because
+that override no longer exists. **`chip-list` itself is untouched and still Shipped** — what
+changed is where its output goes, and the trap in this task was over-correcting into deleting
+a tool that is still the right tool.
+
+**The worker fixed five sites, not the three the task named, and the two extras are the ones
+that mattered.** The task pointed at the clap doc comment and two module comments. It also
+found the `SOC_TO_CHIP` const doc, and — the real one — **`UnmappedSoc`'s `Display`, which is
+the text of the `/resolve-chip` 404 an operator actually reads.** That string was stale twice
+over: it offered `embarch-core detect-dev-bench`'s "sibling chip-list item, **once it
+exists**" (it has existed since decision 34 shipped), and then told the reader to "configure it
+manually" — which is exactly the config file that does not exist. **The one string in this
+whole area that a stuck operator is guaranteed to see was the one nobody had listed.**
+
+**It rejected a config path for `SOC_TO_CHIP` rather than quietly leaving the question open**,
+citing `embarch-api` 13's tombstone: this suite rebuilds and redeploys Core routinely, so the
+rebuild requirement is a recorded choice. The reviewer checked that the rejection **keeps the
+reversal condition live** rather than closing it — "reverse *that* first" — which is the
+correct posture for a condition another sub-project owns.
+
+**Merged:** `agent/core/004-chip-list-help` (code `8be583f`, doc `666ba55`). Gate on the merge
+result: 171 tests, clippy, all 9 doc checks, ownership both branches, client-names clean.
+
+**Blocked:** none — but **one gate item was red and I merged anyway, deliberately, and this is
+the part to read.** `cargo build --target x86_64-pc-windows-msvc` fails. The worker reported
+it honestly and showed it fails identically on the unmodified base; **I reproduced it myself
+rather than taking that**, and it dies in `hidapi`'s build script on `guiddef.h: No such file
+or directory` — WSL has no MSVC toolchain or Windows SDK, and the rustup target alone does not
+supply one. `release.yml` builds this target on a native `windows-latest` runner, and
+`Cross.toml` configures `cross` only for `aarch64-unknown-linux-gnu`, so **there is no
+configured path for a Linux checkout to produce it at all.** The diff is doc comments plus one
+`write!` format string, none of it `#[cfg]`-gated, so the Linux build covers it. **But
+`supervise.md` requires "a native Windows build where `embarch-core` is involved", and that
+requirement is unrunnable for every `embarch-core` worker and every leg.** The worker dropped
+it in `inbox/`; I rescued the drop into the main checkout as
+`inbox/core-windows-target-build-unrunnable-in-wsl.md` before deleting its worktree — it is
+`scripts/`/protocol territory and therefore the owner's.
+
+**Reviewer:** no findings. Tally after this unit: **19 ran, 18 no findings, 1 finding.** It
+verified the changed error string breaks no consumer — `resolve_chip_handler` passes
+`e.to_string()` through as an opaque body, the shared client only deserializes the 200 case,
+and `embarch-api`'s call site wraps with `.with_context()` and never inspects the text — and
+grepped `soc_chip_overrides` across the whole suite: zero in `embarch-core` code, and every
+remaining doc hit is a record of the retirement. **Its one observation worth carrying:** that
+`Display` string is now the unit's sole executable artifact and **no test reads it**, so the
+next drift in it will be caught by nobody. `embarch-decision-reversals.md` row 52's own lesson
+is that a refusal test asserting only that it refuses gates half the surface; Core has no
+equivalent rule, so this is a gap rather than a violation.
+
+**Also folded into this unit, both mine:**
+
+- **`tasks/umbrella/018` filed** from `umbrella/017`'s two reviewer observations, which I had
+  merged over. It is the sharper of the two that carries: `bind-too-narrow`'s fix line tells
+  the user to re-run `embarch setup`, which on that exact path prints "already running", does
+  nothing, and then **rewrites the recorded topology class to `local` — after which check 17
+  passes.** A fix that greens its own check and destroys the evidence in the process. The task
+  offers three shapes and forbids reaching into `embarch-topology` for the expensive one.
+- **`embarch-topology/open.md` corrected by me.** It still called umbrella's
+  bind-versus-topology check "a separate, still-unwired consumer"; it has been wired since
+  `umbrella/017` landed. Out of an umbrella worker's ownership row, in mine, one line. **And
+  my first draft of that one line put the file into reserve at exactly 90.0%**, so
+  `check-doc-size.py` failed the fold and demanded a `tasks/topology/<NNN>-compact-topology.md`
+  from me. I shortened the sentence instead — the tautology detail belongs to umbrella's
+  decision 22 and to this log, not to `embarch-topology`'s open questions. **The reserve rule
+  is not a worker rule; it caught the supervisor on a one-line edit**, which is the first time
+  it has.
+
+**Hardware debts:** none new. Text and decisions only; no logic, no field, no signature moved,
+confirmed mechanically by the reviewer.
+
+**Reserve:** unchanged by this unit — no `features.d` row, no suite-level doc grew.
+`suite/features.md` stands at **96.9%, 632 B left** and is the fleet-wide risk described in
+this leg's `study-designer/004` entry. `embarch-umbrella/open.md` 94.5% (filed, `009`),
+`embarch-decision-reversals.md` 90.9% (filed, `suite/004`, owner-only).
+
+**Budget:** DEGRADED at start and end of the leg, wave 2, **no 429 anywhere**.
+
+**Least sure about:** merging with a gate item red. My reasoning is that the failure is
+environmental, reproduced on the base, and cannot be caused by doc comments — and I checked it
+myself instead of believing the worker. But **"the gate item is unrunnable" and "the gate item
+passed" are not the same fact**, and I have now normalised skipping it for one unit. If the
+next leg meets an `embarch-core` task with real logic in it, the honest position is that this
+suite has *never* gate-checked a Windows build from a leg, and it should say so out loud
+rather than inheriting my judgement call.
+
 ## 2026-09-06 00:12 — study-designer/004 no-ci-feature-matrix
 
 **Leg 014's third unit**, and the second task this leg wrote for itself after the queue hit
