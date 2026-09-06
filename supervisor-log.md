@@ -78,6 +78,111 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-05 23:47 — api/017 soc-chip-overrides-decided-never-built
+
+**Leg 014's first unit**, inherited from leg 013 as the queue's only dispatchable task.
+
+**Decided:** nothing suite-wide. Inside `api`, **decision 13 is retired rather than built**,
+and I am recording that as a real decision because the worker's argument is not the one the
+task file offered. The task's retire case was "the fix belongs in Core's chip table". The
+worker found a stronger one by reading `embarch-core` decision 8: **Core validates every
+SoC→chip mapping against probe-rs's own registry, so even a stale entry in Core's own table
+fails like an unmapped SoC — and a per-project override consulted *before* that call skips
+the validation entirely.** So one typo would reach `/flash` as a plausible chip name and
+attach the wrong physical target, which is exactly the silent-wrong-target failure Core
+decision 8 refused fuzzy matching to avoid. **The short-circuit was the entry's whole selling
+point and the short-circuit is the defect.** The saving it bought was one loopback HTTP call
+this crate makes at `/flash` anyway.
+
+**The losing case is in the entry with a reversal condition**, which is what makes this a
+retirement rather than a deletion: *a Core the operator cannot rebuild*. The hatch would then
+belong in Core's own config — machine-scoped, one copy, still registry-validated — never in a
+per-project `embarch-api` field.
+
+**It is not closed by deleting doc text.** `src/config.rs` keeps the key as
+`retired_soc_chip_overrides: Option<toml::Value>`, so a config written from the old interface
+doc is **refused at load on both discovery kinds**, naming the retirement and the remedy —
+decision 53's posture, and the reviewer confirmed the refusal sits above the `discovery`
+match so it really does reach both arms.
+
+**The ride-along compaction paid both files and closed `api/018`.**
+`interfaces/config.md` 11,844 → 10,923 B (96.4% → 88.9%), `open.md` 4,608 → 3,957 B (90.0% →
+77.3%). `tasks/api/018-compact-api.md` is closed and `git rm`ed. What went was reasoning the
+`decisions/` files already own at depth, and **the reviewer resolved each deleted passage
+against the file the worker named rather than accepting the claim** — build.md 19's
+directory-name rationale, dev-bench.md 45's `artifact_path` derivation, zephyr.md 21's and
+51's clauses, all present. This is the second leg running to use §2's ride-along rule, and the
+first to use it on a compaction task blocked `In flux: yes` **on the very task dispatched into
+its files** — which is the shape the rule was written for.
+
+**The overclaimed `Must not delete:` clause I handed the worker was real, and it fixed the
+remedy rather than the claim.** Decision 20's second remedy now names `west_binary` and
+`build_dir_root` as required, so a `static` project following it literally no longer lands in
+the next arm of the same `validate()`.
+
+**Merged:** `agent/api/017-soc-chip-overrides-decided-never-built` (code `4ef324f`, doc
+`495a7bf`). Gate on the merge result: `cargo build`/`test` (7 suites)/clippy, all 9 doc
+checks, ownership both branches, client-names clean against 7 entries.
+
+**Blocked:** none.
+
+**Reviewer:** no findings. It verified the cross-repo claim about Core against
+`embarch-core/src/chip_resolve.rs:80-93` rather than against decision 8's wording — `resolve()`
+really does re-check the table's own answer against `Registry::from_builtin_families()` per
+call — and it caught **one overstatement, confined to the task file**: I wrote that Core
+validates "at load *and* per call", and there is no load-time validation; it is per call plus
+a test over every table entry. Decision 13's own text says only "validates every mapping
+against probe-rs's registry", which is accurate, so **the retirement argument does not rest on
+my error.** Tally after this unit: **16 ran, 15 no findings, 1 finding.**
+
+**Its two observations are both filed as tasks, because both are the kind that vanish if only
+the log holds them.**
+
+1. **`embarch-core chip-list --help` still routes an operator into the retired key** —
+   `src/main.rs:100` plus two `chip_resolve.rs` module comments, and Core decisions 8 and 34
+   ground `chip-list`'s existence in "configuring an override for an unmapped SoC". So Core's
+   own help now sends someone to a key that stops `embarch-api` starting. **Not a
+   contradiction** — help text is not a decision, and `chip-list` still produces exactly the
+   string the new remedy wants — which is why it reported rather than dropping in `inbox/`.
+   `tasks/core/004`. Its second half is the sharper one: `SOC_TO_CHIP` is a source `const`
+   with no config path, so the remedy is really "edit Core's source and redeploy", and neither
+   message says so.
+2. **Decision 20's remedy is now self-contradictory for two of its five fields** — "remove
+   `west_binary`" and "add `west_binary`" in one message, when `west_binary` or
+   `build_dir_root` is the offending field. Both halves are individually correct and the test
+   passes; the sentence is confusing exactly where the fix was aimed. `tasks/api/019`, with an
+   explicit instruction not to invent a fourth posture for this class.
+
+**Hardware debts:** none. Host-side config-load and string-resolution logic with unit
+coverage; the one cross-repo fact was settled by reading `embarch-core`'s source.
+
+**Reserve, and it is what the next `api` unit walks into.** `api` has **nothing in reserve**
+for the first time since `api/012`, but `decisions/zephyr.md` finished at **10,962 / 12,288 B
+(89.2%)** — the same 89.2% it went in at, with the tombstone's argument having spent the
+slack. Nothing is filed against it and nothing may be (§5 forbids filing against a file not in
+reserve), so `tasks/api/019` carries the warning in its own `## Reserve` section instead.
+
+**One red I caused and fixed, and the next leg should know the mechanism.** `check-docs.py`
+was green on both merge results and went **red on `check-staleness.py` at fold time**, because
+the fold is where `build_features.py` runs and a worker leaves `suite/features.md` stale by
+design. `umbrella/017` (landed minutes earlier, folded next) had rewritten its `doctor` row to
+say the log-tail sub-row "is **design-only**" — and `design-only` is one of
+`STALE_FEATURE_WORDS`, so the check read the *row's own status* as design-only while
+`spec.md` names the shipped command. A false positive, and an unavoidable one from the
+worker's seat: **the check cannot fire until the supervisor assembles.** Fixed by rewording
+that fragment to "designed and unbuilt" — same fact, no trigger word. The fragment is
+`umbrella`'s, so it and `suite/features.md` land in *this* unit's fold rather than
+`umbrella/017`'s purely because the assembler runs per fold and not per merge.
+
+**Budget:** DEGRADED at start, wave 2, no 429.
+
+**Least sure about:** filing two tasks off one reviewer's *observations*. Neither is a
+contradiction, the reviewer deliberately declined to drop either in `inbox/`, and a fleet that
+converts every aside into a queue entry will drown in cleanups it invented for itself. I filed
+them because both are dangling text that only this unit's context makes findable — but the
+honest read is that `api/019` is a one-clause string fix I have dressed in a task file, and if
+the queue were healthy I would probably have left it in the log.
+
 ## 2026-09-05 23:45 — api/016 decisions-20-21-loose-ends
 
 **Leg 013's fourth and last unit, and the only one it did not inherit** — swept out of
