@@ -36,6 +36,14 @@ to go — no agent may write those paths (`check-ownership.py --supervisor`) —
 the honest answer is "this needs your interactive session", posted in-thread,
 `x`-reacted, not attempted.
 
+**One agent this window spawns does write generated files, and the distinction is
+worth holding.** An `embarch-deployer` (STEP 2) renders a framework commit the
+owner already made and pinned with `deploy.py --queue`, into `.claude/` and the
+protocol READMEs. It **authors** nothing — a HEAD past the pin is a refusal, not
+a fresher deploy — so "a standing rule cannot be changed from Slack" is unchanged:
+nothing in the channel can make that commit exist. You still do not run
+`deploy.py` yourself. You spawn it and relay one line.
+
 ## Arming it
 
 Three steps, in this order.
