@@ -78,6 +78,64 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 16:45 — topology/008 two of open.md's nine bullets were decisions, and two were duplicates
+
+**Decided:** one thing, and it is the worker's judgement call that I accepted. Two `Must not
+delete:` items now survive in `decisions/` rather than in `open.md`, where the task file had
+pointed. **I read "survives, in words a reader can still check" as corpus-wide rather than
+file-scoped**, because the alternative is a rule that forbids exactly the move
+`DOC-COMPACTION.md` §3 calls the cheapest bytes there are — a claim held in two files at once.
+The task's own `What` section had already said the likely compaction was a move.
+
+**Merged:** `agent/topology/008-compact-topology` (code **no commit — the branch is empty and this
+was doc-only**, doc `668052e`). Gate on the merge result: `cargo build`, `cargo test` **14 passed
+/ 0 failed / 0 ignored**, clippy `--all-targets -D warnings`, all 9 doc checks, ownership green
+(doc: 7 paths, base `7e2c18622f4e`; code: nothing changed), client-names clean.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**The numbers.** `open.md` **5,015 → 2,865 B (97.9% → 56.0%)**, `spec.md` **9,489 → 8,956 B (92.7%
+→ 87.5%)**, both PAID with no allowance taken and no other topology file pushed into reserve. Two
+bullets *moved* — the rejected-centralization one to `decisions/scope.md` as a new decision 22,
+the signal-alert bullet's two supporting facts into decision 18 — and two were *deleted* as
+already stated verbatim in `decisions/links.md` and `decisions/enrollment.md`, which
+`check-duplication.py` found rather than the worker guessing.
+
+**I asked the reviewer to check survival against the corpus rather than against the worker's own
+summary, and that distinction earned its keep.** It verified the two deletions against the
+**pre-image** — `decisions/links.md` carried `validate_signal`'s reason word for word *before*
+this commit, so nothing left `open.md` and landed nowhere — and confirmed that the clause I was
+most worried about is byte-identical and not merely paraphrased: `detected_by` "names the weakest
+rule consulted rather than the one that chose", which the task file warned is otherwise supported
+only inside two task files that get deleted when their tasks close. The 2026-09-06 bench
+measurements in `spec.md` are untouched, same line numbers, **including the `COM5`-eliminated-by-
+*fallback* sentence that was wrong in that file for twenty minutes yesterday.**
+
+**One observation it raised and correctly declined to call a finding, carried here so the next
+leg does not re-find it as new:** `spec.md:14` now says "retired decision 9 carries the incident
+that proved it", and decision 9 names the *class* rather than narrating the incident. After this
+commit the narrative — the dedicated-UART migration, the uncleared registry override, the 404
+naming the excluded candidate — is in no doc at all; a repo-wide grep returns only that pointer.
+**That is protocol-sanctioned** (`DOC-COMPACTION.md` §1 rejects losslessness, §3 bars "how it got
+that way" from `spec.md`) and I would not revert it. The pointer is just slightly wider than what
+it points at.
+
+**Hardware debts:** none, and none owed.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **that this leg paid three compaction debts and filed two new tasks, and I
+have no way to tell whether that is progress.** `topology/008` bought 2.2 KB of runway by moving
+settled bullets into `decisions/`, which have their own caps — decision files are 12 KB and
+`decisions/links.md` is at 81%. Moving a bullet from a 5 KB file at 98% into a 12 KB file at 81%
+is genuinely cheaper *this time*, and the corpus-wide total did not go down. **The compaction
+mechanism measures per file, and every pass so far has been a file getting better while the sum
+stays put.** Nothing in the queue would notice if that became the whole game.
+
+---
+
 ## 2026-09-06 16:35 — api/029 a study ran green, and the bench told me what is on the air
 
 **Decided:** two things, both mine, and the second reverses the first. **(1)** `suite/studies-guide.md`
