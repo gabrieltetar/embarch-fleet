@@ -78,6 +78,80 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-05 22:35 — umbrella/013 decision-26-target-json-is-written
+
+**Leg 013's first unit.** Leg started at `7e21b08`, detached leg worktree, Slack live.
+
+**Decided:** nothing suite-wide. One dispatch-level call that the next leg should know
+about, because it replaces the move my predecessor recommended. It suggested **unparking
+`tasks/umbrella/016` by narrowing it**, the way the owner unparked `api/012`. I did not.
+Narrowing `016` would have freed one of its two files and left the other in flux anyway —
+`umbrella/007` rewrites `spec.md`'s check-8 row and `umbrella/015` edits decision 40 in
+`decisions/doctor.md`, so *both* files are in flux from this leg's own queue. **Instead I
+split `016` across the two units that are already spending its reserve**: `015` carries
+`decisions/doctor.md` (370 B left) and `007` carries `spec.md` (954 B left), each with
+`016`'s `Must not delete:` list for its own file and an instruction to close only that
+file's item. That is what `DOC-COMPACTION.md` §2 actually asks for — a blocked compaction
+task parks the pass, not the reserve — and it needs no judgement about what is settled,
+which is the judgement my predecessor said it had no unit left to test.
+
+**This unit itself touched no file in reserve.** Decision 26 lives in
+`decisions/projects.md`, 9,752 → ~10,280 B of 12,288, nowhere near its line. **I told the
+worker to decline the task's optional check-16 half** — making check 16 report how many
+build directories are *attributable* rather than a raw count — because that half lands its
+entry in `decisions/doctor.md` and its row in `spec.md`, the two files with 370 B and
+954 B, and §2 would then have obliged a *third* compaction inside a one-bullet unit. The
+worker recorded the idea in the task file's `## Outcome` with the fact that
+`api/013`'s `target.json` is now the oracle it always lacked, so it is queued knowledge
+rather than a lost thought. **That idea is worth a task once `016` clears.**
+
+**Merged:** `agent/umbrella/013-decision-26-target-json-is-written` (code `9d459b9`, doc
+`5b53a00`). **The code branch was empty** — the task needed no code, so `9d459b9` is the
+pre-existing tip and there is nothing to revert on that side; `5b53a00` is the whole unit.
+Gate on the merge result: 152 tests, clippy, all 9 doc checks, ownership both branches
+(`--scope umbrella` on doc, `--code-repo` on code), client-names clean against 7 entries.
+
+**Blocked:** none.
+
+**Reviewer:** no findings. **And it did the one thing the worker could not.** The worker
+verified umbrella's new claim about `embarch-api` against `embarch-api`'s own landed
+decision entry and interface doc — correct, and all it was allowed to do. The reviewer went
+to the shipped source at `embarch-api` tip `ab51bd1` and read `src/resolve.rs:415` and
+`write_target_manifest` in `src/build.rs:302`, and reports the nine-field descriptor the
+umbrella bullet now states is **byte-accurate rather than approximated**. That is a
+cross-repo check nothing else in the pipeline performs. It also listed what it did not
+verify, unprompted — no gate run of its own, no real build directory, and `embarch-api`
+read from the *main* checkout rather than a leg worktree. Its one sub-threshold note,
+deliberately not filed: the bullet now mirrors another repo's schema field-by-field, which
+is the class `umbrella/open.md` already worries about, but no decision forbids it and the
+authoritative link is beside it.
+
+**I gave every reviewer this leg the leg worktree path**, per `tasks/doc/010` — the
+workaround my predecessor named and did not use. It worked as intended here: nothing in
+this review carried a stale `pre-existing` label, and the reviewer flagged the one path it
+read outside the worktree rather than letting it pass silently.
+
+**Hardware debts:** none. Nothing in this unit is hardware-shaped, and nothing ran against
+the owner's machine.
+
+**Budget:** DEGRADED at the start of the leg, wave 2, no 429. **The wave is unusable**:
+all three dispatchable tasks are `umbrella`, and §6 allows one task per sub-project in
+flight, so this leg runs its units serially at half the permitted concurrency however
+healthy the budget is.
+
+**Queue hygiene, and it is mine rather than this unit's:** four `done` task files
+(`api/012`, `api/014`, `umbrella/011`, `umbrella/012`) were still sitting in `tasks/`,
+never `git rm`'d by the legs that finished them. `fold-commit.py` does not delete a `done`
+task file for you — the log has said so since leg 008 and it keeps happening. Cleared in a
+separate commit rather than inside this fold, so the fold stays exactly this unit's paths.
+
+**Least sure about:** the `016` split. It closes two reserve items in the two commits that
+spend them, which is right — but it also means **two different workers each shorten a file
+against half of one `Must not delete:` list**, and neither can see what the other cut.
+`016`'s list is written per-file so the halves do not overlap, and I told each worker to
+leave the other's file alone. If a `Must not delete:` item turns out to span both files,
+this is where it gets half-honoured twice, and no check in the gate would see it.
+
 ## 2026-09-05 23:05 — umbrella/011 check-10-parses-a-format-that-does-not-exist
 
 **Leg 012's last unit.**
