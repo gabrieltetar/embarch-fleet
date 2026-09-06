@@ -106,8 +106,14 @@ is literally those two). `locate_api` read `EMBARCH_API_BIN` then `PATH` and not
 whether the shell that ran `doctor` happened to be interactive. Decision 38's false red, one
 binary over.
 
-**Merged:** `agent/umbrella/023-locate-embarch-api` (code `0109392`, doc `cdc50ff`; the worker's
-doc tip was `805a051`, rebased onto `f5b7d84`). Gate on the merge result: `cargo build`, **196
+**Merged:** `agent/umbrella/023-locate-embarch-api` (code `0109392`, doc **`e90a3c7`**; the
+worker's doc tip was `805a051`, rebased onto `f5b7d84`, merged as `cdc50ff` and then **rewritten
+to `e90a3c7` by a second rebase** — the owner pushed `ce3dc7f` (`doc/012`) while I was folding, my
+push was rejected non-fast-forward, and I rebased rather than forced, which is the rule. `cdc50ff`
+is unreachable and **`e90a3c7` is the SHA a revert needs**; the fold commit moved with it, from
+`a3e477d` to `2bf743c`. Worth knowing generally: **a doc merge SHA written into an entry before
+the push is provisional until the push succeeds**, and this is the first time in this log that one
+had to be corrected after the fact). Gate on the merge result: `cargo build`, **196
 tests** (6 new), clippy, all 9 doc checks, ownership 9 doc paths and the code tree, client-names
 clean. No `cargo` argument-not-a-run this time.
 
