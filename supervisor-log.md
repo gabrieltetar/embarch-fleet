@@ -78,6 +78,91 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 03:05 — api/020 the-bearer-sweep-is-a-hand-maintained-list
+
+**Leg 017's second unit.** A test whose own doc comment said *"this list is meant to stay
+exhaustive"* — and it was not, which is the finding rather than the fix.
+
+**Decided:** nothing suite-wide. One sub-project call, accepted on the worker's argument:
+**the structural form, a source scan, over coverage-by-observation.** The rejected shape
+compares the mock's observed `(METHOD, path)` pairs against a route inventory the client
+exposes — which is the hand list under a new name, and would grow `CoreClient` a public route
+table nothing else wants purely to serve a test. Recorded as decision 54.
+
+**The list had already drifted, and that is the whole justification for the unit.**
+`post_study` and `open_study_events` both reach the network and **neither was swept**.
+`open_study_events` is the shape that escapes such a list by construction: the one route that
+bypasses `send` entirely, building through the `pub(crate)` `http()` accessor because it streams
+and sets no timeout. **A hand list does not fail to be exhaustive in the abstract; it had
+already failed.**
+
+**Merged:** `agent/api/020-bearer-sweep-exhaustive` (code `03ea4bc`, doc `8ab975a`, the doc side
+rebased from `035428e` onto `29a9e7f` and ownership re-checked after — 6 paths, clean). Gate on
+the merge result: `cargo build`, 152 tests, clippy, all 9 doc checks, ownership both branches,
+client-names clean. Test-file-only code diff, so I did not read it before merging under §10's
+shared-crate rule — **note that the file it tests is in a shared crate `embarch-ui` also depends
+on**, which is why the reviewer's brief said so explicitly.
+
+**Blocked:** none.
+
+**Reviewer:** no findings. Tally after this unit: **29 ran, 26 no findings, 3 findings.** It did
+not take the report's word for anything: it re-ran the test's own algorithm in Python,
+independently enumerated both `impl CoreClient` blocks, and **mutation-tested every claim in a
+scratch copy** rather than in the checkout. 25 networked methods, both sets agree, no third
+missed route, `get_study_csv`'s four public callers are the right four, both lexical escapes
+assert and both fire when mutated.
+
+**It disagreed with the worker's *reasoning* while agreeing with its conclusion, and the
+disagreement is the more useful half.** The worker declined to set `Authorization` as a
+`default_headers` on the `reqwest::ClientBuilder` — which would make the failure impossible
+rather than detected — on the grounds that it would make the acceptance criterion
+*unfalsifiable*. **That is wrong against this suite's own posture**: `decisions/surface.md`
+decision 24 does exactly the impossible-by-construction move and keeps a falsifiable guard
+("unconditional by construction, not by convention", with a test that fires if a second
+serializer appears). Had that clause reached decision 54's rejected-alternatives text as
+written, **it would have misstated decision 24's precedent in a permanent record.** The two
+reasons that do hold: blast radius — the crate is a path dep `embarch-ui` also consumes, so a
+production auth change inside a test-hardening unit is reach a worker must not take — and, on
+the merits, that `base_url = "auto"` probes a candidate list, so a header on *every* request
+turns "no auth, refused, loudly" into "token sent somewhere it should not be, silently".
+
+**And it found something nobody had, and left the filing to me: 9 of the 25 routes set the token
+by hand** (`client.rs` 1030, 1109, 1226, 1267, 1310, 1456, 1512, 1549 and `study_events.rs:419`),
+while `client.rs:786`'s comment says *"every other route gets it applied for it by
+`send`/`send_no_content`, and that stays the rule."* **Not a security bug — `020`'s sweep proves
+all 25 do send it** — but the mechanism is convention, and a comment asserts construction.
+Filed as **`tasks/api/022`**, `blocked` on `021`, with the `default_headers` shortcut and the
+reason it is wrong written into the task so it is not re-proposed.
+
+**Hardware debts:** none new, none discharged. Nothing here touches a board or a live Core.
+
+**THE `embarch-api` DECISION CORPUS IS AT THE WALL AND THE NEXT LEG MUST NOT DISCOVER THIS THE
+HARD WAY.** `decisions/shape.md` is **12,281 / 12,288 B — 7 bytes** under a *hard cap*, filed as
+`tasks/api/021-compact-api.md`, `blocked` / `In flux: yes`. The reviewer checked that field is
+honest rather than parking, and it is — decision 46's test-reach account is genuinely moving, two
+consecutive legs (53, then 54) landed in that exact file. But **every other api decisions file is
+one paragraph from its own reserve line**: `zephyr.md` 11,056 against a line of 11,059 — **3
+bytes, unfiled, with no `Must not delete:` list of its own** — then `interfaces/config.md` 51 B,
+`build.md` 125 B, `surface.md` 131 B, `core-link.md` 180 B. The 2026-09-05 misfiling (an api
+decision written into the wrong topic file because 96 bytes were left) is **one byte-pair from
+recurring in a sibling file the ride-along does not cover.** I filed no new compaction task for
+`zephyr.md` because it is not in reserve and `check-doc-size.py` files on the commit that spends
+it; the honest statement is that the rule and the risk have come apart here. **Any api unit
+after this one carries a compaction pass whether its task says so or not.**
+
+**`build_changelog.py --only` is live and I used it** — `1 fragment consumed, 16 left pending`,
+against the park-and-restore dance `umbrella/022` needed an hour earlier. The owner landed
+`59f0913` mid-leg, which is what moved `main` under my first fold's push.
+
+**Budget:** DEGRADED at start and here, wave 2, no 429.
+
+**Least sure about:** merging a diff I did not read, in a file whose subject is authentication,
+in a crate another repo depends on. §10's rule is *shared crate, wire type, or retired
+decision*, and a test file is none of those — but "the tests for the shared client's auth path"
+is closer to the spirit of that rule than to its letter, and I merged on the letter. The
+reviewer read it afterwards and mutation-tested it, which is the only reason I am comfortable;
+**had it not run, this unit would have landed on the worker's word alone.**
+
 ## 2026-09-06 02:50 — umbrella/022 init-writes-an-inferred-board-unconfirmed
 
 **Leg 017's first unit**, and the first task this relay has filed from a *sub-project* open
