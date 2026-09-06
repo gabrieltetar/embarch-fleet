@@ -78,6 +78,92 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 02:50 — umbrella/022 init-writes-an-inferred-board-unconfirmed
+
+**Leg 017's first unit**, and the first task this relay has filed from a *sub-project* open
+question rather than from a fleet-internal defect in several legs. **Read the queue note below
+before anything else: this leg found the queue structurally empty, not merely low.**
+
+**Decided:** nothing suite-wide. Three sub-project calls, all the worker's argument and all of
+which I accepted:
+
+- **The mechanism is the `CHANGE-ME` sentinel, not a marker comment beside a working value** —
+  which was my own first suggestion in the task file, and the worker argued it down correctly:
+  *a comment cannot stop the failure it describes, and being skipped is the entire failure*.
+  Also rejected commenting `build_command` out or withholding it, because both leave a config
+  `embarch status` cannot load — a worse trade than the one `chip = "CHANGE-ME"` already made
+  and proved. The displaced board is quoted back in a comment **with how old that build is**.
+- **An age, not a date.** `init` runs today either way, so a scaffold-time timestamp dates the
+  scaffolding rather than the build the board came from.
+- **Several recorded builds: name every candidate, pick none.** `find_build_infos` walks the
+  repo rather than reading only `build/build_info.yml`. **Rejected taking the newest — the ad
+  hoc dev build behind the original bring-up incident *was* the newest**, which is the whole
+  reason "most recent" reads as a safe tie-break and is not one.
+
+**Merged:** `agent/umbrella/022-init-inferred-board` (code `02004e2`, doc `ce4b920`, the doc
+side rebased from `035428e` onto `e795b3f` and ownership re-checked after — 10 paths, clean).
+Gate on the merge result: `cargo build`, 190 tests, clippy, all 9 doc checks, ownership both
+branches, client-names clean.
+
+**Blocked:** none.
+
+**Reviewer:** no findings. It verified all three of the worker's self-flagged claims from source
+rather than from the report, and the verification is the useful part:
+
+- **The `decisions/projects.md` split is genuinely verbatim** — decisions 10 and 12 extracted
+  from both files are byte-identical at 2,020 B, `diff` empty, nothing renumbered,
+  `check-decision-refs.py` 610/610. It also confirmed the worker's *refusal*: decision 26 was
+  the obvious thing to move and is the wrong one, because `embarch-api/decisions/build.md`
+  references it at three lines, in a sub-project an umbrella worker may not edit — so moving 26
+  would have gone stale silently. **A worker checking the seam before cutting it is the thing
+  §3's ownership row is supposed to produce and rarely gets credit for.**
+- **The Zephyr/west arm is byte-identical**, checked by extracting the block from both commits
+  rather than by trusting the claim; the diff contains no line matching `zephyr_west` at all.
+- **Not adding `projects.md` to `009`'s `Compacts:` is correct** — it lands at 10,491 B (85.4%)
+  and is not in reserve, so nothing is owed.
+- **`open.md`'s deletion took nothing with it**: the whole diff is 2 lines out, 2 in, and every
+  `Must not delete:` item `009` names for that file survives. The bullet is answered by the
+  shipped code and not merely by the decision prose.
+- **One real bug it declined to file**, and it is right that it is not a contradiction:
+  `redact_board` mishandles a recorded argv ending in a bare `-b` with no value, emitting
+  `west build -b -b CHANGE-ME`. Degenerate input only — west cannot produce it. Recorded here
+  so it is not rediscovered as a mystery.
+
+**Hardware debts:** one new, and **it needs no board** — a machine and a real firmware repo.
+Nothing here has run against a real repo or a real `embarch-api`; the worker deliberately did
+not execute `init` itself, because its non-scaffolding half shells out to `claude mcp add` and
+would mutate the owner's real agent config. Owed in an owner session: `embarch init` in a
+static-discovery repo with a `build/build_info.yml`, confirming the written config loads in
+`embarch-api` with the board still `CHANGE-ME`; and the same in a repo with a second
+`build_info.yml` elsewhere in the tree.
+
+**The `status.d/` fold pushed `suite/user-guide.md` into reserve, for the third leg running.**
+22,813 → 23,246 B against a 23,040 line. Leg 016 got out of it by shortening a row that had
+genuinely bloated; §5.1 has no such slack, so **I filed the debt instead of shaving prose to
+dodge the line** — `suite/user-guide.md` added to `tasks/suite/004`'s `Compacts:`, with two
+`Must not delete:` items (the *wrong guess flashes the wrong target* argument, and *`build_info.yml`
+records the last build, not the board on your desk*; both read as boilerplate once shortened to
+"fill these in"). **The pattern is now named in that task file**: a `status.d/` fragment is the
+one edit in a unit that no worker's reserve budget covers, because the worker cannot write the
+file and the supervisor is not told its headroom before it starts folding. Three legs is enough
+to stop calling it bad luck.
+
+**`tasks/doc/013` is live and I worked around it on this fold.** `main` carries 15 `changelog.d/`
+fragments the owner has not folded, so `build_changelog.py` would have swept all 16 into this
+unit's commit. I parked the 15 outside the repo, ran the assembler (`1 fragment consumed`),
+restored them. **It worked and it is entirely manual** — one forgotten step from the bug, on
+every fold of this leg and the next.
+
+**Budget:** DEGRADED at start and here, wave 2, no 429.
+
+**Least sure about:** the split. It is entirely inside the worker's ownership row, the reviewer
+proved it verbatim, and the alternative was an over-cap file that fails the gate — but it is
+substantially more diff than the task asked for, decided unilaterally mid-unit, and **the task
+file told it to extend `tasks/umbrella/009` instead.** It did the better thing and disobeyed a
+specific instruction to do it. I would rather that than a squeezed decision, and I want the next
+leg to know the instruction was overridden by the actor closest to the file rather than silently
+ignored.
+
 ## 2026-09-06 02:35 — umbrella/021 bound-narrows-setup-clause-reads-a-host-that-is-not-setups
 
 **Leg 016's fourth and last unit**, and it closes a chain this leg made itself: `020` fixed a
