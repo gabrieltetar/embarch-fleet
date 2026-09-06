@@ -78,6 +78,96 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 01:22 — umbrella/019 doctor-spawn-tests-lose-their-own-exec-to-etxtbsy
+
+**Leg 016's first unit.** A flaky test `umbrella/018`'s worker reported while running its own
+gate — ~1 run in 20, `Text file busy` on execing a `#!/bin/sh` fake the test had just written.
+
+**Decided:** nothing suite-wide. The worker took the task's own harder arm — **the bounded
+retry, not a narrowing fix** — and the argument is the part worth keeping: `std::fs::write`
+has already closed *our* descriptor by exec time, so the offending fd is a **copy made by a
+`fork` in another test thread**, which dies at that child's own `exec` microseconds later.
+Nothing on the writing side can shorten a window it does not hold, which is exactly why
+`File` + `sync_all` + drop only narrows. 50 attempts, 20 ms apart, ~1 s ceiling.
+
+**And the flake was in two tests, not one.** Reproducing it hit check **8**'s
+`a_located_binary_is_actually_spawned_and_its_failures_are_reported`, same write-then-exec
+shape, never reported by anyone. Both are fixed. **Read the original report as a report of the
+class, not of the test it named** — that generalisation is the unit's real yield.
+`src/setup.rs:748` writes an executable fake too and is not at risk: its only test never spawns it.
+
+**Merged:** `agent/umbrella/019-etxtbsy-flake` (code `8e70b78`, doc `03c995a`). Gate on the
+merge result: `cargo build`, 179 tests, clippy, all 9 doc checks, ownership on both branches
+(bases `bd46a71` and `5f978e7`), client-names clean. Test-module-only diff, so I did not read
+it before merging under §10's shared-crate rule; the reviewer read it after.
+
+**Blocked:** none.
+
+**Reviewer:** no findings. Tally after this unit: **24 ran, 22 no findings, 2 findings.** It
+did the most independent work of any reviewer so far and two of its results are load-bearing:
+
+- **It reproduced the flake itself** — `git archive` of the parent `5f978e7`, built in
+  scratchpad, **2 failures in 80 runs**, both check 10, both `Text file busy`. **It did not
+  reproduce a check-8 hit**, and said so: that half of the worker's "it is the class" claim
+  rests on the worker's run, not the reviewer's. The structural argument (identical shape) is
+  what carries it. Then **200 consecutive runs on the merged SHA, 0 failures**, independently.
+- **It checked the masking claim from source rather than from the report**, which is the thing
+  I most wanted checked: `for _ in 1..TRIES` plus an unconditional trailing spawn is exactly
+  50 attempts, and **the 50th result is returned unchecked**, so a genuine `ETXTBSY` comes back
+  verbatim and still fails its assertion — never a pass, never a hang, only later. It also
+  confirmed the fakes are written *outside* the retried closure, so a retry re-execs and never
+  re-writes, and that the one other spawning test (`/no/such/embarch-api-xyz`) has no fake and
+  is correctly left unwrapped.
+- **Three observations it explicitly declined to call findings**, all worth carrying:
+  1. **"Closes the race" leans on an unstated premise.** The set of forked copies is fixed at
+     write time and cannot grow (`O_CLOEXEC`), which is why this differs in kind from
+     `sync_all`; but what makes it a *bound* rather than a closure is that **every copy's
+     holder execs within ~1 s**. Nothing in this suite delays an exec that long. The
+     `Done when` bar is satisfied independently by the 200 green runs, so nothing turns on it.
+  2. **The new test roughly doubles the suite's wall time** — 178 tests in 0.41 s at the
+     parent, 179 in **1.04 s** merged, because the `stuck` arm sleeps 49 × 20 ms and sets the
+     floor. The cost is the *asserted* arm, not the fix. Parameterising `TEXT_FILE_BUSY_TRIES`
+     down in that one test buys back ~0.6 s with no loss of what it pins. Not filed as a task;
+     it is a one-line change for whoever next opens that module.
+  3. **The retry keys on the substring `"Text file busy"`**, which is libc's strerror text
+     rather than our wording — so decision 37's "never derived from `detail`" is not engaged.
+     But it **fails silently open** (straight back to flaking) if a later unit changes how
+     `mcp_initialize` or `api_host_schema_version` wraps the io error.
+     `ErrorKind::ExecutableFileBusy` is still unstable, so there is no clean alternative today.
+
+**Hardware debts:** none new, none discharged. Test-harness only.
+
+**Reserve after this unit:** unchanged at four files, every one filed —
+`embarch-umbrella/decisions/doctor.md` 93.7% (`umbrella/009`), `suite/features.md` 93.5%
+(`suite/004`), `embarch-study-designer/decisions/crate.md` 91.7% (`study-designer/006`),
+`embarch-decision-reversals.md` 90.9% (`suite/004`). The worker wrote **no** decisions file and
+said why — a test-harness race changes nothing about what `doctor` decides — which is the right
+call and also the convenient one, so I asked the reviewer to check it specifically. It did, from
+`spec.md`, `open.md` and `decisions/doctor.md`, and agreed.
+
+**A fold hazard the next leg must know about, because it is silent and I nearly committed it.**
+`main` currently carries **15 `changelog.d` fragments the owner wrote and has not folded** —
+twelve `fleet-*`, one `doc-*`, one `suite-*`, two `umbrella-*`. They are **tracked and committed**
+(`de07c82`, 2026-09-05 20:37), so a leg worktree has them, and **`python3 scripts/build_changelog.py`
+consumes all of them**: my first run said "16 fragment(s) consumed" and mixed the owner's two
+umbrella entries into the same `history/umbrella.md` block as this unit's. Staging that file
+would have folded his work under my unit's message — the legs 004/005 failure by a different
+route, and `git add -A` is not involved, so the standing rule does not catch it. **What I did:**
+`git checkout -- changelog.d history`, moved the 15 fragments to a scratch directory, re-ran the
+assembler (`1 fragment consumed`), moved them back, and confirmed `git status` showed only this
+unit's two paths. **Do this every fold until his fragments are gone.** Leg 015 evidently arrived
+at the same end state — its `history/umbrella.md` diff is +4 lines, one entry — but nothing in
+`supervise.md` or `ops.md` says to, so it is luck or an unrecorded habit either way. Filed as an
+`inbox/` drop this leg, because the fix is a `scripts/` change and that is the owner's.
+
+**Budget:** DEGRADED at start and here, wave 2, no 429.
+
+**Least sure about:** dispatching one worker against a wave of 2 for the whole leg. Both
+remaining worker tasks are `umbrella` and §6 allows one per sub-project at a time, so the second
+slot sat empty for twenty minutes with no way to fill it that does not break that rule. **The
+honest reading is that the queue is narrow, not that the fleet is slow** — and a queue whose
+only dispatchable work is two tasks in one sub-project is one unit away from a dream.
+
 ## 2026-09-06 01:35 — suite/005 features-fragments-are-longer-than-the-file-says-they-are
 
 **Leg 015's fourth and last unit, and mine under §8** — announced at `ts 1788675832.554579`
