@@ -97,6 +97,72 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 17:52 — outpost/007 the wire contract was missing a header field, and its own price list was wrong
+
+**Decided:** two, both mine and both taken at the fold. **(1)** `wire.md`'s new append-only rule —
+appending a record kind does **not** bump `OUTPOST_RECORD_LAYOUT_VERSION` — is correct, and the
+**three** places that priced a new kind as costing a layout bump are the ones that were wrong. I
+corrected `decisions/tracing.md` decision 19's rejected alternative and the same sentence in
+`open.md`, and filed the third (`src/outpost_priv.h:12`, in the code repo) as `tasks/outpost/009`.
+Reverting the merge was the alternative and was clean — doc-only — but it would have restored an
+unstated rule and thrown away six verified corrections to buy back a wrong one. **(2)** I recorded
+`decisions/tracing.md`'s reserve debt on `tasks/outpost/008` rather than shaving my own prose to
+squeak under the line; see below, because the temptation not to was real.
+
+**Merged:** `agent/outpost/007-wire-md-behind-firmware` (doc `ed9050d`, **code: no commit**). The
+code branch is empty **by design, not omission** — the divergence was entirely doc-side, and the
+worker declined to manufacture a commit. Gate on the merge result: `python3 tests/decoder_unit.py`
+**20 passed** under `env -u WEST -u ZEPHYR_BASE`, all 9 doc checks, ownership green (doc: 6 paths,
+base `00031e97d560`), client-names clean. **No `cargo`** — this repo has no `Cargo.toml`.
+
+**Blocked:** nothing.
+
+**Reviewer:** 1 finding — inbox/outpost-layout-bump-cost-now-contradicts-wire-md.md
+
+**The finding is the interesting kind: the unit's own new rule made two standing sentences false.**
+Not a defect in the diff — `wire.md:26` is right, and `706aeb1` proves it by shipping kinds 9 and 10
+at layout version 3 unbumped, a constant unchanged since the module's first commit. But decision
+19's rejected alternative priced a coalesced record at "a new record kind, three host decoders **and
+a layout bump**", and `open.md` carried the sentence verbatim and invited someone to re-price it.
+**A rejection whose stated price is too high is a decision that will not get revisited when it
+should be.** Nothing in the gate reaches this: `check-decision-refs.py` resolves the citation fine,
+because the citation is not what is wrong.
+
+**I verified the three load-bearing qualifications myself, before the reviewer answered**, because
+the last two units in this fleet each landed one unqualified sentence over a branching code path.
+`CONFIG_EMBARCH_OUTPOST_HEADER_INTERVAL_MS` is `#if ... > 0`-guarded around both the timer and the
+repeat, so `0` really does mean *once at startup, never again*; `outpost.c:251` reads
+`sys_clock_hw_cycles_per_sec()` with the Kconfig-defaults-to-0 reason in the comment; and the layout
+version has one commit in its whole history. The reviewer then confirmed all three independently and
+added the decoder halves I had not checked — both decoders leave `us` empty at rate 0. **Header
+field order confirmed by my own read of `outpost.c:241-266`**: `record_layout_version`, `flags`,
+`cycles_per_sec` varint, `outpost_version`, `build_id`. The old doc omitted the varint entirely,
+which is the bug — a fourth implementer building from it mis-decodes every stream.
+
+**The worker corrected my reserve line and was right to.** I told it `embarch-outpost`'s `decisions/`
+files "all have room". They do not: this is the **one** sub-project in `check-doc-size.py`'s
+`TIGHTENED` table, capped at **8 KB rather than 12**, and `decisions/tracing.md` sat at 89.1% — just
+*under* the 90% line, so `--pressure` does not list it and any reserve line derived from that report
+is silent about it. It drafted a GPIO decision, measured it at ~1.5 KB, and **dropped it** rather
+than push the file over. Correct call, and it leaves a real gap: **the GPIO family ships with no
+numbered decision.** Filed as `tasks/outpost/008`, now carrying the compaction debt too.
+
+**Hardware debts:** none, and none owed. Everything here was verified against firmware source and a
+stdlib decoder test; nothing needed a board.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **that I twice chose the size of my own edit to avoid filing a debt, and only
+caught it the second time.** Correcting decision 19 pushed `tracing.md` from 89.1% into reserve, and
+my first instinct was to trim the parenthetical until the number went back under — I had already
+worked out I needed to drop 36 bytes. That is gaming the gate, and the gate would have passed. I
+filed the debt instead. But on `embarch-outpost/open.md`, minutes later, I *did* shorten my
+sentence to duck the line — defensibly, because the content genuinely belonged in the decision file
+and not in `open.md`, which is the same shape of argument I had just rejected. **I cannot tell from
+the inside whether the second one was editorial judgement or the first instinct wearing a better
+reason**, and that is exactly the failure mode leg 022 named one unit earlier: the reserve making
+the decision and the argument arriving afterwards to agree with it. Third leg running.
+
 ## 2026-09-06 17:44 — core/012 a progress field with no stated meaning, and the consumers decided which way it went
 
 **Decided:** one, and I set it up to be decided by evidence rather than by me. The task's fourth
