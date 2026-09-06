@@ -97,6 +97,84 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 16:51 — core/007 the `503` naming the holder was never built, and three docs said it was
+
+**Decided:** two, both mine. **(1)** `embarch-core` decision 14 — "contention returns `503` naming
+the holder rather than queueing" — is **designed and not implemented**, and I rewrote
+`decisions/platform.md`, `spec.md` §2 and `interfaces.md` to say so rather than marking the rule
+observed. **(2)** I kept the decision rather than retiring it, and parked the build-or-retire fork
+in `tasks/core/013`. Retiring it would have thrown away a real design intent on the strength of one
+bench sitting; the corpus now says what is true *and* what was wanted, which are different facts.
+
+**Merged:** no branch and no worker — a `Hardware: bench` unit is the supervisor's own hands.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**What actually ran.** Both roles validated live and matched their enrolled identities exactly
+(`dut` `834f2559f10a6cdf` / probe `000852006107`, `dev-bench` `6fcddc36cb781b71` / probe
+`001057729826`). The Core reached was the **Windows service at `http://172.22.128.1:4884`**, via
+`embarch-api`'s `base_url = "auto"`. Nine `GET /serial-log` requests across three runs on `COM17`,
+read-only, nothing flashed and no study: **every one returned `200` with a body.** No `409`, no
+`503`, and no port-busy error either — which a genuinely parallel second open would have produced.
+
+**The decisive proof is a type, and the reviewer is why it is in the doc.** I had written the
+finding on a grep — no `try_lock`, no `503`, no `SERVICE_UNAVAILABLE` in `src/`, in the git checkout
+*and* in the rsync tree the Windows service is built from — and asked the reviewer to attack it as
+too narrow. It confirmed the grep, ruled out the only stock sources of a `503` nobody writes (one
+`.layer`, `auth_middleware`, and no tower load-shed, concurrency-limit or timeout layer), and then
+produced the better argument: **`hw_lock` is `Arc<Mutex<()>>`, and a `Mutex<()>` has nowhere to put
+a holder.** Decision 14 requires the refusal to *name* the holder, so the type alone proves it was
+never built, and it survives a refactor a grep would not. That is now the first sentence of the
+corrected entry.
+
+**And it caught me overstating my own measurement.** I wrote that the triple run's 17.96 s against
+an 8.38 s single-call baseline showed ~9 s of serialised hardware time "where parallel execution
+would have shown ~3 s". It does not: ~5.4 s of a single call is fixed overhead, so 17.96 s sits
+*between* fully sequential issuance by the MCP client (~25 s) and concurrent-with-serialisation
+(~14.4 s). The queueing claim rests on `.lock().await`, which cannot do anything but wait; the wall
+clock corroborates and does not carry it. **Both docs now say exactly that**, and name the free way
+to settle it — the three handler entry/exit stamps in `core.log`, no board needed.
+
+**One misquote of mine, caught and fixed before the fold.** `tasks/core/013`'s "Why now" said the
+fleet protocol tells every agent a `409`/`503` from Core is a refusal, and that it points at a code
+Core cannot emit. **Both halves false**: it says `409` only, and that `409` is the **`study_lock`'s**,
+which Core genuinely emits (`study.rs:869`, `:928`). Worth naming for its shape rather than its
+size — **I asserted the contents of a repo a leg is forbidden to check out**, which is the same
+failure this unit is documenting, one level up.
+
+**A second finding, kept and filed against the right task.** `duration_ms=15000` fails with
+`operation timed out` from `embarch-api`, because `embarch-core-client`'s
+`default_serial_timeout_secs()` is **15** — so a duration at or above the client's own deadline can
+never succeed, while Core holds the lock for the whole span regardless. `tasks/core/009` already
+knew the number but had the comparison as `> 15000`; corrected there, and the caller-visible half
+is now in `interfaces.md`.
+
+**What this run did not establish, said once so nobody cites it wrongly:** every read returned
+`lines: []`. `COM17` was quiet. The lock behaviour is measured; the *data path* is not, and this
+run is not evidence that `/serial-log` returns console text.
+
+**Hardware debts:** none owed, and both boards were attached throughout and still validate. **No
+`open.md` bullet and no `status.d/` fragment**, deliberately: the live question is "build the `503`
+or retire decision 14", which is `tasks/core/013` rather than a bullet, and `core/open.md` sits
+120 B from its reserve line after `core/011` compacted it an hour earlier. The only suite-level
+mention is `suite/features.md`'s `hw_lock` row, which cites decision **4**, not 14, and claims
+serialisation — true — rather than the refusal.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **that I found this by running a bench task whose own title asserts the wrong
+answer, and the title is what made it worth running.** `tasks/core/007` is called "Observe the
+`hw_lock` `409` under real contention"; `spec.md` said `503`; the code says neither. **Two docs
+disagreeing with each other is what a checker could have caught, and nothing checks a doc against
+code** — `check-decision-refs.py` resolves 2,362 citations and cannot tell that a decision
+describes something unbuilt. The suite has one mechanism for that class and it is a person, or an
+agent, going and looking. I do not know how many more decisions read as shipped and are not, and
+nothing in the queue would find out.
+
+---
+
 ## 2026-09-06 16:48 — topology/001 the CLI stopped printing a guess as a determination
 
 **Decided:** one thing, and it is a worker deviating from its task file toward canon, which I
