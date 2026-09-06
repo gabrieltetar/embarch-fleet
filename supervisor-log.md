@@ -78,6 +78,85 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 04:50 — api/025 open-md-two-answered-bullets
+
+**Leg 018's fourth and last unit**, and a deliberately small one: two `embarch-api/open.md`
+bullets answered over in `embarch-umbrella` with neither saying so. Doc-only, **no code branch and
+no `cargo` run — the code tree is byte-identical**, which is the argument-not-a-run shape this log
+has flagged eight times now and which is unarguable here.
+
+**Decided:** nothing suite-wide. Two sub-project calls, both the worker's argument:
+
+- **Bullet 1 rewritten, not deleted, and kept under "Known wrong, not fixed."** `init` stopped
+  writing an unconfirmed board on 2026-09-06 (`embarch-umbrella` 41), but **refusing to assert is
+  not detecting**, and the worker added a clause nobody asked for that is the sharpest thing in
+  the unit: **every config scaffolded before that date still asserts a derived board.** Decision
+  41's mechanism is placeholder-on-write only; there is no migration and no repair. My reviewer
+  checked that clause specifically, because unasked-for additions are the ones nobody checks, and
+  it is true. Its argument against itself is honest too: for a *newly* scaffolded config nothing
+  is known-wrong any more, so the section header is arguably wrong — it loses on the pre-41
+  configs, which are the live installs.
+- **Bullet 2 deleted outright.** Both halves are closed and the narrow residual — check 11 has
+  never run inside a live `doctor` — is already `embarch-umbrella/open.md`'s. The rejected
+  alternative was a one-line "pinned from one side only" note, on the grounds that `versions` is a
+  surface this crate ships whose only consumer is another repo, which is the shape of the
+  unpinned-mirror bullet directly above it. It loses because `embarch-umbrella` decision 42
+  records the contract as **measured** against both binaries, so it is observed rather than
+  mirrored.
+
+**Merged:** `agent/api/025-open-md-two-answered-bullets` (doc `8f1e659`; **no code branch**). Gate
+on the merge result: all 9 doc checks, ownership 3 paths, client-names clean.
+
+**Blocked:** none.
+
+**Reviewer:** no findings. Tally after this unit: **35 ran, 32 no findings, 3 findings.** I spawned
+it on my last unit and **waited** rather than taking §10's "leg ending at its unit cap" skip —
+the wait was two minutes against a twenty-minute unit, and on a deletion-shaped diff, which is the
+class whose whole risk is that the deletion reads fine. It earned it three times:
+
+- **It confirmed the citation trap was real and stepped around.** `embarch-api` has its *own*
+  decisions 36, 41 and 42 on entirely unrelated subjects (`core-link.md`'s 512 MiB thread,
+  `surface.md`'s `erase`, `build.md`'s `base_address`), so a bare number would have resolved to
+  the wrong entry. Every citation names the sub-project. It resolved all four umbrella numbers to
+  file and line.
+- **It verified the deleted bullet's residual is genuinely recorded elsewhere** — the one check
+  that matters on a deletion — quoting `embarch-umbrella/open.md` back at me.
+- **It found the task file's byte arithmetic wrong**: the deleted bullet is **194 B, not 251**, so
+  zero growth on the first bullet would have landed at 4,679 rather than 4,622 — 71 B inside
+  reserve, not 14. **The conclusion is unaffected and in fact stronger**: this task could not have
+  cleared `open.md`'s reserve alone under either number.
+
+**And it found a dangling line that this unit did not create but did orphan, which I fixed.**
+`embarch-api/decisions/surface.md` 52 still closed with *"Not verified: nothing reads this surface
+yet… until that lands the check still compares its own constant."* **That has been false since
+2026-09-04**, when `embarch-umbrella` 33/35/36 pointed check 11 at it — and the `open.md` bullet
+this unit deleted was the only thing in `embarch-api` pointing at that decision. So a two-day-old
+staleness became invisible in the same commit. Corrected to what is true, deliberately **shorter
+than what it replaced**: `surface.md` 10,928 → 10,946 B, 113 B clear of its reserve line, where my
+first draft of the fix left only 54.
+
+**Hardware debts:** none new, none discharged.
+
+**Reserve:** `open.md` **4,873 → 4,711 B**, still 103 B inside reserve, `tasks/api/028`'s item
+correctly left open. **And `028` is `State: open`, not `blocked`** — its `In flux: yes` applies to
+`open.md`'s last bullet only, with `spec.md` marked `no` — **so it is dispatchable, and the next
+leg should not read it as parked.** Its `Must not delete:` reservation of the bring-up bullet was
+scoped "until `api/025` lands" and is now spent. The worker also re-measured the five sizes
+`open.md`'s last bullet cites rather than trusting them: `core-link.md` 12,266, `zephyr.md`
+11,056, `interfaces/config.md` 11,008, `build.md` 10,934, `surface.md` 10,928 — **all five exact**,
+so that bullet is not stale.
+
+**Budget:** DEGRADED at start and end, wave 2, no 429 anywhere in the leg.
+
+**Least sure about:** that I made four supervisor-authored corrections to sub-project docs across
+this leg — decision 42's overclaim, `tasks/umbrella/009`'s doubled number, `embarch.md` §5's three
+false sentences, and now decision 52's dangling line — every one of them found by a reviewer and
+none by a worker or a check. **That is the reviewer earning its cost, and it is also four edits
+nobody reviewed**, because the reviewer runs on the worker's diff and not on mine. `suite/007`'s
+entry spawned a reviewer on the supervisor's own uncommitted diff and called it worth it; I did
+not, four times, on the grounds that each was one sentence the reviewer had just handed me. That
+reasoning is fine per edit and I am less sure of it in aggregate.
+
 ## 2026-09-06 05:20 — api/024 clippy-never-lints-the-path-dep-crate
 
 **Leg 018's third unit**, from an `inbox/` drop this leg drained. A crate with **28 unit tests
