@@ -78,6 +78,73 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 04:52 — leg 019: STOPPED BEFORE UNIT 1, the fleet was already stopped
+
+**Zero units. Nothing dispatched, nothing claimed, nothing written to the instance repo.** This is
+a leg-level entry, not a unit entry, and it deliberately carries **no `**Reviewer:**` line** — no
+unit ran, and a `skipped` here would be a false row in the tally `grep '^\*\*Reviewer:'` keeps.
+
+**The owner posted `fleet stop` in `#embarch-fleet` at 2026-09-06 04:15:57 MDT** (`ts
+1788689757.600509`), and **nothing has arrived since that restarts the pump.** It is the newest
+control instruction in the channel. It is owner-typed rather than fleet-posted: every message the
+connector sends carries a `*Sent using* @Claude` footer and that one does not, which is the only
+thing in the channel that distinguishes the owner's own words from the fleet quoting itself under
+his account.
+
+**Two things follow, and the second is the important one.**
+
+1. **I ended the leg without dispatching.** Nothing was in flight — `status.d/` empty, `inbox/`
+   empty, no worktrees, no agent branches — so honouring the stop cost nothing but the leg. The
+   asymmetry decided it: stopping when the fleet was live costs one leg and one `fleet start`,
+   while running when the fleet was stopped means four units of unattended work landing on `main`
+   after the owner said stop, which is the fleet ignoring its own kill signal.
+
+2. **Leg 018 ran two whole units past that stop and never saw it.** The stop landed at 04:15:57;
+   leg 018 announced `suite/008` at 04:17:43, landed `api/024` at 04:31, dispatched `api/025` at
+   04:32 and closed at 04:48. `supervise.md` says to check both stop channels **at every unit
+   boundary**, and leg 018 crossed two of them after the message was posted. Its entries do not
+   mention it, so this is not a leg that saw a stop and misjudged it — it is a leg that did not
+   look, or looked and did not match. **And then the listener spawned me, telling me in my own
+   prompt that the pump is latched.** So the miss is not one leg's slip: the signal has now been
+   missed at three consecutive boundaries by two different components.
+
+**What I did NOT do, on purpose.** I did not run `tasks/suite/008` even though its §4 window is
+genuinely closed and its thread is genuinely empty (I re-read `ts 1788689863.494449` at 04:50 MDT
+— still zero replies). A closed window means the owner did not object to *that change*; it does
+not mean the fleet may run. I did not drain, sweep, refill, renumber or touch a single file in
+`embarch-doc`. The queue is exactly as leg 018 left it.
+
+**Queue, unchanged and verified at 04:50:** 3 dispatchable — `api/027` (decision 55's false
+rejection reason plus three funnel-guard blind spots), `api/028` (compact `open.md`/`spec.md`),
+`suite/008` (parked, window closed, supervisor-only). `doc/009,010,012–019` owner-only;
+`api/026`, `suite/004`, `umbrella/009`, `study-designer/006` blocked on `In flux: yes`.
+`api/028` is `open` and dispatchable — leg 018's entry is right that its `In flux: yes` scopes to
+`open.md`'s last bullet only — and its `Must not delete:` reservation of the bring-up bullet
+expired when `api/025` landed. **Nine files sit in doc-size reserve, every one filed against**,
+`embarch-api/decisions/core-link.md` worst at 22 bytes.
+
+**Hardware debts:** none new, none discharged. Leg 018's stands: two `embarch-api` binaries with
+different md5 and identical `--version`, settled by one `embarch doctor --json` plus one
+`bash -c 'embarch doctor'` in the owner's own session. No board.
+
+**Budget:** DEGRADED at start and end, wave 2, no 429. Nothing was spent on work.
+
+**One log defect I noticed and did not fix:** the `api/024` entry below is headed **05:20** and
+`api/025`'s is headed **04:50**, so the two newest entries are out of order and one is stamped in
+the future. Same root cause as the `suite/008` window leg 018 corrected — wall-clock estimated
+from Slack `ts` instead of asked of `date`. I left both alone rather than rewrite another leg's
+entries after a stop; `fold-day.py` groups by date and both are 2026-09-06, so the daily fold is
+unaffected, but the ordering will read wrong to whoever folds it.
+
+**Least sure about:** whether the listener knows something I cannot see. It told me the pump is
+latched, and it is the component that owns pump state — so either it missed the stop, or the
+owner re-armed it somewhere I have no window onto (Remote Control, or the listener session
+directly). I cannot ask mid-leg and I would not run on the strength of a guess in that direction,
+so I stopped and said so. **If the pump really was re-armed, the cost of my reading is one
+`fleet start`; if it was not, the cost of the other reading was four units.** The thing I would
+most like checked is not this leg at all — it is why two legs and a listener all failed to see a
+one-word message in the channel they are told to poll.
+
 ## 2026-09-06 04:50 — api/025 open-md-two-answered-bullets
 
 **Leg 018's fourth and last unit**, and a deliberately small one: two `embarch-api/open.md`
