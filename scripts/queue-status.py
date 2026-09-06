@@ -33,26 +33,52 @@ the drop sits there permanently keeping the count non-zero. The leg passes
 --tasks-only and drains `inbox/` unconditionally before counting; the listener
 does not, because for it a drop is a real reason to spawn a leg.
 
+**--refill-owed is the low-water mark, and it replaced refilling on zero.**
+Refill used to run only when *nothing* was dispatchable, on the argument that
+sweeping eight `open.md` files every twenty minutes to serve a queue that already
+has work is pure cost. The argument is right and the threshold was wrong:
+measured over the 7.2 h continuous run of 2026-09-05/06, the queue held **one or
+zero** dispatchable tasks for **53%** of it and literally zero for 12%, against a
+wave of 2 -- so "top up once it is empty" means the wave is starved before the
+sweep that would feed it ever fires. A low-water mark keeps the cost argument
+(no sweep while the queue is deep) and removes the starvation.
+
+Two ways it fires, because a count is not the whole predicate:
+
+  * fewer dispatchable tasks than `units_per_leg` -- the queue cannot fill the
+    leg that is about to run, never mind the one after it; and
+  * fewer *distinct scopes* than the wave size -- `supervise.md`'s "at most one
+    task per sub-project" is per slot, so three `api` tasks fill exactly one
+    slot of a wave of two. That cost 9% of the same run. A count-only gate
+    cannot see it.
+
 Exit status is the interface:
-  0  there is work (dispatchable > 0)
-  1  there is nothing dispatchable
+  0  there is work (dispatchable > 0)      -- or, with --refill-owed, refill IS owed
+  1  there is nothing dispatchable         -- or, with --refill-owed, it is not
 
 Usage:
   scripts/queue-status.py                     human-readable breakdown
   scripts/queue-status.py --count             just the integer
   scripts/queue-status.py --no-supervisor     the listener's question
   scripts/queue-status.py --tasks-only        a leg's refill gate (see below)
+  scripts/queue-status.py --refill-owed       the low-water mark (see below)
+  scripts/queue-status.py --refill-owed --wave 4
   scripts/queue-status.py --json
   scripts/queue-status.py --warn-below 3      louder about a thin queue
 """
 from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from fleetconf import CONF  # noqa: E402
 
 import argparse
 import datetime as dt
 import json
 import os
 import re
-import sys
 
 TASKS = "tasks"
 INBOX = "inbox"
@@ -161,6 +187,39 @@ def classify(tasks: list[dict], no_supervisor: bool, after_h: float,
     return buckets
 
 
+def refill_owed(b: dict, args) -> int:
+    """The low-water mark. Exit 0 when refill is owed, 1 when it is not.
+
+    Deliberately reports BOTH reasons rather than short-circuiting: a leg that
+    refills because the count is low still wants to know its scopes are thin,
+    because that changes what it should sweep for -- one more `api` task does
+    not widen a wave that already has an `api` worker in it.
+    """
+    ready = b["open"] + b["recoverable"]
+    scopes = {t["scope"] for t in ready}
+    low_water = args.low_water if args.low_water is not None else CONF.units_per_leg
+    wave = args.wave if args.wave is not None else CONF.degraded_workers
+
+    thin_count = len(ready) < low_water
+    thin_scopes = len(scopes) < wave
+    reasons = []
+    if thin_count:
+        reasons.append(f"{len(ready)} dispatchable, below the {low_water} "
+                       f"low-water mark (units_per_leg)")
+    if thin_scopes:
+        reasons.append(f"{len(scopes)} distinct scope(s) "
+                       f"({', '.join(sorted(scopes)) or 'none'}), below a wave "
+                       f"of {wave} -- one task per sub-project is per slot, so "
+                       f"a deeper queue in the same scope buys no concurrency")
+
+    if reasons:
+        print("REFILL OWED -- " + "; and ".join(reasons))
+        return 0
+    print(f"refill not owed -- {len(ready)} dispatchable across "
+          f"{len(scopes)} scope(s), wave {wave}, low-water {low_water}")
+    return 1
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -180,6 +239,22 @@ def main() -> int:
                          "keeps the count non-zero, suppresses refill, and the "
                          "drop starves itself. The listener does NOT pass it -- "
                          "a drop is a real reason to spawn a leg.")
+    ap.add_argument("--refill-owed", action="store_true", dest="refill_owed",
+                    help="the low-water mark: exit 0 if refill is owed, 1 if "
+                         "not. Owed when dispatchable is below --low-water, or "
+                         "when the dispatchable tasks span fewer distinct "
+                         "scopes than --wave. Implies --tasks-only, because a "
+                         "drop that suppresses the drain that would file it is "
+                         "the starvation this flag exists to end.")
+    ap.add_argument("--wave", type=int, default=None, metavar="N",
+                    help="the wave size this leg will run, from "
+                         "usage-budget.py --suggest (default: degraded_workers "
+                         "from fleet.toml). Only the scope half of "
+                         "--refill-owed reads it.")
+    ap.add_argument("--low-water", type=int, default=None, metavar="N",
+                    help="refill when dispatchable is below this "
+                         "(default: units_per_leg from fleet.toml -- a queue "
+                         "that cannot fill the leg about to run is already late)")
     ap.add_argument("--count", action="store_true",
                     help="print only the dispatchable integer")
     ap.add_argument("--json", action="store_true", dest="as_json")
@@ -188,11 +263,15 @@ def main() -> int:
 
     now = dt.datetime.now()
     tasks = [parse(p) for p in task_files(os.path.join(args.root, TASKS))]
-    drops = [] if args.tasks_only else inbox_drops(os.path.join(args.root, INBOX))
+    tasks_only = args.tasks_only or args.refill_owed
+    drops = [] if tasks_only else inbox_drops(os.path.join(args.root, INBOX))
     b = classify(tasks, args.no_supervisor, args.stale_after, now)
 
     dispatchable = len(b["open"]) + len(b["recoverable"]) + len(drops)
     low = bool(args.warn_below and dispatchable < args.warn_below)
+
+    if args.refill_owed:
+        return refill_owed(b, args)
 
     if args.count:
         print(dispatchable)
@@ -233,7 +312,7 @@ def main() -> int:
 
     if low:
         print(f"LOW QUEUE -- {dispatchable} dispatchable, below {args.warn_below}. "
-              "Refill runs on the next leg; say so rather than waiting for zero.")
+              "Ask --refill-owed, which is the actual gate; this line is advice.")
     if not dispatchable:
         print("NOTHING DISPATCHABLE -- a leg would refill, and dream if refill also "
               "finds nothing (ops.md section 7).")

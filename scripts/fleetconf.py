@@ -82,6 +82,18 @@ class Conf:
         return self._d["slack"]["channel"]
 
     @property
+    def units_per_leg(self) -> int:
+        return int(self._d["limits"]["units_per_leg"])
+
+    @property
+    def degraded_workers(self) -> int:
+        """The wave size when the quota percentages are unavailable, which on
+        this machine is the steady state (ops.md section 2). Read here rather
+        than restated, so a caller that needs a default wave gets the same
+        number usage-budget.py would have suggested."""
+        return int(self._d["limits"]["degraded_workers"])
+
+    @property
     def reserved(self) -> tuple[str, ...]:
         return tuple(self._d["ownership"]["reserved"])
 

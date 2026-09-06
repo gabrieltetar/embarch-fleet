@@ -206,18 +206,37 @@ a non-zero count means a lone drop holds the count up, suppresses its own drain,
 and sits in `inbox/` forever. That is exactly the state this queue was in on
 2026-09-03.
 
-**Then sweep the sources only when no dispatchable task remains.** Not at the top
-of every leg — the relay would sweep eight `open.md` files every twenty minutes
-for a queue that already has work. So: run `scripts/queue-status.py
---tasks-only`, and do not hand-count `State:` lines. **`--tasks-only` is required
-here**: you have just drained `inbox/`, so a drop must not still count as "there
-is already work". **Run it after step 0, never before** — recovery has already
-reclaimed stale claims to `open` by then, which is exactly why you do *not* pass
+**Then sweep the sources when the queue is below its low-water mark — not when
+it is empty.** Run `scripts/queue-status.py --refill-owed --wave <your wave
+size>`, and do not hand-count `State:` lines. **Exit 0 means sweep now; exit 1
+means skip straight to selecting.** It implies `--tasks-only`, because you have
+just drained `inbox/` and a drop must not still count as "there is already work".
+**Run it after step 0, never before** — recovery has already reclaimed stale
+claims to `open` by then, which is exactly why you do *not* pass
 `--no-supervisor` here: you are the supervisor and you are alive, so a claim
-still standing after recovery is one to respect. Exit 0 means work exists — skip
-straight to selecting. Exit 1 means sweep now. Relay its `LOW QUEUE` line if it
-prints one, even when you are not sweeping; a thin queue is the owner's cue to
-top it up, and he should hear it before it reaches zero:
+still standing after recovery is one to respect.
+
+**This threshold moved on 2026-09-06, and the number is the whole change.** The
+rule was "sweep only when nothing is dispatchable", on the argument — still
+correct — that sweeping eight `open.md` files every twenty minutes to serve a
+queue that already has work is pure cost. What was wrong was waiting for zero.
+Measured over the 7.2 h continuous run that ended that morning: the queue held
+**one or zero** dispatchable tasks for **53%** of it, and 24% of the run had a
+free scope with work waiting and fewer than two workers in flight. Topping up
+once the queue is empty means the wave is already starved by the time the sweep
+that would feed it fires. The low-water mark keeps the cost argument and drops
+the starvation.
+
+**Both halves of that gate matter, and the second is the one you will
+under-read.** It also fires when the dispatchable tasks span fewer distinct
+scopes than your wave — because "at most one task per sub-project" is **per
+slot**, so three `api` tasks fill exactly one slot of a wave of two however deep
+the queue looks. When it says your scopes are thin, sweep *for scope spread*:
+one more task in a scope you already have a worker in buys nothing. That
+collision cost 9% of the same run.
+
+Relay its `LOW QUEUE` line if the plain form prints one; a thin queue is the
+owner's cue to top it up, and he should hear it before it reaches zero:
 
 - **The drain, in detail** (`inbox/README.md`). Each file there is a complete task
   written by another thread or by a worker, minus its number. For each: validate
@@ -405,8 +424,23 @@ branch is the remote's only copy of that unit.
 
 **Spawn a reviewer the moment a unit's branches are merged. It never blocks the
 merge; it is the last thing the fold waits for.** One background
-`embarch-reviewer` per unit, given the unit id, both merge SHAs and the
-sub-project's decisions. It reads the diff for one thing — does this contradict a
+`embarch-reviewer` per unit, given the unit id, both merge SHAs, the
+sub-project's decisions, **and — always, in the spawn prompt, as absolute
+paths — your own leg worktree and the unit's code-repo worktree.**
+
+**That last one is not bookkeeping; it is the difference between a review and a
+wrong review.** A reviewer is spawned into the *owner's* checkout, which your leg
+never advances, so everything it reads relatively is as many units stale as your
+leg is old — and it does not fail, it just answers about an older commit. The
+failure that produces is a confidently wrong **`pre-existing`** label, which is
+the phrase that routes a finding to "not this unit's problem": a reviewer reading
+stale context systematically under-reports the contradictions *your leg* just
+introduced, which is the one class it exists to catch. Leg 012 omitted the paths
+for all four of its reviewers and one reported a `decisions/reporting.md` that
+"does not exist" — created two units earlier in that same leg. **Leg 013 passed
+the paths for all four and it worked.** It costs you one line per spawn.
+
+It reads the diff for one thing — does this contradict a
 decision it left standing — and drops a finding in `inbox/` if it finds one. **It
 gates no merge**: merge-on-green is the owner's choice and a reviewer that
 blocked a merge would make every unit a two-agent serial dependency. It is the

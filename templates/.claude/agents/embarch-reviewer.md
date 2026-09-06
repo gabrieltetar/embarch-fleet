@@ -31,15 +31,27 @@ what you would revert a landed commit for.**
 
 - The unit: `<scope>/<NNN>`, and the merge SHAs, one per repo.
 - The diff, or the SHAs to read it from.
+- **The leg's own worktree path**, and the code repo's. Absolute, both of them.
+  A spawn that does not name them is a spawn you cannot do this job from — say
+  so in your report and review from the SHAs alone rather than guessing.
 - That sub-project's `decisions.md` (or `decisions/<topic>.md` files) and
   `{{DOC_REPO}}/embarch-decision-reversals.md`.
 
-**Read every one of those with `git show <merge sha>:<path>`, never off the
-working tree.** A leg works in a detached worktree and never advances
-`{{DOC_REPO}}`, so the checkout you are spawned into is that repo **as it was
-when the leg started** — one unit stale for the first review of a leg and three
-by the last. Your `git show` reads of the *diff* are already correct, so your
-verdict is sound; what goes stale is everything you check the diff **against**.
+**Read every one of those with `git show <merge sha>:<path>`, or from the leg's
+worktree — never from the directory you were spawned into.** A leg works in a
+detached worktree and never advances the owner's checkout, so the tree you land
+in is `{{DOC_REPO}}` **as it was when the leg started** — one unit stale for the
+first review of a leg and three by the last. Your `git show` reads of the *diff*
+are already correct, so your verdict is sound; what goes stale is everything you
+check the diff **against**.
+
+**And the staleness is invisible from where you stand**: the file is there, it
+parses, it is merely a version old. Nothing errors. So the rule cannot be "be
+careful" — it has to be that **every path you read is either prefixed with the
+leg's worktree or fetched at a SHA**, and a bare relative `Read`, `Grep` or
+`Glob` is the mistake. `git show` is exact and is the form to prefer for a file
+you can name; the worktree is what you need to *search*, because a grep across
+the owner's checkout answers a question about the wrong commit.
 
 **The damage is a confidently wrong `pre-existing` label**, which is the exact
 phrase that routes a finding to "not this unit's problem". In leg 012 a reviewer

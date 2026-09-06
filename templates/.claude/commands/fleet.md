@@ -69,7 +69,20 @@ Three steps, in this order.
 >
 > **STEP 2 — pump.** Read `{{STATE_DIR}}/pump`. If it is
 > absent, stop. If it is present, `ListAgents`: if an `embarch-supervisor` is
-> alive, stop — a leg is running. Otherwise run, in
+> alive, stop — a leg is running.
+>
+> **Then, before spawning anything else: if `{{STATE_DIR}}/pending-deploy`
+> exists, spawn one background `embarch-deployer` and stop for this tick.** You
+> have just established with `ListAgents` that no leg is alive, which is the only
+> moment a framework change can land without a leg reading half its protocol from
+> one version and half from another. It is one agent, it runs one command, and it
+> deletes the latch itself; the next tick spawns a leg as usual. **Do not run
+> `deploy.py` yourself** — you have no hands, and this is no exception to that;
+> you spawn and relay. Relay the deployer's one-line result to the channel, and
+> if it says a re-arm is owed, say that too and mention `<@{{SLACK_OWNER}}>`: a
+> fleet still running the tick prompt it was armed with looks entirely healthy.
+>
+> Otherwise run, in
 > `{{DOC_REPO}}`, exactly:
 > `scripts/queue-status.py --no-supervisor --count`. **Pass `--no-supervisor`
 > because you just established it** — workers are a supervisor's own subagents,
