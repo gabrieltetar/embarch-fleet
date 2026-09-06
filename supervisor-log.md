@@ -78,6 +78,102 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 02:20 — suite/006 no-repo-in-this-suite-is-rustfmt-clean-and-nothing-checks
+
+**Leg 016's third unit, and mine under §8.** Announced at `ts 1788678196.359869` (01:03 MDT),
+parked, thread re-read at every unit boundary, run at 02:05 after a window that closed at 01:33
+with **zero replies**. Fourth time §4's window has been served rather than restarted.
+
+**Decided:** **the suite does not enforce `rustfmt` and nobody runs `cargo fmt`** — recorded in
+`embarch.md` §5 with the measured cost and a reversal condition, and as a deferred item in
+`suite/roadmap.md`'s **Later**. `embarch-dev-workflow.md` is the more natural home and is
+owner-reserved, so §5 is the only reachable one; the register objection is real and is below.
+
+**The announced reason was wrong and I changed it, which is the part of this unit worth
+reading.** The `#embarch-fleet` announcement said reformatting would put `git blame` on a
+mechanical commit "in a suite whose entire review surface is *why* a line reads the way it is."
+On measuring I judged that weaker than I had claimed — **this suite's review surface is its
+`decisions/` docs, deliberately, not `git blame`** — and moved the decision onto **sequencing**:
+the check that keeps formatting true lives in `protocol.md` §10 and is the owner's, so
+formatting first decays immediately. Same action, better reason. I asked the reviewer directly
+whether I had rationalised my way back to the outcome I had already announced. **It said no, and
+gave a reason neither version of mine states: the `git blame` objection has a standard cheap
+answer, `.git-blame-ignore-revs`, while nothing similarly cheap answers decay.**
+
+**Merged:** none — this unit has no branches. It is the supervisor's own diff on the leg
+worktree, landed in its fold commit.
+
+**Blocked:** none.
+
+**Reviewer:** 1 finding — `inbox/suite-rustfmt-cost-omits-a-path-dep-crate.md`. Tally after this
+unit: **26 ran, 23 no findings, 3 findings.** Spawned on my own uncommitted diff, and it found
+something no other actor in this design would have:
+
+- **`cargo fmt --check` does not descend into local path-dependency crates.** It never sees
+  `embarch-api/crates/embarch-core-client`, which is not a workspace member — **6 files, 42
+  hunks, 66 lines.** Corrected totals **87 files / 1,288 hunks / 1,947 lines**, and `embarch-api`
+  becomes 24 files, tying `embarch-study-designer` for largest, so my "largest first" clause was
+  wrong too. **The 3.5% on the total is not why this matters**: my reversal condition named
+  `cargo fmt --check` by name, so wired into §10 or CI as written **it would pass green with six
+  files unformatted.** Fixed in `embarch.md` §5, which now warns about it explicitly.
+- **It caught its own error on the way and said so**: `cargo fmt --all` reaches sideways through
+  `path = "../..."` into sibling *repos*, so a naive per-repo `--all` sum triple-counts
+  `study-designer` and `topology` — it briefly had 225 files / 4,461 lines. Its table is
+  deduplicated by owning repo.
+- **It strengthened the decay evidence rather than accepting mine.** My §5 text cited
+  `embarch-umbrella` 209 → 211 across two units. It first confirmed both legs used the same
+  command (leg 015's other three rows reproduce digit-for-digit), then walked umbrella's tree at
+  every commit that night by `git archive`, validating the method against HEAD first:
+  **172 → 212 hunks over eleven commits in thirteen hours, monotonic.** My two-point slice was
+  the weakest part of that curve. §5 now carries the eleven-commit number.
+- **It named where my text oversells.** §5 said the trap "is closed by instruction" — present
+  tense — when **nothing a worker reads says it today**, which is `embarch-decision-reversals.md`
+  shape 3 ("documentation is not a gate", row 81) and shape 4 ("a note describing a gap is not a
+  mechanism for closing one", row 44), ageing into shape 1. The bullet now says outright that
+  until the `inbox/` drop lands **this is a decision without a mechanism.**
+- **And it named the honest limit of my own argument.** The sequencing case explains why *a leg*
+  could not do the §10 half; it does **not** establish that declining was forced, because §5's
+  own reversal condition admits "or to any repo's CI" and CI lives in the code repos, which
+  workers own. Both arms therefore reduce to "do the reachable half, drop the owner half to
+  `inbox/`", symmetrically. Recorded rather than argued away: §5 now opens "adopting is worth
+  doing, doing the expensive half first is not."
+
+**Hardware debts:** none. Nothing here touches a board or a machine.
+
+**What this unit did NOT do, because the task's `Done when` says so and it must not read as
+done anyway.** The load-bearing half — a worker being *told* not to run `cargo fmt` — lives in
+`embarch-fleet/` and no leg checks that repo out. It is `inbox/workers-must-be-told-not-to-run-cargo-fmt.md`.
+The task named that drop as the discharge, so closing is honest on its own terms, and the
+reviewer checked that specifically. **"Delegated to the owner" and "done" are different facts
+and the task file is deleted either way**, which is why it is said twice: here, and in §5 itself.
+I pasted the instruction by hand into all three of this leg's dispatches; that is a per-leg act
+no successor inherits.
+
+**A structural note for the next leg.** `check-ownership.py --scope <s> --code-repo` prints
+*"worker owns the whole tree — not path-checked"*, correctly and deliberately. It also means
+**the one check that exists to stop out-of-scope writes is structurally blind to the largest
+out-of-scope diff a worker can produce.** The only thing between this suite and a 1,947-line
+mechanical commit under a one-line task message is a worker choosing not to type a normal
+command. `api/019`'s worker typed it, reverted it by hand, and reported it — the sole reason
+any of this is visible.
+
+**Also found and not acted on**: `embarch.md` is **not tracked by `check-doc-size.py`** at all.
+12 KB, no cap, no reserve, while every other suite-level doc has one — and it is the file this
+decision was just written into. `scripts/` is the owner's, so it is in the `inbox/` drop.
+
+**Reserve after this unit:** three files, unchanged, every one filed. `suite/roadmap.md` took
+the pointer and stayed out of reserve at 87-something percent; `embarch.md` has no cap to spend.
+
+**Budget:** DEGRADED at start and here, wave 2, no 429.
+
+**Least sure about:** putting a 1,342-character decision entry — date, measured cost, reversal
+condition — into a list of five principles whose longest is 193. The reviewer measured that and
+called it an observation rather than a finding because **there is no `suite/decisions.md` to move
+it to and `embarch-dev-workflow.md` is reserved**, so §5 is the only reachable home. That is a
+real gap in the doc layout rather than a bad choice on my part, but it means the suite's
+principles list now has one entry that is not a principle. **If a second suite-wide decision
+lands with nowhere to go, the answer is a new home, not a sixth bullet.**
+
 ## 2026-09-06 01:52 — umbrella/020 check-17s-other-two-holes-and-decision-37s-stale-example
 
 **Leg 016's second unit**, and the largest diff of the leg. Five items filed by `umbrella/018`'s
