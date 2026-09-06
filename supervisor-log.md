@@ -78,6 +78,115 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-05 23:59 — umbrella/017 decision-22-three-first-day-checks
+
+**Leg 014's second unit, and the first task this leg wrote itself** — swept out of
+`embarch-umbrella/open.md` after the queue hit zero.
+
+**Decided:** nothing suite-wide. Inside `umbrella`, decision 22's three designed-and-unbuilt
+checks are all resolved: **(a) built as `doctor` check 17, (b) firewall and (c) disk space
+retired unbuilt.** I set the frame — build or retire, "still deferred" is not an outcome,
+each half carries the losing argument — and the worker did something better than execute it.
+
+**It found decision 22(a) as written to be tautological, and the entry now says so.** "The
+address `/status` was reached at versus what the detected topology needs" cannot disagree:
+`probe_topology` sets the class *from* the winning candidate, so the check would be comparing
+the winner against itself. The reviewer confirmed it at `doctor.rs:139`. The independent half
+is **the class `setup` recorded in machine state**, and with none recorded the check warns
+`no-recorded-class` rather than passing vacuously. **That is a design the decision did not
+contain, arrived at by reading the code the decision described.**
+
+**And the failure 22(a) names is mostly invisible from the reachable side**, which is the
+second thing the entry gained. A Core that answered has already proved its bind covers that
+route; a narrow bind shows up as *nothing answering anywhere*. So check 17 also reads `--bind`
+off the same `sc.exe qc` line `locate_core` and `deploy-core` already parse, and only when
+nothing answered — two Fails on different evidence (`bind-too-narrow`, `bound-narrow`) plus
+`bind-not-the-cause` as the useful negative. The reviewer verified this is not a second copy
+of the deploy parse: it pulls a different field off the same line, with its own four tests.
+
+**The retirements are the part I would defend hardest.** (b) would be permanently amber on
+this topology *by its own admission* and could not produce an actionable fix line; (c) costs a
+dependency or a per-platform shell-out in a crate explicit about what it refuses to link, for
+a guessed threshold, against check 16 which already measures what grows here. Both tombstones
+carry what the check *would* have done. **The doctor table went from twenty rows / two unbuilt
+decisions to eighteen rows / one**, and `tasks/umbrella/009`'s counts were refreshed with it —
+which matters because that task's `Must not delete:` clause protects the table *by a count*.
+
+**27/29 was stale and is deleted from the bullet.** All four release workflows do carry the
+`verify-version` job; the worker read the files and the reviewer re-read them independently
+(umbrella:62, core:64, api:62, topology:61). One less thing `open.md` claims falsely.
+
+**A latent script defect the worker fixed in passing, and it is the useful kind.**
+`tasks/umbrella/009`'s `Compacts:` line used bold and strikethrough such that
+`check-doc-size.py`'s comma-split matched **neither** path — so the file would have read
+UNFILED and the reserve would have looked unowned. It parses now, confirmed by running the
+script.
+
+**Merged:** `agent/umbrella/017-decision-22-three-first-day-checks` (code `80f4cb8`, doc
+`cbe8a5d`). Gate on the merge result: 174 tests, clippy, all 9 doc checks, ownership both
+branches, client-names clean.
+
+**Blocked:** none.
+
+**Reviewer:** no findings. Tally after this unit: **17 ran, 16 no findings, 1 finding.** It
+cleared decision 37's code-roster rule (7 codes across 3 statuses, no reused spelling),
+decision 32's parse-duplication concern, and `DOC-CONVENTIONS.md`'s tombstone shape at the
+sub-part level.
+
+**Its two observations are the most valuable thing in this unit and neither is a
+contradiction, so neither was dropped in `inbox/`. Both are for the next leg, and I did not
+file them as tasks because I ran out of units, not because they are small:**
+
+1. **`bind-too-narrow`'s fix line can silence its own check instead of fixing anything.** It
+   offers "or re-run `embarch setup`" — but `bind-too-narrow` only fires when a candidate
+   *answered*, which is exactly the condition `setup.rs:80` treats as `already_running`, so
+   setup prints "nothing to install" and never touches the bind. Then `setup.rs:343` writes
+   the recorded topology unconditionally from the **winner's** class, i.e. `local` — after
+   which check 17 passes `bind-matches`. **A fix that makes the check green without changing
+   anything is worse than no fix**, and the same string is correct on the `bound-narrow` arm,
+   where nothing answered.
+2. **`bind-too-narrow`'s evidence does not discriminate, and `open.md`'s plan for retiring its
+   debt cannot retire it.** `candidates()` always tries `Local @ 127.0.0.1` first and stops at
+   the first responder, so a Core bound `0.0.0.0` wins at loopback exactly as one bound
+   `127.0.0.1` does. The new bullet says settling it means a `doctor` run from the Windows
+   side "which still reaches loopback" — that arm emits `bind-too-narrow` either way, so
+   running it proves nothing. The detail string's word "only" is unearned for the same reason.
+   `bound-narrow`, which reads the registration, does not have this problem.
+
+**A third, out of scope and correctly untouched:** `embarch-topology/open.md:17` still calls
+umbrella's bind-versus-topology check "a separate, still-unwired consumer". It is wired now.
+Needs a `topology` unit or an owner edit.
+
+**Hardware debts:** one, and it is new. **Check 17 has never met a real narrow-bound Core.**
+This bench registers `--bind 0.0.0.0`, so the check passes here by agreement rather than by
+discriminating anything. Settling it needs a Core deliberately installed `--bind 127.0.0.1` on
+a `wsl-host` machine. **Read observation 2 before planning that session** — half the plan
+written into `open.md` is unfalsifiable, and only the `bound-narrow` arm is settled by it.
+
+**Suite-level fold:** `suite/user-guide.md` §8 gained a **second** troubleshooting row rather
+than a longer one, per the worker's `status.d` request — "Core bound where you cannot reach
+it" — because the fix is different from "Core unreachable" and `embarch up` does not perform
+it.
+
+**Reserve, and this is the one the next leg must not walk past.** `suite/features.md` is at
+**19,517 / 20,480 B — 95.3%, 963 B left**, and it grew **~980 B in this one leg** against the
+~200 B per leg its own script header measures. It is filed against `tasks/suite/004`, which is
+`Owner: required` and cannot be dispatched, and the file is `never` for every agent because
+`build_features.py` assembles it. **When it crosses the cap `check-doc-size.py` goes red, and
+that is every unit's gate in every sub-project, fleet-wide, with no agent able to fix it.**
+`embarch-umbrella/open.md` is at 94.5% (filed, `009`) and `embarch-decision-reversals.md` at
+90.9% (filed, `suite/004`).
+
+**Budget:** DEGRADED at start and here, wave 2, no 429.
+
+**Least sure about:** merging check 17 when the reviewer had just shown that one of its two
+Fail arms cannot discriminate and its fix line can green itself. I merged because the arm that
+*does* discriminate (`bound-narrow`) is sound, the tests pass, and a doctor check that is
+right in one arm and over-claiming in the other is still better than the vacuous check the
+worker replaced — but I am aware that "over-claiming" is the exact failure decision 22's own
+prose says a check must not have, and the honest sequencing would have been to hold the merge
+and hand observation 1 back to the same worker while it still had the context.
+
 ## 2026-09-05 23:47 — api/017 soc-chip-overrides-decided-never-built
 
 **Leg 014's first unit**, inherited from leg 013 as the queue's only dispatchable task.
