@@ -78,6 +78,68 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 17:25 — api/028 the last unblocked compaction debt, and the reserve went 15 files to 10
+
+**Decided:** one thing, and it is the opposite of what the task's wording invites. **The worker
+edited the bullet its own `In flux:` field marks as live, and I accepted it**, because the field
+does not say *do not touch* — it says *do not restate the numbers from memory; re-measure or leave
+it alone.* It re-measured, found `decisions/surface.md` had drifted 10,928 → **10,946 B**, changed
+that one figure and re-sorted the four files descending. **I re-measured all six numbers myself
+before accepting**: `core-link.md` 12,266, `zephyr.md` 11,056, `surface.md` 10,946, `build.md`
+10,934, and the 11,059 reserve line all check out. A partial `In flux:` is a harder instruction to
+follow than a blanket one and this worker read it correctly.
+
+**Merged:** `agent/api/028-compact-api` (code **no commit — the branch is empty and this was
+doc-only**, doc `14796b0`). Gate on the merge result: `cargo build`, `cargo test` **7 + 98 + 18 +
+10 = 133 passed / 0 failed**, clippy `--all-targets -D warnings`, all 9 doc checks, ownership
+green (doc: 4 paths, base `847fbf44d28f`; code: nothing changed), client-names clean.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**It settled the 129-byte question against my instinct, with a reason I had not thought of.** I was
+inclined to file a debt anyway. It pointed out that would fight the mechanism rather than use it:
+`check-doc-size.py` correlates a `**Compacts:**` line against files **in reserve**, so a task
+naming two files that are *out* of reserve sits in `tasks/` uncorrelated, unpayable, and
+indistinguishable from a stale item. It also gave the number that makes the risk concrete —
+`spec.md` has spent ~12% of its 1,024 B reserve band and `open.md` ~44% of its 512 B one, against
+a bolded sentence in this corpus running 150–300 B. **So the honest form is this log line, not a
+ticket**, and the next `api` unit that writes prose is the one that pays.
+
+**And it checked something I did not think to ask for:** that no decision lost its *only* inbound
+citation when `open.md`'s smoke-harness bullet dropped two. `tests.md` 54 is still cited from three
+places and `core-link.md` 55 from `spec.md` §6. That is the quiet cost of a compaction and nothing
+in the gate looks for it.
+
+**`open.md` 4,711 → 4,385 B (85.6%), `spec.md` 9,333 → 9,087 B (88.7%)**, both out of reserve. All
+four `Must not delete:` items verified by me against the post-merge files, not against the
+worker's summary: `spec.md` §2's "No inference presented as fact" (line 24), §6's inbound trust
+boundary "whoever can spawn the process" (line 54), and the `error_kind` bullet **byte-identical**
+with its ordering and its do-not-derive-from-HTTP-status warning intact.
+
+**One inaccuracy I measured and am deliberately not filing**, because it is pre-existing and one
+sentence is cheaper than a task: that bullet's heading says "**the decision corpus** has no
+headroom left" and then lists `config.md` among four files — but `embarch-api/decisions/config.md`
+does not exist. The file is `embarch-api/**interfaces**/config.md`. Its number (11,008) and its
+reserve line are both right, because `interface-group` and `decision-group` share the same 12 KB
+cap, so nothing downstream is wrong. **The label is loose, the arithmetic is not.**
+
+**Hardware debts:** none, and none owed.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **`spec.md` landed 129 bytes clear of its reserve line and I took PAID for an
+answer.** The checker is right and the worker's reason is honest — it stopped rather than start
+cutting rules from a genuinely dense file — but 129 B is one sentence, so `embarch-api/spec.md`
+re-enters reserve on the next paragraph anyone writes, and **the debt ledger will record that as a
+*new* debt caused by whichever unit writes it** rather than as this pass having stopped short.
+That is the same accounting that made `topology/open.md` go from unflagged to 97.9% in one edit
+last leg. **The mechanism cannot distinguish "compacted fully" from "compacted just past the
+line", and only the second one is a trap.**
+
+---
+
 ## 2026-09-06 16:55 — core/011 open.md out of reserve, by deleting what spec.md already says
 
 **Decided:** one call, and the worker asked for it explicitly rather than making it quietly.
