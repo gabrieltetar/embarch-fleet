@@ -123,9 +123,22 @@ paths, pushes both repos framework-first, and deletes the latch. Then it reports
 one line and dies.
 
 **What makes it safe is the pin, not the agent.** The deployer authors nothing:
-it renders content you already committed to a repo no leg ever checks out, and a
-HEAD that has moved past the pin is a *refusal*, not a fresher deploy. Every
-liveness check except the pump latch still applies — a registered worktree or a
+it renders content you already committed to a repo no leg ever checks out, and
+**any render input that moved past the pin is a *refusal***, not a fresher
+deploy — it names the paths and stops.
+
+**HEAD itself is expected to move, and must be allowed to.** The fleet commits
+`supervisor-log.md` to *this* repo on every fold, so a latch waiting for a
+boundary watches HEAD advance every ten minutes. Requiring strict equality —
+which it did until 2026-09-06 — meant a `--queue` issued while the fleet was
+running could never survive to the boundary it was queued for, which is the only
+case `--queue` exists for. So the rule is the pin is an **ancestor** of HEAD and
+`git diff <pin> HEAD` touches nothing but the log and `log-archive/`. The
+property is unchanged: what the deployer renders is exactly the content you
+pinned. Caught on the first `--queue` issued during a live leg, which is also the
+only way it could have been caught.
+
+Every liveness check except the pump latch still applies — a registered worktree or a
 surviving `agent/*` branch still refuses — which is exactly the difference
 between "the pump is on" and "a leg is mid-unit".
 

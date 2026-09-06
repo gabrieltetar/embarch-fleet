@@ -31,9 +31,11 @@ So the deploy splits in two. `--queue` is the owner's half: it verifies the
 framework tree is committed and that the render would actually change something,
 then writes `pending-deploy` in the state directory **pinning the exact framework
 SHA**. `--from-latch` is the machine's half, run by an `embarch-deployer` agent
-the listener spawns at a leg boundary; it refuses unless HEAD still equals the
-pinned SHA and the tree is still clean, then renders, gates, stamps, commits,
-pushes both repos, and deletes the latch.
+the listener spawns at a leg boundary; it refuses unless the pin is still an
+ancestor of HEAD with **no render input changed since**, and the tree is still
+clean of them, then renders, gates, stamps, commits, pushes both repos, and
+deletes the latch. HEAD is allowed to have moved *only* in the fleet's own log
+-- see `unrelated_to_render`, and the reason that is not a loophole.
 
 **What makes that safe is the pin, not the agent.** The deployer authors nothing:
 it renders content the owner already committed to a repo no leg ever checks out,
@@ -82,6 +84,43 @@ def git(repo: Path, *args: str, check: bool = True) -> str:
     if check and r.returncode != 0:
         sys.exit(f"git {' '.join(args)} failed in {repo.name}:\n{r.stderr.strip()}")
     return r.stdout
+
+
+# Paths in THIS repo that the fleet writes while it runs, and which are not
+# inputs to the render. A leg's fold commits `supervisor-log.md` here on every
+# unit -- the only path a leg ever touches in this repo -- and `fold-day.py
+# --roll` moves whole days into `log-archive/`.
+#
+# Without this distinction `--queue` cannot work at all, which is what it did.
+# It pinned HEAD and `--from-latch` required HEAD to still equal that SHA and
+# the tree to still be clean; both go false within about ten minutes, because
+# the fleet commits its own log to its own framework repo on every fold. So a
+# queue issued while the fleet was running -- the only case --queue exists for,
+# and the whole ~3.7 h of uptime it was built to recover -- was guaranteed to be
+# refused at the boundary it was waiting for. Caught 2026-09-06 on the first
+# --queue issued during a live leg, by which time HEAD was already the leg's
+# next fold. The safety property is unchanged: what may move between the pin and
+# the deploy is the fleet's own bookkeeping and nothing else, so the deployer
+# still renders exactly the content the owner pinned.
+def unrelated_to_render(paths) -> list[str]:
+    """Those of `paths` that are not the fleet's own running bookkeeping."""
+    # `p and` is load-bearing: `git diff --name-only` ends in a newline, and the
+    # empty string that splitting leaves behind is not "supervisor-log.md", so
+    # without it every queued deploy refuses on a path that is not a path.
+    return sorted(p for p in paths
+                  if p and p != "supervisor-log.md"
+                  and not p.startswith("log-archive/"))
+
+
+def dirty_paths() -> list[str]:
+    """Uncommitted paths in the framework tree, as porcelain reports them."""
+    out = []
+    for line in git(FLEET_REPO, "status", "--porcelain").splitlines():
+        path = line[3:]
+        if " -> " in path:  # a rename reports "old -> new"; the new name is the file
+            path = path.split(" -> ", 1)[1]
+        out.append(path.strip().strip('"'))
+    return out
 
 
 PENDING = "pending-deploy"
@@ -142,10 +181,15 @@ def refuse_if_live(force: bool, ignore_pump: bool = False) -> None:
 
 def framework_version(allow_dirty: bool) -> dict:
     sha = git(FLEET_REPO, "rev-parse", "HEAD").strip()
-    dirty = bool(git(FLEET_REPO, "status", "--porcelain").strip())
+    # "Dirty" means the RENDER INPUTS are uncommitted. An in-flight
+    # `supervisor-log.md` is a leg mid-fold, which says nothing about what this
+    # deploy would render and is true at a random ~10% of moments.
+    unstaged = unrelated_to_render(dirty_paths())
+    dirty = bool(unstaged)
     if dirty and not allow_dirty:
-        sys.exit("the framework tree has uncommitted changes.\n\n"
-                 "Commit them first: a stamp naming a SHA that does not contain\n"
+        sys.exit("the framework tree has uncommitted changes:\n  "
+                 + "\n  ".join(unstaged) +
+                 "\n\nCommit them first: a stamp naming a SHA that does not contain\n"
                  "what was rendered is worse than no stamp. Use --allow-dirty if\n"
                  "you are deliberately testing an uncommitted change.")
     return {
@@ -169,9 +213,11 @@ def queue(target: Path, clear: bool, note: str | None) -> int:
         return 0
 
     sha = git(FLEET_REPO, "rev-parse", "HEAD").strip()
-    if git(FLEET_REPO, "status", "--porcelain").strip():
-        sys.exit("the framework tree has uncommitted changes.\n\n"
-                 "A queued deploy pins a SHA, and the whole reason it is safe to\n"
+    unstaged = unrelated_to_render(dirty_paths())
+    if unstaged:
+        sys.exit("the framework tree has uncommitted changes:\n  "
+                 + "\n  ".join(unstaged) +
+                 "\n\nA queued deploy pins a SHA, and the whole reason it is safe to\n"
                  "hand to an agent is that the content is already committed and\n"
                  "reviewable. Commit first, then --queue.")
 
@@ -237,13 +283,33 @@ def main() -> int:
             return 0
         pinned = json.loads(p.read_text())
         head = git(FLEET_REPO, "rev-parse", "HEAD").strip()
-        if head != pinned["framework_sha"]:
-            sys.exit(
-                f"refusing: the latch pins {pinned['framework_sha'][:10]} but "
-                f"HEAD is {head[:10]}.\n\n"
-                "A queued deploy renders exactly the commit the owner pinned. A\n"
-                "newer HEAD is content nobody queued, so this is a refusal rather\n"
-                "than a fresher deploy. Re-run --queue in the owner's window.")
+        pin = pinned["framework_sha"]
+        if head != pin:
+            # HEAD is EXPECTED to have moved: the fleet commits its own log here
+            # on every fold while the latch waits for a boundary. What must not
+            # have moved is anything the render reads.
+            ahead = subprocess.run(
+                ["git", "-C", str(FLEET_REPO), "merge-base", "--is-ancestor", pin, head],
+                capture_output=True, text=True).returncode == 0
+            if not ahead:
+                sys.exit(
+                    f"refusing: the latch pins {pin[:10]}, which is not an "
+                    f"ancestor of HEAD {head[:10]}.\n\n"
+                    "The branch was reset, rewritten or diverged since the queue, so\n"
+                    "the pinned content is not simply older than what is here.\n"
+                    "Re-run --queue in the owner's window.")
+            drift = unrelated_to_render(
+                git(FLEET_REPO, "diff", "--name-only", pin, head).splitlines())
+            if drift:
+                sys.exit(
+                    f"refusing: {len(drift)} path(s) changed between the pinned "
+                    f"{pin[:10]} and HEAD {head[:10]}:\n  "
+                    + "\n  ".join(drift) +
+                    "\n\nA queued deploy renders exactly the commit the owner pinned.\n"
+                    "These are content nobody queued, so this is a refusal rather\n"
+                    "than a fresher deploy. Re-run --queue in the owner's window.")
+            print(f"pinned {pin[:10]}; HEAD is {head[:10]} and differs only in the\n"
+                  "fleet's own log, which the render does not read.\n")
         if args.repo and Path(args.repo).resolve() != Path(pinned["target"]):
             sys.exit(f"refusing: the latch targets {pinned['target']}")
 
