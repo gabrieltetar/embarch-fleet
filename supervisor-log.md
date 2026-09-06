@@ -97,6 +97,86 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 17:44 — core/012 a progress field with no stated meaning, and the consumers decided which way it went
+
+**Decided:** one, and I set it up to be decided by evidence rather than by me. The task's fourth
+Done-when item asked whether the public `current_step` should be *renumbered* to the sane convention
+or merely *documented*, and I told the worker to settle the consumer question **before** writing any
+code. It found two live readers — `embarch-ui`'s run badge renders `current_step + 1`, and
+`embarch-core-client`'s `study_events.rs` keys its poll de-duplication on the value — plus three
+surfaces printing it verbatim. So: **documented, not renumbered.** Decision 43 records both declined
+alternatives, including the honest rename `last_completed_step`, declined because the field is
+serialized straight to the wire.
+
+**Merged:** `agent/core/012-current-step-semantics` (code `f6b2b9d`, doc `cb7b124`). Gate on the
+merge result: `cargo build`, `cargo test` **162 passed / 0 failed / 2 ignored**, clippy
+`--all-targets -D warnings`, all 9 doc checks, ownership green both branches (code: whole tree, base
+`09020a397951`; doc: 6 paths, base `e98491d62246`), client-names clean. **No native Windows build** —
+that is `tasks/doc/012`, owner-reserved and unrunnable from a Linux leg; it is a filed gap, not a
+skipped step, and every `embarch-core` unit this fleet lands carries it.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**The reviewer nearly did not get counted, and the reason is worth the next leg's attention.** Its
+transcript went silent for ~10 minutes with no completion notification, and it did not visibly
+process a direct `SendMessage`. I was one step from writing `skipped (reviewer did not report)`.
+It was alive the whole time and replied with a complete answer. **Reading a quiet transcript as a
+dead agent is the same error `ops.md` §3 already forbids for workers** — `git status` was a bad
+liveness probe there, file mtime is a bad one here, and I had to be told that by the agent I had
+written off. Wait longer than feels reasonable before writing the third form.
+
+**I checked the load-bearing half myself in parallel rather than only asking**, because the one thing
+that could go silently wrong here is the rename: `Capture::current_step` → `open_step_index` scopes
+every signal tap's stream, and a cross-wired read site would mis-scope captures with no test
+failing. A grep of `src/study.rs` finds **no orphaned reads** — every surviving `current_step`
+mention is either the public `StudyJob` field or a doc comment naming it. The reviewer then
+enumerated all eleven old sites against the parent commit `09020a3` and mapped them one-to-one, and
+confirmed the nine public-field sites were untouched. **Two independent passes, same answer** —
+which is the only reason I would state a rename as safe.
+
+**And it caught an over-claim in the contract this unit exists to write, which I corrected in the
+fold rather than filing.** `interfaces.md` said `current_step` is `total_steps - 1` on a completed
+run, flat. **It is a consequence, not an invariant**: `StudyDone { completed: true }` never checks
+that every step reported, and **decision 40 explicitly permits an undecodable frame to cost a
+`StepResult`** — so a lost result plus `completed: true` yields a completed study reporting
+`total_steps - 2`, and a zero-step study reports `total_steps: 0` with no index at all. The row now
+says so and tells a caller not to derive completion from the field. **This is the second leg running
+where a unit's own new contract sentence carried one unqualified word the code branches on** —
+`outpost/006`'s "always" last leg, this one's flat equality. Both were caught by a reviewer and not
+by any gate, and both were written by a worker that had read the code correctly.
+
+**One finding routed out rather than fixed**, correctly: `embarch-ui`'s badge `+1` was written for
+the *count* convention, so under the now-documented *index* convention it shows nothing while step 1
+runs and `1/2` for all of step 2. `embarch-core` may not write `embarch-ui`, so the worker dropped
+it; I re-checked its `Hardware: none` myself and filed it as `tasks/ui/010`. It asks `embarch-ui` to
+decide, in its own words, whether the badge means *step now running* or *steps finished* — **the
+current code shows neither**, which is the part that makes it more than an off-by-one.
+
+**Hardware debts:** none, and none owed. The live observation this unit rests on — study
+`3785bd198cc3a62d…`, a completed 2-step run reporting `current_step: 1` — was taken from leg 021's
+bench sitting as given; I told the worker not to attempt to reproduce it, and it reasoned from
+source instead.
+
+**Doc-size debt paid forward, not sideways:** decision 43 pushed `embarch-core/decisions/studies.md`
+to 11,176 / 12,288 (91.0%), into reserve, and `tasks/core/014-compact-core.md` is filed in the same
+commit with `In flux: no`. My reserve line to this worker said no `embarch-core` doc was in reserve,
+which was true when I wrote it and false by the time it finished — **the ledger worked exactly as
+intended**: the debt was recorded by the actor holding the context, not discovered later by a gate.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **that I told this worker not to write a `features.d/` row, and I cannot fully
+separate "no feature row is owed" from "no feature row can be afforded".** `suite/features.md` has
+221 bytes and a compaction task blocked on the owner, so I pre-emptively instructed both of this
+leg's workers to withhold rows unless a genuinely new capability shipped. For *this* unit that is
+almost certainly right — documenting an existing field's meaning is not a capability, and the
+assembled file came back byte-identical at 20,259 B. But I gave the instruction because of the wall,
+and the justification arrived after. **That is the same failure leg 022 recorded one unit before
+this one** — the reserve making a decision and the argument agreeing with it afterwards — and I
+reproduced it knowingly, which is worse than reproducing it blind.
+
 ## 2026-09-06 16:58 — study-designer/009 the two registries stopped disagreeing about the same mistake
 
 **Decided:** one, and it is a worker's choice of file that I set up and then had checked.
