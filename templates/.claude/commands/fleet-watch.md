@@ -3,7 +3,7 @@ description: Arm the fleet watchdog in this window - a second, hands-free sessio
 argument-hint: "[start | stop | status]"
 ---
 
-The listener cannot detect that it is wedged. This window can.
+The fleet cannot detect that it has stopped making progress. This window can.
 
 `CronCreate` fires **only while the REPL is idle**, so a tick that *hangs* —
 rather than fails — takes the fleet dark with the pump still latched, and
@@ -14,7 +14,41 @@ five hours, and the mitigation on the books was "the owner notices channel
 silence".
 
 This is the replacement. A **second window, in its own process tree**, whose cron
-is therefore not suppressed by the listener being mid-query.
+is therefore not suppressed by anything the fleet is doing. **This window must
+never spawn an agent**, and that is not only about authority: a session holding a
+live background agent is not idle, and an unidle window has no cron. A watchdog
+that spawned once would silence itself for as long as the spawn lived.
+
+## What `tick` means, and what it used to mean
+
+**`{{STATE_DIR}}/tick` means the fleet made progress.** Two actors touch it: the
+listener at the end of every tick, and **a leg at every dispatch and every fold**
+(`.claude/commands/supervise.md`). Fresh means at least one of them moved.
+
+It used to mean only the first, and that was a design defect rather than a tuning
+problem. The listener's cron is dark for the entire life of a leg — measured
+2026-09-06: ticks at 14:04:24 then nothing until 14:53:49, four slots suppressed,
+while the leg underneath landed 4/4 units and was healthy the whole time. A leg
+is *designed* to run four units and that one took 44 minutes, so a threshold
+under a leg's length was guaranteed to fire on **every healthy leg**, not
+occasionally. It did: a false wedge alert at 14:37 unlatched the pump, and when
+the leg died at 14:47 the listener read "pump absent" and stopped. The relay was
+capped at one leg and the only explanation in the channel was wrong.
+
+Adding the leg as a writer keeps this window's logic **literally unchanged** —
+still one mtime, still stop-only — and *widens* what it catches: a leg that hangs
+mid-unit now goes stale, which the old signal could not detect at all.
+
+**The tradeoff, stated rather than left implicit: while a leg runs, a wedged
+listener is masked by the leg's own touches.** That is acceptable. A wedged
+listener only costs anything at a leg boundary — during a leg it has no work to
+do — and once the leg ends nothing touches `tick`, so it is caught one threshold
+later. The alternative, a second `.fleet/leg` file with the watchdog requiring
+*tick stale AND no live leg*, buys that window back at the cost of a second piece
+of state, a writer that must delete it on every exit path including a kill, and
+branch logic in the one window whose entire safety argument is that it reads one
+mtime and can only ever stop. Not worth it for a failure that is detected 45
+minutes later anyway.
 
 ## Why this does not weaken the kill switch
 
@@ -42,7 +76,10 @@ nothing.
    queue is exactly what is being routed around. Open a new window.
 2. **Create the heartbeat**, one recurring cron job on `7-59/10 * * * *` — offset
    from the listener's `3-59/10` so the two never contend. Its prompt must be
-   **exactly** the block below.
+   **exactly** the block below, and that block is the source of truth for the
+   live job: if you change one, change the other in the same pass. They have
+   drifted before, and a job armed with an older threshold looks entirely
+   healthy.
 3. Post one line to `{{SLACK_CHANNEL_NAME}}` saying the watchdog is armed and at
    what threshold, and react `robot_face`. Tell the owner in the terminal which
    window this is.
@@ -53,21 +90,30 @@ nothing.
 > 1. Read `{{STATE_DIR}}/pump`. **If it is absent, stop and print nothing** —
 > the pump is off, so nothing is expected to be ticking and silence is correct.
 >
-> 2. Read the mtime of `{{STATE_DIR}}/tick`. If the file does not exist, the
-> listener has not ticked since the watchdog was armed; treat that as stale only
-> if the pump latch is older than 25 minutes, otherwise stop (the fleet was just
-> started and has not ticked yet).
+> 2. Read the mtime of `{{STATE_DIR}}/tick`. It is touched by the listener at the
+> end of every tick **and by a leg at every dispatch and every fold**, so it
+> means "the fleet made progress". If the file does not exist, nothing has moved
+> since the watchdog was armed; treat that as stale only if the pump latch is
+> older than 45 minutes, otherwise stop (the fleet was just started and has not
+> ticked yet).
 >
-> 3. If the mtime is **more than 25 minutes old** — two missed heartbeats, so a
-> single slow tick is not enough — the listener is wedged or dead. **Delete
+> 3. If the mtime is **more than 45 minutes old**, the fleet is wedged or dead —
+> a wedged listener between legs, or a leg that hung mid-unit. **Delete
 > `{{STATE_DIR}}/pump`**, then run `{{FLEET_REPO}}/scripts/fleet-alert.py
-> "listener silent since <mtime>; pump unlatched"`, post one line to
+> "no fleet progress since <mtime>; pump unlatched"`, post one line to
 > `{{SLACK_CHANNEL_NAME}}` saying both, and react `robot_face`. **Then read
 > `{{STATE_DIR}}/alerted`: if it holds a timestamp under 60 minutes old, skip the
 > alert and the post — you already said this — but still delete the latch if it
 > is back.** Otherwise write the current time there afterwards. A watchdog that
 > repeats itself every ten minutes is a pager, and `ops.md` §3's alert set is
 > closed for that reason.
+>
+> **45 minutes is measured, not chosen for roundness.** A healthy leg is silent
+> between a dispatch and the fold that follows it: fold-to-fold gaps over the
+> 00:12–05:20 run on 2026-09-06 reached **40 minutes**, and a wave of workers
+> dispatched together reports together. Under the old 25 the watchdog fired on a
+> leg that landed 4/4 units. Do not lower it without new measurement; a false
+> wedge is not a harmless conservative alarm, because it unlatches the pump.
 >
 > **Deleting the latch is the only write this window ever makes, and the only
 > direction it may push.** It can stop a fleet; it can never start one. That
@@ -82,15 +128,22 @@ nothing.
 
 ## What it can and cannot tell you
 
-**It detects silence, not health.** A listener that ticks happily while every leg
+**It detects silence, not health.** A fleet that ticks happily while every leg
 fails its gate looks identical to a healthy one from here. That is fine — a red
 gate is already reported per unit, and this exists for the one failure that
 reports nothing at all.
 
-**A stale tick has three causes and this cannot tell them apart:** the tick hung
-on a tool call, the window was closed without stopping the pump, or the machine
-slept. All three want the same response from the owner — look at the listener
-window — so the alert does not guess.
+**A stale tick has four causes and this cannot tell them apart:** a listener tick
+hung on a tool call, a leg hung mid-unit, the window was closed without stopping
+the pump, or the machine slept. All four want the same response from the owner —
+look at the listener window — so the alert does not guess. The second is new:
+under the old signal a hung leg was invisible, because the listener's cron kept
+ticking underneath it.
+
+**While a leg runs it cannot see a wedged listener**, because the leg's own
+touches keep `tick` fresh. That is the accepted cost of the signal meaning
+progress; the case it gives up is one that costs nothing until the leg ends, and
+45 minutes after that it is caught.
 
 **It is not a control plane, and unlatching is not `fleet stop`.** A graceful
 stop is delivered to a live supervisor, which finishes landing what is in
@@ -98,14 +151,19 @@ flight, folds, logs and exits. This window cannot do that — a wedged listener
 cannot relay a message to anyone. Deleting the latch only stops the *next* leg
 from being spawned once the listener recovers. Whatever is already running is
 still running, and closing VS Code remains the only thing that ends it. What
-this buys is learning you need to within ten minutes instead of five hours, and
-not coming back to a fleet that quietly resumed on a rule you no longer wanted.
+this buys is learning you need to within the hour instead of five hours, and not
+coming back to a fleet that quietly resumed on a rule you no longer wanted.
+
+**The graceful stop you do have while a leg runs is `fleet stop` in the
+channel** — the supervisor reads it at every unit boundary and honours it itself
+(`.claude/commands/supervise.md`), latch included. This window is for when there
+is no leg to read it.
 
 ## Vocabulary
 
 | Message | Action |
 |---|---|
-| `watch status` | When the listener last ticked, whether the pump is latched, and whether an alert is currently suppressed |
+| `watch status` | When the fleet last made progress (`tick`'s mtime — listener or leg), whether the pump is latched, and whether an alert is currently suppressed |
 | `watch stop` | Delete the cron job. The listener is unaffected |
 
 `watch status` is the one thing worth asking from a phone, because it answers
