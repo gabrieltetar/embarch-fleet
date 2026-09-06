@@ -13,8 +13,11 @@ git push && git -C ../embarch-doc push                 # 3. publish
 /fleet start                                           # 4. re-arm, IF §4 says so
 ```
 
-`deploy.py` refuses to run while the fleet is live, so the normal order is
-`fleet stop`, deploy, re-arm. It says which of those you still owe.
+`deploy.py` refuses to run while the fleet is live. **With the fleet running,
+commit and `deploy.py --queue` instead** — it pins the SHA and a leg boundary
+lands it, so editing a rule no longer costs the fleet its uptime (§4.1). Stopping
+the fleet to deploy is still available and still correct; it is just no longer
+the price of picking up the pen.
 
 ## 1. Authored here, generated there
 
@@ -75,16 +78,61 @@ sitting, and never with the pump latched.
 
 ## 4. Deploying while the fleet is live
 
-Don't. `deploy.py` refuses if the pump latch exists or a worktree is registered
-under the worktree root, because changing the rules under a running supervisor
-means a leg that read half its protocol from one version and half from another,
-and there is no version marker in a log entry that would let you tell afterwards.
+Don't do it directly — **queue it instead**, and keep working.
+
+`deploy.py` refuses if the pump latch exists or a worktree is registered under
+the worktree root, because changing the rules under a running supervisor means a
+leg that read half its protocol from one version and half from another, and there
+is no version marker in a log entry that would let you tell afterwards.
 
 Neither check is authoritative — the latch says the pump is on, not that a leg is
 alive, and a leg between units holds no worktree. **The authoritative check is
-`ListAgents` in a session**, which no script can run. So: `fleet stop`, watch for
-the leg to finish its unit, then deploy. `--force` exists for when you have
-checked yourself and it is genuinely idle.
+`ListAgents` in a session**, which no script can run. So the old loop was
+`fleet stop`, watch for the leg to finish its unit, deploy, re-arm.
+
+**That loop was the single most expensive thing about editing a rule.** Over the
+14 h window ending 2026-09-06, ~6.6 h had no leg running at all, and **~3.7 h of
+it was the fleet stopped so the owner could hold the pen.** None of it was a
+capacity problem; it was a lock held for the length of a writing session.
+
+### 4.1 Queue a deploy, land it at a leg boundary
+
+```sh
+git commit                                   # in this repo, as always
+python3 scripts/deploy.py --queue            # pins HEAD in the state directory
+git push                                     # framework first, now
+```
+
+`--queue` refuses a dirty tree and refuses a no-op, then writes
+`pending-deploy` in the state directory recording the exact framework SHA. The
+fleet keeps running. At the next leg boundary the listener — which has just
+established with `ListAgents` that no leg is alive, the one moment this is safe —
+spawns an `embarch-deployer`, whose entire job is:
+
+```sh
+python3 scripts/deploy.py --from-latch
+```
+
+That renders the **pinned** SHA, runs both gates, stamps, commits the generated
+paths, pushes both repos framework-first, and deletes the latch. Then it reports
+one line and dies.
+
+**What makes it safe is the pin, not the agent.** The deployer authors nothing:
+it renders content you already committed to a repo no leg ever checks out, and a
+HEAD that has moved past the pin is a *refusal*, not a fresher deploy. Every
+liveness check except the pump latch still applies — a registered worktree or a
+surviving `agent/*` branch still refuses — which is exactly the difference
+between "the pump is on" and "a leg is mid-unit".
+
+**Two things stay yours.** A **re-arm** — `deploy.py` says when one is owed and
+the deployer relays it, but arming is a Claude Code session and no agent may do
+it, so a changed heartbeat prompt sits dormant until you type `/fleet start`. And
+a **red gate**: the deployer leaves the instance rendered and uncommitted with
+the latch still pinned, and stops. Fix the template here and re-queue.
+
+`python3 scripts/deploy.py --queue --clear` unpins. `--force` still exists for a
+direct deploy when you have checked `ListAgents` yourself and it is genuinely
+idle.
 
 ## 5. Versions and rollback
 

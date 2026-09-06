@@ -20,12 +20,38 @@ See DEVELOPING.md for the loop this belongs to -- in particular §2, on the fact
 that a live cron job keeps the heartbeat prompt it was armed with however many
 times `templates/.claude/commands/fleet.md` changes.
 
+**--queue and --from-latch are how a rule change stops costing uptime.** Until
+2026-09-06 the only way to deploy was to stop the fleet, because this script
+refuses while the pump is latched -- so an owner sitting down to edit a rule took
+the fleet down for the sitting. Measured against the 14 h window ending that
+morning, that was **~3.7 h of the ~6.6 h in which no leg existed at all**: the
+single largest block of lost throughput, and none of it a capacity problem.
+
+So the deploy splits in two. `--queue` is the owner's half: it verifies the
+framework tree is committed and that the render would actually change something,
+then writes `pending-deploy` in the state directory **pinning the exact framework
+SHA**. `--from-latch` is the machine's half, run by an `embarch-deployer` agent
+the listener spawns at a leg boundary; it refuses unless HEAD still equals the
+pinned SHA and the tree is still clean, then renders, gates, stamps, commits,
+pushes both repos, and deletes the latch.
+
+**What makes that safe is the pin, not the agent.** The deployer authors nothing:
+it renders content the owner already committed to a repo no leg ever checks out,
+and a SHA mismatch is a refusal rather than a newer deploy. It also keeps every
+liveness check except the pump latch -- a registered worktree or a surviving
+`agent/*` branch still refuses, which is the difference between "the pump is on"
+and "a leg is mid-unit". A leg boundary is exactly the moment the first is true
+and the second is not. `risks.md` carries the residue.
+
 Usage:
   scripts/deploy.py                 refuse if live, install, gate, stamp, commit
   scripts/deploy.py --dry-run       say what would change, write nothing
   scripts/deploy.py --no-commit     install and gate, leave the changes unstaged
   scripts/deploy.py --force         deploy anyway (you have checked ListAgents)
   scripts/deploy.py --allow-dirty   stamp an uncommitted framework tree
+  scripts/deploy.py --queue         pin HEAD for the next leg boundary
+  scripts/deploy.py --queue --clear drop a queued deploy
+  scripts/deploy.py --from-latch    the deployer agent's half; pushes, then unpins
 Exit status: 0 deployed / nothing to do, 1 refused or gate red, 2 misconfigured.
 """
 from __future__ import annotations
@@ -58,7 +84,14 @@ def git(repo: Path, *args: str, check: bool = True) -> str:
     return r.stdout
 
 
-def refuse_if_live(force: bool) -> None:
+PENDING = "pending-deploy"
+
+
+def latch_path() -> Path:
+    return CONF.state_dir / PENDING
+
+
+def refuse_if_live(force: bool, ignore_pump: bool = False) -> None:
     """Two proxies, and neither is authoritative -- say so rather than imply it.
 
     The latch says the pump is on, not that a leg is alive; a leg between units
@@ -68,7 +101,12 @@ def refuse_if_live(force: bool) -> None:
     log entry records which.
     """
     reasons = []
-    if (CONF.state_dir / "pump").exists():
+    # ignore_pump is --from-latch's one relaxation, and it is the whole point of
+    # a leg-boundary deploy: the pump being latched says the fleet is *running*,
+    # not that a leg is mid-unit, and at a boundary the first is true while the
+    # second is not. Every other reason below is a live-work signal and still
+    # refuses.
+    if not ignore_pump and (CONF.state_dir / "pump").exists():
         reasons.append(f"the pump latch exists ({CONF.state_dir / 'pump'})")
 
     # A directory under the worktree root is NOT the signal: a leg clones shared
@@ -119,6 +157,54 @@ def framework_version(allow_dirty: bool) -> dict:
     }
 
 
+def queue(target: Path, clear: bool, note: str | None) -> int:
+    """The owner's half: pin HEAD so a leg boundary can deploy it unattended."""
+    p = latch_path()
+    if clear:
+        if p.exists():
+            p.unlink()
+            print(f"unpinned {p}")
+        else:
+            print("nothing queued")
+        return 0
+
+    sha = git(FLEET_REPO, "rev-parse", "HEAD").strip()
+    if git(FLEET_REPO, "status", "--porcelain").strip():
+        sys.exit("the framework tree has uncommitted changes.\n\n"
+                 "A queued deploy pins a SHA, and the whole reason it is safe to\n"
+                 "hand to an agent is that the content is already committed and\n"
+                 "reviewable. Commit first, then --queue.")
+
+    chk = subprocess.run([sys.executable, str(HERE / "install.py"),
+                          "--repo", str(target), "--check", "--diff"],
+                         capture_output=True, text=True)
+    if chk.returncode == 0:
+        print("nothing to deploy: the instance already matches this framework.\n"
+              "Not queuing -- a latch for a no-op deploy is a latch that will be\n"
+              "cleared by something that did nothing.")
+        return 0
+
+    rearm = REARM_TRIGGER in (chk.stdout or "")
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps({
+        "framework_sha": sha,
+        "queued_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "target": str(target),
+        "rearm_owed": rearm,
+        "note": note or "",
+    }, indent=2) + "\n")
+    print(f"queued {sha[:10]} -> {target.name}\n  {p}\n\n"
+          "The listener deploys this at the next leg boundary and posts what it\n"
+          "did. The fleet keeps running until then; nothing needs stopping.")
+    if rearm:
+        print("\nRE-ARM WILL BE OWED once it lands: the heartbeat cron prompt\n"
+              "changed, and a live job keeps the wording it was armed with. The\n"
+              "deployer cannot `/fleet start`; that stays yours.")
+    print(f"\nPush the framework now, or the stamp will name a SHA nobody can\n"
+          f"fetch:\n  git -C {FLEET_REPO} push")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -127,14 +213,42 @@ def main() -> int:
     ap.add_argument("--no-commit", action="store_true")
     ap.add_argument("--force", action="store_true", help="deploy into a live fleet")
     ap.add_argument("--allow-dirty", action="store_true")
+    ap.add_argument("--queue", action="store_true",
+                    help="pin HEAD in the state directory for a leg-boundary deploy")
+    ap.add_argument("--clear", action="store_true", help="with --queue: unpin")
+    ap.add_argument("--note", help="with --queue: one line for the deployer to relay")
+    ap.add_argument("--from-latch", action="store_true", dest="from_latch",
+                    help="the deployer agent's half: deploy exactly the pinned SHA, "
+                         "push both repos, delete the latch")
     args = ap.parse_args()
 
     target = Path(args.repo).resolve() if args.repo else CONF.doc_repo
     if not (target / ".git").exists():
         sys.exit(f"not a git repo: {target}")
 
+    if args.queue:
+        return queue(target, args.clear, args.note)
+
+    pinned = None
+    if args.from_latch:
+        p = latch_path()
+        if not p.exists():
+            print(f"no deploy queued ({p}); nothing to do.")
+            return 0
+        pinned = json.loads(p.read_text())
+        head = git(FLEET_REPO, "rev-parse", "HEAD").strip()
+        if head != pinned["framework_sha"]:
+            sys.exit(
+                f"refusing: the latch pins {pinned['framework_sha'][:10]} but "
+                f"HEAD is {head[:10]}.\n\n"
+                "A queued deploy renders exactly the commit the owner pinned. A\n"
+                "newer HEAD is content nobody queued, so this is a refusal rather\n"
+                "than a fresher deploy. Re-run --queue in the owner's window.")
+        if args.repo and Path(args.repo).resolve() != Path(pinned["target"]):
+            sys.exit(f"refusing: the latch targets {pinned['target']}")
+
     if not args.dry_run:
-        refuse_if_live(args.force)
+        refuse_if_live(args.force, ignore_pump=args.from_latch)
     version = framework_version(args.allow_dirty or args.dry_run)
 
     # What the instance already has, so we can report the deploy rather than
@@ -222,6 +336,9 @@ def main() -> int:
 
     if not ours:
         print("\nnothing to commit: the instance already matched this version.")
+        if args.from_latch:
+            latch_path().unlink(missing_ok=True)
+            print("latch cleared: there was nothing left for it to ask for.")
         return 0
 
     git(target, "add", "--", *ours)
@@ -240,10 +357,28 @@ def main() -> int:
     print(f"\n{target.name}  {git(target, 'rev-parse', '--short', 'HEAD').strip()}  "
           f"{len(ours)} path(s)")
 
+    rearm = any(p == REARM_TRIGGER for p in ours)
+
+    if args.from_latch:
+        # The deployer pushes, because nobody is sitting there to. Framework
+        # first, always: the stamp just committed to the instance names a SHA
+        # that must be fetchable, and pushing the instance first would publish a
+        # dangling reference to it.
+        git(FLEET_REPO, "push")
+        git(target, "push")
+        latch_path().unlink(missing_ok=True)
+        print(f"\npushed both; latch cleared ({latch_path()}).")
+        if rearm:
+            print("\nRE-ARM OWED, and it is the owner's: the heartbeat cron prompt\n"
+                  "changed and a live job keeps the wording it was armed with. Say\n"
+                  "so in the channel -- a deployer cannot run `/fleet start`, and a\n"
+                  "fleet running the previous tick prompt looks entirely healthy.")
+        return 0
+
     print("\nStill yours:")
     print(f"  git -C {FLEET_REPO} push && git -C {target} push")
     print("     framework first -- the stamp names a SHA that must be fetchable.")
-    if any(p == REARM_TRIGGER for p in ours):
+    if rearm:
         print(f"  /fleet start")
         print("     RE-ARM OWED: the heartbeat cron prompt changed, and a live job\n"
               "     keeps the wording it was armed with. Editing the file is not enough.")
