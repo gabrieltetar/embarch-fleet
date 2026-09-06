@@ -97,6 +97,71 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 16:58 — study-designer/009 the two registries stopped disagreeing about the same mistake
+
+**Decided:** one, and it is a worker's choice of file that I set up and then had checked.
+`decisions/crate.md` is at 91.7% behind a **blocked** compaction task (`study-designer/006`,
+`In flux: yes`), so I told the worker before it started that a duplicate-action rule is not
+crate-shape or CI and belongs elsewhere — and that if it concluded otherwise it owed the
+compaction in the same unit. It chose `decisions/authoring.md`, extending **decision 35**'s body
+rather than taking a new number. **`crate.md` is byte-identical**, and `authoring.md` went
+6,811 → 7,655 B against a 12 KB cap, so nothing entered reserve and no debt was created.
+
+**Merged:** `agent/study-designer/009-duplicate-action-names` (code `9282422`, doc `50d6e57`).
+Gate on the merge result: `cargo build`, `cargo test` **108 + 9 passed / 0 failed**,
+`cargo test --no-default-features --features study-ui` **175 + 9 passed / 0 failed**, clippy
+`--all-targets -D warnings` on both feature sets, ownership green both branches (code: whole tree,
+base `48cac003941b`; doc: 3 paths, base `f62a724d9c04`), client-names clean.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**I checked the load-and-save half myself before spawning it**, because a validation that fires only
+on `load` leaves a file that can be written and never read back — worse than the bug. `save` calls
+`self.validate()?` as its **first statement**, ahead of `registry_path` and `create_dir_all`, and a
+test asserts the file was never created. The reviewer added the part I could not have: `registry.rs`
+is the only file in the crate that touches `registry_path`, so there is **no third write path**
+around `validate`.
+
+**And it corrected the shape of the symmetry claim in a way that matters.** The task's product is
+that two registries in one module stop treating the identical hand-edit mistake differently, so
+*where* the new scan sits is the whole question. The worker wrote "before the per-field work",
+which reads as hoisted ahead of everything; it is not. The scan is **interleaved per item**, in
+`StructRegistry::validate`'s character-for-character construct — so a file with a byte-length fault
+in action 0 and a duplicate at index 1 reports the byte-length fault, which is exactly the
+precedence the struct side already had. **Loose wording, correct code, and the reviewer read the
+code.**
+
+**One over-claim that never reached the corpus.** The worker's commit message says decision 52
+"already stated the identical rule" for the struct registry. It does not — a grep of the whole
+sub-project finds the struct duplicate rule stated *nowhere* until the sentence this unit added to
+decision 35. The prose that landed is a claim about the code and is true. The over-claim is in a
+commit message, so nothing is owed, but it is the kind of thing that becomes a citation later.
+
+**A reasoning error I am recording because its file gets deleted.** The worker declined to add a
+`spec.md` invariant partly because `spec.md` had "only ~136 B before its reserve line". **That is
+not a reason**: `DOC-COMPACTION.md` §2 says the reserve is *writable*, costing a `**Compacts:**`
+line filed in the same commit, and treating it as a wall is the posture that doc names as the worse
+failure. The omission is still right, for the other reason it gave — neither registry's refusal was
+ever a `spec.md` invariant, and adding one for actions alone would put into `spec.md` the very
+asymmetry this unit removed from the code. **A right answer reached partly through a wrong rule is
+the thing that recurs**, and the task file carrying it is retired by this fold.
+
+**Hardware debts:** none, and none owed — host-side file validation with no DUT in the path.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **that I steered this unit's decisions file before the worker read a line, and
+I cannot tell whether I steered it right or merely steered it.** The reviewer agrees `authoring.md`
+was correct, and its reason — the new paragraph follows the premise it builds on — is a better one
+than mine, which was "a duplicate-action rule is not crate shape". But I gave that instruction to
+route *around a blocked compaction task*, not because I had read `authoring.md`. **The reserve made
+the placement decision and the mission argument arrived afterwards to agree with it**, and on a
+different day those two would have pointed apart with nothing to notice.
+
+---
+
 ## 2026-09-06 16:55 — outpost/006 the reference decoder has a test that is guaranteed to run
 
 **Decided:** one thing, and it is small and mine. The reviewer found that
