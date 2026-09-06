@@ -352,6 +352,25 @@ table, the table is out of date rather than the build: **the source of truth is
 `grep -rn 'path *= *"\.\.' --include=Cargo.toml embarch-*/`** in the suite root,
 run against the main checkouts. Say so in your log entry.
 
+**Before you spawn, run `scripts/check-dispatch.py --worktree <each of this
+unit's worktrees>`.** It refuses if they already exist, because a fresh dispatch
+*creates* them — finding them is evidence a worker holds this task, not a state
+to reuse. Leg 012 reused them and ran **both** of its first two tasks twice,
+concurrently, in the same trees; `umbrella/012`'s second worker committed and
+pushed and the first force-pushed over it, and the only reason nothing was lost
+is that the two trees happened to be identical.
+
+**And never conclude a worker died from repo state.** That leg checked
+`git status` and the branch's commit count in all four worktrees — clean, zero
+commits — and re-dispatched. Both workers were alive and mid-pass. **A worker's
+tree is clean for the entire *reading* half of its run**, so the reading was true
+when taken and false ninety seconds later. `ops.md` §3 already reads the worktree
+rather than the branch because a commit count is a bad liveness probe; the
+worktree is a bad one too, for the same reason. `tasks/README.md` settles claim
+staleness by the **process tree**, and that is the rule here: **`ListAgents`, and
+nothing else, may retire a worker you dispatched.** Only then recover per §3 and
+re-run the guard with `--allow-existing`.
+
 **Dispatch.** One background `embarch-worker` agent per task, launched without
 blocking on the previous one. Give each: its task file path, **both** worktree
 paths, its branch name, and the one-line reminder that it owns exactly one
@@ -461,11 +480,23 @@ the choice cannot catch on its own.
 
 **Fold and log, per unit, serialized — in ONE commit.** As part of landing each
 unit: consume its `status.d/` fragments into their target docs and delete them,
-run `python3 scripts/build_changelog.py`, run **`python3 scripts/build_features.py`**,
+run `python3 scripts/build_changelog.py --only '<this unit's fragment names>'`,
+run **`python3 scripts/build_features.py`**,
 **prepend that unit's entry to `{{FLEET_REPO}}/supervisor-log.md`**, run
 `python3 scripts/check-docs.py` once more, and commit all of that with
 **`scripts/fold-commit.py`**, which is the only way to land a fold now that the
 log lives in a different repo from the work.
+
+**`--only` is not optional, and leaving it off is silent.** Without it the
+assembler consumes *every* pending fragment, not the folding unit's — so leg 016
+swept 15 the owner had written and not folded into `history/`, in the same
+`## window` block as its own one entry, with no way to stage its entry without
+his. `fold-commit.py` staged by explicit path and the path list was right: the
+file at that path had been rewritten underneath it by a script the fold is
+required to run. Nothing failed, because the swept lines are well-formed entries
+in the right file. Pass the fragment names this unit actually wrote.
+`fold-commit.py` now refuses a fold that consumed a fragment outside its
+`--path` list, so forgetting is a blocked commit rather than a quiet one.
 
 **The assembler is yours, not the worker's**, and `suite/features.md` goes in the
 `--path` list whenever the unit wrote a `features.d/` fragment. A worker owns its
