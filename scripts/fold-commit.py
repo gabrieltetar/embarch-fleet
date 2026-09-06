@@ -470,11 +470,29 @@ def main() -> int:
               "did not write:\n", file=sys.stderr)
         for q in swept:
             print(f"  {q}", file=sys.stderr)
-        print("\nThat means `build_changelog.py` ran over the whole directory. Restore\n"
-              "them and re-assemble with only this unit's own:\n\n"
-              "    git checkout -- changelog.d history\n"
-              f"    python3 scripts/build_changelog.py --only '<this unit's fragment>'\n\n"
-              "Nothing has been written. The fragments are still in git.", file=sys.stderr)
+        # The assembler lives in the INSTANCE and a leg's worktree freezes it at
+        # that leg's start commit, while this script is a shim that execs the
+        # framework copy at run time. So a leg can be refused by a new rule
+        # while holding an assembler too old to satisfy it. Ask before advising.
+        helptext = subprocess.run(
+            [sys.executable, str(doc / "scripts" / "build_changelog.py"), "--help"],
+            capture_output=True, text=True).stdout
+        print("\nThat means `build_changelog.py` ran over the whole directory.",
+              file=sys.stderr)
+        if "--only" in helptext:
+            print("Restore them and re-assemble with only this unit's own:\n\n"
+                  "    git checkout -- changelog.d history\n"
+                  "    python3 scripts/build_changelog.py --only '<this unit's fragment>'",
+                  file=sys.stderr)
+        else:
+            print("Your checkout's assembler predates `--only`, so park them instead --\n"
+                  "this is the dance leg 016 did by hand:\n\n"
+                  "    git checkout -- changelog.d history\n"
+                  "    mkdir -p ../.held && mv changelog.d/<not-yours>.md ../.held/\n"
+                  "    python3 scripts/build_changelog.py\n"
+                  "    mv ../.held/*.md changelog.d/", file=sys.stderr)
+        print("\nNothing has been written. The fragments are still in git.",
+              file=sys.stderr)
         return 1
 
     addable, to_delete, already, missing = stage_plan(doc, args.path)
