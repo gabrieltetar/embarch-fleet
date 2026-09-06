@@ -78,6 +78,76 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 03:20 — suite/007 rustfmt-cost-omits-a-path-dep-crate
+
+**Leg 017's third unit and mine under §8.** Announced at `ts 1788682200.661269` (02:10 MDT),
+parked, thread re-read at every unit boundary, run at 03:10 after a window that closed at 02:40
+with **zero replies**. Fifth time §4's window has been served rather than restarted.
+
+**The reconciliation is the finding, not the edit.** Of the task's three `Done when` boxes,
+**two were already satisfied before I touched anything.** `suite/006` applied its own reviewer's
+correction to `embarch.md` §5 *in the same commit* that produced the drop, and the drop —
+written against the pre-correction text — was then filed as a task describing a §5 that no
+longer existed. **A drop is a snapshot, and the doc it describes can be fixed before the drop is
+drained.** §12's refill reconciliation is written for a task whose *source doc* moved; this is
+the first time in this log it has fired on an `inbox/` drop, and the shape is worth naming
+because the fleet now files most of its own backlog. **I closed the two boxes as already-true,
+in writing, rather than doing the work again and reporting it as done.**
+
+**Decided:** **§5's reversal condition states a requirement rather than a command, because the
+command the drop recommended is wrong too.** The drop said *"the check must be `cargo fmt --all
+--check` run per repo"*. It is not. Measured in `embarch-api`: bare `--check` reports 18 files,
+`--all --check` reports **57, of which 33 are in `embarch-study-designer` and
+`embarch-topology`** — other repos. So a per-repo gate spelled `--all --check` fails
+`embarch-api` on another repo's files, and bare `--check` misses
+`crates/embarch-core-client` entirely. **Neither flag covers every crate inside the repo and
+nothing outside it, so §5 now says that, plus the one spelling that works today** — `--check`
+once per in-repo crate. `-p` is not an escape hatch: `cargo fmt -p embarch-api -p
+embarch-core-client --check` refuses, a path-dep crate not being a workspace member. And the
+reach into `embarch-topology` is **transitive**, through `embarch-core-client`, so dropping
+`embarch-api`'s direct sibling dep would not close it.
+
+**I also refreshed a pointer my own leg made stale**: §5 said the worker instruction "is dropped
+to `inbox/`", and this leg's drain had filed that drop as `tasks/doc/014` an hour earlier.
+
+**Merged:** none — this unit has no branches. It is the supervisor's own diff on the leg
+worktree, landed in its fold commit.
+
+**Blocked:** none.
+
+**Reviewer:** no findings. Tally after this unit: **30 ran, 27 no findings, 3 findings.** Spawned
+on my own uncommitted diff, second leg running to do that, and it earned its cost twice:
+
+- **It verified the reconciliation independently against `git show origin/main:embarch.md`**
+  rather than taking my reading — which is the check that matters here, because the failure mode
+  of a reconciliation is closing something still owed.
+- **It measured the `--all` claim instead of reading it**, in scratch copies, and produced the
+  18/57/33 table above. I had asked it to, precisely because I was about to write a caution into
+  a standing instruction on the strength of an inference I had not tested. It also found `-p`
+  refuses and that the `topology` reach is transitive — neither of which I knew.
+- **It found the hunk count is off by one and I corrected it**: `embarch-core-client` is **43**
+  hunks not 42, `embarch-api`'s row 190 not 189, suite total **1,289 not 1,288**. Reproduced at
+  the drop's own SHA, so not drift. **This is the third successive measurement of the same
+  quantity and the third different total — 1,245 → 1,288 → 1,289** — which is the argument for
+  §5 carrying the *method* and not only the number, and it now does.
+- **It told me not to tick box 2 as written**, because I deliberately did not do what it asked,
+  and *"a future reader diffing the task's Done-when against §5 sees a decision that ignored its
+  own acceptance criterion"* — reversals shape 1 waiting to happen. Right, and recorded here
+  rather than in the deleted task file.
+
+**Hardware debts:** none. Nothing here touches a board or a machine.
+
+**Budget:** DEGRADED at start and here, wave 2, no 429.
+
+**Least sure about:** that §5's rustfmt bullet is now ~2,000 characters in a list of five
+principles whose next longest is 193, and it grew again on my watch. `suite/006`'s entry already
+flagged this and said **"if a second suite-wide decision lands with nowhere to go, the answer is
+a new home, not a sixth bullet"** — and what has actually happened is that the *same* bullet
+absorbed a second round instead. There is still no `suite/decisions.md` and
+`embarch-dev-workflow.md` is reserved, so I had nowhere else to put it; but the honest reading is
+that §5 is now a decision record wearing a principle's clothes, and **the next thing that lands
+here should force the question rather than be absorbed too.**
+
 ## 2026-09-06 03:05 — api/020 the-bearer-sweep-is-a-hand-maintained-list
 
 **Leg 017's second unit.** A test whose own doc comment said *"this list is meant to stay
