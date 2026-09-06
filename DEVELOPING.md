@@ -67,11 +67,14 @@ Not all at once, and the differences have bitten before.
 
 Those last two rows are the ones to remember. Arming copies the heartbeat prompt
 into a cron job, so the live job keeps the wording it was created with however
-many times you edit the file. They drifted once already. `deploy.py` diffs that
-file and tells you when a re-arm is owed. **The watchdog's block is the same
-trap and `deploy.py` does not diff it** — a watchdog still running an older
-staleness threshold reports nothing unusual, so re-arm both windows whenever
-either block changes.
+many times you edit the file. They drifted once already.
+
+**`deploy.py` compares the blockquotes themselves, in both files, and tells you
+when a re-arm is genuinely owed.** It used to key on the filename, so editing a
+line of prose in `fleet.md` raised an alarm you had to overrule by hand — and it
+never looked at `fleet-watch.md` at all, where a watchdog left on an older
+staleness threshold reports nothing unusual. Prose is re-read from disk every
+tick and owes nothing; the block is what a live cron job froze.
 
 ## 3. Changing fleet.toml is two changes
 
