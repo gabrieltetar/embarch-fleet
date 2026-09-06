@@ -302,6 +302,13 @@ EmbArch against real hardware, not developing someone else's firmware. If a benc
 unit turns out to need a source change in a client repo, that is a finding for
 `inbox/`, not a change to make.
 
+**Flash what is already built; do not build client sources.** The grant is
+flash-and-study over an existing artifact. If the firmware a task needs is not
+already built, say so and leave the task `open` — a `west build` of a client
+workspace is the owner's, and the difference between running his artifact and
+producing a new one is exactly where "exercising EmbArch" turns into
+"developing his firmware".
+
 **Never infer a DUT fact.** What board is on the bench, what its console is, what
 has to happen before a step will work — a bench task carries these, with their
 source, or it is under-specified. If you need one it does not carry, **say so and
