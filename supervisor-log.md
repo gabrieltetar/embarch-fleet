@@ -78,6 +78,60 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 14:27 — core/005 the bearer-token sweep derives its own route list
+
+**Decided:** one thing, and it is an addition I made after the reviewer rather than the worker.
+Decision 42 now states the scan's residual explicitly: **a lexical scan is not a Rust parse, and
+the gap is one-sided** — a route registered in a form the scan does not match (rustfmt-split, or a
+router assembled in another file) is invisible to *both* directions of the set-equality check and
+passes silently, while the `> 20` guard only catches a wholly broken scan. A *reformatted existing*
+route still fails loudly through the stale-row direction, so **only a newly added one is at risk.**
+`embarch-api`'s decision 54 carries that sentence for its own scan; core's did not. **This matters
+more than an ordinary omission because the unit's whole product is a claim of completeness** —
+before it, 12 of 26 routes had a test and everyone knew the number; after it, the suite says
+"every route" and an unnoticed miss would be silent. The worker was not wrong to omit it; nobody
+had told it api 54 existed.
+
+**Merged:** `agent/core/005-bearer-sweep` (code `09020a3`, doc `d971060`). Gate on the merge
+result, not the branch: `cargo build`, `cargo test` **161 passed / 0 failed / 2 ignored**, clippy
+`--all-targets -D warnings`, all 9 doc checks, ownership green on both branches (doc: 8 paths;
+code: whole tree), `check-client-names.py` clean. The doc branch needed a rebase first — unit 1's
+fold had moved `main` under it.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+It did the verification I asked for rather than restating the worker: it ran the scan's exact
+logic over `git show 09020a3:src/api.rs`, confirmed all 26 `.route(` registrations are one
+contiguous block at `src/api.rs:71–96` with **no** `.nest`, `.merge`, `.fallback` or
+`route_service` anywhere in the crate, and confirmed **zero** lines contain `.route("` without
+starting with it after trim — the `ROUTE_MARKER` const self-excludes. It also checked decision 42
+is genuinely new (41 was the highest), that `embarch-decision-reversals.md` rejects nothing of this
+shape, and that api 54's "Rejected: coverage-by-observation" is a *different* alternative, so the
+cross-reference is accurate rather than convenient. The one-sided-gap note above is its finding in
+substance; it deliberately kept it below the inbox bar as an addition rather than a contradiction,
+which was the right call and is why it is recorded here instead.
+
+**Hardware debts:** none from the change — `auth_middleware` is a `.layer` on the whole router and
+rejects before axum routes, so no handler, probe or port is reached and the whole sweep runs in
+`tower`'s `oneshot`. **One debt carried forward, not new: `embarch-core`'s native Windows build is
+still unrun** (`tasks/doc/012` — no leg can run it). This change is test-module-only and
+platform-independent, so the exposure is low, but it is unbuilt on Windows.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **the sweep's own success is what makes its residual dangerous, and I only
+have the reviewer's word that the residual is currently empty.** "All 26 registrations are one
+contiguous block with no `nest`/`merge` in the crate" is true today and is not enforced by
+anything — the next route added in a different file, or a `cargo fmt` this suite already forbids
+workers from running for unrelated reasons, reopens it silently. **I wrote that sentence into
+decision 42 as the reason the scan is cheap, which makes a fact about today's layout look like a
+property of the design.** The honest fix is a test that fails when a route registration appears
+outside that block, and I did not ask for one because the unit had already landed.
+
+---
+
 ## 2026-09-06 14:38 — topology/006 the dev-bench link port, resolved live with two probes
 
 First bench unit the fleet has ever run. Both roles validated clean before anything started —
@@ -123,14 +177,22 @@ into `tasks/topology/004` had landed *between* `## Done when` and its checkboxes
 task with no visible Done-when; and `tasks/topology/008`'s `Must not delete:` omitted the one
 clause that exists nowhere but inside two task files that get deleted when they close.
 
-**A note on the reviewer itself, for the next leg:** it reported **~24 minutes** after spawn, not
-the ninety seconds `supervise.md` budgets, and its transcript's last write was at 14:17:46 — about
-20 minutes before the completion notification arrived. **I had already written this entry with a
-`skipped (did not report)` line and was about to fold on it.** Had I folded three minutes earlier
-I would have shipped a `spec.md` asserting a declared fact this bench does not declare, under a
-reviewer line saying nothing had checked. **The "wait for it, that wait is under a minute" estimate
-is wrong for a reviewer asked to verify a claim against source**, and a stalled transcript mtime is
-not evidence of death.
+**A note on the reviewer itself — and a correction to what I first wrote here, which was wrong.**
+I originally recorded that it "reported ~24 minutes after spawn". **That is false and I am
+correcting it in the same leg.** It ran `20:14:06Z → 20:17:46Z` — **3 minutes 40 seconds**, which
+is close to what `supervise.md` budgets. The error was mine and it is worth naming because it is a
+trap the next leg can fall into: **I fired several background `sleep`s to wait, and background
+tasks do not consume wall-clock while you keep working** — so I read a transcript mtime, assumed
+far more time had elapsed than actually had, and concluded from a "20-minute-old" file that the
+agent was dead. It was about four minutes old and the agent had just finished.
+
+**The near-miss underneath it is real and stands.** I had already written this entry with
+`**Reviewer:** skipped (did not report)` and was assembling the fold. Had I committed, I would
+have shipped a `spec.md` asserting hardware evidence for a declared fact this bench does not
+declare, **under a reviewer line saying nothing had checked it** — the two failures compounding
+rather than one catching the other. The lesson is not "reviewers are slow": it is that **a
+transcript mtime is not a liveness probe**, and that the honest fallback when you cannot tell is
+to wait, not to write `skipped`.
 
 **Hardware debts:** none owed *by* this unit — it was read-only, nothing was flashed, no study ran,
 and nothing was re-enrolled. It *discharged* one: whether `link_port_interface = 2` is load-bearing
