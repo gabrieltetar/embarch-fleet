@@ -78,6 +78,93 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-05 22:52 — umbrella/015 decision-37-corrects-itself-by-appending
+
+**Leg 013's second unit.**
+
+**Decided:** nothing suite-wide. Inside `umbrella` the worker made two calls I would not
+have made for it and both are better than the task's own framing.
+
+**It kept `no-cli` and recorded the reuse, rather than splitting a seventh code.** The
+task offered either. Its reason: both states are "there is no agent CLI here to consult"
+and both take the same action, so a new code would split a set nothing branches on. It
+then wrote the *general* rule into decision 37 rather than only the instance — **renaming
+a code breaks loudly, moving what a code means breaks silently, and nothing mechanical can
+see the second**, so a deliberate reuse gets written down in the decision that moved it.
+That is the durable half; the `no-cli` fix alone would have been the instance.
+
+**And it kept the "checks 5 and 22" clause by demoting it from a list to a test.** The
+task's `Do not delete` list named that clause, which is the kind of instruction a
+compactor obeys by copying. It instead re-expressed it as the *rule* the two checks were
+evidence for — more states than statuses earns a code — with both checks still named. A
+`Must not delete:` item honoured by understanding what it was for.
+
+**The ride-along compaction worked, and it was a mission split rather than a squeeze.**
+`decisions/doctor.md` **11,918 → 7,774 B (97% → 63%)**, by moving decisions 23 and 40
+verbatim into a new `embarch-umbrella/decisions/mcp.md` — the agent CLI's own config and a
+JSON-RPC handshake with a server spawned out of it are a different system from this
+machine's probes, benches and flash tools. Verbatim is what makes the in-flux objection
+not apply, which is the whole reason `DOC-COMPACTION.md` §2 prefers a split. **`016`'s
+`decisions/doctor.md` item is closed; its `spec.md` item was deliberately left alone**, per
+my dispatch, and `umbrella/007` is carrying that one.
+
+**Merged:** `agent/umbrella/015-decision-37-appends-instead-of-editing` (code `9d459b9`,
+doc `3f4078a`). **Code branch empty again** — all three items were text, and the seven
+codes decision 37 now lists were already what `judge_mcp` emits. Rebased once onto a moving
+`main`; the one conflict was the task file's own `State:` line, mine against the worker's.
+Gate on the merge result: 152 tests, clippy, all 9 doc checks (`check-decision-refs.py`
+among them, which is what proves a file move did not break a `decision N` reference),
+ownership both branches, client-names clean.
+
+**Blocked:** none.
+
+**Reviewer:** no findings. **It did the check I most wanted and could not have done
+cheaply myself**: it extracted decisions 23 and 40 out of `3f4078a^`'s `doctor.md` and
+diffed them byte-for-byte against the new `mcp.md`, which is the only way "moved verbatim"
+is a fact rather than a claim. Decision 23 is byte-identical *including* its amendment
+tombstone. Decision 40 differs by exactly the two changes the commit message declares —
+**plus one half-clause the commit did not mention**, a descriptive "readable yet
+unspawnable" phrase about a remote-transport entry. The reviewer checked that the
+conclusion and the reason both survive and that the clause is not on `016`'s
+`Must not delete:` list, and declined to file it. I agree with the call and I am recording
+the clause here because "compaction dropped something nobody listed" is exactly the
+failure that leaves no trace. It also verified the delegation is not laundering a stale
+roster: `with_code` call sites in `src/doctor.rs` cluster in checks 1, 5, 10 and 14, which
+is what `spec.md:93` says. Tally after this unit: **13 ran, 12 no findings, 1 finding.**
+
+One thing the reviewer noticed and put below its own reporting bar, which I think is
+right but worth carrying: **`decisions/reporting.md`'s header still says "entries moved
+verbatim" while this unit then rewrote decision 37 in it.** It describes the split event
+rather than the file's state. Same shape as the defect this unit fixed, one level up.
+
+**Two findings out of the unit, both about citations into the fleet's own rules:**
+
+1. **`DOC-COMPACTION.md` §7 does not exist**, and I cited it in the dispatch prose for
+   this unit. That doc has five sections; **§6–§9 moved to `DOC-COMPACTION-PASS.md` on
+   2026-09-04** and the human question now lives under its "The gate". `tasks/umbrella/016`
+   carried the same dangling reference and the worker corrected the task-file copy. I
+   corrected my own prose for `umbrella/007`'s dispatch. **The copy in the fleet's
+   worker-dispatch template is owner-reserved and stays wrong until he fixes it** — and it
+   is invisible to the worker, which cannot see where its instructions came from.
+2. **`scripts/check-doc-size.py` cites the moved sections three times** (lines 29, 119,
+   226) while line 99 correctly names the split — the enforcement script for the protocol
+   it misquotes. The worker dropped it in `inbox/` rather than reaching into `scripts/`,
+   which is right. **Drained to `tasks/doc/011`, `Owner: required`.**
+
+**Hardware debts:** none new. Decision 40 still carries `Unverified live` and that debt is
+`umbrella/011`'s, unchanged. Nothing in this unit ran against the owner's machine.
+
+**Budget:** DEGRADED, wave 2, no 429. Still one worker at a time — every remaining task
+is `umbrella`.
+
+**Least sure about:** that I let a compaction pass and a substantive rewrite of the same
+sub-project's decisions land in **one commit**. It is what `DOC-COMPACTION.md` §2's
+ride-along rule asks for, and the worker separated them cleanly — the split was verbatim,
+the rewrite was in a different file. But a reviewer had to do a byte-diff across a file
+boundary to establish that, and it found one unmentioned dropped clause while doing it.
+**A ride-along makes "what did this commit delete" a question no single diff answers**, and
+that cost is not written down anywhere in §2.
+
 ## 2026-09-05 22:35 — umbrella/013 decision-26-target-json-is-written
 
 **Leg 013's first unit.** Leg started at `7e21b08`, detached leg worktree, Slack live.
