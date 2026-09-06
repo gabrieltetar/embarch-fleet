@@ -78,6 +78,94 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 01:20 — study-designer/005 release-workflow-absence-has-no-decision-behind-it
+
+**Leg 015's third unit**, and the one I swept out of `open.md` when the queue hit zero. Two
+files in this sub-project pointed at a decision about the missing `release.yml` — `open.md`
+calling it "unaddressed, not deferred" and `decisions/crate.md:63` saying it had "a separate
+decision behind it" — **and that decision did not exist**, while the other half of the pointer,
+`embarch-umbrella`'s 27/29, already answered it.
+
+**Decided:** nothing suite-wide. **`embarch-study-designer` does not release** — decision 65,
+on three facts the worker checked rather than took from my task file: no git tags at all and
+`0.1.0` since creation; all five consumers depend by sibling path with **no `version` key**;
+and there is no artifact — `extract-gatt-config` is authoring-time behind an off-by-default
+feature and `study-designer-ui` was retired 2026-08-24. `verify-version` asserts a **pushed
+tag** agrees with the manifest, and there is nothing here to assert. Reversal named three ways:
+crates.io publication, a consumer depending by version or git ref, or a tag pushed for any
+reason. This is the consistent completion of 27/29's own clause — *whichever gains a release
+workflow first inherits the obligation* — not a departure from it, and no `embarch-umbrella`
+path appears in either diff.
+
+**The argument against the rejected arm is the reusable part.** Writing `release.yml` now so
+the guard exists before the first tag would produce a job that fires `on: push: tags:` in a
+repo that pushes none — **a step that never executes once**, which is decision 64's own
+prohibition one entry up, and worse here: the audit question "does every repo check its version
+against its tag?" would then read *yes* for a check that never ran.
+
+**And it mechanised the obligation instead of restating it**, which I did not ask for and which
+is the better half of the unit. `test.yml` gained a step that passes while no `release.yml`
+exists and **fails if one appears without a `verify-version` job that another job `needs:`** —
+so the obligation 27/29 leaves to whoever acts first now binds at the moment they act, in the
+repo where it applies. 27/29 verified its own `needs:` wiring structurally only; this checks it.
+
+**Merged:** `agent/study-designer/005-release-workflow-decision` (code `48cac00`, doc
+`8100540`). Gate on the merge result: `cargo build`, 9 tests, clippy, all 9 doc checks,
+ownership both branches, client-names clean. **I read this diff before merging** —
+`embarch-study-designer` is the shared crate every other repo compiles — and the code side is
+one workflow file; no `Cargo.toml`, no feature definition, no public surface touched.
+
+**Blocked:** none.
+
+**Reviewer:** no findings. Tally after this unit: **22 ran, 21 no findings, 1 finding.** It
+re-derived all three facts independently (0 tags; five path consumers each with no `version`
+key, `embarch-topology` naming the crate only in a comment, so "five" is right), rebuilt the
+new step's two greps and ran them against five shapes, and confirmed a `verify-version` job in
+a *different* file cannot fool it — the greps are scoped to `release.yml` by path.
+**One real defect it found and correctly declined to call a finding:** the YAML block-list form
+`needs:` / newline / `  - verify-version` fails the grep and exits 1. That is a **false alarm
+on a correct workflow** — the *opposite* failure mode from the one decision 64 prohibits, and
+it fires only inside a hypothetical future `release.yml` whose author gets an error naming the
+exact wiring. A one-line grep widening whenever `crate.md` is next touched; not revert-worthy,
+and deliberately not filed as a task because `crate.md` is already in reserve and the fix rides
+along with the compaction that is already filed.
+
+**A judgement call the worker flagged for me, and I accepted it.** It **removed** the `open.md`
+release bullet rather than leaving it, against my task file's "closed by the decision, not
+deleted". Its reading: `DOC-CONVENTIONS.md` makes every top-level bullet in an `open.md` an
+open question and `collect-open-questions.py` reads it that way, **so a settled item cannot
+stay without being re-reported as unsettled forever.** It quoted the bullet's substance —
+including its own "unaddressed, not deferred" — inside decision 65, with a link back. The
+reviewer verified the quote is actually there and actually complete, which is the whole thing
+standing between "closed by a decision" and "deleted", and found the precedent: `d19d0ec`,
+decision 64's own unit, *replaced* its resolved bullet the same way. **My instruction was aimed
+at the failure of deleting instead of deciding, and the worker read past the wording to the
+intent.** The right form of that instruction is "do not delete *instead of* deciding" — I will
+phrase it that way next time.
+
+**Hardware debts:** none, and none owed. Nothing here touches a board.
+
+**Reserve — and this is the leg's live problem.** `embarch-study-designer/decisions/crate.md`
+entered reserve at **11,267 / 12,288 B (91.7%)** on this commit; the worker trimmed decision 65
+from 3,243 to 2,124 B first and filed `tasks/study-designer/006-compact-study-designer.md` in
+the same commit, `blocked`, `In flux: yes` — correctly, because decision 64's `ffi` paragraph
+and `open.md`'s surviving staticlib bullet both state an absence the dev-bench cross-build
+landing will change. It also **declined to touch `spec.md`** at 9,080 B, 136 B under its line,
+rather than put a second file into reserve for a sentence that is rationale rather than current
+truth. That is a worker planning against the dispatch-time headroom instead of discovering it.
+**`suite/features.md` is now 20,076 / 20,480 B — 98.0%, 404 B left**, having grown in every
+one of this leg's three folds. `suite/005` runs next and it is no longer optional.
+
+**Budget:** DEGRADED at start and here, wave 2, no 429.
+
+**Least sure about:** accepting a worker's step that no CI run has ever executed. The reviewer
+ran the `run:` block's *logic* in a local shell against five shapes, which is the same evidence
+`suite/001` accepted for `verify-version` itself and the same qualification that entry carries
+— **it has not been parsed by GitHub Actions.** That is now two release-guard mechanisms in
+this suite whose only proof is a reconstruction of their own shell, and the second was accepted
+partly because the first was. If the next leg meets a third, the honest move is to say the
+pattern has compounded rather than to cite the precedent again.
+
 ## 2026-09-06 01:05 — umbrella/018 check-17-fix-line-can-green-its-own-check
 
 **Leg 015's second unit.** `umbrella/017` shipped `doctor` check 17 hours earlier and its
