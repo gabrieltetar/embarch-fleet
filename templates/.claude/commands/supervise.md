@@ -653,6 +653,15 @@ it lands without its log entry** (§9, §11). You are the only actor touching
 `main`, so this needs no lock — but it does need to be one commit per unit, never
 interleaved with another unit's fold.
 
+**Do not write the entry's date and time — `fold-commit.py` stamps them.** Put
+anything parseable in the heading (`## <today> <HH:MM> — <scope>/<NNN> <slug>`)
+and it will be corrected to the wall clock at the commit, with a line printed if
+you were more than five minutes out. **Never work the time out from how long
+things felt.** Nothing used to write this field and nothing checked it, and 41 of
+63 entries ran ahead of their own fold, the worst by 63 minutes, drifting further
+with every unit of a leg. `fold-day.py` groups a day by that date, so an entry
+written at 23:50 and stamped 00:15 folds into the wrong day silently.
+
 **The entry is part of the fold commit, not a step after it.** Writing it
 afterwards leaves a window in which a unit is landed and unlogged, and `api/003`
 landed in exactly that window on 2026-09-03: its fold commit did every other

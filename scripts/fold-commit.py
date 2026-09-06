@@ -43,6 +43,7 @@ Exit status: 0 committed / coherent, 1 refused, 2 misconfigured.
 from __future__ import annotations
 
 import argparse
+import datetime
 import re
 import subprocess
 import sys
@@ -206,6 +207,49 @@ def newest_unit_entry() -> tuple[str, str] | None:
             return m.group(1), sec
     return None
 
+
+
+def stamp_entry_time(unit: str, now: datetime.datetime, apply: bool) -> str | None:
+    """Set the newest entry's heading to the wall clock. Returns a note, or None.
+
+    Nothing used to write this field and nothing checked it, so it was a guess.
+    Measured 2026-09-06 over 63 entries: 41 were more than five minutes ahead of
+    the fold that wrote them, the worst by 63. The error accumulates
+    monotonically within a leg and resets at the next one -- the signature of
+    reading a clock once and estimating from there.
+
+    It is not cosmetic. `fold-day.py` groups a day by THIS date, so an entry
+    written at 23:50 and stamped 00:15 folds into the wrong day and nothing
+    says so; and protocol.md §11 makes this log the only review surface under a
+    full delegate, where a heading an hour out is one that correlates with
+    nothing -- not Slack, not the tick file, not `git log`.
+
+    Matched against `unit` rather than "the first timed heading", because a leg
+    entry (`## <date> <time> -- leg 019: ...`) can sit above the newest unit
+    entry and stamping that one would move a heading this fold does not own.
+    The time is optional in the pattern so a heading that carries none is
+    repaired rather than skipped.
+    """
+    text = LOG.read_text()
+    m = re.search(r"^## (\d{4}-\d{2}-\d{2})(?: (\d{2}:\d{2}))? — "
+                  + re.escape(unit) + r"\b", text, re.M)
+    if not m:
+        return None
+    stamp = now.strftime("%Y-%m-%d %H:%M")
+    if m.group(2):
+        was = f"{m.group(1)} {m.group(2)}"
+        drift = (datetime.datetime.strptime(was, "%Y-%m-%d %H:%M")
+                 - now.replace(second=0, microsecond=0)).total_seconds() / 60
+        note = (f"stamped {unit} {stamp} -- the entry said {was}, "
+                f"{abs(drift):.0f} min {'ahead' if drift > 0 else 'behind'}")
+        # Under five minutes and on the right day is the clock being read
+        # properly; saying so every fold would train the reader to skip it.
+        quiet = abs(drift) <= 5
+    else:
+        was, note, quiet = None, f"stamped {unit} {stamp} -- the entry carried no time", False
+    if apply and was != stamp:
+        LOG.write_text(text[:m.start()] + f"## {stamp} — {unit}" + text[m.end():])
+    return None if quiet else note
 
 # A SHA inside backticks, and nothing else. `defaced` and `effaced` are hex
 # words; requiring a digit keeps them out, the same narrowing fold-day.py makes
@@ -447,6 +491,12 @@ def main() -> int:
               "either already committed or was never written. Check before retrying.",
               file=sys.stderr)
         return 1
+
+    # After the guard above, never before it: stamping an unmodified log would
+    # manufacture the very uncommitted change that guard exists to detect.
+    note = stamp_entry_time(args.unit, datetime.datetime.now(), apply=not args.dry_run)
+    if note:
+        print(note)
 
     # Stage-ability is settled BEFORE the log is committed. `git add` refuses a
     # path that is in neither the worktree nor the index, and a `git rm`'d task
