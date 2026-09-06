@@ -62,6 +62,25 @@ is the only evidence that will settle it.
 **Least sure about:** one sentence. Not optional.
 ```
 
+**The heading's date and time are the wall clock at the fold, and
+`fold-commit.py` writes them.** Do not type them and do not work them out — it
+stamps the newest entry from the machine clock just before it commits, and says
+so when what you wrote was more than five minutes out. Nothing used to do this
+and nothing checked it, so the field was a guess: measured 2026-09-06 across all
+63 entries, **41 were more than five minutes ahead of the fold that wrote them,
+the worst by 63 minutes**, and the error grows monotonically within a leg and
+resets at the next one — the signature of reading a clock once and estimating
+from there. It is not cosmetic. `fold-day.py` groups a day by *this* date, so an
+entry written at 23:50 and stamped 00:15 folds into the wrong day and nothing
+says so; and under a full delegate this log is the only review surface
+([protocol.md](protocol.md) §11), where a heading an hour out correlates with
+nothing — not Slack, not `.fleet/tick`, not `git log`.
+
+**Entries before 2026-09-06 17:00 carry the old estimated times**, and they are
+not corrected: they are true in every other respect, and rewriting this file
+wholesale is exactly what `fold-day.py`'s refusals exist to prevent. Read them as
+±1 hour, and use the fold commit's own timestamp when the minute matters.
+
 Every one of those seven markers is written literally, as `**Field:**` at the
 start of a line, and `fold-commit.py` refuses a fold whose entry drops one or
 bends one. That is newer than most of this file: `umbrella/010` below opens its
