@@ -67,6 +67,92 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-05 18:47 — api/015 retired-targets-error-misadvises-zephyr
+
+**Decided:** nothing suite-wide. This is the fleet's first unit that exists **because a
+reviewer found something** — `api/010`'s reviewer, three legs' worth of `**Reviewer:**`
+lines after the tally started, reading a landed diff against decision 12. It is worth
+saying plainly what that means: **the review pass has now paid for itself once**, against
+a defect the gate was structurally blind to and no other actor in this design reads for.
+
+**The worker chose the shape I would not have.** The task offered two: branch the advice on
+`project.discovery` in place, or move the whole `retired_targets` check inside the existing
+`match`. I would have moved it inside the match — it looks tidier. **The worker kept the
+check one level above and made only the remediation sentence a `match`, and its third
+reason is the one that decided it:** a config carrying retired rows *and* a per-kind field
+error must hear about the retired menu **first**; inside the match, the `zephyr-west` arm's
+existing field checks come first, and the caller is told to remove `build_command` before
+being told the menu is gone. Its other two: the refusal is **one** invariant of decision 53
+and duplicating the `is_empty()` condition across two arms is exactly the mechanism by
+which two texts drift apart again — the defect being fixed — and the `static` arm would
+need the check inserted at its top anyway, so nothing is saved.
+
+**What a `zephyr-west` caller now reads** ends: *"Do not move them into
+build_command/chip/artifact_path — a `discovery = "zephyr-west"` project is refused those
+three fields outright, because caching them is the staleness this discovery kind exists to
+eliminate."* The `static` message is unchanged in substance.
+
+**The test is the real deliverable, and it is better than what I asked for.** I told the
+worker the guard must assert what the caller is *advised*, not merely that it is refused.
+It went further in two ways. A **negative** assertion —
+`!contains("Declare one [[projects]] entry per target")`, the static remedy's phrase, which
+the *static* test pins positively — so **the two tests cannot both pass against a shared
+tail**, which is the failure mode restated as a mechanism. And a **conditional** stronger
+than any phrase check: if the message names `build_command` at all, it must be inside
+`Do not move them into build_command/chip/artifact_path`, so a future rewrite cannot name
+a decision-12-forbidden field as an instruction. That second one generalises past this
+defect.
+
+**Merged:** `agent/api/015-retired-targets-error-misadvises-zephyr` — code `9c8d646`, doc
+`4be6baf`. Gate re-run by me on the merge result: `cargo build`, `cargo test` **145 passed
+/ 0 failed** across 7 binaries, `clippy --all-targets -D warnings` green, **8** doc checks
+green, ownership green on both branches (`all 4 changed path(s) owned`). No native Windows
+build — `embarch-api`. I read the diff before merging because it changes the text both
+front-ends surface, §10's judgement call.
+
+**Blocked:** none.
+
+**Reviewer:** skipped (leg ending at its unit cap — `umbrella/010` is the last unit and a
+reviewer spawned here would outlive the leg meant to read its finding). I read the diff
+myself, which is not a substitute.
+
+**I wrote the reversals row, and I placed it differently from where the worker expected.**
+It correctly declined to write one — `embarch-decision-reversals.md` is `never` for a
+worker under §3 — and proposed a numbered row for shape 8. **I put it in the
+*review-driven* section instead, and the placement is the judgement:** that page's own
+standing rule is that every numbered row "was caught by a real build, install, capture, or
+by reading a real repo's actual files — **never by inspection alone**", and a reviewer
+reading a diff is inspection. The review-driven section exists precisely so these are not
+mistaken for rows a build forced. The bullet keeps the worker's sharpest observation — that
+the *test* shape is the transferable lesson, not the code shape: a refusal test asserting
+only that it refuses gates half the surface, so decision 51's "the surface text is what a
+caller reads" had no mechanical form until the test read the text too. **A secondary reason
+for the placement: row 109 is the last number and the range files stop at
+`rows-93-109.md`**, so a row 110 needs either a range-file rename or a new file, and that
+is a structural call about a reserved-adjacent doc I would rather leave visible than make
+quietly at 18:47 unattended.
+
+**Reserve, and a worker that measured twice.** Its first pass put
+`embarch-api/interfaces/config.md` at 11,078 B (90.2%) — **back into reserve one unit after
+`api/013` paid it out**. It noticed, shortened the `[[projects.targets]]` row instead of
+appending to it, and committed at **11,040/12,288 B (89.8%)**, still out, no new compaction
+debt filed. `spec.md` (136 B left) untouched, correctly — its sentence about the menu being
+"retired, refused at load" is still true. **Reserve at the end of this unit: two files,
+both `api`, both filed against `tasks/api/012`.**
+
+**Hardware debts:** none. Host-side, fully covered by unit tests.
+
+**Budget:** DEGRADED, wave 2, no 429.
+
+**Least sure about:** the reversals placement. The review-driven section is lower-signal by
+its own header, and this defect is *not* lower-signal — it is a shipped error message
+telling a user to build the exact thing the suite retired, and it would have reached a real
+caller. If the owner reads that section as "things nobody proved matter", I have filed a
+real defect where it will be skimmed. The alternative was breaking a range-file boundary
+unattended, and I chose the reversible mistake over the structural one.
+
+---
+
 ## 2026-09-05 18:05 — api/013 target-json-not-written
 
 **Decided:** nothing suite-wide. Inside `api` the worker **built decision 19's
