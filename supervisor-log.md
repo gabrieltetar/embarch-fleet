@@ -78,6 +78,128 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-05 23:05 — umbrella/011 check-10-parses-a-format-that-does-not-exist
+
+**Leg 012's last unit.**
+
+**Decided:** nothing suite-wide. Inside `umbrella` the worker chose **read `~/.claude.json`
+and keep the spawn** over **trust `Status: ✔ Connected`**, and its reason retires the second
+option rather than merely preferring the first: reading `Status:` *still means running
+`claude`*, and `claude` is never on `PATH` from a terminal — so that route reaches **no**
+verdict at all on the machine the check was written for. It would also have handed the
+answer back to the CLI's own health check, which is the thing decision 23 built a spawn to
+reproduce independently. Reading a config file needs no CLI. **New decision 40**, with
+**decision 23 amended in place** — I checked the amendment myself before merging: the entry
+keeps its original claim, and says the spawn, the 10 s budget and the three distinct codes
+all stand while only *where it got the command line* was replaced. That is a tombstone, not
+a silent reword.
+
+**Identity is the command, not the config key** — key `embarch`, else any entry whose
+`command` file stem is `embarch-api` (so `.exe` counts), else key `embarch-api`. That is
+what stops `doctor` printing `not registered` beside a server the same session is using,
+which was finding 2 of the three. Tests build their configs with `serde_json::json!` and
+touch no `$HOME`, so they pass on a machine with no `~/.claude.json` at all.
+
+**`Environment:` half-closed, and `open.md` says exactly which half.** Reading the config
+structurally handed over the registered `env` map that the CLI's human output never showed,
+so that half is applied on the spawn. The half that remains: the server still starts in
+`doctor`'s environment rather than the CLI's.
+
+**Merged:** `agent/umbrella/011-check-10-parses-a-format-that-does-not-exist` (code
+`9d459b9`, doc `0e75931`). Rebased twice onto a moving `main` — `api/014`'s fold landed
+between the branch being pushed and being merged. Gate on the merge result: 152 tests,
+clippy, all 9 doc checks, ownership both branches, client-names clean.
+
+**Blocked:** none.
+
+**Reviewer:** no findings. It confirmed decision 23's amendment keeps both halves, that
+`find_registration` matches the documented lookup order and is pure over a
+`serde_json::Value`, that all six codes decision 37 names are still emitted with the
+remote-transport branch reusing `unreadable-entry`, and that `open.md` does not overclaim.
+**It said what it left unverified** — no build, no test run, several decision files grepped
+rather than read — which is the first reviewer in this tally to do that unprompted, and it
+is worth more than the verdict.
+
+**Two of its asides were worth more than its verdict, and both are now filed.**
+
+**1. `judge_mcp` emits a seventh code, `no-handshake`, that decision 37's list omits.**
+Pre-existing — it shipped with `4e48c77`, the commit that first built check 10 — so decision
+37 has described check 10's code set incompletely since day one. Added to
+`tasks/umbrella/015`, which already owns that entry.
+
+**2. A reviewer reads `embarch-doc`'s working tree at the leg's *start*, not at the unit it
+is reviewing** — and this one is mine to have caught earlier. A leg works in a detached
+worktree and never advances the owner's checkout; a reviewer is spawned into the ordinary
+working directory. Its `git show <sha>` reads are correct, so **its verdict is sound** — but
+everything it reads *around* the diff is as many units stale as the leg is old. This
+reviewer reported `decisions/reporting.md` as not existing and decision 37 as still living
+in `doctor.md`, labelled **"pre-existing"** — and that file was created by `umbrella/012`,
+two units earlier in this same leg. **The failure mode is not a wrong verdict, it is a
+confidently wrong `pre-existing` label**, which is the phrase that routes a finding to "not
+this unit's problem". A reviewer reading stale context will systematically under-report
+contradictions the leg itself introduced, which is exactly the class it exists to catch.
+Filed as **`tasks/doc/010`**, `Owner: required` for the durable fix.
+**The workaround costs a leg nothing and needs no reserved file: pass the reviewer the
+leg's worktree path and tell it to read files there.** I did not, for any of this leg's
+four reviewers. The next leg should.
+
+**A third finding of my own, from reading the merge result: `no-cli` survived with a changed
+meaning.** It used to mean *the `claude` binary is not on `PATH`*; after decision 40 the
+check never looks for that binary and the code is emitted for *"no agent-CLI config to
+read"* — a different condition wearing the same name, and decision 40 does not say it was
+reused deliberately. Nothing is wrong today, because check 10 is `code`'s only real
+consumer. But decision 37's entire argument for the field is that a consumer may match on a
+code *because* it is stable while `detail` is free to be rephrased, and **a code whose
+referent moves under a stable name is the one way that promise breaks silently** — invisible
+to every check in the gate. Added to `tasks/umbrella/015` as a text fix, not a revert.
+
+**Hardware debts:** one, riding on the live `embarch doctor` already owed. **Nothing in this
+unit ran against the owner's machine** — no `claude mcp get`, no MCP spawn, no live Core, by
+my instruction. The task file carries the prediction written before the run: from a terminal
+in a repo carrying the registration, `[10] PASS … registered as \`embarch-api\` (local
+scope), and it answered initialize` with `code == "handshake-ok"`, **and `unreadable-entry`
+should now be unreachable on that machine** — if it appears it means a genuinely malformed
+or remote entry, not that the parse is wrong again. That last clause is what makes the run
+diagnostic rather than merely confirmatory.
+
+**Reserve, and this is the state the next `umbrella` unit walks into.**
+`decisions/doctor.md` is **11,918 / 12,288 B — 370 B left**, and `spec.md` is back over its
+line at **9,286 / 10,240 B (90.7%)**. Both are filed against a **new
+`tasks/umbrella/016`, which is `blocked` on `In flux: yes`.** The worker trimmed decision 40
+twice and shortened check 10's `spec.md` row and it still did not fit — its position is that
+the entry cannot say why the route was chosen in under ~1,600 B, and having read it I agree.
+`open.md` paid for itself as predicted (4,596 → 4,289 B). **I accepted a filed task where my
+dispatch had asked for a ride-along compaction**, which is a deviation and I am recording it
+as one. **`DOC-COMPACTION.md` §2 says a blocked compaction task parks the pass, not the
+reserve, so the next `umbrella` worker owes that compaction inside its own commit** — and
+with 370 B of headroom it will meet the cap before it meets the rule. I corrected `016`'s
+`In flux:` line, which listed `tasks/umbrella/012` as open after it had landed as this
+leg's second unit.
+
+**Budget:** DEGRADED at the start and the end of the leg, wave 2 throughout, **no 429
+anywhere in the leg**.
+
+**Reviewer tally after this leg: 11 ran, 10 no findings, 1 finding.** All four of this leg's
+units got one and **none was skipped** — including the last, where §10 permits a skip on the
+grounds that the reviewer would outlive the leg. I waited instead, because each took two to
+three minutes against workers that took ten to fourteen, and because the tally is the only
+evidence that will settle whether this pass earns its cost. **On this leg it earned it
+twice**, and neither time through its verdict: both were asides in reviews that returned
+"no findings".
+
+**Least sure about:** the queue I am leaving. **Three dispatchable tasks and all three are
+`umbrella`** — `007`, `013`, `015` — so the next leg gets a wave of one however healthy the
+budget is, because §6 allows one task per sub-project in flight. `api` has nothing
+dispatchable at all. Add that `decisions/doctor.md` has 370 B and every one of those three
+edits it, and the next leg's most likely first act is meeting a byte cap mid-flight — the
+exact failure the reserve mechanism exists to replace with a debt. **I think the right first
+move next leg is to unpark `016` by narrowing it**, the way the owner unparked `api/012` on
+2026-09-05: `decisions/doctor.md` alone is not in flux from `013`, which only touches
+`decisions/projects.md`. I did not do it myself because narrowing a `blocked` compaction task
+is a judgement about what is settled, and I had no unit left to test it with.
+
+---
+
 ## 2026-09-05 22:35 — api/014 extra-args-hash-not-stable
 
 **Decided:** nothing suite-wide. Inside `api`, the worker chose **FNV-1a spelled out in
