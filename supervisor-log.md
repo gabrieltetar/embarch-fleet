@@ -78,6 +78,85 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 03:30 — api/023 split-shape-md-by-mission
+
+**Leg 017's fourth and last unit**, filed by me during the leg from `api/020`'s reviewer, and
+the only reason `embarch-api` is dispatchable again.
+
+**Decided:** **a mission split is not a compaction pass, and the distinction is what let this run
+at all.** `decisions/shape.md` was **12,281 / 12,288 B — 7 bytes under a hard cap**, filed as
+`tasks/api/021`, `blocked` on `In flux: yes`, and §6 forbids me to dispatch a compaction task in
+that state. I did not. **`DOC-COMPACTION.md` §2 says outright that a split "moves entries
+verbatim, so the in-flux objection does not apply to it at all… Prefer it whenever the file
+holds more than one mission"** — and `decisions.md`'s own index row for `shape.md` described two
+missions in one sentence. So I filed `023` as a split, left `021` untouched and blocked, and told
+the worker in writing that editing a moved entry means it has wandered into the parked pass.
+`umbrella/020` and `umbrella/022` set the precedent within 24 hours; this is the first time it
+was chosen deliberately at dispatch rather than by a worker mid-unit.
+
+**Merged:** `agent/api/023-split-shape-by-mission` (doc `7b9d1e9`, rebased onto `57ab4dc`;
+**no code branch — nothing in `embarch-api`'s source changes**). Gate on the merge result: all 9
+doc checks, ownership 8 paths, client-names clean against the code repo. No `cargo`: the code
+tree is byte-identical, which is the argument-not-a-run shape this log has now flagged seven
+times.
+
+**Blocked:** none.
+
+**Reviewer:** no findings. Tally after this unit: **31 ran, 28 no findings, 3 findings.** On a
+split — the class whose entire risk is a deletion that reads fine — it did the thing that
+actually settles it: **byte accounting.** `12,281 = 297 preamble + 7,122 kept + 4,862 moved`, and
+`7,654 + 5,434 = 533 + 572 preambles + 7,121 + 4,862`, the `+807` being exactly two preambles
+replacing one and the `−1` being decision 53's trailing blank line. **Nothing sat between the
+entries, so nothing could be lost there.** It re-derived all three SHA-256 prefixes
+independently, confirmed the entries that stayed are hash-identical, and grepped all eight
+sibling repos for bare-prose references (none). It also agreed the two `history/api.md` lines
+were right to leave, on a reason the worker did not give: `DOC-CONVENTIONS.md` says a decision
+number addresses a sub-project and not a file, so line 91 needs nothing at all.
+
+**Hardware debts:** none.
+
+**`tasks/api/021` closed and deleted; `tasks/api/022` unparked to `open`.** `check-doc-size.py`
+printed `PAID … close its item`, and I nearly took that at face value — **but `021`'s body was a
+*sub-project-wide* warning while its `Compacts:` line named only `shape.md`, so the script's
+verdict was about the field and not about the task.** The five other files have not moved:
+`zephyr.md` 11,056 against a line of 11,059, `interfaces/config.md` 11,008, `build.md` 10,934,
+`surface.md` 10,928, `core-link.md` 10,879. **A debt notice exists only once a file crosses the
+line, so this hazard is invisible to the script by construction** — which is why I carried it
+into `embarch-api/open.md` as a bullet rather than letting it die with the task file. `022` now
+tells its future worker that its decision belongs in `core-link.md` and that it has 180 bytes.
+
+**`021`'s `Must not delete:` list went with it and is worth naming here**, because the next
+compactor of `tests.md` will not find it otherwise: decision 46's *"six mutations, one per
+criterion, each reverted"* and decision 54's mutation sentence (both are the evidence a test was
+watched to go red, and read as boilerplate once shortened); decision 54's two names
+`post_study` and `open_study_events` (without them the entry reads as speculative tidying rather
+than as drift that had already happened); decision 54's **Not covered** paragraph and its two
+lexical escapes; decision 46's reason the client tests live in `embarch-api/tests/`; and
+decision 53's "why the gate did not catch it" paragraph.
+
+**I pushed a red `main` and did not notice — my error, found by the worker.** `check-links.py`
+extracts every `[…](…)` from **raw file text with no inline-code or fenced-block stripping**
+(verified from source by the reviewer: the only backtick handling is in `slug()`). My `023` task
+file demonstrated the dangerous reference shape by writing a literal markdown link inside a code
+span, which resolved to `tasks/api/decisions/shape.md` and never existed. **I committed and
+pushed that claim without re-running the gate** — every other claim this leg was pushed the same
+way, and this is the one that was red. The worker proved it pre-existing by stashing, reworded
+my file, and dropped `inbox/doc-check-links-ignores-code-spans.md`; `scripts/` is nobody's here
+but the owner's. **The lesson is mechanical and cheap: run `check-docs.py` before pushing a claim
+commit, not only before a fold.** A worker branched off a red base spends its first minutes
+proving the red is not its own — this one did exactly that, twice.
+
+**Budget:** DEGRADED at start and end, wave 2 throughout, **no 429 anywhere in the leg**.
+
+**Least sure about:** filing this task myself, mid-leg, from my own unit's reviewer, and
+dispatching it in the same leg. Everything about it checks out — §2 prescribes the split, the
+reviewer accounted for every byte, and `embarch-api` went from walled to dispatchable — but
+**the fleet is now generating, filing, dispatching and reviewing its own backlog inside one
+twenty-minute window with no outside input at any step.** `inbox/README.md` names that risk
+exactly ("a queue that grows only from what the fleet noticed while working is a queue that can
+drift away from what the owner actually wants done"), and this leg is the purest instance of it
+so far: **three of its four units were filed by the fleet, and two of those by this leg.**
+
 ## 2026-09-06 03:20 — suite/007 rustfmt-cost-omits-a-path-dep-crate
 
 **Leg 017's third unit and mine under §8.** Announced at `ts 1788682200.661269` (02:10 MDT),
