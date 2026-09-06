@@ -78,6 +78,75 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 16:55 — core/011 open.md out of reserve, by deleting what spec.md already says
+
+**Decided:** one call, and the worker asked for it explicitly rather than making it quietly.
+`DOC-COMPACTION-PASS.md` says an open question may disappear only if you can name it as
+*answered*. **Neither deleted bullet is answered** — the token still has no TLS and
+`FlashedThisRun` is still unreachable from Core — and the worker removed them as
+`DOC-COMPACTION.md` §3 **duplication** instead, offering to restore the token bullet and take the
+bytes elsewhere if I read the rule strictly. **I did not, and the reason is in the bullet's own
+text: it ended "Source of truth: `embarch-token.md` §8".** A bullet that names its own source of
+truth somewhere else is a pointer, not the question. The other cited decision 31 in the same way.
+
+**Merged:** `agent/core/011-compact-core` (code **no commit — the branch is empty and this was
+doc-only**, doc `ae03278`). Gate on the merge result: `cargo build`, `cargo test` **161 passed /
+0 failed / 2 ignored**, clippy `--all-targets -D warnings`, all 9 doc checks, ownership green
+(doc: 3 paths, base `5b739e90f7d3`; code: nothing changed), client-names clean. **No native
+Windows build was run and none is owed** — `embarch-core`'s source is byte-identical at this SHA.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**It made my accepted judgement call stronger than the argument I accepted it on.** I let the
+token bullet go because its own text named `embarch-token.md` as its source of truth. The
+reviewer found something better: **`embarch-token.md` §5 is a "Known gaps and open questions"
+heading, which `collect-open-questions.py` matches**, and both "No TLS in transit" and "No
+per-caller identity" print under it at this SHA. So the question did not leave the suite's
+open-questions index at all — it left `embarch-core`'s duplicate of it. That is a different fact
+from the one I reasoned with. It also byte-compared the four untouched sections rather than taking
+the worker's word, and confirmed decision 31 carries `FlashedThisRun`'s reason.
+
+**And it named the rule tension precisely, which I had felt and not located.**
+`DOC-COMPACTION-PASS.md`'s gate says a question may disappear only if you can name it as
+*answered*; its own procedure, two paragraphs earlier, says the cheapest bytes are a claim held in
+two of the four files. **Both deletions are literally that shape, so the doc sanctions the move in
+one clause and forbids it in another.** That is an owner-level question about a reserved doc, not
+something this unit introduced and not mine to fix — the reviewer's suggested wording is one
+clause in the gate. **Recording it here is the whole of what I may do about it.**
+
+**One inherited error the unit silently fixed:** the deleted bullet cited `embarch-token.md` **§8**,
+and that doc has five sections. Deleting the bullet **removed the suite's only dangling `§8`
+citation**; it now survives in this unit's commit prose and its task file, which is a strictly
+better place for it than a doc.
+
+**`open.md` 4,885 → 4,488 B**, 120 B below the reserve line, **entirely inside `Structural
+limits`.** `Never exercised`, `Unverified diagnoses` and `Moved elsewhere` are byte-for-byte
+unchanged — which matters more than the byte count, because those three sections hold all three of
+this file's **live hardware measurements** ("no real port has ever been resolved or read", the
+Espressif relation verified only by construction, the Windows registry path never executed on real
+hardware) and three of the five `Must not delete:` items. **The worker's compaction never entered
+the part of the file where paraphrase would have been dangerous**, and it said so as its first
+line rather than leaving me to derive it.
+
+**One thing it flagged that the next core unit needs:** `core/008` and `core/009` are open against
+this same file and will edit bullets in it. They will conflict textually with the shortened
+route-sweep and SSE bullets. That is a rebase, not a reason to hold them.
+
+**Hardware debts:** none, and none owed.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **that "already stated elsewhere" is now the ground for three of the four
+bullets this leg deleted across two sub-projects, and nothing measures whether the elsewhere is
+still true.** `check-duplication.py` finds the overlap; nothing re-checks it afterwards. If
+`spec.md` §2's auth invariant is ever rewritten, the sentence that used to be in two places is now
+in one and no check knows it was ever load-bearing. **The corpus gets shorter by making single
+points of failure, and the mechanism that creates them cannot see them.**
+
+---
+
 ## 2026-09-06 16:45 — topology/008 two of open.md's nine bullets were decisions, and two were duplicates
 
 **Decided:** one thing, and it is the worker's judgement call that I accepted. Two `Must not
