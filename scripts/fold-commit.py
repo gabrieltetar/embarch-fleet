@@ -13,8 +13,8 @@ after the log commit exists -- so the orderings a kill can leave behind are:
 
   nothing            no unit landed, nothing to recover
   log only           an entry describing a fold that did not happen -- loud, and
-                     `--check` names it, because the entry's SHAs resolve to
-                     nothing in the doc repo
+                     `--check` names it, because the entry's merge SHAs resolve
+                     in none of the suite's repos
   both               the intended state
 
 The one ordering that must never occur is "fold without entry", which is the
@@ -54,6 +54,7 @@ ALLOWED = (
     "embarch-",       # the worker's own sub-project docs
     "changelog.d/",   # its history fragment, and any it folded
     "status.d/",      # fragments it consumed (as deletions)
+    "features.d/",    # its row in the assembled feature inventory
     "tasks/",         # its task file, closed
     "history/",       # build_changelog.py output
     "suite/",         # a suite-level doc a status.d fragment targeted
@@ -161,51 +162,111 @@ def newest_unit_entry() -> tuple[str, str] | None:
     return None
 
 
+# A SHA inside backticks, and nothing else. `defaced` and `effaced` are hex
+# words; requiring a digit keeps them out, the same narrowing fold-day.py makes
+# for the same reason.
+SHA_TICKED = re.compile(r"`(?=[0-9a-f]{7,40}`)([0-9a-f]*[0-9][0-9a-f]*)`")
+# A `suite` unit is the supervisor's own hands on `main`: no worker branch, so
+# no merge SHA to name. That is an entry shape, not an omission.
+NO_BRANCH = re.compile(r"\*\*Merged:\*\*\s*(no branches|none)\b", re.I)
+
+
+def merged_para(body: str) -> str | None:
+    """The `**Merged:**` line and its wrapped continuation, to the blank line.
+
+    Scoped deliberately. The old check swept the WHOLE entry for `word `sha``
+    and read the word before each one as a repo name, so the template's own
+    `code `<sha>`` phrasing -- used by every entry for eleven legs -- resolved
+    to `embarch-code`, a repo that has never existed, and `--check` reported
+    every healthy unit as one that "must be redone". A recovering leg is the
+    actor least able to disbelieve that. The narrative SHAs an entry quotes
+    (a rebase base, a superseded merge) are not what §11 requires carried, and
+    reading them cost the `api/005` entry a prose edit to appease this check.
+    """
+    lines = body.splitlines()
+    for i, ln in enumerate(lines):
+        if ln.startswith("**Merged:**"):
+            out = [ln]
+            for nxt in lines[i + 1:]:
+                if not nxt.strip():
+                    break
+                out.append(nxt)
+            return "\n".join(out)
+    return None
+
+
+def suite_repos() -> list[Path]:
+    """Every git checkout under the fleet root, doc repo first.
+
+    A SHA is resolved by ASKING the repos, never by deriving a repo name from
+    the log's prose: §11 fixes that both SHAs are recorded, not what they are
+    labelled, and eleven legs have labelled them `code`, `doc`, `api`, `sd`,
+    `umbrella` and `core` -- three of which are not directory names.
+    """
+    doc = CONF.doc_repo
+    rest = sorted(d for d in CONF.root.glob("embarch-*")
+                  if (d / ".git").exists() and d != doc)
+    return ([doc] if (doc / ".git").exists() else []) + rest
+
+
 def check() -> int:
     """Do the two repos agree about the last unit?
 
-    A log entry whose merge SHAs do not resolve in the doc repo describes a fold
-    that did not happen -- the "log only" ordering a kill can leave.
+    A log entry whose merge SHAs resolve in no repo of the suite describes a
+    fold that did not happen -- the "log only" ordering a kill can leave.
     """
-    doc = CONF.doc_repo
     found = newest_unit_entry()
     if found is None:
         print("no per-unit entry in the log (a folded day, or empty).")
         return 0
     unit, body = found
 
-    # §11's Merged line labels each SHA with the repo it lives in:
-    #   `agent/api/006-...` (api `1a396ba`, doc `9c3f1de`)
-    # so a SHA is resolved against the repo its label names, never all of them
-    # against the doc repo. Getting that wrong would make every entry fail.
-    pairs = re.findall(r"\(?([a-z][a-z-]*)\s+`([0-9a-f]{7,40})`", body)
-    if not pairs:
+    para = merged_para(body)
+    if para is None:
+        print(f"newest unit entry ({unit}) has no `**Merged:**` line at all.\n"
+              "protocol.md §11 requires one on every entry.")
+        return 1
+
+    shas = sorted(set(SHA_TICKED.findall(para)))
+    if not shas:
+        if NO_BRANCH.search(para):
+            print(f"OK: newest entry ({unit}) names no merge SHA, and says why "
+                  "-- a `suite`\nunit lands on `main` by the supervisor's own hands. "
+                  "Nothing to resolve.")
+            return 0
         print(f"newest unit entry ({unit}) names no merge SHA. protocol.md §11\n"
               "requires both -- there is no merge commit and no surviving branch\n"
               "name, so the SHA is the only handle a revert has.")
         return 1
 
-    missing = []
-    for label, sha in pairs:
-        repo = doc if label == "doc" else CONF.root / f"embarch-{label}"
-        if not (repo / ".git").exists():
-            missing.append((label, sha, f"no repo at {repo}"))
-            continue
-        if subprocess.run(["git", "-C", str(repo), "cat-file", "-e", f"{sha}^{{commit}}"],
-                          capture_output=True).returncode != 0:
-            missing.append((label, sha, f"not in {repo.name}"))
+    repos = suite_repos()
+    if not repos:
+        print(f"no git checkouts under {CONF.root}; nothing to resolve against.",
+              file=sys.stderr)
+        return 2
+
+    found_in, missing = {}, []
+    for sha in shas:
+        for repo in repos:
+            if subprocess.run(["git", "-C", str(repo), "cat-file", "-e",
+                               f"{sha}^{{commit}}"], capture_output=True).returncode == 0:
+                found_in[sha] = repo.name
+                break
+        else:
+            missing.append(sha)
 
     if missing:
-        print(f"log's newest entry ({unit}) names {len(missing)} SHA(s) that do not\n"
-              "resolve:\n")
-        for label, sha, why in missing:
-            print(f"  {label} {sha}  -- {why}")
+        print(f"log's newest entry ({unit}) names {len(missing)} SHA(s) that resolve "
+              f"in\nnone of the suite's {len(repos)} repos:\n")
+        for sha in missing:
+            print(f"  {sha}")
         print("\nThis is the 'log only' ordering: an entry was pushed for a fold that\n"
               "did not land. Either the fold is missing and the unit must be redone,\n"
-              "or that repo needs a pull. Do not write a second entry.")
+              "or a repo needs a pull. Do not write a second entry.")
         return 1
-    print(f"OK: newest entry ({unit}) and its {len(pairs)} SHA(s) resolve "
-          f"({', '.join(l for l, _ in pairs)}).")
+        return 1
+    print(f"OK: newest entry ({unit}) and its {len(shas)} SHA(s) resolve "
+          f"({', '.join(f'{s} in {r}' for s, r in sorted(found_in.items()))}).")
     return 0
 
 

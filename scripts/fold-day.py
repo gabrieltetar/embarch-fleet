@@ -23,12 +23,24 @@ rather than by inspection afterwards.
 
 **The ledger is what makes the fold safe to trust.** Extraction records every
 SHA, every `**Reviewer:**` line and every `**Hardware debts:**` line in the day.
-`--apply` refuses a folded entry that lost any of them. §11 keeps every SHA
-because under embarch-dev-workflow.md §6 there is no merge commit and no
-surviving branch name, so the SHA is a revert's only handle; and
+`--apply` refuses a folded entry that lost a SHA, that carries fewer reviewer
+lines than the day had, or that dropped a debt line naming a board. §11 keeps
+every SHA because under embarch-dev-workflow.md §6 there is no merge commit and
+no surviving branch name, so the SHA is a revert's only handle; and
 `grep '^\*\*Reviewer:' supervisor-log.md` is the tally that decides whether
 per-unit review keeps earning its cost, which a fold collapsing nine reviewer
 lines into one would destroy without failing anything.
+
+**Each of those three is bounded so that a correct fold can satisfy it**, which
+the first cut was not: it demanded every `**Hardware debts:**` line verbatim
+including the six that say "none", and an exact reviewer-line count rather than
+a floor. Replayed against the only real fold this log has -- leg 010's
+2026-09-04, extracted from the pre-fold log at `1a29581` and applied as it
+shipped in `3d88a48` -- the first cut refused it on all nine debt lines and on
+9-vs-8 reviewer lines, where the ninth was the fold *correcting* a reviewer line
+the day had written mid-sentence. The bounded rules accept it unchanged. A
+refusal nobody can satisfy is not a guard; it is a habit of reaching for
+`--allow-debt-edit`, which switches the debt half off entirely.
 
 **The roll.** §11 said the oldest entries roll into `history/archive/` past
 25 KB, "matching what build_changelog.py already does". Nothing ever did it for
@@ -82,6 +94,32 @@ DAY_H = re.compile(r"^## (\d{4}-\d{2}-\d{2}) — (.+)$")
 SHA = re.compile(r"\b(?=[0-9a-f]{7,40}\b)[0-9a-f]*[0-9][0-9a-f]*\b")
 REVIEWER = re.compile(r"^\*\*Reviewer:", re.M)
 DEBTS = re.compile(r"^\*\*Hardware debts:\*\*.*$", re.M)
+# A debt line that names a board. Most of a day's say "none" and then a sentence
+# of reasoning, and requiring THOSE carried verbatim is what made this check
+# unsatisfiable: a fold whose whole job is to collapse nine entries into one
+# cannot reproduce nine hard-wrapped lines, four of them cut mid-sentence. The one
+# real fold this log has -- leg 010's 2026-09-04, which `embarch-log-folder.md`
+# points at as the worked example of the shape -- is refused by the old rule on
+# all nine of its debt lines, and the escape hatch (--allow-debt-edit) turns the
+# whole check off. A check nothing can satisfy is not a check; it is a lesson in
+# reaching for the override, and this file already carries one of those (the
+# 25 KB roll line nothing could ever meet).
+#
+# So the requirement is exactly what §11 says it is: **what needs a board, and
+# what board.** "none" is not a board. The narrowing is real and worth stating --
+# a debt described in prose AFTER the word "none" is no longer guarded -- but the
+# rule it replaces guarded that by refusing every fold, which guards nothing.
+NOT_OWED = re.compile(r"^\*\*Hardware debts:\*\*\s*none\b", re.I)
+WS = re.compile(r"\s+")
+
+
+def owed(debt_lines: list[str]) -> list[str]:
+    return [l for l in debt_lines if not NOT_OWED.match(l)]
+
+
+def flat(t: str) -> str:
+    """Whitespace-insensitive, because a fold rewraps what it carries."""
+    return WS.sub(" ", t)
 
 
 def read_log() -> list[str]:
@@ -174,7 +212,8 @@ def cmd_extract(lines: list[str], date: str, out: Path) -> int:
     print(f"{len(units)} unit(s), {len(text):,} B -> {out}")
     print(f"ledger -> {out.with_suffix('.ledger.json')}: "
           f"{len(led['shas'])} SHA(s), {len(led['reviewer_lines'])} reviewer line(s), "
-          f"{len(led['debt_lines'])} hardware-debt line(s)")
+          f"{len(owed(led['debt_lines']))} of {len(led['debt_lines'])} hardware-debt "
+          "line(s) actually owing something")
     print(f"\nWrite the folded entry to a NEW file, starting `## {date} — "
           f"{len(units)} units`,\nthen: scripts/fold-day.py {date} --apply <that file>")
     return 0
@@ -203,17 +242,26 @@ def cmd_apply(lines: list[str], date: str, src: Path, allow_debt_edit: bool) -> 
         problems.append(f"{len(missing)} SHA(s) dropped: {', '.join(missing[:12])}"
                         + (" ..." if len(missing) > 12 else ""))
     kept = REVIEWER.findall(folded)
-    if len(kept) != len(led["reviewer_lines"]):
+    # Fewer, never `!=`. A day can carry a reviewer line that is not at the start
+    # of its own line -- 2026-09-04's `dev-bench/001` wrote it after "**Blocked:**
+    # none." on the same line, so the ledger counted 8 for 9 units -- and the fold
+    # that line-anchors all nine is the fold doing this right. Refusing an
+    # improvement is a check that trains its operator to reach for the override.
+    if len(kept) < len(led["reviewer_lines"]):
         problems.append(
-            f"{len(kept)} line-anchored `**Reviewer:` line(s), expected "
+            f"{len(kept)} line-anchored `**Reviewer:` line(s), expected at least "
             f"{len(led['reviewer_lines'])} -- one per unit, at the start of a line, or "
             "`grep '^\\*\\*Reviewer:' supervisor-log.md` stops tallying this day")
-    lost_debts = [d for d in led["debt_lines"] if d not in folded]
+    debts_owed = owed(led["debt_lines"])
+    flat_folded = flat(folded)
+    lost_debts = [d for d in debts_owed if flat(d) not in flat_folded]
     if lost_debts and not allow_debt_edit:
-        problems.append(f"{len(lost_debts)} hardware-debt line(s) not carried verbatim:\n"
-                        + "\n".join(f"      {d[:110]}" for d in lost_debts)
-                        + "\n    A debt names a board nobody else knows is owed. Carry the\n"
-                          "    line, or pass --allow-debt-edit and say in the commit why.")
+        problems.append(f"{len(lost_debts)} of {len(debts_owed)} debt-carrying line(s) not "
+                        "carried -- paste each of these into the folded entry:\n"
+                        + "\n".join(f"      {d}" for d in lost_debts)
+                        + "\n    A debt names a board nobody else knows is owed. Line breaks\n"
+                          "    do not matter; the words do. Or pass --allow-debt-edit and say\n"
+                          "    in the commit which line you reworded and why.")
     if problems:
         print(f"REFUSED: the folded entry loses something the day carried.\n")
         for p in problems:
@@ -231,7 +279,8 @@ def cmd_apply(lines: list[str], date: str, src: Path, allow_debt_edit: bool) -> 
     print(f"folded {len(secs)} unit(s) of {date}: {before:,} B -> {after:,} B "
           f"({before - after:,} B)")
     print(f"kept {len(led['shas'])} SHA(s), {len(kept)} reviewer line(s), "
-          f"{len(led['debt_lines']) - len(lost_debts)} debt line(s) verbatim")
+          f"{len(debts_owed) - len(lost_debts)} of {len(debts_owed)} debt-carrying "
+          f"line(s) ({len(led['debt_lines'])} debt line(s) in the day, the rest 'none')")
     return 0
 
 

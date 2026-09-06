@@ -39,10 +39,16 @@ right, and each rule is a failure that already happened:
 - **Every `**Reviewer:**` line, one per unit, at the start of its own line.**
   `grep '^\*\*Reviewer:' supervisor-log.md` is the tally that decides whether
   per-unit review keeps earning its cost. Collapsing six into one destroys the
-  evidence and fails nothing — which is why the script checks the count.
-- **Every `**Hardware debts:**` line, verbatim.** A debt names a board nobody
-  else knows is owed. If you genuinely must reword one, `--allow-debt-edit`
-  exists and the commit must say which and why.
+  evidence and fails nothing — which is why the script checks the count. It is a
+  floor, not an equality: a day whose entry wrote a reviewer line mid-sentence
+  gives the extract fewer lines than it had units, and line-anchoring all of them
+  is the fold doing this right.
+- **Every `**Hardware debts:**` line that names a board.** A debt names a board
+  nobody else knows is owed, and "none" is not a board — the check ignores the
+  `none` lines and the extract tells you how many of the day's are real, usually
+  one or none. Carry those in the day's own words; line breaks do not matter.
+  If you genuinely must reword one, `--allow-debt-edit` exists and the commit
+  must say which and why.
 
 **What you drop is the narrative reasoning** behind each accepted judgement —
 git holds it. What you keep beyond the ledger is what the *next leg* cannot
