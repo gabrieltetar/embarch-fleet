@@ -78,6 +78,108 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 01:35 — suite/005 features-fragments-are-longer-than-the-file-says-they-are
+
+**Leg 015's fourth and last unit, and mine under §8** — announced at `ts 1788675832.554579`
+(00:23 MDT) with the full guardrail list, parked, and run at 01:20 after a 30-minute window
+that closed at 00:55 with **zero replies**. I re-read that thread at every unit boundary and
+did not re-announce. Third time §4's window has been served correctly rather than restarted.
+
+**Why it ran at all.** `suite/features.md` closed leg 014 at 96.9% and grew in *every one* of
+this leg's three folds, reaching **20,076 / 20,480 B — 98.0%, 404 B left.** When it crosses,
+`check-doc-size.py` goes red inside `check-docs.py`, which is every unit's merge gate in every
+sub-project — a fleet-wide stall that no agent may clear, because the file is `never` for every
+worker scope and `tasks/suite/004`'s other two moves are `scripts/`. **Legs 013 and 014 both
+reported this and neither acted**, and leg 014's own "least sure about" says reporting twice
+and acting zero times is how a known ceiling becomes an outage. So this is that leg's advice
+taken.
+
+**Decided:** a suite-wide decision, recorded in `features.d/README.md`. The trim is
+**enforcement of that file's own contract, not an exception to it**: `HEADER.md` says the row
+is a pointer and the reasoning lives in the owning decision, and twelve rows had stopped being
+pointers — the worst at 481–534 B, all `doctor` rows restating what their decision says. So
+twelve Status columns were shortened, capability text and `Verified` and decision numbers
+untouched.
+
+**It bought 934 B — 20,076 → 19,142 B — and that is the whole yield.** The file stays in
+reserve at 93.5%. **The 18,432 B reserve line was not reachable and is not reachable this
+way**, because what remains is the capability column, which is the row's identity, and the row
+count itself. That is now the *measured* version of what `features.d/README.md` already
+claimed before this leg: *every row must be present, so the budget is spent on rows and no
+compaction pass can help.* **The next fragment pass is worth roughly nothing** — that sentence
+is in the README so a later leg does not run this again as a treadmill.
+
+**`DOC-COMPACTION-PASS.md`'s human question, answered in my own words**, since this was a
+compaction pass and the question is the thing no script answers: *can the file alone answer
+what someone needs to work on this component today?* **Yes, and more cleanly than before.**
+The inventory's job is to say what exists and how far it is verified; every trimmed row still
+carries its `Verified` value and its caveat, and what came out was reasoning that the owning
+decision holds and states better. The one thing a reader loses is the *why* — which is exactly
+what the contract says never belonged here.
+
+**Merged:** none — this unit has no branches. It is the supervisor's own diff on the leg
+worktree, landed in its fold commit.
+
+**Blocked:** none.
+
+**Reviewer:** 1 finding — `tasks/suite/004`, fixed in this same commit rather than filed.
+Tally after this unit: **23 ran, 21 no findings, 2 findings.** I spawned it on my own
+uncommitted diff, which is new: **this is the only unit in the leg whose work nothing else
+checks**, and the case for reviewing a supervisor is the same as for reviewing a worker.
+It earned it immediately.
+
+- **The finding.** I ticked `004`'s `features.md` item and wrote "the cap-and-split half below
+  is now the only half left" — **and there was no item below covering it.** The Done-when list
+  was reversals / features `[x]` / the compaction question / gate green, with cap-and-split
+  discussed only in prose above. So `004` would have closed, with `features.md` still in
+  reserve and both real fixes undone, **at which point the reserve goes *unfiled* and the next
+  unit to write a `features.d/` fragment meets the cap mid-flight** — precisely what §2's
+  reserve exists to prevent. A new unticked `[ ]` item now carries the owner's cap-or-split
+  move and is what keeps `004` open and the filing alive.
+- **It verified the guardrails mechanically rather than by reading** — a script diffing HEAD's
+  assembled file against the working tree row by row, keyed on the capability cell: 123 data
+  rows before and after, capability set **byte-identical**, zero diffs on the `Verified` and
+  decision columns, only Status moved, and `suite/features.md` byte-for-byte what
+  `build_features.py` produces. It also confirmed each cut fact still lives in its owning
+  decision, by citation, which is the difference between "the pointer contract was enforced"
+  and "prose was deleted".
+- **It found a false claim I had preserved.** `features.d/umbrella-061` said check 1's
+  `sc.exe qc` read "has never run inside `doctor` on the live machine" — **false since
+  2026-09-05.** Decision 38's closing paragraph records check 1 locating the live service's
+  binary by `BINARY_PATH_NAME` on the first run after the `deploy-core` that had never landed,
+  in the same measurement that made check 14 answer; my own trim of `umbrella-090` had
+  corrected the check-14 half of that fact and left the check-1 half standing, so two adjacent
+  rows disagreed about one run. **I checked decision 38 myself rather than taking it**, and
+  corrected the Status text. **I did not change that row's `Verified` column, which still reads
+  `unit` while `umbrella-090` beside it reads `hw` on the same run** — changing it was outside
+  the announced guardrails and it is the owning scope's claim to make, so it is item 5 of
+  `tasks/umbrella/020`.
+- **What it deliberately did not verify**, and this is the honest gap: **whether the §4 window
+  was actually waited out.** It does not read Slack. The window is attested only by me and by
+  the `ts` in the task file.
+
+**Hardware debts:** none new. One hardware-relevant *correction*: `umbrella-061` no longer
+understates check 1's verification, and whether its `Verified` column should now read better
+than `unit` is `tasks/umbrella/020` item 5.
+
+**Reserve after this unit:** four files, every one filed. `suite/features.md` 93.5%
+(`suite/004`, and its second item is now the owner's), `embarch-umbrella/decisions/doctor.md`
+93.7% (`umbrella/009`), `embarch-study-designer/decisions/crate.md` 91.7%
+(`study-designer/006`), `embarch-decision-reversals.md` 90.9% (`suite/004`). **1,338 B of
+headroom on `features.md` — about five legs at this leg's observed +228 B, six at the ~200 B
+its script header models.** A reprieve, not a fix.
+
+**Budget:** DEGRADED at start and end of the leg, wave 2, **no 429 anywhere**.
+
+**Least sure about:** ticking `004`'s features item while the file is still listed in reserve.
+The item's own text offers "or the fragments shrink" as one of three acceptable answers and
+says recording the decision is the point, so it is satisfied on its own terms — and the
+reviewer agreed, then immediately found that the tick was only safe *because* of the item it
+made me add. **Without that item the tick was a slow-acting bug**, and I wrote it and did not
+see it. The general shape is worth carrying: **ticking the last open item on a task is how a
+filing disappears**, and a reserve filing that disappears is invisible until a worker meets a
+wall mid-task.
+
 ## 2026-09-06 01:20 — study-designer/005 release-workflow-absence-has-no-decision-behind-it
 
 **Leg 015's third unit**, and the one I swept out of `open.md` when the queue hit zero. Two
