@@ -78,6 +78,112 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 14:38 — topology/006 the dev-bench link port, resolved live with two probes
+
+First bench unit the fleet has ever run. Both roles validated clean before anything started —
+`dev-bench` `6fcddc36cb781b71` on probe `001057729826`, `dut` `834f2559f10a6cdf` on
+`000852006107`, no mismatch either side.
+
+**Decided:** three things, all mine. **(1)** The settled measurements went into
+`embarch-topology/spec.md`, not `open.md`, because they are current truth rather than open
+questions — my first draft put all of it in `open.md` and **blew the 5 KB cap outright** (4,395 →
+7,258 B). That is worth carrying: `open.md` was at **85.8%** and therefore *not* in
+`check-doc-size.py --pressure`'s list, so no dispatch could have warned anyone. A 90% reserve line
+gives no warning to an edit bigger than 10% of a cap, and on a 5 KB cap that is 512 bytes — one
+paragraph. **(2)** The two *defects* the run measured were appended to the task files they
+corroborate (`tasks/topology/003`, `tasks/topology/004`) rather than filed again, with the raw
+observations, so whoever fixes them has the bench data they will not be able to re-take.
+**(3)** I did **not** hand-repair `history/topology.md` — see the defect below.
+
+**Merged:** no branch and no worker — a `Hardware: bench` unit is the supervisor's own hands
+(`supervise.md`, "Bench units come first"). Everything lands in this fold commit.
+
+**Blocked:** nothing.
+
+**Reviewer:** 1 finding — inbox/topology-spec-credits-a-fallback-serial-as-a-declared-fact.md
+
+**The finding was real and I had it wrong in exactly the way I was least sure about.** `spec.md`
+said *"both declared port facts were exercised live"* and *"the declared serial eliminates
+`COM5`"*. **This bench declares no `link_port_serial`** — I checked the store myself after the
+report: `/mnt/c/ProgramData/embarch/topology/enrollment.toml`'s `dev-bench` row carries
+`link_port_interface = 2` and nothing else. So `COM5` was eliminated by **decision 17's
+*fallback*** on `board.probe_serial`, with `serial_is_fallback` set. Decision 17 exists precisely
+to separate the declared path from that fallback, so **claiming a live measurement for the
+declared path told a later reader the opposite of the truth**: it still has no hardware evidence.
+Corrected in `spec.md` before the fold.
+
+**And it cleared the thing I was actually worried about, by tracing the code rather than agreeing
+with me.** It read `select` in `embarch-topology/src/hardware/port.rs`: `DEFAULT_PRODUCT_NEEDLE`
+is `"jlink"` and both `COM16` and `COM17` pass the product filter, so the interface is the only
+discriminator; with it removed, `one_probe && interfaces_known` still hold, so resolution does not
+bail — it warns, sorts by interface, takes `COM16`, **and sets `guessed_among = Some(2)`.** The
+counterfactual is now traced rather than inferred, and it gained a fact I did not have. Two
+structural notes it raised below its own reporting bar were also right and are fixed: my insert
+into `tasks/topology/004` had landed *between* `## Done when` and its checkboxes, leaving that
+task with no visible Done-when; and `tasks/topology/008`'s `Must not delete:` omitted the one
+clause that exists nowhere but inside two task files that get deleted when they close.
+
+**A note on the reviewer itself, for the next leg:** it reported **~24 minutes** after spawn, not
+the ninety seconds `supervise.md` budgets, and its transcript's last write was at 14:17:46 — about
+20 minutes before the completion notification arrived. **I had already written this entry with a
+`skipped (did not report)` line and was about to fold on it.** Had I folded three minutes earlier
+I would have shipped a `spec.md` asserting a declared fact this bench does not declare, under a
+reviewer line saying nothing had checked. **The "wait for it, that wait is under a minute" estimate
+is wrong for a reviewer asked to verify a claim against source**, and a stalled transcript mtime is
+not evidence of death.
+
+**Hardware debts:** none owed *by* this unit — it was read-only, nothing was flashed, no study ran,
+and nothing was re-enrolled. It *discharged* one: whether `link_port_interface = 2` is load-bearing
+on this bench is now measured rather than assumed. **What it could not settle: `guessed_among` has
+still never been observed set**, and the run established that a crowded bench cannot produce it —
+only an under-declared one can, so exercising that field needs a board enrolled *without* a
+declared interface, which is a deliberate act, not a plug-in.
+
+**Budget:** DEGRADED at start and at this fold, wave 2 both times, no 429.
+
+**Least sure about:** **that a reviewer is now the only thing standing between a bench unit and a
+confidently wrong measured claim, and there is exactly one of it.** The counterfactual survived
+review; the serial attribution did not, and *nothing mechanical could have caught it* — the gate
+was nine-green on the wrong sentence, because "which fact narrowed this resolution" is not
+checkable from the diff, only from the live store. I wrote it from the response shape and it read
+as measured because the paragraph around it was. **A bench unit is the one kind of unit whose
+central claims cannot be re-derived later** — the boards get unplugged — so an unreviewed one
+ships an unfalsifiable error. This unit was reviewed only because I chose to spawn a reviewer on
+my own uncommitted work, which is not something `supervise.md` asks for: it spawns reviewers on
+*workers'* merges, and a supervisor-run bench unit has no merge.
+
+### The defect this unit found, which is not this unit's
+
+**`scripts/build_changelog.py` opens a new `## <window>` heading on every fold instead of merging
+into the block already there, and all nine checks are green on the result.** Counted across
+`history/` at `c2fc30b`: `api.md` **26** `## 2026-09` headings, `umbrella.md` **23**, `doc.md` 14,
+`suite.md` 8, `core.md` 6, `study-designer.md` 6, `dev-bench.md` 3, `outpost.md` 3, `ui.md` 3,
+`fleet.md` 2, `topology.md` 2. Roughly one per fold, in every scope, **since the changelog split on
+2026-09-02.**
+
+No content is lost — every entry is in the right file, category and order. What is false is the
+structure each file's own header promises: *"newest window first, capped at 20 KB, older windows
+roll into `archive/`."* A reader of `history/api.md` sees 26 separate September windows, one per
+fold, so **the window is doing the job of a commit** — which `changelog.d/README.md` says the
+history file is explicitly not for. And **the roll is sized in windows**, so on a file whose
+windows are per-fold it archives an arbitrary slice of a month; it has not fired only because
+nothing has reached 20 KB.
+
+**Why it survived 26 folds:** `build_changelog.py --check` validates *fragments* — that each is
+named correctly and parses — and never reads the assembled file it writes. The one script that
+could catch this is the script that causes it. **No check in the gate reads an assembled
+`history/*.md` at all.** It is also invisible in a fold's own diff: four added lines that read
+correctly in isolation.
+
+Filed as `tasks/doc/021`, `Owner: required`. **I did not fix the script** (`scripts/` is reserved)
+**and deliberately did not hand-merge the eleven files** — repairing one of eleven makes it
+inconsistent with the other ten and the next fold undoes it. The repair is one pass after the
+script is fixed. This is the third member of a family already on this log: `tasks/doc/013`, the
+pipeline that swallowed the gate's exit status, and now this — **all three a convenience around
+the fold producing something wrong while reporting green.**
+
+---
+
 ## 2026-09-06 04:52 — leg 019: STOPPED BEFORE UNIT 1, the fleet was already stopped
 
 **Zero units. Nothing dispatched, nothing claimed, nothing written to the instance repo.** This is
