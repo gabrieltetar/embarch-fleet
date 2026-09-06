@@ -73,10 +73,43 @@ HERE = Path(__file__).resolve().parent
 FLEET_REPO = HERE.parent
 STAMP = ".fleet-version"
 
-# Editing this file in the instance is what a re-arm is owed for: arming copies
-# the heartbeat prompt into a cron job, so the live job keeps its original
-# wording however many times the template changes. They drifted once already.
-REARM_TRIGGER = ".claude/commands/fleet.md"
+# Arming copies a heartbeat prompt into a cron job, so the live job keeps its
+# original wording however many times the template changes -- they drifted once
+# already. Both armed windows have one: the listener's tick and the watchdog's.
+ARMED_PROMPTS = (".claude/commands/fleet.md", ".claude/commands/fleet-watch.md")
+
+
+def _cron_block(text: str) -> list[str]:
+    """The blockquote a window is armed with, and nothing around it."""
+    return [ln for ln in text.splitlines() if ln.startswith(">")]
+
+
+def rearm_owed(target: Path) -> bool:
+    """True only if a LIVE cron prompt would change, not merely its file.
+
+    Keying on the filename -- which this did until 2026-09-06 -- meant editing
+    one line of surrounding prose raised a re-arm alarm the owner had to
+    overrule by hand, and the vocabulary around the block is re-read from disk
+    on every tick, so it owes nothing. A warning that is usually wrong is one
+    that gets ignored the time it is right, and this one is relayed to Slack
+    with an `@`. It also now covers the watchdog, whose block is the same trap
+    and was checked by nothing at all.
+
+    Unreadable or absent either side is treated as owed: a re-arm costs one
+    command and a missed one leaves a fleet running a rule nobody can see.
+    """
+    want = {p: c for p, c, _ in planned(target)}
+    for rel in ARMED_PROMPTS:
+        live = target / rel
+        fresh = want.get(live)
+        if fresh is None or not live.exists():
+            return True
+        try:
+            if _cron_block(live.read_text()) != _cron_block(fresh):
+                return True
+        except OSError:
+            return True
+    return False
 
 
 def git(repo: Path, *args: str, check: bool = True) -> str:
@@ -230,7 +263,7 @@ def queue(target: Path, clear: bool, note: str | None) -> int:
               "cleared by something that did nothing.")
         return 0
 
-    rearm = REARM_TRIGGER in (chk.stdout or "")
+    rearm = rearm_owed(target)
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps({
         "framework_sha": sha,
@@ -315,6 +348,10 @@ def main() -> int:
 
     if not args.dry_run:
         refuse_if_live(args.force, ignore_pump=args.from_latch)
+
+    # Before install.py overwrites the installed copies, or there is nothing
+    # left to compare them against.
+    rearm = rearm_owed(target)
     version = framework_version(args.allow_dirty or args.dry_run)
 
     # What the instance already has, so we can report the deploy rather than
@@ -423,7 +460,8 @@ def main() -> int:
     print(f"\n{target.name}  {git(target, 'rev-parse', '--short', 'HEAD').strip()}  "
           f"{len(ours)} path(s)")
 
-    rearm = any(p == REARM_TRIGGER for p in ours)
+    # `rearm` was computed before install.py ran, and it has to be: afterwards
+    # the installed copy equals the framework and the comparison is always False.
 
     if args.from_latch:
         # The deployer pushes, because nobody is sitting there to. Framework
