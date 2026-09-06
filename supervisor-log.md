@@ -78,6 +78,118 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 05:20 — api/024 clippy-never-lints-the-path-dep-crate
+
+**Leg 018's third unit**, from an `inbox/` drop this leg drained. A crate with **28 unit tests
+that no gate command anyone typed had ever compiled, linted or run**, in the one crate
+`embarch-ui` also path-depends on, with a red `unused_imports` sitting in it. The root gate had
+been green for weeks.
+
+**Decided:** **workspace membership, with `default-members`, over a per-sub-crate gate leg.**
+`embarch-api/Cargo.toml` gains `[workspace] members = ["crates/embarch-core-client"]` **and
+`default-members = [".", "crates/embarch-core-client"]`. The second is the load-bearing half and
+it is the reason the route was chosen at all**: with `members` alone, `cargo metadata` still
+reports `embarch-api` as the sole default member and a bare root `cargo clippy --all-targets`
+still misses the sub-crate — **so only `default-members` makes the *unamended* `protocol.md` §10
+command reach it, and §10 is owner-only.** The worker verified that by mutation in both
+directions; my reviewer reproduced it independently in scratch copies at both SHAs and got the
+same three-row table. The rejected alternative — a per-path-dep-crate `cargo` leg in the gate —
+loses twice: it is a hand-kept list that goes stale the moment someone adds a sub-crate (the
+failure decision 54 built a whole mechanism to escape), and **it cannot be shipped from this repo
+at all**, being §10. Recorded as decision 56 in `decisions/tests.md`, which **amends decision 46
+in place** — 46's stated reason for putting the `CoreClient` tests in `embarch-api/tests/` was
+this exact blind spot, and that reason has now expired.
+
+**Merged:** `agent/api/024-clippy-reaches-the-path-dep-crate` (code `524fbe0`, doc **`98cb429`**;
+the worker's doc tip was `376be8b`, merged as `485c3a3`, **rebased to `98cb429`** when the owner's
+`7ef47f2` landed mid-fold — the second time this leg, same cause, same response: rebase, never
+force). **I read the diff before merging** — it changes a shared crate's packaging.
+
+Gate on the merge result: `cargo build`, `cargo test`, `clippy --all-targets -- -D warnings` at
+the root, **plus the same clippy run from inside `crates/embarch-core-client`**, all 9 doc checks,
+ownership both branches, client-names clean. **And I ran the one check the worker could not:
+`cargo build` in `embarch-ui` against the merged `embarch-api`, which compiled clean.** The
+worker had established the point with a *synthetic* out-of-workspace consumer carrying the
+identical `path =` line and said so explicitly, naming the limit — that it reproduces the shape of
+the dependency and not `embarch-ui`, whose path points at the main checkout rather than a branch.
+**That honesty is what told me which check was still owed**, and it took thirty seconds to pay.
+
+**Blocked:** none.
+
+**Reviewer:** no findings. Tally after this unit: **34 ran, 31 no findings, 3 findings.** It
+reproduced the `default-members` table, mutation-tested the deleted lockfile (replaced the
+sub-crate's `Cargo.lock` with the literal text `THIS IS NOT A LOCKFILE` and confirmed `cargo
+metadata` succeeds from both the api root and an external consumer — **it was never read by
+either**), and settled the `embarch-ui` question at a level neither the worker nor I reached:
+**resolution and feature unification are unchanged**, two synthetic consumers' resolve graphs
+compared node-by-node at **177 packages identical**, `cargo metadata --locked` exiting 0 in the
+real `embarch-ui` with its August lockfile untouched, and the mechanism behind it —
+`crates/embarch-core-client/Cargo.toml` is **byte-identical across the merge** and the new
+`[workspace]` declares no `package`, `dependencies`, `lints` or `profile` table, so there is
+nothing for an outside consumer to read differently. It also verified `api/027`'s one possible
+silent interaction: `CLIENT_SRC` is pinned off `CARGO_MANIFEST_DIR` of the *api package*, which
+membership does not move, and both funnel tests still pass.
+
+**And it caught a gap in the correction I was about to write**, which is the most valuable thing
+it did — see below.
+
+**Hardware debts:** none new, none discharged.
+
+**The `status.d/` fragment was right and incomplete, and I would have shipped the incomplete
+version.** `api/024` dropped `status.d/api-fmt-p-is-now-an-escape-hatch.md` asking me to correct
+`embarch.md` §5's "**`-p` is not an escape hatch**" sentence, which was now false. All three of
+its numbers reproduced exactly under the reviewer's independent `--check`-only measurement —
+`-p` → **24 files, all in-repo**; `--all` → **57, of which 33 outside** (`embarch-study-designer`
+24, `embarch-topology` 9); `--all` unchanged by membership. **But bare `cargo fmt --check` went
+18 → 24 in the same change**, which the fragment does not mention and which makes **two
+neighbouring §5 sentences newly false**: that bare `--check` "never descends into a local
+path-dependency crate", and that "**no single flag does that**". I corrected all three rather than
+the one I was asked to. The reviewer also measured *why*: **bare `cargo fmt` follows `members`
+while bare `cargo clippy --all-targets` follows `default-members`** — the two subcommands do not
+read the same manifest field, so a manifest carrying only `members` fixes `fmt` and leaves
+`clippy` blind. That is now a clause in §5.
+
+**I also ran the sweep the `inbox/` drop called its cheap, high-value half**, because it is a
+read-only measurement rather than a doc edit: across all six Rust repos,
+**`embarch-api/crates/embarch-core-client` is the only nested in-repo crate in the suite** — the
+only `Cargo.toml` below a repo root, and the only `path =` pointing inside its own repo. Every
+other `path =` points sideways into a sibling repo, which is the *over*-reach problem, not this
+one. `embarch-api` is also the only repo declaring a `[workspace]` at all. **So nothing else is
+hiding**, and that answer is written into `tasks/doc/017` and `embarch-api/open.md` rather than
+into this entry alone, because a measurement that lives in one leg's log is one nobody finds.
+
+**`tasks/suite/008` filed, announced and PARKED — the next leg owns it.** `ts
+1788689863.494449`, posted 04:57 MDT, **window closes 05:27 MDT and my leg ends before that**.
+`../../embarch-fleet/ops.md` §4: the next leg **completes this window rather than restarting it**.
+What it is: §5's rustfmt bullet is now a decision record wearing a principle's clothes, ~2,000
+characters in a list of five whose next longest is 193, and **this is the third round of decision
+text to land in it.** Leg 017's own entry said *"if a second suite-wide decision lands with
+nowhere to go, the answer is a new home, not a sixth bullet"* and then watched the same bullet
+absorb a second round; its closing line asked that the next thing landing there force the
+question. I forced it. The proposal is a `suite/decisions.md` with the bullet moved **verbatim**.
+The task file names the two things that would make it the owner's instead of mine, and says to
+stop rather than guess if either is true.
+
+**`tasks/doc/015` was allocated TWICE, an hour apart, and the full gate passed on the result.** I
+filed one at 03:34 in the `inbox/` drain (`1657f86`); the owner filed a **different** one at 04:19
+(`7ef47f2`). Both are on `main`. `tasks/README.md` says `NNN` is "monotonic per sub-project, never
+reused" and **nothing in `scripts/` checks it** — I found this by eye while rebasing. I renumbered
+**mine** to `018`, because the owner's commit message cites his by number, and filed the class as
+`tasks/doc/019`, `Owner: required`. **The structural point is that the claim commit is an
+interlock between two supervisors and there is none at all between the supervisor and the
+owner**, who both hold `write` on `tasks/` by §3's table and who are most likely to be filing
+simultaneously exactly when the fleet is busy. `tasks/doc/` is the directory they share.
+
+**Budget:** DEGRADED at start and here, wave 2, no 429.
+
+**Least sure about:** growing §5's rustfmt bullet again in the same breath as filing a task that
+says it must stop growing. Every sentence I added is one the reviewer measured and one that was
+false without it, and `embarch.md` has a 25 KB cap as of the owner's `7ef47f2` and sits at 15.9 KB
+— so nothing is at risk mechanically. **But the honest reading is that I did the thing leg 017
+warned against and then wrote a task about not doing it**, and the only defence is that the
+alternative was leaving three false sentences in the suite's index for the length of a parked
+window.
+
 ## 2026-09-06 04:45 — umbrella/023 doctor-check-1-does-not-locate-embarch-api
 
 **Leg 018's second unit, and the one I filed myself to break an api monoculture** — see the queue
