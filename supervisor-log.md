@@ -78,6 +78,68 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 14:46 — umbrella/024 check 14's stray spaces, and a guard so no check can grow them
+
+**Decided:** nothing suite-wide. I accepted three worker judgement calls, and the third is the one
+worth reading. **(1)** The `Remote` skip arm becomes a `\`-continued literal, like the `WslHost`
+sibling `81e20f4` fixed and missed this one beside. **(2)** Check 2's `local` fix line had a
+*hand-set* three-space gap (`install   (or, if already installed: …)`) — not a wrapped literal at
+all, but the guard cannot tell them apart, so it was narrowed to one space. That is a second
+rendered change beyond the task's subject and I am recording it explicitly rather than letting it
+ride. **(3) Check 6's detail is exempt**, because it renders `{e:#}` of a `toml` parse error
+verbatim, caret diagram and all.
+
+**Merged:** `agent/umbrella/024-check-14-stray-spaces` (code `2063511`, doc `5677c4c`). Gate on the
+merge result: `cargo build`, `cargo test` **197 passed / 0 failed / 0 ignored**, clippy
+`--all-targets -D warnings`, all 9 doc checks, ownership green both branches (doc: 5 paths; code:
+whole tree), client-names clean.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**It did the two hard checks I asked for and the answers were not what I expected.** On check 16 —
+where the worker itself flagged that its test compares against *copies* of the strings, which is
+the very failure this unit exists to fix reproduced one level up — the reviewer read both functions
+and found the guard is **genuinely real, not decorative**: `pure_verdicts()` calls the *actual*
+`judge_growth` and the *actual* `absent_note(class)`, so those strings are live under test. The
+copies are **exactly three** notes composed inside `check_growth` at `src/doctor.rs:2224-2234` (the
+remote note, the `no data directory resolves…` note, the `assuming a … Core` note), and
+`check_growth` has one non-test caller. So the hole is narrow, named, and disclosed in three
+places. **The worker's self-report was pessimistic about its own work**, which is the direction you
+want that error to go.
+
+On the newline exemption the reviewer showed the pinning actually works: `verbatim.push` happens on
+the same branch that `continue`s past the space check and `assert_eq!(verbatim, vec![6])` runs
+after the loop, **so a future check whose detail contains a newline yields `[6, N]` and fails
+rather than getting a free pass.** It also confirmed the unit's premise directly — the old
+assertion `.contains("another machine")` sits wholly before the wrap, so it really did sail over
+eighteen spaces; the new one spans them.
+
+**One inherited inaccuracy it caught and correctly declined to charge to this unit:** the code
+cites **decision 39** for "nothing under test resolves a real data directory", but 39 is about
+*printing* the resolved path and says nothing about tests. That framing was already on
+`judge_growth`'s doc comment before this commit. The constraint is real; the citation is loose.
+**Left as-is, named here so the next umbrella unit does not re-derive it.**
+
+**Hardware debts:** none, and none owed. **A finding worth more than the unit:**
+`check-client-names.py` flagged denylist entries #19–21 **in a test fixture the worker itself
+wrote** (`sample_project(...)`), not in prose. It renamed and re-ran clean. That shim is reaching
+worker-authored test data, which nothing in the protocol claimed it did.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **that this unit put two more `umbrella` files into reserve and no ride-along
+was available for either.** `spec.md` went 89.4% → 94.3% and `open.md` 88.4% → 94.2%, and the
+worker's argument is sound — `spec.md` was *already* at 89.4% before it wrote a word, so **any**
+addition of any size landed in reserve. It filed `tasks/umbrella/029`, `In flux: yes`, unparking
+with `009`. But that now makes **four** umbrella files in reserve behind two blocked compaction
+tasks, and the mechanism's answer to "the file was already nearly full" is a debt ticket rather
+than a pass. **`umbrella` is the scope where this is closest to becoming a wall rather than a
+ledger**, and I am recording that as a trend across legs, not as this unit's fault.
+
+---
+
 ## 2026-09-06 14:30 — ui/008 the trace decoder counts the rows it refuses
 
 **Decided:** nothing beyond accepting the worker's two judgement calls, both of which I think are
