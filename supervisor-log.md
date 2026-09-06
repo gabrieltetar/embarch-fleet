@@ -97,6 +97,79 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 16:55 — outpost/006 the reference decoder has a test that is guaranteed to run
+
+**Decided:** one thing, and it is small and mine. The reviewer found that
+`embarch-outpost/spec.md` §5's new line said "**`us` carries exactly three decimals, always**" while
+the same commit's own test pins the exception — `cycles_per_sec` of 0 renders the empty string
+rather than guessing a rate, and *both* decoders agree on that. I corrected "always" in the fold
+rather than filing it. One word, and it was the only word in a cross-implementation contract that
+was not true.
+
+**Merged:** `agent/outpost/006-decoder-unit-test` (code `b078b78`, doc `86616207`). Gate on the
+merge result: `python3 tests/decoder_unit.py` **20 passed** under `env -u WEST -u ZEPHYR_BASE`,
+client-names clean, ownership green both branches (code: whole tree, base `d9d34fb67481`; doc:
+5 paths, base `5f51e3114185`). **No `cargo`** — `embarch-outpost` has no `Cargo.toml`.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**I reproduced the deliberate break myself rather than taking the worker's word**, because the whole
+product of this unit is a claim that a test would catch a regression. Reverting the wrap rule at
+`decode_outpost.py:224` to a naive `cycles < last` turns 20 passes into 2 failures with the
+historical bug verbatim — a 10-cycle backwards step from a gap record rendering `4990` as
+`4294972286` and shifting every record after it by 2**32 — and restoring it returns 20 OK.
+**`test_a_real_wrap_does_unwrap` still passes under that break**, which is exactly why the gap
+direction had to be a separate test and is the detail that makes this a real check.
+
+**The reviewer answered the question I could not.** The test synthesises its own COBS encoder and
+varint writer rather than importing the decoder's — right shape, but worthless if both agree on a
+format that is wrong. It traced the synthesised bytes against `src/outpost_priv.h` **and against the
+firmware's own literal-byte ztests**: the `0xFF` run (`254×0xAA` → `[0xFF, …, 0x01]`, no implicit
+zero), the CRC sealed over `frame_type|seq|payload` before COBS, LEB128 masked to 32 bits with
+`300 → AC 02` and `0xFFFFFFFF → FF FF FF FF 0F`, and the record order reproducing
+`test_gpio_records_literal_bytes`'s pinned `{E8,07,09,A4,AC,1C,00}` exactly. **So this is not two
+implementations agreeing on a shared error.**
+
+**And it found the reversal this pins.** `embarch-decision-reversals.md` row 40 is precisely the
+naive-wrap bug — 99 gap records throwing the first real capture out by 4.29 s each. The unit pins
+the *accepted* side of that reversal rather than re-proposing the rejected one, which is the
+distinction a reviewer exists to draw.
+
+**One pre-existing gap, named so nobody re-finds it as new:** `decisions/clocks.md` decision 17
+enumerates two reasons the DUT clock goes backwards — preemption inversion and a restart — and says
+"what separates them is the other clock, not a threshold". A 32-bit counter wrap is a third case it
+does not enumerate, and the decoder's `2**31` threshold predates this unit. Not introduced here and
+not contradicted here.
+
+**The `features.d` row claims `unit, local`, and the reviewer confirmed that rather than assuming
+it.** Nothing in the corpus claims `decode_outpost.py` has decoded a real hardware capture — the
+real-silicon numbers came through Core to `embarch-study-designer`'s **Rust** decoder, and
+`cross_decoder.py`'s fixtures are native_sim bytes. `hw` would have been the unsupported claim.
+
+**One ownership call, mine.** The worker edited `embarch-outpost`'s own `CLAUDE.md`.
+`protocol.md` §3's table has a `CLAUDE.md` "never" row; `check-ownership.py --code-repo` accepted
+it, and §3 itself says the script is the enforcement and the table its description. I read the row
+as `embarch-doc`'s and let it stand; the added line is one truthful entry in the Layout list. **If
+that reading is wrong it is wrong for every worker, not for this one**, which is why it is here
+rather than reverted.
+
+**Hardware debts:** none, and none owed. **Three environments still dark and one of them narrowed:**
+the three west-gated legs of `run-all.sh` were not executed and `cross_decoder.py`'s sibling
+fixtures are absent — but that is now the *disclosed* remainder rather than the whole story, which
+is the point of the unit.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **that this unit's value depends on `run-all.sh` staying the entry point, and
+nothing enforces that.** The new test earns its keep because it runs *before* the west guard in the
+one script anybody invokes. Move it, reorder it, or add a second runner, and the guarantee is gone
+with no test failing — the guarantee lives in a shell script's line ordering, which is exactly the
+kind of fact this suite has repeatedly found to have drifted.
+
+---
+
 ## 2026-09-06 16:51 — core/007 the `503` naming the holder was never built, and three docs said it was
 
 **Decided:** two, both mine. **(1)** `embarch-core` decision 14 — "contention returns `503` naming
