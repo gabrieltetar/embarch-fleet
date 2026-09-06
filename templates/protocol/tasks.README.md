@@ -60,11 +60,37 @@ task the supervisor invented; that is allowed, and it says so here.
   its workers with it.
 
   Recovery (`{{FLEET_REL}}/protocol.md` §6 phase 0) therefore reclaims every
-  claim at startup, checking each branch first: no commits means back to `open`;
-  commits mean `blocked` with the branch named, so a second worker does not redo
-  salvageable work. The timestamp remains as the backstop for the one case the
-  process tree cannot settle — a supervisor that is alive but wedged — where a
-  claim older than 4 hours is reclaimed the same way.
+  claim at startup — **reading the worktree, not the branch.** A worker's tree
+  is uncommitted for its whole run and becomes commits only in its final
+  bookkeeping, so a branch's commit count reads zero both for a worker that
+  never started and for one that died holding finished work. Three outcomes:
+
+  - **Clean tree, no commits** → back to `open`, delete the worktree.
+  - **Anything else** → `blocked`, naming the branch **and the worktree path**,
+    and delete nothing.
+
+  **Commit a dirty tree to its branch before deciding.** It is cheap and
+  reversible; deleting is neither, and committing is what saved leg 007 when it
+  began recovery on a worker that turned out to be alive. It also makes "delete
+  dead worktrees" a safe unconditional step afterwards rather than a judgement
+  call made twice.
+
+  **This rule replaced its opposite on 2026-09-05, and the opposite had already
+  fired.** It used to read "no commits means back to `open`". Leg 009's
+  `tasks/ui/002` was reclaimed to `open` on exactly that basis — branch tip
+  identical to `main`, which is what the old rule expects of work that never
+  happened — while its worktree held **306 uncommitted insertions that built
+  clean, passed 97 tests and covered three of the task's four code `Done when`
+  boxes**. Nothing was lost only because the worktree deletion that the same
+  tidy-up owed had not run either: two defects cancelled out. The dangerous
+  combination is the old rule working as written — reclaim to `open` *and*
+  delete — after which a task is re-dispatched and nobody ever learns it was
+  done once. `{{FLEET_REL}}/ops.md` §3's table says the same thing; when they
+  disagree, they are both wrong and it is worth saying so out loud.
+
+  The timestamp remains as the backstop for the one case the process tree
+  cannot settle — a supervisor that is alive but wedged — where a claim older
+  than 4 hours is reclaimed the same way.
 - **blocked** — the worker appends a `## Blocked` section saying what it found
   and exits. State returns to `open` only when whatever it named is resolved.
 - **done** — the worker ticks its `Done when` boxes and appends what shipped;

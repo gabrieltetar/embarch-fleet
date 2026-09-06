@@ -42,7 +42,7 @@ Remote Control attaches a phone or browser to a Claude Code session on this mach
 
 | Left behind | Why it is harmless | Recovery |
 |---|---|---|
-| Tasks marked `claimed` | Their workers died with the leg | **No supervisor running ⇒ every claim is stale.** Reclaim to `open`, or to `blocked` naming the branch if it has commits worth salvaging |
+| Tasks marked `claimed` | Their workers died with the leg | **No supervisor running ⇒ every claim is stale.** Reclaim by the **worktree's** state, never the branch's commit count: clean and no commits ⇒ `open`; anything else ⇒ `blocked` naming the branch *and* the worktree path. [tasks/README.md](../embarch-doc/tasks/README.md) carries the rule and why its opposite was dangerous |
 | Worktrees under `embarch/.worktrees/` | Outside every repo tree, so nothing reads them | **Look before deleting.** No commits *and* a clean tree ⇒ delete. No commits and a **dirty** tree ⇒ it may be a worker still finishing, or one that died with finished work; commit it to a branch and inspect. Keep the rest for the `blocked` task |
 | A repo mid-merge or mid-rebase | `main` is untouched until a merge completes | `git merge --abort` / `git rebase --abort` before anything else |
 | Unfolded `status.d/` fragments | A fragment is the request, not the edit | Left for the next leg — that is what they are for |

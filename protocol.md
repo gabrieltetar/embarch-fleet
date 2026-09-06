@@ -156,14 +156,27 @@ The gate, run by the worker and then **re-run independently by the supervisor** 
 
 That is [embarch-dev-workflow.md](../embarch-doc/embarch-dev-workflow.md) §6's existing standard, unchanged, applied per branch instead of per commit. Nothing here licenses a lower bar because an agent wrote it.
 
-**A reviewer reads for intent, alongside landing, and gates nothing.** When a
+**A reviewer reads for intent, alongside landing, and gates no merge.** When a
 unit's branches merge, the supervisor spawns an `embarch-reviewer` on the diff
-against that sub-project's decisions and the reversals index, and does not wait
-for it. Findings land in `inbox/` and in the unit's log entry; a confirmed
-contradiction is reverted by SHA, which is the first thing that ever uses the
-SHAs §11 already requires. **Merge-on-green is unchanged** — a reviewer that
-blocked would make every unit a two-agent serial dependency, and the owner chose
-progress over caution here as elsewhere.
+against that sub-project's decisions and the reversals index. Findings land in
+`inbox/` and in the unit's log entry; a confirmed contradiction is reverted by
+SHA, which is the first thing that ever uses the SHAs §11 already requires.
+**Merge-on-green is unchanged** — a reviewer that blocked a merge would make
+every unit a two-agent serial dependency, and the owner chose progress over
+caution here as elsewhere.
+
+**It is the last thing the fold waits for, and that is not the same as gating.**
+"Spawn it and never wait" was the rule until 2026-09-05, and it is incoherent
+with §11: the `**Reviewer:**` line rides *inside* the fold commit, the fold
+lands a minute or two after the merge, and a reviewer reports in ninety seconds
+to three minutes. The line was therefore required to state a fact that did not
+exist yet, and leg 011 wrote it into two entries before its reviewer reported
+and into a third before it had spawned one — all three true by luck. Two earlier
+legs had each improvised their own way around it. So the merge does not wait and
+the *entry* does: spawn at merge, do the rest of the fold, collect the reviewer
+immediately before writing the entry. The wait is under a minute against a
+twenty-minute worker; what it buys is that the one tally that can ever settle
+[open.md](open.md)'s reviewer question is evidence rather than a guess.
 
 **A reviewer does not count against the worker wave**, and the rule that said it
 did was self-defeating. It reads a diff for about ninety seconds against a

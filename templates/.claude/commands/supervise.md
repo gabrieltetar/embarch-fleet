@@ -377,14 +377,37 @@ after each merge. **Record both merge SHAs per unit** — there is no merge comm
 and no surviving branch name, so the SHA is the only handle a revert has. Delete
 a worker's worktrees once its branches have landed or been abandoned.
 
-**Spawn a reviewer the moment a unit's branches are merged, and do not wait for
-it.** One background `embarch-reviewer` per unit, given the unit id, both merge
-SHAs and the sub-project's decisions. It reads the diff for one thing — does this
-contradict a decision it left standing — and drops a finding in `inbox/` if it
-finds one. **It gates nothing**: merge-on-green is the owner's choice and a
-reviewer that blocked would make every unit a two-agent serial dependency. It is
-the only thing in this design that ever reads a diff for intent, and `risks.md`
-names that gap as the characteristic failure.
+**Spawn a reviewer the moment a unit's branches are merged. It never blocks the
+merge; it is the last thing the fold waits for.** One background
+`embarch-reviewer` per unit, given the unit id, both merge SHAs and the
+sub-project's decisions. It reads the diff for one thing — does this contradict a
+decision it left standing — and drops a finding in `inbox/` if it finds one. **It
+gates no merge**: merge-on-green is the owner's choice and a reviewer that
+blocked a merge would make every unit a two-agent serial dependency. It is the
+only thing in this design that ever reads a diff for intent, and `risks.md` names
+that gap as the characteristic failure.
+
+**Collect it before you write the entry, because the entry has to be true when
+it is written.** §11 puts the `**Reviewer:**` line *inside* the fold commit, and
+the fold lands within a minute or two of the merge while a reviewer takes about
+ninety seconds to three minutes — so a line written at fold time states a fact
+that does not exist yet. Leg 011 wrote it into two entries before its reviewer
+reported and into `api/013`'s before it had spawned one at all; it caught itself
+and both came back clean, so those entries are true **by luck**. The log had
+already invented two different workarounds for this on its own — `api/010`'s
+"result recorded in the next unit's entry" and `core/003`'s "reported after
+that" — which is what a structural problem looks like from inside.
+
+So: spawn at merge, do the rest of the fold (consume `status.d/`, run both
+assemblers, re-run the gate), and **collect the reviewer last, immediately
+before writing the entry.** By then it has usually reported; if it has not,
+wait for it — that wait is under a minute against a twenty-minute worker, and it
+is the difference between a tally that is evidence and a tally that is a guess.
+If it dies, or a `fleet stop` arrives while you are waiting, the line says
+`skipped (reviewer did not report — <what happened>)`. **Never write a fourth
+form and never write "pending":** `grep '^\*\*Reviewer:'` is the tally, a fourth
+form breaks it, and a `pending` nobody resolves is silent — the `umbrella/004`
+entry says exactly this about a fourth form and it was right.
 
 **A reviewer does not count against the worker wave.** It reads a diff for
 about ninety seconds; a worker runs for twenty minutes. Counting them equally
@@ -402,8 +425,12 @@ where a reviewer would outlive the leg that spawned it. Say which in the
 and should not appear again.
 
 **Every unit's log entry carries a `**Reviewer:**` line, in exactly one of three
-forms**, because whether per-unit review earns its cost is an open question that
-only accumulated entries can answer:
+forms, at the start of its own line**, because whether per-unit review earns its
+cost is an open question that only accumulated entries can answer. Write the
+marker exactly — `fold-commit.py` refuses a fold whose entry does not carry every
+field of the shape as a literal `**Field:**` at a line start, and it refuses
+before it commits anything, so a malformed entry costs a retype rather than a
+recovery:
 
 ```
 **Reviewer:** no findings.

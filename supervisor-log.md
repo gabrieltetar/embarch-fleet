@@ -51,12 +51,23 @@ under `embarch-dev-workflow.md` §6 there is no merge commit and no surviving
 branch name, so the SHA is the only handle a revert has.
 **Blocked:** `agent/<scope>/<task>` — why, and what state the task was left in.
 **Reviewer:** `no findings` / `N finding — <inbox file>` / `skipped (<why>)`.
-Exactly one of the three, always. Whether per-unit review is worth double the
-spawns is undecided, and this line is the only evidence that will settle it.
+Exactly one of the three, always, and **collected before this entry is written**
+rather than predicted — the reviewer is spawned at the merge and waited for
+here, which is the only point in the unit where waiting costs anything and the
+only point where the line can be true. Never `pending`, and never a fourth form:
+whether per-unit review is worth double the spawns is undecided, and this line
+is the only evidence that will settle it.
 **Hardware debts:** what needs a board, and what board.
 **Budget:** verdict at start and end, and the wave size it produced.
 **Least sure about:** one sentence. Not optional.
 ```
+
+Every one of those seven markers is written literally, as `**Field:**` at the
+start of a line, and `fold-commit.py` refuses a fold whose entry drops one or
+bends one. That is newer than most of this file: `umbrella/010` below opens its
+debt with `**Hardware debts: one, and it is free.**`, bolding the whole phrase,
+which is invisible to the fold's own ledger — three of 2026-09-05's ten entries
+lost a field that way. The shape is data, not decoration.
 
 A folded day collapses that into one entry with the same fields, listing every
 unit under **Merged** and **Blocked**:

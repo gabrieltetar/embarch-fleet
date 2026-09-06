@@ -46,7 +46,14 @@ only those, which is cheaper and catches less.
 
 **What would settle it:** several legs' worth of findings. If per-unit review
 produces nothing over twenty units, the flagged-diff version is strictly better.
-Nobody has run it yet.
+
+**The tally is trustworthy from 2026-09-05 and not before.** Until then the rule
+was "spawn it and never wait", which [protocol.md](protocol.md) §10 required the
+fold commit to summarise before the reviewer could report — so a `no findings`
+line was a prediction, not a result. Leg 011 wrote three of them that way and
+happened to be right. The reviewer is now collected immediately before the entry
+is written. **Read the eight lines that predate the change as weaker evidence
+than the ones after it**, and count the twenty from here.
 
 ## Compaction is scheduled, and the reserve is calibrated against one pass
 

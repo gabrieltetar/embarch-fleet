@@ -20,6 +20,13 @@ after the log commit exists -- so the orderings a kill can leave behind are:
 The one ordering that must never occur is "fold without entry", which is the
 one this exists to prevent, and it cannot: the doc-repo commit is last.
 
+It also refuses an entry that does not match `## Entry shape`. The shape is not
+decoration: `fold-day.py` finds a day's SHAs, hardware debts and reviewer lines
+by those literal `**Field:**` markers, so an entry that bolds a whole phrase
+instead loses that field from the daily fold silently. Four of 2026-09-05's ten
+entries did exactly that -- three dropping `**Hardware debts:**`, one writing a
+fourth `**Reviewer:**` form -- and nothing failed.
+
 It also does what `git add -A` was doing, and refuses what `git add -A` was
 sweeping. risks.md: the supervisor folds in the main checkout while the owner
 may be dropping a file into `inbox/`, and legs 004 and 005 both swept his
@@ -64,6 +71,44 @@ ALLOWED = (
 )
 
 UNIT_RE = re.compile(r"^[a-z-]+/\d{3}$")
+
+# supervisor-log.md's `## Entry shape`, as data. Every one of these is written
+# literally, as `**Field:**` at the start of a line, and the shape says so of
+# each -- "if it decided nothing, say nothing"; "exactly one of the three,
+# always"; "not optional". None of that was enforced anywhere, and the entries
+# drifted exactly as an unenforced shape does: on 2026-09-05 three of ten lost a
+# field by bolding a whole phrase instead of the marker, `umbrella/010` writing
+# `**Hardware debts: one, and it is free.**`. That is not cosmetic -- fold-day.py
+# extracts debts, reviewer lines and SHAs by these markers, so a bent one is a
+# hardware debt the daily fold cannot see and a reviewer line
+# `grep '^\*\*Reviewer:'` never counts. `umbrella/004` had already needed a
+# correcting commit for the same class.
+REQUIRED_FIELDS = ("Decided:", "Merged:", "Blocked:", "Reviewer:",
+                   "Hardware debts:", "Budget:", "Least sure about:")
+# The three forms, and nothing else. A fourth form breaks the tally that is the
+# only thing able to settle open.md's reviewer question, and `pending` is the
+# tempting fourth: it reads as honest and is never resolved by anybody.
+REVIEWER_FORM = re.compile(
+    r"^\*\*Reviewer:\*\*\s+(no findings\b|\d+ findings?\b|skipped\s*\()", re.M)
+
+
+def entry_shape_problems(body: str) -> list[str]:
+    """What the newest entry drops or bends. Empty means it matches the shape."""
+    out = []
+    missing = [f for f in REQUIRED_FIELDS
+               if not re.search(rf"^\*\*{re.escape(f)}\*\*", body, re.M)]
+    if missing:
+        out.append("missing, or not written as a literal `**Field:**` at the start of "
+                   "a line:\n" + "\n".join(f"      **{f}**" for f in missing))
+    if not any(f.startswith("Reviewer") for f in missing) and \
+            not REVIEWER_FORM.search(body):
+        out.append("the `**Reviewer:**` line is not one of the three forms "
+                   "(`no findings` /\n      `N finding — <inbox file>` / "
+                   "`skipped (<why>)`). `pending` is not a form:\n"
+                   "      collect the reviewer before writing the entry, and if it never\n"
+                   "      reported say `skipped (reviewer did not report -- <what "
+                   "happened>)`.")
+    return out
 
 
 def git(repo: Path, *args: str, check: bool = True) -> str:
@@ -321,6 +366,19 @@ def main() -> int:
               "Write this unit's entry to supervisor-log.md FIRST, then fold. The\n"
               "entry is part of the fold, not a step after it: writing it afterwards\n"
               "is the window api/003 landed in on 2026-09-03.", file=sys.stderr)
+        return 1
+
+    # Before anything is staged and long before the log is committed, so a bent
+    # entry costs a retype rather than a recovery.
+    shape = entry_shape_problems(found[1])
+    if shape:
+        print(f"the log's newest entry ({args.unit}) does not match "
+              "`## Entry shape`:\n", file=sys.stderr)
+        for pr in shape:
+            print(f"  - {pr}", file=sys.stderr)
+        print("\nThose markers are how fold-day.py finds a day's SHAs, hardware debts\n"
+              "and reviewer lines, so a bent one is data the daily fold cannot carry.\n"
+              "Fix the entry and re-run. Nothing has been written.", file=sys.stderr)
         return 1
 
     if not git(FLEET_REPO, "status", "--porcelain", "--", "supervisor-log.md").strip():
