@@ -82,7 +82,11 @@ import re
 
 TASKS = "tasks"
 INBOX = "inbox"
+# What a WORKER may be sent at. `bench` is deliberately absent: the supervisor
+# runs those with its own hands, one at a time (protocol.md section 7), so
+# counting them here would size a wave against work no worker can take.
 DISPATCHABLE_HW = ("none", "verify-only")
+BENCH_HW = "bench"
 
 STATE_RE = re.compile(r"^\*\*State:\*\*\s*(.+?)\s*$", re.M)
 HW_RE = re.compile(r"^\*\*Hardware:\*\*\s*([a-z-]+)", re.M)
@@ -166,13 +170,18 @@ def stale_reason(task: dict, no_supervisor: bool, after_h: float,
 def classify(tasks: list[dict], no_supervisor: bool, after_h: float,
              now: dt.datetime) -> dict:
     buckets = {"open": [], "recoverable": [], "claimed": [], "gated": [],
-               "owner_gated": [], "other": []}
+               "bench": [], "owner_gated": [], "other": []}
     for t in tasks:
         hw_ok = t["hardware"] in DISPATCHABLE_HW
         if t["state"] not in ("open", "claimed"):
             buckets["other"].append(t)
         elif t["owner"] == "required":
             buckets["owner_gated"].append(t)
+        elif t["hardware"] == BENCH_HW and t["state"] == "open":
+            # Real work, but the supervisor's own hands -- so it is reported
+            # separately and never added to `dispatchable`, which sizes a wave
+            # of workers.
+            buckets["bench"].append(t)
         elif not hw_ok:
             buckets["gated"].append(t)
         elif t["state"] == "open":
@@ -286,6 +295,7 @@ def main() -> int:
             "claimed_respected": [t["path"] for t in b["claimed"]],
             "hardware_gated": [{"path": t["path"], "hardware": t["hardware"]}
                                for t in b["gated"]],
+            "bench": [{"path": t["path"], "scope": t["scope"]} for t in b["bench"]],
             "owner_gated": [t["path"] for t in b["owner_gated"]],
             "other": [{"path": t["path"], "state": t["state"]} for t in b["other"]],
             "inbox": drops,
@@ -294,6 +304,8 @@ def main() -> int:
         return 0 if dispatchable else 1
 
     print(f"dispatchable: {dispatchable}")
+    if b["bench"]:
+        print(f"bench (supervisor-only, run one at a time): {len(b['bench'])}")
     for t in b["open"]:
         print(f"  open        {t['scope']:<14} {t['path']}")
     for t in b["recoverable"]:
@@ -303,6 +315,8 @@ def main() -> int:
         print(f"  inbox drop  {'-':<14} {p}")
     for t in b["claimed"]:
         print(f"  claimed     {t['scope']:<14} {t['path']} (respected)")
+    for t in b["bench"]:
+        print(f"  bench       {t['scope']:<14} {t['path']} (supervisor's own hands)")
     for t in b["gated"]:
         print(f"  hw-gated    {t['scope']:<14} {t['path']} ({t['hardware']})")
     for t in b["owner_gated"]:

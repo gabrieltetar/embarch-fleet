@@ -264,6 +264,51 @@ owner's cue to top it up, and he should hear it before it reaches zero:
   what is worth doing, which is why it asks instead of guessing. The pump stays
   latched on; the listener will not respawn you into another dream for 6 hours.
 
+### Bench units come first, and they are yours
+
+**A `Hardware: bench` task is run by you, with your own hands, one at a time.**
+Never dispatch one to a worker (`{{FLEET_REPO}}/protocol.md` §7). There is one
+`hw_lock` and one study in flight, and Core's `409` is a refusal a worker will
+misread as a bug in its own change — serialization is the point, and it needs no
+lock because exactly one supervisor exists.
+
+**Take every runnable bench unit before any host-side one.** `queue-status.py`
+prints them under `bench` and, deliberately, does **not** count them in
+`dispatchable` — that number sizes a wave of workers, and no worker can take
+these. The ordering is not a preference: host-side work does not expire and a
+plugged-in board does. The owner unplugs the bench when he is done with it, and a
+bench unit that waits behind six doc tasks is one that runs against no hardware.
+
+**Validate before you start, every time.** The task names the roles it needs.
+Check each one live — `embarch-api`'s `validate` tool, or
+`embarch-topology validate <role>` — and only then begin.
+
+- **A role that is not attached leaves the task `open`.** Not `blocked`. Say it
+  once in the log entry and move to the next unit. A board coming back is
+  normal, and a `blocked` task would need a human to un-block something that
+  fixed itself.
+- **A topology *mismatch* is different and you stop.** A probe that is attached
+  but reports a hardware ID other than the one enrolled means the board on the
+  desk is not the board recorded. **Never re-enrol to make it pass** — that is
+  the exact safety property enrolment exists for, and papering over it is how
+  `embarch-topology` decision 20's failure went expensive: "a bench that flashed,
+  booted, ran, and timed out". Leave the task `open`, name both IDs in the entry,
+  and alert (`{{FLEET_REPO}}/ops.md` §3) — the owner re-enrols.
+
+**You may flash a configured project's board and run studies against it. You may
+not write to a client repo** — no commit, no source edit, no release, no branch.
+§2 still reserves that; what the owner granted on 2026-09-06 is exercising
+EmbArch against real hardware, not developing someone else's firmware. If a bench
+unit turns out to need a source change in a client repo, that is a finding for
+`inbox/`, not a change to make.
+
+**Never infer a DUT fact.** What board is on the bench, what its console is, what
+has to happen before a step will work — a bench task carries these, with their
+source, or it is under-specified. If you need one it does not carry, **say so and
+leave the task open**; do not guess, and do not derive it from firmware source.
+An inferred hardware fact asserted as measured is the failure this suite has
+already paid for.
+
 **Then run units until the cap.** For each free slot, while the wave size allows:
 
 **Select and set up.** At most one task per sub-project, from `Hardware: none`

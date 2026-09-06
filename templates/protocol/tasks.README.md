@@ -22,7 +22,7 @@ The work queue background agents pull from. One file per task, committed to
 **State:** open
 **Source:** embarch-core/open.md — "api/CLI consumption of /study/{id}/events is not built"
 **Scope:** api                     <!-- one sub-project, or `suite` -->
-**Hardware:** none                 <!-- none | verify-only | required -->
+**Hardware:** none                 <!-- none | verify-only | bench | required -->
 **Owner:** no                      <!-- `required` if every path it writes is reserved -->
 
 ## What
@@ -104,11 +104,35 @@ task the supervisor invented; that is allowed, and it says so here.
 
 ## Hardware field
 
-`none` — fully host-side, dispatchable. `verify-only` — the change can be built
-and unit-tested by a worker but its real behaviour needs a board; dispatchable,
-and it must leave a hardware-verification debt (§7). `required` — cannot be
-started without hardware; **not dispatchable**, it waits for the owner's own
-session. A task nobody has classified is treated as `required`.
+`none` — fully host-side, dispatchable to a worker. `verify-only` — the change
+can be built and unit-tested by a worker but its real behaviour needs a board;
+dispatchable, and it must leave a hardware-verification debt (§7). **`bench` —
+needs the bench, and the *supervisor* runs it itself, one at a time**; never
+dispatched to a worker (§7). `required` — cannot be started by the fleet at all;
+**not dispatchable**, it waits for the owner's own session. A task nobody has
+classified is treated as `required`.
+
+**`bench` is newer than the rest (2026-09-06) and exists because overloading
+`required` would have been wrong in both directions.** `required` has always
+meant two things at once — "needs a board" and "needs the owner" — and the day
+the fleet gained hardware those stopped being the same claim. Two `dev-bench`
+tasks are `required` for a *toolchain* reason (no `west` a worker can run), and
+promoting every `required` task to fleet work would have swept those in.
+
+Three things follow from `bench` being the supervisor's own hands:
+
+- **At most one runs at a time**, which needs no lock: exactly one supervisor
+  exists, ever ({{FLEET_REL}}/protocol.md §6). There is one `hw_lock` and one
+  study in flight, and Core's `409` is a refusal an agent misreads as a bug in
+  its own change — so serialization is the whole point, not a detail.
+- **It is checked live before it starts, not assumed.** Boards get unplugged. A
+  `bench` task names the roles it needs, the supervisor validates each, and a
+  role that is not attached leaves the task **`open`** — never `blocked`. The
+  bench coming back is normal; a task marked blocked for it would need a human
+  to un-block something that fixed itself.
+- **It carries the DUT facts it needs.** An agent must not infer them: what the
+  board is, what its console is, what has to happen before a step will work.
+  Write them into the task, with their source.
 
 ## Owner field
 
