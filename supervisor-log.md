@@ -78,6 +78,164 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-05 23:20 — umbrella/007 doctor-target-count-shellout
+
+**Leg 013's third unit.** The first this leg with a real code diff, and the first with a
+deletion.
+
+**Decided:** nothing suite-wide. The task was a genuine either/or — build decision 17's
+shell-out, or retire the amendment and document the local scanner as intended — and I
+refused to choose for the worker. **It built the shell-out, and its reason retires the
+other option rather than merely beating it.** Reading `count_for_variants`, it found the
+scanner counts the declared **default** revision as backed *unconditionally*, with
+`variant_count` `.max(1)` and a missing revision section yielding 1 — so **for any repo
+with a parseable `boards/` and a non-empty `app/`, the count could not be zero.** The fail
+its own doc comment promised was unreachable, and check 8's zephyr-west branch was in
+practice re-asserting `init`'s shape test under a stronger name. That is not a
+coarse-but-conservative reading of a pass/fail signal; the error was one-sided toward
+passing, which is the absence of a signal. Retiring the amendment would have meant writing
+*that* down as intended behaviour.
+
+**It recorded the losing argument, which is what I actually asked for**, and the losing
+argument shaped the build: shelling out adds a fourth subprocess and a parse of another
+repo's JSON with no version handshake, and the amendment's own bootstrapping argument cuts
+both ways — a check that can only answer when `embarch-api` is locatable **answers less
+often** than one that cannot fail to run. Hence three outcomes rather than two
+(`Count` / `Rejected` / `Unanswerable`), and an unanswerable is a **warn naming which**,
+never a pass. "Answered less often but able to say no" over "always answered, structurally
+unable to say no."
+
+**`zephyr::count_valid_targets` and its revision/variant/soc modelling are deleted.** Only
+`init`'s shape detection remains, which is what the amendment always said it preserved.
+
+**Merged:** `agent/umbrella/007-doctor-target-count-shellout` (code `1489f36`, doc
+`1382ad1`). Rebased once onto a moving `main` — `api/016`'s claim landed between the push
+and the merge — clean, no conflict. Gate on the merge result: 161 tests, clippy, all 9 doc
+checks, ownership both branches, client-names clean.
+
+**Blocked:** none.
+
+**Reviewer:** no findings. It confirmed the deletion took nothing — `count_valid_targets`
+has zero remaining callers, `looks_zephyr_west_shaped` is still called from
+`src/init.rs:382` with its predicate unchanged in substance — and it found the one real
+widening and judged it harmless: `BoardYml.board` went from a typed `BoardSection` to
+`serde_yaml::Value`, so a `board:` key holding a scalar or null now counts as shape where
+it used to fail deserialization. Nothing in decision 17 pins that, and the new test
+`a_yaml_file_without_a_board_key_is_not_a_board` guards the case that matters. All twenty
+doctor rows survive the compaction, counted; the designed-and-unbuilt distinction is still
+per-row. Tally after this unit: **14 ran, 13 no findings, 1 finding.**
+
+**Three things it raised that are not findings and that I am carrying, because each is the
+kind of thing that only shows up once:**
+
+1. **The worker rewrote decision 26, which was `umbrella/013`'s — this leg's own first
+   unit — two hours earlier.** Correctly: 26 cited "17's amendment, which is itself
+   unbuilt" twice and concluded "no `--prune` until a valid-target oracle exists", and both
+   went false the moment this landed. The reviewer verified the replacement claim against
+   `embarch-api/src/resolve.rs:454` and `src/zephyr.rs:171` — `list_targets` serializes
+   `Target { board, soc, cpucluster, variant, revision, app }` and `build_dir_name` is a
+   method never in the JSON, so it holds — **and caught one clause that overstates**: the
+   listing *does* emit `snippets_by_app`, `default_snippets` and `default_extra_args`; what
+   it never sees is a particular call's selection. Not a falsehood, but a sentence that
+   claims more than it can.
+2. **A tension inside a deferred feature, which nobody would meet until they built it.**
+   `embarch-api` decision 19 says pre-`target.json` and pre-FNV directories are off-limits
+   to `--prune` *because they still belong to a valid target*. Umbrella 26 now reads as
+   though publishing `build_dir_name` were sufficient — and a name-set-complement prune
+   built on it would delete exactly those directories. 26's operative rule is still
+   "measure now, delete never" and both safety clauses survive verbatim, so nothing is
+   wrong today. **Anyone who picks up `--prune` needs to read both entries, not one.**
+3. **`tasks/umbrella/009`'s `Must not delete:` clause protects a table by a *count*, and
+   the count's referent moved.** Before this unit `open.md` and `009`/`016` agreed the
+   unbuilt set was {22(a-c), 27/29, 17's amendment}. Now `open.md` says {22(a-c), 27/29}
+   and `009`/`016` say {22(a-c), 26's `--prune`}. The worker refreshed the counts as `009`
+   itself demands, and the count is still two — **but it is two of a different list**, and
+   a clause that protects by number is exactly the one that must not quietly change what
+   it tracks. Same defect shape as `umbrella/015`'s `no-cli`: a stable name over a moved
+   referent.
+
+I consumed the unit's `status.d/umbrella-reversal-row-target-scanner.md` into
+`embarch-decision-reversals.md` myself, per §3 — the reversals bullet had described this
+shell-out as done since 2026-09-02, three days before it existed. The bullet now carries
+the lag as the finding: **an amendment that reads as shipped is indistinguishable from one
+that is**, and only decision 17's own "built 2026-09-05" line says which.
+
+**Hardware debts:** one, and the worker asked for it to be read as red. **The shell-out has
+never run against a real `embarch-api`** — 6 new unit tests against injected exit codes and
+stdout only; the flag ordering (`--config`/`--json` *before* the subcommand, which is check
+11's documented clap trap) and the `{success, targets}` shape are read off `embarch-api`'s
+source, **not observed**. It is not hardware: one `embarch doctor --json` in an attended
+session settles it. **Prediction written before the run, which is what makes it
+diagnostic:** on this machine check 8 **warns** with `embarch-api not located`, because
+check 1 does not locate that binary here. Carried in `embarch-umbrella/open.md`.
+
+**Ride-along compaction:** `spec.md` **9,286 → 9,014 B (88.0%)**, closing `016`'s `spec.md`
+item — so **`tasks/umbrella/016` is now fully paid and should be closed by the next leg**,
+both its items having been carried by the two units this leg dispatched into them. No split
+was available: 10 KB is a role cap on one file. The bytes came from real shortening — check
+8's row stopped describing two states of the world, the `setup` row stopped restating
+decision 21's four-item `--dry-run` plan while citing it, and the check-failure paragraph
+kept the rule and dropped the justification `decisions/schema-skew.md` already owns.
+`open.md` and `decisions/projects.md` were both pushed into reserve by the worker's own
+additions and brought back under **in the same commit**. `--pressure` reports nothing in
+reserve for `umbrella`.
+
+**`DOC-COMPACTION-PASS.md`'s human question, in the worker's words:** yes, and better than
+before. What a reader needs is the command surface, the topology matrix and the twenty-row
+table with each row's real behaviour — all three whole. What left was prose arguing *why* a
+rule is the rule, which is decisions material sitting in the current-truth file. **The one
+place the file got denser rather than shorter is check 8's row**, which now states an
+outcome it did not have — warn where it cannot ask — so a reader of `spec.md` alone learns
+check 8 depends on locating `embarch-api`, which is a thing they can trip over. That is the
+test, and it is the first answer to this question in the log that argues from what a reader
+gains rather than from bytes.
+
+**Budget:** DEGRADED, wave 2, no 429. **This unit ran concurrently with `api/016`** — the
+first time this leg used the full wave, and only because the refill sweep produced an `api`
+task.
+
+**Two defects in my own fold of this unit, both caught, both worth the next leg's
+attention:**
+
+1. **My gate command swallowed its own exit status, and the fold committed over a RED
+   gate.** I ran `python3 scripts/check-docs.py 2>&1 | tail -2 && python3
+   scripts/fold-commit.py …` — and a pipeline's status is `tail`'s, which is always 0. The
+   gate printed `1 of 9 checks RED: check-doc-size.py` and `fold-commit.py` ran anyway. I
+   caught it reading the output, fixed the cause and amended the commit before pushing, so
+   nothing red reached `origin`. **`supervise.md` tells a leg to run the wrapper rather
+   than a list of its own; it does not say not to pipe it.** Run it bare, or the "one
+   command" discipline buys nothing. This is the second time in this log that a
+   *convenience* around the gate — not the gate — was the failure.
+2. **Two suite-level docs entered reserve inside the fold itself**, one by my own hand and
+   one by an assembler. `embarch-decision-reversals.md` **9,309 / 10,240 B** — I spent that
+   consuming this unit's `status.d/` fragment — and `suite/features.md` **18,537 / 20,480
+   B**, crossed by `build_features.py` with no human involved at all. Filed as
+   **`tasks/suite/004-compact-suite.md`**, `blocked`, inside the amended fold commit, which
+   is where `tasks/README.md` says a spent reserve is recorded.
+
+**And filing it surfaced something structural that I want stated once, plainly, rather than
+rediscovered every few folds: the doc-size cap is being applied to a file nobody may
+edit.** `suite/features.md` is assembled by `build_features.py` from `features.d/` on every
+fold and is `never` for every worker scope; `check-ownership.py` refuses it to all of them.
+So when it crosses its reserve line, the check prints *shorten this file and file a
+compaction task* — **an instruction naming an action nobody is allowed to take, and which
+the next fold would overwrite anyway.** The three real moves are shortening the fragments
+(a per-scope act, not a suite act, so the enforcement is aimed at the wrong scope), raising
+the cap for an assembled inventory, or splitting it — **and the last two are `scripts/`,
+which is the owner's.** At 119 rows its growth is monotonic by design: the inventory
+records what the suite has, and the suite gains capabilities. So this file **will re-enter
+reserve on the next feature row whatever anyone does today**, and a compaction task refiled
+every few folds is a treadmill rather than a debt. `suite/004` says so and marks that half
+as blocked on the owner rather than on flux, explicitly so no leg dispatches a worker at
+it.
+
+**Least sure about:** that I let a worker rewrite a decision another unit of *my own leg*
+had edited two hours earlier, and only found out from its report. It was right to do it and
+the reviewer confirmed the new claim against `embarch-api`'s source. But **nothing in the
+dispatch told either worker the other existed**, and the second one happened to notice 26
+had gone false; had it not, this leg would have landed a unit that made its own earlier
+unit's edit wrong, and the reviewer reads one diff at a time.
+
 ## 2026-09-05 22:52 — umbrella/015 decision-37-corrects-itself-by-appending
 
 **Leg 013's second unit.**
