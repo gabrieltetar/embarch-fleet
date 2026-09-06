@@ -78,6 +78,109 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-05 22:05 — umbrella/012 check-16-names-dir
+
+**Leg 012's second unit, and the one the double dispatch actually touched** — see the
+`api/012` entry above for the root cause, and `tasks/doc/009` for the filed version. **Here
+both workers committed and both pushed the same branch.** The second committed the first's
+in-progress tree as `c54d5f0` and pushed it, doing exactly what its dispatch prompt told it
+to ("commit and push incrementally"); the first then committed `d9844dd` and **force-pushed
+over it**. `git diff c54d5f0 d9844dd` is **empty** — the first worker's own staged bytes were
+what the second had committed, so the rewrite swapped an identical tree under a different
+message. **No damage, by luck of content only.** One line of the second worker's own and it
+would have been deleted from pushed history with no conflict and nothing to notice.
+
+**Decided:** nothing suite-wide. Inside `umbrella`, two calls, both the worker's and both
+right.
+
+**A decision-group split rather than a squeeze.** `decisions/doctor.md` would have gone
+**over** its 12 KB cap, not merely into reserve. Decisions **11, 37 and 39 moved verbatim**
+into a new `decisions/reporting.md` — "what a consumer reads back" — leaving 18, 19, 22, 23
+and 31 in `doctor.md` — "what is checked". 10,566 B → 9,454 + 4,089 B. `DOC-COMPACTION.md`
+§2–3 prefers exactly this, and the `In flux: yes` objection that keeps `tasks/umbrella/009`
+parked does not reach a verbatim move, which restates nothing. `tasks/umbrella/009` stays
+parked as filed and no new compaction debt is owed.
+
+**Where the `%ProgramData%` caveat surfaces.** New decision 39: a check that resolves a
+directory prints which one, in `detail` and as a `path` field beside `code` — one path, not
+every path a check mentions. The caveat is printed **only on the arm where it can mislead**,
+and the argument is better than the task's: `setup::data_dir_for` *hardcodes*
+`/mnt/c/ProgramData/embarch` for `wsl-host`, which is a **stronger** assumption than the gap
+`embarch-token.md` §5 records, whose stated mitigation is resolving the real value from the
+Windows side. A relocated `ProgramData` therefore reads as "nothing yet at …",
+indistinguishable from a machine that never ran a study. On the arm where the directory
+exists and holds runs, the sentence would be noise on every healthy run.
+
+**`tasks/umbrella/014` rode along and is closed and removed**, all three items done, which
+is what its own file asked for — it said it must not be dispatched alone. **Pairing it with
+this unit was my call**, made at claim time, and it was the cheap version: one worker, one
+commit, two task files. Two of its three items were **worse than the task claimed**, verified
+against source rather than against the task text: decision 37 was stale by **three** checks,
+not one (`with_code` fires in checks 1, 5, 10 and 14), and decision 18's "the two warns" is
+**three** (`no-status` for the check-4 skip). Item 3 the worker **renamed rather than
+restructured** — `check_probes` takes a finished `UsbScan`, and that injection is what keeps
+`cargo test` off a real `/sys`; moving the scan behind the count would trade that purity for
+a true test name. I agree, and it is the sort of call a mechanical reading of the task would
+have got wrong.
+
+**A dangling citation fixed on the way past:** `src/setup.rs` cited `embarch-token.md` **§6**,
+and that file has five sections. Nothing in the gate can see a section anchor, which is the
+same blind spot `suite/003` hit on 2026-09-05.
+
+**Merged:** `agent/umbrella/012-check-16-names-dir` (code `d9844dd`, doc `811380b`). The doc
+branch was rebased onto `84c0486` before merging, since `api/012`'s fold had moved `main`.
+Gate re-run on the merge result: 150 tests, clippy, all 9 doc checks, ownership on both
+branches (bases `84c0486` / `81e20f4`), client-names clean against 7 entries.
+
+**Blocked:** none.
+
+**Reviewer:** no findings. It verified decision 11 byte-identical across the move and 37's
+body byte-identical plus the append, that `decisions.md`'s index carries both files with the
+right number sets, that nothing still cites 11/37/39 as living in `doctor.md`, that `path`
+does not contradict 37's "the key is always present … every existing consumer keeps working"
+binding clause, and that both `spec.md` deletions preserve their facts elsewhere
+(`spec.md:47`'s topology matrix and `spec.md:57`'s command row).
+
+**One quality defect landed and I did not revert it.** Decision 37's **body** still reads
+"Check 10 is the only user today", corrected by a **`Users, 2026-09-05:` line appended four
+paragraphs below** — an append contradicting an unedited body sentence, which is the shape
+`DOC-PROTOCOL.md` §4 says not to write. The worker flagged it itself and left it because it
+would have been a third commit from a second agent on a branch its author considered
+finished, which is precisely the collision it had just stopped to avoid — correct restraint
+under the circumstances. It is within `tasks/umbrella/014`'s own checkbox wording, which is
+probably how it got there. Filed as **`tasks/umbrella/015`**, with the real fix named: not
+"update the count", which resets the same clock, but delete the roster from the body and
+cite `spec.md`'s table.
+
+**Hardware debts:** one, and it rides free. Not a board — a **live `embarch doctor` on the
+owner's machine**, where Core is the Windows service and this binary runs under WSL2. Nothing
+under test ever resolves a real data directory, by design, so `wsl-host` is the one arm units
+cannot reach. Written into `tasks/umbrella/012` with the exact expected line —
+`[16] PASS … study_results/ at /mnt/c/ProgramData/embarch/study_results: 50 entries,
+809.0 MiB …` — and `embarch doctor --json | jq '.checks[15].path'` giving that same string
+with every other check's `.path` null. **The `%ProgramData%` sentence should not appear
+there; seeing it would mean the hardcoded path is wrong**, which is the finding it exists to
+produce. That prediction, written before the run, is what makes the run worth something. It
+joins the live-`doctor` debt already owed.
+
+**Reserve:** `spec.md` went 68 B into reserve and was **paid back inside the same commit** by
+dropping two duplications, not by squeezing prose — the "separate box" `Not:` bullet (the
+topology matrix already says it) and check 16's "deletes nothing" (the command row already
+says it). Final 9,203 / 10,240 B; `open.md` untouched at 4,596 B, still four hundredths of a
+percent under the line where leg 011 left it. **Nothing in the suite is in reserve.**
+
+**Budget:** DEGRADED, wave 2, no 429.
+
+**Least sure about:** that `c54d5f0` is really gone and really was identical. I am relying on
+the second worker's own `git diff c54d5f0 d9844dd` for the "empty" claim, and after the
+force-push `c54d5f0` is an unreferenced object I did not re-verify before it becomes
+unreachable. If that diff was not actually empty, the difference is now only in a dangling
+object in `/home/gabriel/Github/embarch/.worktrees/embarch-umbrella/012-check-16-names-dir`'s
+reflog, and it will be gone at the next `gc`. **A leg that wants to check this has hours, not
+days.**
+
+---
+
 ## 2026-09-05 21:45 — api/012 compact-api
 
 **Leg 012's first unit.** `embarch-api/spec.md` **10,104 → 8,968 B** (98.7% → 87.6%) and
