@@ -78,6 +78,109 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 01:52 — umbrella/020 check-17s-other-two-holes-and-decision-37s-stale-example
+
+**Leg 016's second unit**, and the largest diff of the leg. Five items filed by `umbrella/018`'s
+reviewer; all five closed.
+
+**Decided:** nothing suite-wide, and two sub-project calls I accepted on the worker's argument
+rather than my own:
+
+- **Item 1 got a guard, not a deletion.** `018` deleted `embarch setup` from `bind-too-narrow`
+  outright; `020` kept it on `bound-narrow` and conditioned it. The distinction is real and the
+  worker stated it cleanly: `bind-too-narrow` fires only when *something answered*, so `setup`
+  can never install there and the offer is unconditionally wrong; `bound-narrow` fires when
+  nothing answered, so it does install, and from the guest side it is the shorter honest
+  remedy. **Mechanically distinguishable, therefore a guard.**
+- **Item 2 was guarded rather than recorded as an exposure, and it was *not* `embarch-topology`'s
+  to fix.** `recommended_bind_address(Remote) == "0.0.0.0"` is the correct recommendation for
+  whichever machine runs Core; what was wrong is which machine `doctor` read it against. New
+  Warn `bind-elsewhere`, citing decisions 31 and 38.
+
+**The reserve was paid by splitting, and that is the part worth carrying.** The worker took
+`018`'s "no further without deleting live reasoning" **as evidence rather than as a starting
+point** and split by mission instead of squeezing again: decision 22 moved verbatim into a new
+`embarch-umbrella/decisions/bind.md`, then was amended *there*. `decisions/doctor.md` 11,519 →
+**6,188 B (50.4%)**, `bind.md` 8,465 B (68.9%), no number renumbered, `decisions.md` gains an
+index row. `open.md` went into reserve on item 3's addition and was **repaid in the same
+commit** to 4,601/5,120 B — 89.86%, which the reviewer checked is genuinely under 90 rather
+than a rounding trick. **`embarch-umbrella` now has no file in reserve at all**, first time in
+this log.
+
+**Merged:** `agent/umbrella/020-check-17-holes` (code `08ccd6f`, doc `0824325`). The doc branch
+was cut at `c1ec5f7` and `main` had moved to `8e86c88` by the time it reported, so I rebased it
+and **re-ran `check-ownership.py` after the rebase** — 10 paths, base `8e86c88`, clean — before
+the `--ff-only`. Gate on the merge result: `cargo build`, 181 tests, clippy, all 9 doc checks,
+ownership both branches, client-names clean.
+
+**Blocked:** none.
+
+**Reviewer:** no findings. Tally after this unit: **25 ran, 23 no findings, 2 findings.** It
+verified the split **by extracting decision 22 from both files and diffing them** — the only
+delta is the two appended amendments, nothing dropped or reworded — and confirmed every inbound
+reference still resolves, including that `spec.md`, `features.d/umbrella-060` and
+`history/umbrella.md` cite "decision 22" by number with no path, which is what
+`DOC-COMPACTION.md` §5 wants. It also re-derived `009`'s `Must not delete:` items one by one and
+checked the whitespace near-miss across the *whole* file rather than the new arm.
+
+**Four observations it declined to call findings, and two of them I filed as
+`tasks/umbrella/021`:**
+
+1. **`setup_would_infer` shares `infer_class` but not its inputs.** Decision 22's new amendment
+   says the two are "shared rather than mirrored so the two can never disagree" — and the
+   reviewer checked the *inputs*: `setup` passes only the `--host` flag, `doctor` passes
+   `config.core.host` **or** the sticky `saved.host`. In one reachable state the fix line names
+   class `remote` where a bare `embarch setup` would infer `wsl-host`. **The remedy's direction
+   survives; the class it names does not.** Shape 8, with a decision amendment written in the
+   same commit as the false witness. Not reverted, and the reviewer's reason is right: check 2
+   has passed the same config-or-saved `host` to the same function since it shipped, so this
+   adopted an existing convention rather than contradicting a standing decision.
+2. **The `Remote` branch of that same predicate is reachable, unguarded and untested** — and
+   `setup` inferring `Remote` installs nothing, which is *exactly* the failure the amendment
+   used to justify deleting the half from `bind-too-narrow`. The tests pin `WslHost` and `Local`
+   only. **The same defect the unit was filed to close, one path further over.**
+3. Decision 37's reuse list was edited to "Two so far" in the same commit in which both existing
+   codes narrowed again; `bind.md` argues that restoring an intended referent is not a reuse.
+   Defensible, but the sub-project's reading of 37 is one day old and has now been applied two
+   ways. Item 3 of `021`.
+4. `features.d/umbrella-061` flipped `Verified` `unit` → `hw` — correct on decision 38's live
+   measurement, and it is item 5 of the task, but it is a drive-by in a unit whose own
+   `Hardware:` is `none`.
+
+**Hardware debts:** none discharged; **one more step added to an existing one.** Item 3 was
+*recorded*, not answered, as instructed: nothing has confirmed that
+`embarch-core install --bind 0.0.0.0` rewrites an existing narrow registration, which is
+load-bearing under **both** Fail arms' fix lines. It is now a third named step of check 17's
+verification debt in `embarch-umbrella/open.md`, alongside `018`'s experiment (a Core installed
+`--bind 127.0.0.1` on a `wsl-host` machine, stopped for `bound-narrow`, running for
+`bind-too-narrow`, plus the wide-registration control). **Needs the Windows side and a real
+narrow-bound Core.**
+
+**The `status.d/` fold was mine and it cost more than it looks.** Applying the fragment to
+`suite/user-guide.md`'s check-17 row put that file **into reserve at 91.8% with nothing filed**
+— a red gate on my own fold, not the worker's. I did not file a task: I **shortened the row
+instead**, back to 89-point-something, because the row had grown into a six-code roster and a
+troubleshooting table's job is symptom → action. It now names only the two codes that change
+*where you go* (`bind-unproven`, `bind-elsewhere`), says the fix line names your case, and
+points at decision 22 for the taxonomy. Note the shape: **a `status.d/` fragment is the one
+edit in a unit that no worker's reserve budget covers**, because the worker cannot write the
+file and the supervisor is not told its headroom.
+
+**Reserve after this unit:** three files, every one filed — `suite/features.md` 93.5%
+(`suite/004`), `embarch-study-designer/decisions/crate.md` 91.7% (`study-designer/006`),
+`embarch-decision-reversals.md` 90.9% (`suite/004`). Down from four.
+
+**Budget:** DEGRADED at start and here, wave 2, no 429.
+
+**Least sure about:** merging a unit whose central mechanism the reviewer showed is not quite
+what its own decision says it is. Item 1 above is a decision amendment asserting an invariant
+that the shipped code does not hold, written in the same commit — and the log's own shape-8
+entry is about exactly that being indistinguishable from a correct one to a later reader. I
+merged it because the direction of the remedy is right, the alternative convention is
+pre-existing and suite-wide in that file, and reverting would restore a strictly worse fix
+line. **But "filed as `021`" is not the same as "fixed", and decision 22 is wrong on `main`
+until it is.**
+
 ## 2026-09-06 01:22 — umbrella/019 doctor-spawn-tests-lose-their-own-exec-to-etxtbsy
 
 **Leg 016's first unit.** A flaky test `umbrella/018`'s worker reported while running its own
