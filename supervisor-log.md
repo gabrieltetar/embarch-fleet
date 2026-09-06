@@ -148,6 +148,20 @@ so that bullet is not stale.
 
 **Budget:** DEGRADED at start and end, wave 2, no 429 anywhere in the leg.
 
+**The leg's own `check-ownership.py --supervisor` came back RED, and it is a false red the next
+leg will also get.** The one flagged path is `scripts/check-doc-size.py`, and it is the **owner's**
+commit `7ef47f2` — the only commit in the range that touched a reserved path, authored by him at
+04:19 while I was folding. It appears in my diff because §13's recipe is
+`git diff --name-only <leg-start-sha>...HEAD`, and once I rebase onto a mid-leg owner commit —
+which I did **twice this leg**, because rebasing rather than forcing is the rule — his commits are
+inside that range. **So the check reports the owner's own edits as the supervisor's whenever he
+commits while a leg is running**, which on a latched pump is most of the time. It is not
+wrong about the path; it is wrong about whose hands. The recipe would have to exclude commits
+already on `origin/main` at leg start *and* those merged in since, or filter by author. **I did not
+touch `scripts/`, and `--supervisor` also reported "all 14 top-level docs classified", so the
+second failure mode it checks for is clean.** Not filing a task for this: `scripts/` and §13 are
+both the owner's, and this entry is where he reads it.
+
 **Least sure about:** that I made four supervisor-authored corrections to sub-project docs across
 this leg — decision 42's overclaim, `tasks/umbrella/009`'s doubled number, `embarch.md` §5's three
 false sentences, and now decision 52's dangling line — every one of them found by a reviewer and
