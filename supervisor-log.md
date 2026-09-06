@@ -78,6 +78,77 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 16:35 — api/029 a study ran green, and the bench told me what is on the air
+
+**Decided:** two things, both mine, and the second reverses the first. **(1)** `suite/studies-guide.md`
+gains a §3a recording the first study the fleet has run end to end, with its provenance. **(2) I
+withdrew a task file I had written twenty minutes earlier** — `tasks/study-designer/013`, which
+proposed a `BleScan` wire action — because it rested on a claim a reviewer showed to be false.
+What replaced it is `tasks/dev-bench/007`, a narrower and real defect in the capability that
+already ships. **A withdrawn task is cheap; a wire-schema announcement for a capability that
+exists would not have been.**
+
+**Merged:** no branch and no worker — a `Hardware: bench` unit is the supervisor's own hands.
+
+**Blocked:** nothing. And **`api/029` itself is `open`, not `blocked`** — I had written it up as
+blocked on an owner-supplied fact and that was wrong; see below.
+
+**Reviewer:** 1 finding — inbox/suite-bleconnect-scan-census-already-exists.md (acted on and
+deleted in this same unit).
+
+**What actually ran.** Both roles validated live and matched their enrolled identities exactly
+(`dut` `834f2559f10a6cdf` / probe `000852006107`, `dev-bench` `6fcddc36cb781b71` / `001057729826`).
+Study `3785bd198cc3a62dccd1780fd552e988`, the two-step `BleAdvertise` self-test, `reflash` at its
+`none` default so nothing was built and nothing was flashed: **2 of 2 `Pass`**, provenance
+`ReportedByDevBench` / `49958d34` against a `Declared` `any`. Then a second study,
+`4d7bcc93cb38f7d01fae509a790d22bd`, deliberately failing.
+
+**The finding is the entry.** I wrote, flatly and in a permanent suite guide, that the study
+vocabulary has **no scan or observe action** and therefore a bench cannot report what is
+advertising near it — derived from reading `study-designer`'s `Action` enum and stopping. The
+enum reading is correct. The conclusion is false: **decision 43's own final paragraph** says a
+failed `target_name` match reports what *was* on the air rather than a bare timeout, and
+`embarch-dev-bench` implements a 256-entry census that lands in the step's `fail_reason`. Three
+artefacts rested on it, including a proposed wire-schema addition. **The reviewer read the
+decision I had cited as authority for everything else and noticed I had contradicted its last
+paragraph.**
+
+**So I ran it, and the census is now measured rather than argued.** A `BleConnect` with an
+unmatchable `target_name` returned `no name match; on air:` and **three named advertisers**, none
+of them attributable to the DUT. That is the honest stopping point and it is a different one:
+**nothing in EmbArch joins a BLE advertiser to an enrolled probe** — enrolment knows a board by
+hardware ID and probe serial, the census by advertised name, and no code relates the two. Decision
+43 also records as *measured* that a DUT's real advertised name was not its configured one, so
+`CONFIG_BT_DEVICE_NAME` is not the authority I had said it was.
+
+**Hardware debts:** the DUT half is owed and it is a bench sitting, not a decision — re-run the
+census, connect to each candidate by name, `GattDiscover`, and the DUT is the one whose table is
+the DUT's. Both boards were attached throughout and are attached now. **`ui/007`, `outpost/002`
+and `study-designer/007` are not blocked** and my earlier write-up said they were.
+
+**Two defects filed, not fixed:** `tasks/core/012` — a completed 2-step study serves
+`current_step: 1` against `total_steps: 2` with both steps `Pass`, because
+`embarch-core/src/study.rs:1333-1334` stores a *count* into the capture's counter and a 0-based
+*index* into the job's, on adjacent lines, and only the second is public;
+`embarch-core/interfaces.md` documents the field with no semantics at all, so nothing could
+disagree. And `tasks/dev-bench/007` — the census `fail_reason` hit its 64-byte cap exactly,
+ending mid-list on a trailing comma, **with no marker**; the `, ...` that exists fires only on the
+256-entry census overflow, which needs 256 advertisers, so the truncation that happens is silent
+and the marked one is unreachable. Its truncation path also leaves a partial `snprintk` write in
+the buffer, which is where the observed trailing comma came from.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **that the provenance discipline had no grip on the sentence that was
+wrong.** Everything I tagged `[measured 2026-09-06 …]` was true and checked; the false claim was
+the untagged negative sitting directly beneath it, and it read as more authoritative for being
+plain. A tag marks what a run produced and says nothing about the inference drawn next to it —
+**and the next sentence is where a bench unit's reasoning actually lives.** I do not have a
+mechanism for that, only a reviewer that happened to read the cited decision to its last
+paragraph, and I would not have caught it alone.
+
+---
+
 ## 2026-09-06 14:46 — umbrella/024 check 14's stray spaces, and a guard so no check can grow them
 
 **Decided:** nothing suite-wide. I accepted three worker judgement calls, and the third is the one
