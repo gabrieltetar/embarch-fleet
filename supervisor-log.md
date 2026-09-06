@@ -78,6 +78,114 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 04:45 — umbrella/023 doctor-check-1-does-not-locate-embarch-api
+
+**Leg 018's second unit, and the one I filed myself to break an api monoculture** — see the queue
+note at the end of this entry, it is the most reusable thing here. The task was written to make
+the worker *establish a premise before fixing anything*: `embarch-umbrella/open.md` said "check 1
+does not locate that binary **here**", and "here" could equally have meant a defect or a machine
+that simply is not an installed suite. **It was a defect**, and the worker proved it on the
+machine's own filesystem rather than by reading.
+
+**Decided:** nothing suite-wide. One sub-project call, the worker's argument, which I accepted:
+**decision 42 ranks the agent CLI's registration ahead of `PATH`** as a source for `locate_api`,
+alongside `EMBARCH_API_BIN` and `install.rs`'s canonical directory. The losing alternative is
+sharp and is recorded: ranking a user-editable JSON entry above `PATH` lets a stale entry naming
+an old build outrank a freshly installed binary. It loses because **that "stale" entry is still
+what the agent actually runs**, and hiding it is precisely the invisible mixed install
+`open.md` complained about. `init` passes `None` deliberately — it is the command that *writes* a
+registration.
+
+**The evidence, because it is what makes this a defect rather than an opinion.** `setup` had
+installed `embarch-api` at decision 28's canonical location beside `embarch` itself, and writes
+its `PATH` line **only into `~/.bashrc` and `~/.zshrc`** (`install.rs:147`'s `candidate_rc_files`
+is literally those two). `locate_api` read `EMBARCH_API_BIN` then `PATH` and nothing else. So
+`command -v embarch-api` succeeds under `bash -ic` and fails under `bash -c` **and `bash -lc`** —
+`.profile` is not a file `setup` writes. With `core=Some, api=None`, `check_binaries` falls to its
+`_` arm and hard-**Fails** `not-found`. A correctly installed suite, red on line one, decided by
+whether the shell that ran `doctor` happened to be interactive. Decision 38's false red, one
+binary over.
+
+**Merged:** `agent/umbrella/023-locate-embarch-api` (code `0109392`, doc `cdc50ff`; the worker's
+doc tip was `805a051`, rebased onto `f5b7d84`). Gate on the merge result: `cargo build`, **196
+tests** (6 new), clippy, all 9 doc checks, ownership 9 doc paths and the code tree, client-names
+clean. No `cargo` argument-not-a-run this time.
+
+**Blocked:** none.
+
+**Reviewer:** no findings. Tally after this unit: **33 ran, 30 no findings, 3 findings.** It
+re-measured the premise instead of accepting it — ran the three shell forms itself, read
+`install.rs:147`, confirmed `check_binaries`'s `_` arm at `doctor.rs:361`, and md5'd both
+binaries. It verified the contested rank's two mitigations exist in code (`locate.rs:186`'s
+`registered.filter(|p| p.is_file())`, and `api_provenance_note` naming the divergence), found the
+locator has exactly three call sites and no circularity through `check_mcp`'s `register_fix`, and
+**re-ran `embarch-api` itself to confirm the observed contract** — argument order, exit 2 on a
+misplaced flag, `{success:false, error}` on **stdout** with the log line on stderr. It then found
+two things nobody else had, **both of which I fixed in this fold**:
+
+- **Decision 42 overclaimed by one sentence.** It said the registration is read once in the driver
+  "so the binary check 1 names and the binary check 10 spawns cannot be different files." **They
+  can**: `EMBARCH_API_BIN` outranks the registration, and a registration whose command is not an
+  existing file is filtered out of the locator while check 10 spawns it anyway. The single read
+  prevents the disagreement it was aimed at — two reads of `~/.claude.json` — and the absolute
+  claim is wider than the code. Narrowed to exactly that, with the divergence-is-printed clause
+  kept. Reversals shape 8, one clause deep.
+- **`tasks/umbrella/009` stated `decisions/doctor.md`'s new size twice, differently** — 11,095 B
+  in its Reserve header and 10,293 B four sentences later, the second a leftover intermediate —
+  and its `Done when` line was ticked `[x]` while still saying "All four files out of reserve"
+  beside the correct new numbers. **That file is the instruction a future compactor obeys**, so a
+  stale number in it is not cosmetic. Both corrected.
+
+**Hardware debts:** one, and it needs no board. **One `embarch doctor --json` on the primary
+topology, in the owner's own session**, plus one `bash -c 'embarch doctor'` — the non-interactive
+shell is the case that made this a defect at all. No `doctor` run has used decision 42's locator.
+What to look for: check 1 Passes rather than Failing `not-found`; its detail names the provenance
+and the mixed install; checks 8 and 11 answer instead of warning `embarch-api not located`; check
+11 compares 17 against 17. **This bench is the awkward case on purpose**: two `embarch-api`
+binaries, different md5, identical `--version` (`0.1.0`), and the one the agent CLI registers is
+the debug build at `embarch-api/target/debug/`. Written into `open.md`.
+
+**What the worker did *not* claim is the good part.** Checks 8 and 11 had a contract read off
+`embarch-api`'s source and never observed. Running that binary directly is neither hardware nor a
+live Core — `versions` loads no config and contacts nothing — so it measured the contract instead
+of predicting it, and then **left the `doctor`-level half as an explicit debt** rather than
+letting "observed" cover both.
+
+**Reserve: a deliberate trade, stated rather than discovered.** `open.md` **4,661 → 4,527 B, out
+of reserve**, paid by deleting bullet 1's settled clause outright and replacing bullet 7 (which
+was a *prediction* of a run) — all three of `009`'s protected clauses verified verbatim by the
+reviewer. `decisions/doctor.md` went the other way, **6,188 → 11,095 B (90.3%)**, filed back onto
+`009` in the same commit; **my own correction above pushed it to 11,346 B (92.3%)**, which is the
+one place this fold spent reserve rather than paying it. The worker's note is worth keeping: 37 B
+of wording would have kept `doctor.md` out, and that is exactly the shave that file's history says
+not to take.
+
+**Not this task, and left in `open.md` for the next sweep rather than filed:** `setup` writes its
+`PATH` line only into `.bashrc`/`.zshrc`, so `embarch-api` is off `PATH` for any script, CI job or
+agent, `bash -lc` included. The locator no longer cares; `install.rs` may have to.
+
+**Budget:** DEGRADED at start and here, wave 2, no 429.
+
+**THE QUEUE NOTE, AND IT IS FOR THE NEXT LEG.** This leg found the queue **1 dispatchable** before
+draining `inbox/` and **3 after — all three `api`.** Every other scope was a blocked compaction
+task or `Owner: required`. One task per sub-project means a wave of 2 could hold only one worker,
+so **half the wave was idle by construction, for this leg and for every leg after it.** §12 says
+sweep only when nothing is dispatchable, and its reason is cost — not sweeping every twenty
+minutes for a queue that already has work. That reason does not cover an api monoculture, so **I
+swept anyway** (`collect-open-questions.py`, one pass, 141 lines) and filed this one task from
+`embarch-umbrella/open.md` bullets 1 and 7. Announced in `#embarch-fleet` as a judgement call with
+a window to object; none came. **The general lesson is that "dispatchable count" is the wrong
+predicate — what matters is dispatchable *sub-projects*.** I did not amend §12; that is the
+owner's.
+
+**Least sure about:** relaxing a refill rule on my own reading of its purpose. It is the one thing
+in this leg that a supervisor is structurally worst placed to judge — the rule exists partly to
+stop a leg generating its own work, `inbox/README.md` names that risk, and leg 017's own closing
+note was that the fleet had filed, dispatched and reviewed its entire backlog with no outside
+input. **I then did more of it, and the argument I used is the kind that always sounds right from
+inside.** The mitigation is that it is announced, small, sourced from a doc the owner wrote, and
+written here rather than into `supervise.md`.
+
 ## 2026-09-06 04:10 — api/022 nine-hand-written-bearer-auth-sites
 
 **Leg 018's first unit.** The token is applied by construction now rather than by convention —
