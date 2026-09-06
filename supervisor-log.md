@@ -154,6 +154,20 @@ against `tasks/api/012`** — the leg started with four across two sub-projects.
 **Budget:** DEGRADED at the start and the end of the leg, wave 2 throughout, **no 429
 anywhere in the leg**.
 
+**A process error of mine, recorded because nothing else would catch it.** I wrote the
+`**Reviewer:**` line into **both** of this leg's first two entries *before the reviewer had
+reported* — and for `api/013` I had not even spawned one when I wrote "no findings". I
+noticed on `umbrella/006`'s reviewer returning, spawned `api/013`'s immediately, and both
+came back **no findings**, so the two entries are now factually true. **They were true by
+luck, not by process.** §10 says "no findings" and "no reviewer ran" are different facts
+and this log is the tally that settles whether per-unit review earns its cost; a supervisor
+writing the line from expectation rather than from a result silently corrupts exactly that
+tally. The fold order makes this easy to get wrong — the entry goes *in* the fold commit,
+which lands before a ~90-second reviewer can report — and the honest options are to spawn
+the reviewer before writing the entry, or to write "pending" and never leave it. **The
+tally after this leg: 7 ran, 6 no findings, 1 finding**, and that one finding became
+`api/015`, this leg's third unit.
+
 **Least sure about:** `open.md` at **89.96%** — four hundredths of a percent from reserve,
 on a file that came *out* of reserve one leg ago. It is technically out, so no ride-along
 was owed and the worker was right not to file one, and I am not going to invent a rule at
