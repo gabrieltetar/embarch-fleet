@@ -78,6 +78,68 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-05 22:35 — api/014 extra-args-hash-not-stable
+
+**Decided:** nothing suite-wide. Inside `api`, the worker chose **FNV-1a spelled out in
+`zephyr.rs`** over a keyed SipHash and over a sanitised non-hash spelling, and its reasons
+are better than the task's. A keyed hash answers hash-flooding, and `extra_args` comes from
+this machine's own project config and never from an untrusted caller — so a key would buy
+nothing and would become one more thing that has to stay in step with names already on
+disk, forever. The non-hash spelling was the one the task nudged toward, because it would
+restore decision 19's readable-listing wish; it was rejected because an arbitrary `west
+build` flag has no length bound and its escaping becomes a second thing to hold stable,
+while `target.json` — shipped by `api/013` the same day — already answers "what produced
+this directory" better than a name ever could. **The encoding length-prefixes each
+argument**, so `["-p", "always"]` and `["-p always"]` cannot collide the way a plain join
+lets them.
+
+**The part that was easy to skip and expensive to omit, and it was not skipped.** Decision
+19 now records that **every build directory already named by the old scheme is orphaned by
+this change, deliberately and once.** No migration is soundly buildable — recomputing an old
+name means reproducing the `DefaultHasher` output of whichever toolchain wrote it, the one
+value this crate cannot know. So: one orphaning now, at a known moment, with an entry saying
+so, against an unbounded number later, silently. Blast radius is only projects passing
+`extra_args`, only those built before today; every other name is byte-identical across the
+change. **This is a cross-repo consequence stated by one repo about another's rule** — those
+directories belong to still-valid targets, so `embarch-umbrella` decision 26 protects them
+from `--prune` forever, and they are a human's to delete.
+
+**Merged:** `agent/api/014-extra-args-hash-not-stable` (code `ab51bd1`, doc `60b316f`). Gate
+on the merge result: 139 tests across six binaries, clippy, all 9 doc checks, ownership on
+both branches, client-names clean. I re-grepped `DefaultHasher` myself before merging — it
+survives only in three doc comments and no hashing use remains.
+
+**Blocked:** none.
+
+**Reviewer:** no findings. It **recomputed all four pinned literals independently** rather
+than trusting the test, confirmed the FNV constants, and confirmed the length prefix really
+does separate `["-p","always"]` (`0x6222ab5e7fce6ae9`) from `["-p always"]`
+(`0xbd3c86d6cdf7411a`) — so the pinning test pins rather than being tautological. It also
+checked the orphaning claim against `embarch-umbrella` decision 26 and found it
+forward-looking but not contradictory, and confirmed `interfaces/config.md` stays true
+because it says only "hashed" and never names the algorithm. **It declined to run
+`cargo test`** because I had asked for the verdict immediately, and said so — the literals
+were checked by recomputation instead, which is the stronger check anyway. **One note it
+raised that is not this unit's:** `embarch-umbrella` decision 26's amendment still says
+`target.json` "is not written by `embarch-api`", stale since `api/013`. That is exactly
+`tasks/umbrella/013`, already open in the queue — independent confirmation that the task is
+still worth dispatching rather than reconciling away.
+
+**Hardware debts:** none. Fully unit-testable host-side.
+
+**Budget:** DEGRADED, wave 2, no 429.
+
+**Least sure about:** whether "orphaned deliberately and once" is really once. It is once
+*for this change*, and the entry is honest about that. But the reason those directories are
+unreachable is that a name is a cache key recomputed by a later run, and **every future
+change to any axis of `build_dir_name` has the same property** — the entry makes the
+toolchain-stability argument beautifully and does not generalise it into a rule about
+changing that function at all. The pinning test is the tripwire that makes the next one
+loud, so I did not ask for more; a reader who meets this in a year may still take "once" as
+a stronger promise than it is.
+
+---
+
 ## 2026-09-05 22:05 — umbrella/012 check-16-names-dir
 
 **Leg 012's second unit, and the one the double dispatch actually touched** — see the
