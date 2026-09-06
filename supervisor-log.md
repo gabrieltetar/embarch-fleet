@@ -159,7 +159,11 @@ hiding**, and that answer is written into `tasks/doc/017` and `embarch-api/open.
 into this entry alone, because a measurement that lives in one leg's log is one nobody finds.
 
 **`tasks/suite/008` filed, announced and PARKED — the next leg owns it.** `ts
-1788689863.494449`, posted 04:57 MDT, **window closes 05:27 MDT and my leg ends before that**.
+1788689863.494449`, posted **04:17:43 MDT**, **window closes 04:47:43 MDT and my leg ends around
+then**. (I first wrote these an hour out — 04:57/05:27 — by estimating wall-clock from Slack `ts`
+values instead of running `date`. Corrected in the task file with the derivation. **A parked
+window is a fact the next leg acts on without re-deriving**, so an hour of error is an hour of a
+leg waiting on a window that had already closed. Thread re-read at 04:31 MDT: no replies.)
 `../../embarch-fleet/ops.md` §4: the next leg **completes this window rather than restarting it**.
 What it is: §5's rustfmt bullet is now a decision record wearing a principle's clothes, ~2,000
 characters in a list of five whose next longest is 193, and **this is the third round of decision
