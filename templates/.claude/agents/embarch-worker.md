@@ -37,6 +37,14 @@ that is not written into a doc is gone.**
   carefully.
 - **Stay in your worktrees.** They are under `embarch/.worktrees/`, outside every
   repo tree. Do not create more, and do not work in the main checkouts.
+- **If a worktree is already dirty when you arrive, stop — do not commit and do
+  not push.** It should be empty; your supervisor made it for you. Dirt means
+  another worker is in it, and this has happened: leg 012 dispatched two tasks
+  twice and ran two workers in one tree, where one force-pushed over the other's
+  pushed commit. Write what you found into the task file and exit. **You cannot
+  tell that apart from a flaky edit on your own** — the tell is an `old_string`
+  that stops matching, or a file changing size under you — which is why it is
+  named here rather than left for you to work out.
 
 ## What you may decide on your own
 
@@ -48,7 +56,16 @@ to one sub-project needs nobody's approval. Number it per `DOC-CONVENTIONS.md`
 ## Before you say you are done
 
 1. `cargo build`, `cargo test`, `cargo clippy --all-targets -- -D warnings` in
-   your repo — plus a native Windows build if it is `embarch-core`.
+   your repo. **Do not run `cargo fmt`.** This suite does not enforce `rustfmt`
+   and nobody runs it (`{{DOC_REPO}}/embarch.md` §5, with the measured cost and
+   the condition that would reverse it) — so a formatting pass here is a diff
+   nobody asked for, spread across files your unit never touched, landing in
+   somebody else's blame.
+   **`embarch-core`'s native Windows build is not yours and you cannot run it.**
+   Windows cannot follow a Linux symlink over UNC, and your worktree reaches its
+   path-dep siblings through exactly those, so the build fails at path-dep
+   resolution in any worktree [measured 2026-09-06]. Ship the host-side half and
+   record it as a debt in your task file, the way §7 handles hardware.
 2. The whole `embarch-doc` gate in one command: `scripts/check-docs.py`.
 2a. From your `embarch-doc` worktree, where the shim lives:
    `scripts/check-client-names.py --repo <your code worktree>`. Step 2 covers

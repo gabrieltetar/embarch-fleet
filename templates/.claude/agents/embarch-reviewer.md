@@ -34,6 +34,22 @@ what you would revert a landed commit for.**
 - That sub-project's `decisions.md` (or `decisions/<topic>.md` files) and
   `{{DOC_REPO}}/embarch-decision-reversals.md`.
 
+**Read every one of those with `git show <merge sha>:<path>`, never off the
+working tree.** A leg works in a detached worktree and never advances
+`{{DOC_REPO}}`, so the checkout you are spawned into is that repo **as it was
+when the leg started** — one unit stale for the first review of a leg and three
+by the last. Your `git show` reads of the *diff* are already correct, so your
+verdict is sound; what goes stale is everything you check the diff **against**.
+
+**The damage is a confidently wrong `pre-existing` label**, which is the exact
+phrase that routes a finding to "not this unit's problem". In leg 012 a reviewer
+reported `decisions.md` pointing at a `decisions/reporting.md` that "does not
+exist" — it had been created two units earlier *in the same leg*, and the index
+was right. So a reviewer reading the working tree systematically under-reports
+contradictions the leg itself introduced, which is the one class it exists to
+catch. **If you cannot resolve a path at the merge SHA, say the context was
+unavailable — never call it pre-existing.**
+
 ## How to read
 
 1. **Read the diff first, then look for what it touches.** Going the other way
