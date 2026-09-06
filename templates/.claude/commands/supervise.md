@@ -461,11 +461,23 @@ the choice cannot catch on its own.
 
 **Fold and log, per unit, serialized — in ONE commit.** As part of landing each
 unit: consume its `status.d/` fragments into their target docs and delete them,
-run `python3 scripts/build_changelog.py`, run **`python3 scripts/build_features.py`**,
+run `python3 scripts/build_changelog.py --only '<this unit's fragment names>'`,
+run **`python3 scripts/build_features.py`**,
 **prepend that unit's entry to `{{FLEET_REPO}}/supervisor-log.md`**, run
 `python3 scripts/check-docs.py` once more, and commit all of that with
 **`scripts/fold-commit.py`**, which is the only way to land a fold now that the
 log lives in a different repo from the work.
+
+**`--only` is not optional, and leaving it off is silent.** Without it the
+assembler consumes *every* pending fragment, not the folding unit's — so leg 016
+swept 15 the owner had written and not folded into `history/`, in the same
+`## window` block as its own one entry, with no way to stage its entry without
+his. `fold-commit.py` staged by explicit path and the path list was right: the
+file at that path had been rewritten underneath it by a script the fold is
+required to run. Nothing failed, because the swept lines are well-formed entries
+in the right file. Pass the fragment names this unit actually wrote.
+`fold-commit.py` now refuses a fold that consumed a fragment outside its
+`--path` list, so forgetting is a blocked commit rather than a quiet one.
 
 **The assembler is yours, not the worker's**, and `suite/features.md` goes in the
 `--path` list whenever the unit wrote a `features.d/` fragment. A worker owns its

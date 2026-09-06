@@ -21,6 +21,12 @@ checked.** Where the change is explained is the doc it changed — link to it.
     core-rram-runner.changed.md
       Core picks the board's declared vendor runner per chip family; never probe-rs on Nordic RRAM parts.
 
+**A fold passes `--only '<its own fragment>'`.** Bare, the assembler consumes
+every pending fragment rather than the folding unit's, and on 2026-09-06 that
+swept 15 of the owner's into a leg's fold — well-formed entries in the right
+file, so nothing failed and the diff read correctly. `fold-commit.py` refuses
+that now. Assembling the whole directory is right only when you mean to.
+
 `scripts/build_changelog.py` assembles these into `history/<scope>.md` under a
 dated window heading and deletes the consumed fragments. `--check` validates
 without assembling, and runs in CI, so a misnamed fragment fails loudly instead

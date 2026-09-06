@@ -455,6 +455,28 @@ def main() -> int:
     # every unit of leg 007, twice after the log commit had already landed and
     # twice recovered by hand. The ordering was safe by design and manual every
     # time; now the case is simply understood.
+    # A fragment this unit did not write, deleted in the worktree, is the
+    # signature of `build_changelog.py` having consumed the whole directory --
+    # the fold then carries somebody else's history entries in a file whose
+    # path IS in the list, so staging-by-explicit-path cannot see it and the
+    # diff review cannot either, because the swept lines are well-formed
+    # entries in the right file. Leg 016 landed exactly that with 15 of the
+    # owner's pending fragments (`tasks/doc/013`). The assembler now takes
+    # `--only`; this refuses the fold if it was run without one anyway.
+    swept = [q for q in git(doc, "diff", "--name-only", "--diff-filter=D", "--",
+                            "changelog.d").split() if q not in set(args.path)]
+    if swept:
+        print(f"{len(swept)} changelog fragment(s) were consumed that this unit "
+              "did not write:\n", file=sys.stderr)
+        for q in swept:
+            print(f"  {q}", file=sys.stderr)
+        print("\nThat means `build_changelog.py` ran over the whole directory. Restore\n"
+              "them and re-assemble with only this unit's own:\n\n"
+              "    git checkout -- changelog.d history\n"
+              f"    python3 scripts/build_changelog.py --only '<this unit's fragment>'\n\n"
+              "Nothing has been written. The fragments are still in git.", file=sys.stderr)
+        return 1
+
     addable, to_delete, already, missing = stage_plan(doc, args.path)
     if missing:
         print(f"{len(missing)} path(s) cannot be staged in {doc.name}, and they are\n"
