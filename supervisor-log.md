@@ -78,6 +78,66 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 14:30 — ui/008 the trace decoder counts the rows it refuses
+
+**Decided:** nothing beyond accepting the worker's two judgement calls, both of which I think are
+right. **(1)** `rows_unparsed` is a *separate* counter from `rows_dropped_by_cap` rather than one
+"rows missing" number — the cap is this view's own limit on a file it read fine; the new counter is
+a file it could not read, and a reader needs to know which. **(2)** One counter for *both*
+malformation causes (short line, unparseable `frame_index`), because the reader's question is
+whether anything went unread, not which malformation did it.
+
+**Merged:** `agent/ui/008-trace-decoder-drops` (code `45811c9`, doc `f706553`). Gate on the merge
+result: `cargo build`, `cargo test` **98 passed / 0 failed / 2 ignored**, clippy `--all-targets -D
+warnings`, all 9 doc checks, ownership green both branches (doc: 5 paths; code: whole tree),
+client-names clean. Rebased onto `main` twice — once after unit 1's fold and again after unit 2's.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**It settled the one thing that decided whether the counter is honest**, which was an ordering
+claim I could not take on trust: in `src/trace.rs` at `45811c9` the loop runs `line.is_empty()` →
+cap check at **1315** → `split_row` at **1319** → the two `rows_unparsed` arms. **The cap check
+genuinely precedes the split**, so a row past `MAX_ROWS` is dropped unread and can never be
+counted as unreadable. Had it been the other way, a large capture would report rows as
+"unreadable" that its own cap truncated — the same over-claiming this unit exists to remove,
+inverted. It also confirmed `TraceView` derives `Serialize` with no rename, so `rows_unparsed` is
+the field name `app.js` actually receives.
+
+**And it read the unrun half as source, which is the only check that half got.** All four count
+combinations compose: neither → the unchanged "every row in the capture" with a falsy `tone`,
+which is the pre-change call shape exactly; cap-only → the pre-existing sentence verbatim;
+unparsed-only → amber; both → joined with `" · "`. `escapeHtml` handles the joined string, and
+against an older payload `undefined > 0` is false, so a missing field degrades to the old wording
+rather than rendering `undefined`.
+
+**Two things it saw and deliberately did not raise, recorded here because it was right not to and
+the next leg should not re-find them as new:** the `"this view caps at 250,000"` literal in
+`app.js` sits against `spec.md`'s "a limit enforced server-side is served, never restated in
+`app.js`" — but it is **pre-existing**, verified from the diff's own removed lines, and this unit
+moves it unchanged. And `decisions/trace-chart.md` records that rendering the tab once found a
+defect every Rust test passed (reversals row 64) — but row 64 is about *concealment*, and this
+worker disclosed the unrun browser half in its commit message, its task file and its report, which
+is the opposite.
+
+**Hardware debts:** none. **But one verification debt, and it is not the worker's fault: the
+browser half never executed.** There is no `node` on this machine and the only harness for the
+render path is an `#[ignore]`d test replayed by hand in headless Firefox. Three lines of `app.js`
+shipped read-but-unrun. A browser pass is owed at the owner's discretion; nothing blocks on it.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **that I have now merged, twice in one leg, on a reviewer's source read
+standing in for an execution nobody can perform here** — `embarch-core`'s Windows build in
+`core/005` and `embarch-ui`'s browser half in this one. Each argument is individually sound and
+each gap is disclosed. But `tasks/doc/012` says the Windows build is unrunnable from a leg,
+`tasks/doc/020` says two firmware repos are undispatchable for want of `west`, and this adds a
+third environment the fleet cannot enter. **That is not three separate gaps; it is the fleet's
+reach being narrower than its gate claims**, and the gate reports green in every one of them.
+
+---
+
 ## 2026-09-06 14:27 — core/005 the bearer-token sweep derives its own route list
 
 **Decided:** one thing, and it is an addition I made after the reviewer rather than the worker.
