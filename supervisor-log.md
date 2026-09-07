@@ -97,6 +97,88 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 20:50 — study-designer/014 the type says its own byte order, and the reviewer closed the clause I could not
+
+**Decided:** two, both mine and both about scope rather than content. **(1)** I told this worker in
+its dispatch that it should almost certainly write **no numbered decision** — the fact was already
+in `interfaces/types.md` and in `ble_bridge_real.c`, `decisions/crate.md` sits at 91.7% with its
+compaction pass parked on `In flux: yes`, and a third entry is exactly what spends a file's runway.
+It wrote none. The reviewer agreed on a stronger ground than mine: **a numbered decision records a
+*choice*, and there was no choice here** — the order is imposed by a bridge that already shipped.
+**(2)** I unparked `tasks/dev-bench/009` in this fold rather than leaving it (below).
+
+**Merged:** `agent/study-designer/014-bleaddress-byte-order` (code `79a4c00`, doc `2378b58`). Gate
+on the merge result: `cargo build`, `cargo test --all-features` **227 + 12 + 10**, `cargo clippy
+--all-targets --all-features -D warnings` clean, `python3 scripts/check-docs.py` **all 10 green**,
+ownership green both branches (doc: 4 paths, explicit base — see below; code: whole tree, base
+`ba50f3efed45`), client-names clean.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**The unit is four doc-comment paragraphs and it is worth the entry because none of it is testable.**
+`BleAddress` now states display order, most significant first, with `C4:82:E1:42:B1:26` as
+`[0xc4, 0x82, 0xe1, 0x42, 0xb1, 0x26]` as a worked example so the reader needs no trip to another
+repo — and it closes the two branches a flat sentence leaves open: the same order for **both**
+`BleAddressKind`s, and the derived serde impls carrying `bytes` in index order so postcard and JSON
+agree. `BleAddressKind`, which had no comment at all, now says the kind selects how a peer
+interprets the address and **not** how the bytes are laid out. That is the same defect one layer
+down, and the worker went looking for it unprompted.
+
+**The one unqualified clause in the diff was the one I asked the reviewer to hunt, and it turned out
+to be exhaustive rather than merely unchecked.** *"Nothing in this crate reverses it"* is precisely
+the shape that has failed five times in three legs. The worker checked `ffi.rs`, `crc.rs` and
+`study.rs`; **the reviewer checked the other 27 `.rs` files** and established something stronger than
+"no counter-example found": `BleAddress` appears in exactly three places in the crate — its
+definition, its re-export, and `study.rs`'s `target_address` field type — **no value of it is ever
+constructed with bytes anywhere in `src/` or `tests/`**, every `target_address` in the crate is
+`None`, and there is no `Display`, `FromStr` or `parse`. So there is no branching path left for the
+flat word to be wrong on. That is the first time in this log that one of these clauses has been
+cleared by enumeration rather than by hedging it.
+
+**What I wrote into `suite/studies-guide.md`, and the sentence I added that the fragment did not
+ask for.** The `status.d/` fragment asked me to retire §3b's "an author who goes to the type finds
+nothing" clause and its `tasks/study-designer/014` pointer, both spent. I did that. I also added:
+**`embarch-dev-bench` decision 23 claimed the crate already said this, and it did not** — because a
+reader of §3b who then opens decision 23 meets a decision asserting a change that had not landed
+when it was written, and `tasks/dev-bench/009` is now the only pointer to that fact. The alternative
+was leaving a reader to discover a false decision with nothing beside it.
+
+**Deleting a `done` task file broke a link, and that is a shape the next leg will meet again.**
+`tasks/dev-bench/009` was `blocked` **on a relative link to `tasks/study-designer/014`** — which I
+`git rm`ed at this fold, as a `done` task file is. `check-links.py` went red on the merge result and
+the fold, correctly. **The right fix was not to repair the link**: `014` landing is exactly what
+unparks `009`, so `009` is now `open`, carrying `79a4c00` / `2378b58` as the record and a summary of
+what actually went into the crate so it need not go and look. But note the general case — **a
+`blocked` task that names its blocker as a link becomes a broken link the moment the blocker
+lands**, and the gate catches it only because the fold runs the gate. A task blocked on one that a
+*worker* completes would break the same way.
+
+**Two things I got right by accident and should say plainly.** The ownership check was green with an
+**explicit base** because my `land.sh` pipes `git diff --name-only <leg-HEAD>..<branch>` into
+`--stdin` rather than letting the script derive its own — which is what makes leg 024's false red
+(rebase-before-push leaves the self-derived base a unit behind) structurally impossible here, and I
+rebased both doc branches onto the leg head before merging, so I would otherwise have hit it twice.
+And the owner pushed `cba1502` to `main` **between my merge and my push**; the push was rejected
+non-fast-forward, I fetched and rebased, and the doc merge SHA changed from `1aa58ae` to `2378b58`.
+**The SHA in this entry is the one that is actually on `main`.**
+
+**Hardware debts:** none new. The reviewer noted it did not need a board: the reversal is in
+dev-bench's source and the live connect is already recorded with its study id.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **that I added a sentence to a suite-level doc that no fragment asked for and
+no reviewer read.** The `embarch-dev-bench` decision 23 clause is mine, written into
+`suite/studies-guide.md` during the fold — after the reviewer had already reported, so it is the one
+part of this unit that went to `main` unreviewed. I believe it because I read decision 23 myself and
+because `tasks/dev-bench/009` quotes it verbatim, but **it is a claim about another repo's decision
+made in the suite's shared guide**, which is the widest-blast-radius sentence in this unit and the
+only one with no second reader.
+
+---
+
 ## 2026-09-06 20:00 — study-designer/013 a worker that split rather than squeezed, and told me my premise was wrong
 
 **Decided:** two, and neither was mine to make alone. **(1)** I told the worker to settle the
