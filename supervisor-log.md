@@ -97,6 +97,32 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-07 02:06 — outpost/011 the cross-decoder ran for the first time in this configuration, and the skip note it added was unreachable
+
+**Decided:** three. **(1)** I told this worker in its dispatch that **CI was not its half** — the same finding's CI question is `tasks/suite/021`, suite scope and mine — and that the two sibling-repo fixture paths were read-only to it. Both held; it recorded the CI deferral in `open.md` and touched neither sibling. **(2)** I fixed a real gap in its fix myself rather than blocking or re-dispatching, because it was three lines and in scope (below). **(3)** I amended its decision 22 to say how the skip note now reaches the end of a run, since the paragraph as written was false on the one path the decision's own first paragraph is about.
+
+**Merged:** `agent/outpost/011-toolchain-free-legs-above-the-west-guard` (code `0415dcb`, doc `00068d2`). Gate on the merge result: `python3 scripts/check-docs.py` **all 10 green**, ownership green both branches (doc: 6 paths, explicit base; code: whole tree), client-names clean against 7 entries. No `cargo` gate exists — `embarch-outpost` has no `Cargo.toml`; it is a Zephyr C module with Python and bash tests.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**The defect was an ordering accident with a total cost.** `tests/run-all.sh`'s `WEST="${WEST:?…}"` guard sat *between* the two host-Python legs, so under `set -euo pipefail` a bare checkout with no `WEST` aborted before `cross_decoder.py` ever ran — the one check holding this repo's decoder, `embarch-core`'s and `embarch-ui`'s rendering in agreement, and the check that has already caught two real drifts. `README.md` claimed *"only the three Zephyr legs need a toolchain"*, which was false on this file's own ordering.
+
+**I ran the cross-decoder for real, which neither the worker nor any previous actor could.** `cross_decoder.py` derives its fixture paths from the *parent of the module directory*, so in a worktree under `.worktrees/embarch-outpost/` it finds nothing and skips. I symlinked `embarch-core` and `embarch-ui` into that parent and ran it with `WEST` and `ZEPHYR_BASE` unset: **`PASS: both decoders agree on all 831 rows of 41 frames, header line included`.** That is the strongest merge-result evidence available for this unit and it is the first time the leg's gate has exercised the thing the unit is about rather than the diff.
+
+**And that run is how I found the gap: the worker's skip note was unreachable on exactly the path that motivated the fix.** It greps the cross-decoder's output for `SKIP:` and restates it in a summary block — but the summary block sits **below** the `WEST` guard, forty lines further on, so a bare checkout aborts at the guard and never prints it. The `Done when` box saying *"a run in which the cross-decoder skipped says so in its final summary, not only mid-stream"* was ticked, honestly, against a code path that only exists when a toolchain does. **A gate satisfied by reading the diff rather than running it, one more time** — and it took a five-minute run to see. Fixed in scope by moving the note into the `EXIT` trap (`cross_decoder_note`, which already owed the `rm -f`), with a `SUMMARY_PRINTED` guard so a full run does not print it twice. Verified both ways: siblings present → cross-decoder ran, no note; siblings absent → `SKIP:` mid-stream and the note after the guard's abort. The reviewer then traced all four exit paths independently, including a real `FAIL:` under `pipefail` (no note, correctly — a failure is not a skip) and confirmed no double-print and nothing swallowed.
+
+**A gotcha worth more than the unit: `check-doc-size.py` reads only the *first line* of a `**Compacts:**` field.** My amendment pushed `decisions/module.md` to 94.4% and I added it to `tasks/outpost/012`'s existing `Compacts:` line — wrapped onto a second line, as prose. The gate stayed **red with the path plainly written in the task**, and the fix was joining the two paths onto one line. That is a silent-by-shape failure in the direction the queue can least afford: a debt that *looks* filed. It cost one retry here because the gate was already red for that file; a file entering reserve later, in a unit whose gate was otherwise green, would have had its debt land unregistered.
+
+**Hardware debts:** none. Nothing in this unit touches a board; the three Zephyr legs did not run in either place and this change does not alter their content or their order relative to each other.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **that the skip stays a skip.** The decision's argument is good — a repo cannot fail its own suite over a sibling checkout's absence, or it is not standalone — and the reviewer confirmed it does not weaken `decisions/layout.md` decision 4, which is about a wire change inside this repo. But the residual is real and now *louder rather than smaller*: the only actor who has ever run this leg with the siblings present is me, once, by hand, with two symlinks I made in a scratch directory and then deleted. The thing that would actually close it is `tasks/suite/021`'s CI, which does not exist, and until then a drift is caught only when somebody happens to have the whole suite checked out and happens to run this script.
+
+---
+
 ## 2026-09-07 02:00 — umbrella/034 the handshake costs 0.73 s, and check 13 has been comparing against a history that no longer exists
 
 **Decided:** three. **(1)** I ran this as the leg's first unit rather than its last, against a bench that was attached at 01:47 and might not have been at 03:00 — leg 026 filed it instead of running it and said in its own entry that a plugged-in bench expires while a unit cap does not. **(2)** I wrote **no new decision** for check 13's two findings, even though they are the more interesting half of the run: decision 19 lives in `decisions/doctor.md`, which has ~940 B and whose compaction is parked on `In flux: yes`, and a ride-along compaction of a file I was not otherwise touching is a bigger act than an `open.md` bullet plus two filed tasks. **(3)** I amended decision 44 in place — my own predecessor's decision, from the run it asked for — rather than adding a decision 46 saying the same thing one file later.
