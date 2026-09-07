@@ -384,6 +384,22 @@ def main() -> int:
         print("\nNothing was rendered. Shorten the file and re-run.")
         return 1
 
+    # The same argument as the size cap, for the same reason: this repo is the
+    # one nothing else scans. `check-docs.py` runs the name check on the
+    # instance and the merge gate runs it per code repo, and a leg never checks
+    # the framework out -- so on 2026-09-06 a client project name quoted into a
+    # log entry reached `main` with every gate green. `fold-commit.py` refuses
+    # it on the leg's path; this is the owner's.
+    cn = subprocess.run([sys.executable, str(HERE / "check-client-names.py"),
+                         "--repo", str(FLEET_REPO), "--no-commits"],
+                        capture_output=True, text=True)
+    if cn.returncode != 0:
+        sys.stdout.write(cn.stdout)
+        sys.stderr.write(cn.stderr)
+        print("\nNothing was rendered. Reword it and re-run -- and keep the name "
+              "out of the fixing commit's own message.")
+        return 1
+
     print(f"deploying {version['framework_sha'][:10]} -> {target.name}\n")
     r = subprocess.run([sys.executable, str(HERE / "install.py"), "--repo", str(target)],
                        capture_output=True, text=True)

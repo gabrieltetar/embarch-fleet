@@ -3809,7 +3809,7 @@ ones the next leg cannot recover:
   would make a **third** posture for one class of config mistake beside this refusal and
   decision 53's. The supervisor checked blast radius by reading the live
   `/home/gabriel/Github/embarch/embarch-api/config.toml`: one `[[projects]]` entry
-  (`healthband-roadrunner`) setting `build_command`, `artifact_path`, `chip`,
+  (one client project, name redacted) setting `build_command`, `artifact_path`, `chip`,
   `flash_format`, `build_timeout_secs`, `probe_serial`, `artifact_path_for_core` — **none of
   the five**; the `west_binary` in that file is under `[dev_bench]`, which deserializes into
   `DevBenchConfig` and is never walked by `validate()`. **The live config still loads.**
