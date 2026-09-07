@@ -104,6 +104,11 @@ reserved = [
   # the fleet runs under. This is the "next split is loud" case protocol.md §3
   # predicted -- check-ownership.py --supervisor failed until it was listed.
   "DOC-COMPACTION-PASS.md",
+  # DOC-COMPACTION.md §2 became its own doc on 2026-09-07 when adding the debt
+  # ledger and the per-decision cap took that file into reserve. Reserved for
+  # the same reason its parent is: it is a rule the fleet runs under, and it is
+  # the one a worker would most like to edit -- it defines the caps.
+  "DOC-BUDGET.md",
   # DOC-PROTOCOL.md §7 became its own doc the same day, same reason.
   "DOC-CONVENTIONS.md",
   # The method for the suite review pass (`/suite-review`). Reserved because it

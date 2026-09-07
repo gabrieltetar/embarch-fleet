@@ -389,6 +389,24 @@ connects with it.
 
 **Then run units until the cap.** For each free slot, while the wave size allows:
 
+**First, check the size-debt ledger, and spend your FIRST unit on it if
+anything is overdue.** `scripts/check-doc-size.py --due` prints it, soonest
+first, and exits non-zero when an entry has passed its date. If one has, that
+entry's task is your first unit — **including when it is `blocked`**, because
+the clock is what makes a park non-absorbing. Read the park against
+`DOC-BUDGET.md`'s split-first rule before you assume it still applies: a
+verbatim split restates nothing, so `In flux: yes` cannot forbid one, and
+`--decisions` will tell you whether the file is many decisions (split it) or one
+sprawling decision (compact that entry). Nothing overdue means dispatch as
+normal — this is a scheduled share of throughput, not a standing tax.
+
+**Why the ledger gets a leg's first unit rather than its last.** A doc debt
+used to be paid by whichever unit happened to touch a full file, which is why
+three units in a row spent their reserve shaving bytes and one supervisor filed
+a decision in the wrong file because the right one had 96 bytes left. Paying
+the oldest debt on a schedule costs the same throughput and stops ambushing
+unrelated work.
+
 **Select and set up.** At most one task per sub-project, from `Hardware: none`
 and `verify-only` tasks only. Claim it — commit the state line before dispatch,
 which is what stops a double-dispatch and what tells the listener a leg is live.
