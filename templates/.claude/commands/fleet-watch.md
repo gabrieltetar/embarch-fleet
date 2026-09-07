@@ -190,6 +190,14 @@ touches keep `tick` fresh. That is the accepted cost of the signal meaning
 progress; the case it gives up is one that costs nothing until the leg ends, and
 35 minutes after that it is caught.
 
+**The next re-derivation reads a log rather than reconstructing one.** The
+numbers above came from git commit times, because claims and folds were the only
+touches that left a record; every touch now also appends a labelled line to
+`{{STATE_DIR}}/tick.log`, so `{{FLEET_REPO}}/scripts/fleet-tick.py --report`
+prints the real gaps — including the step-0 and between-leg touches that
+reconstruction is blind to. Re-derive from that, and only widen the threshold if
+the measured max says to.
+
 **It is not a control plane, and unlatching is not `fleet stop`.** A graceful
 stop is delivered to a live supervisor, which finishes landing what is in
 flight, folds, logs and exits. This window cannot do that — a wedged listener
@@ -208,7 +216,7 @@ is no leg to read it.
 
 | Message | Action |
 |---|---|
-| `watch status` | When the fleet last made progress (`tick`'s mtime — listener or leg), whether the pump is latched, and whether an alert is currently suppressed |
+| `watch status` | When the fleet last made progress (`tick`'s mtime — listener or leg), whether the pump is latched, and whether an alert is currently suppressed. Add `scripts/fleet-tick.py --report` when the question is about *cadence* rather than right now |
 | `watch stop` | Delete the cron job. The listener is unaffected |
 
 `watch status` is the one thing worth asking from a phone, because it answers

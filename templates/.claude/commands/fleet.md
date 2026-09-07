@@ -78,7 +78,13 @@ Four steps, in this order.
    listener is armed, at what cadence, and that nothing will run until he says
    `fleet start`. No `--action`: it is telling him a thing is ready, not asking
    for anything. Tell the owner in the terminal which window this is, and that
-   closing it stops everything.
+   closing it stops everything. **Also tell him when the first tick is due — the
+   next `:x3` minute — and that if his `fleet start` still carries no `eyes`
+   reaction by then, typing anything into this window wakes it.** On 2026-09-07
+   a freshly armed listener's `:13` slot did not fire, the tick ran only when a
+   cross-session message arrived at `:18`, and `fleet start` sat unread for
+   fifteen minutes. One keystroke is the whole workaround; it asks nothing of the
+   fleet, and `tick.log` is what will say whether it is still needed.
 
 > **Fleet tick.** Read `{{SLACK_CHANNEL_NAME}}` (channel_id `{{SLACK_CHANNEL}}`), newest 20
 > messages, `response_format: detailed`.
@@ -150,10 +156,12 @@ Four steps, in this order.
 > five hours on 2026-09-03.
 >
 > **STEP 3 — liveness.** Last thing in every tick, whatever happened above,
-> including when nothing qualified: `touch {{STATE_DIR}}/tick`. It is one file
-> operation and it is the evidence this window is still ticking. A wedged tick
-> never reaches it, which is the point — a watchdog cannot ask a hung process
-> whether it is hung, but it can read an mtime.
+> including when nothing qualified: `{{FLEET_REPO}}/scripts/fleet-tick.py
+> listener`. It is one command and it is the evidence this window is still
+> ticking — it touches the mtime the watchdog reads and appends one labelled
+> line to `{{STATE_DIR}}/tick.log`, the history an mtime cannot keep. A wedged
+> tick never reaches it, which is the point — a watchdog cannot ask a hung
+> process whether it is hung, but it can read an mtime.
 >
 > **You are not the only writer of that file, and you must not be.** A leg
 > touches it too, at every dispatch and every fold, because this window's cron
@@ -222,6 +230,15 @@ Two things follow, and neither is optional:
   `fleet status`, `fleet queue`, a one-off request: all of it sits unread for up
   to a full leg. That is acceptable for everything except a stop, which is why
   the stop has its own route.
+
+**`tick.log` is where that mtime's history goes**, one labelled line per touch,
+written by the same command. An mtime holds one moment and overwrites the rest,
+so until 2026-09-07 nothing on this machine could say whether a slot had fired
+on time — and that day a freshly armed listener's `:13` slot did not fire at
+all, the tick ran at `:18` when a cross-session message woke the session, and
+the only evidence was a person watching the channel with a clock. Read it with
+`scripts/fleet-tick.py --report`: `listener`-to-`listener` gaps are this
+window's own cadence, any-to-any is what the watchdog's threshold has to clear.
 
 **`fleet stop` reaches a live leg through the supervisor's own poll, not through
 this window.** `.claude/leg.md` requires the supervisor to read
