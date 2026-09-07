@@ -147,6 +147,13 @@ rather than assumed:
   `ZEPHYR_BASE` set: all four legs pass. Its tasks stay `Hardware: none`, and a
   task that needs the suite run just names those two variables.
 
+**There is a `west` for this, and reaching for another one is a leak.** The
+fleet has its own at `{{FLEET_ROOT}}/.west-venv/bin/west` (west 1.5.0, plus
+Zephyr's `requirements-base.txt`), outside every repo and outside every client
+workspace. The other `west` binaries on this machine live *inside* client
+workspaces, so naming one in a task file puts a client's name in this repo —
+`check-client-names.py` refuses it, which is how this venv came to exist.
+
 **The cost of getting this wrong is not theoretical.** `embarch-dev-bench`'s
 ztest suite sat red on `main` at 56 of 57 for two days — a fixture the
 client-name scrub had left stale — precisely because no actor was running it.
