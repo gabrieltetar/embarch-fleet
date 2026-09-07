@@ -55,6 +55,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fleetconf import CONF  # noqa: E402
 
 import argparse
+import calendar
 import json
 import os
 import time
@@ -131,14 +132,38 @@ def window(limits: dict, key: str):
 
 
 def recent_429(minutes: int) -> str | None:
-    """An actual rate-limit error in any transcript within the window.
+    """An actual rate-limit error in any transcript within the window, unless
+    the throttle it recorded has already expired.
 
     This is the signal the percentages were a proxy for. Claude Code records a
-    throttled request as `"error":"rate_limit"` with `apiErrorStatus":429`, so a
-    real limit is detectable locally even when no percentage ever is.
+    throttled request with `"error":"rate_limit"`, `"apiErrorStatus":429` and a
+    top-level `quotaLimits` carrying the `resetsAt` the server itself declared.
+
+    Three things this gets right that the first version did not, all measured
+    2026-09-06/07 and filed as `tasks/doc/023`:
+
+    * **The timestamp is UTC.** `time.mktime` reads a naive struct as LOCAL, so
+      west of UTC every age came out inflated by the offset -- 6.0 h on this
+      machine, which turned a 90-minute lookback into a ~7.5-hour one and
+      printed negative ages ("a real 429 was recorded -356 min ago").
+      `calendar.timegm` is the correct pair for a `...Z` timestamp.
+
+    * **A spent 429 does not HOLD.** The rejection carries its own reset time;
+      once that has passed the window has refilled and requests are being
+      served again. Holding the fleet on it stops work for no reason -- the
+      case that actually happened, with `resetsAt` 27 seconds after the
+      rejection. A 429 line with no `quotaLimits` keeps the old behaviour,
+      because then nothing says the throttle is over.
+
+    * **The verdict comes from parsed fields, not a substring.** The old
+      pre-filter matched the raw line, so ANY transcript that merely QUOTED
+      the marker -- a session reading this script, or discussing a 429 --
+      looked like a live throttle and held the fleet. The cheap string test
+      survives as a pre-filter; the decision is made on the top-level keys,
+      which a quotation inside some other field cannot forge.
     """
     cutoff = time.time() - minutes * 60
-    newest = None
+    newest = None                                 # (epoch, resets_at or None)
     for root, _dirs, files in os.walk(TRANSCRIPTS):
         for name in files:
             if not name.endswith(".jsonl"):
@@ -149,20 +174,45 @@ def recent_429(minutes: int) -> str | None:
                     continue                      # cheap reject before reading
                 with open(path, encoding="utf-8", errors="replace") as f:
                     for line in f:
-                        if '"error":"rate_limit"' not in line:
-                            continue
+                        if "rate_limit" not in line:
+                            continue              # pre-filter only, see above
                         try:
-                            ts = json.loads(line).get("timestamp", "")
-                            when = time.mktime(time.strptime(ts[:19], "%Y-%m-%dT%H:%M:%S"))
+                            rec = json.loads(line)
                         except Exception:
                             continue
-                        if when >= cutoff and (newest is None or when > newest):
-                            newest = when
+                        if not isinstance(rec, dict):
+                            continue
+                        if rec.get("error") != "rate_limit":
+                            continue
+                        if rec.get("apiErrorStatus") != 429:
+                            continue
+                        try:
+                            when = calendar.timegm(
+                                time.strptime(rec.get("timestamp", "")[:19],
+                                              "%Y-%m-%dT%H:%M:%S"))
+                        except Exception:
+                            continue
+                        if when < cutoff:
+                            continue
+                        quota = rec.get("quotaLimits")
+                        resets = quota.get("resetsAt") if isinstance(quota, dict) else None
+                        if not isinstance(resets, (int, float)):
+                            resets = None
+                        if newest is None or when > newest[0]:
+                            newest = (when, resets)
             except OSError:
                 continue
     if newest is None:
         return None
-    return f"a real 429 was recorded {int((time.time()-newest)/60)} min ago"
+    when, resets = newest
+    age = int((time.time() - when) / 60)
+    if resets is not None and resets <= time.time():
+        return None                               # spent: the window refilled
+    if resets is None:
+        return (f"a real 429 was recorded {age} min ago, and it recorded no "
+                f"reset time -- holding for the full {minutes} min window")
+    return (f"a real 429 was recorded {age} min ago; the window it names "
+            f"resets in {human_reset(resets)}")
 
 
 def human_reset(ts) -> str:
