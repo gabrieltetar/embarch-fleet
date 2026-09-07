@@ -135,19 +135,9 @@ cannot silence it; nothing checks that the file named is the right one.
 **What would settle it:** the check this now has a signature for — **no
 `.claude/commands/*.md` without `disable-model-invocation`**.
 
-## The budget is calibrated against nothing
+## Why the quota percentages never arrive
 
-[ops.md](ops.md) §2's thresholds and its taper are guesses until many legs have
-run. The feeder half is closed: `statusline-usage.py` is versioned in
-[scripts/](scripts/), and `usage-budget.py` asserts `settings.json` points at
-that copy rather than an unversioned one.
-
-**What is still open.** Real percentages have never arrived on this machine, so
-every leg reports DEGRADED, and there is nothing to calibrate against. Narrowing
-*why* needs a payload capture, not more code — `rate_limits` arrives only for a
-Pro/Max seat, only after a session's first API response, and each window
-disappears once its `resets_at` passes.
-
+**Moved to [budget.md](budget.md)** on 2026-09-07 — mostly closed, and it belongs beside the mechanism that closed it.
 ## Whether the framework's prose is portable
 
 **Answered 2026-09-04, differently than asked.** The question was whether to

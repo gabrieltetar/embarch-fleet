@@ -19,12 +19,22 @@ seeded from whatever is on disk pins the growth that revealed the need for it,
 which is the opposite of a ratchet. Seeding from HEAD means the change being
 made right now has to pay for itself.
 
-**No reserve band and no debt filing here**, unlike `check-doc-size.py`. Those
-exist so a *worker* meets a cap as a filed task rather than as a refused edit
-mid-flight, and no worker ever writes these files -- a leg never checks this repo
-out. The only actor here is the owner, in their own session, who can shorten a
-paragraph on the spot. Adding the reserve machinery would be a second
-implementation of it for a corpus with nobody to protect.
+**No debt FILING here**, unlike `check-doc-size.py`: that exists so a *worker*
+meets a cap as a filed task rather than a refused edit mid-flight, and no worker
+ever writes these files -- a leg never checks this repo out. The only actor is
+the owner, in their own session.
+
+**There is a reserve WARNING, though, added 2026-09-07, and it is not the same
+thing.** The argument above -- nobody to protect -- was tested and failed the
+same day: `risks.md` reached **3 bytes** of headroom and `open.md` 61, and
+nothing said so until an edit was already refused. The owner then spent four
+squeeze passes paying for one new rule in `ops.md`, the last of which nearly
+deleted the evidence for an open question, because the only signal available was
+"you are over" rather than "you are close". A warning costs nothing, fails
+nothing, and is what turns a squeeze into a split while a split is still
+possible. Reserve is `max(RESERVE_FLOOR, (100 - RESERVE_PCT)%)` from the top,
+the same shape and the same floor `embarch-doc` uses, and for the same measured
+reason: a percentage of a small cap is not runway.
 
 `supervisor-log.md` is exempt: its size is governed by the fold and the roll
 (`fold-day.py`), which bound it by days rather than by bytes, and a byte cap
@@ -49,6 +59,13 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 BASELINE = REPO / "scripts" / "doc-size-baseline.json"
 KB = 1024
+
+# A file within this much of its effective limit is reported as in reserve.
+# Advisory only: it never changes the exit status. Same numbers as
+# `embarch-doc/scripts/check-doc-size.py`, deliberately -- two corpora with two
+# different definitions of "close" is a third thing to keep true.
+RESERVE_PCT = 90.0
+RESERVE_FLOOR = 1200
 
 # role -> (cap, matcher). Deliberately few: this repo is eight files, not a
 # corpus, so a role table with more rows than documents would be theatre.
@@ -99,7 +116,7 @@ def main() -> int:
     args = ap.parse_args()
 
     base = json.loads(BASELINE.read_text()) if BASELINE.exists() else {}
-    fails, rows, changed = [], [], False
+    fails, rows, reserve, changed = [], [], [], False
 
     for rel, size in docs():
         role, cap = role_and_cap(rel)
@@ -126,6 +143,8 @@ def main() -> int:
         rows.append((rel, role, size, cap, base.get(rel)))
         if size > limit:
             fails.append((rel, role, size, limit, cap))
+        elif size >= limit - max(RESERVE_FLOOR, limit * (100.0 - RESERVE_PCT) / 100.0):
+            reserve.append((rel, size, limit))
 
     if changed and (args.update or args.adopt):
         BASELINE.write_text(json.dumps(dict(sorted(base.items())), indent=2) + "\n")
@@ -136,6 +155,16 @@ def main() -> int:
         for rel, role, size, cap, b in rows:
             print(f"{rel:28} {size:8,} {cap:8,} "
                   f"{(f'{b:,}' if b else '-'):>9}  {role}")
+
+    if reserve:
+        print(f"\n{len(reserve)} file(s) in reserve -- advisory, nothing failed:\n")
+        for rel, size, limit in sorted(reserve, key=lambda r: r[1] - r[2]):
+            print(f"  {rel}  {size:,}/{limit:,} B, {limit - size:,} B left")
+        print("\n  A file this close cannot take one more amendment. **Split it** --\n"
+              "  moving sections verbatim into a new doc restates nothing, so no\n"
+              "  argument is shortened to pay for a new one, and this repo's own\n"
+              "  `ops.md` -> `budget.md` split lowered a baseline 2,553 B for good.\n"
+              "  Squeeze only where there is no seam left to cut.")
 
     if fails:
         print(f"\n{len(fails)} file(s) over their limit:\n")

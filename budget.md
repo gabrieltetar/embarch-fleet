@@ -23,3 +23,23 @@ So the gate degrades rather than blocking: `usage-budget.py` exits `0` PROCEED, 
 **What actually protects the seat is the hard signal, not the estimate.** A throttled request appears as `"error":"rate_limit"` with `apiErrorStatus: 429`, and `--check-429` turns any verdict into HOLD. It reads the timestamp as **UTC**, ignores a 429 whose own `quotaLimits.resetsAt` has already passed, and decides on **parsed fields** rather than a substring so a session that merely quotes the marker cannot stop the fleet — three defects fixed 2026-09-07, each costing idle fleet hours, written up in `tasks/doc/023`. Five real 429s so far, most recently 2026-09-07 03:29Z.
 
 **The backstop needs no percentage at all.** If a worker dies with a real rate-limit error: stop dispatching, land what is done, write the log entries, exit. That is what keeps this safe when the numbers are wrong.
+
+---
+
+# Still open
+
+Moved here from [open.md](open.md) on 2026-09-07, verbatim apart from this heading: the question is about this doc's own mechanism, and `open.md` had 61 bytes of headroom while this file had 8 KB. A split, so nothing was restated.
+
+## Why the quota percentages never arrive
+
+**Mostly closed 2026-09-07, and the part that closed is the part that mattered.**
+The wave is no longer calibrated against nothing: [budget.md](budget.md) derives
+it from a measured five-hour token burn against a ceiling calibrated on observed
+429 behaviour. The feeder half was already closed.
+
+**What is still open** is only the diagnosis: `rate_limits` reaches a status
+line and nothing else, and a search of every transcript on disk finds it
+recorded nowhere. Narrowing *why* needs a payload capture, not more code — it
+arrives only for a Pro/Max seat, only after a session's first API response, and
+each window disappears once its `resets_at` passes. The percentages would still
+be better than the burn estimate; nothing depends on them any more.

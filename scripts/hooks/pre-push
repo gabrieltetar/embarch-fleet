@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+# Last check before something becomes irreversible. Runs for every repo under
+# the fleet root, from a clone or a worktree, for the owner and for every agent.
+#
+# `scripts/install-hooks.py` installs a four-line shim at the `core.hooksPath`
+# git actually reads and points it here; this file is the implementation and the
+# only copy to edit. `install-hooks.py --check` reports drift.
+#
+# Why a pre-push hook exists when there is already a ten-check gate: the gate
+# runs when a supervisor folds, which in several paths is AFTER a push. Two
+# things escaped to `origin/main` on 2026-09-07 and were found by the gate
+# afterwards:
+#
+#   * A client product name, a client repo name and the workspace path holding
+#     both, in `embarch-fleet/hardware.toml`. Scrubbed forward six minutes
+#     later, but the strings are in that commit's tree for good. It was the
+#     SECOND instance: a supervisor log entry put a client name on
+#     `origin/main` for 21 hours on 2026-09-05, removed by `cab9903`.
+#   * Two files sharing `tasks/ui/016`, issued twenty minutes apart by a leg
+#     and by the owner, each reading the same "next free" before either
+#     committed.
+#
+# The two are treated differently ON PURPOSE, and the asymmetry is the design:
+# a name in pushed history cannot be taken back without rewriting every SHA
+# after it, so that BLOCKS. A duplicate task number is caught by the gate and
+# fixed with a `git mv`, so that WARNS. A hook that blocks on a recoverable
+# problem can wedge a leg mid-fold, which is a worse failure than the one it
+# would prevent.
+set -uo pipefail
+
+# --- BLOCKING: credentials -------------------------------------------------
+# Preserved verbatim from the hand-written `~/.git-hooks-personal/pre-push`
+# this file took over on 2026-09-07, and deliberately FIRST: it is the guard
+# that keeps a personal repo from being pushed with work credentials, and it
+# was previously unversioned -- the same "the mechanism lives outside every
+# repo" shape `usage-budget.py`'s `check_feeder` exists to detect.
+remote_url="${2-}"
+if [[ "$remote_url" == git@github.com:* ]] || [[ "$remote_url" == https://github.com/* ]]; then
+  echo "error: pushing to '$remote_url' would authenticate with your default (work) credentials." >&2
+  echo "Use the personal host alias instead, e.g. git@github.com-personal:<user>/<repo>.git" >&2
+  exit 1
+fi
+
+repo_root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+fleet_scripts="__FLEET_SCRIPTS__"
+fleet_root="__FLEET_ROOT__"
+
+# Everything below is fleet-specific. The credential guard above is not, so it
+# runs first and unconditionally.
+case "$repo_root/" in
+  "$fleet_root"/*) ;;
+  *) exit 0 ;;
+esac
+
+fail=0
+
+# --- BLOCKING: client names ------------------------------------------------
+if [ -f "$fleet_scripts/check-client-names.py" ]; then
+  if ! out=$(python3 "$fleet_scripts/check-client-names.py" --repo "$repo_root" 2>&1); then
+    printf '%s\n' "$out"
+    cat <<'MSG'
+
+PUSH REFUSED: a denylisted client name is in the tree you are about to push.
+
+This is not recoverable by a later commit. A name in pushed history stays in
+that commit's tree, and taking it out means rewriting every SHA after it.
+
+Fix it here, before the push:
+  1. The report above names the file and line, and an entry NUMBER rather than
+     the name -- read the number in .fleet/client-names. Do not paste the name
+     into a commit message, a log entry or an agent transcript; that is the
+     leak, not the fix.
+  2. Move the value to a machine-local file outside every repo, next to the
+     denylist itself, which is kept there for exactly this reason.
+     `embarch-fleet/hardware.toml`'s header is the worked example.
+  3. Re-run the check, then push.
+
+MSG
+    fail=1
+  fi
+fi
+
+# --- ADVISORY: task numbers ------------------------------------------------
+if [ -f "$repo_root/scripts/check-task-numbers.py" ]; then
+  if ! out=$(python3 "$repo_root/scripts/check-task-numbers.py" 2>&1); then
+    printf '%s\n' "$out"
+    cat <<'MSG'
+
+WARNING, NOT REFUSED: a task number is duplicated or reissued in what you are
+about to push. The push goes ahead, because this is recoverable and a hook that
+blocks a fold is worse than the collision.
+
+Fix it now rather than leaving it on main -- `check-docs.py` is RED until you
+do, and that blocks the next fold:
+  scripts/check-task-numbers.py --next <scope>    # a number safe to issue
+  git mv tasks/<scope>/<old> tasks/<scope>/<new>  # then fix the H1 heading
+
+The number that LOST the race is the one that moves: history records whichever
+slug landed first, and `tasks/README.md` says a number is never reused.
+
+MSG
+  fi
+fi
+
+exit $fail
