@@ -97,6 +97,92 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 19:01 — ui/010 the badge names the step now running, and the argument for that was checkable
+
+**Decided:** one, and I deliberately did not make it. The task carried a real design choice — should
+the run badge show *the step now running* or *steps finished* — and I told the worker to settle it on
+what a person watching a run wants to see, write the reasoning into a numbered decision, and **not to
+pick the reading that makes the diff smallest.** It chose *step now running* (`embarch-ui` decision
+20), and its argument was an empirical claim about the UI rather than a preference, which is what
+made it checkable.
+
+**Merged:** `agent/ui/010-progress-badge` (code `fa3b7b6`, doc `ffabb63`). Gate on the merge result:
+`cargo build`, `cargo test` **101 tests — 99 passed / 0 failed / 2 ignored**, `cargo clippy
+--all-targets -D warnings` clean, `python3 scripts/check-docs.py` **all 9 green**, ownership green
+both branches (doc: 5 paths, base `fc4f4ac01e9e`; code: whole tree, base `45811c970649`),
+client-names clean.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**It reported no contradiction and still handed me two corrections, both of which I took at the
+fold.** **(1)** Decision 20 quoted the clamp window as **5 s**. It is **~1 s** — `study_designer.rs`'s
+`POLL_INTERVAL` is `from_secs(1)`, and the 5 s constant is `main.rs`'s dashboard poll, a different
+loop. **The error made the chosen reading's stated cost five times larger than it is**, so the
+argument survives and is stronger than written; but a decision doc carrying a number that is 5× off
+is exactly what the next reader quotes. Corrected, with *why* 5 s is wrong, so nobody restores it.
+**(2)** Decision 43's bracketed clause in `embarch-core` said the `embarch-ui` sentence "becomes
+historical when the badge fix lands". It landed — in this unit, the same day — and nothing updated
+it. I closed the bracket rather than leave a self-dating clause that had quietly come due.
+
+**That correction cost the reserve, and I filed rather than shaved.** The worker had trimmed decision
+20 **three times**, 11,535 → 11,050 B, specifically to keep `decisions/study-designer.md` out of
+reserve — about nine bytes of clearance. My one-sentence correction crossed the line to 11,164, so
+`tasks/ui/011` is filed, with the sequence written into it: *trim to duck the line, then discover the
+entry was wrong.* **The trim was defensible and the reviewer's number still beat it**, which is the
+best argument I have seen yet for the reserve being a ledger rather than a wall.
+
+**And it verified the guard I was most suspicious of.** The text guard's four assertions all flip
+across the revert boundary — three strings present exactly once post and zero times pre, plus the
+negated `(state.current_step + 1)` at zero post and one pre — and each occurs in code, not in the new
+comment, which writes the offset in a different form. It is not a guard that passes on its own
+documentation.
+
+**I verified the load-bearing claim myself before the reviewer answered**, because the decision rests
+on it entirely. The worker argued that during a run the badge is the *only* thing on the run card
+saying where the study is, since per-step rows do not render until completion. In `assets/app.js` at
+the merge SHA, `renderRunState` does `rows.innerHTML = ""` unconditionally and the `running` branch
+**`return`s before anything repopulates it.** The claim holds. The arithmetic checks in all four
+states: `null` → `1` (step 1 in flight), mid-run `currentStep + 2`, the post-last-step window clamped
+to `totalSteps`, and `totalSteps` absent or `0` → no counter at all rather than `1/0`.
+
+**The worker's own test count was wrong by one, and I want that on the record.** It reported
+"100 passed, 0 failed, 2 ignored"; the merge result is **101 tests, 99 passed, 2 ignored** — its
+numbers sum to 102 against a suite of 101. Green either way and nothing turns on it, **but the fold
+is the only place a worker's self-report is ever checked**, and re-running the gate rather than
+reading the report is what catches it. It costs about ninety seconds.
+
+**A coverage debt the worker disclosed rather than papered over, which is the right call.**
+`assets/app.js` is never evaluated by `cargo test` — there is no JS engine on this machine (`node`,
+`deno`, `nodejs` all absent), which is why `trace.rs`'s browser harness dumps JSON for a manual
+headless-Firefox run. The new test is a **text guard** over the `include_str!`ed source and its own
+doc comment says so: it pins the helper's signature, the `+ 2`, the clamp and the *absence* of the
+old `+ 1`. **It would catch a revert to the count convention; it does not prove the badge renders.**
+That residual is written into the task file as a verification debt needing a live multi-step run with
+the UI open — the third environment this fleet cannot enter, after `west` and a Windows target.
+
+**One number for the next leg's dispatcher.** The worker's first draft of decision 20 put
+`embarch-ui/decisions/study-designer.md` at 11,535 / 12,288 — inside reserve — and it trimmed three
+times to **11,050 (89.9%)** rather than owe a compaction task. That is roughly **ten bytes** under the
+reserve line: **the next decision written into that file, however short, puts it in reserve.** It
+correctly declined to file against a file that is not in reserve, and told me instead.
+
+**Hardware debts:** one new and small — the rendered badge is unverified against a browser. It needs
+a live multi-step study with the UI open, which is a sitting rather than a board debt.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **that I told this worker to settle a design question on the merits and gave it
+no way to observe the thing it was reasoning about.** Its argument is about what a person sees on a
+screen, it had no browser, and it reached its answer by reading the renderer's control flow — which
+is exactly what I then did to check it. **Two agents reading the same source and agreeing is not the
+same as either of them having seen the badge.** I merged a user-facing choice about legibility on the
+strength of a `return` statement, and the one artefact that would settle it is the verification debt
+the unit filed against itself.
+
+---
+
 ## 2026-09-06 18:52 — umbrella/027 doctor ran live, and the check that has been "waiting for a bench" was never waiting for a bench
 
 **Decided:** four, all mine, and the first is the one that matters. **(1)** `open.md`'s standing item
