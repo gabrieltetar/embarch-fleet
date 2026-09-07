@@ -97,6 +97,28 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-07 17:35 — ui/013 a manifest comment stops attributing to a decision a claim that decision does not make
+
+**Decided:** three, all about keeping a deliberately small unit small. **(1)** I told the worker in the task file that the "check whether any *other* manifest carries the same sentence" clause is **a read, not a reach** — a hit in another repo becomes an `inbox/` drop scoped to that repo, never an edit, because `check-ownership.py` would refuse it on a `ui` branch anyway and the worker should know that before it finds one rather than after. **(2)** I told it not to re-run `ui/012`'s `cargo tree` measurements and then report the confirmation as this unit's product; they are already measured twice with their provenance recorded in the task file, and a unit whose finding is "I checked the thing that was already checked" is a unit that spent twenty minutes on nothing. **(3)** I told it that **if it concluded a numbered decision was warranted it should stop and say so rather than write one** — `embarch-ui/decisions/study-designer.md` has 224 B and `decisions/wiring.md` is where such a decision would belong; 224 B is not where that call gets made blind. It did not need one, and said so.
+
+**This unit is one comment in one manifest and that is the whole of it.** `embarch-ui/Cargo.toml` said the crate "never depends on `embarch-topology` or its hardware feature at all" and cited `decisions/wiring.md` decision 5 for it. Decision 5 makes only the narrower claim — **never the `hardware` feature** — and the crate *is* in the tree transitively (`embarch-topology → embarch-core-client → embarch-ui`, features `default,software`). `ui/012` fixed the identical defect in `spec.md` on 2026-09-06 and could not fix this one, because it was a doc-only unit and the comment lives in the code repo; that was the right call and this is its follow-up. The new comment states the transitive shape and points at `spec.md`'s Invariants section, where the `probe-rs`/`serialport` count is already measured, rather than restating the count in a third place.
+
+**Merged:** `agent/ui/013-manifest-topology-claim` (code `ec7e322`, doc `09113b0`). Gate on the merge result: `cargo build` clean, `cargo test` **2 passed / 0 failed**, `cargo clippy --all-targets -- -D warnings` clean, `python3 scripts/check-docs.py` **all 10 green**, `check-client-names.py --repo embarch-ui` clean against 7 denylist entries, ownership green on both branches (doc: 2 paths, self-derived base `fa5ecc0c3922`; code: whole tree, 1 path).
+
+**Reviewer:** no findings.
+
+**The reviewer checked the one thing that would have made this unit worse than doing nothing** — whether the replacement comment swings to a *different* wrong claim. It read decision 5 through my leg worktree rather than the owner's checkout, confirmed the new wording matches decision 5's scope exactly and matches `spec.md`'s own corrected sentence, and confirmed it points at the invariant rather than restating it. It also independently spot-checked the worker's negative sweep claim across every `embarch-*` checkout and found no other manifest carrying the sentence.
+
+**Blocked:** nothing.
+
+**Hardware debts:** none owed by this unit.
+
+**Budget:** DEGRADED throughout; 61% of the 16,000,000 ceiling at leg start, observed rate 1,942,514/h against a sustainable 3,200,000/h, wave 3, no 429.
+
+**Least sure about:** whether a unit this small should cost a worker spawn at all. It is one comment, and the twenty minutes went almost entirely into the sweep and the gate rather than the edit — but the sweep is the part that could only be done by something willing to read every manifest in the suite, and it produced a negative result that is now written down instead of assumed. I would dispatch it again; I would not dispatch three of them in one leg.
+
+---
+
 ## 2026-09-07 17:21 — study-designer/007 the bench answered a different question than the one asked, and the answer is worth more than a guess would have been
 
 **Decided:** two, and the second is the one that matters. **(1)** I ran this bench unit with my own hands, as §7 requires, and validated both roles live before authoring anything — `dev-bench` `6fcddc36cb781b71` and `dut` `834f2559f10a6cdf`, both `ok: true` from `POST /validate` rather than from the buffer. **(2)** **I stopped at the connect rather than picking a device.** The study never reached `BleUnbond`, so bond clearing is *still* unobserved — the task stays `open`, with what I measured written into it, and I did not connect to whichever nameless advertiser was plausibly the DUT.
