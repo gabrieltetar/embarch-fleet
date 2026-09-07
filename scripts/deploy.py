@@ -54,7 +54,18 @@ Usage:
   scripts/deploy.py --queue         pin HEAD for the next leg boundary
   scripts/deploy.py --queue --clear drop a queued deploy
   scripts/deploy.py --from-latch    the deployer agent's half; pushes, then unpins
-Exit status: 0 deployed / nothing to do, 1 refused or gate red, 2 misconfigured.
+Exit status: 0 deployed / nothing to do, 1 refused or gate red, 2 misconfigured,
+3 `--from-latch` refused because work is in flight -- self-healing, see below.
+
+**A liveness refusal under `--from-latch` exits 3, and that number is the whole
+fix for a stall measured 2026-09-07.** A leg that dies mid-flight leaves
+worktrees and `agent/*` branches behind -- exactly what this refuses on, and
+exactly what the next leg's step 0 clears. With the latch outranking a leg in
+the listener's STEP 2, the deploy waited on the recovery it was itself
+preventing, and paged the owner every ten minutes with the advice below, which
+is written for an operator who has `--force` and a leg to wait for. The
+deployer has neither. Exit 3 is what lets the listener tell "not now, a leg
+will clear it" from "something is wrong" without reading prose.
 """
 from __future__ import annotations
 
@@ -179,7 +190,26 @@ def latch_path() -> Path:
     return CONF.state_dir / PENDING
 
 
-def refuse_if_live(force: bool, ignore_pump: bool = False) -> None:
+# A leg runs twenty to forty-five minutes, so six hours is eight to eighteen
+# consecutive boundaries that all deferred -- long past transient, and still
+# inside the same day the owner queued it. The exit-3 deferral is deliberately
+# silent because it self-heals; a pin that keeps deferring does not, and a
+# framework change nobody is told has stalled is the failure this bounds.
+STALE_PIN_HOURS = 6
+
+
+def pin_age_hours(queued_at: str | None) -> float | None:
+    if not queued_at:
+        return None
+    try:
+        when = datetime.fromisoformat(queued_at.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return (datetime.now(timezone.utc) - when).total_seconds() / 3600
+
+
+def refuse_if_live(force: bool, from_latch: bool = False,
+                   queued_at: str | None = None) -> None:
     """Two proxies, and neither is authoritative -- say so rather than imply it.
 
     The latch says the pump is on, not that a leg is alive; a leg between units
@@ -187,14 +217,17 @@ def refuse_if_live(force: bool, ignore_pump: bool = False) -> None:
     cannot run. Changing the rules under a running supervisor gives you a leg
     that read half its protocol from one version and half from another, and no
     log entry records which.
+
+    `from_latch` selects both the pump relaxation and the exit -- one flag
+    because they are one fact: this is the agent's half, so the pump means
+    nothing and neither does advice that assumes hands.
     """
     reasons = []
-    # ignore_pump is --from-latch's one relaxation, and it is the whole point of
-    # a leg-boundary deploy: the pump being latched says the fleet is *running*,
-    # not that a leg is mid-unit, and at a boundary the first is true while the
-    # second is not. Every other reason below is a live-work signal and still
-    # refuses.
-    if not ignore_pump and (CONF.state_dir / "pump").exists():
+    # The pump relaxation is the whole point of a leg-boundary deploy: the pump
+    # being latched says the fleet is *running*, not that a leg is mid-unit, and
+    # at a boundary the first is true while the second is not. Every other
+    # reason below is a live-work signal and still refuses.
+    if not from_latch and (CONF.state_dir / "pump").exists():
         reasons.append(f"the pump latch exists ({CONF.state_dir / 'pump'})")
 
     # A directory under the worktree root is NOT the signal: a leg clones shared
@@ -221,11 +254,32 @@ def refuse_if_live(force: bool, ignore_pump: bool = False) -> None:
         print("WARNING: deploying into what looks like a live fleet, because "
               "--force:\n  " + "\n  ".join(reasons) + "\n")
         return
-    sys.exit("refusing to deploy: the fleet may be running.\n  "
-             + "\n  ".join(reasons)
-             + "\n\nSay `fleet stop`, let the leg finish its unit, then deploy.\n"
-               "Neither check is authoritative -- confirm with ListAgents in a\n"
-               "session, then --force if it is genuinely idle.")
+    head = "refusing to deploy: the fleet may be running.\n  " + "\n  ".join(reasons)
+    if not from_latch:
+        sys.exit(head
+                 + "\n\nSay `fleet stop`, let the leg finish its unit, then deploy.\n"
+                   "Neither check is authoritative -- confirm with ListAgents in a\n"
+                   "session, then --force if it is genuinely idle.")
+    # Deliberately NOT the advice above: the deployer is forbidden --force, and
+    # there may be no leg to wait for. On 2026-09-07 a leg died mid-fold leaving
+    # four worktrees and two unlanded branches, the deployer relayed "let the leg
+    # finish or clear worktrees" to the owner as a NEEDS-YOU, and nothing could
+    # act on it -- a leg's step 0 is the recovery owner, and STEP 2 was spawning
+    # a deployer instead of a leg on every tick.
+    msg = (head
+           + "\n\nThis is recoverable without anyone. Reclaiming worktrees and stale\n"
+             "`agent/*` branches is a leg's step 0 (`ops.md` section 3), so the pin\n"
+             "STAYS and the listener should spawn a leg this tick and retry at the\n"
+             "next boundary. Do not clean up by hand, do not re-queue, do not\n"
+             "notify: this refusal is self-healing and an alert for it is a pager.")
+    age = pin_age_hours(queued_at)
+    if age is not None and age >= STALE_PIN_HOURS:
+        msg += (f"\n\nNOTIFY THE OWNER for this one: the pin has been deferred for "
+                f"{age:.1f} h,\nwhich is many boundaries in a row, so it is no longer "
+                "self-healing.\nSend it with an --action saying a queued framework "
+                "change cannot land\nbecause every boundary still has work in flight.")
+    print(msg, file=sys.stderr)
+    sys.exit(3)
 
 
 def framework_version(allow_dirty: bool) -> dict:
@@ -365,7 +419,8 @@ def main() -> int:
             sys.exit(f"refusing: the latch targets {pinned['target']}")
 
     if not args.dry_run:
-        refuse_if_live(args.force, ignore_pump=args.from_latch)
+        refuse_if_live(args.force, from_latch=args.from_latch,
+                       queued_at=(pinned or {}).get("queued_at"))
 
     # Before install.py overwrites the installed copies, or there is nothing
     # left to compare them against.

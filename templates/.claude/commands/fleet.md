@@ -121,6 +121,18 @@ Four steps, in this order.
 > if it says a re-arm is owed, say that too and mention `<@{{SLACK_OWNER}}>`: a
 > fleet still running the tick prompt it was armed with looks entirely healthy.
 >
+> **The one exception, and it is the difference between a ten-minute delay and a
+> dead fleet: if the deployer reports that it deferred because work is still in
+> flight — `deploy.py` exit 3, leftover worktrees or `agent/*` branches — do NOT
+> stop for this tick.** Carry straight on below and spawn a leg. Those leftovers
+> are what a leg's step 0 reclaims, so the deploy is waiting on a leg, and the
+> latch outranking a leg here means it waits forever: on 2026-09-07 a leg died
+> mid-fold, and every tick for the next twenty minutes spawned a deployer that
+> refused and paged the owner instead of spawning the leg that would have fixed
+> it. The pin survives untouched and the next boundary retries it. Post that one
+> as an ordinary FYI — **no `--action`, no mention** — because nothing is owed by
+> anyone.
+>
 > Otherwise run, in
 > `{{DOC_REPO}}`, exactly:
 > `scripts/queue-status.py --no-supervisor --count`. **Pass `--no-supervisor`

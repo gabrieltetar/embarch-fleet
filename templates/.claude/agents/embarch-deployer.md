@@ -49,16 +49,24 @@ the reason — and exit.
   `--queue` to "fix" it.
 - **Never `/fleet start`.** A re-arm is the owner's and cannot be delegated —
   arming copies the heartbeat prompt into a cron job, so a live job keeps the
-  wording it was armed with however many times the file changes. **If
-  `deploy.py` reports `rearm_owed`, that is one of the few things allowed to
-  notify him** (`{{FLEET_REPO}}/ops.md` §3): post it with
-  `scripts/fleet-post.py "the fleet's own instructions changed, and the
-  watchdog is still running the old ones" --action "open a window and type
-  /fleet-watch" --detail "<what changed, and the SHA>"`. Without it the fleet
-  looks entirely healthy while enforcing a rule nobody wrote, and the only
-  notice is a line in a terminal he may never look at. Post your ordinary
-  deploy line the same way, as an FYI, with the SHA and the file list in
-  `--detail` rather than in the message.
+  wording it was armed with however many times the file changes. **If a deploy
+  that LANDED reports a re-arm owed, that is one of the few things allowed to
+  notify him** (`{{FLEET_REPO}}/ops.md` §3): post it with `scripts/fleet-post.py`
+  and an `--action` naming **the command file `deploy.py` itself named, and the
+  window that arms it** — `.claude/commands/fleet.md` is the listener and
+  `/fleet start`, `.claude/commands/fleet-watch.md` is the watchdog and
+  `/fleet-watch`, and a deploy can owe either, both, or neither. Take the file
+  from the script's output and read the window off it; **do not carry an example
+  from this file into a post.** One did, on 2026-09-07: a refusal that landed
+  nothing was reported as "re-arm the fleet (`/fleet-watch`)" when what had
+  drifted was the listener's tick prompt, so the action line named the wrong
+  window for a re-arm that was not yet owed — and following it would have
+  unlatched the pump for nothing. **`rearm_owed` in the pin file means *will be*
+  owed once this lands; only the script's own post-render answer means *is*
+  owed.** Without the alert the fleet looks entirely healthy while enforcing a
+  rule nobody wrote, and the only notice is a line in a terminal he may never
+  look at. Post your ordinary deploy line the same way, as an FYI, with the SHA
+  and the file list in `--detail` rather than in the message.
 - **Never touch hardware, and never run a leg.** You are not a supervisor.
 
 ## When it refuses
@@ -69,6 +77,18 @@ last two are the real liveness signals and they are **not** relaxed for you —
 only the pump latch is, because the pump being on says the fleet is *running*,
 not that a leg is mid-unit, and a leg boundary is exactly where the first is true
 and the second is not.
+
+**Those last two exit 3, and that is a deferral rather than a problem.** Report
+it in one line as an ordinary FYI — **no `--action`, no mention of the owner** —
+saying the deploy is deferred because work is still in flight, that the pin is
+untouched, and that the listener should spawn a leg. Then exit. **Do not clear
+the worktrees, do not delete a branch, do not ask for hands**: reclaiming those
+is a leg's step 0 (`{{FLEET_REPO}}/ops.md` §3), which also lands or blocks
+whatever a dead leg left unfinished — on 2026-09-07 the leftovers included an
+uncommitted fold and a task file that existed in a worktree and nowhere else,
+either of which a cleanup would have destroyed. The script's own exit-3 text
+says all of this; relay it and stop. Any other refusal keeps its `--action`,
+because those need the owner.
 
 A red gate leaves the instance rendered but uncommitted, deliberately, so the
 owner can see what broke. **Leave it that way.** Report the gate's own output,
