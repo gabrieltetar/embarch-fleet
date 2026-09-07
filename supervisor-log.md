@@ -97,6 +97,28 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-07 16:49 — dev-bench/006 a constants row that was right once, and the two neighbours that only looked stale
+
+**Decided:** two, both small and both about *not* editing something. **(1)** I accepted the worker's provenance tag `[computed from serial_protocol.h]` rather than `[measured]` — the value is arithmetic over a committed header, nothing weighed it on a board, and `DOC-CONVENTIONS.md` draws exactly that line. **(2)** I accepted its decision to leave `decisions/logging.md`'s decision 38 citing the old 9,415 B figure untouched, on the ground that a decision entry states what was true the day it was written. That is the right reading and it is the one a well-meaning sweep gets wrong: the temptation with a stale-looking number in a decision is to correct it, which quietly rewrites history and destroys the only record of what the constant was before schema v15 grew it.
+
+**Merged:** `agent/dev-bench/006-stale-inbound-frame-len` (doc `11875b928011a0e7cbfc0b8e6d70b2b4a3b0e8f6`, **code: none — the `embarch-dev-bench` branch was pushed with zero commits**, correctly, because the task is arithmetic over an unchanged header). Gate on the merge result: `python3 scripts/check-docs.py` **all 10 green** (including `check-client-names.py` and `install.py --verify`), ownership green on the doc branch (3 paths, self-derived base `e12b3797c8fc`). No `cargo` anywhere: `embarch-dev-bench` is a Zephyr C application with no host build, and this diff touched no C.
+
+**The branch did not fast-forward on the first try, and that is now a per-leg certainty rather than an incident.** I batch four claim commits at the top of a leg, so every worker branch forks from a commit *behind* the `main` its work has to land on. The fix each time is `git rebase origin/main` in the worker's own doc worktree, then `--ff-only` from mine, then re-run ownership so its self-derived base is the rebased one. Worth saying plainly for the next leg: **rebase-then-ff is the normal path here, not recovery**, and a `fatal: Not possible to fast-forward` on the first attempt means nothing has gone wrong.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**The reviewer re-derived all three arithmetic steps from the header itself rather than checking the diff's internal consistency**, which is the only check that could have caught a wrong term: 8 + (16×(512+64)) + 8 + 3072 + 8 = 12,312, then + (8×16) + 16 = 12,456, then + ⌊12,456/254⌋ + 2 = **12,507**. It independently confirmed the two neighbours the task flagged as *possibly* stale are both fine for reasons the worker stated — `link_rx_ring`'s row cites §4 rather than a number, and decision 38's 9,415 B is a dated snapshot — and it traced `DBM_MAX_PROTOCOLS_WIRE_LEN` back to decision 41 in `decisions/protocols.md` to confirm the new row's stated cause.
+
+**Hardware debts:** none, and none possible. Doc-only arithmetic; nothing was built, flashed or connected for this unit.
+
+**Budget:** DEGRADED at leg start (no usage cache), 5h burn 7,877,369 billable tokens over 2,063 requests = **49%** of the 16,000,000 calibrated ceiling, observed 1,579,041/h against a sustainable 3,200,000/h, **wave 4**, no 429 in the last 90 minutes.
+
+**Least sure about:** whether `spec.md`'s §5 table should carry computed values at all. Every row of it is a number that lives authoritatively in a header, and this row went stale silently for a whole schema version — so the same defect is latent in every other row, and `check-docs.py` cannot see any of it. The unit fixed one row and the worker checked the rest by hand, which is exactly the evidence that expires the moment someone edits the header again. A generated table, or a check that expands the macros, is the real answer and neither is filed.
+
+---
+
 ## 2026-09-07 16:19 — core/020 one field name meant two different chip identities, and the file that documented both got split
 
 **Decided:** four. **(1)** I accepted the worker's **half-fix**: `GET /dev-bench/hello`'s self-reported chip ID is renamed `self_reported_hardware_id` (Core decision 47) while `/probes/enroll`, `/probes/enrolled` and `POST /validate` keep serving `hardware_id`. **This is a wire-field rename on a live route, so I read the diff before merging rather than merging on green** (§10's rule for wire types), and I verified the safety claim by hand instead of trusting it: `embarch-api/crates/embarch-core-client/src/client.rs`'s `HelloAckResponse` (line ~621) deserializes **only** `schema_version`, `compatible` and `firmware_version`, so no caller parsed the field that moved. **(2)** I accepted the **split of `embarch-core/interfaces.md` into `interfaces/{hardware,logs,result-layout,studies,topology}.md`**, which is `DOC-COMPACTION.md`'s split-first rule doing its job: that file was **14,527 / 15,360 B and PARKED behind a blocked compaction task**, and it is off the reserve list entirely as of this fold — a verbatim split restates nothing, so the `In flux: yes` park never forbade it. **(3)** I filed the worker's `inbox/` drop as **`tasks/api/044`** (commit `e44afb0`) rather than dispatching it, and wrote into the file why a single worker cannot finish it: its own "Done when" spans `embarch-core` and `embarch-api`, and §5 gives a worker one repo. **(4)** I ran the gate without a native Windows build, deliberately — see below.
