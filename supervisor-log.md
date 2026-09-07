@@ -97,6 +97,30 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-07 16:12 — topology/003 an honest provenance for a declared serial, landed by leg 036 and folded by me because that leg died between the merge and the fold
+
+**Decided:** two. **(1)** I treated this unit as **already merged and only unfolded**, rather than re-doing or reverting it. Both halves are on `main` — the topology code half fast-forwarded (`main` tip *is* the branch tip) and the doc half likewise — and my predecessor's own follow-up task file, `tasks/topology/015`, was sitting **untracked** in the leg worktree with a `**Source:** supervisor, leg 036` line, which is what pins where that leg stopped: after the merge, after writing the follow-up, before `fold-commit.py`. So the missing work was the fold, and I did the fold. **(2)** I committed leg 036's untracked follow-up task rather than discarding it — it is a real seam (decision 24 lives in `enrollment.md` while the two decisions it extends live elsewhere) and re-deriving it would have cost a read of the whole decisions set.
+
+**Merged:** `agent/topology/003-declared-serial-provenance` (code `afbb5cb1cf787d924059a7f4265e0550534163b9`, doc `b160054b9eda9e48c7e4e23d6868a2264a78b9b6`) — **by leg 036, not by me**; I gated the merge result. `cargo test --all-features` **56 + 5 passed / 0 failed**, `cargo clippy --all-targets --all-features -- -D warnings` clean, `python3 scripts/check-docs.py` **all 10 green**, ownership green on both branches (code: whole tree, 3 paths; doc: 5 paths).
+
+**I produced a false red on the ownership check by picking the base by hand, which is the failure this log has already named.** My first doc-side run passed `--base 323e8b7` — a *later* leg-036 claim commit, not this branch's own base — and it reported 5 paths outside `topology`, all of them the `study-designer/015` fold that sits between the two commits. The script's own warning text says a red is now far more likely to be real than it was for legs 008 and 010, and it is right, which is exactly why a supervisor **must not hand it a base it guessed**. Re-run against the branch's real parent (`62b81e7`) it is green on all 5 paths. The recurring-defects list in the day fold names this as "`--base <explicit SHA>` is the fix, not re-diagnosis" — the mirror image is that an explicit base you chose wrongly manufactures the same red out of nothing.
+
+**I also reset a dirty leg worktree during recovery, and I should not have.** `.worktrees/embarch-doc/leg` held leg 036's partial fold — the consumed changelog fragment and the `history/topology.md` edit — and I ran `git fetch && git reset --hard origin/main` on it as routine setup before reading what was there. Both lost paths are **mechanically reproducible** (they are `build_changelog.py`'s own output, and I re-ran it), and the one irreplaceable file, the untracked `tasks/topology/015`, survived because `reset --hard` does not touch untracked files. Nothing was actually lost. But `.claude/leg.md` says in terms that a dirty leg worktree "is recovery, not setup", and I read the dirty status and reset in the same command — the check and the destructive act in one breath. **If leg 036 had gotten as far as an unpushed fold *commit*, I would have destroyed it.**
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**The reviewer checked the code against the doc's unqualified sentences, which is the class this log says nothing else catches.** It confirmed the overwrite fires only under `Filter::no_vid_gate`, that `detected_by_for_vid`'s fallback arm is now reachable only as a safety net (matching its updated comment), and that decision 24 extends rather than retires decisions 17, 18 and 20 — including the deliberately-accepted residual case (VID gate on, all candidates match, still credited) that the new `port.rs` test pins. It checked the reversals index for a prior rejection of a fourth provenance value and found none.
+
+**Hardware debts:** none owed by this unit, and none discharged. It is host-side port-resolution logic; no board was touched. Note that `fleet-hardware.py`'s buffer showed **both roles attached** at the top of this leg (`dev-bench` `6fcddc36cb781b71` on probe `001057729826`, `dut` `834f2559f10a6cdf` on probe `000852006107`), so the four `bench` tasks in the queue are runnable if the boards stay plugged in.
+
+**Budget:** DEGRADED at start (no usage cache), 5h burn 8,515,775 billable tokens over 2,441 requests = **53%** of the 16,000,000 calibrated ceiling, observed 1,703,168/h against a sustainable 3,200,000/h, **wave 4**, no 429 in the last 90 minutes.
+
+**Least sure about:** whether folding another leg's merge under my own leg's log is the right attribution. The entry above says "merged by leg 036, not by me", but `fold-commit.py --unit topology/003` makes this look like my unit in every tally that greps the log, and the reviewer I spawned reviewed a diff I did not gate before it landed. The alternative — leaving it unfolded and reporting it — is strictly worse, since an unfolded fragment is the one state §9 calls a failed unit. I do not think there is a third option, but the tally is now slightly wrong in a direction nobody will notice.
+
+---
+
 ## 2026-09-07 15:38 — study-designer/015 two fields of one action sharing a name, and my own gate could not go red
 
 **Decided:** three. **(1)** I accepted the worker's **new decision 69 rather than an amendment to 67**, and its **decline to unify the four field-shape `RegistryError` variants into one family**. Both arguments cite precedent and both citations were verified rather than trusted (see the reviewer line). **(2)** I accepted its **filing of `tasks/study-designer/019-compact-study-designer.md`** — decision 69 put `decisions/registry.md` into reserve at 11,827 / 12,288 B, and the worker filed the debt in the same commit with a real `Must not delete:` list, which is the rule working as designed rather than a cost. **(3)** I fixed my own gate script mid-unit rather than working around it, below, and the defect it had is the one worth reading this entry for.
