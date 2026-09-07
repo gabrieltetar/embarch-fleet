@@ -86,12 +86,18 @@ Those last two rows are the ones to remember. Arming copies the heartbeat prompt
 into a cron job, so the live job keeps the wording it was created with however
 many times you edit the file. They drifted once already.
 
-**`deploy.py` compares the blockquotes themselves, in both files, and tells you
-when a re-arm is genuinely owed.** It used to key on the filename, so editing a
-line of prose in `fleet.md` raised an alarm you had to overrule by hand — and it
-never looked at `fleet-watch.md` at all, where a watchdog left on an older
-staleness threshold reports nothing unusual. Prose is re-read from disk every
-tick and owes nothing; the block is what a live cron job froze.
+**`deploy.py` compares the render against what the window was actually armed
+with, per file, and names which one owes a re-arm.** Prose is re-read from disk
+every tick and owes nothing; the block is what a live cron job froze. Arming
+records that block (`fleet-armed.py --stamp`, step 3 of both commands) because
+every repo-side inference of it has been wrong: keying on the filename cried
+wolf over a line of prose, the working tree read new-against-new after a
+hand-run `install.py` and stayed silent through leg 029, and `HEAD` answers
+whether a deploy committed the wording rather than whether any window read it.
+**An unstamped prompt is owed**, which is how a window armed before this existed
+reports itself; it self-clears on the next arming.
+`scripts/fleet-armed.py --check --diff` answers the same question at any time,
+not only after a deploy.
 
 ## 3. Changing fleet.toml is two changes
 

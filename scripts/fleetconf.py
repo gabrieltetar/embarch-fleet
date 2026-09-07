@@ -153,3 +153,39 @@ if __name__ == "__main__":
     print(f"config: {CONF.path}")
     for k, v in CONF.substitutions().items():
         print(f"  {k:22} {v}")
+
+
+# --- the armed cron prompts -------------------------------------------------
+#
+# A live cron job keeps the prompt it was armed with, so editing the file it
+# came from changes nothing until the window is re-armed. Nothing recorded what
+# any window was armed WITH, so `deploy.py` had to infer it from the repo -- and
+# on 2026-09-07 that inference was wrong in the one direction that costs
+# something: a hand-run `install.py` made the comparison read new-against-new,
+# no re-arm was reported, and the listener spent twenty minutes spawning legs
+# with a tick prompt that pointed them at the wrong file.
+#
+# So arming now leaves evidence. The stamp is the block itself rather than a
+# hash of it: a human can read what the live job carries, and a stale one shows
+# up as a diff instead of two unequal hex strings.
+
+ARMED_PROMPTS = (".claude/commands/fleet.md", ".claude/commands/fleet-watch.md")
+
+
+def cron_block(text: str) -> str:
+    """The blockquote a window is armed with, as text, and nothing around it.
+
+    One implementation, imported by `deploy.py` and `fleet-armed.py`. It was
+    two for a day, which this repo's whole premise says is one too many.
+    """
+    return "\n".join(ln for ln in text.splitlines() if ln.startswith(">"))
+
+
+def armed_stamp(rel: str) -> Path:
+    """Where the block a window was armed with is recorded.
+
+    Under the state directory, not either repo: it is machine state like the
+    pump latch, it is per-window, and committing it would say a checkout was
+    armed when only one machine's window ever was.
+    """
+    return CONF.state_dir / "armed" / (rel.replace("/", "%") + ".block")
