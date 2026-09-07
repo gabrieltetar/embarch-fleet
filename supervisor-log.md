@@ -97,6 +97,89 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 20:00 — study-designer/013 a worker that split rather than squeezed, and told me my premise was wrong
+
+**Decided:** two, and neither was mine to make alone. **(1)** I told the worker to settle the
+neighbouring question — whether a non-`Write` action carrying fields is *refused* or
+*documented-as-ignored* — on what a registry author needs rather than on which is less code. It
+**refuses**, and the argument is the right one: documented-as-ignored leaves the mistake in the file
+and defers the only signal to a build-time `NotWritable` that names neither the field nor the file
+and **blames the row for choosing what the registry offered it** — and which does not fire at all if
+the row happens to make no choices. **(2)** I named the wrong destination file in my dispatch and it
+corrected me (below). Both new refusals are additive: no type, no wire shape, no change to
+`resolve_write_payload`'s output for input that is currently valid.
+
+**Merged:** `agent/study-designer/013-disjoint-field-ranges` (code `da54391`, doc `e3f8ac0`), plus
+fold correction `ba50f3e` in `embarch-study-designer`. Gate on the merge result: `cargo build`,
+`cargo test` **108 + 9**, `cargo test --all-features` **227 + 12 + 10**, `cargo clippy
+--all-targets --all-features -D warnings` clean, `python3 scripts/check-docs.py` **all 10 green**
+(the owner's `doc/015` added a tenth mid-leg), ownership green both branches (doc: 5 paths, base
+`f9f62ffa10a5`; code: whole tree, base `726a76de4e18`), client-names clean.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**My dispatch's premise was wrong and the worker refused to act on it.** I told it `limits.md` holds
+decision 66's bound and was the closest mission. **It does not** — 66 is in `authoring.md`, and
+`7e68116`'s own commit message records rejecting `limits.md` as *"about type size and stack cost
+rather than about where a bound is checked."* The worker read that, agreed with it, and went where
+the mission actually pointed. **That is the second dispatch number I got wrong this leg** — the
+other was `decisions/reporting.md`'s size on `umbrella/029` — and both times the cause was the same:
+**I quoted a figure or a claim out of a task file's body instead of checking it.**
+
+**And then it hit a cap and split instead of squeezing, which is the behaviour the reserve exists to
+produce.** `authoring.md` was 10,377 / 12,288 and decision 67 at full length puts it at **12,610 —
+over cap, not merely in reserve.** So: `decisions/registry.md` is new and holds 35, 66 and 67 (the
+registry file and what `validate` refuses it for); `authoring.md` keeps 6, 34, 37, 38 (the surfaces
+that *use* it). 8.4K and 4.7K, **neither in reserve, so no compaction task is owed.** The reviewer
+proved every moved decision **byte-for-byte identical by md5**, with the only two deltas being the
+file's own trailing `---` following the last-block position. This is the third mission split in two
+days and the third proved that way.
+
+**One clause was true only for the arrangement its test used, and I corrected it in the fold.**
+Decision 67 and the `FieldRangesOverlap` doc comment both said the splice takes *"its head from its
+own pick, its tail from the other's."* **That follows the declaration order, not the offsets** —
+declare the higher-offset field first and the ends swap. The substantive claim survives untouched
+(the earlier field's range holds a byte string in **neither** field's `values`); the attribution
+does not, and it was stated as the rule. Fixed in `ba50f3e` and in `decisions/registry.md`, re-gated
+(227 tests, clippy) before pushing. **Fifth instance in three legs of one unqualified clause over a
+branching path, and the third caught by a reviewer rather than a gate.**
+
+**Two things the worker could not do and handed me, both correctly.** Its mission split left two
+links in `history/study-designer.md` naming `authoring.md` for decisions 35 and 66 — which still
+*resolve*, so `check-links.py` stays green, which is exactly `tasks/doc/022`'s class. **It made the
+edit, `check-ownership.py` refused `history/**` to every worker scope, and it reverted rather than
+arguing.** Landed here. I then swept the corpus myself and the reviewer swept it independently:
+**no third stale link.** Second: its `inbox/` drop — `validate` still accepts two fields of one
+action sharing a `name`, which both the UI and `resolve_write_payload` key choices by, so the
+engineer gets one pick for two ranges. **It was written into the worker's own worktree `inbox/`
+again**, the same directory I delete at cleanup; rescued and filed as `tasks/study-designer/015`.
+**That is twice this leg.**
+
+**The one cross-repo risk, checked rather than assumed.** `RegistryError` is a `pub enum` and is not
+`#[non_exhaustive]`, so two new variants would break any downstream exhaustive `match`. The worker
+flagged it and said it could not check. **There is no such `match`: `grep -rn RegistryError` over
+`embarch-api`, `embarch-core`, `embarch-ui` and `embarch-umbrella` returns nothing at all**, and the
+reviewer reproduced that independently. The only dependent that touches the type does so through
+`Display` — `embarch-ui`'s `study_designer.rs` maps it to a string on `load` and to a `400` on
+`save`, so both new refusals now surface as a bad-request naming the field, which is decision 35's
+"named refusals on read and on write" working as designed.
+
+**Hardware debts:** none new.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **that I verified the shared-crate risk by grep and by a build that did not
+actually rebuild.** `cargo build` in `embarch-api` and `embarch-umbrella` returned in 0.13 s — they
+path-depend on the owner's `embarch-study-designer` checkout, whose local `main` is behind
+`origin/main`, **so those builds compiled the old crate and told me nothing.** The grep is the real
+evidence and it is conclusive for the enum question, but **I reported two green builds to myself
+before noticing they were cache hits against a stale sibling**, which is the same shape as the
+unpushed merges this leg found: a check that passes because it never ran.
+
+---
+
 ## 2026-09-06 19:46 — api/029 the census cannot see a nameless device, and a timeout is reported as a lost frame
 
 **Decided:** three, all mine, on my own bench unit. **(1)** Leg 021's conclusion that *"not one of
