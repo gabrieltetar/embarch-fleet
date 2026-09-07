@@ -56,6 +56,13 @@ import time  # noqa: E402
 import tomllib  # noqa: E402
 
 HARDWARE_TOML = Path(__file__).resolve().parent.parent / "hardware.toml"
+# The identifying half -- client product names, repo names, and the workspace
+# paths that contain them -- lives outside every repo, beside the client-name
+# denylist and for the same reason `fleet.toml` gives for that one: a committed
+# record of the names you are hiding is the leak it exists to prevent. This
+# split was not designed up front; `check-client-names.py` went RED on the
+# first version of `hardware.toml` and was right to.
+LOCAL_TOML = CONF.state_dir / "hardware-local.toml"
 BUFFER = CONF.state_dir / "hardware.json"
 # A buffer older than this is reported stale rather than trusted. Chosen
 # against what actually changes: a cable, over hours -- not a study, over
@@ -65,8 +72,28 @@ STALE_AFTER_S = 4 * 3600
 
 
 def load_facts() -> dict:
+    """`hardware.toml`, with the machine-local overlay merged over it.
+
+    One level of merge, per table, which is all the shape needs: the overlay
+    supplies `[api]` and the client-named half of `[dut_ble]`. A missing
+    overlay is not an error -- the refresh then says it has no API binary
+    rather than guessing one.
+    """
     with open(HARDWARE_TOML, "rb") as fh:
-        return tomllib.load(fh)
+        facts = tomllib.load(fh)
+    try:
+        with open(LOCAL_TOML, "rb") as fh:
+            local = tomllib.load(fh)
+    except OSError:
+        facts.setdefault("_notes", []).append(
+            f"no local overlay at {LOCAL_TOML}; client-specific values are absent")
+        return facts
+    for key, val in local.items():
+        if isinstance(val, dict) and isinstance(facts.get(key), dict):
+            facts[key].update(val)
+        else:
+            facts[key] = val
+    return facts
 
 
 def api(facts: dict, *args: str) -> tuple[int, dict | None, str]:
@@ -77,7 +104,9 @@ def api(facts: dict, *args: str) -> tuple[int, dict | None, str]:
     bearer token both live in that binary, and a second implementation of
     either is a second thing to keep true.
     """
-    cfg = facts["api"]
+    cfg = facts.get("api") or {}
+    if not cfg.get("binary") or not cfg.get("config"):
+        return 1, None, (f"no [api] binary/config -- add them to {LOCAL_TOML}")
     cmd = [cfg["binary"], "--config", cfg["config"], "--json", *args]
     try:
         p = subprocess.run(cmd, capture_output=True, text=True, timeout=90)
@@ -126,7 +155,7 @@ def measure(facts: dict) -> dict:
         "probes": [],
         "roles": [],
         "lore": facts.get("lore", {}),
-        "notes": [],
+        "notes": list(facts.get("_notes", [])),
     }
 
     rc, status, err = api(facts, "status")
@@ -185,8 +214,9 @@ def measure(facts: dict) -> dict:
         hwid = (dut or {}).get("measured", {}).get("hardware_id") if dut else None
         snap["dut_ble"] = dict(ble)
         snap["dut_ble"]["derived_from_hardware_id"] = hwid
+        tmpl = ble.get("name_template", "{suffix}")
         snap["dut_ble"]["name_candidates"] = [
-            ble["name_template"].format(suffix=s)
+            tmpl.format(suffix=s)
             for s in suffix_candidates(hwid or "", ble.get("suffix_from_hardware_id_bytes", []))
         ] if hwid else []
         snap["dut_ble"]["source"] = (
