@@ -61,6 +61,34 @@ degraded_workers = 2
 weekly_pct = 70
 five_hour_pct = 85
 
+# What the 5-hour window actually holds, in BILLABLE tokens -- input + output +
+# cache writes, cache reads excluded because they bill at roughly a tenth.
+#
+# This exists because the percentages above are unavailable on this machine by
+# construction (ops.md §2: `rate_limits` reaches only a status line, the VS Code
+# extension runs none, and the field is recorded nowhere on disk). Without a
+# number the fallback was a CONSTANT wave of `degraded_workers`, whatever the
+# seat had left -- which is both too slow when the window is empty and too fast
+# when it is nearly spent.
+#
+# CALIBRATED FROM OBSERVED BEHAVIOUR, not derived, measured 2026-09-07 over four
+# days of transcripts bucketed into 5-hour windows aligned to a real 429's own
+# reset boundary:
+#
+#   09-05 20:30   15.4M billable   3,830 requests   no 429
+#   09-06 01:30   12.5M            2,461            no 429
+#   09-06 11:30   10.2M            2,768            no 429
+#   09-06 16:30   17.7M            5,177            *** 429 at 03:29Z ***
+#   09-06 21:30   13.9M            2,702            no 429
+#
+# So the wall is between 15.4M and 17.7M. 16M is the conservative read of that,
+# and being wrong costs a 5-hour lockout that stops the OWNER working, not just
+# the fleet -- hence the low side of the bracket rather than the middle.
+#
+# `usage-budget.py --burn` prints the current number. Set to 0 to disable the
+# measured wave and restore the constant `degraded_workers`.
+five_hour_token_ceiling = 16_000_000
+
 [ownership]
 # protocol.md §3. Paths reserved to the owner: the rules the fleet runs under,
 # the scripts that enforce them, and the agent definitions that carry them.

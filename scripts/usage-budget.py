@@ -215,6 +215,106 @@ def recent_429(minutes: int) -> str | None:
             f"resets in {human_reset(resets)}")
 
 
+def measured_wave(used_frac: float, full_below: float, cap: int) -> int:
+    """A wave size from the measured burn, as a rate control rather than a budget.
+
+    `suggest()` above tapers over a percentage of a window with a known reset,
+    which is the right shape for a quota that refills at a wall-clock instant.
+    The five-hour window here is ROLLING and its numbers are inferred, so the
+    quantity that matters is the sustainable RATE: at steady state a rolling
+    five-hour sum is five times the hourly rate, so staying under the ceiling
+    means staying under `ceiling / 5` tokens an hour.
+
+    Full width only below `full_below` of the ceiling, then linear to one
+    worker at the ceiling. `full_below = 0.25` is not arbitrary: at the burn
+    this bench actually runs, it returns the same wave the rate arithmetic
+    does, and it degrades the right way at both ends.
+
+    **It is a feedback loop, not a prediction, and that is the whole safety
+    argument.** Every leg's step 0 re-reads the burn its predecessor produced,
+    so a wave that was too wide is narrowed within one leg -- about forty
+    minutes -- and a real 429 remains the hard stop underneath it.
+    """
+    if used_frac >= 1.0:
+        return 1
+    if used_frac <= full_below:
+        return cap
+    frac = 1.0 - (used_frac - full_below) / (1.0 - full_below)
+    return max(1, min(cap, round(cap * frac)))
+
+
+def burn_window(hours: float) -> tuple[int, int, float] | None:
+    """Billable tokens across every transcript in the trailing window.
+
+    The percentages are the number this gate was designed around and they are
+    unavailable on this machine by construction -- `rate_limits` reaches only a
+    status line, the VS Code extension runs none, and a search of every
+    transcript on disk finds the field recorded nowhere. So the fallback used to
+    be a CONSTANT: wave `degraded_workers`, forever, whatever the seat had left.
+
+    What IS on disk is every request's own `message.usage`. Summing it over the
+    trailing five hours gives a real burn rate, which is what this docstring's
+    first version asked for: "once a few batches exist, replace this with
+    cost-per-worker arithmetic against the measured headroom."
+
+    `billable` counts input + output + cache WRITES and excludes cache reads,
+    which bill at roughly a tenth. That is a ratio, not a contract, so the
+    ceiling it is compared against is calibrated from observed behaviour rather
+    than derived -- see `[limits] five_hour_token_ceiling` in fleet.toml.
+
+    Returns (billable, requests, hours_covered), or None if no transcript in the
+    window could be read -- which is NOT zero burn, and must not be read as
+    headroom.
+    """
+    cutoff = time.time() - hours * 3600
+    billable = 0
+    requests = 0
+    oldest = None
+    seen_any = False
+    for root, _dirs, files in os.walk(TRANSCRIPTS):
+        for name in files:
+            if not name.endswith(".jsonl"):
+                continue
+            path = os.path.join(root, name)
+            try:
+                if os.path.getmtime(path) < cutoff:
+                    continue                      # cannot hold a request in it
+                seen_any = True
+                with open(path, encoding="utf-8", errors="replace") as f:
+                    for line in f:
+                        if '"usage"' not in line:
+                            continue
+                        try:
+                            rec = json.loads(line)
+                        except Exception:
+                            continue
+                        msg = rec.get("message")
+                        if not isinstance(msg, dict):
+                            continue
+                        use = msg.get("usage")
+                        if not isinstance(use, dict):
+                            continue
+                        try:
+                            when = calendar.timegm(
+                                time.strptime(rec.get("timestamp", "")[:19],
+                                              "%Y-%m-%dT%H:%M:%S"))
+                        except Exception:
+                            continue
+                        if when < cutoff:
+                            continue
+                        requests += 1
+                        billable += ((use.get("input_tokens") or 0)
+                                     + (use.get("output_tokens") or 0)
+                                     + (use.get("cache_creation_input_tokens") or 0))
+                        oldest = when if oldest is None else min(oldest, when)
+            except OSError:
+                continue
+    if not seen_any:
+        return None
+    covered = (time.time() - oldest) / 3600 if oldest else 0.0
+    return billable, requests, covered
+
+
 def human_reset(ts) -> str:
     if not isinstance(ts, (int, float)):
         return "unknown"
@@ -268,9 +368,34 @@ def main() -> int:
     ap.add_argument("--json", action="store_true", dest="as_json")
     ap.add_argument("--strict", action="store_true",
                     help="treat missing percentages as HOLD instead of a capped wave")
+    ap.add_argument("--token-ceiling", type=float,
+                    default=float(CONF["limits"].get("five_hour_token_ceiling", 0)),
+                    help="billable tokens the 5-hour window holds (fleet.toml); "
+                         "0 disables the measured wave and restores the constant one")
+    ap.add_argument("--burn-full-below", type=float, default=0.25,
+                    help="run the full wave while the measured 5-hour burn is "
+                         "under this fraction of the ceiling (default 0.25)")
+    ap.add_argument("--burn", action="store_true",
+                    help="print the measured 5-hour burn and exit")
     ap.add_argument("--check-429", type=int, default=90, metavar="MIN",
                     help="HOLD if a real 429 was recorded in the last MIN minutes (default 90)")
     args = ap.parse_args()
+
+    if args.burn:
+        b = burn_window(5.0)
+        if b is None:
+            print("no transcript in the last 5 h could be read")
+            return 2
+        ceiling = float(args.token_ceiling)
+        pct = f"{100.0 * b[0] / ceiling:.0f}% of ceiling" if ceiling > 0 else "no ceiling set"
+        if args.as_json:
+            print(json.dumps({"billable": b[0], "requests": b[1],
+                              "hours_covered": round(b[2], 2),
+                              "ceiling": ceiling}))
+        else:
+            print(f"5h burn: {b[0]:,} billable tokens, {b[1]:,} requests, "
+                  f"oldest {b[2]:.1f} h back -- {pct}")
+        return 0
 
     throttled = recent_429(args.check_429)
 
@@ -283,22 +408,51 @@ def main() -> int:
                 print(f"HOLD -- {throttled}")
             return 1
         feeder = check_feeder()
-        workers = 0 if args.strict else DEGRADED_WORKERS
-        verdict = "HOLD" if args.strict else "DEGRADED"
+        burn = burn_window(5.0)
+        ceiling = float(args.token_ceiling)
+        # A measured wave rather than a constant one. Same taper as the
+        # percentage path, over the one headroom that can actually be read
+        # here; the floor is 1 rather than 0 because a burn at the ceiling
+        # without a 429 is a reason to go slowly, not to stop -- a real 429 is
+        # what stops the fleet, and it is checked above.
+        if burn is not None and ceiling > 0:
+            used_pct = 100.0 * burn[0] / ceiling
+            workers = measured_wave(burn[0] / ceiling, args.burn_full_below, MAX_WORKERS)
+            measured = (f"5h burn {burn[0]:,} billable tokens over {burn[1]:,} "
+                        f"requests = {used_pct:.0f}% of the calibrated ceiling "
+                        f"({ceiling:,.0f}); sustainable rate is "
+                        f"{ceiling / 5:,.0f}/h, observed "
+                        f"{burn[0] / max(burn[2], 0.1):,.0f}/h")
+        else:
+            used_pct = None
+            workers = DEGRADED_WORKERS
+            measured = ("no transcript in the last 5 h could be read, so the "
+                        "burn is unknown -- falling back to the constant wave")
+        if args.strict:
+            workers, verdict = 0, "HOLD"
+        elif used_pct is not None and used_pct >= 100.0:
+            workers, verdict = 1, "DEGRADED"
+        else:
+            verdict = "DEGRADED"
         if args.as_json:
             print(json.dumps({"verdict": verdict, "reason": why,
-                              "workers": workers, "feeder": feeder}))
+                              "workers": workers, "feeder": feeder,
+                              "burn_5h_billable": burn[0] if burn else None,
+                              "burn_5h_requests": burn[1] if burn else None,
+                              "burn_pct_of_ceiling": used_pct,
+                              "token_ceiling": ceiling}))
         else:
             print(f"{verdict} -- {why}")
             if feeder:
                 print(f"  FEEDER: {feeder}")
                 print("  DEGRADED and 'the feeder is broken' are indistinguishable on\n"
                       "  disk, so this is the only thing that tells them apart.")
+            print(f"  {measured}")
             if args.strict:
                 print("--strict: not dispatching without numbers.")
             else:
-                print(f"Proceeding with a capped wave of {workers}. No 429 in the last "
-                      f"{args.check_429} min, which is the signal that actually matters.")
+                print(f"Proceeding with a measured wave of {workers}. No 429 in the "
+                      f"last {args.check_429} min, which is the hard signal.")
         return 1 if args.strict else 2
 
     limits = data["rate_limits"]
