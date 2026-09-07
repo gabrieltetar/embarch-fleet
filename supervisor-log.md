@@ -97,6 +97,95 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 20:53 — core/016 the exhaustive match, and a status fragment that retired one paragraph too few
+
+**Decided:** two. **(1)** I told the worker the task's own bound was to be believed — `Outcome` has
+three variants and `TimedOut` is the only one to add — but that it must **prove the new test fails
+against the pre-fix code and quote the failure**, because a test that would have passed either way
+is what this suite keeps paying for. It did, honestly: it first extracted `early_stop_reason()` as a
+**pure refactor carrying the old `Fail`-only logic**, ran the new test against *that*, and quoted the
+panic. So the red is against real pre-fix behaviour and not a strawman. **(2)** I rewrote one more
+paragraph of `suite/studies-guide.md` than the `status.d/` fragment asked for, on the reviewer's
+observation (below).
+
+**Merged:** `agent/core/016-timed-out-step-names-its-step` (code `4b6a5ee`, doc `bf678a5`). Gate on
+the merge result: `cargo build`, `cargo test` **164 passed / 0 failed / 2 ignored**, `cargo clippy
+--all-targets -D warnings` clean, `python3 scripts/check-docs.py` **all 10 green**, ownership green
+both branches (doc: 6 paths, explicit base; code: whole tree, base `50836eeae952`), client-names
+clean. **No native Windows build, and the reason for that changed under me mid-leg**: `tasks/doc/012`
+was the standing record that it is unrunnable from a Linux leg, and the owner **closed it** in
+`cba1502` while my workers ran — `cargo-xwin` considered and declined with a reversal condition, both
+failure modes already recorded in §10. So the absence is now a settled position rather than an open
+task, and the next leg should stop citing `doc/012` for it.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**The fix is better than the task asked for, in the one way that matters.** The task said a fourth
+`Outcome` variant would land in the same silent arm and that this was "worth a line in whatever you
+write". The worker wrote a **`match` with no wildcard arm** instead, so a fourth variant is a compile
+error at the point of record — a comment turned into a build failure, for no extra cost. It also
+split the recorded value into `Option<(String, StoppedBecause)>` with
+`StoppedBecause::{Failed(String), TimedOut}`, because a `TimedOut` outcome carries no reason string
+and forcing the two through one `String` is what let them be confused in the first place.
+
+**The reviewer's real contribution was not a finding, and it is the mechanism note of this leg.**
+It confirmed the `status.d/` fragment named exactly the right paragraph to retire — and then pointed
+out that **the paragraph immediately above it, which the fragment explicitly said "stands and should
+stay", opens with "And when it goes stale, the failure lies to you."** That sentence is precisely
+what this unit falsified, and applying the fragment literally would have deleted the correction while
+leaving the accusation standing, over a dangling colon where the code block had been. **§3b would
+have been left asserting the defect as current.** I rewrote the lead sentence, the code block and the
+explanation together.
+
+**A worker writes its `status.d/` fragment about the paragraph it is retiring, not about the
+paragraph next to it — and that is structural, not this worker's mistake.** It correctly named its
+own span and correctly flagged the code block; the sentence it got wrong was one it had declared out
+of scope. **The author of a fragment is looking at a diff; the supervisor consuming it is looking at
+a document, and only one of those two can see the paragraph above.** So: **read the surrounding
+paragraphs before applying a `status.d/` fragment, always.** This is the first time in this log a
+fragment has been *under*-scoped rather than over-scoped, and the failure it produces is silent.
+
+**What I actually wrote into §3b**, and the provenance line I was careful about: the 15 s timeout on
+`74:92:DB:7F:0C:D8` stays `[measured 2026-09-06, study dd340b2a…]` because it was; **the new reason
+string is explicitly tagged as Core's format string and not a second measurement**, because that
+study ran against the *old* Core and nobody has yet seen the new message come off a bench. Writing
+"a run like it now reports …" without that qualifier would have been the exact failure leg 025
+committed twice in this same document.
+
+**Four things the reviewer checked that I would have taken on trust.** Decision 40's amendment is a
+one-span word-level change and **the occurrence counts `13/15/17/17/13/17` are byte-identical** —
+that file is a bench narrative this suite paid three times for. The `None` arm's new justification
+("an undecodable frame never reaches `write_step`") holds against the real run loop:
+`Received::Undecodable` logs and *continues*, and only `>= MAX_UNDECODABLE_FRAMES` breaks, with its
+own distinct message. All three `reason` shapes in `interfaces.md` match the format strings character
+for character, including the line-continued literal's whitespace strip. And **no consumer anywhere
+keys off the old string** — zero hits across `embarch-api`, `embarch-ui`, `embarch-umbrella`; the
+only doc hits are `tasks/api/029`'s prose, correctly judged not a dependency.
+
+**One cosmetic residue, left deliberately:** the pre-existing test
+`the_writer_remembers_the_last_failed_step_for_an_early_stop` kept its old name through the
+`last_failed_step` → `last_stopping_step` rename. Not worth a commit on `main`.
+
+**Hardware debts:** none new, and none owed. The defect and the fix are host-side; the bench
+measurement that found it is already in the log and in `suite/studies-guide.md`. **What is not yet
+observed is the new message coming off a real timed-out study** — §3b now says so in its own words
+rather than only here.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **that the fragment mechanism only worked here because a reviewer read one
+paragraph further than it was asked to.** I gave it five specific things to check and the `status.d/`
+span was the fifth; it answered that one correctly and then volunteered the adjacent paragraph,
+explicitly saying it was filing nothing because this was "an incompleteness in a supervisor
+instruction, not a contradiction of a standing decision". **Nothing in the gate, the fragment format,
+or `supervise.md` would have caught it**, and if that reviewer had been skipped — which the rules
+permit on a HOLD, a 429, or a leg ending at its cap — I would have applied the fragment literally and
+pushed a suite-level document that states a fixed defect as current.
+
+---
+
 ## 2026-09-06 20:50 — study-designer/014 the type says its own byte order, and the reviewer closed the clause I could not
 
 **Decided:** two, both mine and both about scope rather than content. **(1)** I told this worker in
