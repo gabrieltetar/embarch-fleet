@@ -184,7 +184,7 @@ def invoking_repo() -> Path | None:
 
     protocol.md §6 step 0 puts a leg in its own worktree, but this script
     defaulted to fleet.toml's `doc_repo` -- so the invocation documented in
-    supervise.md staged the OWNER'S checkout, which is the exact thing step 0
+    leg.md staged the OWNER'S checkout, which is the exact thing step 0
     moved the leg out of. A worktree shares its parent's common git dir, so
     that is what identifies the instance repo wherever it is checked out.
     Anything else (a code repo, an unrelated tree) falls back to the config.

@@ -23,7 +23,7 @@ that spawned once would silence itself for as long as the spawn lived.
 
 **`{{STATE_DIR}}/tick` means the fleet made progress.** Two actors touch it: the
 listener at the end of every tick, and **a leg at every dispatch and every fold**
-(`.claude/commands/supervise.md`). Fresh means at least one of them moved.
+(`.claude/leg.md`). Fresh means at least one of them moved.
 
 It used to mean only the first, and that was a design defect rather than a tuning
 problem. The listener's cron is dark for the entire life of a leg — measured
@@ -182,7 +182,7 @@ coming back to a fleet that quietly resumed on a rule you no longer wanted.
 
 **The graceful stop you do have while a leg runs is `fleet stop` in the
 channel** — the supervisor reads it at every unit boundary and honours it itself
-(`.claude/commands/supervise.md`), latch included. This window is for when there
+(`.claude/leg.md`), latch included. This window is for when there
 is no leg to read it.
 
 ## Vocabulary

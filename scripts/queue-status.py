@@ -3,7 +3,7 @@
 
 Why this file exists: the count was written out in prose in four places
 (`.claude/commands/fleet.md` twice, its `fleet status` row, and
-`.claude/commands/supervise.md`), and every one said "State is open". That is
+`.claude/leg.md`), and every one said "State is open". That is
 wrong for the listener, and it stalled the fleet for five hours on 2026-09-03:
 `tasks/umbrella/001` sat `claimed` by a worker that had died with its leg,
 `claimed` is not `open`, so the dispatchable count read 0 and the heartbeat had
@@ -47,7 +47,7 @@ Two ways it fires, because a count is not the whole predicate:
 
   * fewer dispatchable tasks than `units_per_leg` -- the queue cannot fill the
     leg that is about to run, never mind the one after it; and
-  * fewer *distinct scopes* than the wave size -- `supervise.md`'s "at most one
+  * fewer *distinct scopes* than the wave size -- `leg.md`'s "at most one
     task per sub-project" is per slot, so three `api` tasks fill exactly one
     slot of a wave of two. That cost 9% of the same run. A count-only gate
     cannot see it.

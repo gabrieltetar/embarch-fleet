@@ -112,8 +112,11 @@ Three steps, in this order.
 >
 > **Spawning a leg** means one background `embarch-supervisor` agent, working
 > directory `{{DOC_REPO}}`, told: run one leg per
-> `.claude/commands/supervise.md`, read the newest `{{FLEET_REPO}}/supervisor-log.md` entry as
-> your handoff.
+> `.claude/leg.md`, read the newest `{{FLEET_REPO}}/supervisor-log.md` entry as
+> your handoff. **Name `.claude/leg.md` and never
+> `.claude/commands/supervise.md`** — that one is the owner's dispatcher, and a
+> leg pointed at it spawns a supervisor instead of working, which is how leg 028
+> burned three agents on nothing.
 >
 > **One spawn attempt per tick, then end the turn.** If the spawn fails for any
 > reason — an overloaded API, a 529, a transport error — post it with
@@ -193,7 +196,7 @@ Two things follow, and neither is optional:
 - **`tick` cannot mean "the listener's cron fired".** It would go stale on every
   healthy leg by construction — a leg is *designed* to run four units, and this
   one took 44 minutes against a 25-minute threshold. STEP 3 still touches it,
-  but a leg touches it too (`supervise.md`), so it means **the fleet made
+  but a leg touches it too (`.claude/leg.md`), so it means **the fleet made
   progress**. On 2026-09-06 the old reading cost a false wedge alert, an
   unlatched pump, and a relay silently capped at one leg.
 - **Anything posted in the channel during a leg waits for the leg to end.**
@@ -202,7 +205,7 @@ Two things follow, and neither is optional:
   the stop has its own route.
 
 **`fleet stop` reaches a live leg through the supervisor's own poll, not through
-this window.** `supervise.md` requires the supervisor to read
+this window.** `.claude/leg.md` requires the supervisor to read
 {{SLACK_CHANNEL_NAME}} at **every unit boundary**, so a stop posted mid-leg lands
 within one unit — about ten minutes, not the 49 above. **That poll is the primary
 route, and the listener's `SendMessage` is the opportunistic one**; this file
