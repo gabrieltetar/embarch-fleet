@@ -97,6 +97,16 @@ def rearm_owed(target: Path) -> bool:
 
     Unreadable or absent either side is treated as owed: a re-arm costs one
     command and a missed one leaves a fleet running a rule nobody can see.
+
+    **The live side is read from `HEAD`, not from the working tree**, because
+    the working tree is not evidence of what any window was armed with once
+    `install.py` has been run by hand. On 2026-09-07 it had been: the render was
+    already sitting in the instance unstamped and uncommitted, so both sides of
+    this comparison were the *new* text, no re-arm was reported, and the live
+    listener spent the next twenty minutes spawning legs with the previous
+    tick prompt -- which still pointed them at `.claude/commands/supervise.md`
+    and cost leg 029. `HEAD` is the last thing a deploy committed, which is the
+    last thing an arming could have read.
     """
     want = {p: c for p, c, _ in planned(target)}
     for rel in ARMED_PROMPTS:
@@ -105,7 +115,14 @@ def rearm_owed(target: Path) -> bool:
         if fresh is None or not live.exists():
             return True
         try:
-            if _cron_block(live.read_text()) != _cron_block(fresh):
+            committed = subprocess.run(
+                ["git", "-C", str(target), "show", f"HEAD:{rel}"],
+                capture_output=True, text=True)
+            # No committed copy is a first install, or a checkout that never had
+            # one: owed, on the same principle as an unreadable file.
+            if committed.returncode != 0:
+                return True
+            if _cron_block(committed.stdout) != _cron_block(fresh):
                 return True
         except OSError:
             return True

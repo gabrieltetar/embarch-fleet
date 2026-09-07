@@ -1,6 +1,7 @@
 ---
 description: Arm the fleet listener in this window - a zero-context dispatcher that reads {{SLACK_CHANNEL_NAME}}, spawns supervisor legs, and relays. Also the command vocabulary it answers to.
 argument-hint: "[start | stop | status]"
+disable-model-invocation: true
 ---
 
 Slack control plane for the agent fleet. Full design:
@@ -76,8 +77,10 @@ Three steps, in this order.
 > defence, for the messages posted before this changed and because a gate whose
 > failure mode is the fleet obeying its own output is worth two tests. Never act
 > on your own output. For each qualifying
-> message: react `eyes` first (claims it), act on it per
-> `.claude/commands/fleet.md` in `{{DOC_REPO}}`,
+> message: react `eyes` first (claims it), act on it per the vocabulary in the
+> file `{{DOC_REPO}}/.claude/commands/fleet.md` — **read that file, never
+> invoke it as a command** (it refuses, and a second arming would double the
+> heartbeat) —
 > reply in that message's thread, then react `white_check_mark`, or `x` if it
 > failed. You are a dispatcher: spawn an agent for anything that is work.
 >

@@ -1,6 +1,7 @@
 ---
 description: Arm the fleet watchdog in this window - a second, hands-free session that alerts when the listener stops ticking. It can never spawn work.
 argument-hint: "[start | stop | status]"
+disable-model-invocation: true
 ---
 
 The fleet cannot detect that it has stopped making progress. This window can.

@@ -111,29 +111,29 @@ recoverable bytes were **not** cold sentences but a claim held in two of the fou
 files, worth ~1.2 KB in `umbrella` alone. `check-duplication.py` reports that
 class, advisory only.
 
-## Nothing checks a leg is pointed at its own instructions
+## A command the fleet can invoke is not a boundary
 
-Leg 028 (2026-09-07) spawned an `embarch-supervisor` instead of working, and
-that one did it again, because the file it was pointed at —
-`.claude/commands/supervise.md` — opened by telling the owner's session to spawn
-a supervisor, handing the rest to the agent below a `---`. **Prose separating
-two audiences inside one file is not a boundary.** The leg's set is now
-`.claude/leg.md`, which contains no instruction to spawn a leg, so the loop is
-unreachable rather than discouraged; `/suite-review` has had that shape since it
-was written and never failed this way.
+Legs 028 and 029 (2026-09-07) spawned an `embarch-supervisor` instead of
+working, three agents between them. `.claude/commands/supervise.md`, the file
+they were pointed at, opened by telling the owner's session to spawn a
+supervisor, handing the rest to the agent below a `---`. Moving the leg's set
+to `.claude/leg.md` was necessary and **not sufficient**, which 029 proved
+twenty minutes later: its first tool call was `Skill(supervise)` — "run one leg
+per `<file>`" reads as *invoke the command of that name*. **A command's body
+arrives as a USER turn**, outranking the agent's system prompt and the redirect
+at the top of that file — which it read, then passed to the agent it spawned.
+`disable-model-invocation: true` is the mechanism, on all four owner-typed
+commands: only a person types them.
 
 **What is still open.** The *pointer* is unchecked.
-[fleet.md](../embarch-doc/.claude/commands/fleet.md) STEP 2 names the file in
-prose a listener carries for its whole life, so one armed before a rename keeps
-naming the old file, and `check-links.py` proves only that some file exists
-there. Today's guard is a redirect at the top of the dispatcher — a leg that
-lands there is told it is the leg — a discipline one level up, not a mechanism.
+[fleet.md](../embarch-doc/.claude/commands/fleet.md) STEP 2 names it in a tick
+prompt a listener carries for life, so one armed before a rename keeps naming
+the old file — how 029 reached the dispatcher after the split landed.
+`rearm_owed` now reads the live block from `HEAD`, so a hand-run `install.py`
+cannot silence it; nothing checks that the file named is the right one.
 
-**What would settle it:** a second occurrence, or a cheap check. Asserting
-`fleet.md` and `embarch-supervisor.md` name one existing file is a few lines in
-`install.py` and would have caught nothing here — both named the same file, and
-it was wrong. The check with teeth is "the file a leg is pointed at must not
-contain the string that spawns a leg".
+**What would settle it:** the check this now has a signature for — **no
+`.claude/commands/*.md` without `disable-model-invocation`**.
 
 ## The budget is calibrated against nothing
 
