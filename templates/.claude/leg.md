@@ -334,9 +334,22 @@ these. The ordering is not a preference: host-side work does not expire and a
 plugged-in board does. The owner unplugs the bench when he is done with it, and a
 bench unit that waits behind six doc tasks is one that runs against no hardware.
 
-**Validate before you start, every time.** The task names the roles it needs.
-Check each one live — `embarch-api`'s `validate` tool, or
-`embarch-topology validate <role>` — and only then begin.
+**The bench is already written down — read it before you plan, not after.**
+`scripts/fleet-hardware.py` prints one buffered view of the whole topology: each
+role's board, revision, probe serial, hardware ID, whether it is attached, the
+link port and console pins, and the DUT-side sequence facts a study has to obey.
+It is refreshed at step 0 (`--refresh`), so **selecting** bench work costs no
+hardware attach at all — which is the point, since `validate` takes Core's
+`hw_lock` and a leg used to spend four attaches asking a question whose answer
+changes when somebody unplugs a cable. Every field is tagged **measured** (Core
+read it over the debug probe) or **stated** (the owner said so); never promote
+the second to the first.
+
+**Validate before you start, every time — the buffer plans, `validate` commits.**
+The task names the roles it needs. Check each one live — `embarch-api`'s
+`validate` tool, or `embarch-topology validate <role>` — and only then begin. The
+buffer is minutes old, not seconds; it tells you what to attempt, and the live
+check is what you act on.
 
 - **A role that is not attached leaves the task `open`.** Not `blocked`. Say it
   once in the log entry and move to the next unit. A board coming back is
@@ -365,11 +378,14 @@ producing a new one is exactly where "exercising EmbArch" turns into
 "developing his firmware".
 
 **Never infer a DUT fact.** What board is on the bench, what its console is, what
-has to happen before a step will work — a bench task carries these, with their
-source, or it is under-specified. If you need one it does not carry, **say so and
-leave the task open**; do not guess, and do not derive it from firmware source.
-An inferred hardware fact asserted as measured is the failure this suite has
-already paid for.
+has to happen before a step will work — `fleet-hardware.py` carries these with
+their source, and a bench task carries anything narrower, or it is
+under-specified. If you need one neither has, **say so and leave the task open**;
+do not guess, and do not derive it from firmware source. An inferred hardware
+fact asserted as measured is the failure this suite has already paid for. The
+buffer's own `[UNCONFIRMED]` markers are that rule applied to itself: a BLE name
+candidate derived from an enrolled hardware ID is a prediction until something
+connects with it.
 
 **Then run units until the cap.** For each free slot, while the wave size allows:
 
