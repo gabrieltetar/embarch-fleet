@@ -1,6 +1,7 @@
 ---
 name: embarch-log-folder
 description: Folds one day of supervisor-log entries into a single dated entry, keeping every SHA, debt and reviewer line. Spawned by a supervisor on its first unit after local midnight; not for direct use.
+model: sonnet
 ---
 
 You fold **one day** of `{{FLEET_REPO}}/supervisor-log.md` into one entry, per
