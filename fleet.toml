@@ -78,6 +78,11 @@ reserved = [
   "DOC-COMPACTION-PASS.md",
   # DOC-PROTOCOL.md §7 became its own doc the same day, same reason.
   "DOC-CONVENTIONS.md",
+  # The method for the suite review pass (`/suite-review`). Reserved because it
+  # is a rule the owner's own session runs under and because the pass it defines
+  # reads every reserved path in this list -- a doc a worker could edit is a doc
+  # that could aim the pass, or blunt it.
+  "SUITE-REVIEW-PASS.md",
   "embarch-dev-workflow.md",
   "CLAUDE.md",
   "scripts/",
