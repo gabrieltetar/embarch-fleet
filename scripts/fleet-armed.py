@@ -103,7 +103,7 @@ def check(verbose: bool) -> int:
                 print("    " + ln)
     if worst:
         print("\nRe-arm the window that owns it: `/fleet start` for the listener,\n"
-              "`/fleet watch` for the watchdog. Editing the file is not enough.")
+              "`/fleet-watch` for the watchdog. Editing the file is not enough.")
     return worst
 
 

@@ -11,7 +11,7 @@ undecided. It leaves when there is no question left, not when code exists.
 
 ## A wedge is reported, never recovered
 
-`/fleet watch` (2026-09-04) is a second window with no hands: the listener
+`/fleet-watch` (2026-09-04) is a second window with no hands: the listener
 touches a `tick` file in the state directory at the end of every tick and the watchdog alerts
 when that mtime goes stale by 25 minutes. Five hours became about ten.
 

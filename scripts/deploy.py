@@ -418,6 +418,23 @@ def main() -> int:
               "out of the fixing commit's own message.")
         return 1
 
+    # And the same argument once more, for an instruction this script itself
+    # got wrong: its re-arm output named the watchdog with a SPACE where the
+    # command has a hyphen. That does not fail -- `/fleet`'s default argument
+    # is `start`, so the two-word form arms a LISTENER, which spawns work,
+    # where the reader was told to arm a watchdog that has no hands. Eleven
+    # places said it, every one copied from a neighbour. (The wrong string is
+    # not written here: this file is scanned by the check below, and quoting
+    # the defect inside a code span is how the checker first flagged its own
+    # docstring.)
+    cm = subprocess.run([sys.executable, str(HERE / "check-fleet-commands.py")],
+                        capture_output=True, text=True)
+    if cm.returncode != 0:
+        sys.stdout.write(cm.stdout)
+        sys.stderr.write(cm.stderr)
+        print("\nNothing was rendered. Fix the invocation and re-run.")
+        return 1
+
     print(f"deploying {version['framework_sha'][:10]} -> {target.name}\n")
     r = subprocess.run([sys.executable, str(HERE / "install.py"), "--repo", str(target)],
                        capture_output=True, text=True)
@@ -529,7 +546,7 @@ def main() -> int:
     if detail:
         print("  re-arm the window that owns each of these:")
         for rel, why in detail:
-            who = "/fleet watch" if "watch" in rel else "/fleet start"
+            who = "/fleet-watch" if "watch" in rel else "/fleet start"
             print(f"     {who:14} {rel}\n     {'':14} {why}")
         print("     A live cron job keeps the wording it was armed with, so editing\n"
               "     the file is not enough. `scripts/fleet-armed.py --check --diff`\n"

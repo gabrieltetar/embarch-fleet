@@ -50,7 +50,7 @@ Usage:
   scripts/fleet-post.py "leg 27 finished, 4 of 4 landed"
   scripts/fleet-post.py "leg 27 finished, 3 landed, 1 blocked" --detail "$(cat notes.md)"
   scripts/fleet-post.py "the watchdog needs re-arming before the fleet restarts" \
-      --action "type /fleet watch in a new window"
+      --action "type /fleet-watch in a new window"
   scripts/fleet-post.py "..." --react crystal_ball      mark a dream post
                                                        (robot_face is automatic)
   scripts/fleet-post.py --dry-run "..."                 print, send nothing

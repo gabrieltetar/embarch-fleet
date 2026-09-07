@@ -2,7 +2,7 @@
 """Notice, from outside Claude, that the fleet can no longer run.
 
 Why this exists: every other liveness check in this repo is itself a Claude
-session. `/fleet watch` reads `.fleet/tick` and alerts when it goes stale --
+session. `/fleet-watch` reads `.fleet/tick` and alerts when it goes stale --
 but it runs on the same OAuth credential as the thing it watches, so **the one
 failure it cannot see is the one that logs the machine out.** On 2026-09-07
 that happened: all three windows died mid-leg at 02:06, the watchdog died with
@@ -37,7 +37,7 @@ What it watches, and why each is separate:
                    nudge before rather than an alarm after.
 
 **It can alert and do nothing else.** It cannot start a leg, write a repo file,
-or delete the pump latch. `/fleet watch` unlatches on a declared wedge; this
+or delete the pump latch. `/fleet-watch` unlatches on a declared wedge; this
 does not, because a cron job that can stop the fleet is a cron job that stops
 the fleet at 3am for a reason nobody is awake to read.
 
@@ -80,7 +80,7 @@ PUMP = CONF.state_dir / "pump"
 HISTORY = CONF.state_dir / "credential-history.tsv"
 TICK = CONF.state_dir / "tick"
 
-# 35 minutes matches `/fleet watch`; ops.md section 3 re-derived it on
+# 35 minutes matches `/fleet-watch`; ops.md section 3 re-derived it on
 # 2026-09-06 from a max gap of 29.6 over six legs. One number, two watchers.
 STALE_MIN = 35
 # How far past `expiresAt` the file may sit before a missing refresh is real
