@@ -97,6 +97,28 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-07 17:18 — api/032 a hand-written mirror gets pinned from one side, and the other side is filed rather than reached for
+
+**Decided:** three. **(1)** I told the worker before it started that **pinning a mirror to a type that already exists is not a decision** — it is the absence of drift — and that a `changelog.d/` fragment plus the `open.md` bullet the task already asked for was the whole doc footprint it should spend. It took that and wrote no `decisions.md` entry and no `status.d/` fragment, with its reasons in the task file. **(2)** I gave it a fallback it did not need: if a numbered decision *had* been unavoidable, `embarch-api/decisions/core-link.md` has **22 bytes of headroom** and is parked behind a *blocked* compaction task, so the move was a **verbatim topic split** — which `In flux: yes` cannot forbid, because a split restates nothing — and explicitly not a compaction pass. Recording it because the next `api` unit will meet the same 22 bytes. **(3)** I filed its `inbox/` drop as **`tasks/core/024`** rather than dispatching it, and corrected one thing in it while filing: the drop offers a choice of repo ("a test in `embarch-topology`, or `embarch-core`") and **a worker cannot take a choice of repo** — `Scope: core` gives it `embarch-core` and `check-ownership.py` refuses the alternative on its own branch.
+
+**Merged:** `agent/api/032-enrolled-board-mirror` (code `4c7995b`, doc `6f9d6fe`). Gate on the merge result: `cargo test` **133 passed across the workspace / 0 failed**, `cargo clippy --all-targets -- -D warnings` clean, `check-client-names.py` clean against 7 denylist entries, `python3 scripts/check-docs.py` **all 10 green**, ownership green on both branches (doc: 3 paths, self-derived base `111dc13966ac`; code: whole tree, 1 path). No native Windows build — same settled position as `core/020`, and this diff is `serde` field additions and tests with no `#[cfg]` near them.
+
+**What actually landed:** `EnrolledBoardResponse` gains `link_port_interface: Option<u8>` with `#[serde(default)]`, so an older Core that omits it still parses; both `AlertResponse` and `EnrolledBoardResponse` get a pinned JSON literal and a round-trip test in the shape `SIGNAL_LINK_JSON` already used, each carrying a comment naming the Core-side test that does not exist yet. The field had been silently dropped since `embarch-topology` decision 20 — the nRF54L15DK two-VCOM case — so the client every UI reads enrolment through could not see the interface number that case existed to record.
+
+**Reviewer:** no findings.
+
+**The reviewer checked the thing I most wanted checked and it is the one that would have made this unit worse than doing nothing.** A mirror pinned to a *partially* wrong shape is more dangerous than one known to be unpinned, so it diffed both mirrors field-for-field against the real `embarch_topology::hardware::EnrolledBoard` and `::Alert` — both now match completely — and confirmed Core's handler serialises the real types directly, so there is no third shape to drift from. It also confirmed the decision-20 citation resolves to the right decision, and that `core-link.md` really is 12,266 B against a 12,288 cap.
+
+**Blocked:** nothing.
+
+**Hardware debts:** none owed by this unit. The coupling it pins is exercised end-to-end only against a live Core, and the round-trip tests deliberately stand in for that — worth knowing when `tasks/core/024` lands the other half.
+
+**Budget:** DEGRADED, wave 3, 56% of the 16,000,000 ceiling at leg start; not re-measured at this unit.
+
+**Least sure about:** whether "pinning a mirror is not a decision" survives contact with the next reader. It is right on the merits — nothing was chosen, a drift was closed — but the *test convention* it introduces (a `const …_JSON` literal per mirror, round-tripped, with a comment naming the missing counterpart) is a real convention that now exists in `embarch-api` and is written down nowhere except in the code and this entry. If a third mirror appears and does not follow it, nothing will say so.
+
+---
+
 ## 2026-09-07 17:15 — topology/016 the fact was checked before it was put back, and it had grown
 
 **Decided:** two. **(1)** I dispatched this with an instruction the task file did not carry: **verify the claim in today's code before restoring it, and if it does not hold, delete `open.md`'s pointer instead and report that as the finding.** A compaction pass dropped this fact yesterday; copying it back on the strength of a task file would have restored *a sentence*, not *a fact*, and a stale claim reinstated as current is worse than the dangling pointer it replaces. **(2)** I accepted restoring it into decision 18 rather than removing the pointer, because it checked out — both halves, in the two repos the claim is about.
