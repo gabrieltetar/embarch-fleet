@@ -71,7 +71,7 @@ TEMPLATES = HERE / "templates"
 # Framework scripts the instance repo gets a shim for. Anything not listed is
 # framework-internal and is never invoked from the instance.
 SHIMMED = ("check-ownership.py", "queue-status.py", "usage-budget.py",
-           "fleet-alert.py", "fold-commit.py", "fold-day.py",
+           "fleet-alert.py", "fleet-post.py", "fold-commit.py", "fold-day.py",
            "check-client-names.py", "check-dispatch.py")
 
 PLACEHOLDER = re.compile(r"\{\{([A-Z_]+)\}\}")
@@ -315,6 +315,11 @@ def main() -> int:
         print("\nNot configured yet: the alert webhook. Without it every alert exits 2\n"
               "and says so, which is the intended failure -- a muted alarm that looks\n"
               "fine is worse than no alarm. Setup is in scripts/fleet-alert.py's header.")
+    if not (state / "bot-token").exists():
+        print("\nNot configured yet: the bot token. Until it exists the fleet cannot\n"
+              "post under its own identity, so ordinary reporting does not reach the\n"
+              "channel at all and only alerts get through, via the webhook, without\n"
+              "their thread. Setup is in scripts/fleet-post.py's header.")
     return 0
 
 

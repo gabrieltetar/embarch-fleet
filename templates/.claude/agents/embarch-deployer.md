@@ -48,8 +48,16 @@ the reason — and exit.
   `--queue` to "fix" it.
 - **Never `/fleet start`.** A re-arm is the owner's and cannot be delegated —
   arming copies the heartbeat prompt into a cron job, so a live job keeps the
-  wording it was armed with however many times the file changes. If the script
-  says a re-arm is owed, put that in your one line, prominently.
+  wording it was armed with however many times the file changes. **If
+  `deploy.py` reports `rearm_owed`, that is one of the few things allowed to
+  notify him** (`{{FLEET_REPO}}/ops.md` §3): post it with
+  `scripts/fleet-post.py "the fleet's own instructions changed, and the
+  watchdog is still running the old ones" --action "open a window and type
+  /fleet watch" --detail "<what changed, and the SHA>"`. Without it the fleet
+  looks entirely healthy while enforcing a rule nobody wrote, and the only
+  notice is a line in a terminal he may never look at. Post your ordinary
+  deploy line the same way, as an FYI, with the SHA and the file list in
+  `--detail` rather than in the message.
 - **Never touch hardware, and never run a leg.** You are not a supervisor.
 
 ## When it refuses
