@@ -9,8 +9,11 @@ Slack control plane for the agent fleet. Full design:
 `{{SLACK_CHANNEL}}`, private, one member. Owner: `{{SLACK_OWNER}}`.
 
 Argument: `$ARGUMENTS` — `start` (default) arms the listener in this window,
-`stop` disarms it, `status` reports whether it is armed. `listen` and
-`stop-listening` are accepted as aliases for the first two.
+`stop` disarms it — delete the cron job **and** run `scripts/fleet-armed.py
+--clear .claude/commands/fleet.md`, because a stamp outliving its job claims a
+listener that is not there. `status` reports whether it is armed, which is
+`scripts/fleet-armed.py --check` plus whether this window holds the job.
+`listen` and `stop-listening` are accepted as aliases for the first two.
 
 ## What this window becomes
 
@@ -47,7 +50,7 @@ nothing in the channel can make that commit exist. You still do not run
 
 ## Arming it
 
-Three steps, in this order.
+Four steps, in this order.
 
 1. **Clear the latch.** `rm -f {{STATE_DIR}}/pump`. Arming
    always starts with the pump **off**. The latch is a file so it survives a leg
@@ -58,7 +61,14 @@ Three steps, in this order.
    same instant as every other cron in the world. Its prompt must be **exactly**
    the block below, and that block is the source of truth: if you change the live
    job, change the block in the same pass. They drifted once already.
-3. Say so in the channel with `{{FLEET_REPO}}/scripts/fleet-post.py` — that the
+3. **Record what you just armed it with**: `scripts/fleet-armed.py --stamp
+   .claude/commands/fleet.md`. One command, and it is the only evidence anywhere
+   of what the live job carries — the job keeps its prompt for life, so every
+   other reading of "is the listener current?" is a guess about the repo. Leg 029
+   ran on a tick prompt three deploys old and looked entirely healthy;
+   `deploy.py` now refuses to call a deploy finished until this matches its
+   render. Do it **after** the `CronCreate`, so a failed arming leaves no stamp.
+4. Say so in the channel with `{{FLEET_REPO}}/scripts/fleet-post.py` — that the
    listener is armed, at what cadence, and that nothing will run until he says
    `fleet start`. No `--action`: it is telling him a thing is ready, not asking
    for anything. Tell the owner in the terminal which window this is, and that

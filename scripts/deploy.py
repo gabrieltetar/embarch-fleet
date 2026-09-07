@@ -66,7 +66,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from fleetconf import CONF  # noqa: E402
+from fleetconf import (ARMED_PROMPTS, CONF, armed_stamp,  # noqa: E402
+                       cron_block)
 from install import manifest, planned  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
@@ -76,57 +77,55 @@ STAMP = ".fleet-version"
 # Arming copies a heartbeat prompt into a cron job, so the live job keeps its
 # original wording however many times the template changes -- they drifted once
 # already. Both armed windows have one: the listener's tick and the watchdog's.
-ARMED_PROMPTS = (".claude/commands/fleet.md", ".claude/commands/fleet-watch.md")
-
-
-def _cron_block(text: str) -> list[str]:
-    """The blockquote a window is armed with, and nothing around it."""
-    return [ln for ln in text.splitlines() if ln.startswith(">")]
-
-
-def rearm_owed(target: Path) -> bool:
-    """True only if a LIVE cron prompt would change, not merely its file.
+def rearm_detail(target: Path) -> list[tuple[str, str]]:
+    """Which armed prompts a re-arm is owed for, and why. Empty means none.
 
     Keying on the filename -- which this did until 2026-09-06 -- meant editing
     one line of surrounding prose raised a re-arm alarm the owner had to
     overrule by hand, and the vocabulary around the block is re-read from disk
     on every tick, so it owes nothing. A warning that is usually wrong is one
     that gets ignored the time it is right, and this one is relayed to Slack
-    with an `@`. It also now covers the watchdog, whose block is the same trap
-    and was checked by nothing at all.
+    with an `@`. It also covers the watchdog, whose block is the same trap and
+    was checked by nothing at all.
 
-    Unreadable or absent either side is treated as owed: a re-arm costs one
-    command and a missed one leaves a fleet running a rule nobody can see.
+    **The live side is the arming stamp, not the repo.** Inferring it from the
+    repo -- the working tree, then `HEAD` -- was wrong in both forms, and the
+    second one only more quietly. On 2026-09-07 `install.py` had been run by
+    hand, so the working-tree comparison read new-against-new, reported nothing
+    owed, and the listener spent twenty minutes spawning legs with a tick
+    prompt that named the wrong file. `HEAD` fixes that case and still answers
+    a different question than the one that matters: **a commit is not evidence
+    that any window read it.** Arming now records the block it armed with
+    (`fleet-armed.py --stamp`), so this compares the render against what is
+    actually running.
 
-    **The live side is read from `HEAD`, not from the working tree**, because
-    the working tree is not evidence of what any window was armed with once
-    `install.py` has been run by hand. On 2026-09-07 it had been: the render was
-    already sitting in the instance unstamped and uncommitted, so both sides of
-    this comparison were the *new* text, no re-arm was reported, and the live
-    listener spent the next twenty minutes spawning legs with the previous
-    tick prompt -- which still pointed them at `.claude/commands/supervise.md`
-    and cost leg 029. `HEAD` is the last thing a deploy committed, which is the
-    last thing an arming could have read.
+    An unstamped prompt is owed. A window armed before stamping existed is
+    indistinguishable from one never armed at all, and the safe reading of both
+    is the same: a re-arm costs one command, a missed one leaves a fleet
+    running a rule nobody can see. It self-clears on the next arming.
     """
     want = {p: c for p, c, _ in planned(target)}
+    owed: list[tuple[str, str]] = []
     for rel in ARMED_PROMPTS:
-        live = target / rel
-        fresh = want.get(live)
-        if fresh is None or not live.exists():
-            return True
+        fresh = want.get(target / rel)
+        if fresh is None:
+            owed.append((rel, "not a generated file in this instance"))
+            continue
+        stamp = armed_stamp(rel)
         try:
-            committed = subprocess.run(
-                ["git", "-C", str(target), "show", f"HEAD:{rel}"],
-                capture_output=True, text=True)
-            # No committed copy is a first install, or a checkout that never had
-            # one: owed, on the same principle as an unreadable file.
-            if committed.returncode != 0:
-                return True
-            if _cron_block(committed.stdout) != _cron_block(fresh):
-                return True
+            was = stamp.read_text().rstrip("\n")
         except OSError:
-            return True
-    return False
+            owed.append((rel, "never stamped -- armed before this was recorded, "
+                              "or not armed at all"))
+            continue
+        if was != cron_block(fresh):
+            owed.append((rel, "the live job carries older wording"))
+    return owed
+
+
+def rearm_owed(target: Path) -> bool:
+    """True if any armed prompt is stale. See `rearm_detail` for which."""
+    return bool(rearm_detail(target))
 
 
 def git(repo: Path, *args: str, check: bool = True) -> str:
@@ -293,9 +292,11 @@ def queue(target: Path, clear: bool, note: str | None) -> int:
           "The listener deploys this at the next leg boundary and posts what it\n"
           "did. The fleet keeps running until then; nothing needs stopping.")
     if rearm:
-        print("\nRE-ARM WILL BE OWED once it lands: the heartbeat cron prompt\n"
-              "changed, and a live job keeps the wording it was armed with. The\n"
-              "deployer cannot `/fleet start`; that stays yours.")
+        print("\nRE-ARM WILL BE OWED once it lands -- a live job keeps the wording it\n"
+              "was armed with:")
+        for rel, why in rearm_detail(target):
+            print(f"  {rel}: {why}")
+        print("The deployer cannot `/fleet start`; that stays yours.")
     print(f"\nPush the framework now, or the stamp will name a SHA nobody can\n"
           f"fetch:\n  git -C {FLEET_REPO} push")
     return 0
@@ -511,20 +512,28 @@ def main() -> int:
         git(target, "push")
         latch_path().unlink(missing_ok=True)
         print(f"\npushed both; latch cleared ({latch_path()}).")
-        if rearm:
-            print("\nRE-ARM OWED, and it is the owner's: the heartbeat cron prompt\n"
-                  "changed and a live job keeps the wording it was armed with. Say\n"
-                  "so in the channel -- a deployer cannot run `/fleet start`, and a\n"
+        detail = rearm_detail(target)
+        if detail:
+            print("\nRE-ARM OWED, and it is the owner's -- a live job keeps the wording\n"
+                  "it was armed with:")
+            for rel, why in detail:
+                print(f"  {rel}: {why}")
+            print("Say so in the channel: a deployer cannot run `/fleet start`, and a\n"
                   "fleet running the previous tick prompt looks entirely healthy.")
         return 0
 
     print("\nStill yours:")
     print(f"  git -C {FLEET_REPO} push && git -C {target} push")
     print("     framework first -- the stamp names a SHA that must be fetchable.")
-    if rearm:
-        print(f"  /fleet start")
-        print("     RE-ARM OWED: the heartbeat cron prompt changed, and a live job\n"
-              "     keeps the wording it was armed with. Editing the file is not enough.")
+    detail = rearm_detail(target)
+    if detail:
+        print("  re-arm the window that owns each of these:")
+        for rel, why in detail:
+            who = "/fleet watch" if "watch" in rel else "/fleet start"
+            print(f"     {who:14} {rel}\n     {'':14} {why}")
+        print("     A live cron job keeps the wording it was armed with, so editing\n"
+              "     the file is not enough. `scripts/fleet-armed.py --check --diff`\n"
+              "     says the same thing at any time, not only after a deploy.")
     return 0
 
 

@@ -81,7 +81,12 @@ nothing.
    live job: if you change one, change the other in the same pass. They have
    drifted before, and a job armed with an older threshold looks entirely
    healthy.
-3. Say so in the channel — `{{FLEET_REPO}}/scripts/fleet-post.py "the watchdog
+3. **Record what you just armed it with**: `scripts/fleet-armed.py --stamp
+   .claude/commands/fleet-watch.md`, after the `CronCreate` so a failed arming
+   leaves no stamp. This window's block has drifted before and *"a job armed
+   with an older threshold looks entirely healthy"* is the sentence above; the
+   stamp is what makes it visible. Disarming clears it (`--clear`).
+4. Say so in the channel — `{{FLEET_REPO}}/scripts/fleet-post.py "the watchdog
    is armed and will speak up if the fleet goes quiet for 35 minutes"`. That is
    an FYI, so it must not use `--action`: being armed asks nothing of anyone.
    Tell the owner in the terminal which window this is.
