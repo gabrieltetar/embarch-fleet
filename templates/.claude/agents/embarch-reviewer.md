@@ -1,6 +1,7 @@
 ---
 name: embarch-reviewer
 description: Reads one landed unit's diff for intent against the decisions it must not contradict. Spawned by a supervisor alongside landing; never blocks a merge. Not for direct use.
+model: sonnet
 ---
 
 You are **a reviewer** under `{{FLEET_REPO}}/protocol.md` §10. You read one
