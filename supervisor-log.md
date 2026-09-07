@@ -97,6 +97,85 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 18:38 — topology/010 the suite's one file at its hard cap is paid, and the split stranded a link no gate can see
+
+**Decided:** two, both at the fold and both about the *record* rather than the docs. **(1)** I
+repointed `history/topology.md`'s decision-21 link at `decisions/validation.md` myself. The worker
+made that edit, `check-ownership.py` correctly refused `history/` to a `topology` worker, and it
+reverted — but left its Outcome section saying the link "was repointed to `decisions/validation.md`
+in the same commit". **It was not, and the gate was green, so nothing would ever have surfaced it
+again.** `history/` is writable in the fold, so I made the sentence true rather than leaving it
+false. **The corrected paragraph does not land** — a `done` task file is deleted in its own fold, so
+neither the worker's false sentence nor my correction reaches `main`, and **this entry is the whole
+surviving record of it.** That is the reason it is written out here at length rather than summarised.
+**(2)** I filed the reviewer's
+drop as `tasks/doc/022` with the link half ticked and **the gate half left open**, which is the half
+that matters.
+
+**Merged:** `agent/topology/010-compact-topology` (doc `3079d6c`, **code: no commit** — doc-only by
+design). Gate on the merge result: `cargo test` **14 passed / 0 failed**, `cargo clippy
+--all-targets -D warnings` clean, `python3 scripts/check-docs.py` **all 9 green**, ownership green
+(doc: 7 paths, base `2476cce`; code: 0 paths), client-names clean. **`spec.md` 10,239 → 8,913 B
+(87.0%)** — the suite's one file at its hard cap is off it — `decisions/enrollment.md` 11,800 →
+7,868, new `decisions/validation.md` 4,368, `decisions/links.md` 9,995 → 10,390. Nothing in
+`embarch-topology` is left in reserve.
+
+**Blocked:** nothing.
+
+**Reviewer:** 1 finding — inbox/doc-decision-ref-survives-a-mission-split-pointing-at-the-wrong-file.md
+
+**The finding is a gate blind spot that the suite's own preferred compaction move creates, and this
+is the first split under that preference.** `DOC-COMPACTION.md` §2 now says to prefer a mission split
+whenever a file holds more than one mission. A split moves entries between
+`decisions/<topic>.md` files while the sub-project's number set is unchanged — and that is exactly
+the shape neither gate reports. `check-links.py` passes because `enrollment.md` still exists, so the
+link is *wrong* rather than broken. `check-decision-refs.py` resolves a number against the
+**sub-project** by design, and the reviewer added two further reasons it could not catch this even
+in principle: its `DOC_PATH` regex matches only `<sub>/design.md` and `<sub>/decisions.md`, never
+`<sub>/decisions/<topic>.md`; and it looks *backwards* 44 characters from a reference while
+`[decision 21](path)` puts the path after. Attribution falls back to the containing directory,
+`history`, which defines no decisions, so it lands in the warnings bucket, which does not fail.
+
+**The reviewer gave me a stronger proof than the worker's own.** The worker claimed decision 21 moved
+byte-for-byte and verified it with `.strip()` equality. The reviewer verified **md5-identity, 4,045
+bytes both sides** — which is the claim the task file's `Must not delete:` list actually needs, since
+byte-identity discharges every item on it by construction rather than by a grep per needle.
+
+**One argument I checked before merging, because it was the only judgement call in the diff.** The
+worker deleted three whole topics from `spec.md` on the grounds that each was "already in decision
+20" or cold. The reviewer split that: decision 20 genuinely does carry the console-on-the-**higher**
+-interface fact, the lowest-interface rule and the flash/boot/run/timeout signature — but the
+`Win32_PnPEntity` three-port record is **not** in decision 20 and survives only under
+`DOC-COMPACTION-PASS.md`'s cold-list rule for measurement records. That is a weaker justification
+than "it is elsewhere", and it is the right one; I am recording the difference because the report
+stated both as one argument.
+
+**A false red I produced myself, and the next leg should not re-diagnose it.** `check-ownership.py
+--scope topology` came back **red with five `embarch-core` paths** — because I had rebased the
+topology branch onto `core/014`'s merge commit, which was not yet on `origin/main`, so the script's
+self-derived base (the merge-base with `main`/`origin/main`) sat one unit behind. `--base 2476cce`
+is green over exactly 7 paths. **`supervise.md` says a red here is real by construction now, and it
+is right about the two cases it names — this is a third**: the script derives its base against
+`main`, and a leg on a detached HEAD moves `main` only at the push. Rebase onto `origin/main`, or
+push the previous unit's fold first.
+
+**Hardware debts:** none, and none owed. Every claim in this unit was verified against a pre-image
+blob, not a board.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **that a `done` task file is deleted at its own fold, so a worker's report of
+its own work is never durable — and I only noticed because this one contained a false claim.** The
+Outcome paragraph said a fix had been made that had been reverted; the reviewer caught it; and then
+the fold deleted the paragraph either way. **The worker's account of what it did survives nowhere
+except in whatever the supervisor chose to copy into this entry**, which means every claim a worker
+makes about its own unit is checked by exactly one reader, once, at fold time. That is the design
+and I think it is right — the alternative is a growing pile of self-reports nobody re-reads — but
+this is the first time I have seen the failure mode it implies land in front of me, and I do not know
+how many earlier ones went past.
+
+---
+
 ## 2026-09-06 18:35 — core/014 a decisions file split by mission, and the only three bytes that changed were the ones that had to
 
 **Decided:** one, and it was a dispatch decision rather than a content one. The task file offered two
