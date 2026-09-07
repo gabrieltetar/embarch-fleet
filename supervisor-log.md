@@ -97,6 +97,30 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-07 17:21 — study-designer/007 the bench answered a different question than the one asked, and the answer is worth more than a guess would have been
+
+**Decided:** two, and the second is the one that matters. **(1)** I ran this bench unit with my own hands, as §7 requires, and validated both roles live before authoring anything — `dev-bench` `6fcddc36cb781b71` and `dut` `834f2559f10a6cdf`, both `ok: true` from `POST /validate` rather than from the buffer. **(2)** **I stopped at the connect rather than picking a device.** The study never reached `BleUnbond`, so bond clearing is *still* unobserved — the task stays `open`, with what I measured written into it, and I did not connect to whichever nameless advertiser was plausibly the DUT.
+
+**What stopped it, and why it is a finding rather than a failure.** The five-step study (connect, `BleSecurity{l2}`, `BleUnbond{}`, connect, `BleSecurity{l2}`, at `Info` so Zephyr's own pairing account would reach Core) submitted cleanly and ran; step 1 failed with `no name match`. Core's scan census then says something specific: **11 advertisers on air, exactly 4 advertising a name** (`pod-36e017c`, `GABRIEL`, `ECHOMAP UHD 63cv`, `pod-5678212`), **7 nameless, 4 of those connectable random addresses** — and **neither BLE name candidate `scripts/fleet-hardware.py` derives for this DUT was among them** (they are of the form `<vendor> <product> <last four hex of the hardware ID>`; the names themselves stay out of this log — `check-client-names.py` refused an earlier draft of the task file for exactly that, and it was right). Those candidates carry an `[UNCONFIRMED]` marker precisely because they are derived from the enrolled hardware ID rather than heard, and **this is the first run to test them: as advertised names, at 23:14 UTC today, they are wrong.** That is a real measurement about the buffer's own prediction, and it is the whole product of this unit.
+
+**Connecting to a nameless random address would have produced a bond with an unidentified device and a run that looked like a pass.** That is the failure this suite has already paid for once, so I left the task open naming the missing fact: what the DUT advertises, or its address, or what makes it advertise at all — one sentence from someone who knows the board, not something to derive from firmware source.
+
+**The owner appears to be at the same bench on the same question, and the next leg must not walk into it.** Core's log carries study `5453b390f831119fb3004a5774a2f9c0` at 22:44:41 UTC — half an hour before mine, authored by nobody in the fleet — whose failing step is named `elevate to L2 (pairs, bonds)`, failing with `no connection to secure; connect first` after `bt_conn: conn ... failed to establish. RF noise?`. Same wall, one step further along. **Two actors bonding and unbonding one DUT produce results neither can attribute**, so the task file now says to check with him before spending another sitting on it.
+
+**Merged:** nothing — no worker, no branch. This unit is the task file's own record of a bench attempt plus this entry.
+
+**Reviewer:** skipped (no diff to review — a bench attempt that landed no code and no doc change beyond its own task file).
+
+**Blocked:** nothing is blocked. `tasks/study-designer/007` is left **`open`**, deliberately not `blocked`: a board coming back or a sentence being written are both things that fix themselves without anyone un-blocking anything.
+
+**Hardware debts:** one, unchanged and now sharper — bond clearing (`Action::BleUnbond`, `embarch-study-designer` decision 50 / `embarch-dev-bench` decision 11) has still never been seen firing, and now the blocker is named: the fleet cannot address this DUT over the air. Both roles are attached and healthy; nothing was flashed and nothing was written to any client repo. **Separately, `core/020`'s debt is still outstanding** — `GET /dev-bench/hello`'s renamed `self_reported_hardware_id` has never been seen on the wire — and it does *not* need the DUT, only the dev-bench board, so it discharges in one call whenever a leg next has the bench.
+
+**Budget:** DEGRADED throughout; 56% of the 16,000,000 ceiling at leg start, wave 3, no 429.
+
+**Least sure about:** whether a bench attempt that closes nothing should consume a leg's unit at all. It cost one study submission and one log read, which is cheap, and it converted an `[UNCONFIRMED]` marker into a measured refutation — but a leg that takes the bench unit first every time, as the ordering requires, will keep spending units re-discovering the same missing fact until someone writes it down. The ordering rule is right about hardware expiring; it has no notion of a bench unit that is *known* to be one fact short.
+
+---
+
 ## 2026-09-07 17:18 — api/032 a hand-written mirror gets pinned from one side, and the other side is filed rather than reached for
 
 **Decided:** three. **(1)** I told the worker before it started that **pinning a mirror to a type that already exists is not a decision** — it is the absence of drift — and that a `changelog.d/` fragment plus the `open.md` bullet the task already asked for was the whole doc footprint it should spend. It took that and wrote no `decisions.md` entry and no `status.d/` fragment, with its reasons in the task file. **(2)** I gave it a fallback it did not need: if a numbered decision *had* been unavoidable, `embarch-api/decisions/core-link.md` has **22 bytes of headroom** and is parked behind a *blocked* compaction task, so the move was a **verbatim topic split** — which `In flux: yes` cannot forbid, because a split restates nothing — and explicitly not a compaction pass. Recording it because the next `api` unit will meet the same 22 bytes. **(3)** I filed its `inbox/` drop as **`tasks/core/024`** rather than dispatching it, and corrected one thing in it while filing: the drop offers a choice of repo ("a test in `embarch-topology`, or `embarch-core`") and **a worker cannot take a choice of repo** — `Scope: core` gives it `embarch-core` and `check-ownership.py` refuses the alternative on its own branch.
