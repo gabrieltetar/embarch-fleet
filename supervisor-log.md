@@ -97,6 +97,76 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 18:14 — study-designer/012 a bound moved ahead of the allocation, and a worker picked its own decisions file
+
+**Decided:** one, and the point of it was to *not* decide. `decisions/crate.md` is at 91.7% behind a
+**blocked** compaction task, and the last two legs each had a supervisor pre-pick a decisions file to
+route around exactly that and find the argument afterwards — leg 022 said so in its own
+`Least sure about`. So I gave this worker the **exact byte counts for every candidate file** and told
+it to choose on the merits and justify the choice, with the standing rule that picking `crate.md`
+costs it a compaction task in the same commit. It chose `authoring.md` (decision 66) and argued from
+`limits.md`'s actual contents. **The reviewer checked the one thing that would expose a post-hoc
+rationalisation and it came back clean:** `limits.md` was at 8,184 / 12,288 — fully writable, nowhere
+near reserve — so the worker chose *against an available file on an argument*, which is the opposite
+of the pattern I was guarding against. No compaction task owed.
+
+**Merged:** `agent/study-designer/012-payload-too-long` (code `726a76d`, doc `7e68116`). Gate on the
+merge result: `cargo build`, `cargo test` **108 + 9 passed / 0 failed**, `cargo test
+--no-default-features --features study-ui` **181 + 9 passed / 0 failed**, clippy `--all-targets
+-D warnings` on **both** feature sets, all 9 doc checks, ownership green both branches (code: whole
+tree, base `9282422071ef`; doc: 6 paths, base `bbabdebabc74`), client-names clean.
+
+**Blocked:** nothing.
+
+**Reviewer:** 1 finding — inbox/study-designer-overlapping-registry-fields.md
+
+**That finding is mine, not the unit's, and the mechanism is worth the next leg's attention.** The
+reviewer reported that the `inbox/` drop the task file claims was written **does not exist** — it
+searched the merge SHA, the leg worktree, the worker's own worktree and the whole tree, correctly
+found nothing, and called the record a false witness. It was right about the file and wrong about
+the cause: **I had already filed that drop as `tasks/study-designer/013` and deleted the source**,
+minutes before spawning it. `inbox/` is gitignored, so a drained drop leaves no trace anywhere a
+reviewer can look, and the unit's own record then reads as a lie. The reviewer re-dropped the
+content; I deleted the duplicate, since `013` already carries it. **Nothing was lost and the process
+is the defect**: draining a mid-leg drop before that unit's reviewer runs makes the drop
+unfalsifiable. Either drain after the reviewer reports, or say in the task file where the drop went.
+
+**I verified the load-bearing half myself before the reviewer answered.** The whole product is a
+bound that sits *ahead* of an allocation, so I read `resolve_write_payload` at the merge SHA: the
+`buffer_len > MAX_PAYLOAD_LEN` check is immediately above `vec![0u8; buffer_len]`, and the sum uses
+`saturating_add`. The reviewer added what I could not: that this is the crate's **only** heap
+allocation sized by registry numbers, and that the raw-payload path is fixed-capacity over a slice
+the caller already holds, so there is no second route to the hazard.
+
+**And it caught a security-flavoured claim that was stronger than its own evidence — in prose I
+merged.** The worker justified `saturating_add` by saying an offset near `usize::MAX` "wrapped to a
+small length that passed every check". True as far as the arithmetic goes — `panic = "abort"`,
+overflow checks off, the sum wraps to **0** — but the reviewer compiled it at `-O` and found the
+*next* statement panics on the slice index, because slice bounds checks are never elided. **There is
+no out-of-bounds write available here in either profile.** Decision 66 now says exactly that, and
+says the real hazard is the *un*-overflowing case — a 4 GB offset that does not wrap, passes, and
+sizes a 4 GB allocation. The fix is right; the reason given for it was overstated. A test comment
+in `src/registry.rs` makes the same overclaim and is carried on `tasks/study-designer/013` for
+whoever is next in that file, since it is a code-repo edit and not mine.
+
+**One more corrected at the fold:** `spec.md`'s new clause said a named error must not name "a nearby
+one that happens to hold the same number". The two bounds are **64 and 512** — they never shared a
+number; the old code passed `MAX_PAYLOAD_LEN` into `TooManySteps`, the right number under the wrong
+noun. A reader would have gone hunting for a coincidence that never existed. Reworded.
+
+**Hardware debts:** none, and none owed — host-side registry validation with no DUT in the path.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **that all four of this leg's reviewers found something my own checks did not,
+and I still cannot tell whether that makes review cheap insurance or makes my checks the redundant
+half.** I verified the load-bearing claim myself on every unit — the rename on `core/012`, the header
+order on `outpost/007`, my own alert arithmetic on `topology/002`, the bound-before-alloc here — and
+in every case the reviewer either confirmed it and added the part I had not thought to check, or
+found a sentence I had merged that was true-sounding and wrong. **That is 4 for 4 on a sample of
+four**, and the honest reading is that I do not yet know whether my parallel check bought anything
+beyond confidence.
+
 ## 2026-09-06 18:04 — topology/002 the inferred register address is confirmed, and the gate's refusal was already on record
 
 **Decided:** three, all mine. **(1)** The nRF54L device-ID pair `0x00FF_C304` / `0x00FF_C308` is
