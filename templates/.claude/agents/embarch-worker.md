@@ -76,7 +76,15 @@ to one sub-project needs nobody's approval. Number it per `DOC-CONVENTIONS.md`
    Windows `cargo.exe` over UNC *does* build it — from the main checkout, in
    52 s — but not from a worktree, because Windows cannot follow the Linux
    symlinks your worktree reaches its path-dep siblings through, so it fails at
-   path-dep resolution instead [both measured 2026-09-06]. Ship the host-side
+   path-dep resolution instead [both measured 2026-09-06]. **`cargo-xwin` would
+   probably close both** — it supplies a `clang-cl` that satisfies `hidapi`'s
+   `build.rs`, and a Linux build resolves path-deps natively — and it was
+   deliberately not adopted on 2026-09-06 (`tasks/doc/012`): the Windows path
+   already works from the main checkout in 52 s, the debt mechanism already
+   exists, and `lld-link` is not `link.exe`, so it would be an approximation of
+   the native build bought with an install and ~1 GB of cached MSVC CRT/SDK.
+   Reversal condition: an `embarch-core` unit whose debt actually goes
+   unverified, or a Windows-only break that reaches `main`. Ship the host-side
    half and record it as a debt in your task file, the way §7 handles hardware.
 2. The whole `embarch-doc` gate in one command: `scripts/check-docs.py`.
 2a. From your `embarch-doc` worktree, where the shim lives:
