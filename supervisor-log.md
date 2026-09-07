@@ -97,6 +97,104 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 19:34 — umbrella/029 a compaction that moved nothing, and three merges that never happened
+
+**Decided:** two. **(1)** I told this worker that `decisions/doctor.md` (92.3%) and `decisions/bind.md`
+(92.8%) were **not destinations** — moving prose into a file already 92% full is not a payment, it
+is moving the debt — and pointed it at `reporting.md` and `schema-skew.md` instead. It used
+**neither**, and it was right not to: it found that everything it needed to remove was already
+written in full somewhere else, so the payment was choosing between copies rather than moving them.
+Both destinations still have their room. **(2)** I did **not** file the Shape-diagram observation
+the reviewer raised (below); recorded here instead of silently dropped.
+
+**Merged:** `agent/umbrella/029-compact-umbrella` (doc `8cdcdf4`, code **no commit** — doc-only by
+design; `embarch-umbrella` is byte-identical to `origin/main` at `2063511`, verified by
+`git diff --stat`, not argued). Gate on the merge result: `cargo test` **197 passed / 0 failed**,
+`cargo clippy --all-targets -D warnings` clean, `python3 scripts/check-docs.py` **all 9 green**,
+ownership green (4 paths, base `580822957371`), client-names clean.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**`DOC-COMPACTION-PASS.md`'s human question, answered in my own words: yes, and by a wider margin
+than before the pass.** Reading `embarch-umbrella/spec.md` cold, it still names all three jobs, both
+`embarch-api` front-ends, the five topologies with which one is validated, every flag of all seven
+commands, the exit-code convention, and all eighteen `doctor` rows with which are built, which can
+fail the run, and which carry a `code` or a `path`. What left was *argument*, never rule: each
+deletion kept the rule and dropped a justification that a numbered decision already makes in full.
+**`spec.md` 9,237 → 8,956 B (87.5%), `open.md` 4,653 → 4,323 B (84.4%)**, both out of reserve with
+real headroom rather than by a byte. `collect-open-questions.py`: **13 umbrella bullets before,
+13 after** — six shorter, none gone. I verified two survivors myself before merging (decision 20 in
+`decisions/mirrors.md` for decision 15's reversal detail; decision 7 in `decisions/topology.md` for
+the no-GUI/no-TTY fallback) and the reviewer then verified **all nine**, each against the survivor's
+own text rather than the file's existence, plus all eight `Must not delete:` items against the
+pre-image. Its one direction-of-travel note is the reassuring one: the check-15 bullet dropped
+decision 34's mitigating *"better than nothing"* and kept the limit, which reads **weaker**, not
+stronger — the opposite of the failure a compaction pass is watched for.
+
+**One number in my own dispatch was stale and the worker caught it.** I told it
+`decisions/reporting.md` was at 8,920 B; it is **9,254**. I had copied the figure out of the task
+file's body rather than re-running `--pressure`, which is the same class of error as trusting a
+worker's self-report — moot here only because it used neither destination.
+
+**The reviewer's one substantive observation, which I am recording and not filing.**
+`spec.md`'s Shape diagram routes all `embarch-api` access through `embarch-core`, but checks 8, 11
+and 10's MCP spawn have `embarch` shell out to `embarch-api` **directly** (decisions 17, 35, 40).
+It is not a false claim — the prose four lines above already says "a shell-out to `embarch-core`
+**or `embarch-api`**" — and it predates this unit, both hunks being elsewhere in the file. **But the
+omitted edge is not arbitrary**: `embarch-decision-reversals.md` records decision 17's reversal as
+*exactly this shape being wrong*, so the diagram draws the arrangement that reversal replaced. One
+arrow and a wider label. **I left it because filing a task inside the fold of a compaction unit that
+did not touch that block is how a queue fills with observations rather than work** — but if a later
+leg opens that file, this is the paragraph it should read. (My own mapping of check 14 was wrong,
+too: it shells out to `embarch-core`, not `embarch-api`; the reviewer corrected me.)
+
+**And now the thing that matters more than this unit.** While cutting the *next* unit's worktree I
+found `embarch-study-designer`'s `origin/main` at `9282422`, one commit behind the `726a76d` that
+leg 023 reported as `study-designer/012`'s merge. Checking the other repos turned up the same shape
+twice more. **Three code branches reported MERGED by legs 023 and 024 were never on `origin/main`:**
+
+- `embarch-core` `f6b2b9d` (`core/012`, leg 023) — on the owner's **local** `main`, not the remote.
+- `embarch-ui` `fa3b7b6` (`ui/010`, leg 024) — not even on local `main`; it existed **only** on
+  `origin/agent/ui/010-progress-badge`.
+- `embarch-study-designer` `726a76d` (`study-designer/012`, leg 023) — on local `main`, not the
+  remote.
+
+**Every one of them had its doc half landed**, so `embarch-doc` has been documenting three changes
+as shipped that were not in the code repos at all. My own `core/006` worker branched from a
+`origin/main` missing `core/012`'s rename.
+
+**All three are landed and green now**, each gated by me on the result rather than taken on trust:
+`ui/010` fast-forwarded (99 passed / 2 ignored, clippy, client-names); `study-designer/012`
+fast-forwarded (108 + 9 default, **221 + 12 + 10 `--all-features`**, clippy both); `core/012`
+**cherry-picked** onto the current tip as `50836ee` — it sat on `09020a3`, a sibling of this leg's
+own `core/006` work — and re-gated there (`163 passed / 0 failed / 2 ignored`, clippy,
+client-names). Alerted via `fleet-alert.py`.
+
+**The signal was in plain sight for two legs and was read as tidiness.** My handoff said *"three
+remote `agent/*` branches are landed but deliberately unpruned"*, and leg 023's report said the same
+about its own. **They were unpruned because `fold-commit.py` ran `git cherry` and correctly proved
+they were not upstream.** The prune guard did its job perfectly and its refusal was reported as
+housekeeping. **An unpruned branch after a fold is not a leftover; it is `fold-commit.py` telling you
+the merge did not happen.** Note also that `git cherry`'s `+` means *not upstream* — the inverse of
+how it reads — so `merge-base --is-ancestor` is the check to write.
+
+**Hardware debts:** none new.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **the rescue, not the compaction.** I pushed three commits to three repos'
+`main` that no worker of mine wrote and no reviewer of mine read, on the strength of a build, a test
+run and a clippy pass. That is the whole gate for ordinary work, so it is not a lower bar — but the
+`core/012` one is a **cherry-pick**, a commit that has never existed anywhere before I made it, onto
+a tip its author never saw. It applied without conflict and 163 tests pass, and **"it applied
+cleanly" is a statement about text, not about the `open_step_index` rename meeting `core/006`'s
+`logs.rs` changes.** I believe them independent because they touch different modules; nobody has
+checked that but me.
+
+---
+
 ## 2026-09-06 19:24 — core/006 a fix that made the same claim its own defect was about
 
 **Decided:** two, and the first was the worker's to make with my constraint on it. **(1)** I told it to
