@@ -54,7 +54,7 @@ doubt commit it to a branch, which is cheap and reversible.
 **A watchdog window detects the one failure nothing else can.** The fleet cannot
 notice that it is wedged: a hung tick never returns to idle, so its own cron
 cannot fire and no `fleet stop` reaches it. A second window armed with
-`/fleet watch` reads the mtime of one file, `.fleet/tick`, and alerts when it
+`/fleet-watch` reads the mtime of one file, `.fleet/tick`, and alerts when it
 goes stale by **35 minutes**. **Its whole vocabulary points one way — stop, never
 start**: it cannot spawn, write a repo file, or launch a leg, and a declared
 wedge means an alert and deleting the pump latch. That asymmetry is why it does

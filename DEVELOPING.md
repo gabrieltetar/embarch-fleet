@@ -80,7 +80,7 @@ Not all at once, and the differences have bitten before.
 | `.claude/commands/supervise.md` | the next `/supervise` **typed by the owner** — a leg never reads it |
 | `.claude/commands/fleet.md` — vocabulary | the next tick, which re-reads the file |
 | `.claude/commands/fleet.md` — **the cron block** | **only after re-arming** |
-| `.claude/commands/fleet-watch.md` — **the cron block** | **only after re-arming `/fleet watch`** |
+| `.claude/commands/fleet-watch.md` — **the cron block** | **only after re-arming `/fleet-watch`** |
 
 Those last two rows are the ones to remember. Arming copies the heartbeat prompt
 into a cron job, so the live job keeps the wording it was created with however

@@ -54,7 +54,7 @@ the reason — and exit.
   notify him** (`{{FLEET_REPO}}/ops.md` §3): post it with
   `scripts/fleet-post.py "the fleet's own instructions changed, and the
   watchdog is still running the old ones" --action "open a window and type
-  /fleet watch" --detail "<what changed, and the SHA>"`. Without it the fleet
+  /fleet-watch" --detail "<what changed, and the SHA>"`. Without it the fleet
   looks entirely healthy while enforcing a rule nobody wrote, and the only
   notice is a line in a terminal he may never look at. Post your ordinary
   deploy line the same way, as an FYI, with the SHA and the file list in
