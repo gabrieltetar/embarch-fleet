@@ -67,14 +67,14 @@ doubt commit it to a branch, which is cheap and reversible.
 notice that it is wedged: a hung tick never returns to idle, so its own cron
 cannot fire and no `fleet stop` reaches it. A second window armed with
 `/fleet watch` reads the mtime of one file, `.fleet/tick`, and alerts when it
-goes stale by **45 minutes**. **Its whole vocabulary points one way — stop, never
+goes stale by **35 minutes**. **Its whole vocabulary points one way — stop, never
 start**: it cannot spawn, write a repo file, or launch a leg, and a declared
 wedge means an alert and deleting the pump latch. That asymmetry is why it does
 not weaken the kill switch: this section's rule bites only on what *takes away*
 the stop. Unlatching is not a graceful stop: whatever is running keeps running,
 and closing VS Code is still what ends it.
 
-**`tick` means the fleet made progress, not that the listener's cron fired** — the listener touches it each tick, **a leg at every dispatch and fold**. The listener-only reading went dark exactly when the fleet was busiest (§5.2), so it was bound to fire on **every healthy leg**; on 2026-09-06 it did, unlatching a live pump and capping the relay at one leg. The fix leaves the logic untouched (one mtime, stop-only) and *widens* it: a hung leg now trips it too. **45 min because healthy fold-to-fold gaps were measured at 40.** The accepted cost and the rejected `.fleet/leg` alternative are in that command file.
+**`tick` means the fleet made progress, not that the listener's cron fired** — the listener touches it each tick, **a leg at every dispatch and fold**. The listener-only reading went dark exactly when the fleet was busiest (§5.2), so it was bound to fire on **every healthy leg**; on 2026-09-06 it did, unlatching a live pump and capping the relay at one leg. The fix leaves the logic untouched (one mtime, stop-only) and *widens* it: a hung leg now trips it too. **35 min: re-derived 2026-09-06, max gap 29.6 over six legs.** The accepted cost and the rejected `.fleet/leg` alternative are in that command file.
 
 **Alert rarely, and through `scripts/fleet-alert.py`**, whose header carries why a Slack `@` from the fleet notifies nobody, and the webhook setup that fixes it. Unconfigured it exits 2 and says so: post to the channel anyway and record that the alert did not send. `PushNotification` reaches a phone **only while Remote Control is connected**, so it supplements rather than replaces. **The set, closed**: leg blocked and stopped · budget HOLD · a failed spawn · the same failure blocking two units · a dream · a parked `suite` task · **an agent suspended on a permission prompt**. **Never per unit, never on an ordinary leg end** — legs end every twenty minutes, and an alert each time is a pager.
 

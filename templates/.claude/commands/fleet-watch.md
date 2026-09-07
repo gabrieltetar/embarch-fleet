@@ -47,7 +47,7 @@ later. The alternative, a second `.fleet/leg` file with the watchdog requiring
 *tick stale AND no live leg*, buys that window back at the cost of a second piece
 of state, a writer that must delete it on every exit path including a kill, and
 branch logic in the one window whose entire safety argument is that it reads one
-mtime and can only ever stop. Not worth it for a failure that is detected 45
+mtime and can only ever stop. Not worth it for a failure that is detected 35
 minutes later anyway.
 
 ## Why this does not weaken the kill switch
@@ -94,10 +94,10 @@ nothing.
 > end of every tick **and by a leg at every dispatch and every fold**, so it
 > means "the fleet made progress". If the file does not exist, nothing has moved
 > since the watchdog was armed; treat that as stale only if the pump latch is
-> older than 45 minutes, otherwise stop (the fleet was just started and has not
+> older than 35 minutes, otherwise stop (the fleet was just started and has not
 > ticked yet).
 >
-> 3. If the mtime is **more than 45 minutes old**, the fleet is wedged or dead —
+> 3. If the mtime is **more than 35 minutes old**, the fleet is wedged or dead —
 > a wedged listener between legs, or a leg that hung mid-unit. **Delete
 > `{{STATE_DIR}}/pump`**, then run `{{FLEET_REPO}}/scripts/fleet-alert.py
 > "no fleet progress since <mtime>; pump unlatched"`, post one line to
@@ -108,12 +108,29 @@ nothing.
 > repeats itself every ten minutes is a pager, and `ops.md` §3's alert set is
 > closed for that reason.
 >
-> **45 minutes is measured, not chosen for roundness.** A healthy leg is silent
-> between a dispatch and the fold that follows it: fold-to-fold gaps over the
-> 00:12–05:20 run on 2026-09-06 reached **40 minutes**, and a wave of workers
-> dispatched together reports together. Under the old 25 the watchdog fired on a
-> leg that landed 4/4 units. Do not lower it without new measurement; a false
-> wedge is not a harmless conservative alarm, because it unlatches the pump.
+> **35 minutes is measured, not chosen for roundness.** Re-derived 2026-09-06
+> from git commit times — claims and folds are the only touches that leave a
+> record — over the six 4-unit legs from 16:01 to 21:22, the first that carried
+> the dispatch touch. 46 gaps: median **4.5 min**, p90 14.1, p95 17.1, **max
+> 29.6**, nothing above 30. The reconstruction cannot see the step-0 touch or
+> the listener's between-leg cron, so every number is an **upper bound** on the
+> real gap — the conservative direction for a threshold.
+>
+> **The binding gap is a deploy, not a leg.** Both gaps over 25 minutes — 29.6
+> and 28.4 — are leg boundaries with an `embarch-deployer` in them, and nothing
+> touches `tick` while one runs, because a window holding a live background
+> agent has no cron either. *In-leg* gaps top out at **17.4**: four workers are
+> rarely all silent at once. Going below ~32 means making the deployer touch
+> `tick` too; until it does, that is the floor and 35 is the margin over it.
+>
+> **Why 45 was loose.** It came from fold-to-fold gaps of 40–41 minutes over the
+> 00:12–05:20 run, measured before a leg touched `tick` at dispatch. Count that
+> run's own claim commits as the touches they would be today and its max falls
+> to **32.0** — and that was a 13-unit leg, a shape the 4-unit cap has retired.
+>
+> Do not lower it without new measurement; a false wedge is not a harmless
+> conservative alarm, because it unlatches the pump. Under the old 25 the
+> watchdog fired on a leg that landed 4/4 units.
 >
 > **Deleting the latch is the only write this window ever makes, and the only
 > direction it may push.** It can stop a fleet; it can never start one. That
@@ -143,7 +160,7 @@ ticking underneath it.
 **While a leg runs it cannot see a wedged listener**, because the leg's own
 touches keep `tick` fresh. That is the accepted cost of the signal meaning
 progress; the case it gives up is one that costs nothing until the leg ends, and
-45 minutes after that it is caught.
+35 minutes after that it is caught.
 
 **It is not a control plane, and unlatching is not `fleet stop`.** A graceful
 stop is delivered to a live supervisor, which finishes landing what is in
