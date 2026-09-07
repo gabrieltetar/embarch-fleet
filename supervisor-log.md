@@ -97,6 +97,151 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 18:52 — umbrella/027 doctor ran live, and the check that has been "waiting for a bench" was never waiting for a bench
+
+**Decided:** four, all mine, and the first is the one that matters. **(1)** `open.md`'s standing item
+— *"check 11's last live unknown is `/dev-bench/hello`'s `compatible` field, needing a bench"* — is
+**wrong about what it needs**, and I rewrote it rather than ticking it. Two boards were attached,
+enrolled, validated and handshaking, and the field was still unreadable, because `doctor` gives that
+call the same **500 ms** budget it gives `GET /status` while the call opens a serial link and
+handshakes a board. Filed as `tasks/umbrella/030`. **(2)** The message-shape guard's pinned exemption
+is a statement about its *fixtures*, not about the program; that is now `decisions/reporting.md`
+decision 43, and `spec.md` states the rule with its runtime hole instead of a false uniqueness claim.
+**(3)** Check 17's three-step experiment protocol **moved out of `open.md` into
+`tasks/umbrella/033`, marked `Owner: required`** — every step re-registers the Windows service the
+whole fleet reaches, which is not inside a supervisor's bench grant. **(4)** `tasks/umbrella/029` is
+**done**: both files are out of reserve, paid by the actor making the flux, per `supervise.md`'s rule
+for a reserve file behind a compaction task blocked on `In flux: yes`.
+
+**Merged:** no branch and no worker — a `Hardware: bench` unit is the supervisor's own hands. Fold
+below. Gate on the fold tree: all 9 doc checks green. **`embarch-umbrella/spec.md` 9,660 → 9,128 B
+(89.1%), `open.md` 4,823 → 4,535 B (88.6%)**, both PAID; `decisions/reporting.md` 6,498 → 8,920 of
+12,288, which is where the moved content went.
+
+**Blocked:** nothing. `tasks/umbrella/027` is retired by this fold. **`tasks/umbrella/029` is
+*unblocked*, not closed** — see below.
+
+**Reviewer:** 1 finding — inbox/umbrella-027s-three-clauses-outrun-what-the-run-measured.md
+
+**I acted on every item at the fold rather than filing it as a task, so the drop is drained and
+gone** — saying that here because leg 023 recorded that a drained drop leaves no trace anywhere a
+later reader can look. The reviewer verified all six of my central claims sound and then found
+three clauses around them that said more than the run measured:
+
+1. **A contradiction with a decision this unit never touched.** `tasks/umbrella/030` said the
+   transport error was *"indistinguishable from 'no bench'"*. `decisions/schema-skew.md` decision
+   33 requires each missing-number reason to be **its own named `Warn`**, and the code holds it —
+   `HelloOutcome::NoBench` is a distinct variant, `404` maps to it, check 11 renders it as
+   `no dev-bench plugged in`. **My own quoted output disproved my own sentence**, and it was not a
+   throwaway: it was the task file's entire account of why the defect sat unnoticed for weeks.
+   Rewritten to the real account, which is duller — telling the two apart needs a bench attached
+   *and* Core's log open at the same minute, and nobody had put those beside each other.
+2. **An unmarked inference, and it was in the durable doc rather than the task file.** `open.md`
+   said checks 11 and 13 *"cannot finish on any machine"*. The compile-time constant makes the
+   **budget** machine-independent; it does not make every machine's handshake exceed 500 ms, and
+   **the run produced no handshake duration at all**. `tasks/umbrella/030` hedged this correctly
+   under *What is not proven* and `open.md` did not — **the hedge was in the file that gets
+   deleted and the flat claim in the file that outlives it.** That inversion is precisely the
+   leg-021 and leg-023 shape, and I reproduced it having written the caveat myself one paragraph
+   earlier.
+3. **Decision 40 still read `Unverified live`** while the same diff said the run happened and
+   discharged decision 39's identical line four files away. Discharged with both arms' codes and
+   quoted details, and with what the run did **not** reach kept explicit.
+
+**And it caught the deletion I had already flagged to myself and still got wrong.** `spec.md` lost
+a scope sentence — that both of `embarch-api`'s front-ends stay first-class and the human one is as
+much umbrella's job as the agent path — and it appeared in **neither** of `029`'s ledgers, in a
+section headed *"How, so nobody looks for deleted content"*. I had noted at the time that I cut it
+because I needed bytes. **Restored**, shortened, and paid for out of my own citation rather than
+someone else's prose.
+
+**The correction cost the compaction, and I let it.** `spec.md` went 9,128 → **9,237** and `open.md`
+4,535 → **4,653**; both are back in reserve at 90.2% and 90.9%. So `tasks/umbrella/029` is **not
+done** — it is `open`, `In flux: no`, dispatchable to a worker, with the trade written into it:
+~350 bytes of accuracy against ~350 bytes of headroom, and a pass that shaves them back out would
+be undoing the review. Trimming to keep a green ledger was available and is the exact failure three
+consecutive legs have flagged.
+
+**What ran, and it was entirely read-only.** Three `embarch doctor` invocations — one from
+`embarch-umbrella`, one from `embarch-doc`, one `--json` — plus two `validate` calls. No flash, no
+study, no reset, no service touched. The Core reached was the **Windows service at
+`172.22.128.1:4884`** (check 3 `wsl-host`, check 15 `core_version 0.1.4` matching the located
+binary). Both roles matched their enrolled identities exactly before I started.
+
+**Seventeen checks, every verdict recorded, and four of them had never run against hardware.**
+Check **5** PASS, 2 probes — the first live probe count in a while; its `probe-not-permitted` arm is
+still dark and still needs a Linux box running Core natively. Check **14** PASS
+`every-family-covered`, `nRF54L15=jlink, nRF52840=probe-rs, esp32c5=probe-rs` — real output from the
+service exe. Check **10** ran live for the first time since it was rebuilt, and **both arms**: FAIL
+`not-registered` from `embarch-umbrella` (no MCP entry for that directory), PASS `handshake-ok` from
+`embarch-doc`, *"registered as `embarch-api` (local scope), and it answered initialize (rmcp)"*.
+Checks **11** and **13** could not complete, which is the finding.
+
+**Decision 42's wider locator is exercised and it found a mixed install — that item is closed, not
+narrowed.** From `embarch-doc`, check 1 located `embarch-api` at
+`…/embarch-api/target/debug/embarch-api` **via the agent CLI's own MCP registration**, and said so:
+*"A different copy is installed at `~/.local/share/embarch/bin/embarch-api` — that is a mixed
+install, and checks 8, 10 and 11 are about the registered one."* That is the exact condition the item
+was waiting for — two `embarch-api` files at one version, on a bench — and the check reported it
+correctly and unprompted.
+
+**Decision 39's `Unverified live` line is discharged with the string it predicted.** `detail` read
+`study_results/ at /mnt/c/ProgramData/embarch/study_results: 50 entries, 802.9 MiB` and
+`checks[15].path` carried that same path as its own field. Both halves, on a real machine.
+
+**The `/dev-bench/hello` diagnosis is a measurement plus a source fact, and I am marking the join.**
+Measured: `C:\ProgramData\embarch\logs\dev-bench.log.2026-09-07` holds **three completed
+handshakes** at 00:23:55.53, 00:24:17.16 and 00:24:33.90 UTC — one per invocation, each
+`--- link opened on COM17 (firmware 49958d34, wire schema v15) ---` — while all three runs printed
+the endpoint as *unavailable*. **Core did the work; the client stopped waiting.** Source: that fetch
+goes through `authed_get`, which unconditionally sets `AUTHED_GET_TIMEOUT` = 500 ms, and there is no
+other timeout on the path. **Not measured, and said so in the task file:** reqwest's `Display` drops
+the error's source, so *timed out* versus *could not connect* is not readable from the message
+itself — the timeout is the only candidate the source offers, not something the run printed.
+
+**I nearly filed a live schema mismatch that does not exist.** The bench reports **wire schema
+v15** and check 11 reports the host type at **v17**, and my first reading was that check 11 was
+missing a real skew. `judge_schema_versions`' own doc-comment says the opposite in terms: the
+bench's wire version is a **different sequence**, only guaranteed `<=` the host one, and *can never
+be compared* against either host number — what is comparable is Core's `compatible` verdict. I read
+the code before writing the sentence. **This is the same shape as the "four refusals" miscount two
+legs ago**, caught earlier only because the number looked wrong enough to check.
+
+**Two defects filed rather than fixed, and they are two halves of one blob.** `tasks/umbrella/031` —
+check 1's `detail` came back with newlines, multi-space runs **and raw ANSI escapes**, in `--json`,
+while the module-wide guard was green, because `binary_version` interpolates `--version`'s stdout
+verbatim and the guard only ever sees fixtures. `tasks/core/015` — the reason there is anything to
+interpolate: **`embarch-core.exe --version` writes a coloured, multi-line `Caused by:` chain to
+stdout**, with the version as its last line, when a non-elevated caller cannot open
+`C:\ProgramData\embarch\logs`. Fixing either alone leaves the other live. Also `tasks/umbrella/032`
+— check 14's three class arms all sit inside the one branch reached when no Core is locatable, so on
+a set-up `wsl-host` machine the `WslHost` wording is unreachable; third instance of that shape in
+this suite.
+
+**One thing I did not do.** `/dev-bench/hello` needs a bearer token; I did not go looking for one.
+Core's own rotating log gave me the handshakes, which is a read, not a credential — the same route
+and the same refusal as leg 023.
+
+**Hardware debts:** one **restated, not discharged**: `/dev-bench/hello`'s `compatible` verdict is
+still unread, and it now needs `tasks/umbrella/030`'s fix before any bench can answer it. Check 5's
+`probe-not-permitted` arm and check 17's two Fail arms are still owed a machine this bench is not.
+Both boards were still attached and matching at 18:50 local, so the remaining 4 bench tasks are
+runnable for the next leg.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **that I wrote the hedge and the flat claim in the same sitting, put the hedge
+in the file that gets deleted, and did not notice.** `tasks/umbrella/030` says under *What is not
+proven* that the run produced no handshake duration; `open.md`, written minutes later, said checks
+11 and 13 "cannot finish on any machine". Both are mine, ten minutes apart. **The failure was not
+that I did not know the limit — I had just typed it — it was that a task file and a permanent doc
+felt like different registers, and the permanent one got the confident voice.** Leg 021 named this
+shape and leg 023 reproduced it; I have now reproduced it in the form where my own adjacent sentence
+is the disproof. I do not have a rule that would have caught it, and "be careful in `open.md`" is
+not one.
+
+---
+
 ## 2026-09-06 18:38 — topology/010 the suite's one file at its hard cap is paid, and the split stranded a link no gate can see
 
 **Decided:** two, both at the fold and both about the *record* rather than the docs. **(1)** I
@@ -229,7 +374,7 @@ changed no code. **What it actually proves is that `origin/main` is green, which
 anyway and which nothing else in the leg checks.** I am recording it as that, rather than as evidence
 about `core/014`.
 
-
+## 2026-09-06 18:14 — study-designer/012 a bound moved ahead of the allocation, and a worker picked its own decisions file
 
 **Decided:** one, and the point of it was to *not* decide. `decisions/crate.md` is at 91.7% behind a
 **blocked** compaction task, and the last two legs each had a supervisor pre-pick a decisions file to
