@@ -97,6 +97,86 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 21:22 — ui/012 a one-line spec fix that found two more, and the wrong sentence survives one file over
+
+**Decided:** two. **(1)** I dispatched a task whose entire content was one wrong line and told the
+worker in the task file to **read the whole architecture block before editing it** — on the ground
+that one unsupported dependency arrow in a block nothing checks is evidence about the block, not
+about the line. That instruction paid for itself twice over: the block had a second false claim and
+one omission, neither of which the task knew about. **(2)** I filed the reviewer's one residual
+observation as `tasks/ui/013` rather than fixing it in the fold, because fixing it would have made
+this unit's own central claim false (below).
+
+**Merged:** `agent/ui/012-spec-names-the-real-log-path` (doc `5f97a1b`, **code no commit** — doc-only
+by design; `embarch-ui`'s tree is byte-identical to `origin/main` at `fa3b7b6`, verified by
+`git diff --stat`, not argued). Gate on the merge result: `cargo build`, `cargo test` **99 passed /
+0 failed / 2 ignored**, `cargo clippy --all-targets -D warnings` clean, `python3
+scripts/check-docs.py` **all 10 green**, ownership green both branches (doc: 3 paths, explicit base;
+code: 0 paths), client-names clean.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**The dispatched fix.** `embarch-ui/spec.md` listed `GET /logs/stream (SSE live tail)` as a UI→Core
+dependency. It is not one: `src/logs.rs::poll_loop` calls `core.logs_recent(500)` every 2 s, diffs
+the window, and `main.rs::sse_lines` relays new lines as **this binary's own** `lines` SSE event on
+`/api/logs/events`. `embarch-core-client` has no `/logs/stream` method at all. **The correction had
+to keep two things apart that a careless edit would merge**: the UI *serves* SSE and does not
+*consume* Core's, and the Debug tab does have a live tail — it is a server-side poll, not a
+subscription. Deleting the words "SSE live tail" would have been false in the other direction. The
+reviewer read the new text cold and confirmed a reader cannot come away thinking the tail is gone.
+
+**The second finding is the one worth the entry, because it reverses a sentence that says
+"deliberately".** The block also said `+-- does NOT link embarch-topology, at all, deliberately`.
+**It does** — `cargo tree -e normal -i embarch-topology` gives `embarch-topology →
+embarch-core-client → embarch-ui`, features `default,software`, reproduced independently by the
+worker and the reviewer. The true claim is the narrower one this sub-project's **own**
+`decisions/wiring.md` decision 5 already makes: never the **`hardware`** feature, which the
+Invariants section measures correctly as a `probe-rs`/`serialport` count of zero. **So the spec was
+contradicting its own decisions file, in a sentence whose "deliberately" invited a reader to stop
+checking.** That is the same shape as the `/logs/stream` line and it was sitting four lines away.
+
+**And a third: the list that claims to be "every hardware-adjacent call" was missing one.**
+`GET /study/{id}/gatt-data`, reached from `study_designer.rs:1737`. The reviewer then enumerated all
+seventeen `CoreClient` methods the UI actually calls, checked each against a listed line **with its
+verb**, confirmed the seven unused client methods are genuinely uncalled, and confirmed `embarch-ui`
+has no `reqwest` dependency, so there is no off-client path to Core. **A completeness claim is now
+backed by an enumeration** rather than by nobody having noticed a gap.
+
+**Why I filed `tasks/ui/013` instead of fixing it here.** `embarch-ui/Cargo.toml` lines 23–24 carry
+the **identical overstated sentence** the spec just lost — "never depends on embarch-topology or its
+hardware feature at all" — and cite decision 5 for it, which says only the hardware-feature half.
+Fixing it needs a commit in the code repo, and this unit's own central claim is that **the code is
+right and unchanged**; a one-line comment edit would have made that false and turned a clean
+doc-only unit into a mixed one for a manifest comment. **The wrong sentence therefore survives, on
+purpose, in the file a reader opens precisely to find out what this crate links** — which is a worse
+place for it than the spec was. It is filed, with the measurement carried so nobody re-derives it.
+
+**Two things the reviewer noted that I am recording rather than filing.** "Diffed so only genuinely
+new lines are published" slightly overstates — `diff_new_lines` deliberately replays the whole window
+when the overlap is lost, which is reversal row 102 and already recorded there. And "the Debug tab's
+two log feeds are both that shape" is true but not exhaustive: `snapshot.rs` and `study_designer.rs`
+also poll Core server-side. The sentence claims no exclusivity, so it is incomplete rather than
+false, and filing a task for every incomplete sentence in a spec is how a queue fills with
+observations instead of work.
+
+**Hardware debts:** none. Every claim in this unit is about this repo's own source, checked against
+that source, twice.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **that I dispatched "read the whole block" as an instruction and got three
+fixes, and I have no idea how many blocks like it exist.** This one was audited only because a
+`core` worker happened to survey `/logs/stream`'s consumers for an unrelated unit and noticed. The
+block had been wrong in two independent ways and incomplete in a third, for months, past every green
+gate — `check-links.py` sees links that resolve, `check-staleness.py` only fires on a row that
+disagrees with a sub-project doc, and **nothing at all compares a stated HTTP dependency against the
+code that would make the call.** Six other sub-projects have a comparable block. I checked one
+because a task pointed at it.
+
+---
+
 ## 2026-09-06 21:11 — umbrella/030 a budget sized for a device scan was covering a serial handshake, and `suite/features.md` became a wall
 
 **Decided:** three. **(1)** I told this worker in its dispatch that `decisions/doctor.md` — 942 B
