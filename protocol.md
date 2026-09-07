@@ -124,11 +124,11 @@ There is one `hw_lock`, one study in flight (rejected with `409`, deliberately n
 
 So: **workers are host-side only.** Build, `cargo test`, `clippy --all-targets -- -D warnings`, host unit tests, docs, design. A worker whose change can only be verified on hardware writes a **hardware-verification debt** into the task file and ships the host-side half; the supervisor collects those into its log entry (§11).
 
-**The supervisor may run hardware, granted by the owner 2026-09-06.** It was barred for a worker's reason plus one more: it is unattended, and [embarch-dev-workflow.md](../embarch-doc/embarch-dev-workflow.md) §5's Tier 2/3 autonomy was granted to a session the owner sat in front of. What replaced the bar is narrower than lifting it. A **`bench` task** is executed by the leg **itself**, never dispatched, **at most one at a time** — needing no lock, because exactly one supervisor exists; the shape §8 uses for a cross-repo pass, for the same reason. It **validates the roles a task names before starting**, and an unattached board leaves the task `open`, never `blocked` — boards come back. [tasks/README.md](../embarch-doc/tasks/README.md) carries the rest.
+**The supervisor may run hardware, granted by the owner 2026-09-06.** It was barred for a worker's reason plus one more: it is unattended, and [embarch-dev-workflow.md](../embarch-doc/embarch-dev-workflow.md) §5's Tier 2/3 autonomy was granted to a session the owner sat in front of. What replaced the bar is narrower than lifting it. A **`bench` task**, and a **`toolchain`** one (host-side, but needing a toolchain no worktree can carry), is executed by the leg **itself**, never dispatched, **at most one at a time** — needing no lock, because exactly one supervisor exists; the shape §8 uses for a cross-repo pass, for the same reason. It **validates the roles a task names before starting**, and an unattached board leaves the task `open`, never `blocked` — boards come back. [tasks/README.md](../embarch-doc/tasks/README.md) carries the rest.
 
 **The client-repo line moved with it, and only this far.** §2 reserves anything outside the suite's own repos; the grant is to **flash a configured project's board and run studies against it**. *Writing* to a client repo stays reserved — no commit, no source edit, no release. The fleet exercises EmbArch against real hardware; it does not develop someone else's firmware.
 
-Hardware is serial by construction, so it adds depth rather than width — and most of what blocks this suite is still hardware-gated.
+Hardware is serial by construction: it adds depth, not width, and most of what blocks this suite is still hardware-gated.
 
 ## 8. Cross-repo changes: the supervisor does them itself
 
@@ -197,11 +197,11 @@ different facts.
 
 **The gate is mechanical and catches broken, not wrong.** The one judgement the supervisor adds: read the diff before merging when the change touches a shared crate (`embarch-study-designer`, `embarch-topology`, and `embarch-core-client` — inside `embarch-api` but path-depended on by `embarch-ui`, so an `api` worker can change `ui`'s dependency without owning `ui`), a wire type, or retires a decision. That is where passing and correct diverge most expensively; everything else merges on green.
 
-**Merge order** is shared crates first, then consumers, then `embarch-doc` — the sequencing §6 already fixes for a cross-repo pass, applied to a leg's independent ones. Within a tier, oldest branch first, so nothing sits.
+**Merge order** is shared crates first, then consumers, then `embarch-doc` — §6's cross-repo sequencing applied to a leg's independent passes. Within a tier, oldest branch first, so nothing sits.
 
 ## 11. The log
 
-Canon is the doc; Slack is the ping.
+Canon is the doc, Slack the ping.
 
 **One entry per unit**, prepended to [supervisor-log.md](supervisor-log.md), newest first: what it **decided**, what merged with its SHAs, what blocked and why, and any hardware debt. Per unit, not per leg: a leg can be killed at any moment, and an entry written at the end does not exist for the leg that was.
 
@@ -213,9 +213,9 @@ Canon is the doc; Slack is the ping.
 
 **Neither the subagent nor the script is decoration.** `scripts/fold-day.py <yyyy-mm-dd>` extracts the day and a ledger of what it carries; `--apply` splices the folded entry back over exactly those and **refuses one that dropped a SHA, a debt or a reviewer line.** The alternative cost leg 010 ~35 K tokens re-emitting text nobody meant to change, any transcription error corrupting this file silently. It goes to an `embarch-log-folder` subagent rather than the leg — **a leg is bounded at four units precisely so it does not accumulate context** — and still lands in that unit's `fold-commit.py` commit.
 
-**Every day but the two newest rolls into `log-archive/`** — `scripts/fold-day.py --roll`, which never splits a day. Two, because step 0 reads today and the day before; *this* repo's `log-archive/`, not the instance's `history/archive/`, because this log lives here. **There is deliberately no byte line**: two were written and neither reachable, and a second unsatisfiable number means the quantity was wrong — a day's size is the fold's job, so this counts days.
+**Every day but the two newest rolls into `log-archive/`** — `scripts/fold-day.py --roll`, which never splits a day. Two, because step 0 reads today and the day before; *this* repo's `log-archive/`, not the instance's `history/archive/`, because this log lives here. **There is deliberately no byte line**: two were written and neither was reachable, so the quantity was wrong — a day's size is the fold's job, and this counts days.
 
-Slack gets **one line per unit** as it happens — dispatched, landed with its SHA, or blocked with the reason — and nothing on an ordinary leg end: under the relay legs end constantly and a notification per leg is a pager.
+Slack gets **one line per unit** as it happens — dispatched, landed with its SHA, or blocked with the reason — and nothing on an ordinary leg end: under the relay legs end constantly and one per leg is a pager.
 
 **This is the review surface, and under a full delegate the only one.** Read after the fact, so it must be honest about what was decided, not just what shipped — a suite-wide design the supervisor approved on the owner's behalf is the most important line it will write, and belongs at the top of its entry, not under the merge list.
 
