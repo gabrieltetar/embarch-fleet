@@ -41,6 +41,11 @@ or delete the pump latch. `/fleet watch` unlatches on a declared wedge; this
 does not, because a cron job that can stop the fleet is a cron job that stops
 the fleet at 3am for a reason nobody is awake to read.
 
+It also keeps `credential-history.tsv`: one line per credential change, so
+the question "how often does this machine actually get logged out" stops being
+answered from memory. A refresh moves the access expiry; a login moves the
+refresh expiry too, so the file counts both separately.
+
 Install (the owner's, once):
     scripts/fleet-deadman.py --install-cron
 
@@ -68,6 +73,7 @@ HERE = Path(__file__).resolve().parent
 CREDENTIALS = Path.home() / ".claude" / ".credentials.json"
 STATE = CONF.state_dir / "deadman-state.json"
 PUMP = CONF.state_dir / "pump"
+HISTORY = CONF.state_dir / "credential-history.tsv"
 TICK = CONF.state_dir / "tick"
 
 # 35 minutes matches `/fleet watch`; ops.md section 3 re-derived it on
@@ -157,6 +163,47 @@ def claims_standing() -> list[str]:
     return out
 
 
+def record(acc_ms: int | None, ref_ms: int | None, mt: float | None,
+           pids: int) -> None:
+    """Append one line whenever the credential changes, and nothing otherwise.
+
+    Nobody can currently say how often this machine is actually logged out.
+    Transcripts are kept 30 days and a `/login` is not a transcript message;
+    the extension logs carry no auth lines; the credentials file keeps only its
+    last write. So the cadence in `risks.md` is a guess drawn from the two
+    failures that happened to land while a session was recording.
+
+    This makes it measurable, and the two events are distinguishable: **a
+    refresh moves `expiresAt` alone, a login also pushes
+    `refreshTokenExpiresAt` a month out.** A week of this says how many
+    refreshes happen between logins, which is the number the race hypothesis
+    lives or dies by. Two integers and a count -- no token, nothing a leak
+    would matter.
+    """
+    stamp = f"{acc_ms or 0}:{ref_ms or 0}"
+    try:
+        last = HISTORY.read_text(encoding="utf-8").rstrip("\n").rsplit("\n", 1)[-1]
+    except OSError:
+        last = ""
+    if last.endswith("\t" + stamp):
+        return
+    def iso(ms):
+        if not ms:
+            return "-"
+        return datetime.datetime.fromtimestamp(ms / 1000).astimezone().isoformat(
+            timespec="seconds")
+    kind = "cleared" if mt is None else (
+        "login" if last and last.split("\t")[-1].split(":")[1] != str(ref_ms or 0)
+        else "refresh")
+    if not last:
+        kind = "first-seen"
+    row = "\t".join([now().isoformat(timespec="seconds"), kind,
+                     iso(mt * 1000 if mt else None), iso(acc_ms), iso(ref_ms),
+                     str(pids), stamp])
+    with HISTORY.open("a", encoding="utf-8") as f:
+        f.write(row + "\n")
+
+
 def load_state() -> dict:
     try:
         return json.loads(STATE.read_text(encoding="utf-8"))
@@ -206,6 +253,9 @@ def main() -> int:
     tick = age_min(TICK)
     acc_ms, ref_ms, cred_mt = expiries()
     pids = claude_alive()
+
+    if not args.check and not args.dry_run:
+        record(acc_ms, ref_ms, cred_mt, len(pids))
 
     conds: list[tuple[str, str, str, str, str]] = []  # key, id, msg, action, detail
 
