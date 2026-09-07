@@ -97,6 +97,89 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 19:24 — core/006 a fix that made the same claim its own defect was about
+
+**Decided:** two, and the first was the worker's to make with my constraint on it. **(1)** I told it to
+settle *retain the partial* vs *just fix the comment* on the SSE consumer contract rather than diff
+size, and to survey the consumers before deciding. It chose retention (`embarch-core` decision 44) on
+the strongest possible ground: **`/logs/stream` has no consumer anywhere in the suite** — the Core
+client never grew a method for it and `embarch-ui`'s Debug tab reaches Core through `/logs/recent` on
+a 2 s server-side poll — **so it argued from what a consumer could hold rather than from who is
+watching**, and used `embarch-ui`'s renderer as the demonstration of the cost: a split line becomes
+two rows, the second matching no level, tagged `—`, and **hidden outright whenever a level filter is
+on.** A log line that silently disappears. **(2)** At the fold I corrected three sentences (below)
+and pushed the code half as a second commit rather than leaving the branch's own prose wrong.
+
+**Merged:** `agent/core/006-follow-partial-line` (code `0ec3f7c`, doc `9e02825`), plus fold
+correction `87f8972` in `embarch-core`. Gate on the merge result: `cargo build`, `cargo test`
+**162 passed / 0 failed / 2 ignored**, `cargo clippy --all-targets -D warnings` clean,
+`python3 scripts/check-docs.py` **all 9 green**, ownership green both branches (doc: 6 paths, base
+`f4b6d045`; code: whole tree, base `09020a39`), client-names clean. **No native Windows build** —
+`tasks/doc/012` is the standing record that it is unrunnable from a Linux leg, and this unit did not
+change that.
+
+**Blocked:** nothing.
+
+**Reviewer:** 1 finding — inbox/core-logs-stream-whole-line-claim-is-unqualified.md
+
+**And it is the finding I asked for, which makes it worth more than the count.** I told the reviewer
+that "a new contract sentence carrying one unqualified word over a branching code path has now landed
+four times in three legs" and that it was the class I most wanted caught. It came back with **the
+same defect this unit exists to fix, recurring inside the fix**: `src/api.rs`'s route contract said
+`**Every element is one whole log line**`, and `embarch-core/spec.md` said `its offset advances past
+a \n or not at all` — both flat, both citing decision 44, **and decision 44 in the same diff
+documents an anchor that is neither.** The `spec.md` clause was also literally false: the
+first-tick/rotation branch *assigns* `self.offset = metadata.len()`.
+
+**The half I would not have got to on my own is the size of the exception.** Decision 44, the
+`poll_in` comment and I all read that anchor as a rotation-time race "on a file created moments
+earlier", and the whole cost argument rested on that improbability. **The branch is
+`if self.path.as_deref() != Some(latest.as_path())`, whose own inline comment says "First tick, or
+the file rotated"** — and first tick is **every new `/logs/stream` subscriber**, attaching to
+whatever file a long-running Core is already writing. So the case described as negligible is the
+ordinary one, once per subscriber. I verified the branch and the assignment myself before writing
+this. **The decision's conclusion survives and its argument does not**: one short line at the head of
+a tail nobody has read yet is still not worth a carried flag — but the reason is the size of the
+loss, not the rarity of the case, and I rewrote it to say that rather than restating the rarity.
+
+**Three sentences corrected at the fold**, two in the doc repo (`embarch-core/spec.md`,
+`decisions/logging.md`) riding in this commit, one in the code repo as `87f8972`
+(`src/api.rs`'s contract and `src/logs.rs`'s comment; rebuilt, 162 tests, clippy clean before
+pushing). The reviewer also confirmed the consumer survey against the real sources at
+`embarch-api` `524fbe0` and `embarch-ui` `45811c9` — both *later* than the merge, neither having
+touched the surface — and confirmed the UTF-8 boundary argument, with the same caveat: the slice's
+*start* is boundary-clean only in the steady state.
+
+**A worker's `inbox/` drop nearly died with its worktree, and this is the mechanism note for the
+next leg.** The worker wrote `ui-spec-claims-logs-stream.md` into **its own doc worktree's**
+`inbox/`, not the main checkout's. `inbox/` is gitignored, so that file existed in one directory
+I was about to delete at cleanup and nowhere else — the main checkout's `inbox/` was empty the whole
+time. I found it only because I went looking. It is now `tasks/ui/012` and its claim is true
+(`embarch-ui/spec.md:32` lists `GET /logs/stream` as a UI→Core dependency it does not have),
+independently confirmed by the reviewer. **Check every worker worktree's `inbox/` before deleting
+it.**
+
+**One thing I broke and cannot cleanly undo:** `87f8972`'s commit message body lost four words to
+**backtick command substitution in `git commit -m`**. The subject and the argument survive; four
+identifiers are missing. Fixing it means amending a commit already on `main` and force-pushing, which
+I will not do for cosmetics. **Backticks in a `-m` string are shell command substitution** — the next
+leg should quote or avoid them.
+
+**Hardware debts:** none new. The torn-write race is closed against a synthetic half-line only;
+**no real `tracing-appender` write has been observed torn**, which the worker recorded in
+`embarch-core/open.md` under "Never exercised" rather than only in its report.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **that I let the reserve-style "it's rare" argument through twice before a
+reviewer read it.** I read decision 44, I read the diff, I merged on green, and the sentence that was
+wrong was the one asserting how *often* an acknowledged gap is reached — a frequency claim with no
+measurement behind it and nothing in the gate that could ever check one. I corrected the prose; I
+have no way to be confident the same shape is not sitting in the other 43 decisions in that
+sub-project.
+
+---
+
 ## 2026-09-06 19:01 — ui/010 the badge names the step now running, and the argument for that was checkable
 
 **Decided:** one, and I deliberately did not make it. The task carried a real design choice — should
