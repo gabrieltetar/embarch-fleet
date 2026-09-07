@@ -97,7 +97,60 @@ unit under **Merged** and **Blocked**:
 
 ---
 
-## 2026-09-06 18:14 — study-designer/012 a bound moved ahead of the allocation, and a worker picked its own decisions file
+## 2026-09-06 18:35 — core/014 a decisions file split by mission, and the only three bytes that changed were the ones that had to
+
+**Decided:** one, and it was a dispatch decision rather than a content one. The task file offered two
+routes — shorten decision 40's narrative, or split the file by mission — and named the split as
+"probably better". I told the worker the same thing but attached the constraint that makes the
+choice checkable: **decision 40's occurrence counts `13/15/17/17/13/17` are byte-for-byte or omitted
+entirely, never paraphrased.** A split satisfies that trivially and a prose pass does not, so the
+constraint and the recommendation point the same way, which is the shape I want a compaction
+instruction to have. It split: 31 (the version gate) and 35 (handshake identity) moved verbatim into
+a new `embarch-core/decisions/handshake.md`.
+
+**Merged:** `agent/core/014-compact-core` (doc `2476cce`, **code: no commit**). The code branch is
+empty by design — this unit is docs only and the worker declined to manufacture a commit. Gate on
+the merge result: `cargo test` **161 passed / 0 failed / 2 ignored**, `cargo clippy --all-targets -D
+warnings` clean, `python3 scripts/check-docs.py` **all 9 green**, ownership green (doc: 5 paths, base
+`685be17d5d6d`; code: 0 paths), client-names clean. `decisions/studies.md` **11,176 → 8,318 B**,
+PAID at 67.7%, and nothing in `embarch-core` is left in reserve.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**The reviewer did the one check that could have falsified the whole unit, and it held.** The
+worker's claim was that a diff of the pre-image against the two result files concatenated shows
+*exactly three hunks* — `studies.md`'s summary line, the new file's header, and a dated bracket on
+decision 43 — so no decision entry lost a byte. The reviewer reconstructed all three blobs at the
+merge SHA and diffed them itself rather than grepping for the protected strings, which is the
+distinction that matters: a grep confirms a string exists somewhere, a diff confirms nothing else
+moved. Three hunks, confirmed. It also checked the eight-row size column the worker corrected and
+measured **all** eight rather than the two that were wrong, and confirmed the only inbound path-link
+into `studies.md` from outside `embarch-core` (`embarch-dev-bench/open.md:9`) cites decision **40**,
+which stayed.
+
+**The dating, not deleting, of a cross-repo fact is worth recording as a pattern.** Decision 43's
+*Declined* clause rests on `embarch-ui` rendering `current_step + 1`, which `tasks/ui/010` may make
+historical. The task file said explicitly *"do not delete the clause on the grounds that it is now
+out of date; date it"*, and the worker bracketed it with the date and the filed task. The reviewer
+checked the bracket's own factual claim — that the badge fix really is filed — and it is. **A
+decision that depends on another repo's current behaviour is not wrong when that behaviour changes;
+it is dated.** That is cheaper than either deleting it or letting it quietly go false.
+
+**Hardware debts:** none, and none owed — a doc-only compaction with no DUT anywhere in the path.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **that I re-ran the code gate in the worker's own worktree, which is
+byte-identical to `origin/main`, and called that a run rather than an argument.** `cargo test` really
+executed and really passed 161, so it is not the "gate satisfied by an argument" shape this log has
+now flagged eight times — but it is also not a test of anything this unit changed, because this unit
+changed no code. **What it actually proves is that `origin/main` is green, which I would want to know
+anyway and which nothing else in the leg checks.** I am recording it as that, rather than as evidence
+about `core/014`.
+
+
 
 **Decided:** one, and the point of it was to *not* decide. `decisions/crate.md` is at 91.7% behind a
 **blocked** compaction task, and the last two legs each had a supervisor pre-pick a decisions file to
