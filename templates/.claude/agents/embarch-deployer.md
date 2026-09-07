@@ -78,7 +78,20 @@ only the pump latch is, because the pump being on says the fleet is *running*,
 not that a leg is mid-unit, and a leg boundary is exactly where the first is true
 and the second is not.
 
-**Those last two exit 3, and that is a deferral rather than a problem.** Report
+**The script reconciles the instance checkout itself, and you must not.** It
+fast-forwards `embarch-doc`'s `main` to origin before rendering, because a leg
+pushes from a detached worktree and leaves that checkout behind by every fold
+since anyone pulled it. If it cannot fast-forward it refuses and names the one
+command that fixes it — that refusal is the **owner's**, keep its `--action`,
+and do not rebase, merge, force or pull anything yourself. On 2026-09-07 a
+deploy rendered and gated green on a base two folds stale, committed, and could
+not push; the owner reconciled it with a single `git rebase origin/main`, safe
+only because a deploy commit touches generated paths and a fold touches none of
+them. That is a judgement about two commits' contents, which is exactly what you
+are not here to make.
+
+**A registered worktree and a surviving `agent/*` branch exit 3, and that is a
+deferral rather than a problem.** Report
 it in one line as an ordinary FYI — **no `--action`, no mention of the owner** —
 saying the deploy is deferred because work is still in flight, that the pin is
 untouched, and that the listener should spawn a leg. Then exit. **Do not clear

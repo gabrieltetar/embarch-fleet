@@ -33,8 +33,9 @@ then writes `pending-deploy` in the state directory **pinning the exact framewor
 SHA**. `--from-latch` is the machine's half, run by an `embarch-deployer` agent
 the listener spawns at a leg boundary; it refuses unless the pin is still an
 ancestor of HEAD with **no render input changed since**, and the tree is still
-clean of them, then renders, gates, stamps, commits, pushes both repos, and
-deletes the latch. HEAD is allowed to have moved *only* in the fleet's own log
+clean of them, **fast-forwards the instance checkout to origin** because a leg's
+worktree pushes leave it behind, then renders, gates, stamps, commits, pushes
+both repos, and deletes the latch. HEAD is allowed to have moved *only* in the fleet's own log
 -- see `unrelated_to_render`, and the reason that is not a loophole.
 
 **What makes that safe is the pin, not the agent.** The deployer authors nothing:
@@ -144,6 +145,69 @@ def git(repo: Path, *args: str, check: bool = True) -> str:
     if check and r.returncode != 0:
         sys.exit(f"git {' '.join(args)} failed in {repo.name}:\n{r.stderr.strip()}")
     return r.stdout
+
+
+def fast_forward_target(target: Path) -> None:
+    """Bring the instance checkout level with origin before rendering into it.
+
+    **A leg pushes `origin HEAD:main` from a detached worktree, so this checkout's
+    `main` ref never advances on its own.** It sits behind by every fold that has
+    landed since anyone last pulled it, which means a deploy commit made here is
+    born diverged and its push is rejected. Measured 2026-09-07: leg 037 folded
+    three units, `d20cd9b` reached origin at 16:19:44, the deployer rendered at
+    16:22:11 on a base two commits stale, committed, and could not push. The
+    owner reconciled it with one `git rebase origin/main` -- the deploy commit
+    touches only generated paths and a fold touches none of them, so there was
+    nothing to conflict -- but only after two NEEDS-YOU alerts.
+
+    So: fetch, and fast-forward if that is all it takes. **Only under
+    `--from-latch`**, because that is the unattended half; the owner running this
+    by hand may be on an older base deliberately, and moving his branch under him
+    is not this script's business.
+
+    Every case it cannot fast-forward is a refusal rather than anything cleverer.
+    Rebasing its own commit and retrying the push was **considered and rejected**
+    on 2026-09-07: it softens "never rebase, never force" from absolute into
+    judged, and it adds a path that by construction almost never runs -- the
+    least-exercised code in the deploy, executing unattended with the repo
+    mid-push. The race it would close needs something to push `main` inside a
+    25-45 s window, at a boundary where the listener has just established that no
+    leg is alive. Revisit it if that is ever observed rather than imagined.
+    """
+    git(target, "fetch", "origin", check=False)  # offline is not fatal: the push
+    # is the real gate, and refusing here would page for a network blip.
+    branch = git(target, "rev-parse", "--abbrev-ref", "HEAD", check=False).strip()
+    if branch != "main":
+        # `--abbrev-ref` answers "HEAD" for a detached head, which is not a
+        # sentence anyone can act on.
+        where = "detached" if branch in ("", "HEAD") else f"on {branch}"
+        sys.exit(f"refusing: {target.name} is not on main ({where}).\n"
+                 "This deploy commits to main and will not guess what you meant.")
+    local = git(target, "rev-parse", "main", check=False).strip()
+    remote = git(target, "rev-parse", "origin/main", check=False).strip()
+    if not remote or local == remote:
+        return
+    behind = subprocess.run(
+        ["git", "-C", str(target), "merge-base", "--is-ancestor", local, remote],
+        capture_output=True, text=True).returncode == 0
+    if not behind:
+        ahead = git(target, "rev-list", "--count", f"{remote}..main", check=False).strip()
+        sys.exit(
+            f"refusing: {target.name}'s main has {ahead} commit(s) origin/main does\n"
+            f"not have, so this cannot fast-forward. Local {local[:10]}, "
+            f"origin {remote[:10]}.\n\n"
+            "That is either your own unpushed work or a previous deploy whose push\n"
+            "was rejected. Reconcile it and the next boundary will land this:\n"
+            f"  git -C {target} rebase origin/main && git -C {target} push origin main")
+    r = subprocess.run(["git", "-C", str(target), "merge", "--ff-only", remote],
+                       capture_output=True, text=True)
+    if r.returncode != 0:
+        sys.exit(f"refusing: {target.name} is behind origin/main and will not "
+                 f"fast-forward:\n{r.stderr.strip()}\n\n"
+                 "Most likely an uncommitted change to a file the fast-forward\n"
+                 "touches. Commit or stash it; the next boundary retries.")
+    print(f"fast-forwarded {target.name} main {local[:10]} -> {remote[:10]} "
+          "before rendering.\n")
 
 
 # Paths in THIS repo that the fleet writes while it runs, and which are not
@@ -421,6 +485,12 @@ def main() -> int:
     if not args.dry_run:
         refuse_if_live(args.force, from_latch=args.from_latch,
                        queued_at=(pinned or {}).get("queued_at"))
+
+    # Before anything reads or writes the instance: this checkout is chronically
+    # behind origin because legs push from worktrees, and BOTH the re-arm answer
+    # and the commit base depend on it being current.
+    if args.from_latch and not args.dry_run:
+        fast_forward_target(target)
 
     # Before install.py overwrites the installed copies, or there is nothing
     # left to compare them against.
