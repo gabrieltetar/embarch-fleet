@@ -107,7 +107,7 @@ reserved = [
   #      any of them is editing its own gate, which is the stated hazard.
   #
   #   2  WORK DISCOVERY. `collect-open-questions.py` is what a leg sweeps at
-  #      refill to decide what work exists (supervise.md step 1);
+  #      refill to decide what work exists (leg.md step 1);
   #      `check-duplication.py` feeds the auditor that files inbox drops. These
   #      are not gates and they are the more insidious case for it: a gate
   #      failure is loud, a refill blind spot is silent. tasks/doc/003 was
