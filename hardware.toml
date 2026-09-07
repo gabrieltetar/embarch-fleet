@@ -1,9 +1,10 @@
 # The bench, as the owner knows it. The half of the hardware topology that
 # cannot be measured.
 #
-# `scripts/fleet-hardware.py --refresh` merges this with what Core reports live
-# and writes the result to `<state_dir>/hardware.json`, which is what a leg
-# reads. Two reasons for the split:
+# `scripts/fleet-hardware.py --refresh` merges three things -- this file, the
+# machine-local overlay beside it (below), and what Core reports live -- and
+# writes `<state_dir>/hardware.json`, which is what a leg reads. Reasons for the
+# split:
 #
 #   * **A leg must not have to re-derive the bench.** Before this file, the
 #     bench's facts lived in prose inside one task (`tasks/api/029`), so every
@@ -15,15 +16,16 @@
 #     because the failure this suite keeps hitting is a stated fact read as a
 #     measured one.
 #
+# **Nothing that names a client belongs in this file.** Product names, repo
+# names and the workspace paths that contain them go in
+# `<state_dir>/hardware-local.toml`, which is outside every repo — the same
+# reason the client-name denylist lives there and not in a repo, per
+# `fleet.toml`'s `client_denylist`: a committed record of the names you are
+# hiding is the leak it exists to prevent. `check-client-names.py` is what
+# catches a slip, and it caught one writing this file.
+#
 # Owner-reserved, like everything in this repo. A leg never checks it out and
 # never edits it; it reads the rendered JSON.
-
-[api]
-# How the refresh talks to Core. The CLI is used rather than raw HTTP so that
-# base-url discovery ("auto", because WSL2's host IP moves) and the bearer
-# token stay in exactly one implementation.
-binary = "/home/gabriel/Github/embarch/embarch-api/target/debug/embarch-api"
-config = "/home/gabriel/Github/eightsleep-files/workspace/eight-sleep-healthband-fw/embarch/embarch.toml"
 
 # One block per enrolled role. `role` is the string `validate` takes.
 [[roles]]
@@ -40,7 +42,7 @@ link_port_interface = 2
 role = "dut"
 board = "nff_dev"
 revision = 6
-description = "The 8S healthband. rev6 carries the AS7058 PPG AFE; rev7 the MAX86178."
+description = "The client wearable under test. rev6 carries the AS7058 PPG AFE; rev7 the MAX86178."
 # Console, either revision. Needs a physical UART wire — it is not the J-Link
 # VCOM, so `serial-log` has no port configured for this project on purpose.
 console_uart = "uart20"
@@ -48,11 +50,10 @@ console_tx = "P1.05"
 console_rx = "P1.04"
 
 # How this DUT's BLE identity relates to its enrolled hardware ID. Stated, not
-# measured: it is read off the client firmware's own advertising code
-# (`lib/ble/ble.c`, `build_adv_name` and `build_adv_data`), which is evidence
-# about intent, not an observation of this board.
+# measured: it is read off the client firmware's own advertising code, which is
+# evidence about intent, not an observation of this board.
 #
-# The firmware advertises `"<CONFIG_BT_DEVICE_NAME> %02X%02X"` of
+# That firmware advertises a local name ending in `%02X%02X` of
 # `hwinfo_get_device_id()` bytes 6 and 7, and puts those same two bytes,
 # unswapped and in the same order, in a manufacturer-data element of the
 # PRIMARY advert — its own comment says the point is that "an operator reads
@@ -64,15 +65,17 @@ console_rx = "P1.04"
 # `report_scan_seen()` in embarch-dev-bench logs address, connectability and
 # name, and NOT the manufacturer data. Until it does, the join has to be made
 # by hand and confirmed by connecting.
+#
+# The name prefix itself is a client product name, so it lives in the local
+# overlay as `dut_ble.name_template`. Without the overlay this section still
+# yields the suffix candidates, which are the half that carries the argument.
 [dut_ble]
-name_template = "Eight Sleep S11 {suffix}"
 # Which bytes of the enrolled hardware ID become the 4-digit suffix. Both
-# candidates are recorded because Core's hardware-ID byte order and the chip's
+# candidates are computed because Core's hardware-ID byte order and the chip's
 # own `hwinfo` order are known to disagree on at least one path: dev-bench
 # reads `6fcddc36cb781b71` over JTAG and self-reports `cb781b716fcddc36`, the
 # 32-bit-word-swapped form. Neither candidate has been confirmed on air.
 suffix_from_hardware_id_bytes = [6, 7]
-suffix_candidates_note = "834f2559f10a6cdf -> 6CDF direct, 2559 if word-swapped"
 confirmed_on_air = false
 
 # DUT-side sequence facts. Owner-supplied, each one paid for by a failed run.
