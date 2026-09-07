@@ -1,6 +1,7 @@
 ---
 description: Run one suite review pass - seven parallel hunters over every sub-project at once, looking for design flaws and improvement opportunities, landing as inbox drops.
 argument-hint: "[dimension filter, e.g. dry,layering] [--no-drops]"
+disable-model-invocation: true
 ---
 
 **Spawn one `embarch-auditor` agent to run this pass, and do not run it
