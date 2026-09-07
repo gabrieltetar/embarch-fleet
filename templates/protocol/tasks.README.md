@@ -115,8 +115,10 @@ task the supervisor invented; that is allowed, and it says so here.
 can be built and unit-tested by a worker but its real behaviour needs a board;
 dispatchable, and it must leave a hardware-verification debt (§7). **`bench` —
 needs the bench, and the *supervisor* runs it itself, one at a time**; never
-dispatched to a worker (§7). `required` — cannot be started by the fleet at all;
-**not dispatchable**, it waits for the owner's own session. A task nobody has
+dispatched to a worker (§7). **`toolchain` — host-side, but needing a toolchain
+no worktree can carry**; same hands, same serialization, and the paragraph below
+says which repos. `required` — cannot be started by the fleet at all; **not
+dispatchable**, it waits for the owner's own session. A task nobody has
 classified is treated as `required`.
 
 **`bench` is newer than the rest (2026-09-06) and exists because overloading
@@ -126,7 +128,32 @@ the fleet gained hardware those stopped being the same claim. Two `dev-bench`
 tasks are `required` for a *toolchain* reason (no `west` a worker can run), and
 promoting every `required` task to fleet work would have swept those in.
 
-Three things follow from `bench` being the supervisor's own hands:
+**`toolchain` (2026-09-06) is the value those two wanted**, and it exists
+because the same word was doing a third job. It is exactly one repo, measured
+rather than assumed:
+
+- **`embarch-dev-bench` needs it.** Its Zephyr tree lives *inside* the repo at
+  `workspaces/*/{zephyr,modules,.west}` and every one of those is gitignored, so
+  a worker's worktree contains `app/` and a `west.yml` and no Zephyr at all. A
+  `west` binary alone buys nothing: the worktree would need a multi-GB `west
+  update` of its own before it could build. In the **main checkout** the same
+  work takes about a minute — the `app/tests/serial_protocol` ztest suite builds
+  for `native_sim` and runs 57 tests — so this is undispatchable, not
+  unrunnable, which is the whole distinction.
+- **`embarch-outpost` does not.** It is a Zephyr *module*: `tests/run-all.sh`
+  builds against an **external** `ZEPHYR_BASE` with `-DZEPHYR_EXTRA_MODULES`,
+  so nothing about it needs a workspace inside the repo. Verified 2026-09-06 by
+  running the whole suite over a bare `git archive` copy with only `WEST` and
+  `ZEPHYR_BASE` set: all four legs pass. Its tasks stay `Hardware: none`, and a
+  task that needs the suite run just names those two variables.
+
+**The cost of getting this wrong is not theoretical.** `embarch-dev-bench`'s
+ztest suite sat red on `main` at 56 of 57 for two days — a fixture the
+client-name scrub had left stale — precisely because no actor was running it.
+It was found the day this value was added, by running it.
+
+Three things follow from `bench` and `toolchain` being the supervisor's own
+hands:
 
 - **At most one runs at a time**, which needs no lock: exactly one supervisor
   exists, ever ({{FLEET_REL}}/protocol.md §6). There is one `hw_lock` and one
@@ -137,9 +164,11 @@ Three things follow from `bench` being the supervisor's own hands:
   role that is not attached leaves the task **`open`** — never `blocked`. The
   bench coming back is normal; a task marked blocked for it would need a human
   to un-block something that fixed itself.
-- **It carries the DUT facts it needs.** An agent must not infer them: what the
-  board is, what its console is, what has to happen before a step will work.
-  Write them into the task, with their source.
+- **It carries the facts it needs.** An agent must not infer them: for a `bench`
+  task, what the board is, what its console is, what has to happen before a step
+  will work; for a `toolchain` task, the absolute `west` (or equivalent) and the
+  directory to run it from, since neither is on a bare `PATH` here. Write them
+  into the task, with their source.
 
 ## Owner field
 
