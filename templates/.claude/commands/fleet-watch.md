@@ -104,16 +104,29 @@ nothing.
 > older than 35 minutes, otherwise stop (the fleet was just started and has not
 > ticked yet).
 >
-> 3. If the mtime is **more than 35 minutes old**, the fleet is wedged or dead —
-> a wedged listener between legs, or a leg that hung mid-unit. **Delete
-> `{{STATE_DIR}}/pump`**, then one post, which is this window's entire output:
+> 3. If the mtime is **more than 35 minutes old**, the fleet has stopped.
+> **Delete `{{STATE_DIR}}/pump`**, then run
+> `{{FLEET_REPO}}/scripts/fleet-triage.py` — one read-only command that answers
+> *why*, which this window used to say it could not. It reports one of
+> `WINDOW_GONE` / `ORPHANED_LEG` / `UNMERGED_WORK` / `CLAIMED_NO_WORK` /
+> `IDLE_OR_WEDGED`, its evidence, and the recovery. Then one post, which is this
+> window's entire output:
 >
 > ```
 > {{FLEET_REPO}}/scripts/fleet-post.py \
 >   "the fleet has not made progress since <time>, so I stopped it restarting" \
->   --action "look at the listener window — it is wedged, dead, closed, or the machine slept" \
->   --detail "tick mtime <mtime>; pump latch deleted at {{STATE_DIR}}/pump. This window cannot tell those four apart and does not guess."
+>   --action "<the triage verdict's own Recommended line>" \
+>   --detail "<verdict>: <its one-line why>. tick mtime <mtime>; pump latch deleted at {{STATE_DIR}}/pump."
 > ```
+>
+> **Relay the verdict, do not re-derive it and do not soften it.** On
+> 2026-09-07 this window correctly said it could not tell four causes apart, and
+> the true cause was a fifth: a leg orphaned while holding **two finished
+> units**, which took a person reading four transcripts and three remotes to
+> find. If `fleet-triage.py` fails or exits 2, say so and fall back to the old
+> wording — "wedged, dead, closed, or the machine slept, and this window cannot
+> tell those apart" — which is still the honest answer when there is no
+> diagnosis.
 >
 > **`--action`, because this one really does need him** — it is in `ops.md`
 > §3's closed set, and a wedged fleet that nobody is told about is the whole

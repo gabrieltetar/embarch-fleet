@@ -73,8 +73,21 @@ task the supervisor invented; that is allowed, and it says so here.
   never started and for one that died holding finished work. Three outcomes:
 
   - **Clean tree, no commits** → back to `open`, delete the worktree.
+  - **Both branches pushed to their remotes with commits** → **re-land it, do
+    not block it.** A worker's last act is pushing, so a pushed branch is a
+    worker that reached its own bookkeeping; gate the merge *result* the way any
+    unit is gated and fold it. Blocking here parks finished green work and buys
+    a self-report you already have a better substitute for — the gate.
   - **Anything else** → `blocked`, naming the branch **and the worktree path**,
     and delete nothing.
+
+  **The re-land outcome was added 2026-09-07, after the third instance.** Legs
+  023/024 stranded a doc half, leg 031 stranded a code half in the opposite
+  direction, and leg 035 stranded **two whole finished units** when its workers'
+  completion notifications were delivered to the listener session instead of to
+  the supervisor. Each time the next leg re-landed from the pushed branches by
+  its own judgement, and each time this rule said to block. Three by-hand
+  recoveries of the same shape is a rule, not a knack.
 
   **Commit a dirty tree to its branch before deciding.** It is cheap and
   reversible; deleting is neither, and committing is what saved leg 007 when it
