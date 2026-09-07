@@ -41,10 +41,14 @@ or delete the pump latch. `/fleet watch` unlatches on a declared wedge; this
 does not, because a cron job that can stop the fleet is a cron job that stops
 the fleet at 3am for a reason nobody is awake to read.
 
-It also keeps `credential-history.tsv`: one line per credential change, so
-the question "how often does this machine actually get logged out" stops being
-answered from memory. A refresh moves the access expiry; a login moves the
-refresh expiry too, so the file counts both separately.
+It also keeps `credential-history.tsv`: one line per credential change **and
+one per window opening or closing**, so the question "how often does this
+machine actually get logged out, and after what" stops being answered from
+memory. A refresh moves the access expiry; a login moves the refresh expiry
+too; the window rows are there because the binary's own text names a process
+that "exited mid-refresh" as a way to poison the stored token, and that failure
+only surfaces at the *next* refresh, hours later. Without the window timeline
+underneath, the kill and the logout cannot be told apart from coincidence.
 
 Install (the owner's, once):
     scripts/fleet-deadman.py --install-cron
@@ -165,7 +169,7 @@ def claims_standing() -> list[str]:
 
 def record(acc_ms: int | None, ref_ms: int | None, mt: float | None,
            pids: int) -> None:
-    """Append one line whenever the credential changes, and nothing otherwise.
+    """Append one line whenever the credential or the window count changes.
 
     Nobody can currently say how often this machine is actually logged out.
     Transcripts are kept 30 days and a `/login` is not a transcript message;
@@ -173,35 +177,51 @@ def record(acc_ms: int | None, ref_ms: int | None, mt: float | None,
     last write. So the cadence in `risks.md` is a guess drawn from the two
     failures that happened to land while a session was recording.
 
-    This makes it measurable, and the two events are distinguishable: **a
-    refresh moves `expiresAt` alone, a login also pushes
-    `refreshTokenExpiresAt` a month out.** A week of this says how many
-    refreshes happen between logins, which is the number the race hypothesis
-    lives or dies by. Two integers and a count -- no token, nothing a leak
-    would matter.
+    This makes it measurable, and the events are distinguishable: **a refresh
+    moves `expiresAt` alone, a login also pushes `refreshTokenExpiresAt` a
+    month out.** The window rows are here because the client's own text names a
+    process that "exited mid-refresh" as a way to poison the stored token, and
+    that failure surfaces only at the *next* refresh, hours later — without a
+    window timeline underneath, a kill and a logout cannot be told apart from
+    coincidence.
+
+    **Rows are compared field by field, never by a packed key.** The first
+    version of this packed the two expiries into a trailing stamp, and the
+    first edit to that stamp's shape made an unchanged credential read as a
+    refresh — a fabricated event in the one file whose whole job is to say what
+    really happened. Two integers, a count, no token.
     """
-    stamp = f"{acc_ms or 0}:{ref_ms or 0}"
-    try:
-        last = HISTORY.read_text(encoding="utf-8").rstrip("\n").rsplit("\n", 1)[-1]
-    except OSError:
-        last = ""
-    if last.endswith("\t" + stamp):
-        return
-    def iso(ms):
+    def iso(ms: float | None) -> str:
         if not ms:
             return "-"
         return datetime.datetime.fromtimestamp(ms / 1000).astimezone().isoformat(
             timespec="seconds")
-    kind = "cleared" if mt is None else (
-        "login" if last and last.split("\t")[-1].split(":")[1] != str(ref_ms or 0)
-        else "refresh")
-    if not last:
+
+    vals = (iso(mt * 1000 if mt else None), iso(acc_ms), iso(ref_ms), str(pids))
+    try:
+        last = HISTORY.read_text(encoding="utf-8").rstrip("\n").rsplit("\n", 1)[-1]
+    except OSError:
+        last = ""
+    cols = last.split("\t")
+    prev = tuple(cols[2:6]) if len(cols) >= 6 else None
+    if prev == vals:
+        return
+
+    if prev is None:
         kind = "first-seen"
-    row = "\t".join([now().isoformat(timespec="seconds"), kind,
-                     iso(mt * 1000 if mt else None), iso(acc_ms), iso(ref_ms),
-                     str(pids), stamp])
+    elif prev[1:3] == vals[1:3]:
+        kind = ("window-opened" if int(vals[3]) > int(prev[3])
+                else "window-closed" if int(vals[3]) < int(prev[3])
+                else "rewritten")
+    elif mt is None:
+        kind = "cleared"
+    elif prev[2] != vals[2]:
+        kind = "login"
+    else:
+        kind = "refresh"
+
     with HISTORY.open("a", encoding="utf-8") as f:
-        f.write(row + "\n")
+        f.write("\t".join((now().isoformat(timespec="seconds"), kind, *vals)) + "\n")
 
 
 def load_state() -> dict:
