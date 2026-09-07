@@ -97,6 +97,28 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-07 16:16 — ui/005 a text scan over both assets catches the id collision that every Rust test passed through
+
+**Decided:** two. **(1)** I accepted the worker's **scope narrowing**: the guard is a text scan over `assets/index.html` **and** `assets/app.js`, not a rendered check, and it discloses its own blind spot rather than claiming coverage it lacks — a handful of `sd-req-*` lookups pass a variable instead of a literal, so the parser cannot trace them, and both the test's module doc and decision 24 say so in writing. A guard that names its gap is worth more than one that implies none, and this is the third time this log has recorded an unqualified contract sentence as the defect class nothing mechanical catches. **(2)** I accepted **decision 24 in `decisions/wiring.md`** rather than in `trace-chart.md` beside decision 10 (the id collision that motivated it) — the guard is about the HTML-to-Rust wiring surface generally, not the trace chart, and `decisions.md`'s index row was updated in the same commit.
+
+**Merged:** `agent/ui/005-element-id-guard` (code `11bee67faf59dd04a5735c2183749733a1a3ba6e`, doc `6279af2`). **Dispatched by leg 036, which died before landing it** — both halves were pushed with commits, which under `.claude/leg.md`'s presence-may-retire-a-worker rule is a finished worker, so I gated and landed it myself. Gate on the merge result: `cargo test --all-features` **101 passed / 2 ignored** in the unit tests **and 2 passed in `tests/element_ids.rs`**, `cargo clippy --all-targets --all-features -- -D warnings` clean, `check-client-names.py` clean against 7 denylist entries, `python3 scripts/check-docs.py` **all 10 green**, ownership green on both branches (code: whole tree, 1 path; doc: 5 paths, self-derived base `323e8b7`).
+
+**I checked that the new test target actually ran, because the entry above this one says a bare `cargo test` here measured nothing.** `study-designer/015`'s lesson was a gate that compiled neither the code under change nor its new tests and reported a green. So I ran `--all-features` and grepped for `Running` lines rather than only `test result` lines: `tests/element_ids.rs` appears as its own binary with 2 tests. `embarch-ui`'s `Cargo.toml` declares no features of its own (it only *passes* `study-ui`/`gatt-extract` down to `embarch-study-designer`), so for this repo a bare `cargo test` and `--all-features` are the same run — which is worth writing down, because the previous entry's warning does **not** generalize to every repo in the suite and a leg that over-applies it will spend time chasing feature sets that do not exist.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**The reviewer checked the one thing I could not cheaply check: that decision 24's number was free.** 22 and 23 are taken by `decisions/study-designer.md` and `decisions/trace-chart.md`, 24 was unused, and the index row matches. It also verified the claim decision 24 rests on — that `trace-chart.md` decision 10 really does record the Load-button/load-table-body id collision — and that treating `tr-gap`/`tr-cross`/`tr-delay` as declared-but-never-looked-up matches decision 23's description of them as SVG pattern fills. And it settled the apparent contradiction I flagged: `gatt-capture.md`'s "the deployed artifact is the only thing that can be checked" is about rendered behaviour, which this decision explicitly does not claim to cover.
+
+**Hardware debts:** none, and none possible. `embarch-ui` is a host-side UI process and this unit touches only a static text scan over two embedded assets; nothing here reaches a board, a probe or Core's `hw_lock`.
+
+**Budget:** DEGRADED, wave 4, 53% of the 16,000,000 ceiling at leg start and no 429; not re-measured at this fold because two of this leg's three units were landings of already-pushed branches rather than dispatches, which spend almost no tokens on a worker.
+
+**Least sure about:** whether the `sd-req-*` gap should have blocked the unit rather than been disclosed in it. Four ids are exempt from the dangling check because their lookups pass a variable, and the guard exists precisely because a dangling id is invisible to every other test — so the four ids most likely to drift are the four this guard cannot see. The worker's argument is that they are independently declared and the gap is written down; mine for accepting it is that a guard covering the other N ids is strictly better than no guard. Neither argument establishes that the four are safe, and nothing is now scheduled to revisit them.
+
+---
+
 ## 2026-09-07 16:12 — topology/003 an honest provenance for a declared serial, landed by leg 036 and folded by me because that leg died between the merge and the fold
 
 **Decided:** two. **(1)** I treated this unit as **already merged and only unfolded**, rather than re-doing or reverting it. Both halves are on `main` — the topology code half fast-forwarded (`main` tip *is* the branch tip) and the doc half likewise — and my predecessor's own follow-up task file, `tasks/topology/015`, was sitting **untracked** in the leg worktree with a `**Source:** supervisor, leg 036` line, which is what pins where that leg stopped: after the merge, after writing the follow-up, before `fold-commit.py`. So the missing work was the fold, and I did the fold. **(2)** I committed leg 036's untracked follow-up task rather than discarding it — it is a real seam (decision 24 lives in `enrollment.md` while the two decisions it extends live elsewhere) and re-deriving it would have cost a read of the whole decisions set.
