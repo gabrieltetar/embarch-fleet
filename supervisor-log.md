@@ -97,6 +97,28 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-07 17:15 — topology/016 the fact was checked before it was put back, and it had grown
+
+**Decided:** two. **(1)** I dispatched this with an instruction the task file did not carry: **verify the claim in today's code before restoring it, and if it does not hold, delete `open.md`'s pointer instead and report that as the finding.** A compaction pass dropped this fact yesterday; copying it back on the strength of a task file would have restored *a sentence*, not *a fact*, and a stale claim reinstated as current is worse than the dangling pointer it replaces. **(2)** I accepted restoring it into decision 18 rather than removing the pointer, because it checked out — both halves, in the two repos the claim is about.
+
+**It came back slightly larger than it left, and that is the part worth reading.** The original said the mirrored `AlertResponse` in the shared Core client declares `reason`, `role` and `occurred_at_utc_ms` non-optional. The worker read the struct and found `chip` and `recorded_hardware_id` are non-optional too, with only `live_hardware_id` an `Option` — so the restored paragraph names five fields that would have to move in lockstep, not three, and cites the two source locations (`alertsListHtml` in `embarch-ui/assets/app.js`, `AlertResponse` in `embarch-api/crates/embarch-core-client/src/client.rs`) so the next person re-checks in seconds instead of re-deriving. `embarch-ui`'s half was confirmed unchanged: it reads exactly those three fields and no others.
+
+**Merged:** `agent/topology/016-lockstep-fact-restored` (doc `73b6d0b`, **code: none — the `embarch-topology` branch was pushed with zero commits**, correctly: no Rust changed, this is a decision-text restoration). Gate on the merge result: `python3 scripts/check-docs.py` **all 10 green**, ownership green on the doc branch (3 paths, self-derived base `a25313e926aa`). The branch needed `git rebase origin/main` before it would fast-forward, which is the per-leg certainty leg 038's entry already called normal rather than an incident. `embarch-topology/open.md` was left untouched at 4,322/5,120 B — no new reserve debt.
+
+**Reviewer:** no findings.
+
+**The reviewer re-read both foreign structs itself rather than checking the diff's internal consistency**, and independently reached the same five-field list, plus one correct non-finding it declined to file: `probe_serial` is also non-optional in `AlertResponse`, but the restored paragraph never claimed to enumerate every non-optional field — only the ones bearing on UI lockstep. **It also flagged a real limitation of its own read:** I gave it worktree paths for `embarch-doc` and `embarch-topology`, but this unit's claim is about `embarch-ui` and `embarch-api`, for which no worktree exists — so it read those two repos' live `main` checkouts (`11bee67`, `524fbe0`) rather than anything SHA-pinned. That is the right call and worth recording: **a doc unit can make a verifiable claim about repos the unit does not touch, and neither the fold nor the reviewer has a pinned copy of those.** The commit message cites no SHAs for them either, so the fact is true as of two moving tips.
+
+**Blocked:** nothing.
+
+**Hardware debts:** none. Doc-only.
+
+**Budget:** DEGRADED, wave 3, 56% of the 16,000,000 ceiling at leg start; not re-measured at this unit.
+
+**Least sure about:** whether a restored fact should carry the SHAs of the repos it describes. This one is now dated ("verified against the code as it stands 2026-09-07") but not pinned, so the next compaction pass faces the same judgement call that lost it — is this still true? — with nothing cheaper than re-reading two other repos to answer. Pinning SHAs would make it checkable and would also make it look retired the moment those tips move, which may be worse. I left it dated rather than pinned and did not make a rule out of it.
+
+---
+
 ## 2026-09-07 17:08 — ui/017 landed by the previous leg's hands and folded by mine
 
 **Decided:** two. **(1)** I accepted the worker's *same-category* resolution: `tr-cross` keeps one token for both of its causes — a gap-crossing aggregated run and a step outcome `app.js` could not parse — because both carry the same reader-facing promise ("not vouched for as drawn") and each already names its own reason on hover, so decision 10's chart half now states the complete two-cause scope directly instead of the paraphrase living only in decision 23's amendment. **(2)** I accepted its choice to update the already-open `tasks/ui/019` with new byte counts rather than file a second compaction task for the same file.
