@@ -14,9 +14,9 @@ The design principle throughout: **prevent collisions structurally; do not resol
 
 Four, and the boundaries between them are the whole design.
 
-**The owner.** Approves nothing routine — the supervisor is a full delegate, and steers by exception, and can start, stop, question or redirect the fleet from Remote Control or **#embarch-fleet** on a phone ([running the fleet](ops.md) §3–§5) (§11 is why that is a real risk and what it buys). Four things stay the owner's and cannot be delegated:
+**The owner.** Approves nothing routine — the supervisor is a full delegate, steered by exception from Remote Control or **#embarch-fleet** on a phone: start, stop, question, redirect ([running the fleet](ops.md) §3–§5; §11 is why that is a real risk and what it buys). Four things stay the owner's and cannot be delegated:
 
-- **Amending a standing rule** — this doc, [running the fleet](ops.md), [the risks](risks.md), [embarch-dev-workflow.md](../embarch-doc/embarch-dev-workflow.md) §6, every [DOC-*.md](../embarch-doc/DOC-COMPACTION.md), `CLAUDE.md`, the five protocol READMEs, `scripts/` and `.claude/`. §3's table is the full list; `check-ownership.py --supervisor` enforces it. **A supervisor that can rewrite its own constraints has none** — dev-workflow §6's "ends when the repo owner says it ends, and on no other condition" is that property for one rule, and this is it for the class.
+- **Amending a standing rule** — every row §3's table marks **never** for both agents: this doc and the framework's others, every [DOC-*.md](../embarch-doc/DOC-COMPACTION.md), the protocol READMEs, `scripts/` and `.claude/`. `check-ownership.py --supervisor` enforces it. **A supervisor that can rewrite its own constraints has none** — dev-workflow §6's "ends when the repo owner says it ends, and on no other condition" is that property for one rule, and this is it for the class.
 - **Anything physical** — plugging in a board, swapping hardware. Unchanged from [embarch-dev-workflow.md](../embarch-doc/embarch-dev-workflow.md) §5's Tier 3.
 - **Anything outside the suite's own repos** — a deployed machine, a release, and *writing* to a client firmware repo. **Amended 2026-09-06:** flashing a configured project's board and running studies against it is granted to the fleet (§7); everything else here is unchanged.
 - **Latching the pump.** Neither a supervisor nor the fleet starts itself: `fleet start` and `fleet stop` in #embarch-fleet are the owner's. What they start is the *pump*, not each leg — once latched, the listener spawns leg after leg until told to stop ([running the fleet](ops.md) §5). The owner still decides that the fleet runs at all, and closing VS Code still ends it; what he no longer does is start each piece of work by hand.
@@ -25,7 +25,7 @@ Four, and the boundaries between them are the whole design.
 
 **A worker.** Takes one task, in one repo, on one branch, ships it with its docs, and exits. It holds no state between tasks — everything it learned is in the docs it wrote or it is gone. Not a limitation to work around: it is [DOC-PROTOCOL.md](../embarch-doc/DOC-PROTOCOL.md) §4's discipline with the escape hatch removed.
 
-**The listener.** One VS Code window, armed with `/fleet start`, that reads #embarch-fleet and spawns things. A **strict dispatcher**: no hands, edits no file, answers no question, runs no build — everything that is work becomes an agent it spawns and relays, which is what lets it live all day beside a fleet whose every other thread dies on purpose. It is **not** the owner's session: the pen for standing rules, `scripts/`, `.claude/`, hardware and `inbox/` drops stays in a window opened separately ([running the fleet](ops.md) §5.1).
+**The listener.** One VS Code window, armed with `/fleet start`, that reads #embarch-fleet and spawns things. A **strict dispatcher**: no hands, edits no file, answers no question, runs no build — everything that is work becomes an agent it spawns and relays, which is what lets it live all day beside a fleet whose every other thread dies on purpose. It is **not** the owner's session: that pen, and hardware, stay in a window opened separately ([running the fleet](ops.md) §5.1).
 
 ## 3. The ownership map
 
@@ -57,7 +57,7 @@ The three "never" rows a worker most wants to break are the shared suite-level d
 
 `tasks/<sub-project>/NNN-slug.md`, committed to `main` in this repo. Format and claim protocol: [tasks/README.md](../embarch-doc/tasks/README.md).
 
-A queue in git rather than the supervisor's head buys three things worth the extra doc kind: two supervisor runs cannot dispatch one task, a task survives the thread working it, and the reason it exists is written beside it instead of re-derived from the roadmap every batch.
+A queue in git rather than the supervisor's head buys three things: two supervisor runs cannot dispatch one task, a task survives the thread working it, and the reason it exists is written beside it instead of re-derived from the roadmap every batch.
 
 **The supervisor refills the queue itself**, from [suite/roadmap.md](../embarch-doc/suite/roadmap.md)'s Now/Next, every sub-project's `open.md`, and [embarch-decision-reversals.md](../embarch-doc/embarch-decision-reversals.md)'s unaddressed follow-ups. Nobody hand-writes a backlog. **Refill runs when the queue is below its low-water mark** — `queue-status.py --refill-owed`, which fires on fewer dispatchable tasks than `units_per_leg`, or fewer distinct *scopes* than the wave size, since one-task-per-sub-project is per slot. Not at the top of every leg: sweeping eight `open.md` files every twenty minutes to serve a queue that already has work is pure cost. **It used to fire at zero, and zero was too late**: over the 7.2 h run ending 2026-09-06 the queue held one or zero dispatchable tasks for 53% of it, so the sweep meant to feed the wave only ran after it had starved. **Draining `inbox/` is the exception and runs every leg** — it is cheap and the only thing that files a drop, so gating it on the count lets a lone drop suppress its own drain.
 
@@ -68,7 +68,7 @@ A queue in git rather than the supervisor's head buys three things worth the ext
 A worker gets one task file and this contract. It must:
 
 1. **Work in two worktrees, on one branch name.** Almost every task changes both its code repo *and* `embarch-doc/<sub-project>/`, so a worker gets a branch `agent/<sub-project>/<NNN-slug>` in **both**, landed together (§10). Not bookkeeping: a shipped change whose docs sit on an unmerged branch is the drift [DOC-PROTOCOL.md](../embarch-doc/DOC-PROTOCOL.md) §5 exists to prevent. Six workers branching `embarch-doc` at once is safe *because* of §3 — their paths are disjoint by construction. Both worktrees live under `embarch/.worktrees/<repo>/<NNN-slug>/`, **outside every repo tree**, created and deleted by the supervisor (§6). Never inside `.claude/worktrees/`: a repo checked out inside itself made a naive scan find six GATT service blocks instead of three (`embarch-study-designer` decision 57).
-2. **Stay inside its ownership row** (§3). If the task needs another repo, it stops and reports that — it does not reach across. A task needing two repos was mis-filed, and §8 owns the fix.
+2. **Stay inside its ownership row** (§3). If the task needs another repo, it stops and reports that — it does not reach across. A task needing two repos was mis-filed, and §8 owns the fix. **Never `cargo fmt`**: unenforced ([embarch.md](../embarch-doc/embarch.md) §5), and here you own the whole tree, so nothing stops an 87-file diff.
 3. **Never touch hardware** (§7).
 4. **Design freely within its own sub-project.** A new `decisions.md` entry scoped to one sub-project needs nobody's approval — the owner's call, and it stands. Number it per [DOC-CONVENTIONS.md](../embarch-doc/DOC-CONVENTIONS.md); numbers are permanent.
 5. **Update its own four files** — `spec.md`, `decisions.md`, `open.md`, `interfaces.md` — per [DOC-PROTOCOL.md](../embarch-doc/DOC-PROTOCOL.md) §4–5. Edit the body; never append.
@@ -86,7 +86,7 @@ Three words, and keeping them apart is most of understanding how this runs.
 - A **leg** is one supervisor's whole life: recover, refill if the queue is dry, then keep the budget's wave size of workers in flight — landing, folding and logging each as it reports — until **four units** are done. Then it dies.
 - The **pump** is the latch the owner holds. While it is on, a leg's death wakes the listener, which spawns the next leg with the previous one's log entries as its handoff. That chain is the **relay**.
 
-**A leg is a rolling wave, not a batch.** Nothing waits for everything: a finished worker's branches land, its fragments fold, its entry is written, and another task starts in the freed slot. The five-phase batch this replaced had a barrier at the end, making the slowest worker's runtime dead time for every other slot.
+**A leg is a rolling wave, not a batch.** Nothing waits for everything: a finished worker's branches land, its fragments fold, its entry is written, and another task starts in the freed slot. The five-phase batch it replaced had a barrier at the end, so the slowest worker's runtime was dead time for every other slot.
 
 The steps, in order, per leg:
 
@@ -94,11 +94,10 @@ The steps, in order, per leg:
    repo, not the checkout the owner uses — two actors in one working tree is how
    legs 004 and 005 swept his `changelog.d` fragments into their folds, and a
    rebase in a tree he has dirtied fails outright. **Detached, never on `main`**:
-   `git worktree add --detach`, push with `HEAD:main`. A worktree that *checks
-   out* `main` needs `--force`, git refusing because the owner's checkout holds
-   that branch, and two worktrees sharing one branch ref is worse than the
-   problem this solves. Every fold advances `main`, so his HEAD moves while his
-   index and working tree stay at the leg's start commit: leg 007 left his
+   `git worktree add --detach`, push with `HEAD:main` — git refuses a second
+   worktree on a branch the owner's checkout holds, and two worktrees sharing
+   one branch ref is worse than the problem this solves. Every fold advances
+   `main`, so his HEAD moves while his index and working tree stay at the leg's start commit: leg 007 left his
    checkout holding **a staged inverse of the whole leg**, where a `git commit`
    would have reverted four units. That staleness is also why a reviewer must be
    handed a worktree path (§10). `inbox/` is the exception: drops are gitignored,
@@ -149,24 +148,24 @@ The rule DOC-PROTOCOL §5 protects is unchanged — the suite-level docs still m
 
 ## 10. The merge gate and merge order
 
-The gate, run by the worker and then **re-run independently by the supervisor** on the merge result — not on the branch:
+Run by the worker, then **re-run independently by the supervisor** on the merge result — not on the branch:
 
-- `cargo build`, `cargo test`, `cargo clippy --all-targets -- -D warnings` in the touched repo. **§4's native Windows build is a debt, not a gate item**: no worktree can run it, because Windows cannot follow the Linux symlinks a worktree gets its path-dep siblings through. From the main checkout it takes 52 s [measured 2026-09-06], so a unit touching `embarch-core` records the debt.
+- `cargo build`, `cargo test`, `cargo clippy --all-targets -- -D warnings` in the touched repo — which reach **only the packages they select**, never an in-repo non-member crate ([embarch.md](../embarch-doc/embarch.md) §5). **The native Windows build is a debt, not a gate item**, unrunnable from a worktree twice over — `hidapi`'s `build.rs` wants an MSVC `cc` WSL lacks, and Windows `cargo.exe` cannot follow a worktree's Linux symlinks to its path-dep siblings. It takes 52 s from the main checkout [2026-09-06], so a unit touching `embarch-core` records the debt; the owner runs it.
 - The whole `embarch-doc` gate as **one command, `python3 scripts/check-docs.py`** — **which names its own checks, and this doc does not.** The enumeration here went stale twice in two days, and a supervisor triaging a red against a short list is triaging blind. `CHECKS` in that file is the list; no count is restated anywhere.
 - **`check-client-names.py --repo <path>` on the code repo too**, alongside `cargo`. The wrapper covers only `embarch-doc`, a fifth of the suite's bytes, and 2026-09-04's leak was mostly on the other side. Per repo, never one pass over the siblings — a leg and a worker run from `embarch/.worktrees/`, where a sibling walk finds other worktrees. It reads a denylist kept outside every repo and **never prints what it matched**; its header carries the gaps it leaves.
 - **`build_features.py --check` validates the fragments only.** The byte-equality assertion `--check-assembled` is deliberately **not** in a branch gate: `suite/features.md` is `never` for a worker in §3's table, so asserting it per branch left a feature-shipping worker unable to be green on this and `check-ownership.py` at once (leg 009, twice). It is asserted on `main`, by CI and the fold.
 - **`check-ownership.py --scope <sub-project>`** on both branches — the mechanical form of §3. Either `core` or `embarch-core` is accepted; **`suite` is refused outright, because a cross-repo change is §8's.** Without it §3 is prose nothing reads: a worker's edit to [embarch.md](../embarch-doc/embarch.md)'s status table is *plausible by construction*, so `check-staleness.py` (which only flags a row disagreeing with a sub-project doc) passes it, and the collision §9 prevents happens anyway.
 
-That is [embarch-dev-workflow.md](../embarch-doc/embarch-dev-workflow.md) §6's existing standard, unchanged, applied per branch instead of per commit. Nothing here licenses a lower bar because an agent wrote it.
+That is [embarch-dev-workflow.md](../embarch-doc/embarch-dev-workflow.md) §6's standard applied per branch, not per commit. Nothing here licenses a lower bar because an agent wrote it.
 
 **A reviewer reads for intent, alongside landing, and gates no merge.** When a
 unit's branches merge, the supervisor spawns an `embarch-reviewer` on the diff
 against that sub-project's decisions and the reversals index. Findings land in
 `inbox/` and in the unit's log entry; a confirmed contradiction is reverted by
 SHA — the first thing that ever uses the SHAs §11 requires.
-**Merge-on-green is unchanged** — a reviewer that blocked a merge would make
-every unit a two-agent serial dependency, and the owner chose progress over
-caution here as elsewhere.
+**Merge-on-green is unchanged**: a blocking reviewer would make every unit a
+two-agent serial dependency, and the owner chose progress over caution here as
+elsewhere.
 
 **A reviewer reads the leg's worktree, or a SHA — never the tree it is spawned
 into.** It lands in the owner's checkout, which a leg never advances, so a
@@ -187,9 +186,9 @@ spawn at merge, do the rest of the fold, collect the reviewer immediately before
 writing the entry. The wait is under a minute against a twenty-minute worker,
 and it is what makes the tally evidence rather than a guess.
 
-**A reviewer does not count against the worker wave**, because the rule that
-said it did was self-defeating: ninety seconds of reading cost a whole slot out
-of a DEGRADED wave of two — this machine's steady state — so eight entries in,
+**A reviewer does not count against the worker wave.** The rule that said it did
+was self-defeating: ninety seconds of reading cost a whole slot out of a
+DEGRADED wave of two — this machine's steady state — so eight entries in,
 one had run and six were skipped for the wave alone. **The question the tally
 exists to answer could not be answered under the rule governing it.** Skip only
 on a HOLD, a recent 429, or a leg ending at its unit cap where the reviewer would
@@ -204,7 +203,7 @@ different facts.
 
 Canon is the doc; Slack is the ping.
 
-**One entry per unit**, prepended to [supervisor-log.md](supervisor-log.md), newest first: what it **decided**, what merged with its SHAs, what blocked and why, and any hardware debt. Per unit rather than per leg because a leg can be killed at any moment, and a per-leg entry written at the end does not exist for the leg that was.
+**One entry per unit**, prepended to [supervisor-log.md](supervisor-log.md), newest first: what it **decided**, what merged with its SHAs, what blocked and why, and any hardware debt. Per unit, not per leg: a leg can be killed at any moment, and an entry written at the end does not exist for the leg that was.
 
 **The entry goes in the fold commit, not after it, and a unit that lands without one has failed** — §9's rule for an unfolded `status.d/` fragment, same reason. A separate step leaves a window in which a unit is landed and unlogged, and `api/003` landed in it on 2026-09-03: that fold did every other part correctly, never touched this log, and the handoff is gone. One commit makes the state impossible rather than detectable. What *shipped* is already in the workers' `changelog.d` fragments, assembled into `history/<scope>.md`; the log does not restate it.
 
@@ -222,7 +221,7 @@ Slack gets **one line per unit** as it happens — dispatched, landed with its S
 
 ## 12. Known risks
 
-Stated rather than designed away, in [risks.md](risks.md), split out when this doc hit its size cap. No count here: it once said fifteen while that file held 17. The two worth knowing first: **nothing reads a diff for intent before it lands, mostly**, and **nobody watches the relay.**
+Stated rather than designed away, in [risks.md](risks.md), split out when this doc hit its size cap. No count here, for §10's reason. The two worth knowing first: **almost no diff is read for intent before it lands**, and **nobody watches the relay.**
 
 ## 13. Running it
 

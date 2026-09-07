@@ -12,6 +12,13 @@ The work queue background agents pull from. One file per task, committed to
   A `suite/` task is **never dispatched to a worker** — the supervisor executes
   it itself (`{{FLEET_REL}}/protocol.md` §8).
 - **NNN** — three digits, monotonic per sub-project, never reused.
+  `scripts/check-task-numbers.py --next <scope>` gives a number safe to issue;
+  the gate fails on two files sharing one, or on a number reissued after a
+  fold deleted its file. **Do not just read the directory.** Every completed
+  task is `git rm`'d, so the highest number on disk is not the highest ever
+  issued — and reading the directory is exactly how the owner and leg 018
+  both allocated `tasks/doc/015` an hour apart on 2026-09-06, with all nine
+  checks green on the result.
 - **slug** — short, hyphenated.
 
 ## File format
