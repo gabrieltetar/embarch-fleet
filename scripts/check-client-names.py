@@ -22,6 +22,18 @@ hit names the file, the line, and the denylist's own line number; the excerpt
 has the match replaced. Whoever is fixing it can open the denylist -- and
 whoever is reading the log later cannot.
 
+**It also reads what a file *encodes*, not only what it spells** (2026-09-06).
+`embarch-dev-bench`'s ztest suite carries a captured Core frame as a `0x..`
+array, and the 2026-09-04 scrub rewrote the string literal the test compares
+against while leaving the bytes it decodes untouched. So a denylisted name sat
+committed in that file for two days with this check reporting the repo clean --
+the name never appears as text. Every tracked file's `0xHH`, `\\xHH` and bare
+`HH` runs, and its base64-looking runs, are therefore decoded and scanned as
+well, with each hit mapped back to the source line that holds the literal. False
+positives are structurally near-impossible: a run is only ever *reported* when a
+denylist entry matches what it decodes to, so the decoders can afford to be
+generous.
+
 **Two gaps, stated rather than papered over.**
 
 - **It is dark in CI.** GitHub Actions checks out one repo and has no state
@@ -96,6 +108,8 @@ Exit status: 0 clean or skipped, 1 hits found, 2 misconfigured.
 from __future__ import annotations
 
 import argparse
+import base64
+import binascii
 import importlib.util
 import re
 import subprocess
@@ -116,11 +130,54 @@ _own = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_own)
 
 MIN_LEN = 4
+# Encoded spellings of a byte. A captured wire frame lands in a fixture as one
+# of these, and the name inside it is invisible to a text scan.
+HEX_TOKEN = re.compile(rb"0[xX]([0-9a-fA-F]{2})|\\x([0-9a-fA-F]{2})")
+BARE_BYTE = re.compile(rb"(?<![0-9A-Za-z])([0-9a-fA-F]{2})(?![0-9A-Za-z])")
+B64_RUN = re.compile(rb"[A-Za-z0-9+/]{16,}={0,2}")
+# A bare `HH` run is only a byte array if it is a long one; `de` and `ad` are
+# words. The prefixed spellings need no such floor -- `0x` is unambiguous.
+MIN_BARE_RUN = 8
 SEP = rb"[^A-Za-z0-9]{0,3}"
 # Per pattern per file. A leak is usually one or two literals; a file with
 # hundreds is a committed artifact, and listing every offset there would bury
 # the ones somebody can act on.
 MAX_HITS_PER_PATTERN = 20
+
+
+def _runs(data: bytes, token: re.Pattern, min_run: int):
+    """Maximal runs of `token` separated by nothing alphanumeric.
+
+    Yields (decoded bytes, [source offset per decoded byte]). Keeping the
+    offsets is what lets a hit name the line somebody has to open.
+    """
+    out, offs, prev_end = bytearray(), [], None
+    for m in token.finditer(data):
+        gap = data[prev_end:m.start()] if prev_end is not None else b""
+        if prev_end is not None and (re.search(rb"[0-9A-Za-z]", gap) or not gap):
+            if len(out) >= min_run:
+                yield bytes(out), offs
+            out, offs = bytearray(), []
+        out.append(int(next(g for g in m.groups() if g), 16))
+        offs.append(m.start())
+        prev_end = m.end()
+    if len(out) >= min_run:
+        yield bytes(out), offs
+
+
+def decoded_views(data: bytes):
+    """Every (decoded bytes, offsets, how) view a tracked file encodes."""
+    for dec, offs in _runs(data, HEX_TOKEN, 1):
+        yield dec, offs, "hex"
+    for dec, offs in _runs(data, BARE_BYTE, MIN_BARE_RUN):
+        yield dec, offs, "hex"
+    for m in B64_RUN.finditer(data):
+        try:
+            dec = base64.b64decode(m.group(0), validate=True)
+        except (binascii.Error, ValueError):
+            continue
+        if dec:
+            yield dec, [m.start()] * len(dec), "base64"
 
 
 def repo_root(start: Path) -> Path | None:
@@ -213,6 +270,19 @@ def scan_repo(root: Path, pats, scan_commits: bool, base: str | None) -> list[st
             if len(ms) > MAX_HITS_PER_PATTERN:
                 hits.append(f"  {rel}  ... and {len(ms) - MAX_HITS_PER_PATTERN} more "
                             f"for entry #{entry}")
+        # What the file *encodes*. Reported separately: the fix is different --
+        # the literal on that line is not the name, it is what produces it.
+        seen = set()
+        for dec, offs, how in decoded_views(data):
+            for entry, pat in pats:
+                for m in list(pat.finditer(dec))[:MAX_HITS_PER_PATTERN]:
+                    line = line_of(data, offs[m.start()])
+                    if (entry, line, how) in seen:
+                        continue
+                    seen.add((entry, line, how))
+                    hits.append(f"  {rel}:{line}  denylist entry #{entry}, "
+                                f"{how}-encoded -- the bytes decode to it, so no "
+                                f"text scan sees it")
     if not scan_commits:
         return hits
     picked = base or _own.pick_base(str(root))

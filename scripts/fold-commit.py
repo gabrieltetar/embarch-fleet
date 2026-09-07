@@ -20,6 +20,12 @@ after the log commit exists -- so the orderings a kill can leave behind are:
 The one ordering that must never occur is "fold without entry", which is the
 one this exists to prevent, and it cannot: the doc-repo commit is last.
 
+It also refuses a fold whose framework repo carries a denylisted client name
+(2026-09-06). That repo is the one nothing else scans -- the instance's gate
+covers the instance, the merge gate covers the code repos, and a leg never
+checks the framework out -- so a name quoted into a log entry had reached `main`
+with every gate green. Refused before the log commit, where it is still cheap.
+
 It also refuses an entry that does not match `## Entry shape`. The shape is not
 decoration: `fold-day.py` finds a day's SHAs, hardware debts and reviewer lines
 by those literal `**Field:**` markers, so an entry that bolds a whole phrase
@@ -491,6 +497,28 @@ def main() -> int:
               "either already committed or was never written. Check before retrying.",
               file=sys.stderr)
         return 1
+
+    # A client's name in a log entry is the one leak a later fix cannot make
+    # cheaply: file content is one commit to remove, a landed commit message
+    # needs a history rewrite. And THIS repo is the one nothing else scans --
+    # `check-docs.py` runs the name check on the instance, the merge gate runs
+    # it per code repo, and a leg never checks the framework out at all. On
+    # 2026-09-06 a leg had quoted a client project name out of the owner's live
+    # `embarch-api/config.toml` into an entry, and it sat on `main` unnoticed
+    # because no gate anywhere covers this file. Refused here rather than
+    # reported by a gate, because here it is still uncommitted, and because
+    # this is the one actor that can fix it: a worker cannot write this repo,
+    # so a red it raised elsewhere would be a red nobody could act on.
+    names = FLEET_REPO / "scripts" / "check-client-names.py"
+    if names.is_file():
+        r = subprocess.run([sys.executable, str(names), "--repo", str(FLEET_REPO),
+                            "--no-commits"], capture_output=True, text=True)
+        if r.returncode:
+            print(r.stdout + r.stderr, file=sys.stderr)
+            print("Nothing has been written. Reword the entry -- do not paste the\n"
+                  "name into the fix's own commit message either.", file=sys.stderr)
+            return 1
+
 
     # After the guard above, never before it: stamping an unmodified log would
     # manufacture the very uncommitted change that guard exists to detect.
