@@ -18,12 +18,13 @@ webhook cannot replace: a webhook replies `ok` and never returns the message's
 bot token exists this script hands the alert to `fleet-post.py` and the fleet
 speaks with ONE voice; the webhook is only used when it does not.
 
-**Two apps is the failure this arrangement is guarding against.** The webhook
-and the bot token are separate credentials and nothing makes them the same app
--- on the day the token landed they were not, and the channel had a named bot
-posting units and an unnamed one posting alerts. Delegating here means the
-mismatch stops being visible in normal operation, and `--verify-identity` says
-whether it is still there.
+**Delegating also means one voice without having to prove they are one app.**
+The webhook and the bot token are separate credentials, and no local check can
+say whether they belong to the same Slack app -- a webhook URL carries a
+per-integration id, not an app id. Preferring the token sidesteps the question
+entirely: whatever the webhook is, it is not what speaks in normal operation.
+`--check-config` reports what is configured and usable, and explicitly declines
+to guess the rest.
 
 **This is for conditions where the fleet is stuck or waiting on the owner**, not
 for progress. `ops.md` §3 fixes the set; adding to it is
@@ -109,45 +110,55 @@ def delegate(text: str, no_mention: bool) -> int | None:
     return subprocess.run(cmd).returncode
 
 
-def verify_identity(webhook: str) -> int:
-    """Say whether the webhook and the bot token are the same Slack app.
+def check_config(webhook: str) -> int:
+    """Report both credentials, and refuse to guess which app owns the webhook.
 
-    They are separate credentials created in separate places, so nothing keeps
-    them together. When they drift the channel gets two bots and the owner has
-    to work out which is which -- observed 2026-09-06.
+    **This used to claim it could tell.** It compared the `B...` segment of the
+    webhook URL against `auth.test`'s `bot_id` and called a mismatch "two apps".
+    Those are different namespaces and never match, so it reported two apps
+    every time, including for one app -- which is what it did on 2026-09-06,
+    against a single app that had a bot token and a webhook. The proof was
+    already in the channel: the join notice for the SAME app linked
+    `/services/B0C020VTXU1` while its bot user was `B0BUXFK302V`.
+
+    A webhook URL carries a per-integration id, not an app id, and re-installing
+    an app mints a new one. Nothing in the URL identifies the owner. The only
+    places that do are the app's own page on api.slack.com and the author shown
+    on a message it posts, and neither is reachable from here.
     """
-    import re
     tok = bot_token()
     if tok is None:
-        print("no bot token; nothing to compare against")
-        return 2
-    req = urllib.request.Request(
-        "https://slack.com/api/auth.test", data=b"{}",
-        headers={"Authorization": f"Bearer {tok}",
-                 "Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
-        info = json.loads(r.read().decode(errors="replace"))
-    print(f"bot token : team {info.get('team_id')} bot {info.get('bot_id')} "
-          f"as @{info.get('user')}")
+        print("bot token : NOT CONFIGURED -- see scripts/fleet-post.py's header.\n"
+              "            Every post falls back to the webhook, without a thread.")
+    else:
+        req = urllib.request.Request(
+            "https://slack.com/api/auth.test", data=b"{}",
+            headers={"Authorization": f"Bearer {tok}",
+                     "Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
+                info = json.loads(r.read().decode(errors="replace"))
+        except Exception as e:
+            print(f"bot token : present but unusable ({e})")
+            return 1
+        if not info.get("ok"):
+            print(f"bot token : REJECTED by Slack ({info.get('error')!r}) -- "
+                  "revoked, or the app was reinstalled and the token rotated.")
+            return 1
+        print(f"bot token : ok, posts as @{info.get('user')} "
+              f"in team {info.get('team_id')}")
+
     url = read_url(webhook)
     if url is None:
-        print("webhook   : not configured (fine -- the token is the primary path)")
-        return 0
-    m = re.match(r"https://hooks\.slack\.com/services/(T[A-Z0-9]+)/(B[A-Z0-9]+)/", url)
-    if not m:
-        print("webhook   : unrecognised URL shape")
-        return 1
-    print(f"webhook   : team {m.group(1)} bot {m.group(2)}")
-    if m.group(2) == info.get("bot_id"):
-        print("\nSAME APP. The fleet has one identity.")
-        return 0
-    print("\nDIFFERENT APPS. The webhook belongs to an app the bot token does not.\n"
-          "Nothing is broken -- the token is preferred and the webhook is only a\n"
-          "fallback -- but if that old app is still installed it can still post,\n"
-          "and a second unnamed bot in the channel is exactly what this avoids.\n"
-          "Either delete the old app, or replace the webhook with one created on\n"
-          "the same app as the token.")
-    return 1
+        print("webhook   : not configured. Fine while the token works -- it is "
+              "only the fallback.")
+    else:
+        print("webhook   : present and well-formed (fallback only)")
+
+    print("\nWhich app owns the webhook cannot be answered from here, and a\n"
+          "script that guesses is worse than one that says so. Open\n"
+          "api.slack.com/apps and look at the app's Incoming Webhooks page.")
+    return 0 if (tok or url) else 2
 
 
 def main() -> int:
@@ -160,13 +171,13 @@ def main() -> int:
     ap.add_argument("--dry-run", action="store_true",
                     help="print the payload and the target, send nothing")
     ap.add_argument("--webhook", default=WEBHOOK)
-    ap.add_argument("--verify-identity", action="store_true",
-                    help="say whether the webhook and the bot token are the "
-                         "same Slack app, and stop")
+    ap.add_argument("--check-config", action="store_true",
+                    help="report which credentials are configured and usable, "
+                         "and stop")
     args = ap.parse_args()
 
-    if args.verify_identity:
-        return verify_identity(args.webhook)
+    if args.check_config:
+        return check_config(args.webhook)
 
     text = args.message.strip()
     if not text:
