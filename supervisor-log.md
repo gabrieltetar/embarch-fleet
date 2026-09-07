@@ -97,6 +97,112 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 21:11 — umbrella/030 a budget sized for a device scan was covering a serial handshake, and `suite/features.md` became a wall
+
+**Decided:** three. **(1)** I told this worker in its dispatch that `decisions/doctor.md` — 942 B
+left, compaction parked on `In flux: yes` — was **the obvious home for its decision and the wrong
+one**, and that a mission split is this sub-project's established move. It split: new
+`decisions/budgets.md` holding 44 and 45, **nothing moved out of `doctor.md`**, which the reviewer
+proved by blob hash (`doctor.md` and `bind.md` byte-identical at `8037467` and `8037467^`), so
+`tasks/umbrella/009`'s `Must not delete:` list was never in play. **(2)** I paid `suite/features.md`
+over the cap myself, as a ride-along, and it is the most uncomfortable thing in this leg (below).
+**(3)** I filed the hardware debt as `tasks/umbrella/034` rather than running it, because it would
+have been this leg's fifth unit.
+
+**Merged:** `agent/umbrella/030-hello-gets-a-handshake-budget` (code `d329842`, doc `8037467`). Gate
+on the merge result: `cargo build`, `cargo test` **203 passed / 0 failed** (197 → 203), `cargo clippy
+--all-targets -D warnings` clean, `python3 scripts/check-docs.py` **all 10 green**, ownership green
+both branches (doc: 9 paths, explicit base `6aa90b8`; code: whole tree, base `2063511`),
+client-names clean.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**The defect, stated once because it is worth remembering: `doctor` gave a call that opens a serial
+link and completes a board handshake the same 500 ms it gives a device scan.** `authed_get` set
+`.timeout(AUTHED_GET_TIMEOUT)` unconditionally, and that constant's own doc comment described it as
+"an *authenticated* request to an already-resolved `base_url`" — **an accurate description of a
+budget `/dev-bench/hello` was never covered by.** So checks 11 and 13 have been dark on the primary
+topology for weeks, and `embarch-umbrella/open.md` carried the reason as *"the last live unknown,
+needing a bench"*. **A bench was never what it needed**; two boards were attached, enrolled,
+validated and handshaking three times out of three.
+
+**The fix is a parameter, not a bigger number, and that is the part that generalises.** `authed_get`
+now takes its budget as an argument, so a new call site has to choose one; the two constants are
+`DEVICE_SCAN_GET_TIMEOUT` (500 ms) and `LINK_HANDSHAKE_GET_TIMEOUT` (10 s), each with a doc comment
+saying what it is sized for. All three call sites were surveyed and the reviewer confirmed there is
+no fourth: `/status` and `/dev-bench/port` on the scan budget, `/dev-bench/hello` on the handshake
+one.
+
+**The provenance discipline is the reason this unit is good, and it held in four places at once.**
+`/status` under 500 ms is **measured** (three live runs). `/dev-bench/port` sits on the same budget
+**by argument** — Core does the same *kind* of work — and its enumeration **has never been timed**.
+The 10 s is **assumed, not measured**: no run anywhere has ever produced a handshake duration. The
+worker said all three things in the decision, in both doc comments, in `spec.md` and in `open.md`,
+and the reviewer checked that none of them firmed up in transit. **It also could not prove the live
+failure was a timeout and did not pretend to** — it pinned, host-side, that reqwest 0.13.4's
+`Display` renders a timeout and a refused connection as *the same sentence apart from the URL*,
+which is character-for-character what the three live runs printed. So the diagnosis rests on the
+other two facts and decision 45 says "strong and still an inference".
+
+**`suite/features.md` went over its cap in my fold, and `tasks/suite/004` had predicted exactly
+this.** The unit rewrote two Status cells honestly and the assembled file went **20,259 → 20,643 B
+against a 20,480 cap — 163 over, gate refused.** `004` says in its own words that the next unit to
+write a `features.d/` fragment "meets the cap mid-flight, which is precisely what
+`DOC-COMPACTION.md` §2's reserve exists to prevent". **I paid it as a §2 ride-along in three
+successive shaves — 20,643 → 20,524 → 20,493 → 20,466, fourteen bytes under.** No fact was dropped;
+check 13's row now points at check 11's for the shared cause instead of restating it. **But three
+shaves to clear a line by 14 bytes is precisely the move `tasks/umbrella/009`'s history names as the
+one not to take**, and the only reason I took it is that the alternative — a `suite`-scope
+compaction — needs `ops.md` §4's 30-minute announcement window, which a leg landing a fold does not
+have. **The state to hand on is that `suite/features.md` has 14 bytes, not 221**, recorded in
+`tasks/suite/004` with the numbers.
+
+**And the wall lands on the wrong actor, which is the structural half.** A worker's own gate passes:
+it writes a `features.d/` fragment and `suite/features.md` is `never` for it, so the assembler never
+runs on its branch. **The refusal appears in the supervisor's fold, after the merge**, about a file
+the worker was forbidden to look at. This is `tasks/doc/002`'s shape — a gate half telling a worker
+to write a file the ownership half refuses — reaching its expensive form.
+
+**I filed the hardware debt instead of running it, and I want the reasoning on record because it was
+close.** `tasks/umbrella/034` is a bench unit that needs **only** the bench attached and Core up: no
+DUT identity, no flash, no study. **That makes it the only bench task in the queue not waiting on a
+sentence from the owner** — the other four all need the DUT's advertised name or address. It is also
+what turns the 10 s from assumed into measured, and it verifies this leg's own change. Against that:
+it would have been unit five, and `ops.md` §8.1 says four and then die. **A plugged-in bench expires
+and the cap does not, so this is a real cost, not a formality** — I chose the cap and made the task
+the loudest thing in the handoff.
+
+**Two reviewer observations below its own drop bar, recorded into `tasks/umbrella/031` rather than
+lost.** `one_line()` **drops the ESC byte as a control character and leaves the CSI body as literal
+text**, so it is not "escapes stripped" in decision 43's sense — and `031`'s entire premise is check
+1 rendering raw ANSI, so calling the new helper would not close that task's own case. And `030`'s
+doc comment names check 1 as the one remaining unnormalised site when **four others interpolate
+Core's raw HTTP body verbatim** (checks 4, 11, 13, 12). Nothing contradicts anything — decision 43
+already records the check-4-and-12 gap as open — but a future fix trusting that comment misses four
+sites, so `031` now says to re-derive the list from source.
+
+**Hardware debts:** **one, and it is the leg's headline.** `tasks/umbrella/034` — one `embarch
+doctor` plus `--json` on the primary `wsl-host` bench with the bench attached and Core up, recording
+check 11's `compatible` verdict, check 13's real comparison, check 12's verdict, and **a timed
+authenticated GET of `/dev-bench/hello`**, which is the only thing that turns `LINK_HANDSHAKE_GET_TIMEOUT`
+from assumed into sized. If it still fails, that is a *better* result: the failure now names its own
+verb, and `timed out after 10000 ms` versus `could not connect` has never been seen in the wild and
+settles which failure decision 44 was actually about.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **that I shaved a suite-level document three times to make a fold fit, alone,
+unreviewed, at the end of a leg.** Each individual cut is defensible and no fact left the file — but
+the decision to cut *at all* rather than stop and hand it over was made under the pressure of a
+merge already landed and a gate already red, which is the worst moment to be making a judgement
+about a shared document. The honest alternative was to leave the fold blocked and the unit's merge
+sitting on `main` unfolded, which §9 calls a failed unit. **Both options are bad and the rules do not
+say which is worse**; I picked the one that keeps `main` consistent and wrote the number down.
+
+---
+
 ## 2026-09-06 20:53 — core/016 the exhaustive match, and a status fragment that retired one paragraph too few
 
 **Decided:** two. **(1)** I told the worker the task's own bound was to be believed — `Outcome` has
