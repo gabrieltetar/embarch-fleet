@@ -36,15 +36,26 @@ the webhook is a secret and the latch must not be committed.
 
 Usage:
   scripts/install.py                 install into the doc_repo named in fleet.toml
-  scripts/install.py --check         verify the instance matches this repo
+  scripts/install.py --check         does the instance match this working tree?
   scripts/install.py --diff          show what --check found, as a diff
+  scripts/install.py --verify        was anything generated hand-edited since
+                                     the last install? -- what the gate asks
   scripts/install.py --repo PATH     override the target
-Exit status: 0 installed / in sync, 1 out of sync (--check), 2 misconfigured.
+Exit status: 0 installed / in sync, 1 out of sync, 2 misconfigured.
+
+`--check` and `--verify` answer different questions and only one belongs in a
+gate. An instance BEHIND the framework is the normal state between
+`deploy.py --queue` and the boundary that lands it; a generated file EDITED IN
+PLACE is silently reverted by the next install and must be loud. `--check`
+cannot tell them apart, so using it as the gate meant a queued deploy turned
+`check-docs.py` red for every worker.
 """
 from __future__ import annotations
 
 import argparse
 import difflib
+import hashlib
+import json
 import os
 import re
 import stat
@@ -169,11 +180,108 @@ def planned(target: Path) -> list[tuple[Path, str, bool]]:
     return out
 
 
+def digest(text: str) -> str:
+    return hashlib.sha256(text.encode()).hexdigest()
+
+
+def manifest(target: Path) -> dict[str, str]:
+    """Every generated path in the instance, mapped to the hash install writes.
+
+    `deploy.py` records this in `.fleet-version` so `--verify` can answer the
+    question the gate actually asks, which is NOT the question `--check` answers.
+    """
+    return {str(path.relative_to(target)): digest(content)
+            for path, content, _ in planned(target)}
+
+
+def verify(target: Path) -> int:
+    """Has anything generated been hand-edited SINCE THE LAST INSTALL?
+
+    `--check` compares the instance against the framework *working tree*, which
+    conflates two different failures. A hand-edit here is silently reverted by
+    the next install and must be loud. An instance that is merely *behind* the
+    framework is neither wrong nor anybody's fault -- it is the normal state
+    between `deploy.py --queue` and the leg boundary that lands it, and it is
+    also the state of any tree where the owner has edited a template and not
+    deployed yet.
+
+    Conflating them meant a queued deploy turned `check-docs.py` RED for every
+    worker and every merge gate for the whole window it was queued -- so
+    `--queue`, whose entire purpose is deploying without stopping the fleet,
+    blocked the fleet instead. Measured 2026-09-06 on the first one issued
+    during a live leg. "Is the instance behind?" already has two answers that do
+    not live in a gate: the pending-deploy latch, and `deploy.py --dry-run`.
+
+    Hashes rather than a re-render at the installed SHA: a re-render would still
+    be read through *today's* `fleet.toml`, shim text and render logic, so it
+    reports drift that has nothing to do with the instance. What install wrote
+    is a fact, and a fact is what a gate should test.
+    """
+    stamp = target / ".fleet-version"
+    recorded: dict[str, str] = {}
+    if stamp.is_file():
+        try:
+            recorded = json.loads(stamp.read_text()).get("files") or {}
+        except (ValueError, OSError):
+            recorded = {}
+    if not recorded:
+        print(f"no file manifest in {stamp.name} -- this instance predates it, or "
+              f"was installed\nby install.py directly. Falling back to --check.\n")
+        return check(target, diff=False)
+
+    edited, missing = [], []
+    for rel, want in sorted(recorded.items()):
+        path = target / rel
+        if not path.is_file():
+            missing.append(rel)
+        elif digest(path.read_text()) != want:
+            edited.append(rel)
+
+    if edited or missing:
+        print(f"{len(edited) + len(missing)} generated file(s) no longer match "
+              f"what install wrote:\n")
+        for rel in edited:
+            print(f"  edited   {rel}")
+        for rel in missing:
+            print(f"  missing  {rel}")
+        print("\nThese are output, not source. Edit the template in embarch-fleet;\n"
+              "a hand-edit here is reverted by the next install without a word.")
+        return 1
+    print(f"OK: all {len(recorded)} generated file(s) match what install wrote.")
+    return 0
+
+
+def check(target: Path, diff: bool) -> int:
+    """Does the instance match the framework working tree? Used by deploy.py."""
+    stale = []
+    for path, content, _ in planned(target):
+        rel = path.relative_to(target)
+        current = path.read_text() if path.is_file() else None
+        if current == content:
+            continue
+        stale.append(rel)
+        if diff:
+            print(f"\n--- {rel} (installed)\n+++ {rel} (framework)")
+            sys.stdout.writelines(difflib.unified_diff(
+                (current or "").splitlines(True), content.splitlines(True), n=1))
+    if stale:
+        print(f"{len(stale)} installed file(s) differ from the framework:\n")
+        for rel in stale:
+            print(f"  {rel}")
+        print("\nEdit the template in embarch-fleet and re-run scripts/install.py.\n"
+              "The instance copy is output, not source.")
+        return 1
+    print("OK: all installed file(s) match the framework.")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--repo", help="target repo (default: fleet.toml's doc_repo)")
-    ap.add_argument("--check", action="store_true", help="verify, write nothing")
+    ap.add_argument("--check", action="store_true", help="verify against the framework, write nothing")
+    ap.add_argument("--verify", action="store_true",
+                    help="verify nothing generated was hand-edited since the last install")
     ap.add_argument("--diff", action="store_true", help="with --check, show the diffs")
     args = ap.parse_args()
 
@@ -182,37 +290,21 @@ def main() -> int:
         print(f"not a git repo: {target}", file=sys.stderr)
         return 2
 
-    files = planned(target)
-    stale: list[Path] = []
+    if args.verify:
+        return verify(target)
+    if args.check:
+        return check(target, args.diff)
 
-    for path, content, is_exec in files:
+    for path, content, is_exec in planned(target):
         rel = path.relative_to(target)
         current = path.read_text() if path.is_file() else None
         if current == content:
-            continue
-        if args.check:
-            stale.append(rel)
-            if args.diff:
-                print(f"\n--- {rel} (installed)\n+++ {rel} (framework)")
-                sys.stdout.writelines(difflib.unified_diff(
-                    (current or "").splitlines(True), content.splitlines(True), n=1))
             continue
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content)
         if is_exec:
             path.chmod(path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
         print(f"  wrote {rel}")
-
-    if args.check:
-        if stale:
-            print(f"{len(stale)} installed file(s) differ from the framework:\n")
-            for r in stale:
-                print(f"  {r}")
-            print("\nEdit the template in embarch-fleet and re-run scripts/install.py.\n"
-                  "The instance copy is output, not source.")
-            return 1
-        print(f"OK: all {len(files)} installed file(s) match the framework.")
-        return 0
 
     state = CONF.state_dir
     state.mkdir(parents=True, exist_ok=True)

@@ -24,8 +24,24 @@ the price of picking up the pen.
 The single most common mistake is editing the copy. **Everything in the instance
 repo's `.claude/`, its four protocol READMEs, and its five fleet scripts is
 output.** A hand-edit there survives until the next deploy and is then silently
-reverted — which is why `install.py --check` is a gate in that repo's
+reverted — which is why `install.py --verify` is a gate in that repo's
 `check-docs.py`, and why it names the file rather than just failing.
+
+**`--verify` and `--check` answer different questions, and only one belongs in a
+gate.** `--verify` asks *was anything generated hand-edited since the last
+install*, by hashing against the manifest `deploy.py` records in
+`.fleet-version`. `--check` asks *does the instance match this working tree*,
+which is what a deploy wants to know. Until 2026-09-06 the gate used `--check`,
+so it went red whenever the instance was merely **behind** — the normal state
+between `deploy.py --queue` and the boundary that lands it, and the state of any
+tree where a template is edited and not yet deployed. A queued deploy therefore
+turned `check-docs.py` red for every worker and every merge gate for its whole
+window, which is how `--queue` — built to deploy *without* stopping the fleet —
+managed to block it instead.
+
+The residue is deliberate: while a deploy is queued the gate no longer says the
+instance is behind. Two things already do, and neither is a gate — the
+`pending-deploy` latch, and `deploy.py --dry-run`.
 
 | You want to change | Edit | Instance gets |
 |---|---|---|

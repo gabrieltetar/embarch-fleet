@@ -67,7 +67,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fleetconf import CONF  # noqa: E402
-from install import planned  # noqa: E402
+from install import manifest, planned  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 FLEET_REPO = HERE.parent
@@ -392,6 +392,12 @@ def main() -> int:
         sys.stderr.write(r.stderr)
         return 1
 
+    # The manifest of what was just written, so `install.py --verify` can ask
+    # "was anything generated hand-edited since?" without re-rendering. That is
+    # the question the instance's gate needs; `--check`'s "does this match the
+    # framework working tree?" is a different one, and answering it in a gate
+    # turned every queued deploy into a red gate for every worker.
+    version["files"] = manifest(target)
     (target / STAMP).write_text(json.dumps(version, indent=2) + "\n")
 
     # The instance's own gate, on the rendered result. This is what catches a
