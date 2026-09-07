@@ -80,9 +80,10 @@ nothing.
    live job: if you change one, change the other in the same pass. They have
    drifted before, and a job armed with an older threshold looks entirely
    healthy.
-3. Post one line to `{{SLACK_CHANNEL_NAME}}` saying the watchdog is armed and at
-   what threshold, and react `robot_face`. Tell the owner in the terminal which
-   window this is.
+3. Say so in the channel — `{{FLEET_REPO}}/scripts/fleet-post.py "the watchdog
+   is armed and will speak up if the fleet goes quiet for 35 minutes"`. That is
+   an FYI, so it must not use `--action`: being armed asks nothing of anyone.
+   Tell the owner in the terminal which window this is.
 
 > **Fleet watchdog tick.** Do not read the channel. Do not read the repo. Do not
 > spawn anything. This tick is three file checks and at most one post.
@@ -99,14 +100,22 @@ nothing.
 >
 > 3. If the mtime is **more than 35 minutes old**, the fleet is wedged or dead —
 > a wedged listener between legs, or a leg that hung mid-unit. **Delete
-> `{{STATE_DIR}}/pump`**, then run `{{FLEET_REPO}}/scripts/fleet-alert.py
-> "no fleet progress since <mtime>; pump unlatched"`, post one line to
-> `{{SLACK_CHANNEL_NAME}}` saying both, and react `robot_face`. **Then read
-> `{{STATE_DIR}}/alerted`: if it holds a timestamp under 60 minutes old, skip the
-> alert and the post — you already said this — but still delete the latch if it
-> is back.** Otherwise write the current time there afterwards. A watchdog that
-> repeats itself every ten minutes is a pager, and `ops.md` §3's alert set is
-> closed for that reason.
+> `{{STATE_DIR}}/pump`**, then one post, which is this window's entire output:
+>
+> ```
+> {{FLEET_REPO}}/scripts/fleet-post.py \
+>   "the fleet has not made progress since <time>, so I stopped it restarting" \
+>   --action "look at the listener window — it is wedged, dead, closed, or the machine slept" \
+>   --detail "tick mtime <mtime>; pump latch deleted at {{STATE_DIR}}/pump. This window cannot tell those four apart and does not guess."
+> ```
+>
+> **`--action`, because this one really does need him** — it is in `ops.md`
+> §3's closed set, and a wedged fleet that nobody is told about is the whole
+> failure this window exists for. **Then read `{{STATE_DIR}}/alerted`: if it
+> holds a timestamp under 60 minutes old, skip the post — you already said this
+> — but still delete the latch if it is back.** Otherwise write the current time
+> there afterwards. A watchdog that repeats itself every ten minutes is a pager,
+> and `ops.md` §3's alert set is closed for that reason.
 >
 > **35 minutes is measured, not chosen for roundness.** Re-derived 2026-09-06
 > from git commit times — claims and folds are the only touches that leave a

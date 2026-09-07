@@ -137,9 +137,11 @@ not an ending, and the entries you leave are the only thing that crosses it.
   granted to an attended session.
 - **A worker gets one task, in one repo, on one branch.** Never dispatch a
   `suite/` task to a worker — you execute those yourself (§8), and only after
-  **announcing and parking** it: post to `{{SLACK_CHANNEL_NAME}}` (`{{SLACK_CHANNEL}}`) saying
-  what you are about to do, which repos, and why; record the message `ts` in the
-  task file; do NOT start it; keep running units; `slack_read_thread` on that
+  **announcing and parking** it: `scripts/fleet-post.py` saying in one sentence
+  what you are about to do and why, with the repos and the paths in `--detail`;
+  it prints the message `ts`, which you record in the task file. **No
+  `--action`** — an announcement whose whole mechanism is silence-as-consent
+  must not page him every time, and `ops.md` §4's window runs on the clock; do NOT start it; keep running units; `slack_read_thread` on that
   `ts` at every unit boundary; execute it as your last unit, only if no objection
   arrived and 30 minutes have passed since the announcement. **If your leg ends
   before the window closes, leave it `open` with the `ts` in the file** — the
@@ -177,10 +179,23 @@ not an ending, and the entries you leave are the only thing that crosses it.
   costs one command per boundary and it is the difference between the watchdog
   catching a hung leg and the watchdog crying wolf at every healthy one.
 - **Report as if the owner is reading on a phone, because they probably are**
-  (`{{FLEET_REPO}}/ops.md` §3). **One line per unit** — dispatched,
-  landed with its SHA, blocked with the reason — posted to `{{SLACK_CHANNEL_NAME}}` as it
-  happens. Never paste passing output; a green `cargo test` is the word "green",
-  and only failing lines get quoted. Your final report fits one screen.
+  (`{{FLEET_REPO}}/ops.md` §3), and **post through
+  `scripts/fleet-post.py`, never the Slack connector.** The connector
+  authenticates as the owner, so a post it makes is a message from him to
+  himself; `fleet-post.py` posts as the app, which is why the channel can be
+  read at a glance and why a mention in it can ever notify anyone.
+
+  **One plain sentence per unit**, in words, as it happens — *"study-designer/016
+  landed: a registry field's byte range is checked at load"*, not a SHA and a
+  path. **The technical half goes in `--detail`** — SHA, branch, gate result,
+  the reviewer's line — where it lands as a thread reply and stays folded until
+  he opens it. Never paste passing output; a green `cargo test` is the word
+  "green", and only failing lines get quoted, in the thread.
+
+  **Never `--action` for an ordinary unit, landed or blocked.** It notifies, and
+  a leg lands four units an hour; `ops.md` §3 fixes the set that may use it, and
+  a blocked unit is not in it — you record it, park it, and carry on. Your final
+  report fits one screen.
 - **Never ask a question mid-leg.** A question freezes the leg with workers in
   flight and a 5-hour window burning. You are a full delegate; if something
   genuinely needs the owner, end the leg cleanly and say so once, at the end.
@@ -208,8 +223,8 @@ not an ending, and the entries you leave are the only thing that crosses it.
   which will claim it (`eyes`), run `fleet stop` as usual — an absent latch and
   no live supervisor — and confirm it in-thread. Reacting would mark it handled
   and hide the stop from the one window that reports to the channel. Post your
-  own line saying you are stopping and why, in that message's thread, and react
-  `robot_face` to **your** post only.
+  own line saying you are stopping and why, in that message's thread. It is an
+  FYI: he asked for the stop, so telling him it happened is not a request.
 - **If you have no Slack tool, that is a degraded control plane, not an error.**
   Say so once — first log entry and final report — put your unit lines in the
   log entry instead, and note that **your only stop channel is a queued Remote
@@ -221,15 +236,16 @@ not an ending, and the entries you leave are the only thing that crosses it.
   and one nobody could see is not a window, so leave the task `open` with a
   state line saying a fresh 30-minute clock is owed. Full rule:
   `{{FLEET_REPO}}/ops.md` §5.2a.
-- **Alert sparingly, with `scripts/fleet-alert.py`.** A Slack `@` from the fleet
-  notifies nobody — the connector posts as the owner, and Slack does not notify
-  him about his own message — and `PushNotification` reaches a phone only while
-  Remote Control is connected, so send that too but never instead. The set is
-  closed (`{{FLEET_REPO}}/ops.md` §3): leg blocked and stopped, budget
-  HOLD, a failed spawn, **the same failure blocking two units**, a dream, or a
-  `suite` task parked awaiting its window. If the script exits 2 it is not
-  configured — post to the channel anyway and say in your log entry that the
-  alert did not send. **Never per unit and never per leg** — legs end every
+- **Alert sparingly, and `--action` is how.** It is the only thing that
+  notifies: it puts the owner's mention in the post and marks it as a request,
+  so the channel answers "is this asking me for something" without being read.
+  `PushNotification` reaches a phone only while Remote Control is connected, so
+  send that too but never instead. The set is closed
+  (`{{FLEET_REPO}}/ops.md` §3): leg blocked and stopped, budget HOLD, a failed
+  spawn, **the same failure blocking two units**, a dream, a `suite` task parked
+  awaiting its window, a re-arm owed by a landed deploy, or the queue dry. If
+  `fleet-post.py` exits 2 it is not configured — say in your log entry that the
+  channel did not get it. **Never per unit and never per leg** — legs end every
   twenty minutes, and an alert each time is a pager, not a notification.
 
 ## The leg
@@ -289,12 +305,13 @@ owner's cue to top it up, and he should hear it before it reaches zero:
   the thing gets closed, not dispatched. Classify every task's `Hardware:`
   field — an unclassified task counts as `required` and is not dispatchable.
 - **If refill also finds nothing, dream and end the leg**
-  (`{{FLEET_REPO}}/ops.md` §7). Post exactly three proposals to
-  `{{SLACK_CHANNEL_NAME}}`, mention `<@{{SLACK_OWNER}}>`, **react `crystal_ball` to that post
-  as well as `robot_face`**, and exit. The extra reaction is not decoration: the
-  connector posts as the owner so every fleet message carries `robot_face`, and
-  `crystal_ball` is the only thing that lets the listener's 6-hour dream gate
-  tell a dream from an ordinary unit line. Do not pick one yourself,
+  (`{{FLEET_REPO}}/ops.md` §7). Post exactly three proposals with
+  `scripts/fleet-post.py --action "pick one, or say none and I will stay
+  down" --react crystal_ball`, and exit. This is one of the few posts that may
+  notify, because the fleet genuinely cannot proceed without him. **The
+  `crystal_ball` reaction is not decoration**: it is the only thing the
+  listener's 6-hour dream gate can read to tell a dream from an ordinary unit
+  line, so the post is worthless to the fleet without it. Do not pick one yourself,
   do not invent work to fill a slot, and **do not write a dreamt item into the
   queue** — an empty queue is the one moment the fleet genuinely does not know
   what is worth doing, which is why it asks instead of guessing. The pump stays
