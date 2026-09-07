@@ -56,16 +56,28 @@ to one sub-project needs nobody's approval. Number it per `DOC-CONVENTIONS.md`
 ## Before you say you are done
 
 1. `cargo build`, `cargo test`, `cargo clippy --all-targets -- -D warnings` in
-   your repo. **Do not run `cargo fmt`.** This suite does not enforce `rustfmt`
+   your repo. **All three reach only the packages they select**, and a crate
+   inside your repo that is not a workspace member is not one of them — so a
+   green root gate can sit on top of an unlinted, untested, unformatted crate.
+   `embarch-api/crates/embarch-core-client` was the suite's only one and hid 28
+   tests and a red `unused_imports` for weeks (`embarch-api` decision 56). If
+   your repo has a `Cargo.toml` below its root, check it is a member before you
+   believe your own green.
+   **Do not run `cargo fmt`.** This suite does not enforce `rustfmt`
    and nobody runs it (`{{DOC_REPO}}/embarch.md` §5, with the measured cost and
    the condition that would reverse it) — so a formatting pass here is a diff
    nobody asked for, spread across files your unit never touched, landing in
    somebody else's blame.
-   **`embarch-core`'s native Windows build is not yours and you cannot run it.**
-   Windows cannot follow a Linux symlink over UNC, and your worktree reaches its
-   path-dep siblings through exactly those, so the build fails at path-dep
-   resolution in any worktree [measured 2026-09-06]. Ship the host-side half and
-   record it as a debt in your task file, the way §7 handles hardware.
+   **`embarch-core`'s native Windows build is not yours and you cannot run it**,
+   and it fails two different ways so that fixing one does not help. Linux
+   `cargo build --target x86_64-pc-windows-msvc` dies in `hidapi`'s `build.rs`,
+   which compiles `windows/hid.c` with the host `cc`: WSL has no MSVC-flavoured
+   C compiler or Windows SDK headers, and the rustup target supplies neither.
+   Windows `cargo.exe` over UNC *does* build it — from the main checkout, in
+   52 s — but not from a worktree, because Windows cannot follow the Linux
+   symlinks your worktree reaches its path-dep siblings through, so it fails at
+   path-dep resolution instead [both measured 2026-09-06]. Ship the host-side
+   half and record it as a debt in your task file, the way §7 handles hardware.
 2. The whole `embarch-doc` gate in one command: `scripts/check-docs.py`.
 2a. From your `embarch-doc` worktree, where the shim lives:
    `scripts/check-client-names.py --repo <your code worktree>`. Step 2 covers
