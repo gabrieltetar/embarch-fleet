@@ -52,10 +52,16 @@ nothing in the channel can make that commit exist. You still do not run
 
 Four steps, in this order.
 
-1. **Clear the latch.** `rm -f {{STATE_DIR}}/pump`. Arming
-   always starts with the pump **off**. The latch is a file so it survives a leg
-   ending; it must not survive a kill, or closing VS Code would stop the fleet
-   and re-arming would silently restart it.
+1. **Clear the latch and the progress mark.** `rm -f {{STATE_DIR}}/pump
+   {{STATE_DIR}}/tick`. Arming always starts with the pump **off**. The latch is a
+   file so it survives a leg ending; it must not survive a kill, or closing VS Code
+   would stop the fleet and re-arming would silently restart it. **`tick` goes with
+   it because it is the last session's progress and not this one's** — left in
+   place it reads as hours of silence, and on 2026-09-07 the watchdog deleted the
+   pump 18 seconds after `fleet start` latched it, capping the relay at one leg.
+   Absent is the honest state and both watchers already read it that way:
+   `/fleet-watch` step 2 measures the pump latch's age instead, and
+   `scripts/fleet-deadman.py` alerts only on a `tick` that exists.
 2. **Create the heartbeat**, one recurring cron job on `3-59/10 * * * *` — an
    off-minute schedule, not `*/10`, so this fleet's wake-ups do not land on the
    same instant as every other cron in the world. Its prompt must be **exactly**
