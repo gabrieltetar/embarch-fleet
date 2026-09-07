@@ -97,6 +97,106 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 19:46 — api/029 the census cannot see a nameless device, and a timeout is reported as a lost frame
+
+**Decided:** three, all mine, on my own bench unit. **(1)** Leg 021's conclusion that *"not one of
+the advertisers is attributable to the DUT"* is **weaker than it was written**, and I rewrote
+`suite/studies-guide.md` §3a rather than repeating it. **(2)** `tasks/api/029` stays `open` and the
+remaining step is named precisely, including — after a reviewer corrected me — that it may not be
+owner-only at all. **(3)** Two defects found here are filed rather than fixed, because neither is
+`api`'s: `tasks/core/016` and `tasks/dev-bench/008`.
+
+**Merged:** nothing — bench unit, my own hands, no branch, no worker. Both roles validated live and
+matched exactly first (`dut` `834f2559f10a6cdf` / probe `000852006107`, `dev-bench`
+`6fcddc36cb781b71` / probe `001057729826`). **Nothing flashed, nothing built**; four studies, all at
+`reflash`'s `none` default. Gate: `python3 scripts/check-docs.py` **all 9 green**.
+
+**Blocked:** nothing.
+
+**Reviewer:** 2 finding — inbox/suite-studies-guide-3b-random-address-rule-is-false.md
+
+(The second, `inbox/study-designer-bleaddress-byte-order-was-never-stated-in-the-crate.md`, is
+filed as `tasks/study-designer/014` + `tasks/dev-bench/009` rather than fixed here — it is a code
+change in a repo this unit does not own.)
+
+**The measurement, and it overturns what the guide told people to read.** Two 20 s censuses five
+minutes apart (`458c7df0dd599bce574d1d4264bee485`, `6d15c4896b733f7480ea579b64e7210d`): **10
+advertisers on the air both times, 2 of them named.** `fail_reason` was `no name match; on air:
+'GABRIEL', 'pod-36e017c'` — **47 of its 64 bytes, so nothing was truncated**, and eight advertisers
+were missing anyway, four of them connectable. `scan_seen_names_summary()` in `ble_bridge_real.c`
+`continue`s past every entry with an empty name. **A census with no plausible DUT in it is equally
+consistent with a nameless DUT**, so leg 021's negative was drawn from a list that structurally
+cannot contain one. Filed as `tasks/dev-bench/008` (which also carries the second gate: the complete
+per-advertiser log record runs only on the name-filter arm, so an address-filtered connect logs
+nothing at all).
+
+**And a nameless advertiser is reachable, which is the positive half.** `C4:82:E1:42:B1:26`
+(public, connectable, no name) connected and its `GattDiscover` returned three services and eight
+characteristics — `bd39085d9aa34162a1a555494642ae43`, both steps `Pass`. Written up as
+`studies-guide.md` §3b.
+
+**The best thing this unit found was an accident.** A connect to a stale address timed out, and
+Core reported *"dev-bench stopped the study early, and the StepResult saying which step failed did
+not arrive."* **It arrived.** `study_results/dd340b2a36a39aeba94f4f15b4da61f0/events.json.partial`
+holds `{"step_name":"connect","outcome":"TimedOut", …}`, written by the same writer that then said
+it never came: `last_failed_step` records only `Outcome::Fail`, so `TimedOut` takes the lost-frame
+arm. **The comment above that arm says "Said plainly rather than guessed at"** — it is not a guess,
+it is a false statement of fact, and it points a reader at the serial link. `tasks/core/016`. The
+reviewer bounded the fix for me: `Outcome` has exactly three variants, so `TimedOut` is the only one
+to add, and I rewrote the task's "check the other variants" bullet, which implied a plurality that
+does not exist.
+
+**The reviewer's finding is the one I asked it to hunt and I still wrote it.** §3b said *"a random
+address is a resolvable private address that rotates … so `target_address` is durable only for a
+public address"* — **untagged, directly beneath a `[measured …]` paragraph**, which is the exact
+shape leg 021 named as this fleet's characteristic bench failure. A BLE random address has **three**
+sub-types, read off the top two bits of the leftmost byte, and `11` is **static random, which does
+not rotate** — the address a Zephyr peripheral with privacy off advertises, and
+`embarch-dev-bench` decision 17's deliberate choice. **My own census disproves my rule**: of six
+random addresses, the three `11` ones survived both censuses and only the `01` and `00` ones went.
+I had also counted one departure where there were two. Corrected in the fold, scoped back to what
+`study-designer` decision 43 already says — a *rotating private* address is what cannot be authored
+ahead of time, not a random one.
+
+**The second finding is a citation that points at a file which does not say it.** I wrote that the
+address byte order is *"a stated contract on both sides — `ids.rs` documents the order"*. It does
+not; `Uuid`'s comment states its order and `BleAddress`'s never has, which `ble_bridge.h`'s own
+comment says out loud. Worse, **`embarch-dev-bench` decision 23 claims that gap was closed** —
+*"Now stated there"* — recording a change that never landed, over a failure mode that is silent (a
+wrong guess means the step just never matches). `tasks/study-designer/014` for the crate half,
+`tasks/dev-bench/009` **blocked on it** for the decision half.
+
+**Where the attribution actually stands, corrected.** I wrote that the remaining step is the
+owner's, on the grounds that nothing joins a BLE advertiser to an enrolled probe: `target_name`
+cannot see a nameless device, and `reset`/`--reflash dut` are aimed at a **project build target**
+(board/variant/revision/app) rather than at the enrolled role — this task supplies `nff_dev` rev 6
+and no app directory, so aiming one would mean inferring a DUT fact. **The reviewer confirmed route
+two is closed and then narrowed my conclusion**: `POST /validate` **is** role-keyed and **does**
+reach the DUT, opening the enrolled probe and reading FICR over SWD under the same `hw_lock`. It
+neither halts nor resets, so it cannot make the DUT change BLE state — but **a role-keyed probe-side
+read of the DUT already exists and is already wired to `dut`**, so the join may be a readback nobody
+built rather than a capability EmbArch lacks. I softened the paragraph and named establishing that
+as the next step, **without asserting that this DUT's address is readable that way** — that is a DUT
+fact the task does not carry.
+
+**Everything else the reviewer checked held**: all ten counts and quotations against the raw logs,
+both `dev-bench/008` source claims with exact line numbers, and `core/016`'s two.
+
+**Hardware debts:** the bench is still attached and both roles still validate. **One sentence from
+the owner — his DUT's advertised name or address — turns `ui/007`, `outpost/002` and
+`study-designer/007` into ordinary bench units.** Nothing else is owed a board.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **that I asked a reviewer to hunt one specific failure shape and then
+committed that exact shape twice in the same document.** I named it in the spawn prompt, quoted leg
+021's version of it, and still wrote an untagged generalisation under a `[measured …]` tag and a
+citation I had not opened. The provenance discipline did not fail — **every tagged sentence was
+true.** What it cannot do is mark the inference sitting next to the measurement, and knowing that in
+advance bought me nothing at all.
+
+---
+
 ## 2026-09-06 19:34 — umbrella/029 a compaction that moved nothing, and three merges that never happened
 
 **Decided:** two. **(1)** I told this worker that `decisions/doctor.md` (92.3%) and `decisions/bind.md`
