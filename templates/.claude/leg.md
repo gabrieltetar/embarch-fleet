@@ -65,8 +65,15 @@ not an ending, and the entries you leave are the only thing that crosses it.
    ```sh
    git -C {{DOC_REPO}} fetch origin
    git -C {{DOC_REPO}} worktree add --detach {{WORKTREE_ROOT}}/{{DOC_REPO_NAME}}/leg origin/main
-   ln -sfn {{FLEET_REPO}} {{WORKTREE_ROOT}}/{{DOC_REPO_NAME}}/embarch-fleet
+   ln -sfnT {{FLEET_REPO}} {{WORKTREE_ROOT}}/{{DOC_REPO_NAME}}/embarch-fleet
    ```
+
+   **The link goes BESIDE the `leg` worktree, never inside it, and `-T` is not
+   decoration.** `{{DOC_REPO_NAME}}` has a *tracked* `embarch-fleet/`
+   directory — the sub-project's own docs — so a link written one level deeper
+   lands inside it, and `ln -sfn` onto a path that already resolves to a
+   directory descends into it rather than replacing it. Leg 029 did both at
+   once and left a stray symlink inside a tracked doc directory.
 
    Work there for the whole leg — land, fold, run the gate, everything. You
    share `{{DOC_REPO}}` with the owner, who drops files into `inbox/` and edits
@@ -107,9 +114,12 @@ not an ending, and the entries you leave are the only thing that crosses it.
    nowhere else. See `{{FLEET_REPO}}/ops.md` §3.
 
 1. Confirm no other supervisor is running (`{{FLEET_REPO}}/ops.md` §1 —
-   a second one would double-fold `status.d/`). The listener checks this with
-   `ListAgents` before spawning you; check it yourself anyway. If one is, stop
-   and say so.
+   a second one would double-fold `status.d/`). **`ListAgents` is the
+   listener's check and you do not have it** — leg 029 spent three
+   `ToolSearch` calls discovering that before falling back. Yours is the
+   evidence on disk: a registered `leg` worktree with commits on it, a live
+   `agent/*` branch, or a `**State:** claimed` task. If one is, stop and say
+   so.
 2. Run `scripts/usage-budget.py --suggest`. Exit `1` (HOLD) means **do not
    start** — report the numbers and the reset time and stop; the listener will
    not respawn you into a HOLD. Exit `2` (DEGRADED) is the normal case on this
@@ -483,9 +493,12 @@ tree is clean for the entire *reading* half of its run**, so the reading was tru
 when taken and false ninety seconds later. `ops.md` §3 already reads the worktree
 rather than the branch because a commit count is a bad liveness probe; the
 worktree is a bad one too, for the same reason. `tasks/README.md` settles claim
-staleness by the **process tree**, and that is the rule here: **`ListAgents`, and
-nothing else, may retire a worker you dispatched.** Only then recover per §3 and
-re-run the guard with `--allow-existing`.
+staleness by the **process tree**, and that is the rule here: **only the
+harness's own completion notification may retire a worker you dispatched** —
+never a reading of its tree. `ListAgents` is how the owner's session and the
+listener see agents; a leg does not have it, so waiting for the notification is
+not one option among several, it is the only one you have. Only then recover per
+§3 and re-run the guard with `--allow-existing`.
 
 **Dispatch.** One background `embarch-worker` agent per task, launched without
 blocking on the previous one. Give each: its task file path, **both** worktree
