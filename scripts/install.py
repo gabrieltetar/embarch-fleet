@@ -72,7 +72,8 @@ TEMPLATES = HERE / "templates"
 # framework-internal and is never invoked from the instance.
 SHIMMED = ("check-ownership.py", "queue-status.py", "usage-budget.py",
            "fleet-alert.py", "fleet-post.py", "fold-commit.py", "fold-day.py",
-           "check-client-names.py", "check-dispatch.py", "fleet-armed.py")
+           "check-client-names.py", "check-dispatch.py", "fleet-armed.py",
+           "fleet-hardware.py")
 
 PLACEHOLDER = re.compile(r"\{\{([A-Z_]+)\}\}")
 
