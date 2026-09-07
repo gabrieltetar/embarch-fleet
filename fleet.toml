@@ -85,6 +85,68 @@ reserved = [
   "SUITE-REVIEW-PASS.md",
   "embarch-dev-workflow.md",
   "CLAUDE.md",
+  # scripts/ -- the WHOLE directory. Re-examined 2026-09-06 against the backlog
+  # it generates rather than defended on principle, and left unchanged.
+  #
+  # The question was whether an assembler like `build_changelog.py` is the
+  # fleet's constraint or a utility that happens to share a directory. It is not
+  # a mixed directory. All 19 scripts are one of three things, and none of them
+  # is a utility:
+  #
+  #   8  GENERATED SHIMS whose implementation lives in this repo, which no leg
+  #      checks out (check-client-names, check-dispatch, check-ownership,
+  #      fleet-alert, fold-commit, fold-day, queue-status, usage-budget). A
+  #      hand-edit there is reverted by the next install and caught by
+  #      `install.py --verify`, so they are already doubly reserved.
+  #
+  #   9  THE MERGE GATE ITSELF, or its runner -- check-docs.py's ten checks.
+  #      `build_changelog.py` and `build_features.py` are in this class, not
+  #      outside it: their `--check` arms ARE two of the ten, the supervisor
+  #      runs both at every fold, and `fold-commit.py` refuses a fold that shows
+  #      the signature of build_changelog having been run wrong. A leg editing
+  #      any of them is editing its own gate, which is the stated hazard.
+  #
+  #   2  WORK DISCOVERY. `collect-open-questions.py` is what a leg sweeps at
+  #      refill to decide what work exists (supervise.md step 1);
+  #      `check-duplication.py` feeds the auditor that files inbox drops. These
+  #      are not gates and they are the more insidious case for it: a gate
+  #      failure is loud, a refill blind spot is silent. tasks/doc/003 was
+  #      exactly that -- collect-open-questions reporting nothing from three
+  #      sub-projects, so the fleet could not see work that existed.
+  #
+  # MEASURED AGAINST THE BACKLOG, which is the only argument for narrowing: of
+  # the 22 tasks/doc items filed 2026-09-04 19:46 to 09-06 18:38, narrowing to
+  # "the gate only" would have made ZERO of them dispatchable to a leg. Roughly
+  # half named a script, and nearly every one of those named a gate check. The
+  # duty cycle -- 13 of 21 closed in one 90-minute owner burst on 09-06 -- is a
+  # cost, not a refutation. The lever on it is fill rate, not the map.
+  #
+  # THE DIRECTORY PREFIX IS ALSO THE PROPERTY THAT SURVIVES A FILE SPLIT. A new
+  # script is reserved on creation; a per-file allowlist inverts that default,
+  # which is the failure that already happened once (2026-09-04: reserved
+  # content stopped being reserved purely by MOVING, and nothing noticed for a
+  # day). It also covers `doc-size-baseline.json`, which is not a script at all
+  # -- it is the size ratchet's state, and a leg that could edit it could raise
+  # its own caps. A `*.py` allowlist would have missed that file entirely.
+  #
+  # THE MIDDLE PATH WAS CONSIDERED AND DECLINED. ops.md §4's announce-and-park
+  # takes silence as consent, and an owner asleep at 03:00 is silence -- that is
+  # the exact failure the map exists to prevent, so it is wrong for a reserved
+  # path even though it is right for a merely risky one. An explicit "leg
+  # proposes a diff, owner approves" flow is safe, but it relocates the owner's
+  # work rather than reducing it: reviewing a change to the gate you rely on
+  # needs the same understanding as writing it. And a leg proposing a change to
+  # `check-ownership.py` must run its own gate under either the old script (the
+  # proposal is untested) or the new one (the leg ran under its own proposed
+  # constraints). Both are wrong, and neither is worth building for zero tasks.
+  #
+  # REVERSAL CONDITION: revisit when a genuine utility tier appears -- 5 or more
+  # scripts here that are none of the three classes above -- AND a rolling
+  # 20-task tasks/doc window lands 25% or more of its work only on those. The
+  # design then is an EXCEPTION list that `check-ownership.py --supervisor`
+  # requires be exhaustive over `scripts/`, the way it already is over top-level
+  # docs, so a new script is still unclassified until someone classifies it.
+  # Never a plain narrowing, which gives the split hazard back.
   "scripts/",
   ".claude/",
   # Written by deploy.py: which framework version rendered this instance.
