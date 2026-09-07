@@ -97,6 +97,105 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-06 18:04 — topology/002 the inferred register address is confirmed, and the gate's refusal was already on record
+
+**Decided:** three, all mine. **(1)** The nRF54L device-ID pair `0x00FF_C304` / `0x00FF_C308` is
+**confirmed against real silicon** and `decisions/enrollment.md` decision 21 now says so with its
+limits attached. **(2)** The task's second Done-when item — *show the gate refuse a deliberate
+role/probe mismatch, without re-enrolling* — is **not achievable by any agent**, and rather than
+leave it open I recorded why and closed it on better evidence: three real refusals already in the
+durable alert log. **(3)** I **deleted** `embarch-core/open.md`'s bullet rather than rewriting it. A
+closed question should leave `open.md`, and that file was at its 5 KB cap.
+
+**Merged:** no branch and no worker — a `Hardware: bench` unit is the supervisor's own hands. Fold
+below. Gate: all 9 doc checks green on the fold tree.
+
+**Blocked:** nothing. `tasks/topology/002` is retired by this fold.
+
+**Reviewer:** no findings.
+
+**What ran, and it was entirely read-only.** No flash, no study, no reset. Both roles validated live
+and matched their enrolled identities exactly (`dut` `834f2559f10a6cdf` / probe `000852006107`,
+`dev-bench` `6fcddc36cb781b71` / probe `001057729826`), `GET /status` showed both probes, and
+`GET /alerts` and Core's own `core.log` supplied the rest.
+
+**The confirmation is a cross-mechanism agreement, and the reason it is a proof rather than a
+coincidence is that the two routes share nothing.** probe-rs reads two hardcoded absolute addresses
+over the probe; the board's side goes through Zephyr's `hwinfo_nrf.c` → `nrf_ficr_deviceid_get(NRF_FICR, 0/1)`,
+the MDK's own struct offset, which has never seen those constants. They agree exactly, halves
+swapped as decision 21 derived: **JTAG `6fcddc36cb781b71`, self-reported `cb781b716fcddc36`,
+`link_identity="match"`** — originally 2026-08-31 and **reproduced today at 22:07:51Z and 22:15:45Z**
+from Core's handshake log. The **second** word is what this settles: it was inferred from the
+classic layout's two-word stride, and the reviewer added the argument I had only gestured at —
+the projection is a pure half-swap, so a wrong second address `B'` yields `B'|A` against a
+self-report of `B|A`, which can match **only** when `B' == B`.
+
+**The refusal half was already measured, three times, and nobody had noticed.** `GET /alerts` holds
+three identity refusals on role `dut`, probe `000852006107`, each naming the recorded and the live
+ID and saying *"re-enroll if this is deliberate"* — **the most recent 2026-09-06 13:29:42 local, one
+minute before the re-enrolment that answered it.** Two physically different nRF54L15 DUT boards have
+alternated on that one probe. **That is exactly the case `enroll`'s own doc says enrolment
+structurally cannot catch** — "right chip, wrong physical board when both really are that chip" —
+caught at validate time instead. `spec.md` said this path "stays unexercised" and named the
+precondition ("a second same-chip-family board") as hypothetical; the bench had met it three times.
+
+**I miscounted it four, and caught myself, and that is the part I want on the record.** Six alerts
+are in the log; three are *probe-not-attached* with `live_hardware_id: null` and name no live ID at
+all. I wrote "four refusals" into `spec.md`, `open.md`, the changelog fragment and
+`tasks/topology/010` before re-reading the rows. Corrected everywhere before the fold. **A
+supervisor's bench unit has no worker to check its arithmetic** — the only reason this was caught is
+that I re-derived the number while waiting on a reviewer.
+
+**The reviewer then found two more of the same species in my prose, and both are worth the fold.**
+I had written "**every** swap tripped the gate" *inside* a `[measured … GET /alerts]` citation — but
+`/alerts` supplies refusals, never the number of swaps, so a swap re-enrolled before any validate
+ran would leave no row and the sentence would be false on identical evidence. **A true measurement
+with an inference riding inside its own provenance tag** is precisely what leg 021 recorded as this
+fleet's characteristic bench failure, and I reproduced it two legs later. Now: "three such swaps are
+on record, each tripping the gate", with the proportion explicitly not claimed. Second: "the store
+path is compiled in, with no environment override" is true on unix and **false on the primary
+deployment platform** — the Windows arm is `std::env::var("ProgramData")`. The operational
+conclusion survives (unsettable for a running service); the words did not.
+
+**And it strengthened a claim I had left on trust.** `raise()` records the alert and constructs the
+caller's `TopologyMismatch` with its fix-it URL **in one function**, and a logging failure may not
+mask the error — so **an alert row is proof the caller received the refusal.** Three rows are three
+end-to-end refusals, not three log lines beside the gate. That went into
+`decisions/alerts.md` decision 12, where the mechanism belongs.
+
+**What is still not confirmed, kept explicit because rounding it up is the easy failure:** the DUT
+has **no self-report path**, so its 64 bits rest on the address being right rather than
+corroborating it; `nRF54L10`, `nRF54L05` and `nRF54LM20A` share the code arm with no silicon ever
+attached; and three distinct nRF54L15s reading six fully distinct 32-bit words is corroboration that
+the second address is not family-constant, **not the same proof**.
+
+**Two findings filed rather than fixed.** `tasks/topology/009` — `validate`'s response carries
+`confirmed_at_utc_ms`, and it is the **enrolment** time, not the validation's: two calls minutes
+apart both returned 2026-08-31 10:53. A validation response whose only timestamp names a different
+event is a staleness answer nobody can trust, and `tasks/api/032` already records a second fidelity
+bug in that same mirror. `tasks/api/036` — **no MCP tool reaches `GET /dev-bench/hello`**, the one
+endpoint returning the JTAG identity, the self-report and the relation as data. I needed it, could
+not reach it, and read the comparison out of Core's rotating log file on the host instead. Three
+other things point at that route, including a dark doctor check.
+
+**One thing I deliberately did not do.** Reaching `/dev-bench/hello` needs a bearer token; the
+permission layer refused my attempt to go looking for it, and **that refusal was right.** I did not
+work around it — I found the same facts in Core's own log, which is a read, not a credential.
+
+**Hardware debts:** none owed, and one **retired**: `embarch-core/open.md` no longer carries the
+unconfirmed-address question. Both boards were still attached and matching at 18:00 local, so the
+remaining four bench tasks are runnable for the next leg.
+
+**Budget:** DEGRADED at start and at this fold, wave 2, no 429.
+
+**Least sure about:** **that `embarch-topology/spec.md` is now one byte under its hard cap, and I got
+it there partly by deleting two asterisks.** I hit the 10 KB wall twice writing this unit. The first
+fix was legitimate — the alert-log guarantee genuinely belongs in `decisions/alerts.md`. The second
+was three bytes of bold markup, chosen purely because the number had to go down. `tasks/topology/010`
+now says so in a section of its own, because **the next unit here meets a refusal, not a warning**,
+and the reserve mechanism gives no help at the cap. I do not think I dropped a fact; I am not
+confident I would have noticed if I had.
+
 ## 2026-09-06 17:52 — outpost/007 the wire contract was missing a header field, and its own price list was wrong
 
 **Decided:** two, both mine and both taken at the fold. **(1)** `wire.md`'s new append-only rule —
