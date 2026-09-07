@@ -97,6 +97,28 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-07 17:08 — ui/017 landed by the previous leg's hands and folded by mine
+
+**Decided:** two. **(1)** I accepted the worker's *same-category* resolution: `tr-cross` keeps one token for both of its causes — a gap-crossing aggregated run and a step outcome `app.js` could not parse — because both carry the same reader-facing promise ("not vouched for as drawn") and each already names its own reason on hover, so decision 10's chart half now states the complete two-cause scope directly instead of the paraphrase living only in decision 23's amendment. **(2)** I accepted its choice to update the already-open `tasks/ui/019` with new byte counts rather than file a second compaction task for the same file.
+
+**This unit was not dispatched by me. I inherited it half-landed and that is the fact the next leg should take from this entry.** Leg 038 ran the worker, fast-forwarded `agent/ui/017-tr-cross-two-meanings` into its own detached leg worktree, and then died — **before pushing and before folding**. So at my step 0 the work existed in exactly one place on this machine: an unpushed commit on a detached HEAD inside `.worktrees/embarch-doc/leg`. `origin/main` did not have it, `git log` on the main checkout did not show it, and nothing in the queue said it had been done except the task file's own `State: done` inside that unpushed commit. **A leg that had deleted or reset that worktree instead of reusing it would have destroyed a completed unit and left no trace that it ever existed** — which is exactly why `.claude/leg.md` says a dirty-or-ahead leg worktree is recovery rather than setup. I re-ran the whole gate on the merge result myself rather than trusting the dead leg's judgement.
+
+**Merged:** `agent/ui/017-tr-cross-two-meanings` (doc `4b20dd9a0838f5ae859551b4ee9edd66e917b5fe`, **code: none — the `embarch-ui` branch was pushed with zero commits**, correctly: this unit changed decision text only and the reviewer confirmed no rendering changed). Gate on the merge result: `python3 scripts/check-docs.py` **all 10 green**, ownership green (3 paths, self-derived base `a109a536507b`). No `cargo` run: nothing in `embarch-ui` changed.
+
+**Reviewer:** no findings.
+
+**The reviewer did the one check that could have made this decision wrong, and it needed the code to do it.** It grepped `app.js` in the unit's own `embarch-ui` worktree and found `tr-cross` fires at exactly two sites — line ~4274 (`run.flags & TRACE_F_GAP`) and line ~4428 (`decoded.kind === "unknown"`) — and nowhere else. So decision 10's new "two causes" sentence is a description of what the code does rather than a claim ahead of it, and a third cause would have made the decision false the day it landed. It also confirmed decision 23's trim deleted nothing decision 23 alone carried, and that `trace-chart.md` is 11,833 B on disk, matching both the commit message and `tasks/ui/019`.
+
+**Blocked:** nothing.
+
+**Hardware debts:** none. Doc-only; nothing was built, flashed or connected.
+
+**Budget:** DEGRADED (no usage cache), 5h burn 9,007,400 billable tokens over 2,471 requests = **56%** of the 16,000,000 calibrated ceiling, observed 1,820,945/h against a sustainable 3,200,000/h, **wave 3**, no 429 in the last 90 minutes. Up from 54% at leg 038's last unit.
+
+**Least sure about:** whether an unpushed leg worktree should be allowed to hold a landed unit at all. Everything else in this design is durable the moment it is pushed, and this unit spent an unknown number of minutes existing only as a detached commit in a scratch directory that the recovery table also authorises a leg to `reset --hard`. The rule that saved it is a *reading* rule ("if it is dirty, that is recovery") applied to a worktree that was **clean** — its HEAD was simply ahead of `origin/main`, which is a different condition and one the table does not name. Pushing the ff immediately, before the fold, would make the window structurally impossible; I did not change that rule because it is not mine to change.
+
+---
+
 ## 2026-09-07 16:52 — topology/015 a decision moved home, and the compaction that made room for it lost one fact
 
 **Decided:** three. **(1)** I accepted the worker's choice of **compaction over a split** for `decisions/links.md`, and its argument is the best one this log has recorded against the split-first default: `links.md` is already one mission, decision 24 names 17 and 18 by number and reuses 18's `Filter::for_declared_serial`, so **splitting to make room would have reproduced this very task's defect one file over** — the family that belongs together, sitting apart, for a size reason instead of a routing one. `DOC-COMPACTION.md` §3 makes a split the default, not the rule, and this is the case the exception exists for. **(2)** I accepted the move itself (24 → `links.md`, a one-line pointer left at its old spot in `enrollment.md`, `decisions.md`'s index rows updated both ways). **(3)** I filed the reviewer's finding as `tasks/topology/016` rather than hand-fixing it in this fold — the remedy has a real fork (restore the fact, or stop citing decision 18 for it) and picking one inside a fold is the move leg 034 was right to be uneasy about.
