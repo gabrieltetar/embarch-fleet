@@ -167,10 +167,13 @@ not an ending, and the entries you leave are the only thing that crosses it.
   the Edit/Write tools, never `python3 - <<'PY' ... open(p,'w')` or `cat >`** —
   that includes prepending your log entry. This is not style: a leg was blocked
   mid-fold on 2026-09-03 by a command containing both shapes.
-- **Touch `{{STATE_DIR}}/tick` at every dispatch and every fold** — literally
-  `touch {{STATE_DIR}}/tick`, one command, right after you spawn a worker and
-  again right after `fold-commit.py` returns. Also once when you finish step 0,
-  before your first dispatch. **This is the fleet's only liveness signal and
+- **Record a tick at every dispatch and every fold** — `scripts/fleet-tick.py
+  leg-dispatch` right after you spawn a worker, `scripts/fleet-tick.py leg-fold`
+  right after `fold-commit.py` returns, and `scripts/fleet-tick.py leg-step0`
+  once when you finish step 0, before your first dispatch. One command each: it
+  touches the mtime the watchdog reads and appends one labelled line to
+  `{{STATE_DIR}}/tick.log`, which is how a gap gets measured afterwards instead
+  of reconstructed from commit times. **This is the fleet's only liveness signal and
   while you run you are its only writer.** The listener's cron is dark for your
   whole life (see the stop-channel rule below), so the watchdog window
   (`.claude/commands/fleet-watch.md`) reads that mtime and nothing else: fresh
@@ -554,16 +557,16 @@ time this log has recorded finished work stranded by one.
 a worker's own twenty — run `git ls-remote --heads <remote> 'agent/*'` in both
 repos for each worker you dispatched, once, before doing anything else. A branch
 with commits is a finished worker: land it. No branch is a worker still running:
-`touch {{STATE_DIR}}/tick` so the watchdog knows the fleet is alive, and keep
-waiting. Only then recover per §3 and re-run the guard with `--allow-existing`.
+`scripts/fleet-tick.py leg-waiting` so the watchdog knows the fleet is alive,
+and keep waiting. Only then recover per §3 and re-run the guard with `--allow-existing`.
 
 **Dispatch.** One background `embarch-worker` agent per task, launched without
 blocking on the previous one. Give each: its task file path, **both** worktree
 paths, its branch name, and the one-line reminder that it owns exactly one
 sub-project. Re-run `scripts/usage-budget.py` before refilling a slot — never
-only at the start of the leg. **Then `touch {{STATE_DIR}}/tick`** — a dispatch is
-the last progress the fleet makes for the next twenty minutes, so it is exactly
-the moment the watchdog needs on the clock.
+only at the start of the leg. **Then `scripts/fleet-tick.py leg-dispatch`** — a
+dispatch is the last progress the fleet makes for the next twenty minutes, so it
+is exactly the moment the watchdog needs on the clock.
 
 **Land, as each reports.** Re-run the gate yourself on the merge result, not on
 the branch (§10): the repo's `cargo build` / `test` / `clippy --all-targets --
@@ -701,8 +704,8 @@ in the right file. Pass the fragment names this unit actually wrote.
 `fold-commit.py` now refuses a fold that consumed a fragment outside its
 `--path` list, so forgetting is a blocked commit rather than a quiet one.
 
-**`touch {{STATE_DIR}}/tick` once the fold commit lands**, per the standing
-constraint. A fold is the fleet's clearest unit of progress and it is the one
+**`scripts/fleet-tick.py leg-fold` once the fold commit lands**, per the
+standing constraint. A fold is the fleet's clearest unit of progress and it is the one
 the watchdog's threshold was measured against.
 
 **The assembler is yours, not the worker's**, and `suite/features.md` goes in the
