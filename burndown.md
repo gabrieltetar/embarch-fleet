@@ -41,7 +41,9 @@ wave.
 burndown is the only mode that spends to the wall, so it is the only one that
 refuses a stale denominator: `pin_max_age_h` is **4**, tighter than the 24 h the
 cache itself enforces, because at a 97% stop the margin for drift is three
-points. **97 and not 100 for the same reason** — a proxy reading three points
+points. **The precondition costs one command**: `/usage` writes what it rendered
+into the session transcript, `fleet-usage-reading.py --scan` pins it, and
+`--until` runs that refresh itself. So the ceremony is: run `/usage`, then arm. **97 and not 100 for the same reason** — a proxy reading three points
 low puts 97% of it at 100% of the real thing, and the one cost burndown must not
 pay is the *start* of the next week.
 

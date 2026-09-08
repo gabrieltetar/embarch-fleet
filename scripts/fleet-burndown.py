@@ -3,9 +3,10 @@
 it resets.
 
 **Why this exists**, in one line -- the argument is `burndown.md`. The weekly
-allowance is use-it-or-lose-it: it refills at a fixed instant and whatever is unspent at that instant is gone. Every other
-control in this repo is built to keep the fleet away from the ceiling, which is
-right for six days and wrong for the seventh -- on 2026-09-08 the seat entered
+allowance is use-it-or-lose-it: it refills at a fixed instant and whatever is
+unspent then is gone. Every other control in this repo is built to keep the
+fleet away from the ceiling, which is right for six days and wrong for the
+seventh -- on 2026-09-08 the seat entered
 the last evening of its week at 81% used, with roughly 36M billable tokens that
 had no other way to be spent and a gate that would have stopped at 90%.
 
@@ -31,7 +32,9 @@ means forgetting to end it cannot leave the safeties off.
 the only mode that spends to the wall, so it is the only one that refuses to run
 on a stale denominator -- `[burndown] pin_max_age_h`, tighter than the 24 h the
 cache itself enforces, because at a 97% stop the margin for drift is three
-points.
+points. **Running `/usage` is the whole ceremony**: its rendered output lands in
+the session transcript, `fleet-usage-reading.py --scan` pins it, and `--until`
+runs that refresh itself rather than making the owner wait out a cron tick.
 
 **What ends it.** The deadline, `fleet stop`, an empty queue, a hard fault, or a
 real 429 -- the owner's call, 2026-09-08: in burndown a 429 does not throttle,
@@ -42,6 +45,7 @@ whether anything runs next, and after a 429 at 97% that gate holds by itself.
 Usage:
   scripts/fleet-burndown.py                      report (default)
   scripts/fleet-burndown.py --until '2026-09-09 07:00' [--scope core,ui]
+                                                 (run /usage first; this pins it)
   scripts/fleet-burndown.py --clear --reason '429 at 04:12Z'
   scripts/fleet-burndown.py --json               machine-readable, any mode
 Exit status: 0 armed / live / cleared, 1 not armed (report) or refused, 2 bad
@@ -52,6 +56,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -284,6 +289,9 @@ def main() -> int:
     ap.add_argument("--clear", action="store_true",
                     help="end the burndown, leave the pump latched in normal mode")
     ap.add_argument("--reason", help="with --clear, why it ended (recorded in the latch)")
+    ap.add_argument("--no-refresh", action="store_true",
+                    help="with --until, judge the pin and cache as they are "
+                         "instead of running fleet-usage-cache.py first")
     ap.add_argument("--json", action="store_true", dest="as_json")
     args = ap.parse_args()
 
@@ -295,6 +303,22 @@ def main() -> int:
         if args.as_json:
             print(json.dumps(snapshot(), default=str))
         return rc
+
+    if args.until and not args.no_refresh:
+        # **Arming refreshes first, because the owner has just run `/usage`.**
+        # The pin comes from the transcripts and the cache from the pin, both on
+        # a */4 cron -- so without this, "run /usage, then arm" fails its own
+        # freshness check for up to four minutes after the reading it needs is
+        # already on disk. One subprocess rather than an import: this is the
+        # same command the cron runs, and running exactly that is what makes a
+        # refusal here mean the cron would have failed too.
+        r = subprocess.run([sys.executable, str(Path(__file__).resolve().parent
+                                                / "fleet-usage-cache.py")],
+                           capture_output=True, text=True)
+        if r.returncode != 0:
+            print("could not refresh the usage cache "
+                  f"(fleet-usage-cache.py exit {r.returncode}):")
+            print("  " + (r.stderr or r.stdout).strip().replace("\n", "\n  "))
 
     snap = snapshot()
     if args.until:

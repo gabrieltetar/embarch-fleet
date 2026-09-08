@@ -46,6 +46,12 @@ indistinguishable: a proxy standing in for a first-party number must say so, and
 Pair it with cron at **`*/4`**, not `*/5`: the reader rejects a cache older than
 300s, so a five-minute cadence is sometimes one second too late.
 
+**It pins new readings before it computes** (2026-09-08). `/usage` writes its
+rendered output into the session transcript, so `fleet-usage-reading.py --scan`
+turns every glance the owner takes at his usage into a fresh pin with nothing
+pasted. Running it from here rather than from a second cron entry means the pin
+and the cache can never be a cycle out of step.
+
 Usage:
     scripts/fleet-usage-cache.py                 recompute and write the cache
     scripts/fleet-usage-cache.py --check         print what it would write
@@ -110,6 +116,9 @@ def main() -> int:
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--check", action="store_true", help="print, write nothing")
     ap.add_argument("--install-cron", action="store_true", help="add the */4 entry")
+    ap.add_argument("--no-scan", action="store_true",
+                    help="do not pin new /usage output found in the transcripts "
+                         "first; compute from the pins already logged")
     ap.add_argument("--pin-max-age-h", type=float, default=24.0,
                     help="refuse a session pin older than this, because the "
                          "5-hour window is anchored to activity (default 24)")
@@ -128,6 +137,16 @@ def main() -> int:
     sys.path.insert(0, str(HERE))
     from importlib.machinery import SourceFileLoader
     reading = SourceFileLoader("reading", str(HERE / "fleet-usage-reading.py")).load_module()
+
+    # **Scan first, so the cron is the whole loop.** `/usage` writes what it
+    # rendered into the session transcript, so every reading the owner takes is
+    # on disk within a second; pinning it here means the pin refreshes itself
+    # and the "paste a reading" step this file's docstring describes is now
+    # only a fallback. It is cheap when there is nothing new -- one pass with a
+    # string pre-filter -- and it must run BEFORE `pins()`, or a reading taken
+    # in the last four minutes would be computed against the previous pin.
+    if not args.no_scan:
+        reading.scan(quiet=True)
 
     now = time.time()
     have = pins()
