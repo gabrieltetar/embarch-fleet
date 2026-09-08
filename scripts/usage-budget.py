@@ -361,9 +361,15 @@ def main() -> int:
     ap.add_argument("--max-age", type=int, default=300,
                     help="reject a cache older than this many seconds (default 300)")
     ap.add_argument("--cache", default=CACHE)
-    ap.add_argument("--taper", type=float, default=0.25,
+    ap.add_argument("--five-hour-grace-min", type=float,
+                    default=float(CONF["limits"].get("five_hour_grace_min", 60)),
+                    help="ignore the 5-hour window entirely when it resets within "
+                         "this many minutes (fleet.toml [limits] five_hour_grace_min)")
+    ap.add_argument("--taper", type=float,
+                    default=float(CONF["limits"].get("taper", 0.25)),
                     help="fraction of a cap within which the wave narrows "
-                         "toward 1 worker; below it, run full width (default 0.25)")
+                         "toward 1 worker; below it, run full width "
+                         "(fleet.toml [limits] taper)")
     ap.add_argument("--suggest", action="store_true", help="print a suggested wave size")
     ap.add_argument("--json", action="store_true", dest="as_json")
     ap.add_argument("--strict", action="store_true",
@@ -459,6 +465,19 @@ def main() -> int:
     five, five_reset = window(limits, "five_hour")
     seven, seven_reset = window(limits, "seven_day")
 
+    # **A 5-hour window about to reset does not gate anything.** It is a lockout
+    # rather than a budget (ops.md §2) and it refills on a clock, so holding on
+    # it with minutes left buys nothing and costs the fleet those minutes. The
+    # exposure is bounded by the same clock that justifies the grace: ignoring
+    # it with N minutes to go risks at most an N-minute lockout, which is why
+    # the grace is a duration and not a flag. **The weekly window is never
+    # graced** -- it is the real budget and its reset is days away.
+    five_graced = None
+    if five is not None and five_reset:
+        grace = (five_reset - time.time()) / 60
+        if 0 < grace <= args.five_hour_grace_min:
+            five, five_graced = None, five   # out of the HOLD test and the wave
+
     blocking = []
     if throttled:
         blocking.append(throttled)
@@ -477,7 +496,10 @@ def main() -> int:
         print(json.dumps({
             "verdict": verdict,
             "workers": workers,
-            "five_hour": five, "five_hour_resets_at": five_reset,
+            "five_hour": five if five is not None else five_graced,
+            "five_hour_resets_at": five_reset,
+            "five_hour_ignored": five_graced is not None,
+            "five_hour_grace_min": args.five_hour_grace_min,
             "seven_day": seven, "seven_day_resets_at": seven_reset,
             "blocking": blocking,
             "cache_age_s": data["_age"],
@@ -491,7 +513,15 @@ def main() -> int:
         return f"  {label}: {used:5.1f}% [{bar}] cap {cap:g}%, resets in {human_reset(reset)}"
 
     print(f"{verdict}  (cache {data['_age']}s old)")
-    print(fmt("5-hour", five, five_reset, args.five_hour_max))
+    print(fmt("5-hour", five if five is not None else five_graced,
+              five_reset, args.five_hour_max))
+    if five_graced is not None:
+        # NOT "window inactive", which is what fmt() would have said for a None
+        # it could not tell apart from an unreported one.
+        print(f"  IGNORED: the 5-hour window resets in {human_reset(five_reset)}, "
+              f"inside the {args.five_hour_grace_min:g}-min grace, so it gates\n"
+              "           neither the verdict nor the wave. Worst case is a "
+              "lockout no longer than that.")
     print(fmt("weekly", seven, seven_reset, args.seven_day_max))
     for b in blocking:
         print(f"  BLOCKING: {b}")
