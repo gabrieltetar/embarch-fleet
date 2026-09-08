@@ -58,8 +58,35 @@ degraded_workers = 2
 
 # ops.md §2's two thresholds, deliberately different: the weekly one is a
 # budget, the 5-hour one is a lockout that would stop the owner working too.
-weekly_pct = 70
-five_hour_pct = 85
+#
+# **Both raised to 90 at the owner's call, 2026-09-07: full speed until 80%,
+# taper 80->90, hard stop at 90.** `suggest()` already implements exactly that
+# shape, so the policy is these two numbers and `taper` below rather than any
+# code. What made it worth changing: `/usage` read weekly **76%** that evening,
+# so the old 70 would have HELD the fleet outright while a fifth of the week's
+# allowance was still unspent -- and nobody could see that, because the gate has
+# never once had a percentage to read (see the ceiling note below).
+weekly_pct = 90
+five_hour_pct = 90
+
+# The width of the slow-down zone, as a fraction of a cap: full width below
+# `(1 - taper) * cap`, then linear to one worker AT the cap. 0.111 * 90 = 10
+# points, so full width below 80% and a taper from there to the hard stop.
+#
+# It was an argparse default of 0.25 and reachable from no config, which meant
+# the band was 22.5 points wide and full width stopped at 67.5% -- a policy
+# nobody had chosen, in a file nobody would look in.
+taper = 0.111
+
+# **Ignore the 5-hour window entirely when it resets within this many minutes**
+# (owner's call, 2026-09-07). It is a lockout rather than a budget and it refills
+# on a clock, so holding on it with minutes left buys nothing and costs the fleet
+# those minutes -- the evening this was added it read 71% with 15 minutes to run.
+# The exposure is bounded by the same clock that justifies the grace: ignoring it
+# with N minutes to go risks at most an N-minute lockout, which is why it is a
+# duration rather than a flag. **The weekly window is never graced** -- that one
+# is the real budget and its reset is days away.
+five_hour_grace_min = 60
 
 # What the 5-hour window actually holds, in BILLABLE tokens -- input + output +
 # cache writes, cache reads excluded because they bill at roughly a tenth.
@@ -85,9 +112,25 @@ five_hour_pct = 85
 # and being wrong costs a 5-hour lockout that stops the OWNER working, not just
 # the fleet -- hence the low side of the bracket rather than the middle.
 #
+# **Raised to 22.6M on 2026-09-07, and the old bracket was measuring the wrong
+# thing.** That evening `/usage` reported the session window **71% used** while
+# this repo's own transcripts held **17.8M billable in that same window** -- above
+# the 17.7M that produced the 429 above, with no 429 and a third of the window
+# left. So the wall the bracket found was not window exhaustion: 17.8M at 71%
+# implies an allowance near **25.1M**, and the 429 at 03:29Z was something else,
+# most likely a burst rate rather than the five-hour total. A rolling sum is a
+# coarse instrument for predicting a per-minute limit.
+#
+# 22.6M is 90% of that implied allowance -- the owner's hard stop, expressed in
+# the only unit this fallback can read. **It is a proxy pinned to one real
+# percentage, not a published limit**: `scripts/fleet-usage-reading.py` records
+# each `/usage` reading against the burn measured from that window's own start,
+# so the pin is re-derived rather than guessed, and drift shows up as the ratio
+# moving between readings.
+#
 # `usage-budget.py --burn` prints the current number. Set to 0 to disable the
 # measured wave and restore the constant `degraded_workers`.
-five_hour_token_ceiling = 16_000_000
+five_hour_token_ceiling = 22_600_000
 
 [ownership]
 # protocol.md §3. Paths reserved to the owner: the rules the fleet runs under,
