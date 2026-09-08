@@ -97,6 +97,75 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 17:54 — study-designer/022 the reviewer caught the citation I had four questions about and still missed
+
+**Decided:** three. **(1) I told the worker not to go and read `reference-dut-fw`.** The task's own
+framing invited it — "confirming which service count is current reads `reference-dut-fw` source" —
+and that is exactly how the defect was created: `study-designer/011` transcribed a bounded two-file
+read and landed it as current fact. Decision 57 is the validated answer already on record, so the
+unit's job was to restore a citation, not to produce a number. **A task file that tells a worker
+where the truth lives is a different instruction from one that tells it to go and derive the
+truth**, and on a DUT fact the difference is the whole safety property. The worker obeyed and
+invented nothing. **(2) I told it to fix the upstream cause and not only the symptom.**
+`src/limits.rs:80-84`'s doc comment is what the doc pass transcribed; leaving it would have left the
+next transcription free to go stale again independently of the decision. It now cites decision 57
+rather than restating a count. **(3) I accepted a row that carries no provenance bracket at all.**
+`DOC-CONVENTIONS.md` defines exactly two — `[measured <date>]` and `[assumed]` — and neither
+describes a number transcribed from a source-level doc comment. I had told the worker that if no tag
+fit it should say so rather than bend one, and it did, in the task file, noting that
+`DOC-CONVENTIONS.md` is not `study-designer`'s file to amend. That is the right refusal.
+
+**The reviewer found a real misattribution inside the sentence I had already interrogated.** I asked
+it four specific questions about this row, one of them literally *"did the worker invent any number
+decision 57 does not state?"* — and I asked it because I had read the row and thought it was clean.
+It is not. The landed row reads *"decision 57's validated GATT table: `reference-dut-fw` declares 3
+services, 7 in total once an encrypted link reaches the rest"*, attributing **both** figures to
+decision 57. Decision 57 validates only the 3: its text is *"three services where a bounded read
+found two, every characteristic named"*, and it is a static source-extraction decision that says
+nothing about encryption. **The 7 is decision 44's** (`decisions/ble.md`, `Action::BleSecurity`),
+from a live discovery behind an encrypted link — a different mechanism, a different decision. So the
+unit fixed a false provenance claim and introduced a smaller one, one hop over.
+
+**I filed it rather than hand-patching, and the split is two clauses.** The argument for patching is
+that it is genuinely mechanical — credit 57 with the 3, credit 44 with the 7 — and I could have done
+it in this fold. The argument I acted on is that I have now been wrong about this row twice in one
+leg (once at dispatch, once at the merge with the reviewer's four questions in front of me), and an
+actor with that record patching the same sentence a third time from memory is how the *next* wrong
+citation gets written. It is `tasks/study-designer/023`, `open`, with the reviewer's full reasoning
+and both decision numbers. **The reviewer also explicitly cleared the thing I thought was the
+finding** — the row now carrying neither bracket while the file's header promises every row carries
+one — as an internal wording inconsistency not worth a task.
+
+**Merged:** `agent/study-designer/022-limits-service-count` (code `c58f592`, doc `4ff55eb`). Gate
+re-run by me on the merge result, not the branch: `cargo build`, `cargo test`,
+`cargo clippy --all-targets -- -D warnings` clean in `embarch-study-designer`;
+`python3 scripts/check-docs.py` **all 10 green**; `check-client-names.py --repo` clean against 7
+denylist entries; `check-ownership.py --scope study-designer` green on both branches, 3 paths,
+self-derived base `345f0978cee8`. No native Windows build owed — `embarch-core` is untouched. I read
+the diff before merging because `embarch-study-designer` is a shared crate; it is six lines of doc
+comment and one table row, no type or signature moved.
+
+**Blocked:** nothing.
+**Reviewer:** 1 finding — inbox/study-designer-022-decision-57-cited-for-a-number-it-does-not-state.md
+**Hardware debts:** none owed by this unit — a citation fix, no board touched, and the worker was
+directed away from the one action that would have needed one. Carried forward unchanged:
+`core/015`'s native Windows build of `embarch-core` is the owner's and still outstanding;
+`umbrella/037`'s corrected check 13 has never met the bench that found its defects and needs only
+the dev-bench board. The bench queue is still parked by the owner's own commit.
+**Budget:** `PROCEED` throughout. 5-hour **6.5%** against a 90% cap resetting in 4h20m; weekly
+**84.1%** against a 90% cap resetting in 13h20m; suggested wave **4**, **run at 2**. No 429.
+**Least sure about:** **whether the reviewer is now carrying more of this leg's judgement than it
+should.** That is two consecutive units where the reviewer caught a decision-level defect the
+supervisor did not, on rows the supervisor had specifically flagged and asked about. The optimistic
+reading is that per-unit review has stopped being insurance and started being load-bearing, which is
+the tally answering yes. The uncomfortable reading is that the supervisor's own diff read is worth
+less than the design assumes, and §10 hands *me* the shared-crate judgement that no gate covers. **I
+cannot tell which from two data points, and neither can the tally as it is written**, because a
+`**Reviewer:** 1 finding` line does not record whether the supervisor had looked at the same lines
+first. Mine did, both times.
+
+---
+
 ## 2026-09-08 17:52 — umbrella/026 leg 047 landed two units and died before logging either, and the queue said so in three different wrong ways
 
 **Decided:** three, all of them recovery calls rather than design. **(1) I wrote this entry for a
