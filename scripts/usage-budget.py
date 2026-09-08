@@ -503,6 +503,7 @@ def main() -> int:
             "seven_day": seven, "seven_day_resets_at": seven_reset,
             "blocking": blocking,
             "cache_age_s": data["_age"],
+            "derived": bool(data.get("derived")),
         }))
         return 1 if blocking else 0
 
@@ -513,6 +514,13 @@ def main() -> int:
         return f"  {label}: {used:5.1f}% [{bar}] cap {cap:g}%, resets in {human_reset(reset)}"
 
     print(f"{verdict}  (cache {data['_age']}s old)")
+    if data.get("derived"):
+        # A derived cache is byte-compatible with the status line's, so nothing
+        # downstream could otherwise tell a proxy from a first-party number.
+        print("  DERIVED: these percentages come from fleet-usage-cache.py -- a "
+              "pinned allowance\n           over the transcripts' own token sum, "
+              "not from `rate_limits`. Re-pin with\n           "
+              "fleet-usage-reading.py after a fresh /usage.")
     print(fmt("5-hour", five if five is not None else five_graced,
               five_reset, args.five_hour_max))
     if five_graced is not None:
