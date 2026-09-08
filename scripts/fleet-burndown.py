@@ -21,11 +21,16 @@ different fleet, it is the same fleet with the throttle open.
 remaining allowance is a mode that can decide wrong at 3 a.m., and the owner is
 the only one who knows whether he wants the seat tonight.
 
-*Deadlined.* `--until` is required and bounded by `[burndown] max_horizon_h`. A
-burndown with no near reset instant is just the fleet with its safeties off; the
-deadline is the entire justification, so it is also the expiry. `CONF.burndown()`
-reads a passed deadline as "not a burndown" with no write from anyone, which
-means forgetting to end it cannot leave the safeties off.
+*Deadlined.* Every burndown races a known reset instant, and is bounded by
+`[burndown] max_horizon_h`. **The instant defaults to the pinned weekly reset**
+-- the scraped `/usage` reading that pins the allowance carries it, so `--arm`
+alone is the normal form and `--until` is the override. Requiring it to be typed
+was, briefly, asking the owner to re-enter data already on disk. The deadline is
+the entire justification, so it is also the expiry: `CONF.burndown()` reads a
+passed deadline as "not a burndown" with no write from anyone, which means
+forgetting to end it cannot leave the safeties off. **Early in a week the
+derived deadline is refused**, because a reset 160 hours out is not something
+about to expire -- it is the fleet with its safeties off.
 
 *Pinned to a fresh reading.* The percentages on this machine are DERIVED
 (budget.md): a pinned allowance over the transcripts' own token sum. Burndown is
@@ -44,8 +49,11 @@ whether anything runs next, and after a 429 at 97% that gate holds by itself.
 
 Usage:
   scripts/fleet-burndown.py                      report (default)
-  scripts/fleet-burndown.py --until '2026-09-09 07:00' [--scope core,ui]
-                                                 (run /usage first; this pins it)
+  scripts/fleet-burndown.py --arm [--scope core,ui]
+                                    arm until the pinned weekly reset -- run
+                                    /usage first, this pins it for you
+  scripts/fleet-burndown.py --until '2026-09-09 07:00'
+                                    same, with the deadline stated by hand
   scripts/fleet-burndown.py --clear --reason '429 at 04:12Z'
   scripts/fleet-burndown.py --json               machine-readable, any mode
 Exit status: 0 armed / live / cleared, 1 not armed (report) or refused, 2 bad
@@ -158,31 +166,54 @@ def snapshot() -> dict:
     }
 
 
-def arm(until_raw: str, scope: str | None, snap: dict) -> tuple[int, list[str]]:
+def arm(until_raw: str | None, scope: str | None, snap: dict) -> tuple[int, list[str]]:
     """Write the burndown latch, or refuse and say which precondition failed.
 
     Every refusal below is a case where arming would produce a burndown that
     cannot do its job: no deadline to race, no trustworthy denominator to stop
     at 97% of, or nothing left to burn. Refusing is cheap -- the owner re-runs
     one command -- and the failure it prevents is spending into next week.
+
+    **`until_raw` is optional, and defaulting it is not a weakening of the
+    deadline rule.** The rule is that a burndown must race a known reset
+    instant; it was a required argument only because, when this was written, the
+    only place that instant existed was the owner's eyes reading `/usage`. It is
+    now on disk -- the same scraped reading that pins the allowance carries
+    `seven_day.resets_at` -- so asking him to retype it was asking him to
+    re-enter data the machine already had, which is how a wrong date gets typed.
+    Stated still wins over derived, and the latch records which it was.
     """
     bad: list[str] = []
-    when = parse_instant(until_raw)
     horizon = float(cfg("max_horizon_h", 48))
     max_pin = float(cfg("pin_max_age_h", 4))
+    derived = until_raw is None
+
+    if derived:
+        reset = snap["weekly_resets_at"]
+        when = float(reset) if isinstance(reset, (int, float)) else None
+        if when is None:
+            bad.append("no weekly reset instant is pinned, so there is no "
+                       "deadline to derive -- run /usage, or pass --until")
+    else:
+        when = parse_instant(until_raw)
+        if when is None:
+            bad.append(f"--until {until_raw!r} is not an instant I can read "
+                       "(try '2026-09-09 07:00'; no timezone means local)")
 
     if when is None:
-        bad.append(f"--until {until_raw!r} is not an instant I can read "
-                   "(try '2026-09-09 07:00'; no timezone means local)")
+        pass
     else:
         left = (when - time.time()) / 3600.0
         if left <= 0:
             bad.append(f"--until {iso(when)} is in the past")
         elif left > horizon:
-            bad.append(f"--until {iso(when)} is {left:.1f}h out, past the "
+            which = ("the weekly reset" if derived else f"--until {iso(when)}")
+            bad.append(f"{which} is {left:.1f}h out, past the "
                        f"{horizon:g}h horizon ([burndown] max_horizon_h) -- a "
                        "burndown with no near reset is the fleet with its "
-                       "safeties off")
+                       "safeties off"
+                       + (". This is early in the week, not the end of one; "
+                          "there is nothing about to expire." if derived else ""))
 
     if snap["cache_problem"]:
         bad.append(snap["cache_problem"] + " -- burndown stops at a percentage, "
@@ -208,6 +239,10 @@ def arm(until_raw: str, scope: str | None, snap: dict) -> tuple[int, list[str]]:
 
     lines = ["mode=burndown",
              f"until={iso(when)}",
+             # Which it was, because a derived deadline is only as good as the
+             # pin it came from and a reader of this file should not have to
+             # guess. Nothing branches on it; it is provenance.
+             f"until_source={'weekly-reset' if derived else 'stated'}",
              f"armed_at={iso(time.time())}"]
     if scope:
         lines.append(f"scope={scope}")
@@ -282,8 +317,11 @@ def main() -> int:
     ap = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--arm", action="store_true",
+                    help="arm burndown until the pinned weekly reset instant")
     ap.add_argument("--until", metavar="INSTANT",
-                    help="arm burndown until this instant (no timezone = local)")
+                    help="arm until this instant instead of the weekly reset "
+                         "(no timezone = local)")
     ap.add_argument("--scope", help="comma-separated sub-projects, recorded in "
                                     "the latch the way `fleet start core,ui` does")
     ap.add_argument("--clear", action="store_true",
@@ -295,8 +333,13 @@ def main() -> int:
     ap.add_argument("--json", action="store_true", dest="as_json")
     args = ap.parse_args()
 
-    if args.until and args.clear:
-        ap.error("--until and --clear are opposites")
+    if (args.until or args.arm) and args.clear:
+        ap.error("--clear is the opposite of arming")
+    # Arming is never the default. `--until` implies it, because passing a
+    # deadline can mean nothing else; a bare invocation reports, because a
+    # command that latches the fleet when run with no arguments is one typo
+    # away from a burndown nobody asked for.
+    arming = bool(args.until or args.arm)
 
     if args.clear:
         rc = clear(args.reason)
@@ -304,7 +347,7 @@ def main() -> int:
             print(json.dumps(snapshot(), default=str))
         return rc
 
-    if args.until and not args.no_refresh:
+    if arming and not args.no_refresh:
         # **Arming refreshes first, because the owner has just run `/usage`.**
         # The pin comes from the transcripts and the cache from the pin, both on
         # a */4 cron -- so without this, "run /usage, then arm" fails its own
@@ -321,7 +364,7 @@ def main() -> int:
             print("  " + (r.stderr or r.stdout).strip().replace("\n", "\n  "))
 
     snap = snapshot()
-    if args.until:
+    if arming:
         rc, bad = arm(args.until, args.scope, snap)
         snap = snapshot()
         if args.as_json:
@@ -332,8 +375,10 @@ def main() -> int:
                 print(f"  - {b}")
         else:
             left = snap["until"] - time.time()
-            print(f"BURNDOWN ARMED until {iso(snap['until'])} ({human(left)} "
-                  f"from now)")
+            src = (snap["latch"] or {}).get("until_source")
+            how = " (the pinned weekly reset)" if src == "weekly-reset" else ""
+            print(f"BURNDOWN ARMED until {iso(snap['until'])}{how} "
+                  f"({human(left)} from now)")
             print(f"  {snap['caps']['max_workers']} workers, no taper, stops at "
                   f"{snap['caps']['weekly_pct']}% weekly / "
                   f"{snap['caps']['five_hour_pct']}% 5-hour")
