@@ -30,6 +30,15 @@ So the gate degrades rather than blocking: `usage-budget.py` exits `0` PROCEED, 
 
 **The backstop needs no percentage at all.** If a worker dies with a real rate-limit error: stop dispatching, land what is done, write the log entries, exit. That is what keeps this safe when the numbers are wrong.
 
+
+# Burndown
+
+**The mode whose goal is to reach the ceiling.** The weekly window is
+use-it-or-lose-it, so on the last evening of a week the policy above is exactly
+backwards. [burndown.md](burndown.md) is that argument: four config numbers, one
+deadlined latch, and the three refusals that keep it from becoming the fleet
+with its safeties off.
+
 ---
 
 # Still open

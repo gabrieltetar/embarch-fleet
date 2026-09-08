@@ -132,6 +132,58 @@ five_hour_grace_min = 60
 # measured wave and restore the constant `degraded_workers`.
 five_hour_token_ceiling = 22_600_000
 
+[burndown]
+# burndown.md, split out of budget.md the day it was written. The one mode
+# whose GOAL is to reach the ceiling.
+#
+# The weekly window is use-it-or-lose-it: it resets at a fixed instant and
+# whatever is unspent at that instant is gone. The normal gate above is built to
+# never get near the wall, which is right when the week has days left and wrong
+# in its last hours -- on 2026-09-08 the seat went into the final evening of a
+# week at 81%, and the 19% remaining had no other way to be spent.
+#
+# So burndown is the normal gate with four numbers swapped and one extra
+# precondition. It is MANUAL and DEADLINED: `fleet burndown until <instant>`,
+# never self-arming, never open-ended. Everything else about a leg is unchanged
+# -- same protocol, same reviewer, same commits to main.
+
+# The concurrency cap, replacing [limits] max_workers. 12 rather than 6 at the
+# owner's call, 2026-09-08. The binding constraint on width is NOT tokens: it is
+# git contention on `main` (every unit lands through one supervisor) and the
+# single dev bench. So the extra width buys less than double the throughput and
+# some of it shows up as workers queued to land. That is the experiment.
+max_workers = 12
+
+# The hard stops, replacing [limits] weekly_pct and five_hour_pct. 97, not 100,
+# and the three points are not timidity: the percentages on this machine are
+# DERIVED (budget.md) -- a pinned allowance over the transcripts' own token sum,
+# absorbing a constant factor of whatever is actually metered. 97% of a proxy
+# that reads 3% low is 100% of the real thing. Overrunning the weekly costs the
+# START of the next week, which is the one cost burndown must not pay.
+weekly_pct = 97
+five_hour_pct = 97
+
+# No taper. The taper exists so the last workers of a batch do not slam into the
+# threshold six-in-flight; burndown's whole intent is to arrive AT the threshold,
+# so narrowing on approach defeats it. `suggest()` already reads `band <= 0` as
+# full width, so this is the policy and no code.
+taper = 0.0
+
+# **Refuse to arm on a pin older than this.** Burndown is the only mode that
+# spends the whole allowance, so it is the only one that must insist the
+# allowance is current: everything downstream is arithmetic over a number
+# `/usage` last told us. The session half of the pin is refused outright at 24 h
+# (fleet-usage-cache.py --pin-max-age-h) because the 5-hour window is anchored to
+# activity; 4 h here is tighter than that on purpose, because at 97% the margin
+# for a drifted denominator is three points.
+pin_max_age_h = 4
+
+# Refuse a deadline further out than this. A burndown with no near reset instant
+# is just the fleet with its safeties off, and the mode's whole justification is
+# an expiring allowance. The weekly window is 168 h, so anything past 48 h is
+# almost certainly a typo in the date.
+max_horizon_h = 48
+
 [ownership]
 # protocol.md §3. Paths reserved to the owner: the rules the fleet runs under,
 # the scripts that enforce them, and the agent definitions that carry them.

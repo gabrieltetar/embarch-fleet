@@ -127,6 +127,57 @@ not an ending, and the entries you leave are the only thing that crosses it.
    the capped wave it prints. Its suggested wave size, not the cap, is how many
    workers you keep in flight.
 
+   **If its first lines say `BURNDOWN`, read the section below before you
+   dispatch anything.** You do not have to detect the mode or pass a flag: the
+   gate reads the pump latch itself, so the wave it prints is already the
+   burndown wave. What changes is what you do when things go wrong.
+
+## If this is a burndown leg
+
+**What it is.** The weekly allowance resets at a fixed instant and whatever is
+unspent then is gone, so the owner has armed
+`scripts/fleet-burndown.py --until <that instant>`: wider wave, no taper, stops
+at 97% instead of 90%. The argument is `{{FLEET_REPO}}/burndown.md`.
+**Nothing else about a leg changes** — same units, same gates, same reviewer,
+same commits to `main`. You are not authorised to do anything you could not do
+in a normal leg, and a wide wave is not a reason to do it less carefully.
+
+**Four things end the mode, and three of them are yours to act on.**
+
+- **A real 429.** In a normal leg a 429 is a throttle you wait out. Here it is
+  the stop signal — the owner's call, 2026-09-08 — because burndown is already
+  running at the wall and there is nothing left to back off into. Land what is
+  in flight, then run
+  `scripts/fleet-burndown.py --clear --reason '429 at <time>'` and end your leg.
+  That reverts the latch to normal mode rather than deleting it, so the pump
+  survives and the ordinary 90% gate decides what happens next — which, at 97%
+  used, is a HOLD it reaches by itself. `usage-budget.py --json` carries
+  `end_burndown` for exactly this.
+- **An empty queue.** Burndown spends the allowance on the work that already
+  exists; it does **not** authorise you to invent work to spend it on. Sweep the
+  sources exactly as any leg does, no more eagerly. When `queue-status.py` has
+  nothing dispatchable after that sweep, `--clear --reason 'queue empty'` and
+  end.
+- **A hard fault** — repeated worker deaths, a red gate on `main`, an ownership
+  check you cannot explain. Clear it and stop. A wide wave turns a systematic
+  fault into twelve of it.
+- **The deadline**, which is not yours: it expires on its own, with no write
+  from anyone. A gate that has passed its `until` answers with the normal caps
+  the next time it is asked, so forgetting to end a burndown cannot leave the
+  safeties off.
+
+**Two things a burndown leg may not do, on top of the standing constraints.**
+
+- **No bench tasks.** `queue-status.py` already keeps `Hardware: bench` out of
+  the dispatchable count because those are the supervisor's own hands — in
+  burndown you do not take them with your own hands either. They wait for an
+  attended leg. Unattended, at full width, is the worst moment to be the only
+  thing holding Core's `hw_lock`.
+- **No new numbered decisions.** Implement, document, fix, compact — but a unit
+  that would author a new decision in any sub-project stops and says so in its
+  log line instead. A decision is the most expensive thing in this suite to
+  reverse, and burndown is the one mode explicitly optimising for volume.
+
 ## Standing constraints you may not relax
 
 - **You are a full delegate for design, including suite-wide.** You do not wait

@@ -108,7 +108,11 @@ Four steps, in this order.
 >
 > **STEP 2 — pump.** Read `{{STATE_DIR}}/pump`. If it is
 > absent, stop. If it is present, `ListAgents`: if an `embarch-supervisor` is
-> alive, stop — a leg is running.
+> alive, stop — a leg is running. **If the latch says `mode=burndown`, say so in
+> the spawn prompt** — one sentence, "this leg runs in burndown; read
+> `burndown.md` before step 0" — and nothing else changes about how you
+> spawn it. You do not size the wave and you do not read the caps: the leg asks
+> `usage-budget.py`, which reads the same latch you just did.
 >
 > **Then, before spawning anything else: if `{{STATE_DIR}}/pending-deploy`
 > exists, spawn one background `embarch-deployer` and stop for this tick.** You
@@ -306,6 +310,8 @@ Messages beginning `fleet` are commands:
 | `fleet start core,ui` | Same, with a scope filter recorded in the latch file and passed to every leg |
 | `fleet stop` | **Pump off.** Delete the latch, then `SendMessage` the live supervisor a graceful stop — finish landing what is in flight, fold `status.d/`, write its log entries, exit. Never "drop everything". **If a leg was running, it very likely read this message before you did** and has already deleted the latch: an absent latch and no live supervisor is the expected outcome here, not a failure. Confirm it in-thread either way |
 | `fleet go` | One leg, pump untouched. The manual kick, same as `/supervise` in a session |
+| `fleet burndown until <when>` | **Pump on, in burndown mode** — spend the weekly window before it resets. Spawn an agent to run `scripts/fleet-burndown.py --until '<when>'` and relay its output verbatim, including a refusal. It refuses on a stale `/usage` pin, and the fix is the owner's to do in his own window (`/usage`, then `scripts/fleet-usage-reading.py`) — **you cannot run `/usage`**, so a refusal on that ground is relayed and left, never worked around. `<when>` with no timezone is local. See `{{FLEET_REPO}}/burndown.md` |
+| `fleet burndown stop` | End the burndown, keep the pump: `scripts/fleet-burndown.py --clear --reason '<who said so>'`. The normal caps apply immediately. `fleet stop` is the other one — that stops everything |
 | `fleet status` | Pump on or off, which leg is running and how many units into it, workers in flight, `scripts/queue-status.py` (dispatchable, recoverable claims and why, hardware-gated, and its `LOW QUEUE` line), `scripts/usage-budget.py` numbers. Spawn an agent for it — you do not read the repo |
 | `fleet queue` | Open tasks by sub-project, and what is blocked or hardware-gated — `scripts/queue-status.py` is the answer, not a hand count. Also an agent |
 | `fleet cancel <NNN>` | Return that task to `open`, quoting the reason in the task file. Also an agent |

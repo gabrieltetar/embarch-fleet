@@ -34,6 +34,13 @@ the signal that *is* available locally: an actual HTTP 429 recorded in the
 session transcript. ``--check-429`` finds one. That is the real protection --
 the percentages were only ever there to avoid reaching it.
 
+**BURNDOWN changes the answer, and this script reads the mode itself.** While
+`<state_dir>/pump` says `mode=burndown` with a deadline still ahead, the
+`[burndown]` caps replace the `[limits]` ones -- wider wave, higher stops, no
+taper -- and the missing-percentage degradation is turned OFF, because that
+mode's only stop is a percentage. `scripts/fleet-burndown.py` arms it and
+`burndown.md` argues it. `--no-burndown` answers as if it were not armed.
+
 Exit status is the whole interface:
   0  PROCEED  -- headroom on both windows; ``--suggest`` prints a wave size
   1  HOLD     -- a threshold is reached, or a recent 429; stop dispatching
@@ -326,7 +333,8 @@ def human_reset(ts) -> str:
 
 
 def suggest(five: float | None, seven: float | None,
-            five_max: float, seven_max: float, taper: float) -> int:
+            five_max: float, seven_max: float, taper: float,
+            wave_cap: int = MAX_WORKERS) -> int:
     """A wave size from the tighter of the two headrooms.
 
     Full width until the tighter window is inside its taper band, then linear
@@ -338,6 +346,11 @@ def suggest(five: float | None, seven: float | None,
     Still a heuristic over a number nobody has calibrated. The digest records
     actual per-batch burn (§11); once a few batches exist, replace this with
     cost-per-worker arithmetic against the measured headroom.
+
+    `taper = 0` means full width right up to the cap, which is exactly what
+    BURNDOWN wants and is why that mode is four config numbers rather than a
+    second code path: the taper exists so a batch does not slam into the
+    threshold six-in-flight, and burndown's intent is to arrive at it.
     """
     fracs = []
     for used, cap in ((five, five_max), (seven, seven_max)):
@@ -348,7 +361,7 @@ def suggest(five: float | None, seven: float | None,
         fracs.append(1.0 if band <= 0 else min(1.0, headroom / band))
     if not fracs:
         return 0
-    return max(1, min(MAX_WORKERS, round(MAX_WORKERS * min(fracs))))
+    return max(1, min(wave_cap, round(wave_cap * min(fracs))))
 
 
 def main() -> int:
@@ -385,7 +398,52 @@ def main() -> int:
                     help="print the measured 5-hour burn and exit")
     ap.add_argument("--check-429", type=int, default=90, metavar="MIN",
                     help="HOLD if a real 429 was recorded in the last MIN minutes (default 90)")
+    ap.add_argument("--burndown", dest="burndown", action="store_true", default=None,
+                    help="force the [burndown] caps even with no live latch (testing)")
+    ap.add_argument("--no-burndown", dest="burndown", action="store_false",
+                    help="ignore a live burndown latch and answer with the normal caps")
     args = ap.parse_args()
+
+    # **Burndown is read from the latch, not passed in by the caller.** Every
+    # site that asks this gate a question -- a leg's step 0, `fleet status`, a
+    # watchdog -- would otherwise have to learn the mode and pass a flag, and
+    # the one that forgot would dispatch a normal wave into a burndown or, far
+    # worse, print a 90% verdict while the fleet ran to 97%. One reader, and
+    # the mode is named in every line of output so it can never apply silently.
+    bd_latch, bd_why = CONF.burndown()
+    burndown = bd_latch is not None if args.burndown is None else args.burndown
+    if burndown:
+        bd = CONF.get("burndown", {})
+        cap = int(bd.get("max_workers", MAX_WORKERS))
+        # Only override what the caller left at its default. A leg that passes
+        # `--seven-day-max 60` during a burndown means 60, and a mode that
+        # quietly widened it would be a gate overruling its operator.
+        if args.five_hour_max == float(CONF["limits"]["five_hour_pct"]):
+            args.five_hour_max = float(bd.get("five_hour_pct", args.five_hour_max))
+        if args.seven_day_max == float(CONF["limits"]["weekly_pct"]):
+            args.seven_day_max = float(bd.get("weekly_pct", args.seven_day_max))
+        if args.taper == float(CONF["limits"].get("taper", 0.25)):
+            args.taper = float(bd.get("taper", 0.0))
+        # **Burndown implies --strict, and this is the one place the two modes
+        # differ in kind rather than degree.** Normal operation degrades to a
+        # measured wave when the percentages are missing, because DEGRADED is
+        # this machine's steady state and refusing would mean never starting.
+        # Burndown's entire stop is a percentage: without one there is nothing
+        # between the fleet and next week's allowance, so a missing cache stops
+        # it. Arming already refuses on a stale cache; this covers the cache
+        # going away mid-burn.
+        args.strict = True
+    else:
+        cap = MAX_WORKERS
+
+    def mode_lines() -> list[str]:
+        if not burndown:
+            return []
+        until = bd_latch.get("until", "?") if bd_latch else "forced by --burndown"
+        return [f"BURNDOWN until {until} -- caps {args.seven_day_max:g}% weekly / "
+                f"{args.five_hour_max:g}% 5-hour, {cap} workers, no taper.",
+                "  A 429 does not throttle in this mode, it ENDS it: "
+                "scripts/fleet-burndown.py --clear --reason '429'."]
 
     if args.burn:
         b = burn_window(5.0)
@@ -409,9 +467,13 @@ def main() -> int:
     if why:
         if throttled:
             if args.as_json:
-                print(json.dumps({"verdict": "HOLD", "reason": throttled, "workers": 0}))
+                print(json.dumps({"verdict": "HOLD", "reason": throttled,
+                                  "workers": 0, "burndown": burndown,
+                                  "end_burndown": burndown}))
             else:
                 print(f"HOLD -- {throttled}")
+                for line in mode_lines():
+                    print(line)
             return 1
         feeder = check_feeder()
         burn = burn_window(5.0)
@@ -423,7 +485,7 @@ def main() -> int:
         # what stops the fleet, and it is checked above.
         if burn is not None and ceiling > 0:
             used_pct = 100.0 * burn[0] / ceiling
-            workers = measured_wave(burn[0] / ceiling, args.burn_full_below, MAX_WORKERS)
+            workers = measured_wave(burn[0] / ceiling, args.burn_full_below, cap)
             measured = (f"5h burn {burn[0]:,} billable tokens over {burn[1]:,} "
                         f"requests = {used_pct:.0f}% of the calibrated ceiling "
                         f"({ceiling:,.0f}); sustainable rate is "
@@ -436,6 +498,9 @@ def main() -> int:
                         "burn is unknown -- falling back to the constant wave")
         if args.strict:
             workers, verdict = 0, "HOLD"
+            if burndown:
+                why = (why + " -- and burndown stops at a percentage, so it "
+                       "cannot run without one")
         elif used_pct is not None and used_pct >= 100.0:
             workers, verdict = 1, "DEGRADED"
         else:
@@ -449,13 +514,18 @@ def main() -> int:
                               "token_ceiling": ceiling}))
         else:
             print(f"{verdict} -- {why}")
+            for line in mode_lines():
+                print(line)
             if feeder:
                 print(f"  FEEDER: {feeder}")
                 print("  DEGRADED and 'the feeder is broken' are indistinguishable on\n"
                       "  disk, so this is the only thing that tells them apart.")
             print(f"  {measured}")
             if args.strict:
-                print("--strict: not dispatching without numbers.")
+                print("--strict: not dispatching without numbers."
+                      if not burndown else
+                      "Burndown implies --strict. Fix the */4 "
+                      "fleet-usage-cache.py cron, or end the mode.")
             else:
                 print(f"Proceeding with a measured wave of {workers}. No 429 in the "
                       f"last {args.check_429} min, which is the hard signal.")
@@ -489,7 +559,7 @@ def main() -> int:
                         f"resets in {human_reset(seven_reset)}")
 
     workers = 0 if blocking else suggest(five, seven, args.five_hour_max,
-                                         args.seven_day_max, args.taper)
+                                         args.seven_day_max, args.taper, cap)
     verdict = "HOLD" if blocking else "PROCEED"
 
     if args.as_json:
@@ -504,6 +574,14 @@ def main() -> int:
             "blocking": blocking,
             "cache_age_s": data["_age"],
             "derived": bool(data.get("derived")),
+            "burndown": burndown,
+            "burndown_until": (bd_latch or {}).get("until") if burndown else None,
+            "burndown_why_not": None if burndown else bd_why,
+            "max_workers": cap,
+            # A 429 ends burndown rather than pausing it (owner, 2026-09-08),
+            # so the one caller that must act differently gets a field rather
+            # than a sentence to parse.
+            "end_burndown": bool(burndown and throttled),
         }))
         return 1 if blocking else 0
 
@@ -514,6 +592,8 @@ def main() -> int:
         return f"  {label}: {used:5.1f}% [{bar}] cap {cap:g}%, resets in {human_reset(reset)}"
 
     print(f"{verdict}  (cache {data['_age']}s old)")
+    for line in mode_lines():
+        print(line)
     if data.get("derived"):
         # A derived cache is byte-compatible with the status line's, so nothing
         # downstream could otherwise tell a proxy from a first-party number.
