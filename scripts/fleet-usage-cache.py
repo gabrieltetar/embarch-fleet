@@ -35,7 +35,10 @@ indistinguishable: a proxy standing in for a first-party number must say so, and
   the machine goes quiet for a few hours. A session pin older than
   `--pin-max-age-h` is therefore refused rather than projected, and the weekly
   half is still written on its own -- `usage-budget.py` treats a missing window
-  as "not currently constraining", which is the correct reading.
+  as "not currently constraining", which is the correct reading. **The drift is
+  in the safe direction**, which is why projecting at all is defensible: a grid
+  boundary sits at or before the real one, so the sum spans at least the real
+  window and the percentage reads high rather than low.
 - **It never writes an empty `rate_limits`.** That would pass the reader's
   validity check and then produce "PROCEED with 0 workers", the one verdict a
   leg cannot act on.
