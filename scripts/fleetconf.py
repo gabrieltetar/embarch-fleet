@@ -24,10 +24,36 @@ Usage:
 """
 from __future__ import annotations
 
+import datetime
 import os
 import sys
+import time
 import tomllib
 from pathlib import Path
+
+
+def parse_instant(raw: str) -> float | None:
+    """An epoch from an ISO-8601 instant, or None. Naive input is LOCAL time.
+
+    Local rather than UTC because the only human who types one of these reads
+    his reset instant off `/usage`, which prints it in his own timezone. The
+    opposite convention is what put a six-hour error into every 429 age this
+    repo measured (`tasks/doc/023`), so the choice is stated rather than
+    inherited: a `Z` or an offset is honoured when present, and its absence
+    means the clock on the wall next to the person typing.
+    """
+    raw = (raw or "").strip().replace(" ", "T")
+    if not raw:
+        return None
+    if raw.endswith("Z"):
+        raw = raw[:-1] + "+00:00"
+    try:
+        dt = datetime.datetime.fromisoformat(raw)
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.astimezone()
+    return dt.timestamp()
 
 _HERE = Path(__file__).resolve().parent
 _CANDIDATES = (
@@ -93,6 +119,59 @@ class Conf:
         number usage-budget.py would have suggested."""
         return int(self._d["limits"]["degraded_workers"])
 
+    def pump(self) -> dict[str, str] | None:
+        """The pump latch, parsed. `None` when the fleet is stopped.
+
+        The latch has always carried content -- `fleet start core,ui` records a
+        scope filter in it -- but nothing parsed it: every reader asked
+        `exists()` and a human read the rest. Burndown needs one machine-read
+        field (`mode`), so this is the one parser, here rather than in the
+        script that writes it, because `usage-budget.py` reads the latch it
+        never writes.
+
+        Format is `key=value`, one per line. **Anything else in the file is
+        kept and ignored** -- the latch is also a note to whoever opens it, and
+        a parser that rejected prose would turn a scope filter written by hand
+        into a stopped fleet.
+        """
+        path = self.state_dir / "pump"
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            return None
+        out: dict[str, str] = {}
+        for line in text.splitlines():
+            k, sep, v = line.partition("=")
+            k = k.strip()
+            if sep and k and all(c.isalnum() or c == "_" for c in k):
+                out[k.lower()] = v.strip()
+        return out
+
+    def burndown(self) -> tuple[dict[str, str] | None, str | None]:
+        """(latch, None) while a burndown is live, or (None, why-it-is-not).
+
+        Live means all three: the pump is latched, its `mode` is `burndown`, and
+        its `until` is a parseable instant still in the future. **An expired
+        deadline is not an error and not a burndown** -- the mode is defined by
+        the deadline it races, so passing that instant ends it whether or not
+        anyone was watching. The caller reverts to the normal caps and says so.
+        """
+        latch = self.pump()
+        if latch is None:
+            return None, "the pump is not latched"
+        if latch.get("mode") != "burndown":
+            return None, "the pump latch is in normal mode"
+        raw = latch.get("until", "")
+        when = parse_instant(raw)
+        if when is None:
+            # Refuse rather than assume: a burndown whose deadline cannot be
+            # read has no end, and an unreadable date must never widen a wave.
+            return None, f"burndown latch has an unreadable `until` ({raw!r})"
+        if when <= time.time():
+            return None, (f"the burndown deadline ({raw}) has passed; "
+                          "normal caps apply")
+        return latch, None
+
     @property
     def reserved(self) -> tuple[str, ...]:
         return tuple(self._d["ownership"]["reserved"])
@@ -127,6 +206,9 @@ class Conf:
             "SLACK_CLOUD_CHANNEL": s["cloud_channel"],
             "UNITS_PER_LEG": str(lim["units_per_leg"]),
             "MAX_WORKERS": str(lim["max_workers"]),
+            "BURNDOWN_MAX_WORKERS": str(
+                self._d.get("burndown", {}).get("max_workers",
+                                                lim["max_workers"])),
         }
 
 
