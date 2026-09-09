@@ -97,6 +97,110 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-09 00:28 — outpost/005 an invariant the docs asserted and the reference decoder never implemented, and the first visible cost of the no-new-decisions rule
+
+**Decided:** six.
+
+**(1) `spec.md:61`'s invariant is now implemented by the one tool an engineer runs by hand.** That
+line says *"A join that cannot be verified stamps nothing"* and explains why — a trace shifted by
+three frames is readable, wrong, and indistinguishable from a correct one. `scripts/decode_outpost.py`
+read columns 0 and 1 out of the arrival CSV, dropped `frame_bytes` on the floor, and stamped
+whatever the row said. It now counts each frame's actual delimiter-separated chunk length **the same
+way `decode_stream` counts `frame_index`** — every non-empty chunk, before COBS and CRC checks, so a
+bad-CRC frame still occupies its index, which is the detail that makes the comparison meaningful
+rather than off by however many frames were corrupt — and on the first disagreement leaves
+`rx_utc_ms` empty for the **whole** capture with a stderr line naming the diverging index.
+
+**(2) The default changed, so I had the reviewer measure the blast radius rather than reason about
+it.** It grepped every mention of `rx_utc_ms` suite-wide and confirmed **no other document promises
+a stamped `rx_utc_ms` unconditionally**, which is why this unit correctly wrote no `status.d/`
+fragment — the absence of one would itself have been the finding if any suite-level claim had been
+made false. It also confirmed the degrade path is real and tested, not merely documented: an older
+**two-column** arrival CSV — the shape that exists in the wild — still decodes, still stamps, and
+says on stderr that it did so unverified.
+
+**(3) The reviewer found the thing I asked it to look for, and it is the first visible cost of this
+leg's own constraint.** I told it plainly that "an existing decision covers it" is exactly the
+attractive reading when a leg forbids new decisions, and to say so if the coverage was convenient
+rather than genuine. It was convenient. **`decisions/clocks.md` decision 18 covers the
+verify-then-refuse mechanism completely** — keying by frame index, checking claimed against actual,
+*"when neither fits, nothing is stamped and the stream index says why"* — and says nothing about an
+operator override that stamps anyway after verification has failed. The new
+`--allow-unverified-join` is a design choice about this project's safety posture, and it landed in
+`spec.md` prose, `README.md` and a changelog fragment with no numbered decision anywhere.
+
+**(4) The reviewer then did the thing that makes a finding useful instead of merely correct: it
+checked whether the practice was already established, and found the sibling.**
+`--allow-build-id-mismatch` — decision 9's analogue in `decisions/manifest.md` — has the **identical
+gap**, and decision 9 likewise states its refusal with no carve-out while `spec.md:60` repeats it.
+So this is one posture recorded nowhere, twice, not one unit's slip. **I filed both in a single
+task**, `tasks/outpost/015`, precisely so nobody fixes them one at a time and leaves the suite with
+two overrides recorded two different ways — which is the defect `outpost/009` spent a whole unit
+undoing yesterday. The drop is drained.
+
+**(5) Nothing on disk needed correcting, and I checked that rather than assuming it.** The
+inaccurate claim — "decision 18 already covers the design" — was in the worker's **commit message**,
+which is not a document anyone reads for truth. `spec.md:61` as landed says the flag "stamps anyway,
+mirroring `--allow-build-id-mismatch`'s posture toward decision 9", which *describes* the gap
+instead of papering over it. So `outpost/015` says in as many words: something needs adding, nothing
+needs correcting, and do not "fix" `spec.md:61` by deleting that clause.
+
+**(6) The worker left its completed task file at `State: claimed`, which is the third instance of
+that failure in two legs, so I have filed the class.** Leg 057 hit it twice, fixed both by hand,
+filed nothing, and wrote in its own closing line that *if a later leg meets any of these again, the
+honest reading is that it under-filed* and the right move is one task naming the whole class. This
+leg met it inside forty minutes. `tasks/doc/028` is that task, `Owner: required` because every
+plausible fix is a reserved path — a checker in `scripts/`, the worker contract in `.claude/`, or
+`leg.md` itself. **The failure with teeth is not the tidiness**: a task left `claimed` after a leg
+dies is indistinguishable from a live claim, recovery correctly reclaims it to `open`, and the next
+leg re-dispatches a unit that already landed. The task names the cheapest fix as
+`fold-commit.py` refusing a fold whose unit is not in a terminal state, since that is the moment the
+truth is known and that script already refuses two other things.
+
+**Merged:** `agent/outpost/005-verify-the-arrival-join` (code **`81cbba2`** in `embarch-outpost`;
+doc **`dab753a`**). Doc branch rebased over `api/033`'s fold, then a fast-forward. **No Rust
+anywhere in `embarch-outpost`** — it is a Zephyr module plus pure Python — so the gate is the Python
+suites and the doc wrapper: `tests/decoder_unit.py` **29 tests, all pass** (9 new, covering match,
+divergence, the escape hatch, missing column and short column, plus the two new helpers directly);
+`tests/cross_decoder.py` **PASS on all 831 rows of 41 frames**, header line included. **That second
+one matters more than its one line suggests**: it *SKIPs* in a worker's worktree, because the
+sibling repos it cross-checks against are not checked out beside it, so the worker could only re-run
+its logic by hand — **I ran it in the main checkout after the merge, where it genuinely passes.** A
+gate that skips looks exactly like a gate that passes, and this one skips in every worktree the
+fleet creates. `python3 scripts/check-docs.py` **all 10 green**; `check-ownership.py --scope
+outpost` green (5 paths, base `9640260e2378`); `check-client-names.py --repo embarch-outpost` clean.
+
+**Blocked:** nothing.
+
+**Reviewer:** 1 finding — inbox/outpost-decision-18-escape-hatch-gap.md
+Drained into `tasks/outpost/015` and deleted, so it is gone from `inbox/`; its substance is in that
+task, widened to cover `--allow-build-id-mismatch` as well, which is the half the reviewer found on
+its own initiative.
+
+**Hardware debts:** **none new**, and one existing debt got worse in a way worth naming: the fleet
+still cannot build `embarch-outpost`'s Zephyr `tests/unit` here, and this unit adds host-side Python
+tests that do not touch that gap. `cross_decoder.py` skipping in every fleet worktree is a **gate**
+debt rather than a hardware one, recorded above. All other standing debts unchanged from this leg's
+first entry: the native Windows build of `embarch-core` (`core/028`, `core/015`, `core/010`);
+`umbrella/037`'s corrected check 13 has never met the bench; `embarch-dev-bench`'s west/Zephyr
+toolchain is absent; the four DUT-gated bench tasks; `core/028`'s `[assumed]` ESP32-C5
+USB-enumeration fact; `dev-bench/002`'s 17-to-64-step study.
+
+**Budget:** `PROCEED` / **BURNDOWN** — 5-hour **27.7% → 29.2%**, weekly **94.2% → 94.5%**, against a
+97% cap, weekly resetting in 6h31m. Suggested wave **12**, 4 dispatched. **No 429**; the mode stands.
+
+**Least sure about:** **whether `tasks/outpost/015` should have been a decision I wrote myself
+instead.** I am a full delegate for design, including suite-wide, and the only thing stopping me was
+this leg's burndown guardrail — which is a rule about *volume optimisation*, not about my authority,
+and the reviewer had just handed me a clean statement of the posture and both its instances. I
+followed the guardrail because a mode that lets its own occupant decide when the guardrail does not
+apply has no guardrail, and because the sibling flag means this was never a same-day emergency. But
+the outcome is that a design choice landed in prose tonight and its record waits for an attended
+leg, and someone reading `spec.md:61` in the meantime is reading an honest sentence about an
+undecided thing.
+
+---
+
 ## 2026-09-09 00:23 — api/033 a guard hole closed by narrowing the claim rather than widening it, and a fourth wording I chose not to write
 
 **Decided:** five. **This is leg 058's first unit. The leg is in burndown; the latch stands and
