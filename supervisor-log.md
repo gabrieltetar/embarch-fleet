@@ -97,6 +97,63 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-09 16:21 — core/030 the split-first rule used as intended, and the compaction question answered honestly
+
+**Decided:** to accept this as a **split rather than a squeeze**, which is the whole shape of the
+unit and the right call. `embarch-core/spec.md` was 108 bytes into its reserve. The task file's own
+hint pointed at squeezing §5's 12-row constants table (several rows restate `[assumed]` with no
+provenance note). The worker instead lifted the entire table out verbatim into a new
+`embarch-core/interfaces/constants.md`, left a pointer paragraph in `spec.md` saying where it went
+and that nothing was cut, and added a row to `interfaces.md`'s table. `spec.md` 9,148 B → **7,977 B**,
+out of reserve with room to spare, and **not one fact left the corpus.** That is `DOC-BUDGET.md`'s
+split-first rule working: a verbatim split restates nothing, so it costs no accuracy at all, whereas
+the squeeze the task suggested would have traded the `[measured 2026-08-27]` provenance on
+`WATCHDOG_GRACE_MS` — the one row in that table that records why a real 300 s capture was thrown
+away — for bytes. I verified verbatim-ness myself against the removed table before merging, and the
+reviewer diffed all 11 rows independently and agrees: identical values, tags and provenance on both
+sides.
+
+**`DOC-COMPACTION-PASS.md`'s human question, in my own words rather than the worker's — and the
+reason it is mine is worth recording.** The worker's own report never reached me: it pushed both
+branches and I landed the unit on the positive-presence rule (a pushed branch carrying commits
+retires a worker), so I answered from the diff instead. *Can `embarch-core/spec.md` alone answer what
+someone needs to work on this component today?* **No, and it no longer claims to** — that is the
+honest answer and it is the point of the split rather than a defect of it. `spec.md` is now the
+architecture and the routes; the values you need in your hand while changing flashing or capture
+behaviour live one link away. What makes that acceptable is that the pointer is explicit and names
+what moved, so the file does not silently look complete while missing a table; `interfaces.md`
+already splits the same way, and `interfaces/result-layout.md` is the existing precedent for a
+non-route-group row in that table. What I would still call a real if minor wart: a spec-level
+constants table is now filed under `interfaces/`, which is where the split machinery already existed
+rather than where a reader would first look. I asked the reviewer to judge that specifically and it
+called it consistent with the precedent, not a contradiction. I agree, and I am recording the wart
+rather than fixing it, because moving it again would cost a second set of stale pointers for a
+naming preference.
+
+**Merged:** `agent/core/030-compact-core-spec` (code **none** — docs-only by design, the
+`embarch-core` code branch had a zero diff; doc `bfa20de`). Ownership check base `9a0b907fbacd`,
+5 changed paths, all owned by the `core` worker. The doc branch was rebased onto `topology/023`'s
+fold before merging. Gate green 11/11 on the merge result, first run, no fold fixes needed.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — a documentation split, no board, no build. **And one
+narrowed by luck rather than by work:** `interfaces/constants.md` now holds `WATCHDOG_GRACE_MS`'s
+measured provenance somewhere a reader looking for capture behaviour will actually find it, which is
+the only `[measured]` row in that table; the other eleven are still `[assumed]` and none of them was
+promoted. Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is the
+owner's and still outstanding, and is also what would deploy `core/020`'s `self_reported_hardware_id`
+rename — **and this unit did not attempt one**, by explicit instruction, so it does not narrow that
+debt either; `umbrella/037`'s corrected check 13 has never met the bench that found its defects and
+needs only the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built here
+(no `west`, no `ZEPHYR_BASE`). The bench queue is still parked by the owner's own commit, and no
+bench unit was runnable this leg.
+**Budget:** PROCEED, wave 6 suggested; unchanged from the leg's start.
+**Least sure about:** that I answered the compaction pass's human question at all rather than
+recording it as unanswerable. `leg.md` says *whoever runs one* answers it in their own words, and the
+actor who read `spec.md` whole was the worker, whose report I never saw — so what is in this entry is
+a supervisor's answer from a diff, which is a weaker thing than the rule asks for and I do not want
+the next leg to read it as the stronger one.
+
 ## 2026-09-09 16:19 — topology/023 decision 23 stops deferring to an owner who has since answered
 
 **Decided:** three things, and the first is a `fleet stop` this leg is running under.
