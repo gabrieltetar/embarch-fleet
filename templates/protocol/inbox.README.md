@@ -50,6 +50,14 @@ outside its own task drops it here instead of reaching outside its ownership row
 — which is how `study-designer/002` (the test-harness stack overflow) should have
 been captured on 2026-09-03, rather than the supervisor hand-writing it.
 
+**A thread that works in a worktree must write here by absolute path** —
+`{{DOC_REPO}}/inbox/`. Because nothing here is in git, a drop exists only in the
+tree that wrote it, so a bare `inbox/` from a worker's worktree lands in that
+worktree and is deleted with it when the unit lands. Nothing notices: the drop
+leaves no trace in git, the log or the gate. That fired on 2026-09-08
+(`outpost/013`), and the drop survived only because the supervisor went looking
+after reading the worker's report.
+
 That does mean the fleet can generate its own backlog. Worth watching: a queue
 that grows only from what the fleet noticed while working is a queue that can
 drift away from what the owner actually wants done.

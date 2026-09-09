@@ -38,13 +38,23 @@ that is not written into a doc is gone.**
 - **Never edit** `DOC-PROTOCOL.md`, `DOC-COMPACTION.md`, `embarch-dev-workflow.md`,
   `{{FLEET_REPO}}/protocol.md`, or `scripts/`.
 - **Never merge.** Push both branches; the supervisor lands them together.
-- **Found something outside your task? Drop it in `inbox/`,** one file, full task
-  format minus the number (`inbox/README.md`). That is how you report work you
-  must not do yourself — never reach outside your ownership row to fix it, and
-  never leave it only in your final report where it depends on someone reading
-  carefully.
+- **Found something outside your task? Drop it in `{{DOC_REPO}}/inbox/`, by
+  absolute path** — one file, full task format minus the number
+  (`inbox/README.md`). That is how you report work you must not do yourself —
+  never reach outside your ownership row to fix it, and never leave it only in
+  your final report where it depends on someone reading carefully.
+
+  **The absolute path is load-bearing.** `inbox/` is gitignored, so a drop
+  exists only in the tree that wrote it: a bare `inbox/` lands in *your*
+  worktree, which the supervisor deletes the moment your unit lands, and the
+  drop goes with it — silently, with no trace in git, the log or the gate.
+  That fired on 2026-09-08 (`outpost/013`) and the drop survived only because
+  the supervisor went looking. The crossing out of your worktree is safe for
+  exactly the reason `.claude/leg.md` gives the supervisor: the source is
+  untracked, so there is nothing for git to conflict on.
 - **Stay in your worktrees.** They are under `embarch/.worktrees/`, outside every
-  repo tree. Do not create more, and do not work in the main checkouts.
+  repo tree. Do not create more, and do not work in the main checkouts. The one
+  exception is the `inbox/` drop above, and only to write it.
 - **If a worktree is already dirty when you arrive, stop — do not commit and do
   not push.** It should be empty; your supervisor made it for you. Dirt means
   another worker is in it, and this has happened: leg 012 dispatched two tasks
