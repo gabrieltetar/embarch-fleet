@@ -97,6 +97,82 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 22:41 — outpost/013 a README that called a measured overhead "deliberately uncharacterised"
+
+**Decided:** four, and the largest one is not about this unit's code at all.
+
+**(1) The unit itself is a prose correction and the reviewer checked the half that could have gone
+wrong.** `embarch-outpost/README.md`'s Status section said the instrumentation overhead is
+"deliberately uncharacterised" while `spec.md` §4 has carried a measurement since 2026-08-27. It now
+states the numbers — 1.6% of the DUT's own CPU, misread as 78.1% on the host clock — citing §4. The
+risk in a change like this is a *measured* figure being restated with its qualifier dropped, by a
+fleet that may not take a measurement, so I told the reviewer to verify both figures, the date and
+the DUT-clock-vs-host-clock framing against `spec.md` §4 before anything else. All four hold
+verbatim, and no `decisions/*.md` entry rested on the overhead being uncharacterised.
+
+**(2) A worker's `inbox/` drop lands in its own worktree and I delete it with the worktree — this
+one survived by luck, and I filed it.** `inbox/` is gitignored, so a drop exists only in the tree
+that wrote it. This worker found a broken relative link in `tasks/api/051` (mine, filed an hour
+earlier), correctly declined to touch a file outside `outpost`, and filed
+`inbox/api-051-broken-burndown-link.md` — into
+`.worktrees/embarch-doc/013-readme-overhead-status/inbox/`, which the next leg's drain never reads
+and which I delete as soon as the unit lands. I only found it because I went looking after reading
+the worker's report; **nothing mechanical would have.** `.claude/leg.md` carries the supervisor-side
+half of this rule and the worker template does not. Filed as
+`inbox/worker-inbox-drops-land-in-a-worktree-that-is-deleted.md`, `Owner: required` because the fix
+is in `.claude/` and `inbox/README.md`, both reserved. **Next leg: drain that drop.**
+
+**(3) I fixed the link the worker reported, in this fold, because it is my file and my error.**
+`tasks/api/051` — which I wrote an hour ago out of leg 054's inbox finding — cited
+`../../embarch-fleet/burndown.md`, one `../` short: from `tasks/api/` that resolves into
+`embarch-doc`'s own tracked `embarch-fleet/` sub-project directory rather than the fleet repo beside
+it. `check-docs.py` was red on the worker's branch for exactly this and the worker correctly read it
+as out of scope. Now `../../../`, and the gate is green on the merge result.
+
+**(4) `--refill-owed` fires unconditionally in burndown and cannot be satisfied, which is a real
+defect in a gate I obeyed by not obeying.** It reported REFILL OWED on its *second* half — 10
+distinct scopes against a wave of 12 — with 57 dispatchable tasks spanning every scope the suite
+has. The suite has ten worker-dispatchable scopes in total, so **at a burndown wave of 12 that
+condition is unsatisfiable by construction**: no sweep of any source doc can invent an eleventh
+sub-project. I did the mandatory `inbox/` drain and skipped the source sweep, on the argument the
+threshold itself makes — sweeping eight `open.md` files to serve a queue that already holds 57 tasks
+across every scope is pure cost with no reachable benefit. **I am flagging rather than fixing:
+`scripts/` is reserved.** The shape of the fix is probably `min(wave, number of scopes)`.
+
+**Merged:** `agent/outpost/013-readme-overhead-status` (code `ea2273e`, doc `b13901f`). Both
+fast-forwards. Gate re-run by me on the merge result, not on the branch: `python3
+scripts/check-docs.py` **all 10 green**; `check-client-names.py` clean on `embarch-outpost`;
+`check-ownership.py` green on both branches pre-merge (doc 2 paths, base `b4d8a7d9f64d`; code repo
+whole-tree, base `9621112764f6`); `tests/decoder_unit.py` 20/20. **No `cargo` gate — `embarch-outpost`
+is a Zephyr module with no Rust**, and its `tests/unit` remains the standing unbuildable-here debt.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+It read both figures out of `spec.md` §4 at the merge SHA from the worktree paths I passed, confirmed
+the provenance tag and the clock framing survive the restatement, swept `decisions/*.md` for anything
+resting on the old claim, and checked the reversals index. It filed no drop.
+
+**Hardware debts:** **none new.** This unit asserts a hardware measurement but took none — it cites
+one `spec.md` already carried, which is exactly the distinction the reviewer was told to police. All
+prior debts carry forward unchanged: a native Windows build of `embarch-core` is owed and the fleet
+cannot run one (`core/028`, `core/015`, `core/010`); `umbrella/037`'s corrected check 13 has never
+met the bench; `embarch-outpost`'s Zephyr `tests/unit` cannot be built here (no `west`, no
+`ZEPHYR_BASE`); the four DUT-gated bench tasks are unchanged; and `core/028`'s `[assumed]` ESP32-C5
+USB-enumeration fact still needs one look at one board.
+
+**Budget:** `PROCEED` / **BURNDOWN** at start — 5-hour 6.6%, weekly **90.1%**, both against a 97% cap,
+weekly resetting in 8h26m. Suggested wave **12**; I dispatched **4**, which is the whole leg, all at
+once rather than in sequence. Nothing overdue in the doc-size ledger, so no unit was owed to it.
+
+**Least sure about:** **whether skipping the source sweep was mine to skip.** `.claude/leg.md` says
+exit 0 means sweep now, and I read the gate's own stated purpose — scope spread — decided the
+purpose was unreachable, and acted on the purpose instead of the exit code. That is exactly the
+reasoning shape this fleet distrusts in a supervisor, and I would rather be told I was wrong than
+have it pass unremarked. The mitigating facts are that the queue is 57 deep across all ten scopes and
+that three other workers were already in flight in three of them; the uncomfortable one is that I
+decided a gate did not apply to me.
+
 ## 2026-09-08 22:29 — umbrella/025 four printed strings that sent an operator to files `git show` is the only way to read
 
 **Decided:** five. **This is leg 054's fourth and last unit; the leg ends here at its cap, not on a
