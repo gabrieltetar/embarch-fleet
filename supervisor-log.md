@@ -97,6 +97,70 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 23:53 — outpost/009 the fourth copy of a rule that had three, and two workers in a row that left their task file claimed
+
+**Decided:** three.
+
+**(1) The wrong rule is out of the position a firmware author reads first, and the fix was checked
+against the other copies rather than written from the task.** `src/outpost_priv.h`'s top `@file`
+comment said any wire-format change must bump `OUTPOST_RECORD_LAYOUT_VERSION`. It now says a change
+to the record or frame **shape** bumps it, that appending an `enum outpost_kind` value does not, and
+why — a host decodes an unknown kind as `unknown_N` rather than failing. **The risk in this unit was
+producing a fourth wording**, since the defect was three copies of one rule disagreeing, and the
+reviewer tested exactly that: the new block, the file's own lower block at line ~77, and
+`interfaces/wire.md` now agree in substance, phrase for phrase, with no new variant introduced.
+`interfaces/wire.md` opens by calling this header the specification three implementations must agree
+on, which is why a stale comment here was worse than a stale one in prose.
+
+**(2) The "no other copy survives" claim was re-derived, and it holds for a reason worth recording.**
+`decisions/tracing.md` line 49 does still contain the phrase — as an explicit tombstone: *"The cost
+read 'and a layout bump' until 2026-09-06; appending a kind never bumps it — wire.md."* A grep for
+the old rule therefore hits a file that is *documenting* the correction, which is the same
+documentation-shaped-like-its-data trap this log's own preamble records twice. The next actor
+grepping for this should expect that hit and not treat it as a fourth copy.
+
+**(3) Two workers in a row left their task file at `State: claimed` after completing it, and I only
+caught it because I looked.** `topology/021` and this one both ticked their checkboxes, both wrote a
+result section, and neither changed the state line or removed the file — so both would have stayed
+`claimed` on `main` after their fold, which is indistinguishable from a worker that died holding
+them, and the next leg's recovery would reclaim them to `open` and re-dispatch finished work. I
+removed `topology/021`'s in a follow-up commit (it should have been in the fold; my mistake) and
+this one's inside the fold. **Nothing checks this.** `fold-commit.py` refuses a fold whose log entry
+drops a field but has no opinion about the task file the unit was for, and `queue-status.py` would
+have shown both as `claimed` under a supervisor that no longer exists. Two in one leg is the second
+pattern this leg has found of that shape — the first being `In flux: yes` tasks sitting `open` — and
+both are the same class: **a task file's state field is written by hand and verified by nobody.** I
+have not filed a task; if a later leg sees a third instance, that is the finding.
+
+**Merged:** `agent/outpost/009-outpost-priv-layout-version-comment` (code **`dd8cb22`** in
+`embarch-outpost`, one file, header comment only; doc **`b841489`**). The doc branch would not
+fast-forward over `topology/021`'s fold, so I rebased it in its own worktree and force-pushed the
+branch before merging — no conflict, one commit. Gate re-run by me on the merge result:
+`python3 tests/decoder_unit.py` **20 tests OK** (this repo has no cargo and no west);
+`python3 scripts/check-docs.py` **all 10 green**; `check-ownership.py --scope outpost` green on both
+branches (2 doc paths, base `df11eaa4f469`; code repo whole-tree owned);
+`check-client-names.py --repo embarch-outpost` clean.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none new.** `embarch-outpost`'s Zephyr `tests/unit` still cannot be built
+here, which this unit met again — the Python decoder unit tests are what the repo actually offers a
+leg. All other standing debts unchanged from this leg's first entry.
+
+**Budget:** `PROCEED` / **BURNDOWN**, unchanged verdict, weekly still tracking against the 97% cap
+with no 429. Wave 12 suggested, 4 in use.
+
+**Least sure about:** **whether force-pushing a worker's branch to rebase it is right, or whether I
+should have rebased locally and verified before pushing.** `embarch-dev-workflow.md` §6 forbids
+merge commits, so a rebase is the only shape available — but the branch's only copy at that moment
+was the remote one, and a rebase that went wrong mid-way would have force-pushed over the remote's
+only copy of a finished unit. It did not, and previous legs have done this routinely, but the window
+is real and nothing in `.claude/leg.md` addresses it.
+
+---
+
 ## 2026-09-08 23:48 — topology/021 a clean mission split, and the first unit of a leg that started by reclaiming a deferred deploy
 
 **Decided:** four.
