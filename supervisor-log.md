@@ -97,6 +97,69 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 22:48 — ui/019 a decision file compacted by splitting it, and the one sentence that was not verbatim
+
+**Decided:** four.
+
+**(1) The pass split rather than squeezed, which is what `DOC-BUDGET.md` asks for and is the more
+valuable outcome.** `embarch-ui/decisions/trace-chart.md` was 11,833/12,288 B. Decision 23 (the
+outcome decoder) is a different mission from decision 10's chart half, and this sub-project already
+splits `decisions.md` by mission — decision 10 is itself split three ways across `trace-view.md`,
+`topology-tab.md` and `trace-chart.md`. So decision 23 moved into a new `decisions/outcome-decode.md`
+with an index row in `decisions.md`. `trace-chart.md` fell to 8,801 B, clear of its reserve, and
+**nothing was deleted at all** — which is the whole argument for splitting first.
+
+**(2) The reviewer caught the split not being verbatim, and I reverted the addition rather than
+correct the claim.** Diffing decision 23's text at `1638b96` against `outcome-decode.md`, its closing
+sentence had gained a link: "named at decision 10 (chart half)" became "named at decision 10 (chart
+half, `[trace-chart.md](trace-chart.md)`)". Factually harmless and arguably a helpful pointer in a
+newly separated file. I removed it anyway, in this fold. **The reason is that verbatim is the
+property that makes a split content-neutral**, and a split whose commit message says verbatim while
+one sentence is not is precisely the drift the locked rule exists to stop — worth more than a
+convenience link. The two alternatives I rejected were keeping the link and softening the claim
+(which makes "verbatim" mean "nearly"), and keeping both (which leaves a false statement in the
+record). `inbox/ui-019-verbatim-split-drift.md` is resolved and deleted; the finding lives here.
+
+**(3) Decision 10's pinned baseline is a tighter cap than the file's, and the worker hit it and said
+so.** Its first draft put the split-out pointer after decision 10's body, pushing that pinned section
+to 8,429 B over its own 8,192 B ratchet — `check-doc-size.py --decisions` catches what the file-level
+check does not. Moving the pointer into the file header fixed it (8,178 B). Recorded because a leg
+reading only the file-level number would not know the second cap exists.
+
+**(4) The code side has no commits and I am recording that explicitly rather than a SHA.** This is a
+doc-only compaction; `agent/ui/019-compact-ui-trace-chart` in `embarch-ui` was pushed identical to
+`main` (`34210c0`). The worker ran `cargo build`/`test`/`clippy --all-targets -- -D warnings` green
+there and I did not re-run them, because the merge result in that repo is byte-identical to the
+`main` that was already green — **the one place this leg's gate is weaker than "re-run it yourself",
+and it is weaker on an empty diff.**
+
+**Merged:** `agent/ui/019-compact-ui-trace-chart` (code **no commits**, `embarch-ui` unchanged at
+`34210c0`; doc `0470b61`), plus this fold's own revert of (2). Doc branch rebased over `outpost/013`'s
+fold, then a fast-forward. Gate re-run by me on the merge result: `python3 scripts/check-docs.py`
+**all 10 green** (including `check-doc-size.py` and `check-decision-refs.py`, which is what makes a
+split safe); `check-client-names.py` clean on `embarch-ui`; `check-ownership.py` green on the doc
+branch (5 paths, self-derived base `1638b96afd41`).
+
+**Blocked:** nothing.
+
+**Reviewer:** 1 finding — inbox/ui-019-verbatim-split-drift.md
+Fixed in the fold and the drop deleted, per (2). The reviewer also confirmed independently that no
+other prose left `trace-chart.md` (the byte delta is fully accounted for by decision 23's body), that
+`spec.md:75` still cites decision 23 by number and resolves, that nothing was renumbered, and that no
+new numbered decision was authored.
+
+**Hardware debts:** **none new.** A decisions-file split touches no hardware and needs none. All
+prior debts carry forward unchanged from the entry below.
+
+**Budget:** `PROCEED` / **BURNDOWN** throughout, weekly against a 97% cap. Two units left in this leg;
+closing numbers are in the last entry.
+
+**Least sure about:** **whether removing that link was worth a fold's edit, or whether I over-applied
+a rule to a genuinely good pointer.** The link made a split file easier to navigate, and I deleted it
+to protect a property no reader benefits from directly. I think the property is worth more than the
+link because it is what lets every future split be waved through as content-neutral — but a reader
+landing in `outcome-decode.md` now has one less way back, and that is a real cost I chose to pay.
+
 ## 2026-09-08 22:41 — outpost/013 a README that called a measured overhead "deliberately uncharacterised"
 
 **Decided:** four, and the largest one is not about this unit's code at all.
