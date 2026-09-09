@@ -97,6 +97,97 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 19:20 — api/049 a renamed key, and the test that made the rename worth a unit
+
+**Decided:** four.
+
+**(1) The rename was never the point and I dispatched it that way.** One literal key in
+`src/cli.rs`'s `dev_bench_hello()` success object was named `schema_version`, which is the same name
+`json_out::stamped()` unconditionally writes the crate's own envelope constant into on the way out —
+a `serde_json::Map::insert`, which overwrites. So `dev-bench-hello --json` reported `schema_version:
+1` on every call, the dev-bench handshake's real number reached no machine reader at all, and the
+tool existed to report exactly that number. **Renaming the key to `dev_bench_schema_version` is a
+one-line change.** What made this worth a unit is the second Done-when item: `tests/json_surface.rs`
+points every subcommand at a closed loopback port, so `dev-bench-hello` there only ever builds its
+*error* object, and the harness's own `schema_version` assertion is satisfied by the stamp on that
+error object **whether or not the bug exists**. A test that passes identically with and without the
+defect is the defect. The worker added `tests/dev_bench_hello_success.rs`, driving the real
+subprocess against a `MockCore` whose handshake number is deliberately `7` rather than `1`, so a
+reintroduced collision shows up as the envelope's value rather than matching by coincidence.
+
+**(2) I mutation-tested that claim rather than accepting it, and I want the method on the record
+because it cost one command.** The worker said it had verified the new test catches a reintroduced
+collision by reverting locally. I did it myself in the merged tree: put `"schema_version"` back, ran
+`cargo test --test dev_bench_hello_success`, and got
+`assertion left == right failed … left: Null right: Number(7)` — with the failure message printing
+the object still carrying `"schema_version":1`. Then restored. **For a bug whose whole character is
+"the test passed anyway", re-running the test is not verification; reintroducing the bug is.**
+
+**(3) The worker wrote to neither of its scope's four reserved files, and said so as a decision
+rather than leaving it to be noticed.** `embarch-api` has four files in reserve and **all four are
+filed against compaction tasks that are `blocked` on `In flux: yes`** — `decisions/tool-wrapping.md`
+at **66 bytes**, `decisions/core-link.md` at 212, `open.md` at 386, `spec.md` at 1,153. That is the
+case `.claude/leg.md` covers by telling the supervisor to have the worker compact the file as part
+of its own unit. I gave it that instruction with `tasks/api/047`'s `Must not delete:` list attached
+and a split-not-squeeze constraint — **and also told it that if it could finish without writing to a
+reserved file at all, that was the better outcome.** It could: decision 61 lives in
+`decisions/shape.md` (8.9 KB of 12 KB) and the tool row in `interfaces/tools.md` (9.7 KB of 12 KB).
+So the licence went unused, which is the right result.
+
+**(4) I asked the reviewer to judge my own instruction, and it is the answer I would have been least
+able to reach.** Decisions 52, 59 and 60 — the three this bug is about — all live in
+`tool-wrapping.md`, the file with 66 bytes. I told the worker to prefer `shape.md`. **That is
+precisely the shape this log has named across three consecutive legs: the reserve making the
+placement decision and the argument arriving afterward to agree with it.** So I put it to the
+reviewer directly — is this a decision placed by its argument or by a byte count? It came back that
+the placement is correct on the argument: decision 61 is the decision that *created* the CLI twin
+whose `--json` object carried the colliding key, so amending 61 is amending the decision that made
+the shape. I accept that, and I note that I could not have distinguished the two readings myself
+without the byte count in front of me.
+
+**Merged:** `agent/api/049-json-schema-collision` (code `4ceedc8`, doc `739b19f`). Gate re-run by me
+on the merge results, not on the branches: `cargo build` clean; `cargo test` — **7 + 98 + 18 + 10 +
+1 + 4 + 16 + 38 passed, 0 failed**, and I confirmed the new `dev_bench_hello_success` binary actually
+runs rather than trusting the summary; `cargo clippy --all-targets -- -D warnings` clean;
+`python3 scripts/check-docs.py` **all 10 green**; `check-client-names.py --repo embarch-api` clean
+against 7 denylist entries; `check-ownership.py --scope api` green on both branches.
+**No native Windows build owed** — `embarch-core` is untouched.
+
+**One implementation note worth carrying:** the new test needs
+`#[tokio::test(flavor = "multi_thread")]`, because the subprocess `Command::output()` call starves
+`MockCore`'s accept loop on a current-thread runtime. Any future test that drives the real binary
+against `MockCore` will meet the same thing.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+It cleared the one I most expected to be real — whether the rename orphaned a downstream reader of
+the old key — by establishing that `embarch-umbrella`'s `doctor.rs` check 11 and `embarch-ui` both
+read Core's raw HTTP body rather than the CLI's `--json` envelope, so neither ever saw that key. It
+also re-derived that the MCP tool in `src/tools.rs` does not have the same collision by another
+route, rather than believing the task file's grep.
+
+**Hardware debts:** **none new.** This is host-side throughout and no board can see it; confirming
+the *rendered* value against a real Core is possible but adds nothing the mock does not already
+establish. All prior debts carried forward unchanged: a native Windows build of `embarch-core` is
+owed and the fleet cannot run one (`core/015`, `core/010` behind it); `umbrella/037`'s corrected
+check 13 has never met the bench that found its defects; `embarch-outpost`'s Zephyr `tests/unit`
+cannot be built here (no `west`, no `ZEPHYR_BASE`); the bench queue is parked by the owner's own
+commit.
+
+**Budget:** `PROCEED` at both ends: 5-hour 31.9% → 32.6%, weekly **88.2% → 88.3%** against a 90% cap
+resetting in ~11h40m. Wave 1.
+**Least sure about:** **that this unit is the fleet reviewing its own homework, three links deep,
+and every link came back clean.** `api/048` shipped the bug; `api/048`'s reviewer found it; a
+supervisor re-verified it before filing; this unit fixed it; this unit's reviewer cleared the fix.
+No outside input entered that chain at any point, and the log has already named "the fleet generating
+and closing a meaningful share of its own backlog" as something individually defensible and not
+clearly so in aggregate. **I think this particular instance is the good version of it** — the bug was
+real, the mechanism was independently reproduced twice by different actors, and the test now fails
+without the fix — but I cannot tell from inside whether that is evidence the loop works or evidence
+that a closed loop reliably agrees with itself.
+
+---
+
 ## 2026-09-08 19:07 — dev-bench/012 the suite's tightest file, split rather than squeezed, and the bar that made it dispatchable
 
 **Decided:** four, and the first is the one I want challenged if any of them is wrong.
