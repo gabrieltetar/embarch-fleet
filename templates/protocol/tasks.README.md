@@ -227,6 +227,42 @@ would gate the whole queue on a field most tasks have no reason to carry, and
 `check-ownership.py` refuses the write either way. This field exists to stop the
 dispatch being wasted, not to be the enforcement.
 
+## A task may not grant a path its scope does not own
+
+**A worker treats this file as authority, and until 2026-09-09 nothing checked
+its scope claims against §3.** `tasks/core/023` named a shared suite-level doc
+as in scope for a `core` worker; the worker read the task, made the edit,
+reported it plainly, and pre-flagged the failing check as *"an expected,
+task-authorized exception"*. **It was not the worker's error** —
+`check-ownership.py` fired correctly, after the fact, on a branch already
+written and pushed, and the cost was a diff the supervisor had to adopt as its
+own write rather than merge. Two more instances were on `main` when this was
+written: `tasks/core/019` offered a `core` worker three paths it may not touch,
+one of them as an *alternative arm* of its first `Done when` box.
+
+**So write the route, not the path.** Where a task needs a file outside its
+scope's row changed, say *who* changes it: a `status.d/<scope>-*` fragment for
+the supervisor to apply (§9), or `Owner: required` where §2 reserves it. Never
+name the path as though the worker owned it, and never offer *"or change X
+instead"* where X is outside the row — an alternative a worker cannot take is
+worse than no alternative, because it reads as permission.
+
+**`check-task-state.py` enforces this on the task's TITLE**, against
+`check-ownership.py` itself rather than a second copy of the map. The title and
+not the body, and that is measured rather than chosen: **76 of 87 task files
+name a path their scope cannot write**, because every task cites the docs and
+rules it is about — the same reason `Compacts:` matches one declared field and
+never a mention. On titles the identical rule flags **one** file. A title is
+short, deliberate, and names the subject.
+
+Because the gate runs it, this is caught twice for free: **at filing**, by
+whoever files the task, and **before dispatch**, by the leg that runs the gate
+at the top of its own unit. `Owner: required` is exempt — such a task says
+outright that no agent takes it, so a reserved path in its title is the point
+of the task rather than a grant. **A task number's identity is the number *and*
+its slug** (`check-task-numbers.py` reads a rename as a reissue), so fixing an
+already-filed title does not rename the file; say so in the file.
+
 ## Compaction tasks
 
 A doc within the last 10% of its size cap is **in reserve**
