@@ -147,12 +147,26 @@ five_hour_token_ceiling = 22_600_000
 # never self-arming, never open-ended. Everything else about a leg is unchanged
 # -- same protocol, same reviewer, same commits to main.
 
-# The concurrency cap, replacing [limits] max_workers. 12 rather than 6 at the
-# owner's call, 2026-09-08. The binding constraint on width is NOT tokens: it is
-# git contention on `main` (every unit lands through one supervisor) and the
-# single dev bench. So the extra width buys less than double the throughput and
-# some of it shows up as workers queued to land. That is the experiment.
-max_workers = 12
+# The concurrency cap, replacing [limits] max_workers.
+#
+# **It was 12 for one night, and 12 was unreachable.** A leg runs
+# `units_per_leg` units (4) and cannot hold more workers in flight than it has
+# units left, so `suggest()`'s cap never bound: every leg of the 2026-09-08
+# burndown printed a suggested wave of 12 and dispatched 4, and every one of
+# them said so in its own supervisor-log entry. The constraint this comment
+# used to predict -- git contention on `main`, the single dev bench -- was
+# never reached, because the real limit was a number four lines up in this same
+# file.
+#
+# **6 at the owner's call, 2026-09-09: the honest maximum.** `.claude/leg.md`
+# caps a leg's unit count at a hard 6 and the fleet runs one leg at a time, so
+# 6 is the widest the fleet can be however this is set. Setting it higher does
+# not buy width, it only prints a number the code cannot honour -- which is
+# worse than the old 6, because a supervisor reads it and has to work out for
+# itself that it is a fiction. Anything past 6 needs concurrent legs, which is
+# a design nobody has done; THAT is where the git-contention question actually
+# lives, and it is untested because it has never been reachable.
+max_workers = 6
 
 # The hard stops, replacing [limits] weekly_pct and five_hour_pct. 97, not 100,
 # and the three points are not timidity: the percentages on this machine are

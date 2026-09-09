@@ -174,9 +174,19 @@ in a normal leg, and a wide wave is not a reason to do it less carefully.
   attended leg. Unattended, at full width, is the worst moment to be the only
   thing holding Core's `hw_lock`.
 - **No new numbered decisions.** Implement, document, fix, compact — but a unit
-  that would author a new decision in any sub-project stops and says so in its
-  log line instead. A decision is the most expensive thing in this suite to
-  reverse, and burndown is the one mode explicitly optimising for volume.
+  that would author a new decision in any sub-project stops, **drops an inbox
+  file for it** (`{{DOC_REPO}}/inbox/`, full task format), and says so in its
+  log line. A decision is the most expensive thing in this suite to reverse,
+  and burndown is the one mode explicitly optimising for volume.
+
+  **The drop is the requirement; the log line is not.** The 2026-09-08 burndown
+  produced five owed decisions and recorded them three different ways — one
+  task, two `open.md` "Owed decisions" sections, and two that existed in
+  `supervisor-log.md` alone. That file folds daily and rolls into
+  `log-archive/`, so those two were on a timer, and the one the supervisor
+  called the most expensive to forget was among them. An `open.md` line is a
+  fine *addition*; it is not a substitute, because nothing dispatches from
+  `open.md`.
 
 ## Standing constraints you may not relax
 
