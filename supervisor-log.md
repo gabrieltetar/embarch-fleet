@@ -97,6 +97,76 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 19:26 — study-designer/023 two facts, two decisions, one citation
+
+**Decided:** three, and this is a small unit deliberately chosen as the leg's last.
+
+**(1) The defect is a provenance claim, not a wrong number, and both numbers were right.**
+`embarch-study-designer/interfaces/limits.md`'s `MAX_DISCOVERED_SERVICES` row read *"decision 57's
+validated GATT table: `reference-dut-fw` declares 3 services, 7 in total once an encrypted link
+reaches the rest"* — crediting one decision with both. Decision 57 is a **static source-extraction**
+decision (`decisions/gatt-extract.md`); its validation is that the extractor was scanning two
+hardcoded files and missing a third service-definition block, and it says nothing about an encrypted
+link. The 7 is decision 44's (`decisions/ble.md`), carrying
+`[Validated on hardware 2026-08-26]: connect passed, elevation passed … then discovery returned 7
+services. Discovery of that table had never once succeeded before this pass.` **A live-discovery
+result behind an encrypted link, attributed to a decision about reading source files.** The row now
+credits each clause to the decision that established it.
+
+**(2) I verified the attribution from the two decisions myself before merging, not from the task
+file.** This is the cheap half of a citation-accuracy unit, and skipping it would make the whole unit
+an act of faith in a task file — which is exactly the failure the unit is fixing, one level up.
+
+**(3) I told the worker in the dispatch not to find adjacent work, and named the two things it would
+find.** The task file's own "Not filed as findings" section dispositions both: the header's
+`[measured]`/`[assumed]` bracket convention not applying to this row (deliberate, reasoned in
+`tasks/study-designer/022`), and `src/limits.rs`'s stale `design.md` citation (pre-existing, one of
+35 occurrences already tracked in `tasks/study-designer/018`). **The diff is one table row plus the
+task file's own state.** Same instruction the last two legs gave `umbrella/042` and
+`study-designer/020`, for the same reason, with the same result — three for three now, and worth
+reading as a pattern rather than three coincidences: **a worker handed a one-line fix and twenty
+minutes will find something bigger unless told in advance what it is going to find.**
+
+**Merged:** `agent/study-designer/023-limits-row-provenance` (doc `46ac546`; **no code SHA —
+doc-only unit**). Gate re-run by me on the merge result: `python3 scripts/check-docs.py` **all 10
+green**; `check-ownership.py --scope study-designer` green on both changed paths. **No
+`changelog.d/` fragment**, and the reviewer confirmed that call is grounded in `DOC-PROTOCOL.md`
+§4's exemption rather than in the worker's judgement.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+It cleared the one I most expected to be real — a second copy of the same conflation elsewhere. The
+neighbouring `MAX_MONITOR_TARGETS` row does carry the 7-service figure, but **uncredited rather than
+misattributed**, which is a different thing and not this unit's to change. It also confirmed the new
+row reads unambiguously cold, which was my worry about fixing a long table cell by adding a clause to
+it rather than restructuring it.
+
+**Hardware debts:** **none new, and none possible** — one table row. All prior debts carried forward
+unchanged and none was touched: a native Windows build of `embarch-core` is owed and the fleet cannot
+run one (`core/015`, `core/010` behind it); `umbrella/037`'s corrected check 13 has never met the
+bench that found its defects; `embarch-outpost`'s Zephyr `tests/unit` cannot be built here (no
+`west`, no `ZEPHYR_BASE`); the bench queue is parked by the owner's own commit. **This leg touched no
+hardware and incurred no hardware debt in any of its four units**, which is worth stating once
+plainly rather than four times as "none".
+
+**Budget:** `PROCEED` at both ends: 5-hour 33.7%, weekly **88.5%** against a 90% cap resetting in
+~11h35m — unchanged to the tenth across this unit. **Leg total: weekly 87.8% → 88.5%, about 0.7% for
+four units at wave 1.** At that rate the next leg fits and the one after it does not; a HOLD is the
+expected way this stops, not an incident.
+**Least sure about:** **whether a unit this small should have been the leg's last, rather than a
+fifth of `umbrella/036`.** I picked it over `umbrella/036` — the task that would close the third WSL2
+mirror and finish the arc this leg opened with `topology/020` — because `036` is a three-part task
+against `embarch-umbrella` source, a worker gets twenty minutes, and I had one serial slot and a
+tightening weekly budget. **The honest reading is that I optimised for a clean close over the
+highest-value work available**, and a leg that ends at its cap with everything landed is a nicer
+artefact than one that ends with a half-done big task. `umbrella/036` is still `open` and is the
+obvious first unit for the next leg — and it is now *more* worth doing than it was this morning,
+because `topology/020` just wrote into `crate.md` that the mirror in `embarch-umbrella/src/token.rs`
+is still live and is `036`'s to close. **That sentence is a promise this fleet has now made in a
+decisions file.**
+
+---
+
 ## 2026-09-08 19:20 — api/049 a renamed key, and the test that made the rename worth a unit
 
 **Decided:** four.
