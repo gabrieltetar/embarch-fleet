@@ -97,6 +97,89 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 23:58 — ui/011 the third under-described squeeze, and the first one that lost an invariant rather than texture
+
+**Decided:** five. **This is the most important unit of the leg and the finding is not about
+`embarch-ui`.**
+
+**(1) The reviewer found a real contradiction and it is exactly the class `tasks/doc/026` was filed
+about two hours earlier.** `ui/011` squeezed `embarch-ui/decisions/study-designer.md` 12,064 →
+10,961 B. Its commit message described the reflash-selector hunk as cutting a parenthetical and
+"replaced with the shorter … which is what shipped" — **the same wording it used for cuts that
+genuinely were cosmetic.** What the hunk did was turn *"Core's study route accepts only **a mismatch
+override and** a report of what the caller already flashed"* into *"Core's study route accepts only
+a report of what was already flashed"*, which is **a false statement about the API contract**:
+`allow_version_mismatch` is live and documented in `embarch-api/interfaces/studies.md`. A second cut
+in the same commit removed ", next to the override" from the neighbouring paragraph, so after both
+cuts decision 11 did not mention the override anywhere — while `embarch-ui/open.md`'s own
+carry-forward of that same decision 11 still says *"The mismatch override and the before-the-run
+mismatch display are built and unaffected."* **One decision reading two different ways depending on
+which file you land on.**
+
+**(2) Leg 056's two occurrences lost texture. This one lost an invariant, and that settles one of
+`doc/026`'s three options.** Its option (3) was to decide deliberately that texture may go and only
+invariants matter. **That option would have licensed this cut**, because the worker's own honest
+reading was that the parenthetical *was* texture — and it was wrong about that. So a squeeze cannot
+be trusted to classify its own cuts, which also makes `doc/026`'s option (2) — the count in the
+**reviewer** charter — strictly stronger than its option (1), the count in the pass doc, since (1)
+still asks the actor doing the cutting to be the one who notices. **I appended all of this to
+`tasks/doc/026` rather than deciding it**: that task is `Owner: required` because the rule lives in
+`DOC-COMPACTION.md`/`DOC-COMPACTION-PASS.md` and the reviewer template lives in `scripts/`, and none
+of those are mine.
+
+**(3) Three legs running, the catch has depended on a supervisor remembering to ask.** All three
+reviewers found their discrepancy only because the spawn prompt told them, per unit, in prose, to
+enumerate the diff's deletions and count them against the pass's own description. That is not a
+mechanism; it is a habit, and the two legs that had it were the two legs that happened to read this
+log's newest entries carefully. **A leg that skipped that sentence would have landed this one
+silently and it would have been green.**
+
+**(4) Fixed narrowly in the fold rather than reverted, and the reviewer's own recommendation was
+the narrow fix.** Both clauses restored, the rest of the squeeze left standing — everything else in
+it checked clean and decision 20 was genuinely untouched, verified by diff. **The cost is that the
+file is now 11,007 B against an 11,059 B reserve line: 53 bytes of clearance.** That is the second
+time this exact file has landed under 60 B clear; the first is in `tasks/ui/011`'s own history, where
+a worker trimmed to 9 B of clearance to duck the line and then a correction crossed it. **I did not
+trim further to buy headroom**, deliberately: shaving more bytes off a file I had just caught losing
+an invariant to a shave is the wrong instinct, and the ledger exists so that the next amendment
+re-files it rather than being ambushed. Expect `check-doc-size.py` to want this file again very soon.
+
+**(5) The `decisions.md` index fix in this unit was real and unrelated.** `embarch-ui/decisions.md`'s
+routing row was missing decision 22, added the same day by `ui/003`. That is a stale index nobody
+filed, found incidentally by a compaction pass, and it is now correct.
+
+**Merged:** `agent/ui/011-compact-ui-study-designer-decisions` (code **no commits**, `embarch-ui`
+unchanged at its `origin/main`; doc **`f3054e1`**, then corrected in this fold). Doc branch rebased
+over `outpost/009`'s fold, then a fast-forward. Gate re-run by me on the merge result and again
+after my correction: `python3 scripts/check-docs.py` **all 10 green** both times;
+`check-ownership.py --scope ui` green (4 paths, base `0f58c163dd9b`); `check-client-names.py` clean
+on the `embarch-ui` worktree.
+
+**Blocked:** nothing.
+
+**Reviewer:** 1 finding — inbox/ui-011-mismatch-override-dropped.md
+Fixed in this fold and the drop drained, so it is gone from `inbox/`; its substance is preserved in
+`tasks/doc/026`'s new third-occurrence section, which is where it does the fleet any good. The
+reviewer also verified all three of the task's `Must not delete:` items individually against the
+pre-image — including that the ~1 s clamp figure and the named constant survived, which is the
+correction whose landing pushed this file into reserve in the first place and which the task
+explicitly forbids shaving back out.
+
+**Hardware debts:** **none new.** All standing debts unchanged from this leg's first entry.
+
+**Budget:** `PROCEED` / **BURNDOWN**, unchanged, weekly against the 97% cap, no 429. Wave 12
+suggested, 4 in use.
+
+**Least sure about:** **whether leaving this file at 53 bytes of clearance is discipline or
+cowardice.** My reasoning is written above and I still think it is right — but the practical effect
+is that I have handed the next leg a file that will re-file itself on the next byte, in a
+sub-project whose `spec.md` is already at 92.4%, and I did it by choosing not to do the thing the
+ledger would have asked for. Someone reading this in a week may reasonably think I should have spent
+another 300 bytes properly, with the reviewer still warm, instead of leaving it to a leg with no
+context.
+
+---
+
 ## 2026-09-08 23:53 — outpost/009 the fourth copy of a rule that had three, and two workers in a row that left their task file claimed
 
 **Decided:** three.
