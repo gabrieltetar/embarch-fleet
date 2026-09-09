@@ -97,6 +97,90 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-09 01:03 — core/023 a true sentence written by the wrong hand, and an inference now hedged in two docs
+
+**Decided:** five.
+
+**(1) `embarch-token.md` §2 no longer claims something Core does not do.** It said *"Core creates
+the directory and file with owner-restricted permissions."* `embarch-core/src/token_store.rs` calls
+`restrict_token_file_permissions(path)` with the **token file**, and its `icacls` invocation names
+that file as its sole target; the parent directory is created a few lines earlier by a plain
+`create_dir_all` with no ACL call at all. So only the file is locked down. The new wording says
+that, says the `icacls` call names the file only, and **explicitly declines to assert what the
+directory's default ACL concretely grants** — which matters because nobody looked and nobody here
+can: a WSL session cannot read a Windows ACL, and the task forbade the attempt. The reviewer
+re-read the source independently and confirmed both the claim and that the hedge is real.
+
+**(2) The ownership check went red and it was right to.** `check-ownership.py --scope core` refused
+`embarch-token.md` — a shared suite-level doc `protocol.md` §3 reserves to me, whose worker-side
+route is a `status.d/core-*` fragment. **The worker did not err: the task file told it that path was
+in scope, and it obeyed, reported the failing check plainly, and pre-labelled it a task-authorized
+exception.** The defect is that **a task file is prose and nothing validates its scope claims
+against §3**, so a worker takes it as authority and the check fires only after the branch exists. I
+read the diff, judged it, and **adopted the edit as my own write** rather than sending it back —
+the content is mine to own and it replaces a false statement with a true one. Filed as
+**`tasks/doc/029`** (`Owner: required` — the fix lives in `scripts/` or `tasks/README.md`), and it
+is explicitly the sibling of `tasks/doc/028`: two legs running, a task file has asserted something
+mechanical that no script checks. That is a class.
+
+**(3) The reviewer found the one sentence that had smuggled an unobserved fact back in, and I
+hedged it.** The new text explained *why* the loose directory is structurally necessary: it is what
+lets `embarch-topology`'s `enrollment.toml` be read and written by both the Core service account
+and an unprivileged CLI. **That consequence is an inference** — from "Core never restricts the
+directory" to "therefore two accounts can use it" — inherited verbatim from `embarch-topology`
+decision 23, which makes the same leap, and **never checked against a real ACL by anything in this
+suite.** It was stated as fact in a doc whose whole point this unit was to make honest. I rewrote it
+to attribute the conclusion to decision 23 and to say in the doc itself that it is not measured.
+`embarch-token.md` is 8,911 B, nowhere near its cap.
+
+**(4) Decision 23's citation holds in the other direction too.** The reviewer read
+`embarch-topology/decisions/storage.md`: decision 23 already carries its 2026-09-07 correction
+("not admin-owned, which was the original wording's error") and already names
+`embarch-token.md`'s old "directory and file" phrasing as the error being fixed here. The two
+documents now agree and neither is the stale one — which is worth stating, because this doc **is
+where topology's original wrong idea came from**, and a leg that corrected one side and not the
+other would have left the loop.
+
+**(5) A numbered `embarch-core` decision is owed and was deliberately not written**, burndown
+forbidding it. The reviewer checked `embarch-core/decisions.md`, `decisions/handshake.md` and
+`decisions/surfaces.md` and confirms **nothing on Core's own decision log records that the shared
+directory's permissiveness is deliberately preserved.** Topology records the dependency from
+topology's side only, so **a future core-side change tightening `%ProgramData%\embarch`'s ACL would
+silently break the cross-repo sharing with nothing in this repo to catch it.** That is the second
+owed decision this burndown has produced (`outpost/015` was the first) and it is the owner's to
+author.
+
+**Merged:** `agent/core/023-token-dir-acl-doc` (doc **`2d070a8`**, fold **this commit**). The code
+branch `agent/core/023-token-dir-acl` carried **zero commits** — verified, not taken on report. Gate
+re-run by me on the merge result: `python3 scripts/check-docs.py` **all 10 green** (before and after
+my hedge in (3)); `check-ownership.py --scope core` **red by design, see (2)**;
+`check-client-names.py` clean. **No `cargo` gate and no native Windows build** — the unit changed no
+code, and the standing debt that this fleet cannot build `embarch-core` for Windows is untouched and
+unaffected, since nothing about `token_store.rs` changed.
+
+**No `changelog.d/` fragment**, on the worker's judgement that a wording correction ships nothing.
+I let that stand; the substantive record is this entry. Flagging it because a future reader looking
+for this fix in `history/core.md` will not find it.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** none new. Leg 058's list carries forward unchanged — including that a native
+Windows build of `embarch-core` is owed and the fleet cannot run one.
+
+**Budget:** `PROCEED` / **BURNDOWN** — weekly **95.3%** against the 97% cap at the leg's start,
+5-hour 33.6%, no 429. Wave suggested 12, used 4.
+
+**Least sure about:** **whether adopting the out-of-map edit was the right call rather than sending
+it back through `status.d/`.** Adopting it landed a true sentence tonight and cost one task file;
+bouncing it would have honoured §3 exactly and cost a whole unit to reland the same three
+paragraphs. I chose the content, and I am aware that "the supervisor adopted it" is a precedent that
+makes §3 softer every time it is used — which is exactly why `tasks/doc/029` exists and why I would
+not do this twice in one leg.
+
+---
+
 ## 2026-09-09 01:01 — study-designer/024 a verified claim whose converse was false, caught in one reviewer pass
 
 **Decided:** four.
