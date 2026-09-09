@@ -82,21 +82,75 @@ CRON = (f"*/4 * * * * /usr/bin/python3 {HERE / 'fleet-usage-cache.py'} "
         f">> {CONF.state_dir / 'usage-cache.log'} 2>&1")
 
 
-def pins() -> dict[str, dict]:
-    """Newest pin per window from the readings log. Later rows win."""
+def pins(now: float | None = None,
+         horizons: dict[str, float] | None = None) -> dict[str, dict]:
+    """The most PRECISE usable pin per window, not simply the newest.
+
+    A pin's whole job is the denominator: `implied_allowance` came out of
+    `measured_billable / (used_pct/100)`, and `/usage` renders **whole
+    percentages**. So a reading's own percentage IS its precision -- rounding
+    alone puts the allowance within +-`0.5/used_pct` of the truth. At 71% that
+    is +-0.7%. At **1% it is +-50%**.
+
+    Taking the newest row unconditionally therefore lets a worthless reading
+    evict a good one, and it did. On 2026-09-08 at 22:05, arming the first
+    burndown, `/usage` caught the 5-hour window six minutes old at `1%` and
+    pinned the session allowance at 36.9M off 369,287 billable; better readings
+    the same week implied ~25.1M. Every 5-hour percentage that night's
+    supervisor log recorded therefore read about a third low -- `43.4%` at the
+    last fold against a real ~66%, and ~74% of the calibrated five-hour
+    ceiling. Nothing caught it because every guard in this repo is on a pin's
+    AGE. **Fresh and precise are different properties**, and only one of them
+    was being checked.
+
+    So: among the rows inside this window's horizon, keep the tightest; a newer
+    row wins a tie. `read_at` still comes from the row actually chosen, so the
+    caller's own age checks stay honest about what they are describing, and
+    `project()` walks an older row's reset instant forward -- sound for the
+    weekly, and the reason the session horizon is the caller's own
+    `--pin-max-age-h` rather than something longer. With no horizon given, or
+    nothing inside it, this falls back to the newest row and is exactly what it
+    replaced.
+
+    **Every row is still written to the log.** This changes which reading is
+    believed, not what is recorded: `usage-readings.tsv` is also the drift
+    series, and a low reading remains perfectly good evidence about the
+    numerator and about the reset instant.
+    """
     out: dict[str, dict] = {}
     if not LOG.is_file():
         return out
+    now = time.time() if now is None else now
+    horizons = horizons or {}
+    best: dict[str, tuple[tuple[float, float], dict]] = {}
+    newest: dict[str, tuple[float, dict]] = {}
     for line in LOG.read_text().splitlines()[1:]:
         f = line.split("\t")
         if len(f) < 8:
             continue
         try:
-            out[f[1]] = {"read_at": datetime.datetime.fromisoformat(f[0]),
-                         "resets_at": datetime.datetime.fromisoformat(f[3]),
-                         "allowance": float(f[7])}
+            row = {"read_at": datetime.datetime.fromisoformat(f[0]),
+                   "used_pct": float(f[2]),
+                   "resets_at": datetime.datetime.fromisoformat(f[3]),
+                   "allowance": float(f[7])}
         except ValueError:
             continue
+        win, at = f[1], row["read_at"].timestamp()
+        if win not in newest or at >= newest[win][0]:
+            newest[win] = (at, row)
+        if row["allowance"] <= 0 or row["used_pct"] <= 0:
+            continue
+        horizon = horizons.get(win)
+        if horizon is not None and (now - at) / 3600 > horizon:
+            continue
+        # Smaller rounding error first; a newer row breaks a tie.
+        key = (0.5 / row["used_pct"], -at)
+        if win not in best or key < best[win][0]:
+            best[win] = (key, row)
+    for win, (_key, row) in best.items():
+        out[win] = row
+    for win, (_at, row) in newest.items():
+        out.setdefault(win, row)
     return out
 
 
@@ -149,7 +203,12 @@ def main() -> int:
         reading.scan(quiet=True)
 
     now = time.time()
-    have = pins()
+    # The horizon each window picks its pin from. Session gets the same limit
+    # the age check below enforces, so a chosen pin can never be one that
+    # check would then refuse; weekly gets its own length, because a reading
+    # from a previous week describes an allowance that has not changed but a
+    # reset instant `project()` handles anyway.
+    have = pins(now, {"session": args.pin_max_age_h, "weekly": LENGTH_H["weekly"]})
     limits: dict[str, dict] = {}
     notes: list[str] = []
     for name, key in KEYS.items():
@@ -170,7 +229,8 @@ def main() -> int:
         notes.append(f"{name}: {used:.1f}% ({total:,} of {pin['allowance']:,.0f} "
                      f"billable, {reqs:,} req), resets "
                      f"{datetime.datetime.fromtimestamp(reset):%H:%M %d-%b}, "
-                     f"pin {age_h:.1f}h old")
+                     f"pin {age_h:.1f}h old @{pin['used_pct']:g}% "
+                     f"(+-{0.5 / pin['used_pct']:.1%})")
 
     for n in notes:
         print(f"  {n}")

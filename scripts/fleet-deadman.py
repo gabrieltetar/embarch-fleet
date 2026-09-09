@@ -26,12 +26,23 @@ What it watches, and why each is separate:
   refresh_failing  the access token is past its expiry and nothing rewrote the
                    file. The refresh is not happening: the session is dead and
                    the processes have not found out yet.
-  silent           `.fleet/tick` is stale while the pump is latched **and a
-                   claude process is still alive**. Alive-with-no-progress is
-                   the auth-death shape; processes *gone* is the owner closing
-                   VS Code, which is the kill switch and must stay silent
-                   (`ops.md` section 3). That is the whole reason this check
-                   looks at the process table at all.
+  silent           `.fleet/tick` is stale while the pump is latched, a claude
+                   process is still alive, **and the usage gate says the fleet
+                   could be running**. Alive-with-no-progress is the auth-death
+                   shape; processes *gone* is the owner closing VS Code, which
+                   is the kill switch and must stay silent (`ops.md` section
+                   3). That is the whole reason this check looks at the process
+                   table at all.
+  stopped_on_budget
+                   the same four facts, except the gate says HOLD -- so the
+                   fleet stopped because it was told to, not because anything
+                   broke. Split out of `silent` on 2026-09-09, after the first
+                   burndown ended correctly at its own 97% cap at 01:51 and
+                   this file called it auth death at 02:30. Two costs, not one:
+                   an alert that sent the owner to re-login a healthy session,
+                   and a spent `silent` episode, so when the weekly reset at
+                   06:59 and the fleet did not come back there was nothing left
+                   to raise it with.
   expiry_soon      the refresh token is near its own end. The only one of these
                    that can be seen coming, so it is the only one that gets a
                    nudge before rather than an alarm after.
@@ -167,6 +178,34 @@ def claims_standing() -> list[str]:
     return out
 
 
+def budget_verdict() -> tuple[str, str]:
+    """`usage-budget.py`'s verdict, for telling an expected stop from a wedge.
+
+    Exit `0` PROCEED, `1` HOLD, `2` DEGRADED, and anything else means the gate
+    itself could not answer. **Only HOLD is treated as an expected stop.**
+    DEGRADED is not: `budget.md` is explicit that reading it as HOLD would mean
+    the fleet never starts, and here it would mean a genuinely wedged fleet
+    went unreported whenever the cache happened to be stale -- the failure this
+    check exists to catch, silenced by the failure of the thing that measures
+    it. When the gate cannot answer at all, the answer is the same: alert.
+
+    It shells out rather than importing, so a broken `usage-budget.py` costs
+    this file nothing. That matters more here than anywhere: the deadman is the
+    one liveness check that is not a Claude session, and it is worth very
+    little if a traceback somewhere else can stop it running.
+    """
+    try:
+        p = subprocess.run([sys.executable, str(HERE / "usage-budget.py")],
+                           capture_output=True, text=True, timeout=60)
+    except (OSError, subprocess.SubprocessError) as e:
+        return "UNKNOWN", f"could not run usage-budget.py ({e})"
+    verdict = {0: "PROCEED", 1: "HOLD", 2: "DEGRADED"}.get(p.returncode)
+    if verdict is None:
+        return "UNKNOWN", f"usage-budget.py exited {p.returncode}"
+    head = next((ln.strip() for ln in (p.stdout or "").splitlines() if ln.strip()), "")
+    return verdict, head
+
+
 def record(acc_ms: int | None, ref_ms: int | None, mt: float | None,
            pids: int) -> None:
     """Append one line whenever the credential or the window count changes.
@@ -237,15 +276,24 @@ def save_state(st: dict) -> None:
     tmp.replace(STATE)
 
 
-def post(message: str, action: str, detail: str, dry: bool) -> int:
+def post(message: str, action: str | None, detail: str, dry: bool) -> int:
     """One alert, through the fleet's own voice.
 
     `fleet-post.py` owns the identity and the thread; `--action` is the only
-    thing that notifies, and every condition here is by definition one the
-    owner must act on.
+    thing that notifies, and almost every condition here is by definition one
+    the owner must act on.
+
+    **`action=None` is the exception, and it is deliberate.**
+    `stopped_on_budget` reports a fleet that stopped correctly and needs
+    nothing done before the window resets. Paging someone at 02:30 to tell them
+    a safety worked is how a notification channel becomes a feed nobody reads
+    -- which `fleet-post.py`'s own header names as the thing to avoid, and
+    which would blunt the three conditions here that genuinely cannot wait.
     """
     cmd = [sys.executable, str(HERE / "fleet-post.py"), message,
-           "--action", action, "--detail", detail]
+           "--detail", detail]
+    if action:
+        cmd += ["--action", action]
     if dry:
         cmd.append("--dry-run")
     return subprocess.run(cmd).returncode
@@ -310,19 +358,50 @@ def main() -> int:
                 base + f"\naccess token expired {hhmm(acc)}, "
                        f"{overdue:.0f} min ago, and nothing rewrote the file"))
 
-    # 3. The deadman proper. Stale tick, latch on, windows still open.
+    # 3. The deadman proper. Stale tick, latch on, windows still open --
+    #    SPLIT BY THE BUDGET, because those four facts describe two opposite
+    #    situations and until 2026-09-09 this reported both as auth death.
+    #
+    #    The first burndown ended at 01:51 that morning by reaching its own 97%
+    #    weekly cap, which is the mode working. This check fired "silent" at
+    #    02:30 anyway -- a false positive, and the alert it sent told the owner
+    #    to go re-login a session that was fine. Then the weekly reset at 06:59
+    #    and the fleet did NOT come back: a leg's death wakes the listener, but
+    #    nothing wakes a listener that stopped ticking, so five hours of a fresh
+    #    week went by with 43 tasks queued and no alarm left to raise, because
+    #    the one condition that covers this had already been spent on the
+    #    expected stop half an hour after midnight.
+    #
+    #    So ask the gate. HOLD means the fleet stopped because it was told to;
+    #    say so once, calmly, and note that it will not restart itself.
+    #    PROCEED -- or DEGRADED, which `budget.md` is explicit must never be
+    #    read as HOLD -- means the fleet could be running and is not, which is
+    #    the wedge this file was written for. Neither branch starts anything:
+    #    this alerts and does nothing else, and when the fleet runs is the
+    #    owner's call.
     if latched and pids and tick is not None and tick >= args.stale_after:
         last = datetime.datetime.fromtimestamp(TICK.stat().st_mtime).astimezone()
         claims = claims_standing()
         held = (f"\nclaims standing: {len(claims)}"
                 + (f" ({', '.join(claims)})" if claims else ""))
-        conds.append((
-            "silent", f"{TICK.stat().st_mtime:.0f}",
-            f"The fleet has made no progress since {hhmm(last)} and its windows "
-            f"are still open.",
-            "look at the listener window; if it is logged out, run /login and "
-            "say fleet start",
-            base + held))
+        verdict, why = budget_verdict()
+        held += f"\nbudget: {verdict}" + (f" -- {why}" if why else "")
+        if verdict == "HOLD":
+            conds.append((
+                "stopped_on_budget", f"{TICK.stat().st_mtime:.0f}",
+                f"The fleet stopped at {hhmm(last)} because the usage gate says "
+                f"HOLD. Nothing is wrong, and nothing will restart it by itself.",
+                None,
+                base + held))
+        else:
+            conds.append((
+                "silent", f"{TICK.stat().st_mtime:.0f}",
+                f"The fleet has made no progress since {hhmm(last)}, its windows "
+                f"are still open, and the usage gate says {verdict} — so it "
+                f"could be running and is not.",
+                "look at the listener window; if it is logged out, run /login and "
+                "say fleet start",
+                base + held))
 
     # 4. The one that can be seen coming.
     if ref_ms:
