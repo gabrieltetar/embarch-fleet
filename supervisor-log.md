@@ -97,6 +97,88 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 23:00 — topology/014 an open-questions file where three of eleven questions had quietly become answers
+
+**Decided:** five. **This is leg 055's fourth and last unit; the leg ends here at its cap, not on a
+fault, a stop or a budget verdict. The burndown latch stands and expires on its own at 06:59.**
+
+**(1) This was a delete pass, which is the one compaction shape that can lose something for good, so
+I made the reviewer judge each deletion separately rather than judge the pass.**
+`embarch-topology/open.md` was 5,016/5,120 B with **no split seam** — §3 gives that file no
+mission sub-split the way `decisions.md` and `interfaces.md` have — so unlike `ui/019` there was no
+verbatim move available. Three of eleven bullets were deleted on the argument that each had stopped
+being an open question. The reviewer diffed the landed file against `10f2d37`'s, confirmed the eight
+survivors are an exact subset with nothing else altered, and then checked each deletion against the
+text it was said to duplicate.
+
+**(2) All three hold, and the test they passed is the right one.** A bullet that *resembles* a
+settled conclusion is not the same as one the conclusion answers. (a) The `detected_by`
+over-crediting bullet against `decisions/links.md` decision 24, which states the same case and calls
+it "accepted rather than chased". (b) The Nordic mismatch-exposure bullet against
+`decisions/validation.md` decision 21, which names the same fallback-register exposure and accepts it
+"on the same terms". (c) The "no agent can induce a topology mismatch" bullet against `spec.md:103`'s
+"Where it stands", which asserts it as current fact — every route runs through `enroll`, no override
+on the store path. Same claim, same strength, already settled in all three. **`open.md`'s own header
+says "Unresolved only. Current truth: spec.md", and (c) had drifted across that line into being a
+second copy of the spec.**
+
+**(3) The ledger entry is paid, and this is the first leg to spend its scheduled share and see it
+close.** 5,016 → 3,669 B, 98.0% → 71.7% of the cap, out of reserve. `check-doc-size.py --due` now
+lists 28 dated entries where it listed 29 at the top of this leg, **0 overdue** throughout. Nothing
+was overdue when I started, so no unit was owed to the ledger; this one paid an entry anyway because
+it was the best available work in a free scope.
+
+**(4) Two of this leg's four units were compaction passes and they came out opposite ways, which is
+the useful result.** `ui/019` split and deleted nothing; this one found no seam and deleted three
+things. **`DOC-BUDGET.md`'s split-first rule is not "always split" — it is "prove there is no seam
+before you cut"**, and these two units are what each side of it looks like when done honestly. Worth
+saying because a fleet optimising for volume will reach for the delete pass, which is faster.
+
+**(5) I answered the pass's human question myself as well as taking the worker's.** Can `spec.md`
+alone answer what someone needs to work on `embarch-topology` today? **Yes**, and the pass did not
+change that — the eight remaining bullets are genuinely open (an unbuilt alert path, an unread signal
+byte, a `NotFound` resolution gap, an unknown bench fact, two live silicon-coverage gaps, an
+unspecified caller contract, two mirror/detection gaps tracked elsewhere) and none of them is a thing
+`spec.md` asserts.
+
+**Merged:** `agent/topology/014-compact-topology` (code **no commits**, `embarch-topology` unchanged
+at `b722895`; doc `ec0e42f`). Doc branch rebased over `dev-bench/002`'s fold, then a fast-forward.
+Gate re-run by me on the merge result: `python3 scripts/check-docs.py` **all 10 green**;
+`check-client-names.py` clean on `embarch-topology`; `check-ownership.py` green on the doc branch
+(3 paths, self-derived base `10f2d37896e8`). `embarch-topology` is a shared crate, so its diff is one
+I read rather than merge on green — the diff is doc-only and touches no crate source.
+
+**Blocked:** nothing. **This leg blocked no task and left none `blocked`.**
+
+**Reviewer:** no findings.
+It diffed the pre- and post-change files directly rather than trusting the worker's byte and count
+claims, confirmed the eight survivors are an exact subset, and resolved each of the three deletions
+against the decision or spec section cited, quoting the sentence that made it settled.
+
+**Hardware debts:** **none new.** A doc compaction touches no hardware. Standing debts, unchanged and
+carried forward in full: a native Windows build of `embarch-core` is owed and the fleet cannot run one
+(`core/028`, `core/015`, `core/010`); `umbrella/037`'s corrected check 13 has never met the bench;
+`embarch-outpost`'s Zephyr `tests/unit` cannot be built here (no `west`, no `ZEPHYR_BASE`);
+`embarch-dev-bench`'s west/Zephyr toolchain is likewise absent, so `dev-bench/002` ran no firmware
+test; the four DUT-gated bench tasks are unchanged; `core/028`'s `[assumed]` ESP32-C5
+USB-enumeration fact still needs one look at one board; **new this leg**, `dev-bench/002` recorded
+that a 17-to-64-step study is accepted by the host and unrunnable on the bench, and nobody has ever
+tried one.
+
+**Budget:** `PROCEED` / **BURNDOWN** at start and end — 5-hour **6.6% → 9.9%**, weekly **90.1% →
+90.7%**, both against a 97% cap, weekly resetting in 8h00m. Suggested wave **12** throughout, and I
+used **4**, dispatched simultaneously rather than in sequence. **No 429 at any point**, so the mode is
+not cleared and the latch stands. **55 tasks dispatchable across 10 scopes** as this leg ends.
+
+**Least sure about:** **the same thing leg 054 was, and this leg is the second data point rather than
+an answer.** I dispatched all four units at once — the widest a 4-unit leg can be — and the whole leg
+cost **0.6% of the weekly allowance**, less than leg 054's 0.9%. The ~6.3 points between here and the
+97% cap are therefore something like ten more legs, and eight hours at roughly twenty-five minutes a
+leg will not fit them. **Running the wave wide does not help, because the unit cap binds first**, and
+that is now measured twice rather than argued once. The cap is not mine to change and I did not; but
+if the owner wants burndown to reach the wall before 06:59, `units_per_leg` is the only number that
+can get it there.
+
 ## 2026-09-08 22:53 — dev-bench/002 a decision that recorded a refactor as done when it was never built
 
 **Decided:** four.
