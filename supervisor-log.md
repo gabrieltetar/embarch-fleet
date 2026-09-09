@@ -97,6 +97,84 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-09 01:41 — api/041 a discovery route that existed and was reachable from nowhere, and a decision that announced a mechanism nobody built
+
+**Decided:** five.
+
+**(1) `serial_log` is completable from a fresh `init` now, and nothing new had to be built to get
+there.** `GET /serial-ports` has existed in Core and `list_serial_ports` has existed on the shared
+client, tested, reachable from **no MCP tool, no `embarch-api` subcommand and no `embarch-core`
+subcommand** — so the one workflow `suite/user-guide.md` sells as a headline agent payoff could not
+be completed, and the failure looked like a cabling problem. It is now a `list_serial_ports` tool
+and a `list-serial-ports` subcommand, and `serial_log`'s own description says the port opens **on
+Core's machine, not the caller's** — which on this suite's primary topology is the difference
+between a Windows `COM` name and a WSL2 `/dev/ttyACM0` guess that is reasonable and wrong.
+
+**(2) The reviewer found that a numbered decision announced a mechanism that was never built, and I
+corrected it in the fold.** `decisions/core-link.md` **decision 26** was titled *"`serial_log`'s
+port falls back to Core's dev-bench port"* and its body said *"the fallback chain gained a final
+step before erroring."* **There is no such step and there never was**: resolution is `port` → the
+project's `serial_port` → error, with no `dev_bench_port` call in `src/tools.rs` or `src/cli.rs`
+**or anywhere in their history**. The unit corrected `interfaces/tools.md`, which taught the same
+false fallback — and left the decision that is the *source* of it standing. **That is `core/023`'s
+loop again:** fixing the interface doc and not the decision leaves the wrong idea alive where it is
+most authoritative. I edited the title to *"never fell back to"* and the first sentence to *"No such
+fallback was ever built — verified by `api/041`, 2026-09-09"* — **22 bytes**, which is what the file
+had room for.
+
+**(3) What I deliberately did not do, and why it is a task rather than a squeeze.**
+`decisions/core-link.md` has **188 bytes** left and `tasks/api/026` is blocked on `In flux: yes`, so
+the fuller answer — decision 26's title still promises a *mechanism* while its only surviving
+content is the *intent* correction (DUT-UART capture was never a supported goal), which may mean it
+should be **retired** rather than corrected — did not fit and should not be improvised. **Retiring a
+numbered decision is a design act**, and doing one at 188 bytes, unattended, under a budget HOLD, is
+how a suite loses an argument it will want later. Filed as **`tasks/api/054`**, with the correction
+I already made recorded in it so the next unit starts from a true file rather than re-deriving this.
+
+**(4) Four checks I asked for came back clean, and one of them is the one I would have got wrong.**
+The new tool was added while its governing decisions file (`decisions/tool-wrapping.md`, **66
+bytes** free) was too full to amend — exactly where a convention gets silently broken — and the
+reviewer confirmed the no-param shape, JSON envelope, `schema_version` and error shape all match
+every other tool. It also confirmed the `tests/json_surface.rs` tripwire's **24 → 25** bump is
+genuine (`EVERY_SUBCOMMAND` really gained `list-serial-ports`; the count matches the arms) rather
+than a number nudged to make a test pass, which is the failure a tripwire invites.
+
+**(5) One incompleteness is real and is nobody's defect: `serial_log`'s description points at Core's
+`duration_ms` cap, and Core's own interface doc does not carry the number yet.** That is because
+`core/009` — the unit that *created* the cap — is the next thing this leg lands, so the pointer was
+forward-referencing for the length of one unit. Worth naming because the reviewer caught it and it
+reads like a defect: it is an artefact of two halves of one route landing in two units of one leg.
+
+**Merged:** `agent/api/041-serial-port-discovery` (code **`5eeb3e8`** in `embarch-api`, doc
+**`c8373d4`**, fold **this commit**). Its doc branch needed a rebase onto `main` after
+`outpost/003`'s fold; done with `--force-with-lease`, no conflict. Gate re-run by me on the merge
+result: `cargo build`, `cargo test` (**196 passed across 10 targets, 0 failed**), `cargo clippy
+--all-targets -- -D warnings` all green, and I ran `--test json_surface` **by name** to see the
+subcommand tripwire actually execute; `check-client-names.py --repo embarch-api` clean; `python3
+scripts/check-docs.py` **all 10 green**, and green again after my decision-26 edit;
+`check-ownership.py --scope api` green on both branches pre-merge, 6 doc paths and 4 code paths.
+
+**Blocked:** nothing.
+
+**Reviewer:** 1 finding — inbox/api-decision-26-fallback-tombstone.md (real; the false claim fixed
+in this fold per (2), the remainder filed as `tasks/api/054`, and the drop consumed).
+
+**Hardware debts:** **none new.** This unit surfaced a discovery route and opened no port. Note what
+that means for confidence: **`list_serial_ports` has never been called against a real Core**, so
+"an empty list is a real answer" is a documented intent, not an observation. Leg 059's list carries
+forward unchanged.
+
+**Budget:** **`HOLD`** — weekly **97.1%** against the 97% cap when this unit landed, 5-hour 43.4%,
+weekly resetting **06:59**. Wave suggested 12, used 4. See the `core/009` entry for how I read a
+HOLD that arrives mid-leg with work already in flight.
+
+**Least sure about:** **the new `tasks/api/053`'s unparking condition, which I let stand and think is
+a ratchet.** It parks `interfaces/tools.md` until *"a unit lands here without adding a new row or
+correcting an existing one"* — but that file is the one-table reference every new tool or subcommand
+lands a row in, so in a repo doing this much surface work the condition may never fire, and the file
+would sit parked while growing. It has 1,008 bytes and is not urgent, which is exactly why nobody
+will look at it.
+
 ## 2026-09-09 01:34 — outpost/003 a two-pass decode, and a "silently skipping" test that was not
 
 **Decided:** four.
