@@ -97,7 +97,104 @@ unit under **Merged** and **Blocked**:
 
 ---
 
-## 2026-09-08 22:25 — api/030 a silent truncation, and the first time burndown's no-new-decision rule actually bound
+## 2026-09-08 22:29 — umbrella/025 four printed strings that sent an operator to files `git show` is the only way to read
+
+**Decided:** five. **This is leg 054's fourth and last unit; the leg ends here at its cap, not on a
+fault or a budget stop.**
+
+**(1) The unit's whole risk was replacing a wrong pointer with another wrong pointer, and I made the
+reviewer check that first.** Four user-visible strings named documents the four-file split deleted:
+`doctor.rs`'s check 1 Pass detail (`milestone-6.md §3.7`), check 9's **fix line**
+(`../embarch-doc/embarch-api/design.md §12`), the marker `install.rs` writes into a user's
+`~/.bashrc` (`embarch-umbrella/design.md decision 28`), and two `embarch.toml` comments `init`
+writes. They now cite `decision 42`, `spec.md, check 9`, `embarch-umbrella decision 28,
+decisions/install.md`, `embarch-api decision 12 (decisions/zephyr.md)` and `decision 16,
+decisions/mirrors.md`. The reviewer resolved **every one** against the real files and all hold. The
+one it qualified is check 1's detail citing decision 42 — a topical rather than exact match, which
+it called defensible and I agree with; the alternative is no citation at all.
+
+**(2) The backward-compatibility half landed and was verified byte-for-byte, not by reading the
+claim.** `install.rs` gained a `LEGACY_MARKER` constant and `ensure_not_sourced` now strips a line
+matching either marker, so an uninstall on a machine set up before today still removes the comment
+that machine actually has. The task flagged this as the half easiest to lose. The reviewer pulled
+the old string out of `git log` and confirmed `LEGACY_MARKER` is byte-identical to the only prior
+value. A test pins the legacy path.
+
+**(3) The new guard test is a source scan, and its limits are on record rather than glossed.**
+`doctor::tests::no_check_text_names_a_document_the_four_file_split_deleted` reads `doctor.rs`'s own
+production text above `mod tests`, skipping `//` and `///` lines, because several `Check` values
+cannot be constructed without a live Core or a subprocess. It therefore does not scan `init.rs` or
+`install.rs`, and would not catch a string assembled by `format!` across lines. The worker said so
+plainly; the reviewer confirmed every remaining `design.md`/`milestone` hit in that file is inside a
+developer comment. **A partial guard that documents what it does not cover is the right answer here
+— but it is a partial guard**, and `DOC-PROTOCOL.md:86` records this class going unnoticed for a
+week precisely because nothing mechanical watched it.
+
+**(4) The worker reverted its own decision amendment on a reserve check, and I think that was the
+right instinct rather than a gap.** It drafted one sentence for `decisions/install.md` decision 28
+about the marker fix and legacy compatibility, found that even trimmed it crossed the file's reserve
+line, and **reverted rather than file a compaction task for a sentence nothing needed**. The
+reviewer checked whether decision 28 now describes marker behaviour the code no longer matches: it
+does not — the decision states the mechanism, not the literal string, so it is unaffected.
+`decisions/install.md` is untouched at 11,009 B. That is a worker declining to spend a scarce
+resource on an optional edit, which is the judgement the reserve rule wants and the opposite of
+`api/030`'s (correct, but costly) spend on a necessary one.
+
+**(5) No `spec.md`, `decisions.md` or `open.md` edit, verified rather than asserted.** None of the
+three named the stale strings; the reviewer confirmed independently.
+
+**Merged:** `agent/umbrella/025-stale-doc-pointers` (code `db08b1e`, doc `01ecd2e`). Both
+fast-forwards after rebasing the doc branch over `api/030`'s fold. Gate re-run by me on the merge
+result, not on the branch: `cargo build`, `cargo test` (**218 passed**), `cargo clippy --all-targets
+-- -D warnings` clean; `python3 scripts/check-docs.py` **all 10 green**; `check-client-names.py`
+clean on the code worktree; `check-ownership.py` green on both branches (code repo whole-tree, doc 2
+paths, self-derived base `13df60743463`).
+
+**One process note the next leg should have.** My first attempt to merge this branch passed
+`git merge --ff-only <worktree path>`, which git rejects with "not something we can merge" — **and
+the surrounding `set -e` did not abort**, so the gate that followed ran on an unmerged tree and
+reported green about nothing. I caught it because the merge output said so, re-ran with the branch
+name, and re-ran the gate on the actual merge result, which is what the SHAs above record. Nothing
+bad landed. But "the gate passed" and "the gate passed on the merge result" are different facts and
+this is a shape that makes them look identical — **merge by branch name, and read the merge output,
+not just the gate's.**
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+It verified all four citation replacements resolve, pulled `LEGACY_MARKER`'s prior value out of git
+history to confirm byte-identity, confirmed the stale strings survive only in developer comments,
+and cleared the reverted `install.md` amendment as genuinely optional.
+
+**Hardware debts:** **none new, and one deliberately not incurred.** This unit changes what `doctor`
+and `install` *print*; I told the worker explicitly to exercise it with `cargo test` and never
+against the owner's real installation — no `install`, no `uninstall`, no live `doctor`, no service
+operation. **Burndown forbids bench work outright**, including by my own hands, so that was not a
+judgement call. All prior debts carry forward unchanged: a native Windows build of `embarch-core` is
+owed and the fleet cannot run one (`core/028`, `core/015`, `core/010`); `umbrella/037`'s corrected
+check 13 has never met the bench that found its defects; `embarch-outpost`'s Zephyr `tests/unit`
+cannot be built here (no `west`, no `ZEPHYR_BASE`); the four DUT-gated bench tasks are unchanged;
+and the ESP32-C5 USB-enumeration fact `core/028` tagged `[assumed]` still needs one look at one
+board. **A real uninstall on a pre-change machine is the only way (2)'s legacy-marker path is ever
+exercised end to end** — the test pins the string, not the removal on a machine that has it. That
+is not a hardware debt, but it is a debt, and it is owed to an attended session.
+
+**Budget:** `PROCEED` / **BURNDOWN** at start and end — 5-hour **1.0% → 5.6%**, weekly **89.0% →
+89.9%**, both against a 97% cap, weekly resetting in 8h32m. Suggested wave **12** throughout,
+never approached. **No 429 at any point**, so the mode is not cleared and the latch stands: the
+burndown expires on its own at 06:59 and the next leg inherits it. 57 tasks dispatchable across 10
+scopes when this leg ends.
+
+**Least sure about: the width, and I am the first leg with data on it.** [burndown.md](burndown.md)
+says the untested thing is 12 workers, and this leg did **not** test it — a 4-unit cap makes a wave
+of 12 unreachable, so I ran the same four-wide leg a normal `PROCEED` would have run, and burned
+0.9% of the weekly allowance doing it. At that rate the ~7 points between here and the 97% cap are
+roughly eight more legs, which is more legs than the ~8.5 hours to the reset will fit at twenty
+minutes each with relay overhead. **So the allowance this mode exists to spend will very likely not
+be spent, and the reason is the unit cap, not the wave.** I did not change the cap because it is not
+mine to change — it is the thing that makes me disposable. But if the owner wants burndown to
+actually reach the wall, the unit cap is the number to look at, and he should hear that before
+morning rather than after the reset.
 
 **Decided:** five.
 
