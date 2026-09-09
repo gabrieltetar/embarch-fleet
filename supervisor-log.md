@@ -97,6 +97,82 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 22:20 — study-designer/010 a stated property of the grammar that was untrue for the errors an author actually hits
+
+**Decided:** four.
+
+**(1) The AST's public shape changed and I checked the blast radius before merging, not after.** The
+fix threads a line number through `AstProtocol`: `sources` went from `Vec<(String, Uuid, Uuid)>` to a
+4-tuple, `session` likewise, and a `line: u32` field was added. Those are public fields on a public
+struct in a **shared crate**, which is the one class [.claude/leg.md](../embarch-doc/.claude/leg.md)
+says to read the diff for rather than merge on green. I grepped `AstProtocol` across `embarch-api`,
+`embarch-core`, `embarch-ui`, `embarch-umbrella` and `embarch-topology` and found **no consumer
+outside the crate**; the reviewer re-derived that independently, across the docs as well as the
+source, and agreed. So the shape change is internal in practice despite being public in type.
+
+**(2) The two `line0` uses the task left open were answered rather than deleted, and the answer is
+the interesting half.** A protocol's *name* error and `validate_protocol`'s failures do not belong
+to any one declaration — `validate_protocol` works over the resolved index-only `ProtocolDef` and
+its checks span states, frames and sources at once. The worker reports both at the `protocol` line
+and said so in a source comment. The task permitted exactly this ("given a real line **or**
+documented as protocol-wide"), so it is not a shortcut.
+
+**(3) I put that convention into `interfaces/eap.md` in the fold, over the reviewer's own
+assessment that it was out of scope.** The reviewer called the explanation-living-only-in-a-source-
+comment a quality nit and declined to file it, which I think was the right call *for a reviewer*.
+But `interfaces/eap.md` line 38 is the sentence "Every error carries its source line", and that
+sentence is the entire reason this task existed — it was the claim that turned out to be false for a
+whole class. Landing a fix for it while leaving the claim at the same imprecision that let it go
+unnoticed is the shape this suite keeps paying for. It now says the line is the declaration's own,
+and names the two protocol-wide exceptions. The file is 8.0 KB against a 12 KB cap, so this cost
+nothing anyone is tracking.
+
+**(4) The worker touched no `spec.md`, `decisions.md` or `open.md`, and that was right.** None of
+the three asserted the old behaviour; `decisions/protocols.md` decision 58 justifies the grammar on
+legibility and is *supported* by this change rather than amended by it. Burndown's no-new-decision
+constraint was respected and, per the worker, was never close to binding — this repairs a claimed
+property rather than making a design call.
+
+**Merged:** `agent/study-designer/010-eap-error-lines` (code `9089feb`, doc `2fd192f`), plus this
+fold's own edit to `embarch-study-designer/interfaces/eap.md` per (3). Both branches were
+fast-forwards onto `main` after the doc branch was rebased over `topology/022`'s fold. Gate re-run
+by me on the merge result, not on the branch: `cargo build`, `cargo test` (9 + 10 tests, both
+feature sets — the task named `--no-default-features --features eap-parse` explicitly and it is
+green), `cargo clippy --all-targets -- -D warnings` clean; `python3 scripts/check-docs.py` **all 10
+green**, re-run after my own edit; `check-client-names.py` clean on the code worktree;
+`check-ownership.py` green on both branches (code repo whole-tree, doc 2 paths, self-derived base
+`2fd192f3a015`).
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+It independently confirmed the `AstProtocol` shape change has no other reader anywhere in the suite,
+and — the check I most wanted — hand-traced the three new tests' line numbers to confirm they
+discriminate against the pre-fix behaviour rather than passing by coincidence. The
+duplicate-session-variable test asserts line 4 and the `session` block *is* on line 4, which is
+exactly the shape of a test that passes for the wrong reason; it does not.
+
+**Hardware debts:** **none new.** This unit is a host-side parser change in a `no_std`-adjacent
+crate and touched no board. Prior debts carry forward unchanged from the `topology/022` entry above.
+Worth noting for a future bench leg: the `.eap` interpreter this parser feeds has a **firmware**
+half on dev-bench that is pinned against this module by a literal frame, and nothing in this unit
+exercised that side — the line numbers are an authoring-time surface only, so no bench debt is
+actually owed, but a reader scanning for "did a grammar change need a board" should see the question
+answered rather than absent.
+
+**Budget:** `PROCEED` / **BURNDOWN**, weekly 89.0% against a 97% cap at leg start. Two more units
+land after this one; the closing numbers are in the last entry.
+
+**Least sure about:** **whether (3) is me quietly overruling a reviewer.** The reviewer looked at
+the same gap and called it out of scope, and I did it anyway in the fold — which is legitimate,
+since a `**Reviewer:** no findings` line and a supervisor's own judgement are different instruments
+and the fold is where mine applies. But the honest version is that I disagreed with it, and a
+pattern of supervisors "improving" on clean reviews would make the review line worth less than it
+looks. I want the next leg to see that this happened once, deliberately, on a one-sentence edit to
+the exact sentence the unit disproved — and not to read it as licence.
+
+---
+
 ## 2026-09-08 22:16 — topology/022 a true sentence that a landing made false, and the same shape one layer down
 
 **Decided:** five.
