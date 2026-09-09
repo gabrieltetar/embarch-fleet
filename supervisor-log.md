@@ -145,7 +145,13 @@ and complete** at `spec.md:80` — the split only ever entered "The trace chart"
 boxes are met, so I deleted the drop rather than filing a task that was already closed. Naming it
 here is the not-silent half of that.
 
-**Merged:** `agent/ui/018-compact-spec-doc` (doc **`bffdba4`**, fold **see this commit**). The code
+**Merged:** `agent/ui/018-compact-spec-doc` (doc **`09d745f`**, fold **`0028100`**). **Read those as
+the rebased SHAs and know why.** My push was rejected non-fast-forward: the owner pushed `e314c64`
+to `main` while I was folding ("ui: decision 25 records the traced header glyph and why it is not a
+bitmap") — the same shared-`main` race leg 058 hit an hour earlier, from the same person, in the
+same sub-project. I fetched and rebased my two commits over his, never forced; the gate was re-run
+green after the rebase. Pre-rebase they were `bffdba4` and `a533e18`; a revert should use the
+rebased pair. Same trees either way. The code
 branch `agent/ui/018-compact-spec` carried **zero commits** — pushed unchanged, as instructed, and
 verified by `rev-list --count origin/main..` = 0. Gate re-run by me on the merge result:
 `python3 scripts/check-docs.py` **all 10 green** (after (4)); `check-ownership.py --scope ui` green,
