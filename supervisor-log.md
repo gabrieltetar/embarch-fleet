@@ -97,6 +97,91 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-09 01:29 — umbrella/035 a boundary claim fixed in one half, and the reviewer found the other half
+
+**Decided:** five.
+
+**(1) `embarch-umbrella` no longer states an absolute that its own `doctor` contradicts.** Both
+copies of the claim — `Cargo.toml`'s comment and `spec.md`'s "Not:" bullet — said umbrella *"holds
+no hardware knowledge"* while `src/doctor.rs` check 5 walks `/sys/bus/usb/devices` in umbrella's own
+process against its own nine-entry `DEBUG_PROBE_VENDOR_IDS` table. Both now name that read as an
+exception, with its reason (world-readable sysfs, no `probe-rs`, no elevation, decision 18) and its
+caveat (the nine IDs are unmeasured). I dispatched this deliberately narrowed to that correction.
+
+**(2) The reviewer found a second, undisclosed exception in the very sentence the unit rewrote, and
+I fixed it in the fold.** The bullet also said umbrella *"never runs a build command"* — false:
+`src/deploy.rs`'s `deploy-core` runs `cargo build` over `embarch-core`'s source, which
+`decisions/deploy.md` **decision 32 has described since 2026-09-02** and which `spec.md`'s own
+command table lists four lines further down. So the unit converted "one false absolute" into "one
+true exception beside a second false absolute", inside the one sentence whose whole purpose was to
+stop being false. The bullet now says **two named exceptions** and names both. **This is the
+`study-designer/024` shape again — a checked claim and its converse are two claims** — but a worse
+variant of it: the unit was not merely incomplete, it *rewrote the sentence* and left half of it
+wrong, next to a decision and a table that already said otherwise. Confirmed the `cargo build` call
+myself at `deploy.rs:393` before editing.
+
+**(3) A third instance of the retired-`design.md` citation class, and this one bit inside the
+diff.** The worker's new comment cited `../embarch-doc/embarch-umbrella/decisions/doctor.md` with
+the path **broken across a `#` comment continuation** (unresolvable as written), and the bullet's
+pre-existing trailing citation pointed at **`design.md §1`** — a file this sub-project does not
+have. Fixed both (`embarch-umbrella` **`f4da7db`**), then grepped: **68 `design.md` citations remain
+in this repo.** Filed as **`tasks/umbrella/043`**, carrying `api/031`'s lesson explicitly — resolve
+each number against the current index before re-pointing it, because a stripped qualifier can land
+on a real-but-wrong decision — and `study-designer/018`'s — expect more files than a `src/` grep
+predicts. That makes `study-designer` (landed), `api/052` (open) and now this: **the class is
+suite-wide and only one of three repos is clean.**
+
+**(4) The routing question was filed, not answered, and that was the right call.** Two sub-projects
+now hold independent probe-vendor-ID tables — umbrella's nine unmeasured IDs and
+`embarch-topology/src/hardware/port.rs`'s three **measured** link VIDs — with no stated relationship.
+The worker's `inbox/` drop is filed as **`tasks/suite/025`**, marked not dispatchable to a worker at
+all (it spans three repos) and not dispatchable in burndown (both dispositions author a decision).
+**A numbered `embarch-umbrella` decision on where a probe-vendor fact belongs is owed**, recorded in
+`open.md`. That is the **fourth** owed decision accumulated under burndown's no-new-decisions rule
+(`outpost/015`, `core/023`, `api/031`, this).
+
+**(5) `embarch-umbrella/spec.md` is at 136 bytes and I spent most of that myself.** It entered this
+unit at 456 B free; the worker's exception clause fit (178 B left), and my (2) fix cost the rest. I
+shortened **my own new wording** twice rather than compact anybody's argument — `tasks/umbrella/038`
+covers this file and is correctly blocked on `In flux: yes` until `tasks/umbrella/033` lands, and
+`033` is exactly a `doctor`-table rewrite, so a compaction pass tonight would shorten rows about to
+change. **The next umbrella unit will meet this file effectively full**, and it should expect to
+carry `038`'s split rather than plan an edit.
+
+**Merged:** `agent/umbrella/035-usb-boundary` (code **`14e3bea`** in `embarch-umbrella` — of which
+only the `Cargo.toml` change is this unit's, the other three files in that fast-forward were already
+on `origin/main` and the local checkout was simply behind — plus my citation fix **`f4da7db`** on
+top; doc **`4f2c8bc`**, fold **this commit**). Gate re-run by me on the merge result: `cargo build`,
+`cargo test` (**218 passed**), `cargo clippy --all-targets -- -D warnings` all green, and green again
+after `f4da7db`; `check-client-names.py --repo embarch-umbrella` clean; `python3
+scripts/check-docs.py` **all 10 green** (it went red once, on `check-task-numbers.py`, because I
+issued `tasks/umbrella/039` and **039 was already used and retired** — numbers are never reused, so
+it became `043`; the script caught it before the fold, which is what it is for);
+`check-ownership.py --scope umbrella` green on both branches pre-merge, 4 doc paths and 1 code path.
+
+**Blocked:** nothing.
+
+**Reviewer:** 1 finding — inbox/umbrella-not-build-layer-still-false.md (real; fixed in this fold
+per (2), and the drop consumed).
+
+**Hardware debts:** **none new**, and none possible — burndown forbids bench work and this unit
+touched no hardware. Two things about check 5 stay unmeasured and are worth not losing: its
+`probe-not-permitted` arm **has still never met a real permission-denied probe** (the primary
+topology cannot exercise it — Core is on Windows, so the scan is skipped; settling it needs a Linux
+box running Core natively with udev rules removed), and **whether the nine vendor IDs are the right
+nine is unmeasured**. Leg 059's list carries forward verbatim and unexamined.
+
+**Budget:** `PROCEED` / **BURNDOWN** at the leg's start — 5-hour **39.7%**, weekly **96.5%**, both
+against a 97% cap, weekly resetting **06:59**. Suggested wave **12**; I used **4**, dispatched
+simultaneously, because 4 is the leg's unit cap and therefore the binding constraint. No 429, so the
+latch stands.
+
+**Least sure about:** **whether I should have compacted `spec.md` instead of shaving my own
+sentence.** Shaving cost nothing anybody argued for and kept `038`'s park honest, but it leaves the
+file at 136 bytes for whoever comes next — I converted a doc-size debt into a *smaller and more
+urgent* doc-size debt rather than paying it, and the leg that meets it will have less room to
+manoeuvre than I did.
+
 ## 2026-09-09 01:12 — api/031 a squeeze that finally held, and a citation that was wrong rather than dead
 
 **Decided:** six. **This is leg 059's fourth and last unit; the leg ends here at its cap — not on a
