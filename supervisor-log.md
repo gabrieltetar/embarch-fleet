@@ -97,6 +97,70 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 23:18 — topology/017 a spec squeeze whose deleted categories were named short, and a reviewer that counted them
+
+**Decided:** four.
+
+**(1) Same two-shape pass as `outpost/012`, on a file where the squeeze is the expensive half.**
+`decisions/validation.md` had a mission seam — decision 26 is validation *timing*, a different subject
+from 21 and 25 — so 26 moved byte-for-byte into a new `decisions/validate-timing.md`, 91.0% → 71.4%.
+`spec.md` had none available and was squeezed 97.3% → **87.8%** (1,245 B left). **A deletion in
+`spec.md` is worth more scrutiny than one anywhere else in a sub-project**, because `open.md`'s own
+header names `spec.md` as the current truth — so the thing a squeeze there can lose is the statement
+every other file defers to.
+
+**(2) The reviewer verified the four deletion categories the worker named, and then found the list was
+not exhaustive.** The worker's defence was four kinds of cold content: a serial number, an exact
+measurement citation, a date tag, and a rationale decision 26 now owns. All four check out. But
+**two further sentences and one caveat also went, and the commit message names none of them.** The
+reviewer read each and judged them asides and epistemic nuance rather than invariants, constraints or
+failure signatures — no contradiction, nothing that changes what `spec.md` asserts. I agree with that
+reading and I am recording the gap rather than the verdict: **a squeeze that describes its cuts by
+category is only auditable if the categories are complete**, and this one's were not. That is a note
+for the next compaction pass in any scope, not a finding against this one.
+
+**(3) The verbatim claim was tested rather than accepted, and the suite-wide reference sweep is the
+part that had to be done for a shared crate.** `embarch-topology` is path-depended on by four repos,
+so a decision moving files can strand a citation outside the sub-project that owns it. The reviewer
+checked suite-wide and found nothing stale — the other hits are same-numbered decisions in other
+sub-projects or bare unlinked citations. The `decisions.md` routing table and `enrollment.md`'s
+cross-link are both consistent.
+
+**(4) The task is fully paid and closed, unlike this leg's first unit.** Both files on its
+`Compacts:` line are out of reserve, `check-doc-size.py --pressure` says so for each, and the task
+file is `git rm`'d. `decisions/crate.md` (93.4%) and `decisions/enrollment.md` (92.3%) remain in
+reserve in this sub-project and are already filed under `topology/021` and `topology/019`.
+
+**Merged:** `agent/topology/017-compact-topology` (code **no commits**, `embarch-topology` unchanged
+at `b722895`; doc `f7506fa`). The doc branch did **not** fast-forward onto the previous unit's fold
+and was rebased first, then merged `--ff-only`. Gate re-run by me on the merge result:
+`python3 scripts/check-docs.py` **all 10 green**; `check-client-names.py` clean on
+`embarch-topology`; `check-ownership.py` green on both branches (doc 6 paths after the rebase,
+code whole-tree with 0 paths changed, self-derived base `097e96a37e61`). `embarch-topology` is a
+shared crate, so its diff is one I read rather than merge on green — it is doc-only and touches no
+crate source.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+It diffed decision 26 against its pre-move text rather than trusting "byte-for-byte", checked every
+inbound reference across the whole suite rather than only this sub-project, verified each of the four
+named deletion categories, and reported the two unnamed sentences and one caveat as a completeness
+gap in the commit message rather than as a contradiction.
+
+**Hardware debts:** **none new.** A doc compaction touches no hardware. Standing debts carry forward
+unchanged from the entries below.
+
+**Budget:** `PROCEED` / **BURNDOWN** throughout, weekly against a 97% cap. Two units left in this
+leg; closing numbers are in the last entry.
+
+**Least sure about:** **whether "the categories were incomplete" should have been a finding rather
+than a note.** Nothing was lost — the reviewer read the extra cuts and they are asides. But the
+reason a squeeze is allowed to delete at all is that someone can check the deletions against a stated
+rule, and a stated rule that turns out to cover most of what happened is weaker than it looks. I let
+it stand because the review that caught it *is* the check working; a second occurrence would change
+my answer.
+
 ## 2026-09-08 23:14 — outpost/012 a compaction that split one file and squeezed the other, and paid only half its own task
 
 **Decided:** four. **This is leg 056's first unit.** Recovery first, because two things were left
