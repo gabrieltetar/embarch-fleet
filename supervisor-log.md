@@ -97,6 +97,99 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 19:07 — dev-bench/012 the suite's tightest file, split rather than squeezed, and the bar that made it dispatchable
+
+**Decided:** four, and the first is the one I want challenged if any of them is wrong.
+
+**(1) I dispatched a compaction task whose `In flux:` field says yes, deliberately, by narrowing it to
+a split.** `.claude/leg.md` is flat about this — never dispatch an in-flux compaction — and it is
+right about the reason: a *squeeze* rewrites prose that is about to change, and what it silently
+drops is the qualification that makes a decision honest, which no gate can see. But the same file
+also says a **verbatim split restates nothing, so `In flux: yes` cannot forbid one**, and
+`DOC-COMPACTION.md` §2 says prefer a split. **The deciding evidence was in the task file itself**:
+its own 2026-09-07 "Widened" note says *"Prefer a SPLIT … a split restates nothing, so it costs no
+argument, and a file warned 1.2 KB out still has a seam to cut. Squeeze only where there is none."*
+So the `In flux` bar was guarding the squeeze half, and the task had been carrying both halves under
+one state line. **I dispatched the split half and left the squeeze half parked**, and told the worker
+in as many words that if it found itself rewriting a sentence it had left the dispatch.
+
+**(2) The file was the suite's most urgent structural hazard and nothing was going to reach it on the
+ledger's clock.** `embarch-dev-bench/decisions/ble.md` was at **12,282 of 12,288 bytes — six bytes of
+headroom**, the tightest file in the corpus, and its size-debt date was 2026-09-22, two weeks out.
+Nothing was overdue this leg, so the ledger would not have offered it. **The failure mode a full
+decisions file produces is not a clean refusal**, which is why I did not wait: it is a decision
+filed into the wrong topic file because the right one was full, silently, gate-green — `embarch-api`
+did exactly that on 2026-09-05 with 96 bytes left in `decisions/zephyr.md`. Six bytes is not a
+warning, it is the wall.
+
+**(3) I chose not to choose the seam, and the worker's cut is better than the one I had in mind.**
+I named three candidate groupings in the dispatch and said the choice was its judgement, with the
+one instruction that each resulting file needs a topic line a reader can act on. It cut
+pairing/security (11, 15, 33, 34, 37) from addressing-and-pre-connection-discovery (17, 23, 31, 32,
+44), the second into a new `embarch-dev-bench/decisions/scanning.md`. **The line that makes it a real
+mission boundary rather than a size boundary is "before a connection exists"** — the bench's own
+address, GATT UUID byte order, name filtering and the advertiser census are all things true before
+anything is connected; pairing, security elevation, connection-count enforcement and teardown are
+all after. I would have cut 15 and 33 the other way on the word "connection" and been wrong.
+
+**(4) I verified the split myself rather than reviewing it.** The worker reported byte-identity and I
+did not take that on report: I extracted every `### `-delimited section from the pre-split file and
+from both post-split files and compared them mechanically — **9 sections before, 9 after, every one
+identical.** That took one throwaway script and it is the entire correctness question for a split,
+which is why the reviewer was told to take it as established and spend its run on what a diff cannot
+see.
+
+**Merged:** `agent/dev-bench/012-split-ble` (doc `ec5cdf4`; **no code SHA — doc-only unit**). Gate
+re-run by me on the merge result: `python3 scripts/check-docs.py` **all 10 green**;
+`check-ownership.py --scope dev-bench` green on all 5 changed paths.
+
+**`DOC-COMPACTION-PASS.md`'s human question, answered in my own words because no script answers it —
+*can `spec.md` alone answer what someone needs to work on this component today?*** For the dev-bench's
+BLE behaviour: **yes for the shape, no for the traps, and that is the correct split rather than a
+defect.** `spec.md` carries the source tree, the thread model, the two BLE bridge implementations,
+the RAM ceiling that has overflowed three times, and the tuned constants with their `[measured]` and
+`[assumed]` tags — enough to start work. What it does not carry, and should not, is why bonds are
+RAM-only *and cleared twice*, or that 16-bit UUIDs were once reported two bytes out of place, or that
+"Just Works needs no auth callbacks" was wrong. Those are the reasons someone would otherwise
+reintroduce a bug, and they are exactly what a decisions file is for. **The split did not change that
+answer in either direction** — it changed which of two files a reader opens second.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+It confirmed the seam holds as a claim — specifically that decisions 15 and 33 belong on the
+pairing/security side, which was the judgement I flagged as most likely to be wrong — that no
+reference to `decisions/ble.md` or to the five moved decision numbers dangles anywhere in the repo
+including in scopes the worker could not edit, that the index row's numbers and stated sizes match
+the files, and that `spec.md` and `open.md` were genuinely untouched so the `In flux` bar was
+respected rather than routed around.
+
+**Hardware debts:** **none new, and none possible** — this unit moved text between two files. All
+prior debts carried forward unchanged: a native Windows build of `embarch-core` is owed and the fleet
+cannot run one (`core/015`, `core/010` stacked behind it); `umbrella/037`'s corrected check 13 has
+never met the bench that found its defects; `embarch-outpost`'s Zephyr `tests/unit` cannot be built
+here (no `west`, no `ZEPHYR_BASE`); the bench queue is parked by the owner's own commit.
+
+**Doc-size state, since that is what this unit was about:** `ble.md` went **12,282 B (99.95%) →
+64.3% of cap, out of reserve and marked PAID**, and `scanning.md` was born at ~4.8 KB with room. Its
+item in `tasks/dev-bench/012` is closed and the task remains `open` for the two it did not touch —
+`embarch-dev-bench/open.md` (4,782/5,120, 338 B left) and `spec.md` (9,460/10,240, 780 B left), both
+still `In flux: yes` and both still squeezes.
+
+**Budget:** `PROCEED` at both ends: 5-hour 30.4% → 31.1%, weekly **87.9% → 88.1%** against a 90% cap
+resetting in ~11h50m. Wave 1 throughout; this leg is serial.
+**Least sure about:** **whether narrowing an `In flux: yes` task to its split half is a supervisor's
+call to make, or a rule change wearing a unit's clothes.** I think it is the former — I changed
+nothing, the licence is written in `.claude/leg.md` and in the task file's own note, and the parked
+half is still parked with its field intact. But the honest description of what happened is that a
+flat instruction said "never dispatch this" and I dispatched it on a reading of a second rule, with
+a six-byte file as the reason to act now rather than wait. **If that reading is wrong, the fix is one
+sentence in `DOC-COMPACTION.md` or `.claude/leg.md` saying a split-only dispatch of an in-flux task
+is or is not permitted, and neither file is mine.** Recording it here loudly because the next leg
+will meet three more `In flux: yes` compaction tasks (`api/026`, `api/047`, `study-designer/006`) and
+will now have a precedent for them that nobody approved.
+
+---
+
 ## 2026-09-08 18:59 — topology/020 a claim about a crate bounded to the crate, and the caller it could not speak for
 
 **Decided:** three.
