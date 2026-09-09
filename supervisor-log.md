@@ -97,6 +97,142 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-09 01:47 — core/009 a route called bounded and bounded only by its caller, and a compaction task that closed itself while its debt stood
+
+**Decided:** seven. **This is leg 060's fourth and last unit. The leg ends here — and unlike the
+last several, not at its cap: it ended on a `HOLD` that arrived after dispatch. See (6).**
+
+**(1) `GET /serial-log` is bounded by Core now, not by whoever calls it.** `interfaces.md` has
+called it *"a bounded snapshot, not a stream"* while the only bound was a number the caller chose.
+`src/serial.rs` gained `MAX_DURATION_MS` (10,000 ms) and a byte cap
+(`EMBARCH_SERIAL_LOG_MAX_BYTES`, 1 MiB, following `EMBARCH_STREAM_MAX_BYTES`'s convention), the
+capture reports `truncated: bool`, and the `Ok(0)` read sleeps 10 ms instead of spinning a
+blocking-pool thread with no yield. The read loop was split over a `Read` so it is testable **with
+no port opened** — 4 new `serial::` tests and 2 in `api::tests`, and I ran all six by name to see
+them execute rather than trusting a summary.
+
+**(2) The reviewer confirmed the one thing that decides whether this fix works at all.** The whole
+point is that an over-cap request must be refused *before* `hw_lock` is taken — take the lock first
+and an over-cap caller still stalls every other hardware caller for its whole span before being told
+no, which is the self-inflicted outage the task was filed about. Verified in `af1e168`: the
+`duration_ms > MAX_DURATION_MS` check and its `400` are the **first** thing in
+`serial_log_handler`, and `state.hw_lock.lock().await` is the very next statement. It also settled
+the boundary — the refusal is on **`>` cap**, not `>=`, demonstrated by
+`serial_log_at_the_duration_cap_is_unchanged`, where exactly-at-cap passes validation and fails
+later at port-open — and confirmed `interfaces/hardware.md`'s wording says the same thing.
+
+**(3) A compaction task closed itself while its debt was still standing, and nothing would have
+noticed. I reopened it.** The worker compacted `embarch-core/open.md` (5,051 → 4,669 B) as
+`tasks/core/022`'s parked item — correctly, under the mid-unit exception I dispatched it with — then
+marked `022` **closed**. But **`open.md` is still inside its reserve**: the floor is
+`max(1200 B, 10%)` from the top, i.e. **3,920 B** for a 5,120 B cap, so 4,669 B is 91.2% and still
+in it. **`check-doc-size.py` reports a reserved file as "filed" whenever a task *file* names it,
+regardless of that task's `State:`** — so a closed task satisfies the ledger exactly as well as an
+open one, and this debt would have become unowned with every check green. That is **`tasks/doc/028`'s
+class a third time**, now with a second-order consequence: a hand-written `State:` field can
+silently retire a *ledger entry*, not merely mislead a reader. `022` is `open` again with the
+arithmetic written into it, only `open.md`'s item left, needing a further ~750 B. The reviewer
+checked that arithmetic independently and confirmed it.
+
+**(4) The squeeze cut one clause that was the actual open question, and I put it back.** The
+Espressif dev-bench port bullet lost *"Either way, nothing asserts what replaces the removed knob
+for that family."* What survived was the `[assumed]` enumeration fact and "confirming it needs the
+board" — so the bullet came out reading as *we need hardware*, when the real unresolved thing is
+that **decision 23 removed four env overrides and nothing states the replacement for that family**,
+which needs no board at all. Restored, and the reviewer confirmed that clause is stated **nowhere
+else** in `open.md`, `decisions.md` or `decisions/platform.md`. **Fifth recorded instance of a
+squeeze cutting something it believed was texture**, and the second in this one file tonight. Its
+sweep of the other hunks found nothing further that reverses a decision or drops a fact asserted
+nowhere else: the deleted `GET /study/{id}/events` bullet described *itself* as "closed rather than
+owed" (fine to drop from an unresolved-only doc), and the three tightened bullets lost elaborating
+clauses — *"resolution matches on a USB serial"*, *"and circular"*, *"and returns the same error"*.
+**Thinner, and I am recording the three by name**, because "prose quality, not a contradiction" is
+how a file gets hollowed out one defensible edit at a time.
+
+**(5) An owed decision, and this one has teeth.** The cap values (10,000 ms, 1 MiB) and the
+`truncated: bool` shape are **reasoned, not measured** — 10,000 was chosen to sit comfortably under
+the shared client's 15,000 ms serial timeout rather than to match it — and burndown forbade
+authoring the decision. Recorded in `open.md` under a new "Owed decisions" heading. **This is the
+fifth owed decision of this burndown** (`outpost/015`, `core/023`, `api/031`, `api/041`'s deferral,
+this) and the one I would least like forgotten: a future unit that raises the client's timeout or
+lowers Core's cap has nothing to read saying why either number is what it is.
+
+**(6) The `HOLD` arrived after dispatch, and how I read it is the one judgement in this leg a
+successor should check.** `usage-budget.py` said `PROCEED` at step 0 with weekly at **96.5%** of the
+97% burndown cap; it crossed to **97.1%** while the four workers ran and has read `HOLD` since
+(**97.2%** at this fold). I read a HOLD as *do not start*, not *do not finish*: all four workers
+were already in flight and had already spent their tokens, so I landed, gated, reviewed and folded
+every one and **dispatched nothing further**. I also **kept the reviewers** rather than taking
+`.claude/leg.md`'s HOLD exemption — see this entry's last line. **I did not clear the burndown
+latch**: a HOLD is not one of the four things `burndown.md` says ends the mode, the latch expires by
+itself at **06:59** (which is also when the weekly resets), and the listener will not respawn a leg
+into a HOLD, so leaving it latched resumes the fleet at the reset instead of requiring a re-arm.
+**I also did not delete `/home/gabriel/Github/embarch/.fleet/pump`** — that is for honouring a *stop*, and nobody asked
+for one.
+
+**(7) The native Windows build debt now has a measured cause instead of a shrug.** `core/015`,
+`core/010` and `core/028` have carried "a native Windows build of `embarch-core` is owed and this
+fleet cannot run one" for days. I tried it on the merge result:
+`cargo build --target x86_64-pc-windows-msvc` fails in **`hidapi v2.6.6`'s build script**, before
+compiling any of Core's own code, and the rustup target itself **is installed**. So the blocker is a
+C-dependency build script wanting a Windows toolchain, not a missing target — worth writing down,
+because "cannot build for Windows" reads like something a leg might fix with one `rustup` command.
+
+**Merged:** `agent/core/009-serial-log-bound` (code **`af1e168`** in `embarch-core`, doc
+**`0f47877`**, fold **this commit**). Its doc branch needed a rebase onto `main` after `api/041`'s
+fold; done with `--force-with-lease`, no conflict. Gate re-run by me on the merge result:
+`cargo build`, `cargo test` (**190 passed, 0 failed, 2 ignored**, plus the six new ones run by
+name), `cargo clippy --all-targets -- -D warnings` all green; `check-client-names.py --repo
+embarch-core` clean; `python3 scripts/check-docs.py` **all 10 green**, and green again after my two
+doc edits; `check-ownership.py --scope core` green on both branches pre-merge, 8 doc paths and 2
+code paths. **Native Windows build attempted and failed for (7)'s reason** — the standing debt is
+unchanged and unaffected, nothing in the changed code being platform-specific.
+
+**Blocked:** nothing. **Four units dispatched, four landed, none blocked.**
+
+**Reviewer:** no findings.
+
+**Three notes on the reviewers, because this leg leaned on them harder than any before it.** All
+four ran and **three found something**; two of those were real defects fixed in their folds
+(`umbrella/035`'s second false absolute, `api/041`'s decision 26). This reviewer additionally
+**corrected my own spawn prompt**: I cited "decision 46, `hw_lock` is an `Arc<Mutex<()>>`", and that
+content is decisions 4/14/15 in `decisions/platform.md` — decision 46 is about `interfaces.md`
+route-count pinning in `decisions/auth.md`. It checked the right content anyway and said so. Two
+mechanical oddities for a successor: it sent an interim reply under my deadline from a **different
+agent id than the one I spawned** and addressed to a third id, and the content matched my prompt
+exactly, so a reviewer's reply id may not match its spawn id; and while it looked, my (4) restoration
+was still staged in my leg worktree rather than in `0f47877`, so its early concern that the clause
+had been "cut" was right about the commit and moot about the outcome.
+
+**Hardware debts:** **none new**, and none incurred — no unit this leg touched hardware, and
+burndown forbids bench work outright. Carried forward: the owed native Windows build of
+`embarch-core` (`core/028`, `core/015`, `core/010`), **now with (7)'s measured cause**;
+`umbrella/037`'s corrected check 13 never met by the bench; check 5's `probe-not-permitted` arm
+never met by a real permission-denied probe, and its nine vendor IDs unmeasured (`umbrella/035`);
+`embarch-outpost`'s Zephyr `tests/unit` and `native_sim_stream` unbuildable here, so
+`assert_stream.py` has not run against `outpost/003`; `embarch-dev-bench`'s absent west/Zephyr
+toolchain; the four DUT-gated bench tasks; `core/028`'s `[assumed]` ESP32-C5 USB-enumeration fact,
+whose bullet this unit reworded; `dev-bench/002`'s 17-to-64-step study; and `list_serial_ports`
+never having been called against a real Core (`api/041`). **`outpost/005`'s entry should be
+re-worded** per the `outpost/003` entry: `cross_decoder.py` is not a silently-skipping test, it is a
+test that cannot run in a fleet worktree, and it **passes** from the main checkout — 831 rows, 41
+frames.
+
+**Budget:** **`HOLD`** at this fold — 5-hour **43.4%**, weekly **97.2%** against the 97% cap,
+weekly resetting **06:59**. `PROCEED` / **BURNDOWN** at the leg's start (weekly 96.5%). Suggested
+wave **12** throughout; I used **4**, dispatched simultaneously, because 4 is the leg's unit cap.
+**No 429 at any point**, so the mode was not cleared and the latch stands until it expires on its
+own. Dispatchable count **43 → 41** by my arithmetic: four consumed, three filed (`umbrella/043`,
+`api/054`, `core/030`), one filed as a `suite` task not dispatchable to a worker (`suite/025`), one
+reopened (`core/022`), one new blocked compaction task (`api/053`).
+
+**Least sure about:** **that I kept spawning reviewers under a HOLD, on my own reasoning rather than
+on the rule.** `.claude/leg.md` names a HOLD as a legitimate reason to skip one, and I declined it
+four times because they were finding real defects and looked cheap beside the gate runs I owed
+anyway. I believe that was right — two of tonight's fixes exist only because a reviewer ran — but it
+is me deciding a budget signal did not apply to me, at 97.2% of a cap whose entire purpose is to
+protect the *start* of next week. If the seat opens the week short, this is the entry to look at.
+
 ## 2026-09-09 01:41 — api/041 a discovery route that existed and was reachable from nowhere, and a decision that announced a mechanism nobody built
 
 **Decided:** five.
