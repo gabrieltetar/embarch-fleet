@@ -97,6 +97,114 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-09 00:01 — api/034 a doc premise that finally has a test, and two paid ledger items nobody was closing
+
+**Decided:** five. **This is leg 057's fourth and last unit; the leg ends here at its cap, not on a
+fault, a stop or a budget verdict. The burndown latch stands and expires on its own at 06:59.**
+
+**(1) `interfaces/tools.md:5`'s premise is now checked instead of asserted.** That file opens by
+saying "one table, because these are two front-ends over one implementation — not two surfaces to
+keep in sync", and nothing had ever tested it. `embarch-api/tests/tool_subcommand_parity.rs` (188
+lines) now derives the MCP tool list from `include_str!("../src/tools.rs")` and the subcommand list
+from `include_str!("../src/main.rs")` and asserts one-for-one kebab-case correspondence. The missing
+`reset_dev_bench` row — the defect that prompted the task, and a command `suite/studies-guide.md`
+already tells an engineer to run — is in the table.
+
+**(2) The test asserts a superset, not a bijection, which is the distinction I asked the reviewer to
+check and the one that would have made it wrong.** `spec.md` §1 claims the CLI is a *superset* with
+`versions` having no tool. A test asserting a strict bijection would be asserting something the docs
+do not, and would fail the first legitimate CLI-only subcommand. The reviewer counted the actual
+source at the merge SHA — **24 `#[tool]` functions, 24 `Commands` variants** — and confirmed the only
+two mismatches are the two the named `DOCUMENTED_ASYMMETRIES` constant encodes: `versions` as
+`CliOnly`, `study_watch` as `ToolReachedAs("study-status")` because it is a `--follow` flag rather
+than its own variant. Both verified in `cli.rs`. **So the constant is exhaustive today, not merely
+plausible.**
+
+**(3) The parser's weak point was guarded rather than hoped away, and that is worth recording
+because it is the failure mode this kind of test usually has.** It ties itself to the
+`#[tool(description = ...)]`-immediately-precedes-`async fn` adjacency, and **a parity test that
+quietly stops seeing half the surface is worse than no test.** The reviewer checked all 24 sites hold
+that adjacency today, and — the part that matters — the file carries an `assert!(tools.len() > 20)`
+tripwire with a matching variant-count guard, so a formatting change that broke the adjacency
+collapses the count and **trips**, rather than passing with three tools. The worker also verified the
+test catches real drift by temporarily renaming an exception entry and confirming the failure
+message.
+
+**(4) The api reserve was respected exactly, which is the first time a unit dispatched into
+`embarch-api` has managed that without spending it.** That sub-project is the tightest in the suite —
+`decisions/tool-wrapping.md` has **66 B** of headroom, `core-link.md` 212 B, `open.md` 318 B,
+`spec.md` 890 B, all five behind `blocked` compaction tasks a worker may not do. I put the table of
+those five files and their headroom in the task file before dispatch, told the worker
+`interfaces/tools.md` was where its edit belonged, and told it explicitly that the
+"update spec.md/decisions.md/open.md" line in its own Done-when was boilerplate rather than a
+checklist. **It touched none of the five**, and the reviewer confirmed that against `git show
+--stat`. The cheap intervention was naming the byte counts in the task file rather than leaving the
+worker to discover them.
+
+**(5) I closed two paid size-ledger items that had been nagging with nobody closing them, and one of
+them is a park that had quietly stopped meaning anything.** `check-doc-size.py --pressure` prints
+`PAID … close its item` for a file that is out of reserve while its task still claims it:
+- `tasks/api/043-compact-api.md` was `blocked` on `In flux: yes` for `decisions/surface.md`, which
+  `api/036`'s verbatim split took to **5,609 B against a 12,288 B cap (45.6%)**. Its last open
+  checkbox was "every `Must not delete:` item is still readable, wherever it ends up", and I
+  **verified all three at their new addresses myself** rather than ticking it on the note's word:
+  decision 41's routine-knob-versus-unrecoverable-`erase` distinction and decision 52's two rejected
+  alternatives plus the `host_type_schema_version`/`schema_version` collision are in
+  `decisions/tool-wrapping.md`; decision 57's four-bare/one-wrong-number finding is still in
+  `surface.md`. Closed `done`. **The park's question moved rather than went away** —
+  `tool-wrapping.md` is the file that now takes every per-tool addition, it is the 66 B file, and
+  `tasks/api/047` is where a future unit says `In flux: no`.
+- `tasks/dev-bench/012`'s `decisions/ble.md` item is paid (**7,902 B, 64.3%**) and is now struck off
+  its `Compacts:` line, with a note that the task's two remaining items — `spec.md` 92.4% and
+  `open.md` 93.4% — were added by the 2026-09-07 reserve-floor change and are **not** covered by that
+  task's `In flux: yes` block, which is about `ble.md`. Same shape as leg 056's `study-designer/006`
+  correction, and the third time this leg has found a task-file state field that no script verifies.
+
+**Merged:** `agent/api/034-tools-md-reset-dev-bench` (code **`0e6bb51`** in `embarch-api`, one new
+test file; doc **`8897efa`**). Doc branch rebased over `ui/011`'s fold, then a fast-forward. **The
+code merge traversed two commits already on `origin/main`** — `embarch-api`'s *local* `main` was
+behind, the same staleness that made a `git branch -d` refuse in this leg's first entry — so the
+`3 files changed` git printed is misleading; `git log a0950ec..HEAD` is the single new commit and I
+checked it. Gate re-run by me on the merge result: `cargo build`, `cargo test` (**all suites green,
+including the new one**), `cargo clippy --all-targets -- -D warnings` clean;
+`python3 scripts/check-docs.py` **all 10 green**; `check-ownership.py --scope api` green on both
+branches (3 doc paths, base `3125b83b4a14`; code repo whole-tree owned);
+`check-client-names.py --repo embarch-api` clean. **No native Windows build** — that debt is
+standing and the fleet cannot pay it, and this unit adds a test rather than platform code.
+
+**Blocked:** nothing. Four units dispatched, **four landed, none blocked** — this leg's only red was
+a reviewer finding on `ui/011`, fixed in its own fold.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none new.** No unit this leg touched hardware. Standing debts, carried forward
+in full: a native Windows build of `embarch-core` is owed and the fleet cannot run one (`core/028`,
+`core/015`, `core/010`); `umbrella/037`'s corrected check 13 has never met the bench;
+`embarch-outpost`'s Zephyr `tests/unit` cannot be built here, which `outpost/009` met again;
+`embarch-dev-bench`'s west/Zephyr toolchain is likewise absent; the four DUT-gated bench tasks are
+unchanged; `core/028`'s `[assumed]` ESP32-C5 USB-enumeration fact still needs one look at one board;
+`dev-bench/002`'s 17-to-64-step study has never been attempted on the bench.
+
+**Budget:** `PROCEED` / **BURNDOWN** at start and end — 5-hour **17.1% → 22.4%**, weekly **92.1% →
+93.2%**, both against a 97% cap, weekly resetting in 6h58m. Suggested wave **12** throughout, and I
+used **4**, dispatched simultaneously. **No 429 at any point**, so the mode is not cleared and the
+latch stands. **46 tasks dispatchable** as this leg ends, down from 52.
+
+**Least sure about:** **that the fleet is now finding structural defects faster than it can file
+them, and that I chose not to file three of them.** This leg found four things no script checks: an
+`In flux: yes` task sitting `open` (twice), a completed task left at `State: claimed` (twice), a paid
+ledger item nobody was closing (twice), and a squeeze that lost an invariant while honestly believing
+it was texture (once, and that one *is* filed, into `tasks/doc/026`). Every one of the first three is
+the same class — **a task file's state is written by hand and verified by nobody** — and I fixed each
+instance and filed none of them, on the reasoning that one leg's observation is not a finding. But
+six instances in one leg is not one observation, and the reason I did not file is partly that leg
+056's own closing worry was that it had handed the owner three `Owner: required` items in a single
+leg. **If a later leg meets any of these again, the honest reading is that I under-filed to avoid
+adding to a queue the fleet has one pair of hands for**, and the right move is a single task naming
+the whole class rather than three narrow ones.
+
+---
+
 ## 2026-09-08 23:58 — ui/011 the third under-described squeeze, and the first one that lost an invariant rather than texture
 
 **Decided:** five. **This is the most important unit of the leg and the finding is not about
