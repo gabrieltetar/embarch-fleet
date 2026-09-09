@@ -97,6 +97,80 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-09 16:08 — api/052 a 160-citation sweep, six real miscitations, and a convention its own fold would have deleted
+
+**Decided:** three things, and the third is the one the next leg needs.
+
+**First, I held `umbrella/043` back rather than dispatching it alongside this.** They are the same
+`design.md`-citation sweep in two repos, and `umbrella/043`'s own body says to check whether
+`api/052` landed first and adopt whatever convention it settles. Run concurrently they would have
+produced two conventions independently — which is the defect one level up from the one they fix. So
+this worker was told that **stating its convention explicitly was a deliverable**, not a courtesy.
+
+**Second, the sweep was worth more than a mechanical pass, and the numbers say so.** Filed for 320
+occurrences, actual 160 — the count had shrunk since filing, exactly as `study-designer/018`
+predicted in the other direction (filed for 290, landed 522 lines across 32 files). **Six real
+miscitations, not dead pointers:** `src/config.rs`'s two `artifact_path_for_core` comments and
+`config.example.toml`'s `base_address` comment credited `embarch-core` for what are `embarch-api`'s
+own decisions 15 and 42; `src/main.rs`'s `EnrollProbe`/`Validate`/`Alerts` doc comments carried bare
+numbers belonging to `embarch-core` (22, 28); `src/cli.rs` and `src/tools.rs`'s reseal comment
+carried a bare number belonging to `embarch-study-designer` (26). The worker disclosed five. **The
+reviewer found a sixth the worker had not**, in `src/reflash.rs` — two comments citing "decision 44's
+own 'no `project` param' note", where decision 44's three gaps are a missing DUT reset, a reseal
+overwriting two of three seals, and silently-ignored snippets, none of them `project`. **Decision 40
+is the one that states it**, verbatim: *"`project` appears exactly where it becomes meaningful …
+required only by a DUT reflash, and passing it where it means nothing is ignored rather than
+rejected."* I read both decisions myself before applying the fix rather than taking the reviewer's
+word — a citation asserted confidently and wrongly is the precise defect this unit existed to
+remove, and applying one on a relayed verdict would have been the same failure with a different
+author. Fixed in the fold, comment-only, own commit `cf5c0e1`, gate re-run green.
+
+**Third — and this is a trap in the process, not in the unit. `fold-commit.py` DELETES the completed
+task file, so this unit's convention sentence was going to be destroyed by its own fold.** `leg.md`
+tells a worker to record a cross-unit deliverable "in one line of the task file"; the fold then
+removes that file. The advice and the mechanism contradict each other and **nothing fails** — I
+would have folded a green unit, ended the leg, and `umbrella/043` would have found nothing to adopt
+and invented a second convention anyway, with the log entry above claiming the deliverable existed.
+I copied the convention **verbatim into `tasks/umbrella/043`** (`tasks/` is mine), with the two
+lessons that generalise: the filed count is always stale, and **the bare `decision M` form is the
+dangerous one** because it asserts "this repo's own" and silently absorbs a cross-repo number — which
+is 6 for 6 of the miscitations above. The convention itself: same-repo → bare `decision M`;
+cross-repo → `` `<repo>` decision M ``; a section-only citation with no decision → that repo's
+`spec.md`; and a number split across topics keeps its disambiguator
+(`` `embarch-ui` decision 10, routing half ``). **That last clause is `embarch-ui`'s deliberate
+three-way split of decision 10, which this worker rediscovered independently** — I had hit the same
+structure an hour earlier from the other direction, sweeping for the uniqueness defect `outpost/015`
+exposed. Two units in one leg arriving at the same undocumented convention from opposite ends is the
+argument for writing it into `DOC-CONVENTIONS.md`; that is the owner's file and I did not touch it.
+
+**Merged:** `agent/api/052-design-md-citations` (code `5131ec7`, doc `97a19f0`), plus the fold's own
+citation fix `cf5c0e1` in `embarch-api`. Ownership check bases: code `5eeb3e8409a4`, doc
+`a9e5b742c4ce`. The doc branch was rebased onto `core/031`'s fold before merging.
+**Blocked:** nothing.
+**Reviewer:** 1 finding — inbox/api-052-reflash-decision-40-vs-44.md
+**Hardware debts:** none owed by this unit — comment-only across 21 files, no board, and the
+`git diff -U0 -- '*.rs'` non-comment check returned exactly 2 hits, both citation text inside
+`format!` error strings, which the worker reported rather than hid. Carried forward unchanged:
+`core/015`'s native Windows build of `embarch-core` is the owner's and still outstanding, and is also
+what would deploy `core/020`'s `self_reported_hardware_id` rename; `umbrella/037`'s corrected check
+13 has never met the bench that found its defects and needs only the dev-bench board;
+`embarch-outpost`'s Zephyr `tests/unit` suite cannot be built here (no `west`, no `ZEPHYR_BASE`).
+The bench queue is still parked by the owner's own commit, and **no bench unit was runnable at any
+point this leg** — every `hw-gated` task is `toolchain` or `required`.
+**Budget:** PROCEED at start and end, wave 6 suggested both times; 5-hour 7.4% and weekly 2.0% at
+the start. **The 4-unit cap bound this leg, not the budget** — the first time that has been true
+since the week reset, and with a suggested wave of 6 the fleet is currently rate-limited by the leg
+length rather than by the allowance.
+**Least sure about:** **both of this leg's last two reviewer verdicts reached me relayed by the
+listener rather than directly**, which is the orphaned-notification gap, and it is now the dominant
+cost in a leg rather than a curiosity — it cost ~11 minutes of held wall clock on `core/031` and
+would have cost the same again here. The asymmetry that matters for my successor: `leg.md` gives a
+*positive-presence* rule for workers (a pushed branch retires one), and **there is no equivalent for
+a reviewer**, because a reviewer that finds nothing leaves nothing on disk. "No findings" and "died
+silently" are indistinguishable from inside the leg. Here the relay carried a *finding*, so it was
+self-verifying — I could read the drop and check the claim against the decisions, and I did. A
+relayed **"no findings"** is not self-verifying, and that is what I trusted on `core/031`.
+
 ## 2026-09-09 16:02 — core/031 a cross-repo invariant that lived in one repo's head, and a reviewer notification that went to the listener again
 
 **Decided:** nothing beyond dispatching this at all. The substance is the worker's: `embarch-core`
