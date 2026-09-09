@@ -97,6 +97,85 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-09 00:57 — ui/018 a split that conserved every sentence and still lost an invariant
+
+**Decided:** five.
+
+**(1) `embarch-ui/spec.md` is out of reserve by a split, not a squeeze** — 9,613 B → **8,568 B
+(83.7%)**. The worker ran `check-duplication.py embarch-ui` first as the task asked, found only the
+expected spec/decisions overlap and no true duplicate, and moved the *reference* half of "The trace
+chart" — the reference-dut capture numbers, the `/api/trace/.../bins` endpoint shape, and the two
+served view caps (`MAX_ROWS`, `MAX_STREAM_NAME_LEN`) — into a new **`embarch-ui/interfaces.md`**,
+following the `embarch-core` precedent. It checked the seam for inbound links before cutting and
+found only whole-file references, and it caught one sentence the split itself had duplicated.
+
+**(2) The finding worth carrying forward: a split can conserve every sentence verbatim and still
+lose an invariant, because *where* a fact lives is part of the fact.** The reviewer's conservation
+check came back clean — every moved sentence byte-identical, typo included — and the unit was still
+wrong. Of the two invariants the worker believed it had kept in `spec.md`, only the bounded SVG
+element count survived **as an assertion**; the second, *filtering changes the drawing and nothing
+else — the load repartition stays computed across every lane*, went across whole, and `spec.md` was
+left **naming it as a topic that points elsewhere**. `DOC-COMPACTION.md` §3 assigns
+invariants-as-a-list to `spec.md` specifically, and its hot/cold test calls this exact kind of fact
+hot: it is what someone has to hold in their head *before* they touch lane filtering. **This is a
+fourth instance of the `tasks/doc/026` class** (a compaction cutting something load-bearing while
+honestly believing it was texture) and the first one where the mechanism was **demotion rather than
+deletion** — which is worse, because a conservation check passes it. `doc/026` counts three
+occurrences of the deletion form; the next leg to touch it should add this one, since a check that
+diffs for lost *text* cannot see it.
+
+**(3) Fixed in this fold rather than filed.** I restored the invariant to `spec.md` as a stated
+fact with its reasoning cited (`decisions/trace-chart.md`), and — so the split still restates
+nothing — replaced it in `interfaces.md` with an explicit statement that the invariant lives in
+`spec.md` and why a reference file is the wrong home for it. `spec.md` is 8,568 B, still well clear.
+
+**(4) I fixed a broken relative link the owner shipped 20 minutes before this leg started, because
+it was red on `main` and would have blocked every unit of this leg.**
+`changelog.d/ui-brand-token.added.md` (his commit `2e3b749`) links `decision 25` as
+`embarch-ui/decisions/shell.md` from inside `changelog.d/`, which resolves to
+`changelog.d/embarch-ui/...` — the target file exists, the link is missing its `../`. One character.
+`check-docs.py` went from 9/10 to **all 10 green** on the merge result. Worth knowing that **leg
+058 reported all 10 green and was telling the truth**: his commit landed during its final fold.
+
+**(5) The owner's own `inbox/` drop about this unit is satisfied and consumed, not filed.**
+`inbox/ui-brand-clause-must-survive-018.md` asked that `spec.md` still state that `--brand` carries
+the logo's red and is never the accent, since `018` carried no `Must not delete:` list and was
+claimed after that sentence landed. Verified by grep on the merge result: the clause is **untouched
+and complete** at `spec.md:80` — the split only ever entered "The trace chart". Both its `Done when`
+boxes are met, so I deleted the drop rather than filing a task that was already closed. Naming it
+here is the not-silent half of that.
+
+**Merged:** `agent/ui/018-compact-spec-doc` (doc **`bffdba4`**, fold **see this commit**). The code
+branch `agent/ui/018-compact-spec` carried **zero commits** — pushed unchanged, as instructed, and
+verified by `rev-list --count origin/main..` = 0. Gate re-run by me on the merge result:
+`python3 scripts/check-docs.py` **all 10 green** (after (4)); `check-ownership.py --scope ui` green,
+4 paths; `check-client-names.py --repo embarch-ui` clean against 7 denylist entries. No `cargo`
+gate — this unit changed no code, so there is nothing for one to be a gate on.
+
+**Blocked:** nothing.
+
+**Reviewer:** 1 finding — inbox/ui-018-load-repartition-invariant-lost-from-spec.md (real; fixed in
+this fold per (3), and the drop consumed).
+
+**Hardware debts:** none new, and none possible — no unit this leg touches hardware, and burndown
+forbids bench work outright. Every standing debt from leg 058's entry carries forward unchanged.
+
+**Budget:** `PROCEED` / **BURNDOWN** — 5-hour 33.6%, weekly **95.3%** against a 97% cap, resetting
+in ~6h. Suggested wave **12**; I dispatched **4**, the leg's unit cap, all four simultaneously.
+
+**Least sure about:** **whether my worktrees are in the wrong place and it matters.** `git -C <repo>
+worktree add .worktrees/...` resolves the relative path against the *repo* directory, not my cwd,
+so all eight of this leg's worktrees were created **inside** their repos
+(`embarch-core/.worktrees/...`), which `.claude/leg.md` says to keep outside every repo tree, and
+**`.worktrees` is in no repo's `.gitignore`**. Two workers found the real trees themselves and the
+`core` one had to make its own sibling symlinks, because mine went to the path I *thought* I had
+created. Nothing has been committed from a nested tree and every landed diff is clean, but a
+repo-walking scan reading three copies of the same source is exactly the failure
+`embarch-study-designer` decision 57 records. **The next leg must use absolute paths for
+`worktree add`.**
+
+---
+
 ## 2026-09-09 00:40 — study-designer/018 a 32-file citation sweep, and a reviewer that greppped for what was left instead of trusting "done"
 
 **Decided:** six. **This is leg 058's fourth and last unit; the leg ends here at its cap, not on a
