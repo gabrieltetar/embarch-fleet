@@ -97,6 +97,106 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-09 00:33 — ui/004 a cap kept on purpose, a number I refused to believe, and a reviewer that reran the experiment
+
+**Decided:** six.
+
+**(1) The 250,000-row view cap is now a measured decision instead of an inherited one, and the
+outcome is that it does not move.** `embarch-ui/open.md` had said for weeks that the cap "is now the
+only term left, and the reason it was set is gone", and that any change to it *"should be made
+against a measurement at the new number rather than by extrapolating this one"*. The unit built
+`scratch_view::synth_capture` — an in-memory CSV shaped like the committed
+`outpost-native-sim-stamped` fixture — and an `#[ignore]`d `measure_the_row_cap_at_scale`, run by
+`cargo test --release measure_the_row_cap_at_scale -- --ignored --nocapture`, needing no file on
+disk. Measured, release build:
+
+| rows | decode | view JSON | `/bins` JSON @ width 1170 |
+|---|---|---|---|
+| 250,000 | 257 ms | 4.48 MB | 165 KB |
+| 500,000 | 604 ms | 9.03 MB | 180 KB |
+| 1,000,000 | 1.69 s | 18.1 MB | **1.5 KB** |
+
+**Cap kept at 250,000, with the measurement as the stated reason** — which the task named as a
+complete and legitimate outcome, and which is the honest one: decode time and resident view JSON
+both grow somewhat worse than linearly, so the cost of raising it is server time and memory.
+
+**(2) That 1.5 KB is the number the whole table rests on and I did not believe it.** A `/bins`
+payload that *drops two orders of magnitude* between 500k and 1M rows is exactly what an
+off-by-one, an early return, an empty-result path, or a synthesiser that goes degenerate at scale
+looks like — and if the synthesiser's rows collapse at 1M then that entire row of the table measures
+the harness rather than the viewer. **So I told the reviewer that in as many words and asked it to
+settle whether the number is a property of the data or an artifact.** It **re-ran the measurement
+itself and reproduced 165 KB / 180 KB / 1.5 KB exactly**, then traced the cause: at 1M rows the
+density passes the `below_resolution` merge threshold and each lane collapses to a single run,
+while the sparser IRQ lanes do *not* collapse — which is the merge property working, not a bug.
+**This is the strongest thing a reviewer has done in this log**: it did not read the code and agree,
+it reproduced the experiment.
+
+**(3) So decision 18 holds much further out than it was ever tested, and that is the reusable
+finding.** `decisions/trace-transfer.md` 18 says the payload no longer tracks dataset size; the
+measurement shows it flat-to-*shrinking* across a 4× row increase. **The cost of raising the cap is
+not what reaches the browser** — it is decode time and server memory, and those are the two terms a
+future argument about the cap has to be about.
+
+**(4) The refactor was the only part that could have broken the shipped product, and it is
+clean.** `parse()` was split into a thin wrapper over a new `parse_with_cap(..., cap: usize)` so the
+cap could be a parameter. The reviewer confirmed **`parse_with_cap` is test-only and production
+still goes through `parse()` at `MAX_ROWS = 250_000`** — a measurement unit that silently changed the
+product's row cap would have been a very quiet defect.
+
+**(5) The `open.md` rewrite was checked for what it dropped, not just what it added.** That bullet
+was the *source* this task was filed from, so a rewrite could easily have answered one question and
+deleted another. The reviewer confirmed the rewrite is complete and honest, that decisions 18 and 21
+are correctly distinguished in it, and that what remains open is genuinely what the worker said
+remains open: whether **1.69 s** of decode is acceptable against the `/study/{id}/streams`
+request-path budget, which nobody has measured. That is a better-stated open question than the one it
+replaced.
+
+**(6) I corrected `tasks/ui/021-compact-ui.md` from `open` to `blocked`, which is the fourth
+instance in two legs of the class `tasks/doc/028` was filed for two units ago.** The worker's
+`open.md` edit spent the file's reserve — 3,630 → **4,191 B** against `DOC-BUDGET.md`'s 3,920 B
+`RESERVE_FLOOR`, still 929 B under the 5,120 B cap — and it correctly filed the debt in the same
+commit, with a genuinely good `In flux:` block arguing bullet by bullet that the file is in flux and
+a `Must not delete:` list that **already warns off all nine measured numbers** (the reviewer checked
+that, since a compaction pass shaving them out would undo this whole unit). But `.claude/leg.md` is
+explicit that `In flux: yes` means `blocked` and must name what unparks it, and an `open` one means
+the filer got it wrong — so this was a wrong state field, not a different judgement. Unparks on
+`tasks/ui/007` landing, or on a later reading that finds the other bullets settled. **Note the
+percentage display is misleading here and cost me a minute**: `--pressure` prints this file at
+**81.9%** while counting it as in reserve, because the reserve line is a byte floor rather than a
+percentage of the cap. A supervisor who trusts the percentage column concludes the worker filed a
+debt that did not exist.
+
+**Merged:** `agent/ui/004-measure-the-row-cap` (code **`442b98a`** in `embarch-ui`, one file
+`src/trace.rs` +162/−2; doc **`f1a14e1`**). Doc branch rebased over `outpost/005`'s fold, then a
+fast-forward. Gate re-run by me on the merge result: `cargo build`, `cargo test` (**101 passed, 0
+failed, 3 ignored** plus 2 in the second suite — the new measurement is one of the ignored, by
+design), `cargo clippy --all-targets -- -D warnings` clean (the worker fixed one
+`manual_is_multiple_of` hit); `python3 scripts/check-docs.py` **all 10 green**;
+`check-ownership.py --scope ui` green (4 doc paths, base `6618e5129ab5`);
+`check-client-names.py --repo embarch-ui` clean. **No native Windows build** — standing debt, and
+this unit is a host-side test.
+
+**Blocked:** nothing. `tasks/ui/021-compact-ui.md` was *filed* blocked by me, which is a park rather
+than a blocked unit.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none new.** All standing debts unchanged from this leg's earlier entries,
+including the `cross_decoder.py`-skips-in-every-worktree gate debt recorded under `outpost/005`.
+
+**Budget:** `PROCEED` / **BURNDOWN** — 5-hour **29.2% → 30.8%**, weekly **94.5% → 94.8%**, against a
+97% cap, weekly resetting in 6h27m. Suggested wave **12**, 4 dispatched. **No 429**; the mode stands.
+
+**Least sure about:** **that the 1M-row figure will be misread by whoever reads it next, despite
+being correct.** "The payload gets *smaller* at 1M rows" is true, reproduced twice, and explained —
+and it is also a sentence that sounds like good news about raising the cap, when the actual finding
+is that the two costs which *do* grow are the ones nobody has budgeted. The `open.md` bullet says
+this properly. The one-line changelog entry and this table do not, and the table is what someone
+will quote.
+
+---
+
 ## 2026-09-09 00:28 — outpost/005 an invariant the docs asserted and the reference decoder never implemented, and the first visible cost of the no-new-decisions rule
 
 **Decided:** six.
