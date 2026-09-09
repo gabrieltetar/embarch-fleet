@@ -97,6 +97,76 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 22:53 — dev-bench/002 a decision that recorded a refactor as done when it was never built
+
+**Decided:** four.
+
+**(1) The worker settled which half was wrong against the source rather than against the decision's
+confidence, and the doc lost.** Decision 35 in `embarch-dev-bench/decisions/link.md` said the 16-step
+local cap was removed in favour of single-step decoding from a retained span, "the crate's constant
+goes back to being the one authority". The firmware is unanimous the other way:
+`app/src/serial_protocol.h:55` still `#define DBM_MAX_STEPS_PER_STUDY 16` with a defending comment,
+`:714`'s fixed `steps[DBM_MAX_STEPS_PER_STUDY]` array, a `steps_len > DBM_MAX_STEPS_PER_STUDY`
+refusal on **both** the encode and decode paths, and a ztest pinning it. The refactor was never
+built. **The reviewer re-derived every one of those citations line by line** — a doc that starts
+citing line numbers is only better than the one it replaced if the lines are right.
+
+**(2) Recording "planned, never built" inside decision 35 is an amendment, not a new decision hiding
+under one, and I made the reviewer argue that against leg 054's own precedent.** Burndown forbids
+authoring a numbered decision, which makes "amend the nearest entry" the path of least resistance
+regardless of whether it is correct — that is exactly how `api/030` went wrong yesterday, and the
+finding is still open as `tasks/api/051`. The distinction the reviewer drew, and I agree with it:
+decision 35 *is* the record of the plan to remove the cap, so correcting its status from planned to
+never-built introduces no new design choice. `api/030` amended a decision about truncation with a fix
+to stream decoding, which is a different axis. **Same constraint, opposite answer, and the difference
+is real** rather than a supervisor grading its own homework twice.
+
+**(3) The decision was amended, not retired, and that is the more honest record.** Its reasoning is
+sound *as a plan*; what was false was the tense. So the original text stays as the plan, the title
+says "not implemented as of 2026-09-08", and the amendment states the live consequence: the crate's
+`MAX_STEPS_PER_STUDY` is 64 and the bench's is 16, so **a 17–64-step study the host accepts is
+silently unrunnable on this board.** `decisions/dispatch.md:27` had bundled this with decision 40's
+field retirement, which did land; it now claims only decision 40. Nothing anywhere still says the cap
+was removed, checked by the worker and again by the reviewer.
+
+**(4) The unit spent reserve and filed for it in the same commit, correctly and blocked.** The
+amendment pushed `decisions/link.md` to 91.5% (1,047 B left), and `tasks/dev-bench/014-compact-dev-bench.md`
+is filed `In flux: yes` — decision 13 in the same file took a live amendment on 2026-09-07 — so it is
+parked rather than dispatchable, which is the right state and not a blocked unit of this leg.
+
+**Merged:** `agent/dev-bench/002-decision-35-step-cap` (code **no commits**, `embarch-dev-bench`
+unchanged; doc `84243a3`). Doc branch rebased over `ui/019`'s fold, then a fast-forward. Gate re-run
+by me on the merge result: `python3 scripts/check-docs.py` **all 10 green** (`check-decision-refs.py`
+resolves 1,247 references, so decision 35's number survives the retitle); `check-client-names.py`
+clean on `embarch-dev-bench`; `check-ownership.py` green on the doc branch (5 paths, self-derived base
+`412b541756cb`). **No firmware build or test was run** — `embarch-dev-bench` is a west/Zephyr tree
+whose toolchain is not present here, and the code side of this unit is an empty diff.
+
+**Blocked:** nothing. `tasks/dev-bench/014-compact-dev-bench.md` was **filed** blocked by the worker,
+which is a new park, not a blocked unit.
+
+**Reviewer:** no findings.
+It verified all four source citations at their exact lines, argued the amendment-versus-new-decision
+question against `api/030`'s precedent and reached the opposite answer with a reason, swept the
+sub-project for anything still resting on the removed cap, and confirmed the 64-vs-16 divergence is
+recorded as live in both places that mention it.
+
+**Hardware debts:** **one restated, none new.** The 17-to-64-step gap is a real bench fact that is now
+written down and has never been exercised — a study with more than 16 steps has not been attempted
+against this board, and doing so is what would confirm the failure is silent rather than a clean
+refusal. That needs the bench and an attended leg; burndown forbids bench work outright. Prior debts
+carry forward unchanged from the entries below.
+
+**Budget:** `PROCEED` / **BURNDOWN** throughout, weekly against a 97% cap. One unit left in this leg;
+closing numbers are in the last entry.
+
+**Least sure about:** **that (2) is a supervisor ruling on the same question two legs running and
+answering it differently.** I believe the distinction — mission versus axis — and the reviewer reached
+it independently before I wrote this. But leg 054 recorded the same doubt about its own call, and the
+pattern to watch is a fleet that learns to describe every amendment as within-mission because the
+alternative is forbidden this week. If a third unit needs this argument, the honest move is probably
+to end burndown rather than make it a third time.
+
 ## 2026-09-08 22:48 — ui/019 a decision file compacted by splitting it, and the one sentence that was not verbatim
 
 **Decided:** four.
