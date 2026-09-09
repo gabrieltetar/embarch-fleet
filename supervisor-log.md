@@ -97,6 +97,75 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 18:24 — dev-bench/005 a README fix whose correct doc-side result was nothing
+
+**Decided:** three. **(1) I told the worker in the task file that a doc-side no-op was the expected
+and correct outcome, and to say so plainly rather than manufacture churn.** The task's boilerplate
+last Done-when box asks for `spec.md`/`decisions.md`/`open.md` updates, but `spec.md` §1/§2 are the
+*source* this README was being corrected against — they were already right. A worker reading that box
+literally would have edited the very file it was supposed to be copying from. It reported the no-op
+as predicted and touched nothing. **This box is boilerplate on every task file in the queue and it
+will mislead again**; a task whose fix flows *from* the docs *into* a code repo should probably say
+so in its own body rather than relying on a supervisor to catch it.
+**(2) I named `embarch-dev-bench/decisions/ble.md`'s six bytes of headroom and told it that if it
+found itself about to write there, the correct move was to stop and report rather than fit.** Six
+bytes is not headroom, and the failure it produces is silent — `embarch-api` filed a decision in the
+wrong topic file on 2026-09-05 with 96 bytes left and nothing failed. It did not need to write there.
+**(3) I let it decline to answer a hardware question, and that was the right call.** Removing the
+dead `EMBARCH_DEV_BENCH_PORT` instruction from the espressif section leaves that board with no
+stated port-selection route. The ESP32-C5-WROOM-1 DK enumerates as a plain USB Serial/JTAG device
+with no VCOM, so there is no `link_port_interface` to state and inventing one would have been
+exactly the inferred-hardware-fact failure this suite has already paid for. It removed the dead
+variable, deferred to `embarch-core`'s own docs, and filed the gap. **The espressif port story is
+now genuinely absent rather than wrong**, which is better but is not nothing — `tasks/core/028`
+carries it.
+
+**One judgement of mine that is worth flagging rather than burying.** The diff also deletes the
+caveat "the `manifest/west.yml` pin (NCS version) hasn't been validated against real hardware yet".
+I accepted that deletion because the nordic board has since been enrolled, flashed and run against
+repeatedly — it is the bench — so the sentence had gone stale. But **I did not verify that the
+specific NCS pin in `workspaces/nordic/manifest/west.yml` is the one those runs used**, and
+`west update can destroy module work` is a known trap in this suite. If that pin has moved since,
+the caveat was still true and I let it go.
+
+**Merged:** `agent/dev-bench/005-readme-board-and-links` (code `8854f3e`, doc `37efe77`). Gate re-run
+by me on the merge result, not on the branch: `python3 scripts/check-docs.py` **all 10 green**,
+`check-client-names.py --repo embarch-dev-bench` clean against 7 denylist entries,
+`check-ownership.py` green on both branches (code: whole tree, 1 path, `--code-repo`, base
+`973483ef1e67`; doc: 2 paths, base `2bddaba24832`). **No cargo gate, and that is correct rather than
+skipped** — `embarch-dev-bench` has no `Cargo.toml`; it is Zephyr C. My landing script asserts that
+explicitly and would have gone red if one had appeared.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**This is the first `no findings` in a while that I did not put in front of it.** I gave it three
+specific things to check and it cleared all three on its own evidence — decision 43's text against
+the new workspace bullets, `link_port_interface = 2` scoped to the DK rather than generalised, and
+every link resolved rather than pattern-matched, including that `spec.md#2-repository-layout`
+slugifies from the real heading. It also independently confirmed the dropped "decision 13" citation
+was correct to drop: `embarch-core` decision 13 is now `core_version` on `/status` and has nothing
+to do with flashing, so the README's old citation resolved while pointing somewhere unrelated —
+the same defect class the previous leg landed two units on. **Contrast this with `outpost/004`'s
+entry directly below, where I told the reviewer what to file and the tally recorded a finding it
+did not independently make.** Both lines are honest; only one of them is evidence.
+
+**Hardware debts:** **none new, and one narrowed.** This unit needed no board and took none. What it
+did do is write the enrolment fact an operator cannot infer — `link_port_interface = 2`, because the
+DK's console is VCOM1 and detection's lowest-index fallback lands on a port that accepts bytes and
+never answers — into the build instructions where it is needed, reproduced as **stated** and scoped
+to the nRF54L15DK, never promoted to measured. Carried forward unchanged: `core/015`'s native
+Windows build of `embarch-core` is the owner's and still outstanding; `umbrella/037`'s corrected
+check 13 has never met the bench that found its defects; `embarch-outpost`'s Zephyr `tests/unit`
+suite cannot be built from this environment (no `west`, no `ZEPHYR_BASE`) and no leg can currently
+claim it green. The bench queue is still parked by the owner's own commit.
+**Budget:** `PROCEED` throughout: 5-hour 18.4% → 21.8%, weekly **86.0% → 86.5%** against a 90% cap
+resetting in ~12h36m, suggested wave **2**, run at 2.
+**Least sure about:** **the `west.yml` pin caveat above — I approved deleting a hardware-validation
+warning on an inference about which builds the bench has actually run.** Everything else in this
+unit is checkable from documents; that one is not, and I did not check it.
+
+---
+
 ## 2026-09-08 18:08 — outpost/004 the worker found four more citations than the task claimed, and that drift is the result rather than a discrepancy
 
 **Decided:** four. **(1) I told the worker that "never `sed`'d blind" was the whole task rather than
