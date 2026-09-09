@@ -36,6 +36,23 @@ possible. Reserve is `max(RESERVE_FLOOR, (100 - RESERVE_PCT)%)` from the top,
 the same shape and the same floor `embarch-doc` uses, and for the same measured
 reason: a percentage of a small cap is not runway.
 
+**THE RATCHET MOVES IN STEPS, added 2026-09-09 (`tasks/fleet/001`), and it is
+overdue here.** A baseline pinned to a file's exact size means "no correct edit
+may ever be made in this file without an equal deletion in the same commit" --
+a hard stop wearing a gradient's clothes. `embarch-doc`'s ratchet learned this
+on 2026-09-07, and **the measurement that justified it was taken on these two
+files**: `ops.md` at 29,701/29,701 and `protocol.md` at 32,466/32,466, both at
+ZERO headroom, which is how one new rule in `ops.md` cost four squeeze passes.
+The fix landed in the other repo's script and never in this one, so the corpus
+the argument was made about kept the behaviour the argument refuted -- measured
+again 2026-09-09: `ops.md` could not accept a **ten-byte** link correction.
+
+So a shrink now records the next `RATCHET_STEP` boundary ABOVE the new size,
+and the baseline is still `min(old, that)` -- monotonically decreasing, never a
+raise. A file already pinned tight stays tight until someone shrinks it, and
+then it earns real room; a shrink that crosses a boundary buys the room it
+crossed and nothing more.
+
 `supervisor-log.md` is exempt: its size is governed by the fold and the roll
 (`fold-day.py`), which bound it by days rather than by bytes, and a byte cap
 here would be the third unreachable line written for that file.
@@ -67,6 +84,10 @@ KB = 1024
 RESERVE_PCT = 90.0
 RESERVE_FLOOR = 1200
 
+# A shrunk baseline lands on the next boundary above the new size, not on the
+# exact byte. Same value and same reason as `embarch-doc`'s: see the docstring.
+RATCHET_STEP = 1024
+
 # role -> (cap, matcher). Deliberately few: this repo is eight files, not a
 # corpus, so a role table with more rows than documents would be theatre.
 CAPS = [
@@ -82,6 +103,17 @@ CAPS = [
 # where the roll puts whole days and is meant to grow. templates/ renders into
 # the instance, where check-doc-size.py already caps the result.
 EXEMPT = re.compile(r"^(supervisor-log\.md$|log-archive/|templates/|\.)")
+
+
+def ratchet_to(size: int, cap: int, old: int) -> int:
+    """Where a shrunk file's baseline lands. See RATCHET_STEP.
+
+    `min(old, next step above size)` -- monotone by construction, so this can
+    never raise a baseline, and a shrink that crosses a boundary earns working
+    room instead of re-pinning the file at zero headroom.
+    """
+    step = min(cap, ((size // RATCHET_STEP) + 1) * RATCHET_STEP)
+    return min(old, max(step, size))
 
 
 def role_and_cap(rel: str):
@@ -134,8 +166,10 @@ def main() -> int:
         # is a wall, not a ratchet. Same shape as check-doc-size.py, on purpose.
         limit = base[rel] if rel in base else cap
         if args.update and rel in base and size < base[rel]:
-            print(f"  lower {rel}: {base[rel]:,} -> {size:,} B")
-            base[rel], changed, limit = size, True, size
+            new = ratchet_to(size, cap, base[rel])
+            print(f"  lower {rel}: {base[rel]:,} -> {new:,} B"
+                  f"{f' (size {size:,}, room earned {new - size:,})' if new > size else ''}")
+            base[rel], changed, limit = new, True, new
         if rel in base and size <= cap and (args.update or args.adopt):
             print(f"  {rel} reached its {cap:,} B cap; baseline retires")
             del base[rel]

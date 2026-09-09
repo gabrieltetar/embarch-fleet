@@ -52,7 +52,7 @@ instance is behind. Two things already do, and neither is a gate — the
 | The claim protocol, the drop format, fragment rules | `templates/protocol/*.README.md` | `tasks/README.md`, etc. |
 | Ownership, queue state, budget, alerting, the fold | `scripts/*.py` | a shim — no re-render needed |
 | A path, channel, identity or limit | `fleet.toml` | **both**, see §3 |
-| The rules themselves | `protocol.md`, `ops.md`, `risks.md`, `open.md` | nothing — read in place |
+| The rules themselves | `protocol.md`, `ops.md`, `risks*.md`, `open.md` | nothing — read in place |
 
 **Placeholders.** A template may use `{{FLEET_ROOT}}`, `{{DOC_REPO}}`,
 `{{FLEET_REPO}}`, `{{STATE_DIR}}`, `{{SLACK_CHANNEL}}`, `{{SLACK_OWNER}}` and the
@@ -74,7 +74,7 @@ Not all at once, and the differences have bitten before.
 | Change | Live for |
 |---|---|
 | `scripts/*.py` | the next invocation — shims, so immediately |
-| `protocol.md`, `ops.md`, `risks.md` | the next agent that reads them; a **running leg already read them** |
+| `protocol.md`, `ops.md`, `risks*.md` | the next agent that reads them; a **running leg already read them** |
 | `.claude/agents/*.md` | the next agent spawned. A running leg keeps the definition it started with |
 | `.claude/leg.md` | the next leg |
 | `.claude/commands/supervise.md` | the next `/supervise` **typed by the owner** — a leg never reads it |
