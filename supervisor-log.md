@@ -97,6 +97,97 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 18:59 — topology/020 a claim about a crate bounded to the crate, and the caller it could not speak for
+
+**Decided:** three.
+
+**(1) I dispatched this doc-only, with no code worktree, and that is now the second consecutive leg
+to make that call.** `topology/020` edits `embarch-topology/decisions/crate.md` and `open.md`, both
+of which live in `embarch-doc`; no `embarch-topology` source is involved at any point. Standing up
+an unused code worktree is clutter plus one more chance to mis-provision. `.claude/leg.md` says
+"almost every task changes both", and a pure-correction unit against a decisions file is the case
+that "almost" excludes.
+
+**(2) The correction is a qualification, not a reversal, and I accepted the worker's reading of
+which convention applies.** `crate.md` decision 4 said the mirrored software-class detection moves
+into the crate "as the sole implementation … there is nothing left to mirror once everyone links the
+same crate", and decision 8 said "there is no way for the two to disagree, since there is only one
+of them." Neither was wrong about the crate; both read as statements about the *callers*, and
+`api/038` disproved that reading last leg by finding `embarch-api/crates/embarch-core-client`
+already linking this crate and still running its own narrower `token_discovery::is_wsl2` beside the
+`detect_wsl2` call it never made. The landed text appends a dated **Qualified 2026-09-08** paragraph
+after each decision, leaving the original wording intact — which is exactly the shape this same
+file's existing `**Reversed**` paragraphs use (decisions 2, 3, 6, 8). The reviewer checked that
+independently rather than taking the report's word for it. **The distinction that matters and is now
+written down: linking the crate stops a mirrored *copy* of the crate's own logic; it cannot stop a
+caller writing an unrelated second predicate next to a call it never makes.**
+
+**(3) The third Done-when box asked for a yes-or-no on detection, and the honest answer is no —
+recorded as an open question rather than left implied.** `open.md` now carries one bullet saying
+nothing can cheaply detect a caller writing a second predicate beside a call it never makes: both
+known instances (`api/038`'s and `embarch-umbrella/src/token.rs`'s) were found by a human reading a
+call site, and a general detector would have to recognise duplicated *logic*, not a duplicated
+*file*. **This is the load-bearing half of the unit.** The original claim's real cost was not that
+it was inaccurate — it was that it was the reason nobody went looking, and it read as an audit
+result rather than an intention.
+
+**One thing the correction deliberately does not say:** that every mirror is gone.
+`embarch-umbrella/src/token.rs` still carries a verbatim copy of the old narrow rule; it is
+`umbrella/036`'s to remove and is named in the qualification as still live. I told the worker this
+in the dispatch and the reviewer confirmed `umbrella/036` is `open` and is in fact about that file.
+
+**Merged:** `agent/topology/020-crate-md-uniqueness` (doc `a8a35a0`; **no code SHA — doc-only
+unit**). Gate re-run by me on the merge result, not on the branch: `python3 scripts/check-docs.py`
+**all 10 green**; `check-ownership.py --scope topology` green on **all 5** changed paths.
+
+**Note for whoever reads a worker's ownership line next:** this worker reported
+`check-ownership.py` seeing "3 changed path(s)" where the branch has 5, and flagged it as something
+it could not explain. It is not a gap. Run against the pushed branch the count is 5; the worker ran
+it before committing, so its two newly-added files were still untracked and outside a `git diff`.
+Worth knowing because a worker's honest "I could not trace this" is the right report and the answer
+costs the supervisor one command.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+It verified all three things I asked against sources: that `umbrella/036` is open and really is
+about `src/token.rs`; that `embarch-api` decision 62 as landed says what the qualification
+attributes to it; and that the "Qualified" paragraph matches the file's own amendment convention
+without erasing history. **It flagged one thing it could not verify — the `861f30f` SHA, because no
+`embarch-api` checkout is reachable from where a reviewer stands.** I verified it myself in one
+command: `861f30f api/038: token_discovery's WSL2 check delegates to
+embarch_topology::detect_wsl2`. Recording the shape rather than the result — **a reviewer spawned
+into the doc repo structurally cannot check a code-repo SHA**, so a doc-only unit that cites one is
+a citation nothing in the pipeline confirms unless the supervisor does it by hand.
+
+**Hardware debts:** **none new, and nothing here can incur one** — the whole unit is two paragraphs
+in a decisions file and one bullet in an `open.md`. Carried forward unchanged from the last leg: a
+native Windows build of `embarch-core` is owed and the fleet cannot run one, with `core/015` and
+`core/010` stacked behind it; `umbrella/037`'s corrected check 13 has never met the bench that found
+its defects; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this environment (no
+`west`, no `ZEPHYR_BASE`); the bench queue is parked by the owner's own commit.
+
+**Doc-size debt this unit incurred, filed by the worker as it is supposed to be:** the two additions
+pushed `embarch-topology/decisions/crate.md` from comfortable into reserve (91.9%, 998 B left), and
+`tasks/topology/021-compact-topology.md` records it, naming decision 23 as a candidate split seam.
+That is now **four** open compaction tasks in the `topology` scope (`014`, `017`, `019`, `021`).
+
+**Budget:** `PROCEED` at both ends, and the number is the leg's constraint: 5-hour 29.3% → 30.1%,
+weekly **87.8% → 87.9%** against a 90% cap resetting in ~12h. **Suggested wave 1**, run at 1 — this
+leg is serial, and roughly 2% of weekly allowance stands between it and a HOLD.
+**Least sure about:** **whether `tasks/dev-bench/012` is safe to dispatch, which I did not settle
+and the next leg will face.** `embarch-dev-bench/decisions/ble.md` is at **6 bytes of headroom**
+(12,282/12,288) — the tightest file in the suite — so any dev-bench decision edit walls. Its
+compaction task is `open` and says `In flux: yes`, which `.claude/leg.md` says is a state that
+should not exist: never dispatch an in-flux compaction, and an `open` one means the filer got it
+wrong. But `--decisions` shows the file is many decisions with a 5,155 B pin at 34/37, so
+`DOC-COMPACTION.md` §2's split-first rule applies and **a verbatim split restates nothing, which
+means `In flux: yes` cannot forbid one.** I think the right move is to dispatch it as an explicit
+split-by-seam rather than a compaction rewrite, and I did not do it this unit because I had one
+worker slot and a fresher task in hand. Flagging it rather than acting on it, because the argument
+arriving after the reserve picked the file is a pattern this log has already named three times.
+
+---
+
 ## 2026-09-08 18:46 — api/038 a status.d fragment aimed at a doc status.d does not cover, and a runtime predicate deliberately narrowed
 
 **Decided:** five, and two of them are corrections to instructions I wrote.
