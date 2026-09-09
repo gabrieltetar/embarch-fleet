@@ -161,6 +161,16 @@ it became `043`; the script caught it before the fold, which is what it is for);
 
 **Blocked:** nothing.
 
+**This fold landed in two commits and the next leg should know why.** `fold-commit.py` commits the
+log first, then stages the work by path — and its `git rm` of the completed task file **failed
+because I had edited that file's `State:` line and left it unstaged**, so the log entry landed
+(fleet `9d3a453`) and the instance half did not. The script then correctly refuses to re-run against
+an entry already committed, so I `git rm -f`'d the task file and committed the instance half by
+hand, by explicit path, as **`3f283b1`**. Both halves are pushed and the result is what a single
+fold would have produced. **The lesson is small and repeatable: do not hand-edit the `State:` line
+of a task file you are about to fold** — `fold-commit.py` removes a completed task file itself, and
+an unstaged modification to it turns one commit into two.
+
 **Reviewer:** 1 finding — inbox/umbrella-not-build-layer-still-false.md (real; fixed in this fold
 per (2), and the drop consumed).
 
