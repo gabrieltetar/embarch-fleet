@@ -97,7 +97,96 @@ unit under **Merged** and **Blocked**:
 
 ---
 
-## 2026-09-08 20:21 — core/029 a decisions file split along its own seam, not the one the task proposed
+## 2026-09-08 22:16 — topology/022 a true sentence that a landing made false, and the same shape one layer down
+
+**Decided:** five.
+
+**(1) This is the first burndown leg, and the mode is doing what it says.** The pump was re-armed at
+22:06 with `fleet-burndown.py`, deadline 2026-09-09T06:59 -0600 (the pinned weekly reset), caps 97%
+weekly / 97% 5-hour, suggested wave **12**. Weekly was 89.0% at my step 0 — i.e. *above* the 90% cap
+that HOLDed the previous two legs, and dispatchable only because the cap moved. **A leg cap of 4
+units means the wave of 12 is not reachable by one leg**, so I dispatched all four units at once and
+the extra width is unspent by construction. That is worth writing down because
+[burndown.md](burndown.md) says the untested thing is the width: on this leg the binding constraint
+was never tokens or `main` contention, it was the 4-unit bound, and a wave of 4 and a wave of 12
+produce the identical leg. If the owner wants the width exercised, the unit cap is the number to
+look at, not the wave.
+
+**(2) I am leg 054, and my own dispatch note says 053 in four task files.** The listener's channel
+post at 22:06 says "spawned leg 054"; leg 053 was the one that opened straight into the 90% HOLD at
+20:23 and ran nothing. I had already pushed four claim commits carrying "Supervisor's dispatch note,
+leg 053" before reading the channel, and I did **not** correct them — the workers were live and
+reading those files, and rewriting a file underneath a running worker is a worse failure than a
+wrong leg number in a note. Recorded here so the next leg is not confused by four task files
+attributing this leg's dispatch to the leg that did nothing.
+
+**(3) The unit itself was dispatched doc-only, with no code worktree, and that was right.** Every
+file it changes (`embarch-topology/decisions/crate.md`, `embarch-topology/open.md`) lives in
+`embarch-doc`; an `embarch-topology` worktree could only have produced an empty branch. Fifth
+consecutive leg to make this call. The worker was told to stop and report rather than edit source if
+it concluded otherwise; it did not need to.
+
+**(4) I made the worker re-derive the task file's central premise instead of citing it, and it paid
+off twice.** The task asserts `embarch-umbrella/src/token.rs` is deleted and that umbrella now calls
+`embarch_core_client::token_discovery::resolve_token` directly. The worker checked the main checkout
+and confirmed it; the reviewer then re-derived it *again*, independently, and found **four** call
+sites (`src/main.rs:273`, `src/doctor.rs:697`, `:1812`, `:2132`), not the three the worker's commit
+message claims. That discrepancy is in a commit message only — no document asserts a count — so
+nothing is wrong on disk, and I am recording it rather than amending a commit. The pattern is the
+point: this unit exists because a true sentence went stale when nobody re-checked it, and the
+cheapest defence against that is exactly this, two independent re-derivations of one claim.
+
+**(5) The reviewer's finding is this unit's own shape one layer down, and I fixed it in the fold.**
+`decisions/crate.md` decision 4 now says the token mirror is closed; `embarch-topology/open.md`'s
+mirrors bullet still counted it among **two** mirrors that "still raise the extract-or-CI-diff
+question". That is not pre-existing staleness — the line was defensible before this diff and this
+diff is what made it wrong — which is precisely the trap a reviewer reading stale context
+mislabels `pre-existing`. Corrected here: the bullet now names `CoreConfig`/`ProjectConfig` as the
+open pair and records that the token mirror closed **by direct call, neither extraction nor a CI
+diff**, which is a third answer the bullet's own framing did not have. **The correction costs 175
+bytes and `open.md` had 279**, so it is now at 5,016/5,120 — 104 B, the tightest this file has been.
+I recorded that spend inside `tasks/topology/014-compact-topology.md` per that task's own reserve
+note rather than filing a third compaction task, and said in it that the next edit to `open.md`
+very likely cannot be paid the same way. The drop
+`inbox/topology-open-md-line-27-stale-token-mirror.md` is deleted because the thing it reports is
+fixed here; naming it is the record, since it no longer exists to be read.
+
+**Merged:** `agent/topology/022-crate-md-mirror-retired` (code **none** — dispatched doc-only, no
+code branch exists, doc `e420bf5`), plus this fold's own edits to `embarch-topology/open.md` and
+`tasks/topology/014-compact-topology.md` per (5). Gate re-run by me on the merge result, not on the
+branch: `python3 scripts/check-docs.py` **all 10 green**, and re-run again after my own two edits.
+`check-ownership.py --scope topology` green on the branch, 3 paths, self-derived base
+`10f8e75a35a8`. No `cargo` half exists for this unit — nothing outside `embarch-doc` changed.
+
+**Blocked:** nothing.
+
+**Reviewer:** 1 finding — inbox/topology-open-md-line-27-stale-token-mirror.md
+Fixed and consumed in this fold; see (5). It also independently re-derived the `token.rs` removal
+and caught the three-versus-four call-site discrepancy in the commit message, and correctly declined
+to file that as a second finding.
+
+**Hardware debts:** **none new, and none possible** — this unit changed documentation only and
+touched no code repo and no board. All prior debts carry forward unchanged: a native Windows build
+of `embarch-core` is owed and the fleet cannot run one (`core/028`, `core/015`, `core/010`);
+`umbrella/037`'s corrected check 13 has never met the bench that found its defects;
+`embarch-outpost`'s Zephyr `tests/unit` cannot be built here (no `west`, no `ZEPHYR_BASE`); the four
+DUT-gated bench tasks are unchanged; and the ESP32-C5 USB-enumeration fact `core/028` tagged
+`[assumed]` still needs one look at one board. **Burndown forbids bench units outright**, including
+by my own hands, so none of these could have been touched on this leg regardless.
+
+**Budget:** `PROCEED` / **BURNDOWN** at start — 5-hour 1.0%, weekly **89.0%** against a 97% cap
+resetting in 8h52m, suggested wave 12. Three more units are in flight as this entry is written
+(`api/030`, `umbrella/025`, `study-designer/010`), so the end-of-leg numbers are in the last unit's
+entry, not this one.
+
+**Least sure about:** **whether correcting `open.md` in the fold, rather than leaving the reviewer's
+drop in `inbox/` for a later unit, was the right call given what it cost.** The fix is small and
+obviously correct, and leaving a known-wrong line in a file while filing a note about it is the
+failure this whole unit is about — but it spent 175 of the 279 bytes that stood between `open.md`
+and its cap, on a file that already has two compaction tasks open against it, to repair a sentence
+in an open-questions list. A cheaper honest version exists (drop the token mirror from the bullet
+and say nothing about how it closed) and I rejected it because *how* it closed is the interesting
+part. I am not certain that judgement survives contact with a `open.md` that has 104 bytes left.
 
 **Decided:** four.
 
