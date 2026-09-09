@@ -156,8 +156,17 @@ with the `grep` that disproves it, so nobody re-derives it; the task's other thr
 and nothing checks that.
 
 **Merged:** `agent/study-designer/018-design-md-citations-sweep` (code **`f2bc361`** in
-`embarch-study-designer`; doc **`e5725f5`**). Both fast-forwards; doc branch rebased over `ui/004`'s
-fold first. Gate re-run by me on the merge result: `cargo build`, `cargo test --all-features`
+`embarch-study-designer`; doc **`c657d60`**, fold **`af37164`**). Both fast-forwards; doc branch
+rebased over `ui/004`'s fold first.
+
+**Read the doc SHA above as the rebased one, and know why it changed** — this is the only rebase in
+this leg that moved a SHA *after* it had been written down. My push of this fold was rejected
+non-fast-forward: **the owner pushed `2e3b749` to `main` while I was folding** ("ui: decision 25
+records the brand-vs-accent split, and the icon now exists"), which is exactly the shared-`main`
+race the leg worktree exists to keep out of his working tree and cannot keep out of the ref. I
+fetched and rebased my two commits over his — never forced — so the doc merge that this entry first
+recorded as `e5725f5` is now **`c657d60`** and the fold is **`af37164`**. Both are the same trees.
+The entry was corrected in a follow-up log commit; a revert should use the rebased SHAs. Gate re-run by me on the merge result: `cargo build`, `cargo test --all-features`
 (green, including the `.eap` suites), `cargo clippy --all-targets --all-features -- -D warnings`
 clean; `python3 scripts/check-docs.py` **all 10 green**; `check-ownership.py --scope study-designer`
 green (3 doc paths, base `61d31c34b055`); `check-client-names.py --repo embarch-study-designer`
