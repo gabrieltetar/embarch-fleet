@@ -97,6 +97,92 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 18:27 — core/010 I mis-provisioned this worker's worktree and the worker caught me
+
+**Decided:** four, and the first is about my own hands rather than the work.
+
+**(1) I created this unit's doc worktree in the wrong repository, and the fix belongs in this entry
+because the next leg will run the same command.** My setup script did `cd embarch-core`, created the
+code worktree there, and then created the *doc* worktree without changing back — so
+`.worktrees/embarch-doc/010-flash-backend-unknown-name` was a second `embarch-core` checkout on a
+branch named `...-doc`, containing `src/` and `Cargo.toml` and no `tasks/` directory at all. The
+first worker read both paths, found the task file it was pointed at did not exist, established from
+`git worktree list` in *both* repos that this was a wrong-repo provisioning error rather than a
+dirty tree from a double dispatch, **wrote nothing, committed nothing, pushed nothing, and reported
+it.** That is exactly the right behaviour and it cost one worker spawn. I removed the stray
+worktree, deleted its branch, re-created the doc worktree in `embarch-doc`, **verified the task file
+was present at the path before re-dispatching**, and told the second worker plainly that the fault
+was mine and that nothing had been committed by its predecessor. **The lesson is narrow and
+mechanical: `git worktree add` is repo-relative to wherever you are standing, and a leg creates two
+worktrees in two repos per unit.** Use `git -C <repo> worktree add` rather than `cd`, and check that
+the doc worktree contains `tasks/` before dispatch — one `ls` would have caught this.
+
+**(2) I told the worker to re-derive the task file's line numbers, and it found drift again.** The
+task cited `src/flash_backend.rs:270-272` for `locate()` and `:273-274` for the unreachable arm, from
+a 2026-09-06 survey. `locate()` is at `:270-274`, and the unreachable arm is at `:308` — `:273-274`
+is now `discover`'s doc comment. **This is the third consecutive leg in which a task file's own
+numbers had aged out** (`study-designer/022`, `outpost/004`, now this), and the previous leg's entry
+already said the instruction should probably be standing rather than per-task. I agree, and I am
+recording the third instance rather than amending anything: `tasks/README.md` is not mine.
+
+**(3) I let the worker choose deletion over resurrection for the dead arm, and it argued the case
+rather than asserting it.** The task allowed either — "removed or made reachable, whichever leaves
+the code honest". It deleted the `.with_context("...is not a known backend")` arm on the ground that
+validating up front makes `build` infallible on every value that survives the check, so keeping a
+`Result`-returning arm would be *a second lie about an unreachable path* — the same defect the unit
+exists to close. I find that persuasive and the reviewer independently verified the load-bearing
+half of it: the other call site to `build()`, the non-forced `preferred_for` loop, keeps its own
+`.context("internal: unknown preferred backend")` untouched, so no path reaches `build()` with an
+unvalidated name.
+
+**(4) Decision 52's wording is qualified, and I checked it specifically because of what the previous
+day's fold says.** An unqualified clause over a branching code path, landing in a unit's own new
+contract sentence, is the most-repeated defect in this log — five instances in one day, caught by a
+reviewer every time and by no gate check ever. Decision 52 says "infallible on every value that
+survives the check" and "only the name check is new" rather than an unqualified "always". That is
+the right shape.
+
+**Merged:** `agent/core/010-flash-backend-unknown-name` (code `b278e96`, doc `b51abda`). The doc
+branch was rebased onto `main` past `dev-bench/005`'s claim and the `tasks/core/028` promotion before
+merging; ownership was re-checked **after** the rebase, not only before. Gate re-run by me on the
+merge result: `cargo build` clean, `cargo test` **184 passed / 0 failed / 2 ignored** (the two
+ignored are pre-existing and unrelated), `cargo clippy --all-targets -- -D warnings` clean,
+`python3 scripts/check-docs.py` **all 10 green**, `check-client-names.py --repo embarch-core` clean
+against 7 denylist entries, `check-ownership.py` green on both branches. **A native Windows build of
+`embarch-core` is owed and is not mine** — see hardware debts.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+I gave it four specific concerns and it cleared all four with its own evidence, including the one I
+could not have checked cheaply myself: that no *other* file in the crate touches `FLASH_BACKEND_ENV`,
+so the new `ForcedBackendGuard` has no unguarded racer elsewhere in the binary. It also confirmed
+`Drop` clears the variable unconditionally, so a panic mid-test cannot leak it into the next, and
+that decision 52 and decision 18 are disjoint topics in the same file. **Two clean reviews in two
+units this leg, both on concerns I raised but neither on a conclusion I had already reached** — which
+is a different and better thing than `outpost/004`'s finding, where the previous leg told the
+reviewer what to file.
+
+**Hardware debts:** **one new, and it is the ordinary Windows one rather than a board.**
+`embarch-core` changed, so a **native Windows build** is owed before anything ships — the fleet
+cannot run one, and this is the second `embarch-core` change now stacked behind it (`core/015`'s
+stdout-warning fix is the other, and is also what would deploy `core/020`'s rename). Nothing here
+needs a probe: every one of the new tests is host-side, no flash was performed, and the code path
+changed is name validation that runs before any tool lookup. Carried forward unchanged:
+`umbrella/037`'s corrected check 13 has never met the bench that found its defects and needs only the
+dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this environment
+(no `west`, no `ZEPHYR_BASE`) and no leg can currently claim it green. The bench queue is still
+parked by the owner's own commit.
+**Budget:** `PROCEED` throughout: 5-hour 18.4% → ~22%, weekly **86.0% → ~86.5%** against a 90% cap
+resetting in ~12h30m, suggested wave **2**, run at 2.
+**Least sure about:** **the hand-rolled `ForcedBackendGuard`.** The worker added a `Mutex<()>`-backed
+guard because this crate has no `serial_test`-style mechanism anywhere in its tree, and that is a
+real gap it filled correctly for its own tests — but it is now a **crate-local convention invented by
+one unit**, and nothing records it as one. The next worker that needs to serialise an env var in
+`embarch-core` will either not find it or reinvent it. That is a small doc debt I did not file
+because it is not this task's, and I am naming it here instead so the next leg can decide.
+
+---
+
 ## 2026-09-08 18:24 — dev-bench/005 a README fix whose correct doc-side result was nothing
 
 **Decided:** three. **(1) I told the worker in the task file that a doc-side no-op was the expected
