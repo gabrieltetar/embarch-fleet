@@ -97,6 +97,102 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 19:41 — umbrella/036 a mirror retired against a crate that already existed
+
+**Decided:** four.
+
+**(1) I narrowed a three-mirror task to one mirror before dispatching it, and wrote the narrowing
+into the task file rather than only into the prompt.** `umbrella/036` describes three copies of
+`embarch-api` internals plus a `doctor` check named after a loader it does not call. That is four
+distinct pieces of work and a worker gets twenty minutes. I dispatched **mirror 1 only** — the
+token fallback chain, `Done when` bullets 1/3/4/5 — and left the `CoreConfig`/`ProjectConfig`
+drift and check 6's title explicitly out. The narrowing is a `**Narrowed 2026-09-08**` line in the
+task file itself, which matters because the task is now `partially done` and the next leg reads the
+file, not my prompt.
+
+**(2) The predecessor leg named this as its obvious first unit and it was right.** `topology/020`
+landed a qualification into `embarch-topology/decisions/crate.md` saying the mirror in
+`embarch-umbrella/src/token.rs` is still live and is `036`'s to close — the previous leg's own entry
+called that "a promise this fleet has now made in a decisions file." It is kept: `src/token.rs`
+(245 lines) is deleted and `embarch-umbrella` now calls
+`embarch_core_client::token_discovery::resolve_token` in process.
+
+**(3) The decision this amends was wrong on a cost argument with a four-day shelf life, and the
+amendment says so in those terms.** `decisions/mirrors.md` decision 20 declined a shared crate
+because *"a fourth Rust crate in the suite, versioned and released, to hold one function … is more
+machinery than the problem justifies"*, and chose a CI diff job instead — recorded in the same file
+as **"Never actually implemented."** `embarch-api/crates/embarch-core-client` was created four days
+later for exactly this function, and the suite kept the copy *and* the owed CI job *and* the open
+question, all justified by a sentence that had stopped being true. **The fourth crate the reasoning
+warned against already existed, uncounted.** The landed text is a dated `**Amended**` paragraph
+appended after the original wording, closing the token half and saying in as many words that it does
+not touch the config half.
+
+**(4) I verified the two things a diff cannot show, before merging.** The worker asserted that every
+umbrella-local test case in the deleted file has an upstream counterpart (so deleting the module
+drops no coverage) and that `probe-rs`/`serialport` stay out of the graph after Cargo unifies
+`embarch-core-client`'s `reqwest`/`tokio` features with umbrella's own — the latter being a
+constraint `Cargo.toml`'s own "deliberately absent" comment asserts. I had the reviewer re-derive
+both independently rather than accept either on report, because a silently narrowed test suite and a
+silently widened dependency graph are both gate-green.
+
+**One dispatch note worth carrying:** this worktree needed **`embarch-api` symlinked into the
+worktree parent** on top of the usual `embarch-topology`/`embarch-study-designer`, because the new
+path-dep is `../embarch-api/crates/embarch-core-client`. That is one link beyond `.claude/leg.md`'s
+table, which lists nothing but those two for `embarch-umbrella`. **The table is not wrong yet — it
+describes the manifest as it was — but it is now one dispatch out of date**, and a leg that provisions
+from it without reading the diff will hand the next `umbrella` worker a tree that cannot build.
+`grep -rn 'path *= *"\.\.' --include=Cargo.toml embarch-*/` in the suite root is the source of truth;
+`.claude/leg.md` is not mine.
+
+**Merged:** `agent/umbrella/036-token-mirror` (code `e1a5e7c`, doc `444f84d`). Gate re-run by me on
+the merge results, not on the branches: `cargo build` clean; `cargo test` **216 passed, 0 failed**;
+`cargo clippy --all-targets -- -D warnings` clean; `check-client-names.py --repo embarch-umbrella`
+clean against 7 denylist entries; `python3 scripts/check-docs.py` **all 10 green**;
+`check-ownership.py` green on both branches — `--scope umbrella` on the doc branch (4 paths),
+`--scope umbrella --code-repo` on the code branch (9 paths, whole-tree ownership).
+**No native Windows build owed** — `embarch-core` is untouched.
+
+**Blocked:** nothing. `tasks/umbrella/036` is left **partially done**, not closed, with bullet 2 and
+mirrors 2/3 named in a dated state note: `CoreConfig`'s missing `*_timeout_secs`, `ProjectConfig`'s
+three-way drift (missing `flash_format`, missing `retired_*` refusal fields, no `validate()` call,
+the phantom `artifact_path_for_core` that `src/init.rs:534` still writes), and `doctor` check 6's
+title.
+
+**Reviewer:** no findings.
+It cleared all three of the things I flagged as most likely to be wrong: that an `**Amended**`
+paragraph is the right shape here rather than a `**Reversed**` one (it checked decision 15's own
+reversal in the same file for the convention), that `src/config.rs`'s new header claim is literally
+true against the real `embarch-core-client` source rather than merely plausible, and the feature
+unification. **It also flagged one thing I had not asked about and it is the better half of its
+run:** `embarch-topology/decisions/crate.md`'s qualification — written by `topology/020` one leg
+ago — still describes `src/token.rs` as live, which this unit made false hours later. Not a
+contradiction this unit introduced and not `umbrella`'s file to fix, so I filed
+`tasks/topology/022` rather than reaching into another sub-project's decisions file at a fold.
+
+**Hardware debts:** **none new, and none possible** — this is a dependency swap and comment
+repointing, host-side throughout, and no board can observe it. All prior debts carried forward
+unchanged and none was touched: a native Windows build of `embarch-core` is owed and the fleet
+cannot run one (`core/015`, `core/010` behind it); `umbrella/037`'s corrected check 13 has never met
+the bench that found its defects; `embarch-outpost`'s Zephyr `tests/unit` cannot be built here (no
+`west`, no `ZEPHYR_BASE`); the bench queue is parked by the owner's own commit.
+
+**Budget:** `PROCEED` at both ends: 5-hour 34.5% → 36.2%, weekly **88.6% → 88.9%** against a 90% cap
+resetting in ~11h20m. Wave 1 throughout; this leg is serial. **About 1.1% of weekly headroom is
+left at this fold**, which at the last two legs' measured rate is roughly one more leg. A HOLD is the
+expected way this stops.
+**Least sure about:** **whether closing the token half while deliberately leaving the config half a
+mirror is a coherent state or a worse one than either end.** The file now depends on
+`embarch-core-client` for `resolve_token` and hand-keeps `CoreConfig` beside it, so
+`src/config.rs`'s header has to explain that one of its two structs is mirrored and the other is
+not — and a reader meeting that has to hold a distinction the code does not enforce. The argument
+for it is that the alternative was a worker running out of time in the middle of the *config*
+change; the argument against is that a half-migrated module is exactly the state nobody revisits.
+I think the state note plus a `partially done` task is enough to make it revisitable, but that is a
+bet on the queue, and the queue currently has 64 open items.
+
+---
+
 ## 2026-09-08 19:26 — study-designer/023 two facts, two decisions, one citation
 
 **Decided:** three, and this is a small unit deliberately chosen as the leg's last.
