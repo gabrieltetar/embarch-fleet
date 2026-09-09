@@ -97,6 +97,74 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 23:36 — outpost/012 (continuation) a worker that kept working after I landed its first push, and the branch that came back
+
+**Decided:** four. **This is a second entry for a unit already logged**, and the shape is deliberate
+rather than a slip — see (3).
+
+**(1) I landed `outpost/012` on a pushed branch, and the worker was not finished.** The presence rule
+is that a branch on its remote carrying commits means that worker reached its own bookkeeping, so it
+may be landed whether or not a notification arrived. That is still right and it is what let this leg
+start without stalling. **What it does not license is concluding the worker is *done with its task*.**
+This one pushed `a620d08` — `open.md` and `decisions/module.md` — I gated, merged, folded, logged and
+pruned the branch; and it then went on and paid the other two files on the same task's `Compacts:`
+line and pushed again. I found `agent/outpost/012-compact-outpost` alive at `ce98982` during my
+end-of-leg teardown sweep, carrying finished, unlanded work.
+
+**(2) Nothing mechanical would have found it, and I only did because the teardown looks.** My fold
+had already pruned that branch as landed, correctly, since `a620d08` was on `main`. `git worktree
+list` and `git ls-remote` at leg end are what surfaced it. **This is the third time this log records
+finished work stranded by a signalling gap** — legs 035 and 055 are the other two — and it is a
+different gap from theirs: not a notification delivered to the wrong session, but a *second* push
+after a first was treated as final. The cheap guard is the one that caught it: sweep the remotes for
+live `agent/*` branches before ending a leg, always, even when every unit is folded.
+
+**(3) I landed and folded it rather than leaving it, and it is not a fifth unit.** The cap is four
+**units**, a unit is one task, and this is the same task — no new dispatch, no new claim, no new
+worker. Leaving it would have meant ending the leg with a live branch holding finished work and no
+log entry, which is the thing `.claude/leg.md`'s "leave nothing in flight" exists to prevent and the
+thing that made legs 035 and 055 expensive. Writing a second entry rather than editing the first is
+the honest form: the first entry was true when written, and rewriting it would erase the fact that
+the unit landed in two pieces.
+
+**(4) The work itself is a squeeze and it completes the task.** `spec.md` 9,187 → **8,987 B (87.8%)**
+and `decisions/transport.md` 7,114 → **6,978 B (85.2%)**, both out of reserve — the two items I
+explicitly left `open` an hour ago, saying closing the task would retire a ledger entry nobody paid.
+Somebody paid it. The cuts are reasoning already canonical elsewhere, reduced to a fact plus a
+citation: `decisions/layout.md`'s reversals row 86, `decisions/transport.md` decision 20, and
+`interfaces/integration.md`'s `BATCH_BYTES` row. **Task closed, all four items paid**, and
+`check-doc-size.py --pressure` now lists nothing for `embarch-outpost` but `decisions/tracing.md` at
+90.4%, already filed under `outpost/008`.
+
+**Merged:** `agent/outpost/012-compact-outpost` (code **no commits**, `embarch-outpost` unchanged at
+`2f6aba3`; doc `0d4ae25`). The branch did not rebase cleanly — it edited the `changelog.d` fragment
+my own fold had already consumed, and the task-file state line I had rewritten to `open`. **I
+resolved both by hand**: the fragment resolves to its deletion, since it is already assembled into
+`history/outpost.md`, and I wrote a fresh fragment for this half rather than reopening the assembled
+one; the task file takes the worker's version, which closes all four items. Gate re-run by me on the
+merge result: `python3 scripts/check-docs.py` **all 10 green**; `check-ownership.py` green (3 paths,
+self-derived base `21e6b8a6620f`).
+
+**Blocked:** nothing.
+
+**Reviewer:** skipped (leg ending at its unit cap — a reviewer spawned here would outlive the leg).
+The first half of this unit was reviewed and came back clean; **this half was not reviewed at all**,
+and that is a real gap rather than a formality, because it is a squeeze and this leg has already
+recorded twice that a squeeze's own description of its cuts is not reliably complete. A later leg
+reading this should treat `outpost/012`'s `spec.md` and `transport.md` cuts as unaudited.
+
+**Hardware debts:** **none new.**
+
+**Budget:** `PROCEED` / **BURNDOWN**, weekly 91.9% against a 97% cap, no 429. The latch stands and
+expires on its own at 06:59.
+
+**Least sure about:** **that skipping the reviewer here was the right trade against writing an
+unreviewed squeeze into `main`.** The sanctioned reason applies — the leg is at its cap — but the
+sanctioned reason was written for a reviewer that would be abandoned mid-run, and I could have waited
+ninety seconds. I chose to close cleanly instead, and the cost is one unaudited squeeze in a leg that
+found two under-described ones. If a later leg is picking somewhere to spend a spare review, this is
+it.
+
 ## 2026-09-08 23:33 — doc/022 a task blocked on both halves, and a sentence in it that said the supervisor may write `scripts/`
 
 **Decided:** five. **This is leg 056's fourth and last unit; the leg ends here at its cap, not on a
