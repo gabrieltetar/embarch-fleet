@@ -97,6 +97,61 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-09 16:02 — core/031 a cross-repo invariant that lived in one repo's head, and a reviewer notification that went to the listener again
+
+**Decided:** nothing beyond dispatching this at all. The substance is the worker's: `embarch-core`
+**decision 53** in `decisions/auth.md` now records that `%ProgramData%\embarch`'s default ACL is
+left untightened **deliberately**, because `embarch-topology` decision 23 puts `enrollment.toml` one
+level down in that directory and relies on the untouched default to let both the Core service
+account and an unprivileged interactive CLI create and read files there. `token_store.rs`'s `icacls`
+call names the token file only, never the parent, and nothing in Core's own build would catch a
+future author narrowing the directory — there is no test touching the parent's ACL. The decision
+also tells that author what to do instead: lock down whatever new file needs protection, the way the
+token file already is, never the directory, since a sibling sharing the directory has no way to ask
+Core for an exception once the directory itself is closed. Two things I want to name as good rather
+than merely correct: it **hedges what it does not know** ("does not claim what the default ACL
+concretely grants on any given Windows machine — `embarch-token.md` already flags that as
+unmeasured"), which is the rule about never promoting a stated fact to a measured one applied to a
+decision's own text; and the worker found two stale places outside `core`'s ownership row and
+**routed them to `inbox/` instead of editing them** — `inbox/topology-cite-core-decision-53-on-shared-dir-acl.md`
+(topology's `decisions/storage.md` decision 23 still says the phrasing is "flagged to its owner",
+now stale) and `inbox/suite-cite-core-decision-53-in-embarch-token.md` (`embarch-token.md` is
+suite-level and should cite 53). The reviewer confirmed both drops describe the staleness accurately,
+which matters because they are now the only record of it.
+
+**Decision 53 is unique, and I checked by hand because nothing else does.** See `outpost/015`'s
+entry above: this leg found that the gate has no uniqueness check at all, and that unit collided on
+a number one hour earlier. `embarch-core`'s highest was 52.
+
+**Merged:** `agent/core/031-shared-dir-decision` (code **none** — docs-only by design, the task
+forbade a code change and the worker's code branch carries zero commits; doc `c2ef681`). Ownership
+check base `a9e5b742c4ce`. The doc branch was rebased onto `outpost/015`'s fold before merging, so
+its pre-rebase tip is not a revert handle.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — a decision record, no board, no build, zero code diff.
+It does *narrow* an existing one by writing down a Windows-side invariant that until now existed only
+in `embarch-topology`'s head, which is the kind of debt no board can pay. Carried forward unchanged:
+`core/015`'s native Windows build of `embarch-core` is the owner's and still outstanding, and is also
+what would deploy `core/020`'s `self_reported_hardware_id` rename; `umbrella/037`'s corrected check
+13 has never met the bench that found its defects and needs only the dev-bench board;
+`embarch-outpost`'s Zephyr `tests/unit` suite cannot be built here (no `west`, no `ZEPHYR_BASE`).
+The bench queue is still parked by the owner's own commit; no bench unit was runnable this leg.
+**Budget:** PROCEED throughout, wave 6 suggested, bound by the 4-unit cap rather than the budget.
+**Least sure about:** **this unit's reviewer verdict reached me relayed by the listener, not
+directly** — its completion notification landed in the listener session's main loop, which is the
+orphaned-notification gap this log has now recorded three times (leg 035 for two workers, and
+`leg.md` bounds the *worker* wait at ~25 minutes because of it). I waited ~11 minutes past the
+normal 90s-to-3min, ticked `leg-waiting` so the watchdog would not call a healthy leg wedged, and was
+about to write `skipped (reviewer did not report)` when the relay arrived. So the `no findings` above
+is a **relayed** verdict, not one I collected myself — it is consistent with the four things I asked
+that reviewer to check and I have no reason to doubt it, but the next leg should know that the
+positive-presence rule leg.md gives for *workers* (a pushed branch retires a worker) has **no
+equivalent for reviewers**: a reviewer leaves nothing on disk when it finds nothing, so "no findings"
+and "died silently" are indistinguishable from inside the leg. That is the same single-point-of-
+failure argument leg 035's entry makes, applied to the one actor whose whole output is sometimes an
+absence.
+
 ## 2026-09-09 15:48 — outpost/015 a decision authored on a number that was already taken, and the check that says it is enforced does not exist
 
 **Decided:** I renumbered this unit's new decision from **23 to 24** in the fold, and that is the
