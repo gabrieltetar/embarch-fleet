@@ -255,7 +255,8 @@ script can make, recorded by the only actor with the context to make them:**
 
 ```markdown
 **Compacts:** embarch-core/spec.md, embarch-core/open.md
-**In flux:** no                    <!-- yes → State: blocked, and say what unparks it -->
+**Size debt due:** 2026-09-16       <!-- set once, from the day the debt opens -->
+**In flux:** no                    <!-- one answer per file; all-yes → State: blocked + what unparks it -->
 **Must not delete:** the 18-stale-records candidate fix in open.md; decision 36's
 probe-rs counterfactual, which is evidence and not proof and reads as proof once
 shortened.
@@ -264,10 +265,25 @@ shortened.
 - **`Compacts:`** is what `check-doc-size.py` matches on. It matches this field
   and nothing else: a path merely *mentioned* in a task body made five of one
   day's twelve files read as filed, because every task cites the doc it is about
-  to edit.
+  to edit. **The line is data, so a paid file is DELETED from it** — say so in
+  the body, and never strike it through in place. Leg 057 annotated one with
+  `~~…~~` and prose, `check-doc-size.py` stopped recognising the line at all,
+  and the gate failed reporting two filed files as unfiled; two quieter
+  instances of the same shape sat on `main` until 2026-09-09, yielding a path
+  that matched no doc and saying nothing. `check-task-state.py` fails on it now.
 - **`In flux:`** is `DOC-COMPACTION-PASS.md`'s warning, asked of whoever just
-  worked in that subsystem. **Yes is a legitimate and cheap answer** — set
-  `**State:** blocked` and name the milestone that unparks it. Compacting a
+  worked in that subsystem. **It is answered PER FILE** — `yes`, `no`, or
+  `per file` naming each — because the answer belongs to a doc and not to a
+  task, and a field that outlives the file it was about is how this went wrong
+  (`tasks/doc/030`, 2026-09-09: three of four parked tasks were arguing flux
+  about a file already struck off their own `Compacts:` line, and one had it
+  backwards). **Yes is a legitimate and cheap answer** — when it is yes for
+  *every* file, set `**State:** blocked` and name the milestone that unparks
+  it, because `blocked` means nothing here can be done. Mixed stays `open` and
+  the dispatch note says which file to leave alone; `Owner: required` is exempt
+  from the state rule entirely, since ownership already keeps agents off it and
+  `blocked` would only hide the debt from the one actor who can pay it.
+  Compacting a
   subsystem still moving writes a clean statement of something about to be
   wrong and destroys the alternatives you are about to need; a parked task is
   the mechanism working. **But it parks the pass, not the reserve** — the next
@@ -277,6 +293,14 @@ shortened.
   that next writes it**, same commit, carrying this task's `Must not delete:`
   list and closing only that file's item. `DOC-COMPACTION.md` §2 is the rule;
   a mission split is the cheaper move where the file holds more than one.
+- **`Size debt due:`** is what stops a park absorbing, and it is why the state
+  rule above costs what it used to cost. A leg spends its first unit on the
+  oldest overdue ledger entry *whether or not the item is blocked*
+  (`.claude/leg.md`), so a dated park is revisited by construction. Set once,
+  from the day the debt opens; moving it forward is visible in the diff.
+  **`check-doc-size.py` fails a blocked debt carrying no date at all** — that
+  is the one shape with no drain, and `DOC-BUDGET.md`'s ledger section has the
+  measured reasoning.
 - **`Must not delete:`** is what the filer knows and the eventual compactor will
   not. Anything: a failure signature, a rejected alternative, a measurement that
   reads as an assumption once its date goes.

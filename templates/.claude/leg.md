@@ -524,6 +524,33 @@ dispatch one whose `In flux:` field says yes** — that task should be `blocked`
 and naming what unparks it, and if it is `open` and says yes, the filer got it
 wrong; fix the state rather than sending a worker.
 
+**`In flux:` is answered PER FILE, and that is what makes the rule above safe**
+(decided 2026-09-09, `tasks/doc/030`; `check-task-state.py` enforces the whole
+of what follows). This rule and the size ledger looked for two days as though
+they contradicted each other — implying `blocked` here, while
+`check-doc-size.py` called `blocked` *"the parked state that absorbed 13 of 28
+debts"* — and **both were right; the field was wrong.** A task names several
+docs, one is paid and struck off its `Compacts:` line, and the flux answer that
+belonged to *that* file stays behind reading as if it covered the rest. Three of
+the four live violations were exactly that. So:
+
+- **`yes` means every file on the line is in flux**, and that is when the task
+  is `blocked` — `blocked` has to keep meaning "nothing here can be done".
+- **`per file` is the answer when they differ**, and it must name each; a task
+  with one settled file stays `open`, and **your dispatch note says which file
+  the worker leaves alone.** That is a normal unit, not an exception.
+- **`Owner: required` is exempt from the whole rule.** Ownership already keeps
+  every agent off the task, so `blocked` would protect nothing and would hide
+  the debt from the only actor who can pay it.
+- **A park is not a park without a date.** `blocked` stopped being absorbing
+  when the ledger got a clock: you spend your first unit on the oldest overdue
+  entry *whether or not it is blocked*, and `check-doc-size.py` fails a blocked
+  debt carrying no `**Size debt due:**` at all.
+- **The `Compacts:` line is data.** Strike a paid file off by **deleting** it
+  and saying so in the body — never `~~…~~` in place. Leg 057 annotated one
+  and the size gate stopped recognising the line, reporting two filed files as
+  unfiled; two quieter instances survived on `main` until 2026-09-09.
+
 **A blocked compaction task does not park the reserve, only the pass.** If a file
 you are dispatching *into* is in reserve and its compaction task is blocked on
 `In flux: yes`, say so in the task file and **tell that worker to compact that
