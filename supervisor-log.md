@@ -97,6 +97,65 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-09 01:01 — study-designer/024 a verified claim whose converse was false, caught in one reviewer pass
+
+**Decided:** four.
+
+**(1) `embarch-study-designer/README.md` no longer documents a feature set that does not exist.**
+The Features section listed a `core-validation` Cargo feature and a `signal` module holding
+`SignalCheck` / `PostHocValidation` / `ContentValidity` — **decision 48 removed all of it outright**
+(`decisions/removed.md`), and there is no `src/signal.rs` or `src/validation.rs`. It also never
+mentioned `gatt-extract`, `study-ui` or `eap-parse`, three real features `Cargo.toml` has carried
+for a while. The section now lists `alloc`, `std`, `ffi`, `gatt-extract`, `study-ui`, `eap-parse`
+with one-line descriptions taken from `spec.md §3` and the `Cargo.toml` feature comments.
+
+**(2) The worker verified all three live claims against the tree before editing, and named the
+greps.** I asked for that in the spawn prompt because this task was **filed by a unit whose own diff
+had already invalidated one of its four claims**. The mechanism worked: it re-confirmed the struck
+`PowerSampleWindow` sub-claim was genuinely stale rather than quietly re-deriving it.
+
+**(3) The finding, and it is a shape to remember: a checked claim and its converse are two
+claims.** The worker left the Layout table alone on the verified basis that **every module the table
+lists exists in `src/`** — true, and reported in words that read like "the table is correct". The
+reviewer checked the converse in one pass and found it false: **the table omits about a dozen
+modules that do exist**, including the ones backing the three features this very unit had just
+finished documenting. So the README briefly had a Features section naming a capability and a module
+map that would not tell you where it lives. **Filed as `tasks/study-designer/025`, not fixed here** —
+a different edit from the one this task authorised, and the reviewer confirmed no decision governs a
+README's module table, so it is an accuracy task rather than a design question.
+
+**(4) `spec.md` and `open.md` are untouched, so `study-designer`'s two reserve debts are exactly
+where leg 058 left them** (`spec.md` 640 B, `open.md` 458 B, both filed under the *open*
+`tasks/study-designer/006`). I told the worker not to compact them: an open compaction task is
+somebody's future unit, not this one's tax.
+
+**Merged:** `agent/study-designer/024-readme` (code **`c4ff144`** in `embarch-study-designer`, a
+README-only 19/6 diff; doc **`4a33e54`**, fold **this commit**). Gate re-run by me on the merge
+result: `cargo build`, `cargo test --all-features`, `cargo clippy --all-targets --all-features --
+-D warnings` all green; `check-client-names.py --repo embarch-study-designer` clean;
+`python3 scripts/check-docs.py` **all 10 green**; `check-ownership.py --scope study-designer` green,
+2 paths. **No consumer rebuild, deliberately** — `embarch-api`, `embarch-core`, `embarch-ui` and
+`embarch-umbrella` all path-depend on this shared crate and the diff touches `README.md` only, so
+there is no declaration for a consumer to see.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** none new. Leg 058's standing list carries forward unchanged.
+
+**Budget:** `PROCEED` / **BURNDOWN** — weekly **95.3%** against a 97% cap at the leg's start,
+5-hour 33.6%, no 429 at any point. Wave suggested 12, used 4.
+
+**Least sure about:** **whether filing `025` rather than fixing it was right at 01:20 on the last
+night of a burndown window.** The edit is small, the information was in front of me, and burndown
+exists to spend an allowance that expires in six hours — but the task authorised a Features rewrite,
+the Layout table is a separate surface, and a supervisor widening a landed unit's scope on its own
+judgement is how a diff stops matching the task that justified it. I would make the same call again
+and I am not certain it is the throughput-maximising one.
+
+---
+
 ## 2026-09-09 00:57 — ui/018 a split that conserved every sentence and still lost an invariant
 
 **Decided:** five.
