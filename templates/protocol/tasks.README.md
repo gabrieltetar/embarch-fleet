@@ -53,6 +53,30 @@ task the supervisor invented; that is allowed, and it says so here.
 
 `open` → `claimed` → `done`, or → `blocked`.
 
+**Those four words, and one of them is the first word on the line.** Everything
+after it is prose for a human and no script reads it; token zero is what every
+consumer reads, by `raw.split()[0]`, and it must match exactly — no trailing
+comma, no `partially`, no `closed`. `check-task-state.py` enforces it, and it
+exists because the field was prose all the way down until 2026-09-09 and three
+things had already gone wrong on `main`:
+
+- **`dev-bench/012` and `umbrella/036` were undispatchable while saying they
+  were open.** Their state lines began `partially closed` and `partially done`
+  and ended, respectively, *"This task stays open for that remaining half"* and
+  *"mirrors 2 and 3 still open"*. `split()[0]` gave `partially`, which is not
+  `open`, so `queue-status.py` filed both under `other` and no leg could see
+  them. Both carried real remaining work; the queue was two tasks shorter than
+  it looked for over a week.
+- **Five completed tasks were never retired**, because they said `closed` — a
+  word that has never been one of the four. `fold-commit.py` deletes a task file
+  by matching `done` at token zero, so each survived the fold meant to remove
+  it and sat in the queue for up to four days.
+
+So `closed` is not a synonym for `done`; write `done`. A task that is partly
+finished is `open` with the remainder described after the dash, which is what
+those two now say. **If the honest state needs a qualifier, the qualifier goes
+after token zero** — that is what the rest of the line is for.
+
 - **claimed** — the claim line becomes
   `**State:** claimed by agent/<scope>/<NNN-slug>, <yyyy-mm-dd HH:MM>`.
   Claiming is a commit to `main` by the supervisor **before** dispatch, not by
