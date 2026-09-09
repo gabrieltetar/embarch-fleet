@@ -97,6 +97,78 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 18:08 — outpost/004 the worker found four more citations than the task claimed, and that drift is the result rather than a discrepancy
+
+**Decided:** four. **(1) I told the worker that "never `sed`'d blind" was the whole task rather than
+a caveat.** Twenty-two mechanical-looking references is exactly the count at which a regex becomes
+the obvious tool, and the failure it produces is a citation that still *resolves* while pointing
+where the content is not — which is the third instance of that same shape in this one leg. So I split
+the work explicitly in the task file: decision-number citations (`design.md §3 decision N` →
+`decisions.md decision N`) are genuinely mechanical, and the section citations (`§4`, `§5`, `§7`) each
+need the target file opened. **(2) I told it to re-derive the count and report what it actually
+found.** The task's 22 came from a 2026-09-06 survey. It found **26** across 14 files and wrote the
+drift into the task file. That is the second unit this leg where a task file's own numbers had aged
+out — `study-designer/022`'s line numbers were archaeology too — and it is now routine enough that
+the instruction should probably be standing rather than per-task. **(3) I verified "comment-only"
+myself instead of accepting the claim**, because it is the safety property the entire unit rests on:
+`git diff -U0` over every `.c`/`.h`/`.h.in`, filtering out comment-prefixed lines, returned nothing,
+and I read the `Kconfig`/`CMakeLists.txt`/`.py`/`.overlay` hunks by eye. **(4) I ran the repo's own
+host-side suite on the merge result** rather than trusting the worker's: `tests/run-all.sh` gives
+20 decoder unit tests OK, the vocab check agreeing on 11 record kinds and 8 flag bits across
+`outpost_priv.h`/`decode_outpost.py`/`outpost.rs`, and the cross-decoder agreeing with `embarch-core`
+on all 831 rows of 41 frames.
+
+**The Zephyr `tests/unit` suite did not run and could not, and that is a debt this leg is opening.**
+`tests/run-all.sh` ends with `set WEST to a west executable`: there is no `west`/`ZEPHYR_BASE` in
+this environment. The worker recorded it rather than skipping past it, which is right. **The reason
+I accepted the unit anyway is the comment-only verification above** — a diff that changes no
+non-comment byte cannot change what a ztest asserts. That reasoning is only as good as the
+verification, which is why I did it myself.
+
+**Merged:** `agent/outpost/004-design-md-citations` (code `9621112`, doc `a06da6f`). The doc branch
+was rebased onto `main` past `umbrella/042`'s fold before merging; ownership was re-checked after the
+rebase, not only before. Gate re-run by me on the merge result: `tests/run-all.sh` as above with the
+`west` leg unreachable, `python3 scripts/check-docs.py` **all 10 green**,
+`check-client-names.py --repo embarch-outpost` clean against 7 denylist entries, `check-ownership.py`
+green on both branches (code: whole tree, 14 paths, `--code-repo`, base `0517e598f8c1`; doc: 2 paths,
+base `6fd3210ba83b`). No `cargo` gate — this is a C module. No native Windows build owed;
+`embarch-core` is untouched, though its decoder is what the cross-decoder test agrees with.
+
+**Blocked:** nothing.
+**Reviewer:** 1 finding — inbox/outpost-readme-status-overhead-stale.md
+**I have to qualify that reviewer line, because I may have manufactured it.** The worker had already
+found the thing — `README.md`'s Status section still calls instrumentation overhead "deliberately
+uncharacterised" while `spec.md` §4, *the section this unit's citation now correctly points at*, gives
+numbers measured on real hardware on 2026-08-27 — and recorded it in the task file as an out-of-scope
+note. **I then told the reviewer that if it agreed the note deserved a drop, it should file one**,
+and it did. So this is not a reviewer catching something independently; it is a reviewer agreeing
+with a judgement I put in front of it. The task file `tasks/outpost/013` says so in its own header.
+**The tally cannot tell those two apart, and this is the second entry in this leg to say so** — a
+`1 finding` line records that something was filed, not whether the supervisor had already seen it.
+On the substance I think the drop is right: repointing the citation made the contradiction *sharper*,
+because the sentence now correctly cites a file that contradicts the sentence.
+
+**Hardware debts:** **one new, and it is a toolchain rather than a board.** `embarch-outpost`'s
+Zephyr `tests/unit` ztest suite has not been built or run by this unit, and cannot be from the fleet's
+environment — no `west`, no `ZEPHYR_BASE`. It is owed in a session that has the Zephyr toolchain, and
+it is not urgent for *this* diff (comment-only, verified) but it means **no leg can currently claim
+that suite is green after any `embarch-outpost` change.** Carried forward unchanged: `core/015`'s
+native Windows build of `embarch-core` is the owner's and still outstanding, and is also what would
+deploy `core/020`'s rename; `umbrella/037`'s corrected check 13 has never met the bench that found its
+defects and needs only the dev-bench board. The bench queue is still parked by the owner's own commit.
+**Budget:** `PROCEED` at this unit's fold: 5-hour **14.7%** against a 90% cap resetting in ~3h55m,
+weekly **85.4%** against a 90% cap resetting in ~12h55m, suggested wave **3**, **run at 2** all leg.
+**Least sure about:** **whether I should have blocked this unit on the unrunnable ztest suite rather
+than accepting my own comment-only proof.** The rule I applied is sound in the abstract — a diff that
+touches no executable byte cannot break a test — but I proved it with a `grep` over a diff, and the
+class of thing that survives such a proof is a comment that was load-bearing: a Kconfig help string,
+a `.overlay` node, a docstring some tool parses. I read the non-`.c` hunks specifically for that and
+saw nothing of the kind. **Still, "I checked and it looked like prose" is a weaker guarantee than a
+green suite, and I recorded it as a debt rather than treating the unit as unverified.** A leg with the
+toolchain should re-run `tests/unit` against `9621112` before anyone leans on that reasoning twice.
+
+---
+
 ## 2026-09-08 18:04 — umbrella/042 a one-line unit, dispatched as one on purpose, and the reviewer that cleared it is the point
 
 **Decided:** three. **(1) I told the worker in the task file that a one-line result would be the
