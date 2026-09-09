@@ -152,6 +152,58 @@ def finished_task(doc: Path, rel: str) -> bool:
         return False
 
 
+STATE_LINE = re.compile(r"^\*\*State:\*\*\s*(.+?)\s*$", re.M)
+
+
+def unit_task_not_settled(doc: Path, unit: str) -> str | None:
+    """Refuse a fold whose OWN task file still says `open` or `claimed`.
+
+    This is `tasks/doc/028`'s failure (1), and it is the one with teeth: a task
+    left `claimed` after its leg dies is indistinguishable from a live claim, so
+    `ops.md` §3's recovery reclaims it to `open` and the next leg re-dispatches a
+    unit that already landed, into a repo whose `main` already has the change.
+    Six instances in two legs, every one repaired by hand at a fold or found by
+    the next leg; nothing ever checked it.
+
+    **The fold is the only place this is checkable**, which is why it lives here
+    and not in the gate. A `claimed` task is perfectly legal in general — it
+    means a worker is running — so no repo-wide checker can call it wrong. What
+    makes it wrong is *this* fold asserting that *this* unit landed, and at that
+    moment the truth is known and one comparison settles it.
+
+    Only the unit's own task is inspected. A fold legitimately touches other
+    task files: filing new ones, and reopening a task whose debt turned out to
+    stand, which leg 060 did to `tasks/core/022` on 2026-09-09.
+
+    `blocked` and `done` both pass. `blocked` is a real ending — the unit
+    reports what stopped it and the queue keeps the task — and the log entry
+    carries a `**Blocked:**` line saying so.
+    """
+    scope, num = unit.split("/", 1)
+    matches = sorted((doc / "tasks" / scope).glob(f"{num}-*.md"))
+    if not matches:
+        # No file: the task was already retired, or this is a recovery fold
+        # reconstructing a unit whose file went with an earlier one. Silence is
+        # right -- the other refusals cover a fold with nothing behind it, and
+        # inventing a failure here would block the recoveries this repo does.
+        return None
+    f = matches[0]
+    m = STATE_LINE.search(f.read_text(encoding="utf-8", errors="replace"))
+    if not m:
+        return (f"{f.relative_to(doc)} has no `**State:**` line, so nothing can "
+                f"say whether this unit finished.\nNothing has been written.")
+    tok = (m.group(1).split() or [""])[0].strip("*_`")
+    if tok in ("done", "blocked"):
+        return None
+    return (f"this fold says {unit} landed, but {f.relative_to(doc)} still says "
+            f"`{tok}`.\n\n"
+            f"  **State:** {m.group(1)[:100]}\n\n"
+            "A task left `claimed` reads as a live claim to the next leg's recovery,\n"
+            "which reclaims it to `open` and re-dispatches work that already landed\n"
+            "(tasks/doc/028, six instances). Set the state to `done` — or `blocked`\n"
+            "with a `## Blocked` section — and re-run. Nothing has been written.")
+
+
 def stage_plan(doc: Path, paths: list[str]) -> tuple[list[str], list[str], list[str], list[str]]:
     """(addable, to_delete, already_staged, missing) for exactly these paths.
 
@@ -490,6 +542,11 @@ def main() -> int:
         print("\nThose markers are how fold-day.py finds a day's SHAs, hardware debts\n"
               "and reviewer lines, so a bent one is data the daily fold cannot carry.\n"
               "Fix the entry and re-run. Nothing has been written.", file=sys.stderr)
+        return 1
+
+    stale = unit_task_not_settled(doc, args.unit)
+    if stale:
+        print(stale, file=sys.stderr)
         return 1
 
     if not git(FLEET_REPO, "status", "--porcelain", "--", "supervisor-log.md").strip():
