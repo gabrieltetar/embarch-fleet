@@ -97,6 +97,117 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 20:08 — suite/021 a CI that was decided and never built, in the two repos nothing checks
+
+**Decided:** six. **This is a `suite`-scope unit, so there was no worker — the whole diff is mine**
+([protocol.md](protocol.md) §8), announced and parked at 19:31:48 and executed at 20:03 after **31
+minutes with no objection**. `ts` `1788917508.792199`; the thread was polled at each of the three
+preceding unit boundaries and carried no reply.
+
+**(1) I re-measured the task file's evidence rather than citing it, and it was incomplete in three
+places.** The task asserted that `embarch-study-designer/.github/workflows/test.yml` and
+`embarch-topology`'s two are the *only* test/build workflows in the suite. Measured across all nine
+repos: **`embarch-doc` also has `docs-ci.yml`** (push to `main` + PR) and **`embarch-umbrella` has a
+manual `assemble-suite.yml`**, neither mentioned; and **`embarch-outpost` has never had a `.github`
+directory either**, which the task asserted only of `embarch-dev-bench` and `embarch-ui`. None of
+those change the conclusion, and all three are in the landed table. **A task file's measured
+evidence is still someone else's measurement**, and this unit's whole subject is a claim that
+survived because nobody re-checked it.
+
+**(2) Both decisions keep their arguments and lose only their claims, and that distinction is the
+unit.** `embarch-core`'s decision 1/2/7/17 and `embarch-dev-bench`'s decision 9 each gained a dated
+**Corrected 2026-09-08** paragraph. Decision 9's says in as many words that a `native_sim` job is
+**still worth building** — this retires the assertion that it exists, not the reasoning that it
+should. `embarch-decision-reversals.md` names this exact shape ("documented as implemented, wasn't")
+as the most common in the suite and the *decisions files* as its worse variant, because an amendment
+that reads as shipped is indistinguishable from one that is.
+
+**(3) The sharpest fact is one neither decision stated: two sub-projects are checked by nothing
+mechanical at all.** `embarch-dev-bench` and `embarch-outpost` have no CI and **no `Cargo.toml`, so
+the fleet's own merge gate ([protocol.md](protocol.md) §10) cannot reach them either** — its
+`cargo build`/`test`/`clippy` half selects nothing there. A change to either is checked by a human or
+an agent reading the diff and by nothing else. That is now the last row of the table and the load-
+bearing sentence of dev-bench's correction. **§10 was cited and never edited**, per the task's own
+constraint and §2's reservation.
+
+**(4) "One place" is a new `embarch.md` §5 bullet with a nine-repo table**, rather than a sentence in
+each repo. §5 already carries the `rustfmt` bullet whose own text says "not any repo's CI", so the
+suite-wide statement about what does and does not check a change was already half-written there.
+
+**(5) I left `embarch-core`'s heading reading "and CI everywhere", and the reviewer correctly
+narrowed my justification for it.** I had written that decision numbers *and their titles* are
+permanent; `DOC-CONVENTIONS.md` says only that the numbers are, and **nothing has ever decided
+whether a title may be amended.** The landed text now says that plainly and records leaving it as a
+choice rather than a rule. A weak citation defending a correction about a weak citation is not an
+irony I want in the file.
+
+**(6) The correction pushed `embarch-core/decisions/platform.md` into reserve and I filed the debt in
+the same commit**, as the rule requires of a worker and therefore of me:
+`tasks/core/029-compact-core-platform.md`, 11,701/12,288 B, `In flux: no` and so **dispatchable**
+rather than parked, split-first, with a `Must not delete:` list the reviewer checked. It includes
+decision 46's *rejected* arm — the relative cross-repo `include_str!` — which this same leg
+reintroduced by accident two units ago, so that entry is the file's own proof that a decision reduced
+to its conclusion stops being able to catch anything.
+
+**Merged:** doc `ac20966` — **and that is the fold commit itself, not a merge.** A `suite` unit has no
+branch and no worker, so there is nothing to merge; it is executed in the leg worktree and lands as
+one commit, which is therefore the only handle a revert has and is recorded here as such.
+**`fold-commit.py --check` refuses an entry naming no merge SHA**, correctly under §11's reasoning
+and with no case for a unit that never had a branch — noted below.
+Changed: `embarch.md`, `embarch-core/decisions/platform.md`,
+`embarch-dev-bench/decisions/platform.md`, two `changelog.d/` fragments (assembled into
+`history/core.md` and `history/dev-bench.md`), `tasks/core/029-compact-core-platform.md`,
+`tasks/suite/021` closed. Gate: `python3 scripts/check-docs.py` **all 10 green** — red once, on
+`check-doc-size.py`, for exactly the reserve debt in (6), and green after filing it.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+**Worth more than usual here, because it was the only review this unit could get.** I gave it the
+diff *uncommitted* and asked it to re-measure every cell of the table independently rather than read
+it — it did, all nine repos, and confirmed `embarch-outpost` never had CI by `git log --all`, which
+was the one row I had extended beyond the task file's own evidence. It also checked that the two
+corrections retire claims without reversing arguments, and cleared `tasks/core/029`'s `In flux: no`
+and its `Must not delete:` scoping. Its two non-blocking notes — the `DOC-CONVENTIONS.md`
+overstatement and the missing `assemble-suite.yml` — are both fixed in what landed, not deferred.
+
+**Hardware debts:** **none new, and none possible** — this unit changed three documents and touched
+no code repo. All prior debts carried forward unchanged: a native Windows build of `embarch-core` is
+owed and the fleet cannot run one (`core/028` this leg added to it, `core/015` and `core/010` behind
+it); `umbrella/037`'s corrected check 13 has never met the bench that found its defects;
+`embarch-outpost`'s Zephyr `tests/unit` cannot be built here (no `west`, no `ZEPHYR_BASE`); the bench
+queue is parked by the owner's own commit; and the ESP32-C5 USB-enumeration fact `core/028` tagged
+`[assumed]` needs one look at one board.
+
+**Budget:** `PROCEED` at both ends: 5-hour 40.6% → 42.2%, weekly **89.6% → 89.8%** against a 90% cap
+resetting in ~10h50m. Wave 1. **This is the leg's fourth and last unit and the fleet is 0.2% from a
+HOLD** — the next leg is very unlikely to start, and a HOLD is the correct and expected way this
+stops rather than an incident.
+**One tooling note the next leg needs, because it cost this one three retries.** `fold-commit.py`
+does not have a clean path for a `suite` unit, in two places. First, it `git rm`s the closed task
+file and that **fails if the task file has local modifications** — which it always does, because
+closing the task *is* modifying it; `git rm -f` it yourself first, then pass the path. Second, it
+commits the log **before** settling the instance paths, so a failure at the `git rm` leaves the log
+committed and the instance half not, and the retry then refuses with "supervisor-log.md has no
+uncommitted change". That is the *survivable* ordering by design ([ops.md](ops.md) §3's last row),
+and the recovery is exactly what it says: commit the already-staged instance paths by hand with the
+same message — `fold-commit.py` makes two commits anyway, one per repo, so this reproduces it — and
+do **not** write a second entry. Third, `--check` requires a merge SHA, and a `suite` unit has none;
+naming the fold commit is the only honest answer and is what this entry does. **None of `scripts/`
+is mine to fix**, so this is a note, not a change.
+
+**Least sure about:** **whether spending this leg's one `suite` slot on an honesty correction was the
+right use of it, with fifteen `suite` tasks open and the weekly budget about to close.** The argument
+for it is that `suite` tasks starve structurally — they need the leg's own hands *and* a 30-minute
+window, so a leg that does not announce one at its start cannot run one at all, and the queue shows
+the result. The argument against is that I picked the cheapest one rather than the most valuable one,
+precisely so it would fit — `suite/011` ("four repos cannot be built from a fresh clone") and
+`suite/016` (`rx_utc_ms` is bench uptime, not UTC) are both worth more and both bigger. **I think
+announcing at the start and running at the end is the pattern the next leg should copy; I am much less
+sure that "pick the small one" is.**
+
+---
+
 ## 2026-09-08 19:56 — core/028 a stale README, and the reviewer catching me rather than the worker
 
 **Decided:** five, and the second and third are about my own commits.
