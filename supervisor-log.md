@@ -97,6 +97,73 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 18:04 — umbrella/042 a one-line unit, dispatched as one on purpose, and the reviewer that cleared it is the point
+
+**Decided:** three. **(1) I told the worker in the task file that a one-line result would be the
+correct one, and not to find adjacent work to justify the run.** That instruction is the whole reason
+this entry exists. A worker given twenty minutes and a one-line fix has an obvious failure mode —
+it goes looking for something bigger, and what it finds is out of scope, half-understood, or both.
+The task's own body already named an adjacent stale citation in `history/api.md` and correctly ruled
+it out as `api`'s file; without the instruction, that is exactly the thing a worker reaches for. It
+reported the one line, said so plainly, and stopped. **(2) I widened its acceptance grep rather than
+its scope.** The task's second Done-when checked only for `embarch-api/decisions/surface.md`. But
+`api/048` had landed decision **61** into `embarch-api/decisions/shape.md` an hour earlier in this
+same leg, so I told it to check *every* `embarch-api/decisions/` path cited anywhere under
+`embarch-umbrella/`, not just the one the task named. **A task file written before this leg started
+could not know about a split this leg performed**, and the queue is now old enough that this is
+routine rather than exceptional. The widened grep found exactly one citation — the line being fixed.
+**(3) I spawned a reviewer for a one-line change and I want the reasoning on the record**, because
+the obvious call is to skip it: the budget is at 85% of its weekly cap, a reviewer costs a spawn, and
+this diff is one path swap verified by grep. `.claude/leg.md` fixes the skip set to a HOLD, a 429, or
+a leg ending at its cap, and says in terms that the wave size is not a reason. **None of those
+applied, so I spawned it**, and the tally is worth more for containing a cheap `no findings` than it
+would be for containing only the expensive ones — a tally that records review only where review was
+likely to pay cannot answer the question it exists to answer.
+
+**Why this defect could reach `main` with a green gate, which is the part worth carrying forward.**
+`check-decision-refs.py` resolves a decision *number* and falls back to "defined somewhere in this
+sub-project" when the path beside it is not `decisions.md`-shaped. So
+`([embarch-api](../../embarch-api/decisions/surface.md) 52)` passed: 52 exists in `embarch-api`, and
+the checker never asked whether it exists *in the file the link names*. **A citation that resolves
+while pointing at the wrong file is worse than a broken link**, because a broken link announces
+itself and this one silently hands the reader a file where the reasoning is not. `schema-skew.md`'s
+link is the only thing in that file explaining why check 11 shells out to a different binary. This is
+the second unit this leg to turn on the same gap in the same checker — `api/048` fixed a dangling
+`[decision 47](surface.md)` in `decisions/study-events.md` — and `outpost/004`, in flight as I write
+this, is twenty-two more of the same family. **Three units in one leg against one blind spot in one
+script is the shape that says the script should be fixed rather than the citations chased.** I have
+not filed that, because `scripts/` is the owner's and a task telling him to change a gate check is
+his call to make, not mine to queue.
+
+**Merged:** `agent/umbrella/042-schema-skew-path` (code **none — docs-only, the `embarch-umbrella`
+code repo has zero diff and there is no code commit to revert**; doc `640012c`). The doc branch was
+rebased onto `main` past `api/048`'s fold before merging, so its pre-rebase tip `2030a07` is not a
+revert handle; ownership was re-checked after the rebase. Gate re-run by me on the merge result:
+`python3 scripts/check-docs.py` **all 10 green**, `check-ownership.py --scope umbrella` green,
+3 paths, base `893a62977f05`. No `cargo` gate owed and none run — there is no code change to compile,
+and the worker said so rather than manufacturing one. No native Windows build owed.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — a documentation citation, no board, no build. Carried
+forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still
+outstanding, and is also what would deploy `core/020`'s rename; `umbrella/037`'s corrected check 13
+has never met the bench that found its defects and needs only the dev-bench board. The bench queue is
+still parked by the owner's own commit.
+**Budget:** `PROCEED`. At this unit's fold: 5-hour **14.7%** against a 90% cap resetting in 3h56m,
+weekly **85.4%** against a 90% cap resetting in 12h56m, suggested wave **3**, **run at 2**. The
+weekly has moved 1.3 points across this leg's three folded units.
+**Least sure about:** **whether I should have filed the `check-decision-refs.py` gap rather than only
+writing it down here.** Three units in one leg hit the same blind spot, which by `.claude/leg.md`'s
+own standard — the same failure blocking two units — is loud enough to say loudly. My reason for not
+queuing it is that the fix lives in `scripts/`, which §2 reserves to the owner, and a task file
+telling him what to change in his own gate is a supervisor reaching for the rules by a longer route.
+**But there is a real difference between editing a reserved file and reporting a defect in one**, and
+I may have collapsed the two. If the next leg thinks a `tasks/doc/` entry describing the gap (without
+prescribing the fix) is legitimate, it should file one and say I was over-cautious.
+
+---
+
 ## 2026-09-08 18:01 — api/048 three consecutive reviewers have now caught what I did not, and this one was in a hunk I read line by line
 
 **Decided:** four. **(1) I directed the worker to one of the task's two arms and told it why, in
