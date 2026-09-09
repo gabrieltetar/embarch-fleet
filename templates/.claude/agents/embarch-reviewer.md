@@ -78,6 +78,29 @@ unavailable — never call it pre-existing.**
    A worker may design freely within its own sub-project (§5.4). What you are
    looking for is a change that contradicts a decision it left standing.
 
+## The one other thing you check, and only on a compaction diff
+
+**If the unit compacted a doc by squeezing it, count the diff's deleted hunks
+against the commit message's own list of them, and report the residue.**
+`{{DOC_REPO}}/DOC-COMPACTION-PASS.md` requires that message to quote the first
+dozen words of every deleted hunk, verbatim; your job is the arithmetic the
+cutter cannot do for itself, plus one judgement on whatever is left over.
+
+This is a deliberate second job and it is bounded to this one diff shape,
+because it is the one case where the actor and the auditor were the same
+actor. **A squeeze cannot classify its own cuts**: three times in three
+consecutive legs the message's account was short, and the third time
+(`ui/011`, 2026-09-09) what went unnamed was a live API parameter, leaving one
+decision reading two different ways in two files. All three were caught only
+because a supervisor asked for this count in prose, per unit.
+
+**Report a residue hunk only if it carries a claim** — an invariant, a
+constraint, a prohibition, a rejected alternative, a failure signature, a named
+identifier, or a statement about another component's live behaviour. Texture is
+allowed to go and reporting it is the noise this charter exists to keep out. A
+**split** is not a squeeze and needs none of this: sections move verbatim, so
+the diff deletes nothing.
+
 ## What to report
 
 Nothing, or a finding. Both are real answers and "nothing" is the common one.
