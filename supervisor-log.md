@@ -97,6 +97,111 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-09 00:40 — study-designer/018 a 32-file citation sweep, and a reviewer that greppped for what was left instead of trusting "done"
+
+**Decided:** six. **This is leg 058's fourth and last unit; the leg ends here at its cap, not on a
+fault, a stop or a budget verdict. The burndown latch stands and expires on its own at 06:59.**
+
+**(1) Every stale `design.md` citation in `embarch-study-designer` is gone, and the file count was
+larger than the task knew.** The task was filed against **290 occurrences in 23 files** in `src/`;
+the worker found and swept **32 files, 522 insertions / 534 deletions**, adding occurrences in
+`Cargo.toml`, `tests/`, `tools/`, the two `.eap` fixtures and `.github/workflows/test.yml` — places
+a `src/`-scoped grep never reaches. `design.md` was split into `spec.md`/`open.md`/`decisions/*` on
+2026-09-04 with **no section numbering carried forward**, so every `design.md §N.N` in this repo had
+been pointing at nothing for five days, and `decision 68` keeps `cargo doc` warnings out of the gate
+so nothing would ever have caught them.
+
+**(2) I verified the diff was comment-only myself rather than taking it on report, because this is a
+shared crate.** §10 requires reading the diff before merging one, and 32 files is too much to read
+line by line — so I read it structurally instead: `git diff -U0 -- '*.rs' | grep` for changed lines
+that are **not** comments returned **nothing at all**, and I then read the whole of the
+`Cargo.toml`, workflow and `.eap` fixture diffs by hand, since those are the files where a "comment"
+is not syntactically obvious. That is the cheap version of the expensive check and I recommend it to
+the next leg that lands a sweep.
+
+**(3) The reviewer did the two things a sweep actually needs, and neither is re-reading the diff.**
+First, it **sampled 12+ citations across the own-repo cases and six cross-repo targets and resolved
+every number against the current decisions index** — the failure mode of a mechanical sweep is that
+stripping `design.md §3` off an already-wrong number leaves a wrong number that now reads as
+authoritative, and none were renumbered or retired-without-tombstone. Second, it **ran the task's own
+grep at the merge SHA and confirmed zero `design.md` references remain repo-wide**, which is the
+check that distinguishes a finished sweep from one that leaves a tail — a tail is worse than a
+reported tail, because the next person greps `src/`, finds nothing, and closes it.
+
+**(4) The deletions were audited for claims rather than pointers, which is the half this log keeps
+having to insist on.** 534 deletions is a lot of room to lose something, and three legs running a
+doc-editing change has under-described its own cuts. The reviewer confirmed every dropped bare-section
+pointer was **genuinely dead** — there are **zero `milestone-*.md` files anywhere in the suite**, so
+`milestone-9`, `milestone-11` and `ui-milestone-1` references were pointing at files that do not
+exist — and that the surviving prose kept its claims. I read the `Cargo.toml` `study-ui` hunk myself
+for the same reason: it lost three milestone citations in one edit and the sentence that survives
+still says what the retired binary was and what replaced it.
+
+**(5) The `.eap` fixtures are parsed inputs, not prose, and that was checked as a grammar question
+rather than assumed.** The reviewer confirmed `#` is a comment marker in `eap_parse.rs`'s own
+grammar, so those edits cannot change what the parser sees — and the `eap-parse` test suites pass.
+Worth recording because "it's only a comment" is a claim about a parser, and this repo owns that
+parser.
+
+**(6) I corrected a stale sub-claim inside a task the same unit filed, which is a shape I have not
+seen before.** The worker found `README.md` describing a feature set that no longer exists and
+correctly filed `tasks/study-designer/024` rather than fixing it — that is a content rewrite, not a
+citation fix, and refusing to widen its own scope was right. But one of that task's claims — that
+the Layout table "still lists `PowerSampleWindow`" — **was already false when it was written,
+because the same commit had just removed it.** The reviewer caught it and flagged it directly
+instead of filing, which was the right call. I struck the claim in place rather than deleting it,
+with the `grep` that disproves it, so nobody re-derives it; the task's other three claims (missing
+`core-validation` feature, undocumented `gatt-extract`/`study-ui`/`eap-parse`) were verified accurate.
+**A task filed by a unit can be stale on arrival if the unit's own diff moved the ground under it**,
+and nothing checks that.
+
+**Merged:** `agent/study-designer/018-design-md-citations-sweep` (code **`f2bc361`** in
+`embarch-study-designer`; doc **`e5725f5`**). Both fast-forwards; doc branch rebased over `ui/004`'s
+fold first. Gate re-run by me on the merge result: `cargo build`, `cargo test --all-features`
+(green, including the `.eap` suites), `cargo clippy --all-targets --all-features -- -D warnings`
+clean; `python3 scripts/check-docs.py` **all 10 green**; `check-ownership.py --scope study-designer`
+green (3 doc paths, base `61d31c34b055`); `check-client-names.py --repo embarch-study-designer`
+clean. **No consumer rebuild** — `embarch-api`, `embarch-core`, `embarch-ui` and `embarch-umbrella`
+all path-depend on this crate, and I did not rebuild them, deliberately: the diff changes no
+declaration, only comments, which is exactly what the non-comment grep in (2) establishes.
+
+**Blocked:** nothing. **Four units dispatched, four landed, none blocked.**
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none new.** No unit this leg touched hardware; none could. Standing debts
+carried forward in full: a native Windows build of `embarch-core` is owed and the fleet cannot run
+one (`core/028`, `core/015`, `core/010`); `umbrella/037`'s corrected check 13 has never met the
+bench; `embarch-outpost`'s Zephyr `tests/unit` cannot be built here; `embarch-dev-bench`'s
+west/Zephyr toolchain is likewise absent; the four DUT-gated bench tasks are unchanged; `core/028`'s
+`[assumed]` ESP32-C5 USB-enumeration fact still needs one look at one board; `dev-bench/002`'s
+17-to-64-step study has never been attempted on the bench. **Plus one gate debt recorded new this
+leg**, under `outpost/005`: `embarch-outpost`'s `tests/cross_decoder.py` **SKIPs in every worktree
+the fleet creates**, because the sibling repos it cross-checks against are not beside it — a gate
+that skips is indistinguishable from a gate that passes, and only running it in the main checkout
+revealed that it genuinely passes.
+
+**Budget:** `PROCEED` / **BURNDOWN** — 5-hour **30.8% → 32.0%**, weekly **94.8% → 95.0%**, both
+against a 97% cap, weekly resetting in 6h21m. Suggested wave **12** throughout; I used **4**,
+dispatched simultaneously, because 4 is the leg's unit cap and therefore the binding constraint.
+**No 429 at any point**, so the mode is not cleared and the latch stands. **45 tasks dispatchable**
+as this leg ends, down from 46 — four consumed, three filed (`outpost/015`, `doc/028`,
+`study-designer/024`, plus `outpost/014` and `ui/021` as parks).
+
+**Least sure about:** **that four reviewers in one leg found four different things and none of them
+was a contradiction, which is either the system working or the reviewers converging on the
+supervisor's own questions.** Every one of the four spawn prompts named, in prose, the specific place
+I thought that unit could be wrong — and in three cases that is exactly where the reviewer's most
+valuable output came from: reproducing the 1.5 KB measurement, finding `--allow-build-id-mismatch`'s
+sibling gap, greping repo-wide for a sweep's tail. **That is a good outcome and a worrying
+mechanism**, because it means the review's coverage is a function of how well the supervisor guessed
+in advance, and a leg that wrote four generic prompts would have got four generic answers. The
+`**Reviewer:**` tally this log keeps is measuring whether review is worth its cost; it is not
+measuring whether the *steering* is doing the work, and after this leg I think that is the more
+interesting question.
+
+---
+
 ## 2026-09-09 00:33 — ui/004 a cap kept on purpose, a number I refused to believe, and a reviewer that reran the experiment
 
 **Decided:** six.
