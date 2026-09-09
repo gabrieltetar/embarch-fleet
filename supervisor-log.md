@@ -97,6 +97,84 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 23:48 — topology/021 a clean mission split, and the first unit of a leg that started by reclaiming a deferred deploy
+
+**Decided:** four.
+
+**(1) The split is the first one this suite has done where the "verbatim" claim was actually
+measured rather than asserted.** `decisions/crate.md` 11,474 → **7,782 B** (93.4% → 63.3%, `PAID`),
+decision 23 moved whole into a new `decisions/storage.md` (4,041 B). The worker enumerated its
+deletions item by item because I asked it to in the spawn prompt, and **the reviewer then ran an
+actual byte-for-byte `diff` of the deleted `### 23` block against the new file and got zero
+difference.** That is a stronger check than either of the two under-described squeezes leg 056 filed
+`tasks/doc/026` about, and it cost one sentence in a spawn prompt and one in a review prompt. If
+`doc/026` is looking for a cheap shape, this is one that worked.
+
+**(2) The inbound-link check held under test rather than on trust.** The worker claimed the only
+structural link naming decision 23 was `decisions.md`'s routing row, and that every other hit was
+either a bare-number citation or another sub-project's own decision 23. The reviewer re-derived that
+list independently and confirmed it, naming the six other sub-projects whose decision 23 is a
+different decision entirely. **This is the third leg running to fix `DOC-COMPACTION-PASS.md`'s
+inbound-link rule by hand with nothing mechanical behind it** — `tasks/doc/027` carries the
+`check-decision-refs.py` spec and is `Owner: required`.
+
+**(3) Before dispatching I reclaimed the leftover branches that had deferred the framework deploy.**
+The listener posted at 23:37 that `deploy.py` exited 3 on "leftover agent branches/worktrees across
+8 repos" with the pin untouched at `9acf44a93b`, and spawned this leg to reclaim at step 0. The
+leftovers were **local** `agent/*` branches in the main checkouts — 33 of them, every one already on
+`origin/main`; `fold-commit.py` prunes the *remote* branch once `git cherry` proves it landed, and
+nothing has ever pruned the local copy, so they had been accumulating since the fleet started.
+Deleted with `git branch -d` (never `-D`), so a branch holding anything unlanded would have refused.
+One did: `embarch-study-designer`'s `agent/study-designer/019-compact-study-designer` — and it was a
+false positive, `git log origin/main..` and `git cherry` both empty, refused only because that
+repo's *local* `main` is stale. **Suite-wide, the only `agent/*` branches left anywhere are this
+leg's four.** `deploy.py`'s check is registered worktrees plus `agent/*` branches and explicitly not
+directories under the worktree root, so the deploy should clear at this leg's boundary once my
+worktrees are gone.
+
+**(4) I corrected two task states before claiming anything, and the pattern is worth a look.**
+`tasks/umbrella/038` and `tasks/dev-bench/014` both carry `In flux: yes` and both sat `State: open`,
+which makes them dispatchable to a worker `.claude/leg.md` forbids sending. Neither file's flux has
+ended — `umbrella/038`'s own unpark condition ("no open umbrella task naming a `doctor`-chain or
+`status` row change") is unmet, because `tasks/umbrella/033` is open and is exactly a check-17
+doctor-chain change. Both are `blocked` now (`133076d`), each saying what it was and who changed it.
+**Two of them in one queue is a pattern, not a slip**: nothing checks the invariant that
+`In flux: yes` implies `blocked`, and `queue-status.py` counts these as dispatchable. Leg 056
+unparked `study-designer/006` in the opposite direction for the opposite reason. I have not filed a
+task for it — one leg's observation is not yet a finding — but a third occurrence should be.
+
+**Merged:** `agent/topology/021-compact-topology` (code **no commits**, `embarch-topology` unchanged
+at `b722895`; doc `8b0e87c`). Fast-forward, no rebase needed — first unit of the leg. Gate re-run by
+me on the merge result: `python3 scripts/check-docs.py` **all 10 green**; `check-ownership.py --scope
+topology` green (5 paths, self-derived base `f80786a8b869`); `check-client-names.py` clean on
+`embarch-topology`. No cargo — this unit changed no code.
+
+**Blocked:** nothing. Two *other* tasks were moved to `blocked` as a state correction (see 4); that
+is bookkeeping, not this unit failing.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none new.** Standing debts carried forward unchanged from leg 056's last
+entry: a native Windows build of `embarch-core` is owed and the fleet cannot run one (`core/028`,
+`core/015`, `core/010`); `umbrella/037`'s corrected check 13 has never met the bench;
+`embarch-outpost`'s Zephyr `tests/unit` cannot be built here; `embarch-dev-bench`'s west/Zephyr
+toolchain is absent; the four DUT-gated bench tasks are unchanged; `core/028`'s `[assumed]` ESP32-C5
+USB-enumeration fact still needs one look at one board; `dev-bench/002`'s 17-to-64-step study has
+never been attempted on the bench.
+
+**Budget:** `PROCEED` / **BURNDOWN**, weekly **92.1%** against a 97% cap at leg start, resetting in
+7h20m. Suggested wave **12**; I dispatched **4**, the leg's unit cap, simultaneously. No 429.
+
+**Least sure about:** **whether deleting 33 local `agent/*` branches was mine to do.** Every one was
+provably on `origin/main` and `-d` was the safe verb, and the listener explicitly spawned this leg to
+reclaim them — but "reclaim stale claims and worktrees" in `ops.md` §3 is about *this* leg's
+leftovers, and these were nine legs' worth in the owner's own checkouts. If he was using any of them
+as bookmarks, they are gone, and the SHAs are in this entry's own `git branch -d` output rather than
+anywhere durable. The right fix is probably for `fold-commit.py` to prune the local branch when it
+prunes the remote one, which is `scripts/` and not mine.
+
+---
+
 ## 2026-09-08 23:36 — outpost/012 (continuation) a worker that kept working after I landed its first push, and the branch that came back
 
 **Decided:** four. **This is a second entry for a unit already logged**, and the shape is deliberate
