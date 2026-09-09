@@ -97,6 +97,91 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 23:25 — study-designer/019 the second squeeze in one leg to under-describe its own cuts, and the park it had to work around
+
+**Decided:** five. **This unit is where a note became a finding.**
+
+**(1) The "no seam" claim was the first thing tested, and it held.** `decisions/registry.md` is four
+decisions — 35, 66, 67, 69 — and the reviewer's reading is that they are one mission built
+incrementally: 66 finds a hole in 35, 67 finds a hole in 66, 69 finds a hole in 67's neighbouring
+function, all on the same `validate` / `study-actions.toml` surface. There is no split point the
+worker missed. **This is the case `DOC-BUDGET.md`'s split-first rule exists to identify, not to
+forbid**, and it is now the second unit in two legs to reach it honestly. 11,827 → **10,074 B**, out
+of reserve, with every `Must not delete:` item surviving and still checkable — the reviewer confirmed
+each of the four individually rather than judging the pass.
+
+**(2) I said in the previous entry that a second occurrence would change my answer, and this is the
+second occurrence, so I changed it.** `topology/017` cut two sentences and a caveat beyond the four
+categories its commit message named. This unit cut two things beyond the three its message named:
+decision 35's *"presenting that inference as fact is worse than not answering at all"* — a **ranking**
+claim, not a restatement of the durable principle kept above it — and, in decision 66, the concrete
+rendered string `"study has 513 steps, but the limit is 512"` together with *"They are the same kind
+of thing to the type system and not to the reader, and the reader is who an error message is for"*,
+which is a design maxim. Neither breaks a constraint; every bound and every test that asserts one is
+still stated. **The defect is not what was lost, it is that both were caught by luck.** Both reviewers
+enumerated the diff's deletions and counted them against the pass's own description only because I
+asked them to, per unit, in prose. A reviewer on the ordinary charter reads for contradiction and
+passes both.
+
+**(3) So it is filed, with the three ways it could be closed and no preference smuggled in.**
+`tasks/doc/026-a-squeeze-describes-its-cuts-by-category-and-the-categories-are-never-complete.md`,
+`Owner: required` — the rule lives in `DOC-COMPACTION.md`/`DOC-COMPACTION-PASS.md` and possibly the
+reviewer template, all reserved. The three shapes: enumerate every deletion rather than name
+categories; put the count in the reviewer charter so it does not depend on a supervisor remembering;
+or decide deliberately that texture may go and only invariants matter — **and if it is the third, say
+so in the pass doc, because that doc currently reads as though the description is the audit trail.**
+Burndown is the mode explicitly optimising for volume and the squeeze is the faster shape, which is
+why two in one leg is worth the task rather than a third note.
+
+**(4) The unit spent `spec.md`'s reserve, and it was right to.** `spec.md` did not mention the
+registry at all, so `DOC-COMPACTION-PASS.md`'s human question was genuinely **no** before this pass.
+The worker added two sentences — the registry named in the `study-ui` feature row, and a paragraph
+under §3 saying what `ActionRegistry`/`StructRegistry` are and where the file lives — taking
+`spec.md` 9,136 → 9,600 B (93.8%). The reviewer checked every claim in that prose against
+`src/registry.rs` and `Cargo.toml`: the path, the sibling relationship to `embarch.toml`, the
+`std`-only and behind-`study-ui` and never-linked-into-dev-bench claims all hold, and it is a pointer
+rather than a design choice — no numbered decision smuggled in as description, which burndown
+forbids.
+
+**(5) I unparked `tasks/study-designer/006`, and that is a state correction rather than a judgement
+that its flux ended.** That task was `blocked` on `In flux: yes`, and its own body says the flux is
+about `crate.md`'s FFI-shape content — `crate.md` is struck off its `Compacts:` line, having been
+paid. The two items left, `spec.md` and `open.md`, were added by the 2026-09-07 reserve-floor change
+and were never covered by the park. **A `blocked` state that outlives the thing it was blocked on is
+a park that absorbs work**: this unit had to write a dated note into a task it could not act on
+instead of compacting the file it had just pushed to 93.8%, which is exactly the shape `.claude/leg.md`
+warns about. It is `open` now, and `spec.md` at 93.8% and `open.md` at 91.1% are dispatchable work for
+a later leg.
+
+**Merged:** `agent/study-designer/019-compact-study-designer` (code **no commits**,
+`embarch-study-designer` unchanged; doc `f6c307b`). Doc branch rebased over `topology/017`'s fold,
+then a fast-forward. Gate re-run by me on the merge result: `python3 scripts/check-docs.py` **all 10
+green**; `check-client-names.py` clean on `embarch-study-designer`; `check-ownership.py` green on the
+doc branch (5 paths, self-derived base `9e70e5bea0b3`). `embarch-study-designer` is a **shared
+crate** — four repos path-depend on it — so its diff is one I read rather than merge on green; it is
+doc-only and touches no crate source.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+It tested the "no seam" claim against the four decisions rather than accepting it, confirmed each
+`Must not delete:` item individually, enumerated the cuts the commit message did not describe, and
+verified the new `spec.md` prose line by line against `src/registry.rs` and `Cargo.toml` — reading
+everything from the leg and code worktrees at SHA rather than the owner's checkout.
+
+**Hardware debts:** **none new.** A doc compaction touches no hardware. Standing debts carry forward
+unchanged from the entries below.
+
+**Budget:** `PROCEED` / **BURNDOWN** throughout, weekly against a 97% cap. One unit left in this leg;
+closing numbers are in the last entry.
+
+**Least sure about:** **whether filing `doc/026` is the right weight for something that has lost
+nothing.** Both passes are defensible and a reader of either file today is not missing a constraint.
+The argument for the task is that the *audit* is what failed, twice, and an audit nobody can check is
+the failure mode this whole log exists to avoid — but a fleet that files a protocol task every time a
+commit message is imprecise will bury the owner, and he has exactly one pair of hands for reserved
+paths.
+
 ## 2026-09-08 23:18 — topology/017 a spec squeeze whose deleted categories were named short, and a reviewer that counted them
 
 **Decided:** four.
