@@ -97,6 +97,79 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-09 01:34 — outpost/003 a two-pass decode, and a "silently skipping" test that was not
+
+**Decided:** four.
+
+**(1) `manifest_refused` and named output are now mutually exclusive over the whole capture.**
+`scripts/decode_outpost.py`'s `main()` decoded in one pass, so any records frame arriving *before*
+the first header frame was rendered against the manifest as it stood at that instant — i.e. against
+a manifest that a header a few frames later might reveal as mismatched. Those rows kept their names
+while the run reported `manifest_refused: true`. That is exactly the mid-stream-attach case
+`interfaces/wire.md` §37 says the repeating header exists for, and `spec.md`'s "a mismatched
+manifest refuses to render the names" was leaking in it. Now two passes over the
+already-in-memory stream: pass one resolves the first header and any build-ID mismatch, pass two
+renders every row — pre-header ones included — against that settled state, which also gives those
+rows a correct `us` since `cycles_per_sec` is known before anything renders.
+
+**(2) The reviewer confirmed the arithmetic instead of the outcome, which is the point of asking.**
+I flagged the new test's `us == "1000.000"` as possibly a number copied from a passing run. It is
+not: `render()` computes `absolute * 1_000_000 / cycles_per_sec`, the synthesized frame stamps
+`1000` cycles and the header sets `cycles_per_sec = 1_000_000`, so `1000.000` is derived
+independently of the code under test. It also verified pass one's `break` reproduces the old
+`if header is None` guard exactly (later header frames were inert before and are inert now),
+that `--allow-build-id-mismatch` is copied verbatim, and that `unwrap_state` continuity is
+unchanged because it was always one ordered loop.
+
+**(3) It also corrected me, and the correction is the useful half.** I had written that the
+"no header frame" error *moved earlier* — from after rendering to before it — and asked whether any
+caller depended on the old ordering. The reviewer diffed against `a34a346^` and showed the premise
+was wrong: the old `return 2` already sat after the row loop but **before** the `json.dump`/`print`
+block, so no caller ever saw output ahead of it in either version. What moved is in-memory row
+construction, not anything observable. **The commit message's framing is therefore slightly
+misleading and is not worth a rewrite; this entry is the correction.**
+
+**(4) `tests/cross_decoder.py` is not the dead test this fleet has recorded it as — it is
+worktree-specific, and I have now measured that.** `outpost/005`'s standing debt says it "skips
+silently in every fleet worktree", and this worker duly reported it skipping. **Run from the main
+checkout it PASSES, on 831 rows of 41 frames**, cross-checking the Python decoder against the Rust
+one — including over this change. So the debt is real but narrower than written: the skip is
+missing sibling fixtures in a worktree, not a broken test, and **a leg that only ever runs it in a
+worktree will never know whether it agrees.** I ran it in the main checkout on the merge result on
+purpose. The correct standing form of this debt is "cross_decoder.py cannot run in a fleet
+worktree", and someone should either make the fixtures reachable or make the skip loud.
+
+**Merged:** `agent/outpost/003-two-pass-decode` (code **`a34a346`** in `embarch-outpost`, doc
+**`86a7a50`**, fold **this commit**). Its doc branch needed a rebase onto `main` after
+`umbrella/035`'s fold; done with `--force-with-lease`, no conflict. Gate re-run by me on the merge
+result: `tests/decoder_unit.py` **31 passed**, and I confirmed the two new
+`TestPreHeaderRowsUnderARefusedManifest` cases **actually executed by name** under `-v` rather than
+trusting a green summary; `tests/vocab_check.py` PASS (11 kinds, 8 flag bits agree across
+`outpost_priv.h`, `decode_outpost.py` and `outpost.rs`); `tests/cross_decoder.py` **PASS**, see (4);
+`python3 scripts/check-docs.py` **all 10 green**; `check-client-names.py --repo embarch-outpost`
+clean; `check-ownership.py --scope outpost` green on both branches pre-merge, 3 doc paths and 2 code
+paths. **No cargo gate** — this repo has no crate. `tests/native_sim_stream/assert_stream.py` was
+**not run** (needs `west`/`ZEPHYR_BASE`, unbuildable here); it exercises `render()`, which this
+change does not touch, so the risk is low but the verification is genuinely absent.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none new.** Carried forward and unchanged: `embarch-outpost`'s Zephyr
+`tests/unit` and `tests/native_sim_stream` are unbuildable in this fleet, so `assert_stream.py` has
+not been run against this change. The `outpost/005` debt should be **re-worded** per (4) rather than
+carried as written — it is a worktree limitation, not a silent test.
+
+**Budget:** `PROCEED` / **BURNDOWN** at dispatch; **`HOLD` by the time this unit landed** — weekly
+**97.1%** against the 97% cap, 5-hour 42.7%, weekly resetting **06:59**. See the `core/009` entry
+for how I read that. Wave suggested 12, used 4.
+
+**Least sure about:** **that the two-pass decode doubles the decode work on every capture and
+nobody has measured what that costs on a large one.** The stream is already in memory so no I/O
+repeats, but `decode_stream` is re-run in full; on the biggest traces this suite produces that is a
+real second pass over hundreds of thousands of rows, and neither the worker nor I timed it.
+
 ## 2026-09-09 01:29 — umbrella/035 a boundary claim fixed in one half, and the reviewer found the other half
 
 **Decided:** five.
