@@ -97,6 +97,82 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 20:21 — core/029 a decisions file split along its own seam, not the one the task proposed
+
+**Decided:** four.
+
+**(1) The worker rejected the task file's proposed seam and took the file's real one, and it was
+right to.** `tasks/core/029` suggested cutting "what this process is built out of" from "what checks
+that the docs match the router" — a candidate, and the task said so. The worker read the index first
+and cut along the section boundaries the file already had: `platform.md` keeps decisions 1, 2, 3, 4,
+7, 14, 15, 17 (5,820 B) and the new `embarch-core/decisions/auth.md` takes 5, 6, 11, 42, 46
+(6,627 B). Both are out of reserve. `decisions.md` carries two index rows where it carried one.
+
+**(2) Verbatim was verified rather than asserted, on both sides.** The worker checked every moved
+decision byte-identical to its pre-split text, and I asked the reviewer to re-derive that
+independently rather than read the claim; it did, and confirmed it, along with all three
+`Must not delete:` passages surviving unshortened — decision 1/2/7/17's **Corrected 2026-09-08**
+paragraph *and the measurement behind it*, decision 3's Windows SCM 30-second handshake detail and
+the foreground-fallback reason, and decision 46's **rejected** relative-`include_str!` arm. That
+last one is the entry `suite/021` filed this debt over one leg ago, on the argument that a decision
+reduced to its conclusion stops being able to catch anything; it survived the compaction it caused.
+
+**(3) I dispatched this doc-only with no code worktree.** That is now the fourth consecutive leg to
+make that call and the cheapest instance of it: the file being compacted lives in `embarch-doc`, so
+an `embarch-core` worktree could only have produced an empty branch. The worker was told to stop
+rather than edit source if it concluded otherwise; it did not need to.
+
+**(4) The one thing the split broke, I fixed in this fold rather than filing.** The reviewer's
+finding is not a contradiction in the diff — it is a side effect: `history/core.md` line 18 cited
+decision 42 by linking `decisions/platform.md` directly, and 42 moved to `auth.md`. **The link still
+resolves, so no gate can see it**, which is precisely the failure `DOC-CONVENTIONS.md` already names
+when it says `history/` entries should link the index and not a topic file. Repointed to
+`../embarch-core/decisions.md`. I checked the drop's other two flagged lines myself and **both are
+fine**: line 33's decision 14 is still in `platform.md`, and line 13 is this unit's own
+narrates-a-move changelog entry, which the convention explicitly permits. The drop
+`inbox/doc-history-core-decision-42-link-stale-after-029-split.md` is deleted because the thing it
+reports is fixed here; naming it is the record, since it no longer exists to be read.
+
+**Merged:** `agent/core/029-compact-core-platform` (code **none** — the unit was dispatched doc-only
+and had no code branch, doc `5c55b4b`), plus this fold's own one-line edit to `history/core.md` per
+(4). Gate re-run by me on the merge result, not on the branch: `python3 scripts/check-docs.py`
+**all 10 green**, including `check-doc-size.py` and the link checker, and re-run after my own edit.
+`check-ownership.py --scope core` green on the branch, 5 paths, self-derived base `608c7223f81b`.
+No `cargo` half exists for this unit — nothing outside `embarch-doc` changed.
+
+**Blocked:** nothing.
+
+**Reviewer:** 1 finding — inbox/doc-history-core-decision-42-link-stale-after-029-split.md
+Fixed and consumed in this fold; see (4). It also independently re-derived the byte-identity claim
+and cleared the three protected passages, and judged the new file's name (`auth.md` for a set that
+includes decision 46's documentation-surface item) a naming judgement call rather than a
+contradiction — which I agree with, and flag here as the thing most likely to send a future decision
+to the wrong file.
+
+**Hardware debts:** **none new, and none possible** — this unit changed documentation only and
+touched no code repo and no board. All prior debts carried forward unchanged: a native Windows build
+of `embarch-core` is owed and the fleet cannot run one (`core/028`, `core/015`, `core/010`);
+`umbrella/037`'s corrected check 13 has never met the bench that found its defects;
+`embarch-outpost`'s Zephyr `tests/unit` cannot be built here (no `west`, no `ZEPHYR_BASE`); the four
+DUT-gated bench tasks are unchanged; the bench queue is parked by the owner's own commit; and the
+ESP32-C5 USB-enumeration fact `core/028` tagged `[assumed]` still needs one look at one board.
+
+**Budget:** `PROCEED` at start, **`HOLD` at end** — 5-hour 42.7% → 44.0%, weekly **89.9% → 90.1%**
+against a 90% cap resetting in ~10h40m. Wave 1. **This leg ends here, after one unit, on the
+expected HOLD the previous leg predicted** — the weekly line crossed while this unit's worker was in
+flight. The pump latch is deliberately left in place: a HOLD is not a stop, and the listener will
+not respawn into one.
+
+**Least sure about:** **whether spending this leg's single unit on a scheduled size debt, rather
+than on one of the 62 dispatchable defect tasks, was right when the budget was 0.1% from closing.**
+The argument I used is that a doc-only compaction is the cheapest unit the queue can produce — no
+`cargo build`, no code worktree, no second branch — so it was the one most likely to *land* inside
+the remaining headroom rather than die half-merged at the cap. That reasoning is about landing
+probability, not value, and I want the next leg to notice I optimised for the former. Its debt was
+due 2026-09-22 and nothing was overdue, so nothing forced it.
+
+---
+
 ## 2026-09-08 20:08 — suite/021 a CI that was decided and never built, in the two repos nothing checks
 
 **Decided:** six. **This is a `suite`-scope unit, so there was no worker — the whole diff is mine**
