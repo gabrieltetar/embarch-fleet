@@ -97,6 +97,84 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 19:46 — study-designer/008 a feature withdrawn, and the tombstone checked for being a second fiction
+
+**Decided:** four.
+
+**(1) I dispatched this doc-only with no code worktree, which is now the third consecutive leg to
+make that call, and here the reason is stronger than convenience.** The finding *is* that no source
+implements the thing — standing up an `embarch-study-designer` worktree would have created a branch
+whose only possible correct diff is empty. The worker read the real crate read-only at
+`/home/gabriel/Github/embarch/embarch-study-designer` to verify the absence.
+
+**(2) The absence is verified, not assumed, and that was the instruction rather than the report.**
+`Study.gatt`, `DeclaredGatt` and `MAX_DECLARED_SERVICES` appear nowhere in `src/`, and
+`git log -S DeclaredGatt` returns nothing — **the type has never existed at any commit.** I told the
+worker in the dispatch that if the type turned out to exist, or to have existed and been removed,
+that changed the unit completely and it should stop rather than proceed. It did not, but the
+instruction is the difference between a documented fact and a task file taken on faith, which is
+exactly the failure `study-designer/023` fixed one leg ago at a level up.
+
+**(3) The worker found a fourth document nobody had counted, in a file it was not sent to.**
+The task named three — `interfaces/types.md`, `spec.md`, `interfaces/limits.md`. `limits.md` needed
+no edit (its row had already gone in an earlier task, which the worker established rather than
+assumed), and `decisions/seals.md` turned out to name `gatt` among the fields deliberately outside
+the study's integrity seals. **A decision about what a seal covers, listing a field that does not
+exist**, is a worse instance of the same defect than the interface tables were, because it reads as
+a design constraint rather than a schema row. Editing it is in scope — same sub-project — and I
+accepted it; I also put it to the reviewer as the change I had not asked for.
+
+**(4) The load-bearing question for a withdrawal unit is whether the tombstone is reversible, and I
+made the reviewer verify it rather than read it.** Decision 45 keeps its number and its full
+reasoning, now opened with **Designed, never built** and closed with what building it would take: a
+`DeclaredGatt` enum reusing `GattServiceInfo`/`GattCharacteristicInfo`, a `gatt: Option<DeclaredGatt>`
+field, and Core's reconciliation pass. **A tombstone whose build instructions cite types that are
+themselves phantom would have replaced one fiction with another** — the reviewer confirmed both
+types exist at `src/gatt.rs:24,31` and are documented under those exact names.
+
+**Merged:** `agent/study-designer/008-declaredgatt` (doc `ffed7ca`; **no code SHA — doc-only unit**).
+Gate re-run by me on the merge result, not on the branch: `python3 scripts/check-docs.py` **all 10
+green**; `check-ownership.py --scope study-designer` green on **all 8** changed paths. I also ran the
+tombstone grep myself on the merge result and confirmed every surviving mention of `DeclaredGatt`,
+`Study.gatt` and `MAX_DECLARED_SERVICES` under `embarch-doc/embarch-study-designer/` reads as
+tombstone prose. **No native Windows build owed** — `embarch-core` is untouched.
+
+**Blocked:** nothing. Task closed.
+
+**Reviewer:** no findings.
+It cleared the tombstone's own citations (above), confirmed the `seals.md` rewrite left decision 40's
+`requires` claim untouched and asserts nothing new about seal design, judged the `open.md` bullet a
+genuine deferral with a trigger rather than a to-do in disguise — matching the phrasing the file
+already uses for its `Study.protocols` bullet — and closed the one grep I had not run, `gatt:`, which
+returns exactly one hit and it is the tombstone's own sentence.
+
+**Doc-size state:** `embarch-study-designer/open.md` **4331 → 4662 B of 5120** (458 B left), still in
+reserve. Recorded in `tasks/study-designer/006`'s own text rather than filed as a new task, per
+`.claude/leg.md`; `006` stays `blocked` on `In flux: yes` and its `Must not delete:` list was not
+touched. `spec.md` shrank by one table row.
+
+**Hardware debts:** **none new, and none possible** — this unit removed descriptions of code that has
+never existed. All prior debts carried forward unchanged and none was touched: a native Windows build
+of `embarch-core` is owed and the fleet cannot run one (`core/015`, `core/010` behind it);
+`umbrella/037`'s corrected check 13 has never met the bench that found its defects;
+`embarch-outpost`'s Zephyr `tests/unit` cannot be built here (no `west`, no `ZEPHYR_BASE`); the bench
+queue is parked by the owner's own commit.
+
+**Budget:** `PROCEED` at both ends: 5-hour 36.2% → 38.4%, weekly **88.9% → 89.2%** against a 90% cap
+resetting in ~11h15m. Wave 1. **0.8% of weekly headroom left**, which is two or three units at this
+leg's measured rate — a HOLD is now the likely way this leg ends rather than the unit cap.
+**Least sure about:** **whether a decision recorded as designed-but-unbuilt is a durable state or a
+slow leak.** Decision 45 now sits in `decisions/declares.md` reading as a design the suite stands
+behind and has not built, with a trigger nobody is watching for. That is honest and it is what the
+task asked for. But the file's other decisions describe things that exist, and a reader who meets 45
+without reading its first line — which is exactly what a reader skimming for the design does — gets
+the original text unchanged. **I chose the status line at the top over moving the decision to a
+separate unbuilt-designs file**, on the grounds that the number must stay put and the reasoning is
+worth meeting where the neighbouring decisions are. I am not sure that is right, and if this suite
+accumulates a second and third of these the answer probably changes.
+
+---
+
 ## 2026-09-08 19:41 — umbrella/036 a mirror retired against a crate that already existed
 
 **Decided:** four.
