@@ -97,6 +97,70 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-09 15:48 — outpost/015 a decision authored on a number that was already taken, and the check that says it is enforced does not exist
+
+**Decided:** I renumbered this unit's new decision from **23 to 24** in the fold, and that is the
+whole story of this entry. The worker authored a genuinely good decision — the two `--allow-*` flags
+are one operator-override posture rather than two accidents, opt-in per invocation, never a config
+default, with the "rejected: fold it into the file format" arm that makes it a decision rather than a
+note — and numbered it 23. **`embarch-outpost` decision 23 already existed**, in `decisions/wire.md`
+(`outpost_priv.h` is the definition, the other three copies are diffed against it). Renumbering to
+24 was trivial and in scope, so I did it rather than blocking: `decisions.md`'s index,
+`decisions/manifest.md`'s heading and its lead-in line, `decisions/clocks.md`'s cross-reference,
+both `spec.md` citations, and the `changelog.d/` fragment. `wire.md` keeps 23. Verified no duplicate
+`^### N` remains anywhere in `embarch-outpost/decisions/`, and the reviewer independently confirmed
+the renumber is complete and no stray `decision 23` points at the new content.
+
+**What is worth the next leg's attention is not the collision, it is that nothing caught it.**
+`check-docs.py` passed 11/11 on the worker's branch, `check-decision-refs.py` included, and the
+worker's report of green was accurate. That script resolves a *citation* — "does decision N exist in
+this sub-project" — a predicate two definitions of N satisfy **more** easily, not less. Meanwhile
+every sub-project's `decisions.md` opens by asserting the rule in bold and naming that script as its
+enforcement: *"Numbers are permanent identifiers, unique to this sub-project, never renumbered or
+reused. `scripts/check-decision-refs.py` resolves every one."* The first sentence is a rule and the
+second makes it look enforced; it is not. This was caught only because leg.md requires a supervisor
+to read a diff by hand when a unit authors a decision, which is a rule about attention, not a check.
+Filed as `inbox/doc-nothing-checks-that-a-decision-number-is-unique.md`. `scripts/` is
+owner-reserved, correctly, so this is a finding and not a fix.
+
+**I then swept all nine sub-projects for the same collision, and the one other hit is not a defect —
+which is the part that changes the check's shape.** `embarch-ui` defines `### 10` three times
+(`topology-tab.md`, `trace-view.md`, `trace-chart.md`), deliberately: one decision whose mission
+split put its three halves in three topic files, with `decisions.md` disambiguating them as
+`10 (routing)`, `10 (trace)`, `10 (chart)`. A naive `grep '^### N'` uniqueness check would fail that
+legitimately. **The discriminator is the index, not the headings** — a bare number on two rows is a
+collision, the same number on several qualified rows is a split — so the check belongs on
+`decisions.md`'s table, which also means no hand-maintained `embarch-ui` allowlist. The drop says
+all of this so nobody re-derives it. The split convention itself is written nowhere and probably
+belongs in `DOC-CONVENTIONS.md`; that is the owner's file and I did not touch it.
+**Merged:** `agent/outpost/015-override-flag-decision` (code **none** — docs-only by design, the
+task forbade a code change and the worker's code branch carries zero commits; doc `8ce2126`).
+Ownership check base `a9e5b742c4ce`. The doc branch's pre-rebase tip `f88262a` is not a revert
+handle — it was rebased onto `study-designer/025`'s fold before merging. **The revert handle for the
+work as it stands on `main` is this fold commit, not `8ce2126`**, because `8ce2126` carries the
+colliding 23 and the renumber lives only in the fold.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — a decision record, no board, no build, and the code
+repo has no diff at all. **One standing debt was correctly refused rather than papered over:**
+`embarch-outpost` is a Zephyr C module with no `Cargo.toml`, and its `tests/unit` ztest suite cannot
+be built here (no `west`, no `ZEPHYR_BASE`); the worker was told not to claim it green and did not.
+No leg can claim that suite green after any `embarch-outpost` change — it is owed in a session with
+the Zephyr toolchain. Carried forward unchanged: `core/015`'s native Windows build of `embarch-core`
+is the owner's and still outstanding, and is also what would deploy `core/020`'s
+`self_reported_hardware_id` rename; `umbrella/037`'s corrected check 13 has never met the bench that
+found its defects and needs only the dev-bench board. The bench queue is still parked by the owner's
+own commit; no bench unit was runnable this leg.
+**Budget:** PROCEED throughout, wave 6 suggested, 4 workers actually in flight against a cap of 4
+units — the unit cap bound this leg, not the budget, which is the first time that has been true
+since the week reset.
+**Least sure about:** whether decision 24's flat claim that the two flags "are the entire mechanism,
+and there is no third way to reach either bypass" stays true. The reviewer read
+`scripts/decode_outpost.py` and found no env var and no config key, so it is true today — but it is
+the kind of absolute that a later convenience flag falsifies quietly, and nothing checks it. That
+is a smaller version of the same defect as the missing uniqueness check: a claim asserted in a
+decision, enforced by nobody.
+
 ## 2026-09-09 15:45 — study-designer/025 a converse checked in the direction nobody checked
 
 **Decided:** nothing suite-wide. Two dispatch judgements, both recorded in task files before the
