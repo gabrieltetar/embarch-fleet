@@ -97,6 +97,80 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 23:14 — outpost/012 a compaction that split one file and squeezed the other, and paid only half its own task
+
+**Decided:** four. **This is leg 056's first unit.** Recovery first, because two things were left
+behind and one of them was a landed unit: `tasks/ui/019-compact-ui-trace-chart.md` still read
+`**State:** claimed` although `ui/019` landed at `412b541` last leg — the worker's own commit touched
+the file without closing it and the fold did not notice. With no supervisor alive every claim is
+stale, so I closed it. The `inbox/` drop leg 055 flagged is drained to
+`tasks/doc/025-worker-inbox-drops-land-in-a-deleted-worktree.md`, `Owner: required`: every path that
+closes it — the worker template in `embarch-fleet/scripts/install.py`, and `inbox/README.md` — is
+reserved, so it is filed visible rather than dispatchable. Both in commit `2abd45c`.
+
+**(1) The pass used both compaction shapes in one unit, and picked each on evidence rather than
+taste.** `decisions/module.md` had a real mission seam — decision 22 is the test harness's leg
+ordering and its skip/fail split, which is a different subject from decisions 1/14/21's module shape
+and boundary — so 22 moved byte-for-byte into a new `decisions/testing.md`. `open.md` has no seam,
+which `.claude/leg.md` and `DOC-BUDGET.md` both say is the case where deleting is legitimate, so four
+bullets were deleted and replaced with one-line citations. **8,192 → 3,632 B (44.3%) and 5,120 →
+3,606 B (70.4%)**, both out of reserve.
+
+**(2) Every deletion was judged separately, by the reviewer, against the paragraph said to settle
+it.** Not the pass as a whole — that is the discipline leg 055 established for a delete pass and it
+is the one that matters here, because four bullets went. The four homes are `decisions/manifest.md`
+decision 9 (the dirty-tree hole and the DUT staleness deferral), `decisions/tracing.md` decision 19
+(self-exclusion's uncovered interval and the whole-vector ISR limit), `decisions/naming.md` decision
+8 (the non-zero-offset thread miss), and `decisions/module.md` decision 1 (the portable-core
+deferral). The reviewer confirmed each match on content **and strength**, and confirmed decision 22's
+move is byte-identical.
+
+**(3) The split reached across the repo boundary and the code half is the part that could have been
+missed.** Every inbound reference to "module.md decision 22" was repointed: `decisions/wire.md` and
+`open.md` in the doc repo, and `README.md`, `tests/run-all.sh` and `tests/vocab_check.py` in
+`embarch-outpost`. That is the whole code diff — three files, six lines. A mission split that leaves a
+live path string behind is precisely `tasks/doc/022`'s open complaint, and this one did not.
+
+**(4) I left the task `open` rather than closing it, and that is the honest state.** Its `Compacts:`
+line names four files, not two. `spec.md` (1,053 B left) and `decisions/transport.md` (1,078 B left)
+are both still inside the `max(1200 B, 10%)` reserve floor and this unit did not touch either — they
+crossed on the 2026-09-07 rule change rather than on an edit. Closing the task would have retired a
+ledger entry nobody paid. The state line records which two items are paid and which two are not.
+
+**Merged:** `agent/outpost/012-compact-outpost` (code `2f6aba3`, doc `a620d08`). Both fast-forwards.
+Gate re-run by me on the merge result: `python3 scripts/check-docs.py` **all 10 green**;
+`check-client-names.py` clean on `embarch-outpost`; `check-ownership.py` green on both branches
+(doc 7 paths, code whole-tree, self-derived base `b7a88e4243e2`). **No firmware build or test was
+run** — `embarch-outpost` is a Zephyr tree with no `Cargo.toml`, and its `tests/unit` needs a `west`
+and a `ZEPHYR_BASE` this environment does not have. The worker ran the three host-Python legs
+(`decoder_unit.py`, `vocab_check.py`, `cross_decoder.py`) directly instead and said so rather than
+claiming a suite it could not run.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+It diffed the moved decision rather than trusting the "verbatim" claim, resolved each of the four
+deletions against the decision it cited, checked the `decisions.md` index and every inbound reference
+in both repos, and confirmed no new numbered decision was authored — burndown forbids one.
+
+**Hardware debts:** **none new.** Standing debts carry forward unchanged from the entries below: a
+native Windows build of `embarch-core` is owed and the fleet cannot run one; `umbrella/037`'s
+corrected check 13 has never met the bench; `embarch-outpost`'s Zephyr `tests/unit` cannot be built
+here, which this unit met again; `embarch-dev-bench`'s west/Zephyr toolchain is likewise absent; the
+four DUT-gated bench tasks are unchanged; `core/028`'s `[assumed]` ESP32-C5 USB-enumeration fact
+still needs one look at one board; `dev-bench/002`'s 17-to-64-step study has never been attempted.
+
+**Budget:** `PROCEED` / **BURNDOWN** at start — 5-hour 10.0%, weekly **90.7%** against a 97% cap,
+weekly resetting in 7h56m. Suggested wave **12**; I dispatched **4**, all at once, for the reason the
+last two legs measured. **No 429.** The latch stands.
+
+**Least sure about:** **whether leaving a compaction task `open` after paying half of it is the right
+shape, or whether it should have been closed and the two unpaid files refiled as a new task.** Open
+preserves the original `Source:` and the reserve-floor history, which is real context; but a task
+whose title names two files that are now fine reads, at a glance, like unfinished work on the wrong
+thing. The ledger is keyed on the `Compacts:` line rather than the title, so nothing mechanical is
+wrong — it is a legibility judgement and I made it once, here.
+
 ## 2026-09-08 23:00 — topology/014 an open-questions file where three of eleven questions had quietly become answers
 
 **Decided:** five. **This is leg 055's fourth and last unit; the leg ends here at its cap, not on a
