@@ -97,6 +97,110 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-09 01:12 — api/031 a squeeze that finally held, and a citation that was wrong rather than dead
+
+**Decided:** six. **This is leg 059's fourth and last unit; the leg ends here at its cap — not on a
+fault, a stop, or a budget verdict. The burndown latch stands and expires on its own at 06:59.**
+
+**(1) `config.example.toml` no longer teaches a retired field, and it now documents the five live
+ones it omitted.** `artifact_path_for_core` and its `\\wsl.localhost\…` UNC prose are gone — nothing
+in `src/` or `crates/` reads that key, and `spec.md` already said no UNC path is computed anywhere
+any more, so the example was teaching the opposite of the spec while `README.md` called it "the full
+configuration schema". `env`, `serial_port`, `serial_baud`, `probe_serial` and `version_command`
+appear as commented examples worded from `interfaces/config.md`, so the two agree.
+
+**(2) The squeeze held, and I want that on the record as loudly as the four failures.**
+`embarch-api/open.md` went **4,802 B → 3,782 B (73.9%, out of reserve)** — a squeeze, not a split,
+by a worker I had authorised to compact one file mid-unit because its own compaction task
+(`tasks/api/026`) is blocked on `In flux: yes` and nobody else could touch it. Given four recorded
+instances of a squeeze cutting something load-bearing while believing it was texture, I aimed the
+reviewer at exactly that and it came back clean: **no item on `026`'s `Must not delete:` list
+touched**, the cut "stale itemized compaction-debt ledger" **traced through `tasks/api/043`'s real
+history and confirmed genuinely redundant** with the filed `*-compact-api.md` files, and **no
+tightened bullet lost a caveat.** `026` was updated correctly — `open.md`'s item closed, `spec.md`
+and `decisions/core-link.md` still parked. So the mid-unit compaction exception in `.claude/leg.md`
+worked as designed for the first time I can point at.
+
+**(3) The finding is a new species and it is worse than the one we keep hunting.**
+`config.example.toml`'s new `probe_serial` comment cited *"design.md §3 decision 9"* for probe
+ambiguity, following this crate's own bare-citation convention. That content is **`embarch-core`'s
+decision 9** (`decisions/probes.md`, "`open_probe(probe_serial)`, and ambiguity is a named error");
+**`embarch-api`'s own decision 9 is about locked dependency choices and is entirely unrelated.**
+Dropping the repo qualifier did not produce a dead link — it produced a citation to a **real,
+permanent, wrong decision**, which reads as authoritative and survives every check. And nothing
+could catch it: `check-decision-refs.py` reads markdown, not a code-repo TOML comment. **Fixed in
+place** (`embarch-api` **`61e2b42`**), naming the repo and, explicitly, naming what this repo's own
+decision 9 is *not*.
+
+**(4) Chasing that one citation found 320 of them, and I filed rather than swept.**
+`embarch-api/design.md` **does not exist** — the docs were split into `spec.md`/`open.md`/
+`decisions/*`/`interfaces/*` — and a repo-wide grep finds **320 occurrences of `design.md`** in the
+`embarch-api` code repo, almost all `design.md §N.N decision M`. The section numbers did not survive
+the split, so they have been pointing at nothing, and `embarch-api` keeps `cargo doc` warnings out
+of its gate. This is `study-designer/018` again in a bigger repo. **Filed as `tasks/api/052`**, with
+the two things that unit learned written into it: expect more files than a `src/` grep predicts
+(018 was filed for 290 in 23 files and landed 522 lines across 32), and **resolve every number
+against the current index before stripping its prefix**, because (3) is what a mechanical sweep
+produces. A sweep is a unit's worth of work and it is not what this task authorised.
+
+**(5) The test proves less than it looks like it proves, and that is recorded rather than fixed.**
+`config::tests::config_example_toml_loads_through_the_real_loader` loads the real example through
+`Config::load_from_path` — good, and the kind of test that stops an example file rotting. But it
+**rewrites the example's three placeholder `source_path`s into a tempdir first**, because
+`validate()` requires each to exist, so a placeholder that is wrong in a way `validate()` would
+catch is precisely what it cannot see. The reviewer confirmed the limitation is real and inherent,
+not a defect introduced here. Likewise **the five new fields are comments**, which no loader test
+covers at all — a typo in a commented key name ships silently. Both are the honest ceiling of this
+approach and worth knowing before someone trusts that test.
+
+**(6) The deliberate omission stands, and a decision may be owed for it.** The task forbade adding a
+by-name load refusal for `artifact_path_for_core`, unlike `[[projects.targets]]` and
+`soc_chip_overrides` which have one, because umbrella-scaffolded configs in the field still carry
+it. Confirmed: nothing in the diff added one, and the gap is recorded in `open.md`. The reviewer's
+note, which I pass on rather than act on: **that asymmetry — two keys refused by name, a third
+deliberately tolerated — may deserve a numbered decision instead of living as `open.md` prose.**
+Burndown forbids authoring it. That makes **three owed decisions from this burndown**
+(`outpost/015`, `core/023`, this).
+
+**Merged:** `agent/api/031-config-example` (code **`96f0684`** in `embarch-api`, plus my citation fix
+**`61e2b42`** on top; doc **`b8be146`**, fold **this commit**). Gate re-run by me on the merge
+result: `cargo build`, `cargo test`, `cargo clippy --all-targets -- -D warnings` all green, and I
+**ran the new test by name to see it actually execute** (`1 passed`) rather than trusting a `-q`
+tail that showed a `0 tests` summary from a different target; `check-client-names.py --repo
+embarch-api` clean; `python3 scripts/check-docs.py` **all 10 green**; `check-ownership.py --scope
+api` green, 4 paths. Clippy and the test re-run green after my own fix too.
+
+**Blocked:** nothing. **Four units dispatched, four landed, none blocked.**
+
+**Reviewer:** 1 finding — inbox/api-config-example-probe-serial-miscite.md (real; fixed in this fold
+per (3), and the drop consumed).
+
+**Hardware debts:** **none new.** No unit this leg touched hardware and none could — burndown
+forbids bench work outright, and `queue-status.py` had no dispatchable bench task anyway. Every
+standing debt in leg 058's entry carries forward verbatim and unexamined: the owed native Windows
+build of `embarch-core` (`core/028`, `core/015`, `core/010`); `umbrella/037`'s corrected check 13
+never met by the bench; `embarch-outpost`'s Zephyr `tests/unit` unbuildable here;
+`embarch-dev-bench`'s absent west/Zephyr toolchain; the four DUT-gated bench tasks; `core/028`'s
+`[assumed]` ESP32-C5 USB-enumeration fact; `dev-bench/002`'s 17-to-64-step study; and
+`outpost/005`'s `tests/cross_decoder.py` skipping silently in every fleet worktree.
+
+**Budget:** `PROCEED` / **BURNDOWN** — 5-hour **33.6%**, weekly **95.3%**, both against a 97% cap,
+weekly resetting in ~5h15m from this fold. Suggested wave **12** throughout; I used **4**,
+dispatched simultaneously, because 4 is the leg's unit cap and therefore the binding constraint.
+**No 429 at any point**, so the mode is not cleared and the latch stands. Dispatchable count
+**45 → 43** by my arithmetic: four consumed, two filed (`study-designer/025`, `api/052`), one filed
+`Owner: required` (`doc/029`), and two owner drops resolved without becoming tasks.
+
+**Least sure about:** **that three of my four units were doc-only, and I chose them that way.** I
+picked for scope spread and for "no new numbered decision" — burndown's constraint — and what
+that selects for is prose. The one unit with a real code diff is the one that produced a genuine
+misattribution, a 320-occurrence finding, and the only interesting test question of the leg. **A
+mode optimising for volume, plus a rule against authoring decisions, quietly biases a leg toward
+the work least likely to be wrong** — which is also the work least likely to matter. The next leg
+in burndown should deliberately take at least two tasks with code in them.
+
+---
+
 ## 2026-09-09 01:03 — core/023 a true sentence written by the wrong hand, and an inference now hedged in two docs
 
 **Decided:** five.
