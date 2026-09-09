@@ -97,6 +97,75 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-09 16:19 — topology/023 decision 23 stops deferring to an owner who has since answered
+
+**Decided:** three things, and the first is a `fleet stop` this leg is running under.
+
+**A `fleet stop` arrived from the listener seconds after I dispatched four workers**, with the pump
+latch already removed. I did not delete it (it was gone) and I did not drop the four units: a stop is
+"finish landing what is in flight", so this leg lands, folds and logs all four and dispatches
+nothing further. **My successor should not exist** — if a leg is running after this one, the pump was
+re-latched by the owner, not by the relay. I posted the acknowledgement in `#embarch-fleet`
+(`ts 1788992091.787979`) rather than reacting to anything, so the listener's own `fleet stop` report
+is unaffected.
+
+**Second, `tasks/doc/033` — the drop that says nothing checks decision-number uniqueness — I filed
+`Owner: required` at the moment of filing it.** Its fix is a new or extended check under `scripts/`,
+which §3 reserves to the owner. Left `open` it would have looked dispatchable to every future leg
+(and `queue-status.py` did list it as such), and the first worker to take it would have produced a red
+`check-ownership.py` for a task it was correct to attempt. This is the gate gap leg 061 found by hand
+while reading `outpost/015`'s diff; it is now visible in the queue and pointed at the only actor who
+can pay it. **I also enforced its own subject on this leg by hand:** the topology unit cites a
+cross-repo decision rather than authoring one, so nothing here could collide.
+
+**Third, the unit itself.** `embarch-topology/decisions/storage.md` decision 23 said the
+`%ProgramData%\embarch` directory-vs-file ACL phrasing was *"embarch-core's to tighten, not this
+crate's — flagged to its owner rather than edited across the boundary."* `embarch-core` decision 53
+(leg 061, an hour earlier) answered it, so decision 23 was deferring to an answer that already
+existed. It now reads *"now stated as `embarch-core` decision 53, which confirms the directory's
+permissiveness is deliberate and names this crate's dependency on it explicitly."* **I read the diff
+myself before merging** because a decision citation is exactly the class leg.md requires reading by
+hand: no behavioural claim moved (the `icacls`-targets-the-file-only claim, the untouched-default-ACL
+claim, and the both-accounts-can-read-there claim are all byte-identical), and the new wording stops
+at "deliberate" without promoting decision 53's deliberate hedge — it does not claim what the default
+ACL concretely grants on any given Windows machine — into a stated fact. Cross-repo citation form is
+`api/052`'s settled one, `` `embarch-core` decision 53 ``, repo name as a plain qualifier.
+
+**Two red gate checks on the merge result, both trivial and both fixed in the fold rather than
+blocking the task.** The worker wrote `**State:** closed` on the completed task file, and `closed` is
+not one of the four state tokens — every consumer reads `split()[0]`, so `queue-status.py` would have
+sorted it into `other`; corrected to `done`. And `tasks/doc/033`'s `../DOC-CONVENTIONS.md` link, which
+was correct while the file sat in `inbox/` and broke the moment I moved it to `tasks/doc/`, so
+`check-links.py` was red on **my** hand, not the worker's — corrected to `../../`. Worth naming for
+the next leg: **filing an inbox drop into `tasks/<scope>/` moves it one directory deeper and silently
+breaks every relative link in it.** Gate green 11/11 after both.
+
+**Merged:** `agent/topology/023-cite-core-53` (code **none** — docs-only by design, the
+`embarch-topology` code branch had a zero diff; doc `9a90c7a`). Ownership check base
+`e1b5c21dc3ba`, 3 changed paths, all owned by the `topology` worker. The task was filed as
+`tasks/topology/021` from the inbox drop and **renumbered to 023 before dispatch** —
+`check-task-numbers.py` caught 021 as reissued (history has it as `compact-topology`) and warned
+rather than refused; 022 was also taken.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — a one-clause citation swap, no board, no build, and the
+worker was told explicitly not to touch `embarch-token.md` (suite-level, outside its ownership row);
+the suite half is filed as `tasks/suite/026` and left `open`, unannounced, because a `suite` task
+needs a 30-minute announcement window and this leg is stopping. Carried forward unchanged:
+`core/015`'s native Windows build of `embarch-core` is the owner's and still outstanding, and is also
+what would deploy `core/020`'s `self_reported_hardware_id` rename; `umbrella/037`'s corrected check 13
+has never met the bench that found its defects and needs only the dev-bench board; `embarch-outpost`'s
+Zephyr `tests/unit` suite cannot be built here (no `west`, no `ZEPHYR_BASE`). The bench queue is still
+parked by the owner's own commit, and **no bench unit was runnable this leg** — every `hw-gated` task
+is `toolchain` or `required`.
+**Budget:** PROCEED at start, wave 6 suggested; 5-hour 15.6% and weekly 3.3%.
+**Least sure about:** I created all eight worktrees before running `scripts/check-dispatch.py
+--worktree`, which is the guard against reusing a worktree a live worker already holds. Its condition
+was independently satisfied — step 0's recovery scan found no registered worktrees, no `agent/*`
+branch on any remote, and no claimed task — so I am confident this leg did not double-dispatch
+anything, but I skipped the check that would have proven it rather than argued it, and leg 012 ran two
+tasks twice concurrently by getting exactly this wrong.
+
 ## 2026-09-09 16:08 — api/052 a 160-citation sweep, six real miscitations, and a convention its own fold would have deleted
 
 **Decided:** three things, and the third is the one the next leg needs.
