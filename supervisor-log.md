@@ -97,6 +97,91 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 22:25 — api/030 a silent truncation, and the first time burndown's no-new-decision rule actually bound
+
+**Decided:** five.
+
+**(1) The fix is right and the diff is small.** `src/build.rs`'s drain used
+`AsyncBufReadExt::next_line()` inside `while let Ok(Some(line))`, which decodes UTF-8 per line and
+returns `Err(InvalidData)` on the first bad byte — indistinguishable, to that loop, from a clean
+EOF. So one latin-1 path in a compiler's output silently dropped the entire rest of the log, worst
+on exactly the failing builds the surface exists for. It now reads raw bytes with
+`read_until(b'\n', ..)`, decodes each line with `String::from_utf8` and falls back to
+`from_utf8_lossy` for only the failing line, naming every substituted line by number in a marker.
+One bad byte costs one line. The new test drives the task's exact fixture through a real child
+process.
+
+**(2) The reviewer says the amendment should have been its own decision, and I agree with it — and
+burndown is why it is not.** Decision 18 is about the truncation cap: head-and-tail retention,
+UTF-8 boundary cuts, the two constants' congruence mod 3. The defect fixed here is in
+`drain_stream`, **upstream of truncation and entirely unrelated to the 64 KB cap** — the old bug
+fired on short logs that were never truncated at all. So the reviewer's reading is correct on the
+merits: this is a separate design call wearing an amendment's clothes. It is also exactly what
+burndown's second guardrail produces, and this is the first time on record that rule has bound
+anything. **The worker flagged the same doubt in its own report before I saw the reviewer's** —
+"the one judgment call worth flagging: I treated this as amending decision 18 rather than authoring
+a new decision" — which means the constraint was visible to it and it chose the compliant reading,
+which is what I asked for.
+
+**(3) I left the finding in `inbox/` rather than fixing it, and that is deliberate.** Filing the
+correct fix means authoring a numbered decision in `embarch-api/decisions/build.md`, which this leg
+may not do. `inbox/api-030-review-finding.md` stays where it is; the next leg's inbox drain files it
+as a numbered `api` task, and an attended or non-burndown leg does it properly. **This is the
+disposition burndown.md prescribes and it costs one leg of latency, not the finding.** I checked
+the drop parses — it has `State`, `Source`, `Scope`, `Hardware` and a `What`.
+
+**(4) The reserve was spent and paid for in the same commit, correctly.** The amendment pushed
+`decisions/build.md` from 10,934 to 11,134 B, across its 11,059 B reserve line, and the worker filed
+`tasks/api/050-compact-api.md` in the same commit — `In flux: yes`, blocked, with an unpark
+condition and a `Must not delete:` list. The reviewer checked that list against the file and it
+holds: decision 18's `[assumed]` provenance note for the 1:3 head/tail split and the exact
+observation that would move it, and decision 19's full `target.json` reasoning. It also verified
+`open.md`'s rewritten headroom bullet — `build.md` moved from the "a paragraph short of the line"
+group into "crossed, task filed", and the byte figures it still quotes for `zephyr.md` (11,056) and
+`config.md` (11,008) are accurate. **This is a worker doing the reserve bookkeeping unprompted for
+a file that was not in its dispatch note's table**, which is the behaviour the reserve rule was
+written to produce.
+
+**(5) Decision 18's boundary reasoning survives the change and the reviewer confirmed it.** The
+drain can now emit U+FFFD (3 bytes) plus an appended marker, so the truncation cuts see different
+input than before; the head-rounds-down / tail-rounds-up rule and the existing straddle tests are
+unweakened. That was the one way this fix could have broken something subtle and it did not.
+
+**Merged:** `agent/api/030-build-log-utf8` (code `a0950ec`, doc `d2ab624`). Both fast-forwards after
+rebasing the doc branch over `study-designer/010`'s fold. Gate re-run by me on the merge result, not
+on the branch: `cargo build`, `cargo test` (193 across nine binaries, including 19 in
+`build_capture`), `cargo clippy --all-targets -- -D warnings` clean; `python3 scripts/check-docs.py`
+**all 10 green**; `check-client-names.py` clean on the code worktree; `check-ownership.py` green on
+both branches (code repo whole-tree, doc 6 paths, self-derived base `2e58fb9694c0`). **No native
+Windows build was run** — the fleet cannot, and `embarch-api` is not `embarch-core`, so none was
+owed.
+
+**Blocked:** nothing. `tasks/api/050-compact-api.md` was **filed blocked** by the worker, which is a
+new park rather than a blocked unit of this leg.
+
+**Reviewer:** 1 finding — inbox/api-030-review-finding.md
+Left in `inbox/` unfixed on purpose; see (3). The finding is about where a decision was recorded,
+not about the code, and the reviewer said so explicitly. It cleared the boundary reasoning, the
+`Must not delete:` list and the `open.md` byte figures independently.
+
+**Hardware debts:** **none new.** A build-log drain is host-side and exercised against a real child
+process in-crate. Prior debts carry forward unchanged from the two entries above — including that a
+native Windows build of `embarch-core` is owed and the fleet cannot run one.
+
+**Budget:** `PROCEED` / **BURNDOWN** throughout. One unit left in this leg; the closing numbers are
+in its entry.
+
+**Least sure about:** **whether "leave it in `inbox/`" is really cheaper than the alternative I
+rejected, which was to end the burndown early and author the decision properly.** Burndown is a
+throughput mode and I treated the no-new-decision rule as absolute, which is what it says it is. But
+the cost is that `decisions/build.md` now carries a paragraph in the wrong entry, and this suite's
+own `embarch-decision-reversals.md` calls a decisions file describing the wrong thing the *worse*
+variant of its most common failure. It is one leg of latency if the next drain files it, and
+permanent if the drop is ever dropped. I do not think that trade is wrong; I am not confident it is
+obviously right.
+
+---
+
 ## 2026-09-08 22:20 — study-designer/010 a stated property of the grammar that was untrue for the errors an author actually hits
 
 **Decided:** four.
