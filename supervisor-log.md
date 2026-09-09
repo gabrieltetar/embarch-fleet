@@ -160,8 +160,22 @@ them is a park that had quietly stopped meaning anything.** `check-doc-size.py -
   task's `In flux: yes` block, which is about `ble.md`. Same shape as leg 056's `study-designer/006`
   correction, and the third time this leg has found a task-file state field that no script verifies.
 
+**(6) This unit's fold landed in two commits and the log entry is the older half, which the next leg
+should know how to read.** `fold-commit.py` committed this entry (`00b0cf6`) and then **failed
+before staging the instance side**, for two reasons at once: `check-doc-size.py` went red because
+the note I had written onto `tasks/dev-bench/012`'s `**Compacts:**` line struck the paid path through
+with `~~…~~` and prose, and **the parser stopped recognising the line at all** — so the two paths
+that genuinely remain were reported as *in reserve with no debt filed*; and its `git rm` of the
+now-`done` `tasks/api/043` refused because that file had unstaged edits. **That is precisely the
+ordering `fold-commit.py` is built to leave** — "an entry for a fold that did not happen", never "a
+fold nobody logged" — and it is the first time this log has recorded the recovery actually being
+used. I fixed the `Compacts:` line (the paid path is *removed* from it and the explanation moved to
+prose below it, because **that line is data**), re-ran the gate green, and committed the instance
+side by hand as `0ea2f63`, saying so in the commit message. `fold-commit.py` correctly refused a
+second run rather than double-committing.
+
 **Merged:** `agent/api/034-tools-md-reset-dev-bench` (code **`0e6bb51`** in `embarch-api`, one new
-test file; doc **`8897efa`**). Doc branch rebased over `ui/011`'s fold, then a fast-forward. **The
+test file; doc **`8897efa`**; **fold `0ea2f63`, log `00b0cf6`** — two commits, see (6)). Doc branch rebased over `ui/011`'s fold, then a fast-forward. **The
 code merge traversed two commits already on `origin/main`** — `embarch-api`'s *local* `main` was
 behind, the same staleness that made a `git branch -d` refuse in this leg's first entry — so the
 `3 files changed` git printed is misleading; `git log a0950ec..HEAD` is the single new commit and I
