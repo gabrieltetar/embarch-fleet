@@ -97,6 +97,87 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 18:33 — study-designer/020 a one-line citation fix on a file the owner parked, and the constraint no gate can check
+
+**Decided:** four.
+
+**(1) I dispatched this without a code worktree, and said so in the prompt.** Every other unit this
+leg got two worktrees in two repos because `.claude/leg.md` says almost every task changes both.
+This one changes a task file and nothing else — no `embarch-study-designer` source is involved at
+any point. Creating an unused code worktree would have been clutter to clean up and one more chance
+to mis-provision, which I had already done once earlier in this same leg. **The judgement is "almost
+every", not "every", and a doc-only unit is the case it excludes.**
+
+**(2) I told the worker a one-line result was the correct one and not to find adjacent work.** Same
+instruction the previous leg gave `umbrella/042`, for the same reason: a worker given twenty minutes
+and a one-line fix goes looking for something bigger, and what it finds is out of scope or
+half-understood. It changed two lines — the `Source:` line in `007` and its own task file's
+checkboxes — reported that, and stopped.
+
+**(3) I added a merge-time assertion for the one constraint no gate in this suite can check.**
+`tasks/study-designer/007` is **parked by the owner**, deliberately, since 2026-09-07. The failure
+mode here is not a bad citation; it is a unit that notices the quote was wrong, concludes the task
+was mis-filed, and quietly flips `**State:** blocked` back to `open` — **undoing an owner decision
+with every check green**, because nothing compares a task's state against who set it. So my landing
+script reads `007`'s `State:` line out of the branch and prints it *before* the merge, and I read it:
+`**State:** blocked — parked by the owner 2026-09-07`. The reviewer then confirmed the parking note
+and the deliberately-unmet `Done when` list were untouched as well. **This assertion is three lines
+of shell and it should probably be standing rather than mine** — any unit that edits a `blocked` task
+file has the same exposure — but the gate is not mine to amend, so it is recorded here instead.
+
+**(4) On the substance, the re-quote is right and I checked it against the file rather than the
+report.** `007` had cited `embarch-study-designer/open.md`, which has never carried the sentence. The
+bullet lives in `embarch-dev-bench/open.md` under `## Never exercised`, and it was **amended on
+2026-09-07** to record leg 039's attempt, the stop at step 1 with no connection, and the owner's
+parking — so the old quote was a *prefix* of the current text, and copying it forward would have
+recreated the same defect one revision later. The new quote carries the full amended sentence. **One
+fidelity note I am recording rather than treating as a defect:** the source bullet bolds
+"Bond clearing has never been observed firing on real hardware" and "an accepted risk and still not
+an observation"; the inline quote drops those `**` markers. That is ordinary inline quoting and the
+reviewer did not flag it, but a future reader diffing the two strings byte-for-byte will find them
+unequal.
+
+**Merged:** `agent/study-designer/020-source-cites-wrong-open-md` (doc `bc211fa`). **Doc-only — there
+is no code SHA for this unit**, which is a fact about the unit rather than an omission from this
+entry. The branch was rebased onto `main` past this leg's `api/038` claim before merging; ownership
+was re-checked after the rebase, not only before. Gate re-run by me on the merge result:
+`python3 scripts/check-docs.py` **all 10 green**, `check-ownership.py` green (2 paths, base
+`ac88483f1d8f`). No cargo gate and no `check-client-names.py` on a code repo — no code repo was
+touched. **No `changelog.d/` fragment, and none owed**: nothing shipped and no behaviour changed. No
+`status.d/` fragment either.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Three clean reviews in three units this leg, and I want the pattern noted rather than celebrated.**
+All three were spawned on concerns I raised, and all three cleared them on the reviewer's own
+evidence rather than agreeing with a conclusion I had already reached — which is the distinction
+`outpost/004`'s entry two below says the tally cannot make. **It still cannot.** What is accumulating
+is a run of `no findings` on units I had already read carefully, which is evidence that review is
+cheap insurance and *not* evidence that it catches what I miss. The one finding this fleet logged
+today was one the previous leg pointed at.
+
+**Hardware debts:** **none new, and one deliberately not discharged.** This unit's whole subject is a
+bench debt — bond clearing has never been observed firing on real hardware, decision 11's clearing
+step has only been reasoned about — and the correct outcome was to fix the citation and **leave the
+debt exactly where it is**. It needs the bench, the bench queue is parked by the owner's own commit,
+and `study-designer/007` stays `blocked`. Carried forward unchanged: a **native Windows build of
+`embarch-core`** is owed and the fleet cannot run one, now with two changes stacked behind it
+(`core/015` and this leg's `core/010`); `umbrella/037`'s corrected check 13 has never met the bench
+that found its defects; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this
+environment (no `west`, no `ZEPHYR_BASE`).
+**Budget:** `PROCEED` throughout: 5-hour 22.6% → 24.6%, weekly **86.7% → 87.0%** against a 90% cap
+resetting in ~12h26m, suggested wave **2**, run at 2.
+**Least sure about:** **whether a unit this small should have taken a wave slot at 87% of the weekly
+cap.** It is real work, correctly scoped, and the queue holds 69 dispatchable tasks — but it fixes a
+citation on a file that is parked and that nobody can act on until the owner unparks the bench. With
+roughly 3% of the weekly allowance left, a leg choosing between this and `umbrella/036`'s three
+mirrored copies should probably have taken the mirrors. I paired it with `api/038` deliberately to
+keep one cheap unit against one substantial one, and I still think the pairing was right; I am less
+sure the cheap half should have been *this* task rather than one whose result someone can use
+tomorrow.
+
+---
+
 ## 2026-09-08 18:27 — core/010 I mis-provisioned this worker's worktree and the worker caught me
 
 **Decided:** four, and the first is about my own hands rather than the work.
