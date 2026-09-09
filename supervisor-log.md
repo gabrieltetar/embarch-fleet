@@ -97,6 +97,48 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-09 15:45 — study-designer/025 a converse checked in the direction nobody checked
+
+**Decided:** nothing suite-wide. Two dispatch judgements, both recorded in task files before the
+worker saw them. First, this leg is the first non-burndown leg since the weekly reset, so
+**authoring numbered decisions is in scope again** — which is why `core/031` and `outpost/015` were
+selected at all; leg 060's closing note flagged five owed decisions compounding under burndown's
+no-new-decisions rule, and two of them are now dispatched rather than accumulating.
+Second, **`umbrella/043` was deliberately not dispatched alongside `api/052`.** They are the same
+`design.md`-citation sweep in two repos, and `umbrella/043`'s own task file says to adopt whatever
+convention `api/052` settles. Running them concurrently would have produced two conventions
+independently, which is the defect one level up. `api/052`'s worker is instead told that stating its
+convention explicitly is a deliverable, and `umbrella/043` waits for a later leg to read it.
+**Merged:** `agent/study-designer/025-readme-layout-table` (code `4af5e64`, doc `9238103`).
+Ownership check bases: code `c4ff14456287`, doc `a9e5b742c4ce`.
+**Blocked:** nothing. One task filed and left `open` on purpose: `api/055`, drained from `inbox/`
+this leg, is the owed config-key decision from `api/031` — **both** files it would naturally go in
+are in reserve (`decisions/tool-wrapping.md` 66 B left, `open.md` 261 B left) and **both** their
+compaction tasks are BLOCKED, so it is filed with a number and a queue position rather than
+dispatched into a wall. `api/041`'s owed decision is behind the identical blockage and names the same
+file; the drop argues the two should be settled together and the compaction paid once. Whoever
+sequences that should treat the compaction as the prerequisite, not as part of the unit.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — a README module table, no board, no build, and the
+whole diff is 15 added lines. Carried forward unchanged: `core/015`'s native Windows build of
+`embarch-core` is the owner's and still outstanding, and is also what would deploy `core/020`'s
+`self_reported_hardware_id` rename; `umbrella/037`'s corrected check 13 has never met the bench that
+found its defects and needs only the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite
+cannot be built from this environment (no `west`, no `ZEPHYR_BASE`) and no leg can claim it green.
+The bench queue is still parked by the owner's own commit, and no bench unit was runnable this leg —
+every `hw-gated` task is either `toolchain` or `required`.
+**Budget:** PROCEED at start, wave 6 suggested (5-hour 7.4%, weekly 2.0% after the reset). This is
+the first leg since leg 060 ended on the expected weekly HOLD at 97.5% of the burndown cap; the
+latch expired on its own at 06:59 as designed, and the gate answered with normal caps without
+anyone clearing it.
+**Least sure about:** the two mechanical citation sweeps are the risk in this leg, not this unit.
+`api/052` is ~320 occurrences and its predecessor `study-designer/018` landed 522 lines across 32
+files against a task filed for 290 in 23 — so the count will be wrong and the interesting failures
+are the citations that become *real but wrong* decisions rather than dead links. I gave the worker
+`api/031`'s worked example of exactly that and made the comment-only proof a reported deliverable,
+but I cannot verify 320 resolutions myself at fold time, and a reviewer sampling a sweep that large
+is sampling.
+
 ## 2026-09-09 01:47 — core/009 a route called bounded and bounded only by its caller, and a compaction task that closed itself while its debt stood
 
 **Decided:** seven. **This is leg 060's fourth and last unit. The leg ends here — and unlike the
