@@ -97,6 +97,98 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 19:56 — core/028 a stale README, and the reviewer catching me rather than the worker
+
+**Decided:** five, and the second and third are about my own commits.
+
+**(1) The unit itself is small and the worker got it right.** `embarch-core/README.md` documented
+`EMBARCH_DEV_BENCH_PORT`/`_SERIAL`/`_PRODUCT`/`_INTERFACE` as live env overrides;
+`decisions/probes.md` decision 23 removed all four with no replacement knob. The table is gone,
+replaced by prose naming the mechanism the worker verified in source
+(`embarch_topology::hardware::resolve_dev_bench_port`, plus `POST /probes/enroll` and
+`POST /dev-bench/link`). It re-ran the four-name grep across `.rs` itself rather than trusting the
+task file.
+
+**(2) I over-tightened the worker's prose and introduced a wrong noun, then a second defect fixing
+it.** The worker wrote "the stale-probe incident that motivated `embarch-topology`". Decision 23 says
+only "the incident", and `embarch-topology/spec.md` names the class as **"a stale port override
+winning silently over reality"** — a port override, not a probe. I corrected it at the merge
+(`4e0e7f4`) and added a link to the source. **The link was a relative path from a code repo into
+`embarch-doc`, which the reviewer caught as an unnoticed reintroduction of a shape
+`embarch-core/decisions/platform.md` decision 46 explicitly rejected** — a worker's two worktrees for
+one unit do not share a parent directory, so a cross-repo relative path resolves at a normal desk and
+breaks under the fleet model, and it does not resolve on GitHub across separate repos either. Every
+other cross-repo reference in the suite is a full `https://` URL. Fixed in `11f5dc3`.
+
+**This is the second supervisor commit in two units and the first one that was wrong. Both were
+"tightening" a worker's sentence at a fold, which is the moment with no gate, no reviewer yet, and
+nobody watching.** Recording it plainly: the correction was right and the mechanism I used to carry
+it was not, and I would not have found that myself.
+
+**(3) I filed the reviewer's own finding, fixed it, and consumed the drop in this fold rather than
+leaving it as a task.** `inbox/core-readme-relative-doc-link-contradicts-decision-46.md` is deleted
+because the thing it reports is fixed in this same commit. Naming it here is the record, since the
+drop no longer exists to be read.
+
+**(4) The reviewer's second flag was not filed and is the more interesting one: a hardware fact with
+circular provenance.** The worker's `open.md` bullet asserted that the ESP32-C5-WROOM-1 DK
+"enumerates as a single USB-Serial/JTAG interface with no VCOM to name" — untagged, stated as fact.
+Its provenance runs `tasks/core/028`'s note → `dev-bench/005` → and `dev-bench/005` **explicitly
+declined to assert it**. So the chain closes on itself and nothing in this suite has measured it. I
+rewrote the bullet to mark it `**[assumed]**`, say the provenance is circular, and say confirming it
+needs the board. **The unit's whole instruction was not to invent a hardware fact, and it very nearly
+laundered one through two task files instead.** That is a shape worth watching for: an assertion
+becomes true-looking by being restated across documents, and each restatement is individually
+defensible.
+
+**(5) `embarch-core/open.md` went 18 bytes over its 5,120 B cap** and the gate passed it, because its
+ledger entry is in date — a debt, not a wall, which is the design working. I trimmed my own
+annotation back to 5,051 B anyway rather than spend a scheduled allowance on a supervisor's
+footnote.
+
+**Merged:** `agent/core/028-readme-env-overrides` (code `fec6841`, doc `74cbc87`), **plus two
+supervisor follow-ups on `embarch-core`: `4e0e7f4`** (the noun correction) **and `11f5dc3`** (the
+relative link replaced by a URL), and this fold's own edit to `embarch-core/open.md`. Gate re-run by
+me on the merge results, not on the branches: `cargo build` clean; `cargo test` **184 + 1 passed, 0
+failed**; `cargo clippy --all-targets -- -D warnings` clean; `check-client-names.py --repo
+embarch-core` clean against 7 denylist entries; `python3 scripts/check-docs.py` **all 10 green**, and
+re-run after each of my own edits; `check-ownership.py` green on both branches.
+
+**Blocked:** nothing. `tasks/core/028` is closed with its **second `Done when` box deliberately
+unticked** — the espressif replacement story does not exist and saying so is the correct answer, per
+the task's own leg-049 supervisor note.
+
+**Reviewer:** 1 finding — inbox/core-readme-relative-doc-link-contradicts-decision-46.md
+Filed against **my** follow-up commit, not the worker's diff. Fixed in this fold and the drop
+consumed; see (2) and (3). It also cleared the three things I asked about that were not mine — no
+surviving stale env-var references elsewhere in the README, no conflation with `core/010`'s
+`EMBARCH_FLASH_BACKEND` work in `decisions/flashing.md` decision 52, and the rewritten phrase itself
+being accurate against `embarch-topology/spec.md` — and raised the hardware-provenance flag in (4)
+directly rather than as a finding.
+
+**Hardware debts:** **one, and it is the standing `embarch-core` one, now owed by this unit too.**
+The native Windows build was not run — `hidapi`'s `build.rs` wants an MSVC `cc` WSL lacks, and
+Windows `cargo.exe` cannot follow this worktree's Linux symlinks. §10 makes it a recorded debt; it
+takes ~52 s from the main checkout and it is the owner's. **The risk here is as low as that debt
+gets: the diff is `README.md` only, with no `src/` change at all.** Newly *sharpened* rather than
+added: the ESP32-C5 USB-enumeration fact in (4) now carries an `[assumed]` tag and a named discharge —
+one board, one look. Carried forward unchanged: `umbrella/037`'s corrected check 13 has never met the
+bench that found its defects; `embarch-outpost`'s Zephyr `tests/unit` cannot be built here (no
+`west`, no `ZEPHYR_BASE`); the bench queue is parked by the owner's own commit.
+
+**Budget:** `PROCEED` at both ends: 5-hour 38.4% → 39.1%, weekly **89.2% → 89.3%** against a 90% cap
+resetting in ~11h05m. Wave 1. **0.7% of weekly headroom left.**
+**Least sure about:** **whether a supervisor should be editing a worker's prose at a fold at all.**
+Both of this leg's follow-up commits were corrections I stand behind on substance, and one of them
+shipped a defect a gate cannot see and a reviewer caught by luck of being asked the right question —
+I put my own commit in the reviewer's prompt deliberately, and if I had not, it would have landed
+unexamined. **The alternative is filing a task and leaving a sentence I know is wrong on `main` for
+days**, which is worse in a different way. What I actually take from it is narrower: **if I am going
+to correct a worker at a fold, the correction belongs in the reviewer's prompt every time**, and
+that is now two for two on it being worth doing.
+
+---
+
 ## 2026-09-08 19:46 — study-designer/008 a feature withdrawn, and the tombstone checked for being a second fiction
 
 **Decided:** four.
