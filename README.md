@@ -73,6 +73,7 @@ Then, in the instance repo: arm a listener window with `/fleet start`, and say
 | [budget.md](budget.md) | The usage budget: may the fleet dispatch right now, and how many? Why the percentages are derived |
 | [burndown.md](burndown.md) | The one mode whose goal is to reach the ceiling, for a weekly window about to reset |
 | [risks.md](risks.md) | The risk register — what each choice traded away and what its failure looks like |
+| [risks-authority.md](risks-authority.md) | The same register, one mission: what an agent may do unattended, and what each grant cost |
 | [DEVELOPING.md](DEVELOPING.md) | Changing this repo and deploying the change: what is authored vs generated, when a change takes effect, rollback |
 | [open.md](open.md) | Unresolved questions and known limitations, each with what would unblock it |
 | [supervisor-log.md](supervisor-log.md) | One entry per unit, newest first. The review surface, and the relay handoff |
@@ -82,6 +83,37 @@ Then, in the instance repo: arm a listener window with `/fleet start`, and say
 
 Read `protocol.md` first, then `ops.md`, then `risks.md` — in that order, and
 not `risks.md` instead of the protocol. To change any of it, `DEVELOPING.md`.
+
+## When a doc here runs out of room, this is the seam
+
+`scripts/check-fleet-doc-size.py` caps these files and warns before it refuses.
+**Written down in advance on purpose** (`tasks/fleet/001`, 2026-09-09): the four
+docs closest to their limit each name the section that would move and where,
+so the next rule addition is a split someone already thought about rather than
+a squeeze under time pressure. That distinction is not theoretical here — one
+new rule in `ops.md` on 2026-09-07 cost **four** squeeze passes, the last of
+which nearly deleted the evidence for an open question, and the split that
+replaced them took one move and lowered that file's baseline by 2,553 B for
+good. A split moves sections **verbatim**, so it restates nothing and no
+argument is shortened to pay for a new one
+([DOC-COMPACTION.md](../embarch-doc/DOC-COMPACTION.md) §2).
+
+| Doc | Now | Seam | After | Why not yet |
+|---|---|---|---|---|
+| `risks.md` | **8,877 B** (was 12,285, 3 B left) | **done** — six unattended-authority entries → [risks-authority.md](risks-authority.md) | 8,877 + 5,109 | — |
+| `ops.md` | 29,701 / 25,600 cap, **0 B** | §5 *Slack as a control plane* (8,556 B) → `slack.md` | **~21.1 KB, under cap — the baseline retires** | §5 is cited from four places; the move is cheap but the re-pointing is a sitting of its own |
+| `protocol.md` | 32,466 / 25,600 cap, **0 B** | §10 *The merge gate and merge order* (5,733 B) → `gate.md` | ~26.7 KB, still over — then §6 *the leg* (6,495 B) takes it to ~20.2 KB | §10 is the most-cited section in the suite; two moves, and the second changes what a leg reads |
+| `DEVELOPING.md` | 11,966 / 12,288, 322 B | §4 *Deploying while the fleet is live* (3,706 B) → `deploying.md` | ~8.3 KB | **Stays for now**: §4 is a *step* in the loop §"The loop" walks a reader through in order, and splitting a procedure mid-sequence costs a reader more than the bytes are worth |
+| `open.md` | 11,717 / 12,288, 571 B | *(no split)* — the compaction question alone is 3,531 B of seven sections | — | **Stays, and shrinks by resolution instead**: an open question is deleted when it is answered, never shortened while live ([DOC-COMPACTION-PASS.md](../embarch-doc/DOC-COMPACTION-PASS.md)), and three of the seven are answerable now |
+
+**The mechanism that makes the two `0 B` files survivable is the stepped
+ratchet**, ported here 2026-09-09 from `embarch-doc` — where it had been added
+on 2026-09-07 *on the strength of measuring these very two files*, and then not
+applied to them. A baseline pinned to the exact byte means no correct edit may
+ever be made without an equal deletion in the same commit; measured again the
+day it was ported, `ops.md` could not accept a **ten-byte** link correction. A
+shrink now lands on the next 1 KB boundary above the new size, so crossing one
+earns real room and a file can never grow back toward where it was.
 
 ## What stays in the instance repo, and why
 
