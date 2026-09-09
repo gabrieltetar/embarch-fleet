@@ -97,6 +97,108 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 18:46 — api/038 a status.d fragment aimed at a doc status.d does not cover, and a runtime predicate deliberately narrowed
+
+**Decided:** five, and two of them are corrections to instructions I wrote.
+
+**(1) I told the worker the third Done-when box was owed either way, and the box names the wrong
+mechanism — my error, repeated from the task file rather than caught.** The task asks for a
+`status.d/api-*` fragment correcting `embarch-topology/decisions/crate.md` decisions 4 and 8. But
+`status.d/README.md` is explicit: it is one file per pending edit to a **shared suite-level doc**, and
+it names the five — `embarch.md`, `suite/roadmap.md`, `embarch-decision-reversals.md`,
+`embarch-glossary.md`, `suite/user-guide.md`. `embarch-topology/decisions/crate.md` is none of them;
+it is a **sub-project doc owned by the `topology` scope**, which an `api` worker may not write and
+which I may not write either. **The worker spotted the mismatch, said so in its report, and followed
+the instruction rather than overriding it** — which is the right call for a worker and is why the
+error surfaced at fold time instead of silently. **So I did not fold the fragment.** I converted it
+into `tasks/topology/020`, carrying its full argument, and deleted it. The mechanism that exists for
+"a doc in another sub-project is wrong" is a task in that sub-project's queue, and it was one command.
+**The task file's Done-when box is still wrong and will mislead the next reader**; correcting it is
+`api`'s, not mine, and I am recording it here rather than editing a task I have just retired.
+
+**(2) The new decision cited a `status.d/` file, by a filename that did not exist, and I fixed that
+as part of the fold.** Decision 62 as landed said the correction lives in
+`status.d/api-038-two-wsl2-rules-were-really-two.md`. The fragment the worker actually wrote was
+named `api-038-topology-decisions-4-8-were-false.md`. **Both halves are defects and the second is the
+interesting one:** even with the right filename, `status.d/` fragments are *transient* — they are
+consumed and deleted by the very fold that lands the decision citing them, so a decision that cites
+one is born pointing at nothing. It passed the gate because the citation is backticked prose rather
+than a markdown link, so `check-links.py` never resolves it. **That is the third instance of that
+exact class in two legs** — `umbrella/042`, `study-designer/020` this same leg, now this — and the
+one gate-shaped observation worth carrying: `check-links.py` sees markdown links, and this suite
+writes most of its cross-references as backticked paths. I repointed it at `tasks/topology/020`,
+which is durable, and the edit made `core-link.md` 32 bytes *smaller*.
+
+**(3) I let the worker narrow a runtime predicate, and this is the judgement I want on the record.**
+`token_discovery::is_wsl2` used to accept a `/proc/version` containing `"microsoft"` **or** `"wsl"`.
+It now delegates to `embarch_topology::software::detect_wsl2`, whose kernel test accepts only
+`"microsoft"`, unioned with `$WSL_DISTRO_NAME`. **That is strictly less accepting on the kernel
+string**, and the surviving failure case is real if narrow: a `/proc/version` with `"wsl"` and not
+`"microsoft"`, on a process whose `$WSL_DISTRO_NAME` was scrubbed — the MCP-launcher scenario the old
+comment invoked. It would surface as "no token found" or a token read from the wrong side. **I
+accepted it because the alternative was worse and because the decision hedges honestly.** Two rules in
+one binary deciding *where the token is* and *which Core to talk to* could already disagree, and each
+was unit-tested only against its own expectations, so nothing compared them; decision 62 says "no real
+WSL2 kernel **is known to** stamp 'wsl' without 'microsoft'" and "at **no known** cost" rather than
+claiming universality. **That is an absence of counterexample presented as an absence of
+counterexample**, which is the standard this suite's inferred-environment-fact rule asks for. The
+reviewer independently reached the same reading.
+
+**(4) I asserted at merge time that the doc branch wrote no `embarch-topology/` path**, because the
+whole unit is about a shared crate and the obvious over-reach was to "just fix" `crate.md` while
+there. Three lines of shell in the landing script, green.
+
+**(5) The worker re-derived the citations and found drift for the third consecutive leg.**
+`embarch-topology` has since split the predicate into its own `src/wsl2.rs` (its decision 27),
+unconditionally compiled so `hardware`-only consumers do not pull in `software`'s `reqwest`/`tokio`.
+So `software::detect_wsl2` is now a three-line delegation, not the inline union the task file quoted
+at `:195-201`. The public signature was unchanged, so the target was still right — **but the task file
+was describing code that no longer looked like that**, and the reviewer confirmed the delegation
+chain preserves the union end to end, which is what the fix's correctness rests on.
+
+**Merged:** `agent/api/038-wsl2-predicate` (code `861f30f`, doc `bbceeae`). The doc branch was rebased
+onto `main` past this leg's three earlier folds before merging; ownership was re-checked after the
+rebase, not only before. Gate re-run by me on the merge result: `cargo build` clean, `cargo test`
+**16 + 38 passed, 0 failed**, `cargo clippy --all-targets -- -D warnings` clean,
+`python3 scripts/check-docs.py` **all 10 green** (re-run again after my fold edits, still green),
+`check-client-names.py --repo embarch-api` clean against 7 denylist entries, `check-ownership.py`
+green on both branches. **No native Windows build owed by this unit** — `embarch-api` is the WSL
+debug build and `embarch-core` is untouched here.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+It cleared all five concerns on its own evidence, including the two I could not have judged cheaply:
+that decision 62's trimming-to-fit did not drop the qualification that makes it honest — the failure
+`DOC-COMPACTION.md` exists to prevent and the gate cannot see — and that the `#[cfg(unix)]` split
+still resolves the Windows token path unchanged. **Four units this leg, four `no findings`.** I said
+in the entry two below that this is evidence review is cheap insurance and *not* evidence it catches
+what I miss, and I still think that; but this unit is the one where I would have been least able to
+check point 4 myself, so it is the strongest of the four.
+
+**Hardware debts:** **none new.** Nothing here needs a board: the predicate is host-side, the tests
+are host-side, and no token was read from a real install. **One inherited debt is now sharper**,
+though, and the next leg should know why: this change alters where `embarch-api` looks for the token
+on a WSL2 host, and **nobody has run it against a real deployed Core** — the surviving narrow case
+above can only be observed on a machine, not in a test. Carried forward unchanged: a **native Windows
+build of `embarch-core`** is owed and the fleet cannot run one, with two changes now stacked behind it
+(`core/015` and this leg's `core/010`); `umbrella/037`'s corrected check 13 has never met the bench
+that found its defects; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this
+environment (no `west`, no `ZEPHYR_BASE`). The bench queue is still parked by the owner's own commit.
+**Budget:** `PROCEED` throughout: 5-hour 24.6% → 26.9%, weekly **87.0% → 87.4%** against a 90% cap
+resetting in ~12h15m, suggested wave **2**, run at 2. **This leg spent ~1.4% of the weekly allowance
+across four units.**
+**Least sure about:** **whether converting the `status.d/` fragment into a task was the right call or
+merely the safe one.** Folding it would have meant me editing `embarch-topology/decisions/crate.md`,
+a sub-project doc §3 reserves to that scope's worker — so I did not. But the effect is that a
+correction the fleet had already reasoned out completely now waits in a queue behind 69 other tasks,
+and `crate.md` keeps saying something known to be false in the meantime. **A false decision left
+standing is exactly the thing the reviewer exists to catch**, and here the fleet found it, wrote it
+down, and then filed it rather than fixing it. If the owner would rather a supervisor fold such a
+fragment into a sub-project doc directly, that is a one-line change to `status.d/README.md` and it is
+his to make.
+
+---
+
 ## 2026-09-08 18:33 — study-designer/020 a one-line citation fix on a file the owner parked, and the constraint no gate can check
 
 **Decided:** four.
