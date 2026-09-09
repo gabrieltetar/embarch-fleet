@@ -639,7 +639,12 @@ everything else merges on green. Merge order: shared crates, then consumers, the
 `embarch-doc`; oldest branch first within a tier. Rebase the remaining branches
 after each merge. **Record both merge SHAs per unit** — there is no merge commit
 and no surviving branch name, so the SHA is the only handle a revert has. Delete
-a worker's worktrees once its branches have landed or been abandoned. **You do
+a worker's worktrees once its branches have landed or been abandoned — but
+**move any `inbox/` drop out of its doc worktree into `{{DOC_REPO}}/inbox/`
+first**, or you delete it. Drops are gitignored, so one written relatively by a
+worker exists only in that worktree; a worker is told to write them absolutely,
+and this is the backstop for the one that does not. Cheap to check, total to
+lose — leg 055 found one on 2026-09-08 only by going looking. **You do
 not delete the pushed branches** — `fold-commit.py` does it, and only once
 `git cherry` proves them already on `origin/main`, so it is normally a fold
 behind. Do not "help" by deleting one by hand: before the push, the remote
