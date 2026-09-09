@@ -157,8 +157,21 @@ leg re-dispatches a unit that already landed. The task names the cheapest fix as
 `fold-commit.py` refusing a fold whose unit is not in a terminal state, since that is the moment the
 truth is known and that script already refuses two other things.
 
+**(7) This unit's fold landed in two commits, for the second time in two legs, and the cause is now
+clearly a pattern rather than an accident.** `fold-commit.py` committed the log (`85784fe`) and then
+refused its own `git rm` of the retired task file, because that file carried **my own unstaged
+correction** — the `State: claimed` → `done` fix from (6). Leg 057 hit the identical refusal on
+`api/034` for the identical reason: a supervisor that corrects a task file's state at the fold
+leaves that file dirty, and the fold then cannot retire it. I finished the instance half by hand as
+**`6618e51`** with the paths exactly matching `fold-commit.py`'s `--path` list and the reason in the
+commit message, then re-ran the gate green. **This is a second argument for `tasks/doc/028`'s
+option 1** and it points at a cheaper variant: whatever refuses a non-terminal state at the fold
+should also stage the correction, because the two failures are the same edit seen from either side.
+This note was appended to the entry after the log commit, so the log carries a small follow-up
+commit rather than a single one.
+
 **Merged:** `agent/outpost/005-verify-the-arrival-join` (code **`81cbba2`** in `embarch-outpost`;
-doc **`dab753a`**). Doc branch rebased over `api/033`'s fold, then a fast-forward. **No Rust
+doc **`dab753a`**, **fold `6618e51`, log `85784fe`** — two commits, see (7)). Doc branch rebased over `api/033`'s fold, then a fast-forward. **No Rust
 anywhere in `embarch-outpost`** — it is a Zephyr module plus pure Python — so the gate is the Python
 suites and the doc wrapper: `tests/decoder_unit.py` **29 tests, all pass** (9 new, covering match,
 divergence, the escape hatch, missing column and short column, plus the two new helpers directly);
