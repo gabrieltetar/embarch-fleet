@@ -97,6 +97,92 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-08 23:33 — doc/022 a task blocked on both halves, and a sentence in it that said the supervisor may write `scripts/`
+
+**Decided:** five. **This is leg 056's fourth and last unit; the leg ends here at its cap, not on a
+fault, a stop or a budget verdict. The burndown latch stands and expires on its own at 06:59.**
+
+**(1) This unit shipped nothing and that is the correct outcome.** The task wanted a gate rule and a
+corpus sweep so a `[decision N](<sub>/decisions/<topic>.md)` link cannot survive a mission split
+still naming the old topic file. **Both halves are outside a `doc`-scope worker's write set** — the
+check lives in `scripts/`, and the sweep lives in `history/*.md`, which has **no scope entry in
+`check-ownership.py`'s allow-list for any scope at all**. The worker hand-edited 22 links across
+eight sub-projects, `check-ownership.py --scope doc` caught it, and **it reverted them without
+committing** rather than land rows it does not own. The reviewer verified that reasoning against the
+allow-list itself rather than taking it on trust, and it holds.
+
+**(2) The reviewer found one real thing, and it is about the ownership map rather than about links.**
+The landed task file said `scripts/` is writable by "supervisor and owner". **It is not.** §3's table
+gives `scripts/` and `.claude/` the one row that reads **never / never / write** — the supervisor is
+barred exactly as a worker is, which is the property `check-ownership.py --supervisor` exists to
+enforce and the reason this log's own preamble says a supervisor that can rewrite its constraints has
+none. Wrong in the direction that matters: a later reader could take it as licence. **Corrected in
+this fold**, with a note saying what it used to say and who caught it, because after the fold the
+task file is the only surviving record and a silent correction teaches nothing. The verdict is
+unchanged — the fix was always the owner's.
+
+**(3) The follow-up is filed with the ownership stated correctly and the dispatchability stated
+honestly.** `tasks/doc/027-a-decision-link-to-a-topic-file-is-never-checked-against-what-that-file-defines.md`
+carries the exact `check-decision-refs.py` spec the worker derived — a regex for
+`<sub>/decisions/<topic>.md` *hrefs*, distinct from the existing `DOC_PATH` which matches only
+`<sub>/design.md` and `<sub>/decisions.md`, plus a lookup against the number→file map instead of the
+number→sub-project set — and marks item 1 the owner's and item 3 a **supervisor's, at a fold**. It is
+`Owner: required` so it stays out of the dispatchable count, because **no worker can take either
+half** and a task a worker will fail is worse than one it never sees.
+
+**(4) I considered doing the `history/` sweep in this fold and declined, which is the judgement call
+of this unit.** It is squarely supervisor work and I could have done it. But the worker's verified
+list was **not preserved**, so it would have to be re-derived: 22 links, each needing a lookup in its
+sub-project's `decisions.md` routing table, at the end of a leg. **A wrong one writes a false link
+into `history/` silently — the same class of defect this task exists to close**, and doing it badly
+to avoid filing it would have been the worse trade. The task says so explicitly so the next actor
+does not read the decline as an oversight, and it warns that the counts (26 candidates, 22 to
+repoint, 4 exempt as split narration) predate three mission splits and must be re-taken.
+
+**(5) Three of this leg's four units were mission splits, which is why the missing check matters
+more than it did yesterday.** `outpost/012` moved decision 22 to `decisions/testing.md`,
+`topology/017` moved decision 26 to `decisions/validate-timing.md`, and `ui/019` did the same the leg
+before. `DOC-COMPACTION-PASS.md` requires fixing every inbound link in the same commit and each of
+these units did — checked by their reviewers, one of them suite-wide. **The rule is being obeyed by
+hand, three times a leg, with nothing mechanical behind it.**
+
+**Merged:** `agent/doc/022-decision-link-mission-split` (code **none** — this unit has no code repo;
+doc `553a582`). Branch rebased over `study-designer/019`'s fold, then a fast-forward. Gate re-run by
+me on the merge result: `python3 scripts/check-docs.py` **all 10 green**; `check-ownership.py` green
+on the doc branch (1 path, self-derived base `49702cb3a369`).
+
+**Blocked:** `tasks/doc/022-...` is left **`blocked`**, by the worker and confirmed by me — its two
+remaining items need the owner's hands for `scripts/` and a supervisor's fold for `history/`, and
+`tasks/doc/027` now carries both with their owners named.
+
+**Reviewer:** 1 finding — inbox/doc-022-review-scripts-ownership-misstatement.md
+Fixed in this fold rather than left in `inbox/`, so the drop is drained and gone. It also confirmed
+the worker's ownership reasoning against the allow-list, verified each of the three claims about
+`check-links.py` and `check-decision-refs.py` by reading both scripts, and checked that `doc/022` and
+`doc/027` do not now disagree about who may do what.
+
+**Hardware debts:** **none new.** No unit this leg touched hardware; all four were doc-side.
+Standing debts, carried forward in full: a native Windows build of `embarch-core` is owed and the
+fleet cannot run one (`core/028`, `core/015`, `core/010`); `umbrella/037`'s corrected check 13 has
+never met the bench; `embarch-outpost`'s Zephyr `tests/unit` cannot be built here, which `outpost/012`
+met again; `embarch-dev-bench`'s west/Zephyr toolchain is likewise absent; the four DUT-gated bench
+tasks are unchanged; `core/028`'s `[assumed]` ESP32-C5 USB-enumeration fact still needs one look at
+one board; `dev-bench/002`'s 17-to-64-step study has never been attempted on the bench.
+
+**Budget:** `PROCEED` / **BURNDOWN** at start and end — 5-hour **10.0% → 15.7%**, weekly **90.7% →
+91.9%**, both against a 97% cap, weekly resetting in 7h28m. Suggested wave **12** throughout, and I
+used **4**, dispatched simultaneously. **No 429 at any point**, so the mode is not cleared and the
+latch stands. **53 tasks dispatchable across 10 scopes** as this leg ends.
+
+**Least sure about:** **that I filed two `Owner: required` doc tasks in one leg** — `doc/026` on the
+under-described squeezes and `doc/027` on this check — on top of `doc/025`, which I drained at step 0
+and which the owner closed himself while I was folding my second unit. Three reserved-path items in
+one leg is a lot to hand one person, and the fleet has exactly one pair of hands for that class. Each
+is individually justified and I would file each again; what I cannot judge from inside a leg is
+whether the *rate* is now the problem. If a later leg finds these still open, the honest reading is
+that the fleet is generating reserved-path work faster than it can be absorbed, and the answer is
+probably to batch them rather than to file fewer.
+
 ## 2026-09-08 23:25 — study-designer/019 the second squeeze in one leg to under-describe its own cuts, and the park it had to work around
 
 **Decided:** five. **This unit is where a note became a finding.**
