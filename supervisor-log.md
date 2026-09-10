@@ -159,9 +159,12 @@ defects and needs only the dev-bench board; `embarch-outpost`'s Zephyr `tests/un
 built from the fleet's environment. **No bench unit was runnable at any point this leg** — every
 `hw-gated` task in the queue is `toolchain` or `required`, and the bench queue is still parked by
 the owner's own commit.
-**Budget:** PROCEED at both ends of the leg; weekly **7.8% → 7.8%** of a 90% cap (the whole leg
-moved it less than the reading's own precision), 5-hour window inactive, wave **6** suggested at
-start and at the last check. **The 4-unit cap bound this leg, not the allowance — sixth consecutive
+**Budget:** PROCEED at both ends of the leg; weekly **7.8% → 8.6%** of a 90% cap, 5-hour window
+inactive, wave **6** suggested at start and at the last check. *(Corrected after the fold: I wrote
+"7.8% → 7.8%" from the reading I took at step 0 and folded before taking the closing one. The
+closing reading is 8.6%, so the leg cost about 0.8 points of the weekly allowance for four units —
+the arithmetic a later leg would want, and I nearly recorded a null. Take the closing reading
+before writing the last entry, not after.)* **The 4-unit cap bound this leg, not the allowance — sixth consecutive
 leg for which that is true**, and at four legs an hour that is now the fleet's real throughput
 limit rather than a safety margin.
 **Least sure about:** **whether the citation-sweep class is finished or has just moved.** Four
