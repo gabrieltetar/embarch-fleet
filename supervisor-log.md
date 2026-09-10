@@ -97,6 +97,86 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 15:23 — study-designer/026 a compaction pass that struck nothing, and why I landed it as a result rather than a failure
+
+**Decided:** three things, and the first is the one that matters beyond this unit.
+
+**First, that a compaction unit which strikes zero bytes can be a completed unit, and that this one
+is.** The task was to compact `embarch-study-designer/open.md` (4,662 / 5,120 B, 91.1%, inside its
+reserve floor). Leg 064's supervisor had asserted `In flux: no` on it over its own worker's
+objection, and that assertion was right in its reasoning — *the move for an `open.md` is striking
+questions that have since been answered, which restates nothing, so flux cannot forbid it.* The
+worker then did exactly that pass, question by question, against current `spec.md`, `decisions/`
+and `interfaces/`, and **found nothing strikeable**, naming a source for each of the six:
+power-profiling still deferred with no trigger fired; the bench UTC clock-resync still unmeasured;
+`repeat`/`bitpack`/`crc32`/`fixed` still without a render consumer (`interfaces/decoders.md`'s
+`StructLayout` covers only the flat case); decision 45 reading literally *"Designed, never built"*;
+`Study.protocols` still with no builder row type; and `decisions/ci.md` decision 64 saying *"That
+build root does not exist yet."* **The reviewer independently verified all six against source and
+confirmed every one.** So the honest output is a verified negative, and I would rather land that
+than send a second worker at it in three weeks to rediscover it.
+
+**Second, that `State: blocked` with the clock kept is the right park here, and I accept the
+worker's reasoning over a literal read of the rule.** `blocked` is supposed to mean "nothing here
+can be done", and `In flux: no` is supposed to imply the task is *not* blocked — so this looks like
+a violation and it is not. The worker's argument, which I checked: a `done` task is deleted by the
+fold and cannot carry a debt forward, so closing it `done` would leave a 91.1% file in reserve with
+**nothing filed against it** — the exact gap the size gate exists to catch. It kept
+`Size debt due: 2026-10-04` unchanged and wrote a named unpark condition, so the park is not
+absorbing. `check-task-state.py` passes it, and the reviewer, asked directly whether the two
+sections are coherent, said they answer different axes: 064's `In flux: no` rejects *"the file is
+still being edited"* as a reason to leave it alone, and this leg's `blocked` is a conclusion
+reached by actually doing the pass. I agree, and I am recording the agreement because the next leg
+will see a `blocked` task whose own file says `In flux: no` and should not "fix" it.
+
+**Third, that the real finding here is about `DOC-BUDGET.md`, and it is not mine to act on — so I
+filed it.** Five of eight sub-projects now have an `open.md` inside the same reserve against the
+same 5 KB role cap (`api` 4,763, `dev-bench` 4,782, `umbrella` 4,870, `core` 4,813, and this one),
+and **every one of those compaction tasks is blocked.** A cap that nearly every instance of a role
+exceeds is more likely to be a wrong cap than five wrong files, and this unit is the first hard
+evidence that at least one of those debts **has no payable form at all** — it cannot be paid at any
+date without deleting a live question or inventing an answer to it. `DOC-BUDGET.md` and
+`check-doc-size.py` are both owner-reserved, so I wrote
+`inbox/doc-a-full-open-md-of-live-questions-has-no-payable-debt.md` with two candidate answers
+(move the role cap, or give the ledger a third state for "verified unpayable") and touched neither
+file. It also names the adjacent pattern: **four decisions in a week placed by a byte count**
+(`api/048`, `api/055`, and this leg's `umbrella/044` shaped the same way).
+
+**The reviewer also found a live citation defect this unit did not introduce, and I filed it as
+`tasks/study-designer/027`.** `open.md`'s power-profiling deferral cites decision 24 for a
+front-end pick, and decision 24 appears to be about the `StudyStart` wire message. `026` changed
+zero lines of `open.md`, so it is pre-existing — but **`026`'s own Result repeats the reading**,
+which is two agents in a row taking the number at face value. The task tells whoever runs it to
+read the body and to treat the reviewer as possibly wrong too, because `core/032` and `umbrella/044`
+both ended with the original number vindicated.
+
+**Merged:** `agent/study-designer/026-compact-open` (code **none** — the `embarch-study-designer`
+branch is empty by design, zero changed paths, the tree is byte-identical to `main`; doc
+`02775af`). Ownership check base `b1bce56f2c72` after the rebase, 2 paths, both owned; code repo
+base `7063dc84dcec`, whole tree owned, 0 paths. Gate **11/11 green** on the merge result plus
+`check-client-names.py` clean; no `cargo` run against a zero-diff tree.
+**Blocked:** `tasks/study-designer/026-compact-study-designer.md` — deliberately, by the worker,
+with a named unpark condition and its 2026-10-04 clock intact. This is a park, not a failure; the
+first two Decided paragraphs are why.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — a documentation pass, no board, no build, no flash.
+Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and
+still outstanding, carrying `core/008`, `core/020`'s `self_reported_hardware_id` rename and
+`core/032`'s corrected operator message; `umbrella/037`'s corrected check 13 has never met the
+bench that found its defects and needs only the dev-bench board; `embarch-outpost`'s Zephyr
+`tests/unit` suite cannot be built from the fleet's environment. The bench queue is still parked by
+the owner's own commit.
+**Budget:** PROCEED, unchanged; weekly **7.8%** of a 90% cap, 5-hour window inactive, wave **6**
+suggested. The 4-unit cap binds.
+**Least sure about:** **whether I should have overruled the worker and closed this `done`.** The
+case for closing: a `blocked` compaction task is what `check-doc-size.py` itself called *"the
+parked state that absorbed 13 of 28 debts"*, and I have just added a fourteenth. The case for the
+park, which I took: the debt is real, the file is genuinely in reserve, and a `done` task that
+deletes itself would leave that file unfiled — which is worse than a park carrying a date. What
+makes me uneasy is that both readings are defensible from the same rules, which is usually a sign
+the rules have a gap rather than that one of us read them wrong; that gap is what the `inbox/` drop
+is about.
+
 ## 2026-09-10 15:20 — umbrella/044 a reviewer's finding survived contact with two decision bodies, and the previous leg was right
 
 **Decided:** one thing, and it was decided twice before this unit ran — I am recording that the
