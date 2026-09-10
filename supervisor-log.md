@@ -97,6 +97,85 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 16:45 — umbrella/036 a check stops trusting its own copy of another repo's loader, and the file it documents itself in is now 96 bytes from full
+
+**Decided:** three things. The first closes a task open since 2026-09-06; the third is a
+bookkeeping correction I made against this leg's own work.
+
+**First, that `doctor` check 6 answers from the loader its title names.** The defect was the
+suite's fourth instance of the liftable-copy pattern going wrong: check 6, titled *"embarch-api
+config loads"*, answered entirely from `embarch-umbrella`'s own hand-mirrored `ProjectConfig`, so
+it could report **Pass on a config `embarch-api` would refuse** — an engineer whose `doctor` is
+green and whose `embarch-api` then will not start had no way to see which was lying. Fixed the way
+check 8 already solved the identical problem **one function away** in the same file: shell out to
+the located `embarch-api` (`--config <path> --json list-projects`) and take its verdict. The shape
+that makes this right rather than merely different is the three-arm `LoaderVerdict`: `Ok` → Pass,
+`Rejected(why)` → Fail **carrying `embarch-api`'s own error text**, and `Unanswerable(why)` →
+falls back to the local mirror as a **Warn — never a Pass and never a Fail**. The mirror is no
+longer trusted to issue a verdict; it is kept for the job decision 16 actually needs it for,
+explaining *which* field looks wrong and feeding checks 7–9 project data on a config the real
+loader rejects for a reason none of them read.
+
+**Second, that `artifact_path_for_core` is not drift and stays.** The task, written 2026-09-06,
+called it a phantom field and asked for its removal — a fourth strand alongside the three real
+ones. The worker declined, citing `embarch-api` `decisions/shape.md` **decision 64, dated
+2026-09-10, today**, which tolerates the field by name *specifically because* `embarch-umbrella`
+scaffolds it in `init.rs` and reads it in check 9. **I had the reviewer read decision 64's body
+before I accepted that**, because a citation to a decision written the same day is exactly where
+this leg has been finding trouble, and because "the task says remove it" is the easy path. It
+holds: removing the field needs `init.rs`'s write removed **and** decision 64's toleration retired
+in the same change, and the second half is another repo's. Three strands fixed, one correctly
+refused — recorded as an amendment to decision 16 rather than silently skipped.
+
+**Third — and this is mine, not the worker's — `tasks/umbrella/038`'s size-debt clock moved from
+2026-09-30 to 2026-09-12.** This unit **spent the reserve rather than paying it**, on both of that
+task's files: `spec.md` 10,104 → **10,144 B (99.1%, 96 bytes left)** and `open.md` 4,870 →
+**4,996 B (97.6%, 124 bytes left)**. Nothing was done wrong — my dispatch note offered two paths
+and the worker took the sanctioned one, staying inside the 136 bytes it was told it had. But its
+closing note calls this *"no new debt was created and none was paid down"*, which is true of the
+ledger's bookkeeping and **misleading about the file: 96 bytes is not headroom, it is a wall one
+row-edit away.** `038` stays `blocked` — its `In flux: yes` is still correct, `tasks/umbrella/033`
+is open and is exactly a check-17 `doctor`-chain row change — but the earlier date puts it in front
+of a leg's first-unit ledger check in two days instead of twenty. I wrote three options into that
+task and flagged the one nobody has considered: **a verbatim mission split of the eighteen-row
+`doctor` chain table**, which `outpost/008` proved safe under flux *this same leg*, and which would
+leave `spec.md` stable while giving the volatile table room to move.
+
+**Merged:** `agent/umbrella/036-mirrors-two-and-three` (code `6c423e1`, doc `293a647`). Ownership
+check bases: code `d06bb6472fb4` (whole tree owned, 2 paths), doc `7dce408b7caf` (5 paths, all
+owned). Gate on the merge result: `cargo build` clean, `cargo test` **225 passed, 0 failed** — up
+from leg 051's 216, the nine new ones being `LoaderVerdict` decoding tests and two `check_config`
+integration tests mirroring check 8's existing shape — `clippy --all-targets -- -D warnings`
+**zero** warnings; `check-docs.py` **11/11 green**; `check-client-names.py` clean. **This is the
+only unit of the leg with a code merge**; the other three were documentation-only and pushed
+zero-commit code branches.
+**Blocked:** nothing.
+**Reviewer:** no findings. It confirmed the four claims I flagged and the one behaviour change I
+was unsure of — see below.
+**Hardware debts:** none owed by this unit. It is host-side throughout, and the one thing it added
+that *could* have needed a board — check 6 shelling out to a real `embarch-api` — is exercised by
+two integration tests rather than a live binary. Carried forward unchanged: `core/015`'s native
+Windows build of `embarch-core` is the owner's and still outstanding; `umbrella/037`'s corrected
+check 13 has never met the bench that found its defects and needs only the dev-bench board;
+`embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from the fleet's environment. **No
+bench unit was runnable at any point this leg** — every `hw-gated` task in the queue is `toolchain`
+or `required`, and the bench queue is still parked by the owner's own commit.
+**Budget:** PROCEED at both ends; weekly **8.6% → 9.5%** of a 90% cap, 5-hour window inactive, wave
+**6** suggested at start and at the last check. The leg cost about **0.9 points** of the weekly
+allowance for four units, in line with leg 065's 0.8. **The 4-unit cap bound this leg, not the
+allowance — eighth consecutive leg for which that is true.** Closing reading taken before this
+entry was written, per leg 065's correction.
+**Least sure about:** **the one thing the reviewer settled, which I would otherwise have merged on
+faith.** The old check 6 Failed when any project's `source_path` did not exist; the new
+`LoaderVerdict::Ok` arm Passes on `embarch-api`'s say-so and checks `source_path` nowhere. That is
+only safe if upstream's own loader refuses a missing `source_path` — and the worker's `Unanswerable`
+arm *does* still check it, which reads either as care or as the author knowing the check mattered
+and dropping it anyway. The reviewer found `embarch-api`'s `validate()` bails on a missing
+`source_path` for every project, so the deleted check is redundant rather than lost. **I want this
+recorded because a reviewer is the only thing in this design that reads a diff for intent, and this
+is the first time in four legs of tallying that it changed what I would have written** — not by
+finding a contradiction, but by turning a merge-on-green into a merge on evidence.
+
 ## 2026-09-10 16:41 — core/027 the answer was "do not build it", and the reviewer found the sentence that unit should also have written
 
 **Decided:** that `EnrolledBoardResponse` does **not** grow a persisted last-validation timestamp,
