@@ -97,6 +97,73 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 16:41 — core/027 the answer was "do not build it", and the reviewer found the sentence that unit should also have written
+
+**Decided:** that `EnrolledBoardResponse` does **not** grow a persisted last-validation timestamp,
+and that the fix is a label. New `embarch-core` **decision 54** in `decisions/surfaces.md`.
+
+**This was a genuine fork and I deliberately did not pre-pick it.** The task posed both arms —
+persist a real last-validation instant so passive readers can answer "how stale is this identity
+check?", or label the existing field honestly and never claim freshness at all — and said either
+answer closes it. My dispatch note said only what would make **each** arm wrong. The worker took
+the label arm, and the argument it wrote is better than the one I would have accepted:
+
+- **`EnrolledBoard` is `embarch-topology`'s storage, not this crate's.** So the persist arm is a
+  cross-repo change — `embarch-topology`'s enrollment file gains a field, `POST /validate`'s
+  handler writes it back — and §8 reserves that to me, not to a `core`-scoped worker. Half-landing
+  the response side without the storage side is the failure `embarch-topology` decision 26 already
+  named.
+- **And the migration has no honest value to write.** Every board enrolled before the field existed
+  comes back `None`, and a `None` rendered as "never validated" is a **lie about every board on the
+  bench today**, each of which has passed `/validate` calls this suite simply never recorded. I put
+  that trap in the dispatch note as the sentence I would look for first; the worker found it
+  independently and made it the load-bearing half.
+
+**The label is specific enough to act on, which is what makes it a decision rather than a
+deferral**: render `confirmed_at_utc_ms` as **"Enrolled"**, never "Validated" or "Last validated",
+and a reader wanting to say something is stale must call `POST /validate` and show
+`validated_at_utc_ms` from *that* response. The two follow-ups went to `inbox/` rather than
+`tasks/umbrella/` and `tasks/ui/`, correctly — those are not a `core` worker's to write.
+
+**The reviewer earned its slot on this one.** It confirmed the two factual claims I flagged
+(`EnrolledBoard` really is an `embarch-topology` type; decision 26's body really does give that
+reasoning rather than the decision borrowing a nearby argument), confirmed both `inbox/` drops
+describe reachable work, and confirmed no reversals row is owed. Then it found what neither the
+worker nor I had: **decision 50, immediately above 54 in the same file, still says "three consumers
+are filed and blocked on this task: `tasks/api/045`, `tasks/umbrella/041`, `tasks/ui/020`."** One
+landed a leg ago and two closed unsatisfiable — and **decision 54 is built on exactly that**, in
+the same diff, without amending the sentence above it. Not a design contradiction: 54 narrows 50
+correctly and 50's additive field stands. It is a stale forward-reference, which is worse in the
+one way that matters — a forward-reference exists to be read alone, and read alone decision 50 now
+gives a wrong status for all three of its own consumers with no pointer to the decision that
+supersedes them. Filed as `tasks/core/034`, **re-scoped from the drop's `doc` to `core`** on the
+way in, because the file is `embarch-core/decisions/surfaces.md` and `doc` scope would have made it
+undispatchable to the only worker who can fix it.
+
+**Merged:** `agent/core/027-validated-at-reaches-no-reader` (code **none** — the label arm needs no
+code, and the branch was pushed with zero commits; doc `56cb0b1`). Ownership check base
+`317795f077fb`, 4 paths, all owned. Gate on the merge result: `embarch-core` `cargo build` clean,
+`cargo test` **192 passed, 0 failed, 2 ignored** plus **1 passed** in the second target,
+`clippy --all-targets -- -D warnings` **zero** warnings; `check-docs.py` **11/11 green**;
+`check-client-names.py` clean.
+**Blocked:** nothing.
+**Reviewer:** 1 finding — inbox/doc-decision-50-stale-consumer-list-after-decision-54.md
+**Hardware debts:** none owed by this unit, and it is the first thing this leg has landed that
+*reduces* one: the arm it declined is the arm that would have needed a store migration and a bench
+to prove. Note that **`core/015`'s native Windows build did not grow** either — this unit changed
+no `embarch-core` code at all. That build is still the owner's and still outstanding, carrying
+`core/008`, `core/020`'s `self_reported_hardware_id` rename, `core/032` and `core/033`. Carried
+forward unchanged: `umbrella/037`'s corrected check 13 has never met the bench that found its
+defects; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from the fleet's
+environment. **No bench unit runnable this leg.**
+**Budget:** PROCEED, weekly **8.6%** of a 90% cap at the leg's start, wave **6**.
+**Least sure about:** **whether "label, do not add" survives the next person who wants freshness on
+a screen.** The decision is right about cost and right about the migration, but it leaves the
+original defect — a human reading enrolment time as freshness — fixed only by *wording*, on two
+surfaces neither of which has been changed yet, by two `inbox/` drops that are now the only thing
+carrying it. If those two drops are lost or deprioritised, this unit will read as having closed a
+four-task chain that in fact ends with nothing on any screen having changed.
+
 ## 2026-09-10 16:33 — outpost/008 a decision that could not be written for four days, and the split that made room for it
 
 **Decided:** two things, and the first is the reason this unit existed at all.
