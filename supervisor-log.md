@@ -97,6 +97,83 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 15:26 — topology/011 the CLI stops racing Core's lock, and I fixed the refusal's own error message before pushing
+
+**Decided:** three things, and one of them is a behaviour change to a shared crate that every other
+sub-project depends on.
+
+**First, to land a refusal rather than a routing layer, and I pre-committed to that before
+dispatch.** The defect was real and old: `embarch-topology`'s CLI performed four mutations —
+`enroll`, `validate`, and two `set-dev-bench-link` writers — that this crate's **own decision 15**
+places inside Core, because Core does the identical thing under a hardware lock that is
+`Arc<Mutex<()>>` and therefore **in-process only** and blind to a second process. On the suite's one
+validated topology it is worse than a race: `hardware/paths.rs` resolves `#[cfg(unix)]
+/var/lib/embarch` while the Windows-service Core reads `%ProgramData%\embarch`, so
+`embarch-topology enroll` run from WSL wrote **a different store than Core reads**, silently.
+
+The task's own candidate direction was to route mutations through Core's three endpoints. **I
+forbade that in the dispatch note** and said so in writing: `embarch-topology` is path-depended on
+by `embarch-api`, `embarch-core`, `embarch-ui` and `embarch-umbrella`, so adding an HTTP client to
+it is a suite-wide cost paid by four consumers for a CLI convenience. What landed instead is
+`refuse_if_core_reachable`, built on `resolve_software_topology` — **already in the crate** — which
+refuses with Core's base URL and the route to use, and lets the mutation run in-process only when
+no Core answers at all. That last arm is the local-bootstrap machine, and it is why this is a
+property rather than a rewrite. New **decision 28** in `decisions/enrollment.md` records it and,
+more usefully, records *why decision 15 read as done when it was half-done*: 15 says "this crate's
+UI reverted to fully read-only" and never mentions the CLI, so the rule looked applied.
+
+**Second, I fixed the refusal's own message before pushing, in the code repo, as a separate
+commit.** It printed `curl -X /probes/enroll <base_url>` — a route passed where `curl` expects an
+HTTP **method**, so an operator copying the line gets an error from curl rather than from EmbArch.
+I did not substitute `POST`: nothing I could verify states the method for those three routes, and
+**inventing one would be exactly the inferred-fact failure this suite has paid for** — so the
+message now prints `<base_url><route>` and leaves the method to the operator. Trivial and in scope,
+so I fixed it rather than filing it (`3508dc8`), but it is worth naming that **this is the third leg
+running in which a citation-or-comment unit rewrote text a real user sees** — `umbrella/043` changed
+a generated rc-file header, `core/032` changed a study-refusal string, and this one writes a whole
+new operator message. That class is no longer "comment-only" in practice.
+
+**Third, the reviewer's negative result is the one I actually wanted, and it is worth reading as
+evidence rather than as a green tick.** A CLI that refuses whenever any Core answers is a
+behaviour change for every existing caller, so I asked it specifically whether anything documented
+anywhere expects those three subcommands to work with a Core running. It swept `suite/user-guide.md`,
+`embarch-umbrella/decisions/topology.md` and `mirrors.md`, and the topology task files, and found
+**nothing** — `embarch-umbrella`'s `status`/`setup`/`doctor` call the shared crate's *read* paths,
+not these mutating subcommands. It also corrected a mislabel in my own spawn prompt: the code
+comment's `embarch-core/decisions/surfaces.md:30` is a **line** reference into decision 27's
+paragraph, not a citation of a "decision 30", and is correct as written.
+
+**Merged:** `agent/topology/011-cli-mutations-lock` (code `3a9937c`, plus `3508dc8` for my
+error-message fix; doc `6cba4ff`). Ownership check bases: code `2e94db47cda0` (1 path, whole tree
+owned), doc `3e0b168ff9a0` (6 paths, all owned). Gate on the merge result: `embarch-topology`
+`cargo build` clean, `cargo test` **15 passed, 0 failed** across the suite's targets,
+`clippy --all-targets -- -D warnings` **zero** warnings; `check-docs.py` **11/11 green**;
+`check-client-names.py` against the code worktree clean.
+**Blocked:** nothing. One item was left undone on purpose and named in decision 28:
+`set-dev-bench-link --clear-serial` / `--clear-interface` refuse the same way, but Core's
+`/dev-bench/link` has **no documented clear semantics** to point an operator at. That is
+`embarch-core`'s gap, the worker correctly did not reach into another repo to fix it, and decision
+28 records it where the next `embarch-core` unit will find it.
+**Reviewer:** no findings.
+**Hardware debts:** **one new, and it is small but real.** The refusal path has never been exercised
+on a `wsl-host` machine with the live Windows-service Core answering — which is the exact
+configuration the whole change is about, and the only one where the wrong-store bug bites. It needs
+no board, only the owner's machine with Core running: run `embarch-topology validate <role>` from
+WSL and confirm it refuses and names the right base URL. Until then the fix is argued, not observed.
+Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and
+still outstanding; `umbrella/037`'s corrected check 13 has never met the bench that found its
+defects and needs only the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be
+built from the fleet's environment. The bench queue is still parked by the owner's own commit.
+**Budget:** PROCEED, unchanged; weekly **7.8%** of a 90% cap, 5-hour window inactive, wave **6**
+suggested. The 4-unit cap binds.
+**Least sure about:** **whether "refuse whenever any Core answers" is too wide a net.**
+`resolve_software_topology` finding a winner means *some* Core answered on the default port — not
+necessarily the Core that owns this machine's store. On a developer box running a scratch Core on
+the default port, this now refuses a mutation that would have been correct and safe, and the escape
+hatch is to stop the Core. The reviewer found nothing documented that breaks, which is real
+evidence, but "nothing documents it" and "nobody does it" are not the same claim, and the owner
+runs this CLI by hand on the bench.
+
 ## 2026-09-10 15:23 — study-designer/026 a compaction pass that struck nothing, and why I landed it as a result rather than a failure
 
 **Decided:** three things, and the first is the one that matters beyond this unit.
