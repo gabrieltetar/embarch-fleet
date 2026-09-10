@@ -138,3 +138,7 @@ optional: without a webhook, `fleet-alert.py` exits 2 and says so, which is the
 intended failure — a muted alarm that looks fine is worse than no alarm.
 `check-client-names.py` applies the same rule to its denylist, with one
 difference: it is in the gate, so its absence is red rather than merely loud.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
