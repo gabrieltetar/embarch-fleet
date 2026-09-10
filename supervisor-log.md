@@ -97,6 +97,70 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 16:33 — outpost/008 a decision that could not be written for four days, and the split that made room for it
+
+**Decided:** two things, and the first is the reason this unit existed at all.
+
+**First, that the mission split is the right move for a file in reserve, and I pre-committed to it
+before dispatch rather than leaving the choice open.** `decisions/tracing.md` had **784 bytes left**
+against this sub-project's tightened **8 KB** cap — `embarch-outpost` is the only entry in
+`check-doc-size.py`'s `TIGHTENED` table — and the decision it needed to hold was drafted on
+2026-09-06 and **thrown away by that worker because the gate refused it**. So the defect was not
+that anyone got it wrong; it is that a correct, already-written decision has been missing from the
+record for four days purely because of a byte count.
+
+`decision 6` (manual markers, build-registered IDs) moved **verbatim** into a new
+`decisions/markers.md`. That is the whole argument for a split over a compaction: **a verbatim
+move restates nothing**, so it cannot lose an argument, and this file's `Must not delete:` list is
+unusually specific because a previous pass *did* lose one — decision 19's rejected-alternative
+price read "and a layout bump" until 2026-09-06 and was wrong in three places at once. I checked
+that sentence and the measured duty-cycle result myself in the diff before merging, and had the
+reviewer check both independently; both survived word for word. `tracing.md` is now
+**6,940 / 8,192 B** and has left the size ledger entirely — this task was the only filing against
+it, so the debt is paid rather than reassigned.
+
+**Second, that `decision 25` records the two traps in the *decision*, not only in `wire.md`.** The
+GPIO-dispatch family (`GpioDispatch` kind 9, `GpioCallbackDone` kind 10, `OUTPOST_FLAG_TRACE_GPIO`)
+has shipped and been documented since `007`; what was missing was why it exists and what it
+deliberately does not do. It traces a **handler timeline, not pin state** — the hook is a
+callback-list boundary, not a level sample. The two traps are the useful half and both are the kind
+that leave a *readable* trace saying the wrong thing:
+
+- **`GpioCallbackDone` is an exit marker**, placed after `cb->handler()` returns. Read as an entry
+  marker it attributes every handler's span to the wrong handler, and nothing looks broken.
+- **`GpioDispatch`'s `b` is `0`, not a pin mask** — the hook's mask parameter is 8 bits while
+  `gpio_fire_callbacks()` passes 32, so pins above 7 are gone before the record is made. Which pins
+  a dispatch covered has to come from `pin_mask` on the `GpioCallbackDone` records after it.
+
+**Merged:** `agent/outpost/008-gpio-family-decision` (code **none** — documentation-only by my
+dispatch instruction, and the branch was pushed with zero commits; doc `896f9c9`). Ownership check
+base `3236e9ab5870`, 5 paths, all owned. Gate on the merge result: `check-docs.py` **11/11 green**;
+`check-decision-refs.py` re-run explicitly after the split — **all 18 topic-file links resolve to
+the file that defines the number**, and all 19 reversal-row citations resolve. Decision numbers 1–25
+are contiguous with no duplicate, checked by hand because `tasks/doc/033` records that nothing
+checks that automatically.
+**Blocked:** nothing.
+**Reviewer:** no findings. It confirmed the verbatim survival of both protected passages in
+decision 19, matched decision 25's two traps against `interfaces/wire.md` field by field, confirmed
+the one surviving prose reference to decision 6 now names `markers.md`, and confirmed
+`embarch-decision-reversals.md` holds no `embarch-outpost` rows at all.
+**Hardware debts:** **one, unchanged and re-stated because it is now several units deep.**
+`embarch-outpost`'s Zephyr `tests/unit` ztest suite was **not run** — no `west`, no `ZEPHYR_BASE` in
+the fleet's environment — and this is the standing condition, not this unit's failure. It costs
+nothing here specifically: this unit changed no C and no Kconfig, by instruction. But **no leg has
+been able to claim that suite green after any `embarch-outpost` change for several days**, and this
+is the second such change to land in that window. Carried forward unchanged: `core/015`'s native
+Windows build of `embarch-core` is the owner's and still outstanding; `umbrella/037`'s corrected
+check 13 has never met the bench that found its defects. **No bench unit is runnable this leg** —
+every `hw-gated` task is `toolchain` or `required`.
+**Budget:** PROCEED, weekly **8.6%** of a 90% cap at the leg's start, wave **6**.
+**Least sure about:** **whether a split leaves the sub-project easier or harder to read, and I have
+no way to measure it.** `decisions/markers.md` is 1,725 bytes holding a single decision. That is a
+file a reader has to find, against a paragraph they would have scrolled past — and the index row is
+the only thing pointing at it. `DOC-COMPACTION.md` §2 names the split as the cheaper move and it is
+plainly cheaper *to write*; whether an eleven-topic-file `decisions/` directory is still navigable
+at twelve is a question this suite keeps answering one file at a time.
+
 ## 2026-09-10 16:31 — study-designer/027 the citation was wrong, and so is every replacement anyone would have guessed
 
 **Decided:** that a question may cite **nothing**, and that this is the correct output rather than a
