@@ -73,7 +73,12 @@ TEMPLATES = HERE / "templates"
 SHIMMED = ("check-ownership.py", "queue-status.py", "usage-budget.py",
            "fleet-alert.py", "fleet-post.py", "fold-commit.py", "fold-day.py",
            "check-client-names.py", "check-dispatch.py", "fleet-armed.py",
-           "fleet-hardware.py", "fleet-tick.py", "fleet-burndown.py")
+           "fleet-hardware.py", "fleet-tick.py", "fleet-burndown.py",
+           # The Slack read/mark path, shimmed for the same reason fleet-post.py
+           # is: a tick and a leg invoke these as `scripts/...` from whichever
+           # repo they are standing in, and on 2026-09-10 the first render after
+           # the cutover left STEP 1 naming a file the instance did not have.
+           "fleet-read.py", "fleet-react.py", "fleet-slack-doctor.py")
 
 PLACEHOLDER = re.compile(r"\{\{([A-Z_]+)\}\}")
 
@@ -320,7 +325,10 @@ def main() -> int:
         print("\nNot configured yet: the bot token. Until it exists the fleet cannot\n"
               "post under its own identity, so ordinary reporting does not reach the\n"
               "channel at all and only alerts get through, via the webhook, without\n"
-              "their thread. Setup is in scripts/fleet-post.py's header.")
+              "their thread, and it cannot READ the channel at all, so a listener\n"
+              "can post its heartbeat while being unable to receive an instruction.\n"
+              "Setup is in scripts/fleet-post.py's header; scripts/fleet-slack-doctor.py\n"
+              "checks the whole path once it exists.")
     return 0
 
 
