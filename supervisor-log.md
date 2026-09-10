@@ -97,6 +97,80 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 14:24 — core/008 a citation form invented by a worker, caught by a reviewer, and verified by reading bodies rather than headings
+
+**Decided:** to **fix the reviewer's finding in the fold rather than queue it**, and to do that only
+after re-deriving its verdict myself — because the first time I read it, it looked wrong.
+
+The unit itself was clean and slightly larger than filed. `embarch-core/spec.md` §4's module table
+was missing exactly one row (`outpost_manifest`, confirmed by enumerating all 14 `mod` declarations
+in `main.rs`), and the two `decision 48` comments really do mean **36** — `decisions/flashing.md`'s
+decision 36 is literally *"a flashing backend per chip family, refusing probe-rs where the vendor's
+semantics are not implemented"*, which is what both comments claim. The task said there were **two**
+stale `milestone-N.md` citations; there were **five**.
+
+**The finding, and why it is a real one.** For four of those five the worker wrote
+`embarch-ui milestone 1`, arguing that naming a deleted milestone doc is the suite's established
+convention and citing `embarch.md`'s "deleted, not indexed" note. **It is not a convention.** That
+note is about recovering an old file with `git show`; the actual form, settled by `api/052` and
+adopted unchanged by `umbrella/043` an hour before this, is bare `decision M` same-repo and
+`` `<repo>` decision M `` cross-repo. So the unit replaced four dead pointers with four
+*plausible-looking* pointers into a doc that does not exist — which is strictly worse than a dead
+one, because it reads as though it resolves. It also dropped the section numbers (§4.9, §4.7,
+§4.4/§4.6) the old citations carried, so it lost locating information at the same time.
+
+**And the decision numbers were already sitting in the repo**, which is the part that makes this a
+fold fix rather than a task: `embarch-core`'s own `decisions/surfaces.md:29` already tombstones the
+`/enroll` retirement as *"see `embarch-ui` decision 1"*, and `embarch-ui/decisions/wiring.md`'s
+decision 6 is verbatim the no-client-side-interval-polling rule `logs.rs` describes.
+
+**The method note is the thing I want the next leg to take.** `embarch-ui` decision 1 is titled
+*"One consolidated process, not a shared library three separate binaries keep depending on"* — read
+as a heading it is a packaging decision and has nothing to do with an enrollment page, and I nearly
+recorded the reviewer's proposal as itself a miscitation on exactly that basis. It is correct, and
+only its **body** says why: *"Core's enroll page's HTML moves out of Core, which keeps the enroll
+endpoint it already had."* **A heading-only check rejects correct citations, and its mirror accepts
+wrong ones.** I applied the fix only after reading both decision bodies, not on the reviewer's word —
+leg 062 recorded the same discipline and it earned its keep here.
+
+**One thing I did not fix, and filed instead.** The lines I was repairing sit three lines from
+untouched `` `embarch-topology/design.md` decisions 2/8/14 `` and `` `embarch-ui/design.md` §3 ``
+citations. `embarch-core` is the **fourth** sub-project with this defect and the only substantial one
+with no sweep — and it is the repo the other three most often cite *into*, so a wrong bare number
+here has the widest blast radius in the suite. Dropped as
+`inbox/core-src-still-cites-a-design-md-embarch-core-no-longer-has.md`, carrying the settled
+convention verbatim plus the three lessons the earlier sweeps paid for (every filed count has been
+wrong; the bare form is the dangerous one; read bodies not headings) and the two look-alikes
+`umbrella/043` correctly left alone. I did **not** widen this unit to cover it.
+
+**Merged:** `agent/core/008-outpost-manifest-module` (code `61bce4f`, doc `1b03ce0`), plus the fold's
+own citation fix `a5daef6` in `embarch-core`. Ownership check bases: code `586b6d60f84d` (code repo,
+whole tree owned), doc `b0ad6110e7cf` after rebasing onto `api/056`'s fold, 3 changed paths. Gate
+green on the merge result and again after the fold fix: `check-docs.py` **11/11**, `embarch-core`
+`cargo build` / `test` (193 tests) / `clippy --all-targets -- -D warnings` clean,
+`check-client-names.py --repo embarch-core` clean. I read the whole code diff myself — comment-only,
+7 insertions and 7 deletions, no behavioural line touched.
+**Blocked:** nothing.
+**Reviewer:** 1 finding — inbox/core-review-008-milestone-citation-form.md
+**Hardware debts:** none owed by this unit — comment-only plus one `spec.md` table row, no board, no
+flash, and the worker was told explicitly that a native Windows build is not its to attempt and
+correctly did not claim one. Carried forward unchanged: `core/015`'s native Windows build of
+`embarch-core` is the owner's and still outstanding, and is also what would deploy `core/020`'s
+`self_reported_hardware_id` rename — **this unit adds a third thing riding on it**, since `a5daef6`
+and `61bce4f` are `embarch-core` source and reach the running service only through that build;
+`umbrella/037`'s corrected check 13 has never met the bench that found its defects and needs only the
+dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built here (no `west`, no
+`ZEPHYR_BASE`). The bench queue is still parked by the owner's own commit, and no bench unit is
+runnable — every `hw-gated` task in the queue is `toolchain` or `required`.
+**Budget:** PROCEED, weekly 5.7%, wave 6 suggested; unchanged from the leg's start.
+**Least sure about:** **I deleted the reviewer's `inbox/` drop after fixing what it reported**, and
+the `**Reviewer:**` line above still names that file, so the tally now points at a path that is not
+on disk. I think fixing a verified comment-only citation in the fold is right and leaving a duplicate
+task in the queue is wrong — but the grep that settles whether per-unit review earns its cost reads
+that line, and an entry naming a deleted file is a worse artefact than I would like. If this recurs,
+the honest form is probably `1 finding — fixed in the fold, drop removed`, and that is a fourth form
+`leg.md` forbids, so it is the owner's call and not mine.
+
 ## 2026-09-10 14:19 — api/056 a unit that shipped its code and lost its documentation for a day
 
 **Decided:** to land this as a **reconstruction rather than a re-run**, and the reason is the state I
