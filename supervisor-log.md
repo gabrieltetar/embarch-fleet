@@ -97,6 +97,71 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 17:41 — dev-bench/007 two truncations get two markers, and the reviewer found the case where they get one
+
+**Decided:** new `embarch-dev-bench` **decision 45** in `decisions/scanning.md` — two distinct
+markers for two distinct overflows, and the name list is bounded *before* it is written rather
+than trimmed after. `(truncated)` means the 64-byte `fail_reason` name list filled; `(census full)`
+means the 256-entry `SCAN_SEEN_MAX` census (decision 32) dropped advertisers. A combined marker was
+considered and rejected in the decision body: it would say something was cut without saying which.
+
+**The second defect is the one that was surprising and it is now structurally impossible.** The old
+code called `snprintk` and *then* checked its return — so the bytes were already in the buffer, and
+a partial name or a bare trailing separator stayed there. The new `scan_seen_names_append()`
+(`app/src/scan_seen_names.c`, pure C, no BT host) formats each entry into scratch and copies it in
+only whole, so a rejected entry changes nothing. I read it line by line for an unsigned underflow
+in `max_len - *used` — the early `*used > max_len` return makes it unreachable. A ztest suite under
+`app/tests/scan_seen_names/` pins it under `native_sim`.
+
+**I told the worker not to widen `OUTCOME_MAX_FAIL_REASON_LEN`** — 64 bytes is `embarch-core`'s
+wire contract, not `embarch-dev-bench`'s to relax — and it did not. It instead budgeted the name
+list against prefix + longest-marker, with a `BUILD_ASSERT` holding the room, so the final
+`outcome_fail` write cannot silently eat the marker the way the unbudgeted version could.
+
+**Then the reviewer found the hole in exactly the property the decision claims.** When *both*
+conditions are true at once, the implemented priority order writes `(truncated)` and drops
+`(census full)` entirely — so an advertiser lost to the 256-entry cap reads as an ordinary
+name-list truncation, which is precisely what decision 32 forbids: *"'not in the list' has to mean
+'not on the air', not 'the list was full.'"* Decision 45's own text says the two conditions are
+always independently signalled, and in the combined case the code re-collapses them. Filed as
+`tasks/dev-bench/015`, and I folded the reviewer's secondary note into the same task rather than
+letting it become a second unit: `scan_seen_names.h`'s header cites a decision 43 in `ble.md` that
+does not exist. **I did not fix either in the fold** — the marker fix is a real budget change in
+firmware I cannot compile, and hand-patching that from a diff is how this suite has produced
+citation defects all week.
+
+**Merged:** `agent/dev-bench/007-census-truncation-marker` (code `79d4743`, doc `07a5062`). Doc
+branch rebased onto `ui/022`'s fold; the code branch fast-forwarded `embarch-dev-bench` `main` from
+`07f15bd`. Ownership check bases: code `07f15bd4ccc2` (whole tree owned, 8 paths), doc
+`dc1ff1a82cce` (4 paths, all owned). Gate on the merge result: `check-docs.py` **11/11 green**;
+`check-client-names.py` clean. **The firmware itself was not built or tested by anyone** — see
+below.
+**Blocked:** nothing.
+**Reviewer:** 1 finding — inbox/dev-bench-census-marker-priority.md
+**Hardware debts:** **one, and it is the biggest of the leg.** This is the only unit of the four
+that landed real code into a repo whose toolchain this environment does not have: no `west`, no
+`ZEPHYR_BASE`, so **`app/src/scan_seen_names.c` has never been compiled, and the ztest suite the
+worker wrote for it has never been run — not by the worker, not by me.** It went in on two careful
+reads. That is the already-open `embarch-outpost`-shaped debt now reaching a second repo, and it is
+owed in a session with a Zephyr toolchain. The task also owes **one 20-second study** to re-observe
+the original `fail_reason` on a real bench; that is an attended-leg debt and I did not attempt it,
+per the standing no-hardware rule. Carried forward unchanged: `core/015`'s native Windows build of
+`embarch-core` is the owner's and still outstanding, carrying `core/008`, `core/020`'s
+`self_reported_hardware_id` rename, `core/032` and `core/033`; `umbrella/037`'s corrected check 13
+has never met the bench that found its defects. No bench unit was runnable at any point this leg —
+every `hw-gated` task in the queue is `toolchain` or `required`, and the bench queue is still
+parked by the owner's own commit.
+**Budget:** PROCEED at both ends; weekly **9.9%** of a 90% cap, 5-hour window inactive, wave **6**
+suggested at start and at the last check. **The 4-unit cap bound this leg, not the allowance —
+ninth consecutive leg.**
+**Least sure about:** **that I was right to land unbuilt firmware at all.** The alternative was to
+block the task on the missing toolchain, and I judged that wrong — the change is well-reasoned, the
+new file is deliberately pure C with its own test, and blocking would park a real fix indefinitely
+on a debt nobody has scheduled. But the reviewer then found a genuine logic hole by reading the
+same code I had read and passed, which is evidence about how far a read gets you: **`main` now
+carries firmware that no compiler has seen, and a leg's gate reported green over it.** If one thing
+from this leg is worth the owner's attention, it is that.
+
 ## 2026-09-10 17:35 — ui/022 decision 54's label finally reaches a screen, and it was rendered twice
 
 **Decided:** nothing new — this unit *implements* `embarch-core` decision 54 rather than deciding
