@@ -97,6 +97,80 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 15:28 — core/033 the four citations nobody would guess at are settled, and the citation-form question is closed
+
+**Decided:** two things, and the first closes a thread that has been open across three legs.
+
+**First, that `core/032`'s refusal was worth the extra unit, and the evidence is that all four
+resolved cleanly and one of them changed a *claim*, not a number.** Leg 064's worker left four
+citations carrying their original numbers rather than guessing, and leg 064's supervisor filed them
+here rather than hand-patching them in a fold. Both calls look right in hindsight:
+
+- `src/chip_resolve.rs:46` and `src/api.rs:1273` — `embarch-dev-bench` **decision 26** confirmed
+  (the ESP32-C5 board substitution), and the worker **deleted a "reversing that repo's decision 13"
+  clause** because 13's body is *"Core can flash dev-bench firmware"* and has nothing to do with
+  the JTAG/board choice. That deletion is the part a guess would have missed entirely: the number
+  was defensible and **the sentence around it was false**. A wrong reversal claim is worse than a
+  missing one, because a reader takes it as a record that something was overturned.
+- `src/dev_bench_link.rs:115` — "an outpost frame carries its own CRC" was citing `embarch-outpost`
+  **decision 5**, which is the overflow/gap-record policy. The worker's stronger finding is that
+  **no `embarch-outpost` decision covers frame CRC at all**, so it repointed to that repo's
+  `interfaces/wire.md`, which states it (`frame := COBS(body || crc32_ieee(body) …)`). I verified
+  that file myself before merging and the reviewer verified the negative half. **Citing an
+  interface doc because no decision exists is the honest move**, and it is one a number-substituting
+  script can never make.
+- `src/api.rs:970` — repointed from decision 7 (the Axum choice, zero overlap) to **decision 28**,
+  `NotEnrolled`/404. Confirmed against the body.
+- `src/study.rs:2471` — left **unchanged** at `embarch-study-designer` decision 30, confirmed
+  correct. One of four flagged citations was simply fine, which is the base rate this class of task
+  should expect.
+
+**Second, the citation-form drift leg 064 declined to fix in a fold is now fixed as a unit, which
+is where it belonged.** ~47 sites written as `` `decision N` `` are normalised to the plain-prose
+form the two prior sweeps used, by a scripted `perl -pi` whose diff the worker read by hand. **Zero
+`design.md` citations and zero competing citation forms now remain in `embarch-core`.** I checked
+comment-only-ness mechanically before merging — filtering comment-prefixed lines out of
+`git diff -U0` left **nothing at all** — which matters more here than in leg 064, where the same
+check found one shipped error string; this diff touches no user-visible text.
+
+**Also worth recording: `embarch-core`'s main checkout was two commits behind `origin/main` when I
+merged**, so the fast-forward brought `core/032`'s landed work down with `core/033`. Nothing was
+wrong and nothing was lost — the branch was based on `origin/main`, and `--ff-only` is what made
+this safe rather than lucky. But a leg that merges in the owner's code checkout should expect that
+checkout to be stale, and read the diffstat it gets rather than the one it expected.
+
+**Merged:** `agent/core/033-flagged-miscitations` (code `1ba44af`, doc `b4a036e`). Ownership check
+bases: code `9b8e716e5d1a` (10 paths, whole tree owned), doc `58d17c026201` after the rebase (2
+paths, both owned). Gate on the merge result: `embarch-core` `cargo build` clean, `cargo test`
+**192 passed, 0 failed, 2 ignored** plus **1 passed** in the second target,
+`clippy --all-targets -- -D warnings` **zero** warnings; `check-docs.py` **11/11 green**;
+`check-client-names.py` against the code worktree clean.
+**Blocked:** nothing.
+**Reviewer:** no findings. It independently confirmed all four citations against decision bodies,
+confirmed no `embarch-outpost` decision covers frame CRC, found no reversals-index entry for
+dev-bench 13/26, outpost 5 or core 7/28, and confirmed the ~47 mechanical edits touched no shipped
+string literal and altered no decision number.
+**Hardware debts:** none owed by this unit — comment-only, no board, no flash. It deepens the
+standing one by one more commit: this diff is in `embarch-core`, so **`core/015`'s native Windows
+build** — the owner's, still outstanding — now carries `core/008`, `core/020`'s
+`self_reported_hardware_id` rename, `core/032`'s corrected operator message and this unit.
+Unchanged otherwise: `umbrella/037`'s corrected check 13 has never met the bench that found its
+defects and needs only the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be
+built from the fleet's environment. **No bench unit was runnable at any point this leg** — every
+`hw-gated` task in the queue is `toolchain` or `required`, and the bench queue is still parked by
+the owner's own commit.
+**Budget:** PROCEED at both ends of the leg; weekly **7.8% → 7.8%** of a 90% cap (the whole leg
+moved it less than the reading's own precision), 5-hour window inactive, wave **6** suggested at
+start and at the last check. **The 4-unit cap bound this leg, not the allowance — sixth consecutive
+leg for which that is true**, and at four legs an hour that is now the fleet's real throughput
+limit rather than a safety margin.
+**Least sure about:** **whether the citation-sweep class is finished or has just moved.** Four
+repos have now been swept and each one found real miscitations hiding behind mechanical ones, which
+argues the remaining repos hold them too. What I cannot tell from here is whether the *four*
+sweeps' worth of filed follow-ups (`core/033` was one) are converging or accumulating — this unit
+closed its own follow-up cleanly, but it closed it because a supervisor happened to pick it two
+legs later, not because anything schedules that.
+
 ## 2026-09-10 15:26 — topology/011 the CLI stops racing Core's lock, and I fixed the refusal's own error message before pushing
 
 **Decided:** three things, and one of them is a behaviour change to a shared crate that every other
