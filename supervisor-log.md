@@ -97,6 +97,60 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 14:45 — topology/019 a verbatim split whose seam the decision text had already drawn
+
+**Decided:** nothing suite-wide. Two dispatch-time calls, both recorded in the task file before the
+worker ran: that this task's single `Compacts:` file answers `In flux: no` and so is an ordinary
+compaction unit, and that the worker must leave `open.md`, `spec.md` and `decisions/validation.md`
+alone because `tasks/topology/014`/`017` own those. **I also refused a fourth reviewer-shaped
+inbox drop before this leg's first dispatch** — see the `core/032` entry for it; it is recorded
+here only because it was the leg's first act.
+
+**The pass itself, and why I merged it on a read rather than on green alone.** `decisions/enrollment.md`
+was 11,346/12,288 B (92.3%). Decisions 20 and 27 moved **verbatim** into a new
+`decisions/link-declares.md` (8,157 B), leaving `enrollment.md` at **4,034 B**; `decisions.md`'s
+routing table gained the new row in the same commit and `enrollment.md`'s header gained a
+cross-pointer. **I diffed the moved text rather than trusting the report** — the new file's two
+sections are byte-identical to what left, so nothing was restated and nothing was cut, which is
+exactly the case `DOC-BUDGET.md`'s split-first rule exists for and the case where `In flux` cannot
+forbid the move.
+
+**The seam was the worker's best contribution and it did not invent it.** Decision 20's own first
+line is "Two independent gaps, one event", and 27 is the follow-up fix to the same failure: 14/15/16
+are enrolment's human-interaction surface, while 20/27 are what a *role* carries across an
+enrollment change and how `NotFound` reports which declared fact emptied the candidate list. It
+also considered and rejected folding them into `decisions/links.md` (10,941 B) because that would
+push a second file over cap — the right trade, and it said so with the byte numbers.
+
+**`DOC-COMPACTION-PASS.md`'s human question, answered by the actor that read the file whole:** can
+`embarch-topology/spec.md` alone answer what someone needs to work on enrollment today? Its answer,
+which I accept: **yes for the mechanics, no for two specific traps** — why a role *displaces*
+rather than merges on upsert (the inherited stale link serial), and why `NotFound`'s message cannot
+call `embarch-topology status` inline (the `hardware`/`software` feature split that keeps `reqwest`
+out of `embarch-core`'s build). Someone extending this code without reading `link-declares.md`
+first would plausibly re-introduce one of those two.
+
+**Merged:** `agent/topology/019-compact-topology` (code **none** — the `embarch-topology` branch is
+empty by design, a docs-only compaction with a zero-line diff; doc `867945d`). Ownership check base
+`12563915c73a`, 5 paths, all owned. Gate **11/11 green** on the merge result, plus
+`check-client-names.py --repo embarch-topology` clean. No `embarch-topology` `cargo` run: the code
+tree is byte-identical to `main`.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — a verbatim documentation split, no board, no build.
+Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and
+still outstanding, and it also carries `core/008`'s commits and `core/020`'s
+`self_reported_hardware_id` rename; `umbrella/037`'s corrected check 13 has never met the bench that
+found its defects and needs only the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite
+cannot be built here. **No bench unit was runnable at dispatch time** — every `hw-gated` task in the
+queue is `toolchain` or `required`, and the bench queue is still parked by the owner's own commit.
+**Budget:** PROCEED at the leg's start, weekly **6.7%** of a 90% cap, 5-hour window inactive, wave
+**6** suggested — so the 4-unit cap binds this leg, not the allowance, for the fourth leg running.
+**Least sure about:** that `decisions/link-declares.md` is the right *name* for a file whose two
+decisions are really "what a role carries across an enrollment change" — the worker itself noted the
+mission sits closer to `links.md` than to `enrollment.md`, and if a later unit finds `links.md` has
+room after its own compaction, merging these two files back would be a reasonable reversal.
+
 ## 2026-09-10 14:31 — umbrella/043 a sweep redone from scratch, four real miscitations with one root cause, and a reviewer finding I refused
 
 **Decided:** three things, and the third is a disagreement I want on the record rather than resolved
