@@ -97,6 +97,64 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 14:52 — api/055 an owed decision finally authored, in a file I picked because the right one is over its cap
+
+**Decided:** two things, one of them before dispatch and consequential.
+
+**First, that `embarch-api` decision 64 goes in `decisions/shape.md` rather than `decisions/zephyr.md`,
+and I wrote the argument into the task file before the worker read it.** `zephyr.md` is
+**14,238 B against a 12,288 B cap** — over, not merely in reserve — and its compaction task
+`api/057` is `blocked` on `In flux: yes`. `zephyr.md` holds decision 13 (`soc_chip_overrides`)
+because *that key* was Zephyr-shaped; a policy about retired keys **as a class** is not. So the new
+decision cites 13 and 53 across files and moves neither. This is the same pre-pick leg 063 made for
+`api/048`, for the same reason, and it is worth naming what it is: **`DOC-BUDGET.md` warns that a
+cap which misfiles is worse than a cap which refuses, and this is the third decision in a week
+placed by a byte count.** The queue now carries **six** `compact-api` tasks, every one of them
+`blocked` on `In flux: yes`. That is the wall, not this unit.
+
+**Second, that the decision records the shipped behaviour and changes no code.** Decision 64:
+`[[projects.targets]]` (53) and `soc_chip_overrides` (13) are refused **by name** at config load;
+`artifact_path_for_core` (15) is not, and loads silently unread because `ProjectConfig` carries no
+`deny_unknown_fields`. The asymmetry is deliberate — an installed base umbrella still writes — and
+the decision states **the default for the next retired key (refuse by name)** and **what ends the
+tolerance**, which is the half that makes it worth a number rather than a comment. `open.md`'s
+prose became a citation and got *shorter* (4,859 → 4,763 B).
+
+**The reviewer found the premise the whole exception rests on was never checked, and I checked it
+in the code.** It reported that "`embarch-umbrella` still scaffolds `artifact_path_for_core` into
+every config it writes" appears nowhere in `embarch-umbrella`'s docs, and that umbrella decision 17
+says the opposite for `zephyr-west` repos. **It looked in the docs; the answer is in the source, and
+both halves turn out to be true.** `embarch-umbrella/src/init.rs` emits
+`artifact_path_for_core = …` for a **static** project on a WSL2 split where a Windows-visible UNC
+form exists (its decision 16), `render_zephyr_west_config` deliberately writes none of those keys
+(its decision 17), and `doctor.rs`'s check 9 reads the field. So the installed base is real and
+**narrower than "every config"** — I rewrote that clause in decision 64 to say exactly which
+configs, marked `[verified 2026-09-10]`, and deleted the drop. **Then the fix itself pushed
+`shape.md` into reserve (11,229 B against an 11,059 B floor) and turned the size gate red**, which
+is the cap doing its job to a supervisor for once; I tightened my own clause to 10,969 B rather than
+file a seventh `compact-api` task.
+
+**Merged:** `agent/api/055-retired-config-keys` (code **none** — the `embarch-api` branch is empty
+by design; the task forbade a code change and the worker verified `src/config.rs` instead; doc
+`2f42558`). Ownership check base `5621bb545ac5` after the rebase, 5 paths, all owned. Gate
+**11/11 green** on the merge result plus `check-client-names.py --repo embarch-api` clean; no
+`cargo` run, the code tree is byte-identical to `main`.
+**Blocked:** nothing.
+**Reviewer:** 1 finding — accepted, verified in `embarch-umbrella/src` and fixed in this fold
+(`inbox/api-055-review-finding.md` deleted, having been acted on).
+**Hardware debts:** none owed by this unit — a documentation decision, no board, no build. It does
+narrow an existing one usefully: the tolerance decision 64 records is about configs
+`embarch-umbrella` writes on this machine, and `umbrella/037`'s corrected check 13 still needs the
+dev-bench board. Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` (the
+owner's, outstanding, carrying `core/008`'s commits and `core/020`'s `self_reported_hardware_id`
+rename), and `embarch-outpost`'s Zephyr `tests/unit` suite which cannot be built here.
+**Budget:** PROCEED, weekly 6.7% of a 90% cap, wave 6 suggested; unchanged from the leg's start.
+**Least sure about:** **that decision 64's "ends when" is testable by anyone but the owner.** It
+ends when umbrella stops scaffolding the key *and no config in the field still carries it* — and
+nothing in this suite can enumerate configs in the field. A future leg reading that clause could
+reasonably conclude the condition is unfalsifiable and refuse the key anyway; the safer reading is
+that it ends when the owner says his own machines are clean.
+
 ## 2026-09-10 14:51 — study-designer/006 a compaction that was a duplicate-removal, and a `blocked` I put back to `open`
 
 **Decided:** two things about this task's own state, and the second is a rule I am asserting rather
