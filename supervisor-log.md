@@ -178,6 +178,16 @@ unit was runnable at any point this leg** — every `hw-gated` task in the queue
 throughout, wave **6** suggested both times. **The 4-unit cap bound this leg, not the allowance** —
 third consecutive leg for which that is true, and the fleet is now rate-limited by leg length rather
 than by quota.
+**Postscript, written after the fold: correcting that token by hand broke the fold, exactly as
+`tasks/doc/028` predicts.** `fold-commit.py` committed this entry to the fleet repo (`9d19d3c`) and
+then **refused its own second half** — `git rm` will not remove a task file carrying local
+modifications, and I had edited the `State:` line in the same sitting. That leaves precisely the
+ordering the script is designed to prefer, "an entry for a fold that did not happen" rather than "a
+fold nobody logged", so nothing was lost and the recovery was one commit. I completed the leg half by
+hand (`ba7f742`) with the same paths `fold-commit.py` was given and nothing else staged. **The
+generalisable rule for the next leg: if you correct a task file's `State:` token at fold time, use
+`git rm -f`, or the fold will half-land.** `tasks/doc/028` has this and it is worth believing.
+
 **Least sure about:** **the worker left this task's `State:` token at `claimed` while ticking every
 `Done when` box, and I corrected it to `done` by hand at fold time.** The gate does not catch that —
 `claimed` is a legal token — so a fold could have landed a completed unit whose task file still read
