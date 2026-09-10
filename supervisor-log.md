@@ -97,6 +97,50 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 17:26 — core/034 a forward-reference stops lying about its own three consumers
+
+**Decided:** nothing new. This unit deliberately decides nothing — decision 50's design stands,
+decision 54 narrows it correctly, and the only thing wrong was a status sentence. **I told the
+worker explicitly not to amend decision 54**, which is one day old and correct, and not to
+re-litigate 50. It did neither.
+
+**What changed is one paragraph, and the pointer in it is the load-bearing half.** Decision 50's
+closing sentence said three consumers were "filed and blocked on this task" (`tasks/api/045`,
+`tasks/umbrella/041`, `tasks/ui/020`). It now says `api/045` landed (`a687baf`) and the other two
+closed unsatisfiable (`e0dc52b`), and **points forward to decision 54 for what replaced the latter
+two's intent**. A forward-reference exists to be read alone; read alone, the old sentence gave a
+wrong status for all three of its own consumers with no route to the decision that superseded them.
+
+**My dispatch note made the verification the deliverable, not the edit.** The task asserted all
+three statuses and two fold SHAs, and the edit is *nothing but* those assertions restated in a
+decision body — so a worker that trusted the task file would have replaced one wrong status
+sentence with another and nothing would have failed. I told it to open each task file and each
+fold commit and to stop rather than write a corrected sentence that was also wrong. It checked,
+and the reviewer independently re-checked all three tasks and both SHAs afterwards.
+
+**Bookkeeping I did myself:** the worker ticked both `Done when` boxes and left `**State:**
+claimed`. I set it to `done` in the fold.
+
+**Merged:** `agent/core/034-decision-50-consumers` (code **none** — documentation-only, the
+`embarch-core` branch was pushed with zero commits; doc `af785d8`). Rebased onto `umbrella/046`'s
+fold before merging. Ownership check base `5d79b29a1934`, 3 paths, all owned. Gate on the merge
+result: `check-docs.py` **11/11 green**.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — one sentence in a decision file, no board, no build,
+no `embarch-core` code touched, so `core/015`'s native Windows build did not grow. Carried forward
+unchanged: that build is still the owner's and still outstanding, carrying `core/008`, `core/020`'s
+`self_reported_hardware_id` rename, `core/032` and `core/033`; `umbrella/037`'s corrected check 13
+has never met the bench that found its defects; `embarch-outpost`'s Zephyr `tests/unit` suite
+cannot be built from the fleet's environment. No bench unit runnable this leg.
+**Budget:** PROCEED, weekly **9.9%** of a 90% cap at the leg's start, wave **6**.
+**Least sure about:** **that this is the last of them.** The reviewer checked `surfaces.md` and the
+other `embarch-core` docs for the same stale status and found none, but this is the fourth
+citation-or-status defect this fleet has landed a fix for in two days, and every one of them was
+found by a human-shaped read rather than by a gate. `check-decision-refs.py` resolves a decision
+*number*; nothing anywhere checks whether a sentence *about* a task's state is still true, and
+task states change every twenty minutes now.
+
 ## 2026-09-10 17:18 — umbrella/046 the 96-byte wall is gone, paid by the move nobody had considered until yesterday
 
 **Decided:** that leg 066's **option 2** is the right answer for `embarch-umbrella/spec.md`, and I
