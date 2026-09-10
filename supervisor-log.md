@@ -97,6 +97,76 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 14:27 — outpost/014 the split-first rule again, and a worker that caught itself relocating the debt
+
+**Decided:** nothing suite-wide. What I decided about this unit is that **a compaction that clears
+one file's reserve by pushing another file into its own is not a compaction**, and the worker had
+already decided the same thing before I saw it — which is the most useful thing in this entry.
+
+**The pass itself.** `embarch-outpost/spec.md` §5 "Host-side outputs" — the three `streams/` file
+formats, their exact columns, and the `us`/`cycles` formatting and wrap rules — moved **verbatim**
+into a new `## Host-side outputs` section in `embarch-outpost/interfaces/integration.md`, with a
+pointer paragraph left behind naming what moved. 9,775 B → **8,316 B**, clearing the 9,216 B reserve
+threshold with room, and `check-doc-size.py` no longer names the file. Second consecutive day the
+split-first rule has paid: `core/030` did the same thing to `embarch-core/spec.md` yesterday, and
+between them these two units have taken 2,630 B out of two `spec.md` files without removing a single
+fact from the corpus.
+
+**I verified verbatim-ness by diffing, not by reading the report.** Every line removed from `spec.md`
+against every line added to `integration.md`: the only textual difference in the whole move is the
+relative link `[interfaces/wire.md](interfaces/wire.md)` → `[wire.md](wire.md)`, which the
+one-directory-deeper location *requires*. Both `Must not delete:` items are still in `spec.md` §3 and
+did not move — the `--allow-unverified-join`/`--allow-build-id-mismatch` posture pairing, and the
+missing/short `frame_bytes` degrade-not-refuse sentence, which is on the list precisely because a
+reader who loses it concludes there is a **third** refusal alongside the manifest and build-ID ones.
+
+**The worker's first attempt is the part worth recording.** It moved the section into
+`interfaces/wire.md`, which cleared `spec.md`'s reserve and pushed `wire.md` to **94.8%** of its own
+cap — into *its* reserve, so the gate still failed. It caught that by re-running
+`check-doc-size.py` rather than by being told, retargeted to `integration.md` (6,096 → 7,953 B of a
+12,288 B cap), and **reported the false start rather than hiding it.** That is the failure mode a
+squeeze-vs-split rule cannot catch on its own: a verbatim move is always accuracy-safe and is *not*
+always budget-safe, and "the file with headroom" and "the file a reader would look in" are different
+criteria that happened to agree on the second try.
+
+**`DOC-COMPACTION-PASS.md`'s human question, and this time the actor who read the file whole answered
+it.** *Can `embarch-outpost/spec.md` alone answer what someone needs to work on this component
+today?* **Mostly yes, with one narrower exception than before.** The architecture, the invariants,
+the measured-cost table and the manifest/join refusal rules are all still in `spec.md` untouched.
+What it no longer answers standalone is the **exact byte layout of the three `streams/` output
+files** — for that it points one hop to `interfaces/integration.md § Host-side outputs`, next to the
+Kconfig table already governing the same integration surface. I agree with that answer and I asked
+the reviewer to judge the home specifically, given `core/030`'s recorded wart about a spec-level
+table landing under `interfaces/`. It called this a **closer fit** than that case, because the
+receiving doc is the one about *consuming* outpost's output and the new section sits directly under
+`integration.md`'s own "Reading the trace" heading — the question it answers. I am recording that as
+settled rather than a wart.
+
+**Merged:** `agent/outpost/014-compact-outpost` (code **none** — docs-only by design, the
+`embarch-outpost` code branch had a zero diff, and the worker was told not to invent one; doc
+`cb64fcf`). Ownership check base `d6fefc7fe17d`, 5 changed paths, all owned by the `outpost` worker.
+The doc branch was rebased onto `core/008`'s fold before merging. Gate green **11/11** on the merge
+result, first run, no fold fixes needed.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — a verbatim documentation split, no board, no build, no C
+touched. **The standing outpost debt is unchanged and was correctly not claimed away:**
+`embarch-outpost`'s Zephyr `tests/unit` ztest suite cannot be built from this environment (no `west`,
+no `ZEPHYR_BASE`) and the worker said so rather than reporting it green — but since this unit changed
+no C, it does not deepen it either. Carried forward unchanged: `core/015`'s native Windows build of
+`embarch-core` is the owner's and still outstanding, and now carries `core/008`'s two commits as well
+as `core/020`'s `self_reported_hardware_id` rename; `umbrella/037`'s corrected check 13 has never met
+the bench that found its defects and needs only the dev-bench board. The bench queue is still parked
+by the owner's own commit, and no bench unit is runnable — every `hw-gated` task in the queue is
+`toolchain` or `required`.
+**Budget:** PROCEED, weekly 5.7%, wave 6 suggested; unchanged from the leg's start.
+**Least sure about:** that `embarch-outpost/spec.md` is now **8,316 B against a 10,240 B cap with a
+9,216 B reserve line**, which is 900 B of runway — a comfortable margin today and one more paragraph
+away from being back in reserve. The split took the one obviously-liftable reference section out, so
+the *next* compaction of this file will not have an easy seam and will be a genuine squeeze against
+`Must not delete:` items that are there because losing them produces a wrong conclusion. Nothing
+needs doing now; I want the next leg to know the cheap move has been spent.
+
 ## 2026-09-10 14:24 — core/008 a citation form invented by a worker, caught by a reviewer, and verified by reading bodies rather than headings
 
 **Decided:** to **fix the reviewer's finding in the fold rather than queue it**, and to do that only
