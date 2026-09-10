@@ -97,6 +97,66 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 15:20 — umbrella/044 a reviewer's finding survived contact with two decision bodies, and the previous leg was right
+
+**Decided:** one thing, and it was decided twice before this unit ran — I am recording that the
+disagreement resolved, not that I resolved it.
+
+**The drop asked for `decision 14` to be replaced by `decision 24` in `src/manifest.rs`, leg 063's
+supervisor read both bodies and refused, and this unit took the third option: cite both, with the
+split named.** The comment now reads *"decision 14, and decision 24 for why a mismatch is a warning
+rather than a refusal"* — 14 for `doctor` reading the suite manifest at all, 24 for the
+warn-not-refuse posture. Two lines, comment-only. What makes this worth an entry is that **three
+independent readers reached the same conclusion from the same two bodies**: leg 063's supervisor,
+this unit's worker, and the reviewer, none of whom took the task title at face value. The title said
+"miscite"; the body of decision 14 says *"A version mismatch against the suite manifest is a warning
+(decision 24)"*, which is a cross-reference and not a handover, and decision 24's body is entirely
+about Core/API skew — a different pair of binaries. Pointing `manifest.rs` at 24 alone would have
+been the *real but wrong decision* failure `api/031` is the recorded case of.
+
+**Second, that I dispatched this at all rather than closing it from the drop.** Leg 063 had already
+written the argument, so a cheaper leg would have closed it "no change needed" without spending a
+worker. I sent one because the drop's Done-when item 2 — *does any other comment from the
+`umbrella/043` sweep pair a 14 citation with 24's claim?* — was explicitly un-audited, and that is
+the half a supervisor cannot answer from a drop. **It came back audited in full and negative**:
+`decision 14` occurs exactly once in `embarch-umbrella/src/`, the line just fixed; `decision 24`
+occurs twice more (`src/doctor.rs:2348`, `:4634`), both citing 24 alone for the warn-never-fail
+posture, correctly, with no 14 alongside. That audit is the unit's durable output — the comment fix
+is two lines.
+
+**Third, the doc reserve held with nothing spent.** `embarch-umbrella`'s `spec.md` has 136 B free
+and `open.md` 250 B, both parked behind compaction tasks blocked on `In flux: yes`. I told the
+worker in its dispatch note to write no prose into either and to keep the doc side to a
+`changelog.d/` fragment; it did, so this unit neither paid nor deepened that debt. **That is the
+fourth decision in a week placed or shaped by a byte count** — leg 064 counted three — and it is
+worth saying that here the cap cost nothing, because the honest change genuinely was two lines.
+
+**Merged:** `agent/umbrella/044-manifest-decision-14` (code `d06bb64`, doc `5c87654`). Ownership
+check bases: code `ea9b72a85b7f` (1 path, whole tree owned), doc `3e0b168ff9a0` (2 paths, both
+owned). Gate on the merge result: `embarch-umbrella` `cargo build` clean, `cargo test` **218
+passed, 0 failed**, `clippy --all-targets -- -D warnings` **zero** warnings; `check-docs.py`
+**11/11 green**; `check-client-names.py` against the code worktree clean.
+**Blocked:** nothing.
+**Reviewer:** no findings. It read both decision bodies independently and confirmed the citation of
+both is accurate to each, with no reversals-index entry for either number.
+**Hardware debts:** none owed by this unit — a comment-only change in a host-side crate, no board,
+no flash, no build beyond `cargo`. It adds nothing to the standing set, which is unchanged:
+`core/015`'s native Windows build of `embarch-core` is the owner's and still outstanding, and now
+carries `core/008`, `core/020`'s `self_reported_hardware_id` rename and `core/032`'s corrected
+operator message; `umbrella/037`'s corrected check 13 has never met the bench that found its
+defects and needs only the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be
+built from the fleet's environment. The bench queue is still parked by the owner's own commit.
+**Budget:** PROCEED at the start of the leg and unchanged here; weekly **7.8%** of a 90% cap,
+5-hour window inactive, wave **6** suggested. The 4-unit cap binds, not the allowance — fifth
+consecutive leg.
+**Least sure about:** **whether this unit was worth a worker rather than a supervisor's one-line
+close**, and I would not defend it on the comment fix alone. The two-line change was already
+designed by leg 063 and needed no agent; what justified the spawn is the negative audit, and a
+negative audit is exactly the result that looks like nothing was accomplished. If a later leg finds
+itself spending workers on drops whose argument a predecessor already wrote, the thing to check is
+whether an un-audited Done-when item is really there or whether it is being read into the task to
+justify the dispatch.
+
 ## 2026-09-10 15:05 — core/032 the last repo's citation sweep, and a worker that refused to guess four times
 
 **Decided:** three things, and the first is the one I would defend hardest.
