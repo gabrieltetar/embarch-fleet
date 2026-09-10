@@ -97,6 +97,94 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 14:51 — study-designer/006 a compaction that was a duplicate-removal, and a `blocked` I put back to `open`
+
+**Decided:** two things about this task's own state, and the second is a rule I am asserting rather
+than one I found written down.
+
+**First, that this pass is a repoint rather than a split, and that this is legitimate.** My dispatch
+note told the worker to prefer a verbatim split. It did not split, and it was right not to:
+`spec.md` §7's closing two paragraphs restated `Study`'s host size (1,080 B), the `no_std` sizes
+(`Study` 83,512 B, `DevBenchMessage` 75,288 B) **and the same measurement date** that
+`decisions/limits.md` decision 63's table already carries — so a split would have relocated a
+duplicate rather than removed one. It cut the restatement and pointed at decision 63 by number.
+`spec.md` **9,600 → 8,941 B**, out of reserve. The worker's own first attempt was the wrong version
+of this — appending the paragraph verbatim to `interfaces/limits.md`, which pushed *that* file from
+10,334 to 11,205 B, past its 11,059 B reserve floor — and it reverted itself and said so, which is
+the second time this leg a worker caught itself relocating a debt.
+
+**Second, and this is the part worth arguing with: the worker left the task `blocked` on the
+grounds that `open.md`, its one remaining file, "is still in flux", and I put it back to `open`.**
+The every-file-in-flux test is the right test, and `blocked` would have been formally satisfied —
+but not for an `open.md` **specifically**. An open-questions file is edited every week in every
+sub-project, so "in flux" applied to one is a property of the filename rather than a fact about a
+subsystem settling down, and accepting it parks that debt permanently. It is also the wrong test
+for the work: the compaction move for an `open.md` is **striking questions that have since been
+answered**, which restates nothing and which no flux forbids. `blocked` has to keep meaning
+"nothing here can be done". The `**Size debt due:** 2026-10-04` clock is unchanged.
+
+**Two fold-time repairs I made by hand, both of them the failure this file already records.** The
+worker did **not** delete `spec.md` from the `Compacts:` line after paying it, so the size gate
+would have gone on reporting a paid file as filed — leg 057's defect from the other direction, and
+I deleted the path rather than annotating it. And its `State:` token needed the correction above.
+Both were edits to a task file at fold time, which is exactly what half-landed leg 063's fold, so I
+staged them through `fold-commit.py`'s own `--path` list and used no `git rm`.
+
+**`DOC-COMPACTION-PASS.md`'s human question, answered by the worker that read the file whole:** can
+`embarch-study-designer/spec.md` alone answer what someone needs to work on this component today?
+**Yes for its own job** — what the crate is, its invariants, the feature/target split, what a
+`Study` carries, the result-file shapes, the three consumers — and deliberately not for *why* or for
+exact values, which are one pointer hop away by design. I accept that, and note the answer is
+easier here than usual precisely because this unit removed a duplicate instead of moving text.
+
+**Merged:** `agent/study-designer/006-compact-study-designer` (code **none** — the
+`embarch-study-designer` branch is empty by design, docs-only; doc `4705746`). Ownership check base
+`5621bb545ac5` after the rebase onto `topology/019`'s fold, 3 paths, all owned. Gate **11/11 green**
+on the merge result. No `cargo` run in `embarch-study-designer`: its tree is byte-identical to
+`main`.
+**Blocked:** nothing. **Task 006 is closed `done`, and its surviving half is now
+`tasks/study-designer/026-compact-study-designer.md`** — `open.md`, `In flux: no`, same
+`Size debt due: 2026-10-04`, with the argument above written into it.
+
+**Why a new task and not the `open` state I first wrote: `fold-commit.py` refused the fold, and it
+was right to.** It will not fold a unit whose own task file reads `open` — a live-looking claim the
+next leg's recovery would reclaim and re-dispatch (`tasks/doc/028`, six instances). That refusal
+collides with the ledger's rule that a debt must keep a clock rather than be closed with the task
+that paid *part* of it. **Splitting the task is the move that satisfies both**: 006 goes `done`
+with an empty `Compacts:` line, 026 carries the unpaid file and the original date. Two smaller
+traps on the way, both worth the next leg knowing: the `Compacts:` line cannot be left with
+placeholder prose on it (`check-task-state.py` reads the placeholder as a filename and fails the
+`In flux: per file` block), so the line is **deleted** and the explanation moved below it; and
+`fold-commit.py` refuses *before* writing anything, so the retype cost nothing.
+**Reviewer:** 1 finding — half accepted and fixed in this fold, half refused; see below. The drop
+`inbox/study-designer-review-006-lost-77368-provenance.md` is deleted because I acted on it.
+
+**The reviewer's finding, and what I did with it.** It reported that the deleted passage's
+**77,368-byte** pre-reduction baseline for host `Study`, and its three-pass history, live nowhere
+else — and, separately, that the passage's "97% of what remained" claim was about a different
+type's buffer. **The first half is right and I fixed it in this fold**; the second is wrong and I
+checked it myself. `decisions/removed.md`'s decision 48 carries exactly that chain — *"after
+decision 46 fixed the field that actually crashed a debug build, this was 97% of what remained.
+Decision 46 got a 2× reduction; removing this got a further 35×"* — about post-hoc validation, the
+same subject the cut sentence named. The arithmetic settles it: 77,368 ÷ 2 ÷ 35 ≈ 1,105, against
+the 1,080 decision 63 measures. So one number was genuinely homeless, not a claim.
+I added it to **decision 49** in `decisions/limits.md` (8,184 → 8,941 B against a 12 KB cap, well
+clear of reserve) — the decision that already holds the before/after table — naming all three
+passes and citing decision 48 for the multipliers. That is a supervisor writing in a sub-project's
+decision file at fold time, which `core/008` did yesterday for the same reason: the fix was small,
+verifiable and in the unit's own subject.
+**Hardware debts:** none owed by this unit — a documentation duplicate removal, no board, no build.
+Carried forward unchanged from `topology/019`'s entry below: `core/015`'s native Windows build of
+`embarch-core` (the owner's, outstanding, and carrying `core/008`'s commits plus `core/020`'s
+`self_reported_hardware_id` rename), `umbrella/037`'s corrected check 13 needing only the dev-bench
+board, and `embarch-outpost`'s Zephyr `tests/unit` suite which cannot be built here.
+**Budget:** PROCEED, weekly 6.7% of a 90% cap, wave 6 suggested; unchanged from the leg's start.
+**Least sure about:** **my own `open.md` rule.** I asserted that "in flux" can never park an
+`open.md`, and that is a general claim about a file class made at fold time by one leg, from one
+task. It is a judgement, not something `DOC-BUDGET.md` or `DOC-COMPACTION.md` says — and if the
+owner disagrees, the right place for it is his files, not mine. A next leg that finds this reasoning
+wrong should say so rather than quietly re-blocking the task.
+
 ## 2026-09-10 14:45 — topology/019 a verbatim split whose seam the decision text had already drawn
 
 **Decided:** nothing suite-wide. Two dispatch-time calls, both recorded in the task file before the
