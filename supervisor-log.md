@@ -97,6 +97,81 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 15:05 — core/032 the last repo's citation sweep, and a worker that refused to guess four times
+
+**Decided:** three things, and the first is the one I would defend hardest.
+
+**First, to land a sweep that deliberately left four citations unresolved, and to file them rather
+than fix them.** 170 occurrences across 14 files (`src/*.rs`, `Cargo.toml`,
+`.github/workflows/release.yml`) — the filed estimate was 68, so **that is four sweeps in a row
+where the filed count was wrong**, and the next one should not spend a paragraph re-arguing it. Zero
+`design.md` occurrences remain in the repo. Of five citations whose *number* looked wrong, the
+worker resolved **one** with confidence and left the other four carrying their original numbers,
+flagged in the task file with its candidate for each. That is exactly the discipline this class of
+work needs — `api/052` and `umbrella/043` each had real miscitations behind the mechanical ones, and
+the failure mode is a plausible guess nothing can catch — so I landed it and filed
+`tasks/core/033-four-flagged-miscitations-core-032-refused-to-guess.md` with all four, each carrying
+the worker's candidate and the instruction to read bodies rather than headings.
+
+**Second, I verified three of the five myself before merging, because one of them ships.**
+- `src/dev_bench_link.rs`: `embarch-dev-bench/design.md §4` → core's own `decision 40`. **Correct** —
+  core decision 40 (`decisions/studies.md`) *is* "an undecodable frame costs the frame, not the
+  link", which is what the comment says. This is the one repoint the worker made on its own
+  judgement and it is right.
+- `src/study.rs`'s **shipped error string** for an undeclared signal tap: now
+  `embarch-topology decision 18`. **Correct** — topology's `decisions/links.md` holds 17/18/24 as
+  declared facts about wires including a DUT signal's route. Worth naming that this is the second
+  leg running where a citation sweep rewrote text that reaches a real user: `umbrella/043` changed a
+  generated rc-file header, and this one changes what an operator sees when `POST /study` refuses.
+- `Cargo.toml`'s `known_boards.toml` comment → bare `decision 22`: core decision 22 is the
+  probe/board identity gate. Fine.
+- I also independently confirmed the worker's read on flagged item 2: `embarch-outpost` decision 5
+  is *"Overflow policy: drop, count, and emit an explicit gap record"*, not CRC framing, so that
+  citation is wrong — but **it was wrong before this unit** and the sweep carried the number
+  unchanged. It goes to `core/033` as an inherited defect, not a regression.
+
+**Third, the sweep invented a third citation form and I did not fix it in the fold.** It wrote
+roughly fifty citations as `` `decision 40` ``, with the number inside the code markup, where both
+prior sweeps wrote the number in plain prose (`embarch-umbrella/src/deploy.rs`'s `(decision 32)`,
+`embarch-api/src/config.rs`'s `` `embarch-study-designer` decision 35 ``). The task file told it
+**"the convention is settled — do not invent a second one"**, and this is a third. I left it and put
+it in `core/033` rather than normalising ~50 sites by hand in the fold: it renders as inline code in
+rustdoc so it is visible rather than merely stylistic, and the safe fix is scriptable *with* a diff
+read — which is a unit, not a fold. The next leg should expect that item to be the cheap half of
+`core/033`.
+
+**Merged:** `agent/core/032-design-md-citations` (code `9b8e716`, doc `a555eac`). Ownership check
+bases: doc `29ee8e6258a7` after the rebase, 2 paths; code repo, whole tree owned. Gate on the merge
+result: `embarch-core` `cargo build` clean, `cargo test` **192 passed, 0 failed, 2 ignored**,
+`clippy --all-targets -- -D warnings` **zero** warnings; `check-docs.py` **11/11 green**;
+`check-client-names.py` against the code worktree clean. I verified comment-only-ness mechanically —
+`git diff -U0 -- '*.rs'` filtered of comment-prefixed lines returned exactly **one** hit, the shipped
+error string above, which the worker disclosed.
+**Blocked:** nothing.
+**Reviewer:** no findings. It spot-checked eleven citations I had not — core decisions 3, 6, 8, 9,
+15, 16, 28, 29, 30(c), 34 and `embarch-api` decision 15 in `src/api.rs`'s multipart-upload comment —
+all matching their comments' claims, and found no reversals-index hit for any touched number.
+**Hardware debts:** none owed by this unit — comment-only plus one error-message string, no board,
+no flash. It adds to an existing one: this diff is in `embarch-core`, so the corrected operator
+message does not reach the owner's machine until **`core/015`'s native Windows build** happens,
+which is the owner's and still outstanding, and which now carries `core/008`'s two commits,
+`core/020`'s `self_reported_hardware_id` rename and this unit as well. Carried forward unchanged:
+`umbrella/037`'s corrected check 13 has never met the bench that found its defects and needs only
+the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built here. **No bench
+unit was runnable at any point this leg** — every `hw-gated` task in the queue is `toolchain` or
+`required`, and the bench queue is still parked by the owner's own commit.
+**Budget:** PROCEED throughout; weekly **6.7% → 7.5%** of a 90% cap, 5-hour window inactive, wave
+**6** suggested at start and at the last check. **The 4-unit cap bound this leg, not the allowance —
+fourth consecutive leg for which that is true.**
+**Least sure about:** **whether landing a sweep with four known-suspect citations is better than
+blocking it**, and I want the disagreement on record rather than assumed settled. The argument for
+landing: 166 of 170 are unambiguous repairs, the four keep the numbers they already had, and the
+task file plus `core/033` name every one. The argument against: a bare `decision 7` reads as
+verified where `design.md §7` read as stale, so for those four the sweep made a wrong citation
+*more* credible, and `check-decision-refs.py` cannot catch it — it resolves a number and falls back
+to "defined somewhere in this sub-project". If `core/033` does not run within a few legs, that
+trade goes negative.
+
 ## 2026-09-10 14:52 — api/055 an owed decision finally authored, in a file I picked because the right one is over its cap
 
 **Decided:** two things, one of them before dispatch and consequential.
