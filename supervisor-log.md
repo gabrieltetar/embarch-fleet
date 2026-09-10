@@ -97,6 +97,53 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 17:35 — ui/022 decision 54's label finally reaches a screen, and it was rendered twice
+
+**Decided:** nothing new — this unit *implements* `embarch-core` decision 54 rather than deciding
+anything. What it settles is a factual question the task itself could not answer.
+
+**The task was written not knowing whether the cell existed**, and said so honestly: a grep for
+`confirmed_at_utc_ms` in `src/` at filing time found nothing, so the filer left two legitimate
+outcomes open — relabel it if it renders, or write the guard into the docs if it does not. My
+dispatch note kept both arms open and asked for the evidence, not the guess.
+
+**It renders, and it renders twice.** Not in `src/` at all — in `assets/index.html`, as a
+`<th>Confirmed</th>` over `formatTimestamp(b.confirmed_at_utc_ms)`, in **two** copies of the
+"Enrolled boards" table: the Dashboard's and the Topology/Enroll tab's. Both are now **"Enrolled"**.
+The worker also did the *other* arm anyway — a guard comment on `Snapshot::enrolled` in
+`src/snapshot.rs` and above `enrolledTableRows` in `assets/app.js`, citing decision 54 — which I
+think is right: the next person to add such a display reads the code, not this log.
+
+**This is the first thing in the decision-54 chain that a human can actually see.** `core/027`
+decided the fix is a label; its own entry recorded that the decision "ends with nothing on any
+screen having changed" and that two `inbox/` drops were the only thing carrying it. One of those
+two is now landed. The other is `tasks/umbrella/045`, still open, and it is the weaker of the pair
+— `doctor` may never render the field at all.
+
+**Merged:** `agent/ui/022-confirmed-at-label` (code `9361329`, doc `d2f52ee`). Doc branch rebased
+onto `core/034`'s fold; the code branch fast-forwarded `embarch-ui` `main` from `408e3b1`.
+Ownership check bases: code `408e3b17fd7c` (whole tree owned, 3 paths), doc `424f5cc00961` (2
+paths, all owned). Gate on the merge result: `embarch-ui` `cargo build` clean, `cargo test` **101
+passed, 0 failed, 3 ignored** plus **2 passed** in the second target, `clippy --all-targets --
+-D warnings` **zero** warnings; `check-docs.py` **11/11 green**; `check-client-names.py` clean
+against 7 denylist entries. **This is the only unit of the leg so far with a code merge.**
+**Blocked:** nothing.
+**Reviewer:** no findings. It swept the whole `embarch-ui` tree for a third "Confirmed"/"Validated"
+sibling the relabel could have missed, and for a paraphrase of decision 54 stronger than 54 says.
+**Hardware debts:** none owed by this unit — a column header and two comments, no board, no study.
+It does not touch `embarch-core`, so `core/015`'s native Windows build did not grow. Carried
+forward unchanged: that build is still the owner's and still outstanding, carrying `core/008`,
+`core/020`'s `self_reported_hardware_id` rename, `core/032` and `core/033`; `umbrella/037`'s
+corrected check 13 has never met the bench that found its defects; `embarch-outpost`'s Zephyr
+`tests/unit` suite cannot be built from the fleet's environment. No bench unit runnable this leg.
+**Budget:** PROCEED, weekly **9.9%** of a 90% cap at the leg's start, wave **6**.
+**Least sure about:** **that "Enrolled" alone is enough on a dashboard.** The column now says what
+the number *is* rather than what a reader wanted it to mean, which is decision 54 exactly — but a
+timestamp column headed "Enrolled" next to live probe state still sits in a context that invites
+being read as recency, and nothing on either table tells the reader that answering "is this still
+the right board?" costs a `POST /validate`. Decision 54 chose a word; whether a word is the whole
+fix is a UI question no one has tested on a human.
+
 ## 2026-09-10 17:26 — core/034 a forward-reference stops lying about its own three consumers
 
 **Decided:** nothing new. This unit deliberately decides nothing — decision 50's design stands,
