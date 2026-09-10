@@ -97,6 +97,96 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 14:31 — umbrella/043 a sweep redone from scratch, four real miscitations with one root cause, and a reviewer finding I refused
+
+**Decided:** three things, and the third is a disagreement I want on the record rather than resolved
+quietly.
+
+**First, to redo this sweep from nothing rather than salvage it.** Leg 062's worker was killed by the
+`fleet stop` with the **entire sweep uncommitted** in its worktree — 14 files, 60 insertions, never a
+commit, never pushed. `ops.md` §3 says delete a worktree with no commits, and I did, so ~10 minutes
+of a worker's output was thrown away deliberately. That is the right call for a mechanical sweep and
+it would be the wrong call for something expensive; `tasks/README.md` already records `tasks/ui/002`,
+where the same reclaim rule discarded **306 uncommitted insertions that built clean and passed 97
+tests**, and was saved only because a second defect cancelled it out. What made this cheap to discard
+is that leg 062 left the one thing that was not reproducible — `api/052`'s settled convention, copied
+into the task file because `api/052`'s own fold had deleted the file it was written in.
+
+**Second, the sweep found more than filed and the miscitations had a single root cause.** Filed for
+68 across 15 files; actual **75 across 13**. Third sweep in a row where the filed count was wrong
+(`study-designer/018` filed 290, landed 522; `api/052` filed 320, found 160), which is now a reliable
+enough pattern that the next one should not bother re-arguing it.
+
+**Four real miscitations, not dead pointers, and all four were the same error:** `src/state.rs`
+(`deploy_source_root`'s doc comment), `src/setup.rs` (that field's assignment, twice) and
+`src/deploy.rs` (the module doc and `elevated_script`'s generated-script comment) all cited umbrella
+**decision 37** — `reporting.md`'s *"a check may carry a machine-readable `code`"* — for
+`deploy-core`'s subject. The match is **decision 32** (`decisions/deploy.md`, the `deploy-core`
+command itself), which the very field names those comments describe (`deploy_source_root`,
+`deploy_windows_root`, `deploy_cargo_exe`) point at directly. **I verified both decision bodies
+myself** before accepting the fix. One of the four is not a comment: `deploy.rs`'s `elevated_script`
+emits an rc-file header carrying the citation, so this text ships onto real machines — the reviewer
+confirmed nothing (`install.rs`'s `LEGACY_MARKER`, `doctor.rs`, any uninstall path) matches on that
+header string.
+
+**Third — I refused the reviewer's finding, and the reason is the same lesson `core/008` taught two
+hours earlier in this leg.** The reviewer dropped
+`inbox/umbrella-review-043-manifest-decision-14-miscite.md` arguing `src/manifest.rs`'s `decision 14`
+should be `decision 24`, because decision 14's own body ends *"A version mismatch against the suite
+manifest is a warning (decision 24)."* **I read both bodies and decision 14 is the better citation.**
+The clause the comment quotes is *in* decision 14; decision 14's third paragraph is also the only
+text anywhere saying `doctor` reads the manifest at all, which is precisely `manifest.rs`'s subject;
+and decision 24 (`schema-skew.md`) is *"version skew between **Core and the API** stays a warning"* —
+a different pair entirely. Decision 14 cites 24 for the warn-not-refuse **posture**, by analogy; it
+does not hand the manifest behaviour over. Re-pointing `manifest.rs` at 24 would send a reader about
+the suite manifest to a decision about Core-versus-API skew, which is exactly `api/031`'s recorded
+*real-but-wrong-decision* failure. **This is the mirror image of `core/008`'s trap in the same leg:**
+there a correct citation looked wrong from its heading; here a correct citation looks wrong from a
+parenthetical. Both times only the body settles it. **I left the drop in place rather than deleting
+it** — the worker and the reviewer stopped on that line independently, which is evidence the line
+reads ambiguously even though it is right — and wrote my counter-argument into the drop itself, with
+an explicit warning not to apply its title. Its honest resolution is probably to cite both decisions,
+and closing it as "no change needed" is a legitimate outcome.
+
+**Two things the worker left alone and was right to.** `install.rs`'s `LEGACY_MARKER` literal is
+matched against rc files on machines set up before the four-file doc split, so changing it breaks
+uninstall for those installs; and `doctor.rs`'s guard test asserting no *production* line names a
+deleted doc is the check, not a violation of it. The reviewer confirmed the guard still guards after
+the sweep.
+
+**Merged:** `agent/umbrella/043-design-md-citations` (code `ea9b72a`, doc `18c859d`). Ownership check
+bases: code `cffed3d96c9a` (code repo, whole tree owned, 15 paths), doc `07bab8221f82` after rebasing
+onto `outpost/014`'s fold, 2 changed paths. Gate green on both merge results: `check-docs.py`
+**11/11**, `embarch-umbrella` `cargo build` / `test` (**218 tests**) / `clippy --all-targets --
+-D warnings` clean, `check-client-names.py --repo embarch-umbrella` clean. I verified
+comment-only-ness mechanically — `git diff -U0 -- '*.rs'` filtered of comment-prefixed lines returned
+exactly **4** hits, all four the one generated rc-file header string the worker disclosed.
+**Blocked:** nothing.
+**Reviewer:** 1 finding — inbox/umbrella-review-043-manifest-decision-14-miscite.md
+**Hardware debts:** none owed by this unit — comment-only across 15 files, no board, no flash. One
+adjacent fact worth naming rather than a debt: the rc-file header this unit rewrote is emitted by
+`deploy-core`, and `deploy-core` is the command `core/015`'s outstanding native Windows build would
+run — so the corrected text does not appear on the owner's machine until that build happens. Carried
+forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still
+outstanding, and now carries `core/008`'s two commits plus `core/020`'s `self_reported_hardware_id`
+rename; `umbrella/037`'s corrected check 13 has never met the bench that found its defects and needs
+only the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built here (no
+`west`, no `ZEPHYR_BASE`). The bench queue is still parked by the owner's own commit, and **no bench
+unit was runnable at any point this leg** — every `hw-gated` task in the queue is `toolchain` or
+`required`.
+**Budget:** PROCEED at start and end; weekly **5.7% → 6.6%** of a 90% cap, 5-hour window inactive
+throughout, wave **6** suggested both times. **The 4-unit cap bound this leg, not the allowance** —
+third consecutive leg for which that is true, and the fleet is now rate-limited by leg length rather
+than by quota.
+**Least sure about:** **the worker left this task's `State:` token at `claimed` while ticking every
+`Done when` box, and I corrected it to `done` by hand at fold time.** The gate does not catch that —
+`claimed` is a legal token — so a fold could have landed a completed unit whose task file still read
+as in-flight, and the next leg's recovery scan would have found a claim with no worker and reclaimed
+a finished task to `open`. `tasks/doc/028` already names a hand-edited `State:` line as a recurring
+failure; this is the same field going wrong from the opposite direction and I have not filed it,
+because I am not confident whether the fix belongs in the worker contract or in `fold-commit.py`'s
+refusals, and both of those are the owner's files.
+
 ## 2026-09-10 14:27 — outpost/014 the split-first rule again, and a worker that caught itself relocating the debt
 
 **Decided:** nothing suite-wide. What I decided about this unit is that **a compaction that clears
