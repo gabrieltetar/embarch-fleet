@@ -97,6 +97,63 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 16:31 — study-designer/027 the citation was wrong, and so is every replacement anyone would have guessed
+
+**Decided:** that a question may cite **nothing**, and that this is the correct output rather than a
+gap to fill later.
+
+`embarch-study-designer/open.md`'s power-profiling deferral rested on "decision 24's front-end pick
+is still provisional". Decision 24's body (`decisions/wire.md`) is about the `StudyStart`/`StudyDone`
+wire messages — whole-vector transfer, `steps_crc` atomicity, per-step `StepResult` streaming — and
+mentions no analog front end, no radio and no bench hardware. So far this is leg 064's and leg 065's
+pattern: a flagged citation, read against the body rather than the heading.
+
+**What is different here is that the search for the right number came back empty**, and the worker
+said so instead of reaching for the nearest plausible decision. Nothing in this sub-project records
+a power-profiling front-end hardware pick: the only hits for "power" / "front end" / "BLE radio"
+are `PowerFrontEnd` as a `StreamSource` *type variant* and decision 25's throughput argument for why
+per-sample framing does not scale — a type name and a bandwidth argument, neither of which picks
+hardware. `open.md` now reads *"No decision records this pick; none is cited."* **A question whose
+premise cites no decision is honest; one citing the wrong decision is worse than one citing none** —
+that was in my dispatch note, and this is the first unit to actually land on the "none" arm.
+
+**The negative claim is the load-bearing one and I had the reviewer re-derive it independently**,
+because it is exactly the kind of assertion a later reader will rely on without rechecking. It
+confirmed the absence and separately confirmed all four of the other citations in the file (45, 48,
+57, 64) against their bodies.
+
+**Also: this is the third leg running to touch a `study-designer` size debt without paying it, and
+that is now deliberate rather than incidental.** `open.md` went 4,662 → 4,649 B (**−13**), so the
+file is fractionally better off and still 91% full. I told the worker explicitly not to attempt
+`tasks/study-designer/026`'s compaction pass — leg 065 established that nothing in that file is
+strikeable and filed an `inbox/` drop saying the debt has no payable form, which I filed into the
+queue this leg as `tasks/doc/034`. A leg rediscovering that would be the exact waste that drop
+predicts.
+
+**Merged:** `agent/study-designer/027-open-md-decision-24-citation` (code **none** — the branch was
+pushed with zero commits, correctly: this unit changed no code at all; doc `eb06bae`). Ownership
+check base `09109e782502`, 4 paths, all owned. Gate on the merge result: `check-docs.py` **11/11
+green**; `cargo test` / `clippy --all-targets -- -D warnings` clean in the code worktree (0 tests —
+the crate's suite is untouched by a docs-only unit); `check-client-names.py` clean.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — a documentation citation, no board, no build. Carried
+forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still
+outstanding, now carrying `core/008`, `core/020`'s `self_reported_hardware_id` rename, `core/032`'s
+corrected operator message and `core/033`; `umbrella/037`'s corrected check 13 has never met the
+bench that found its defects and needs only the dev-bench board; `embarch-outpost`'s Zephyr
+`tests/unit` suite cannot be built from the fleet's environment. **No bench unit is runnable this
+leg either** — every `hw-gated` task in the queue is `toolchain` or `required`, and the bench queue
+is still parked by the owner's own commit.
+**Budget:** PROCEED at the leg's start, weekly **8.6%** of a 90% cap, 5-hour window inactive, wave
+**6** suggested. The 4-unit cap binds this leg, not the allowance — seventh consecutive leg for
+which that is true.
+**Least sure about:** **whether "cites nothing" survives contact with the next reader.** A citation
+is self-defending — someone who doubts it opens the decision. A stated absence is not: the only way
+to doubt it is to redo the search, and nothing in `open.md` records *when* the search was done or
+how wide it was. That evidence lives in this entry and in the task file's Result section, both of
+which are further from the claim than a decision number would have been.
+
 ## 2026-09-10 15:28 — core/033 the four citations nobody would guess at are settled, and the citation-form question is closed
 
 **Decided:** two things, and the first closes a thread that has been open across three legs.
