@@ -25,7 +25,7 @@ Four, and the boundaries between them are the whole design.
 
 **A worker.** Takes one task, in one repo, on one branch, ships it with its docs, and exits. It holds no state between tasks — everything it learned is in the docs it wrote or it is gone. Not a limitation to work around: it is [DOC-PROTOCOL.md](../embarch-doc/DOC-PROTOCOL.md) §4's discipline with the escape hatch removed.
 
-**The listener.** One VS Code window, armed with `/fleet start`, that reads #embarch-fleet and spawns things. A **strict dispatcher**: no hands, edits no file, answers no question, runs no build — everything that is work becomes an agent it spawns and relays, which is what lets it live all day beside a fleet whose every other thread dies on purpose. It is **not** the owner's session: that pen, and hardware, stay in a window opened separately ([running the fleet](ops.md) §5.1).
+**The listener.** One VS Code window, armed with `/fleet start`, that reads #embarch-fleet and spawns things. A **strict dispatcher**: no hands, edits no file, answers no question, runs no build — everything that is work becomes an agent it spawns and relays, which is what lets it live all day beside a fleet whose every other thread dies on purpose. It is **not** the owner's session: that pen, and hardware, stay in a window opened separately ([slack.md](slack.md) §1).
 
 ## 3. The ownership map
 
