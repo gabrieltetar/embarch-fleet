@@ -97,6 +97,59 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 17:18 — umbrella/046 the 96-byte wall is gone, paid by the move nobody had considered until yesterday
+
+**Decided:** that leg 066's **option 2** is the right answer for `embarch-umbrella/spec.md`, and I
+took it as this leg's first unit rather than waiting for the 2026-09-12 clock.
+
+**Why I dispatched a new task instead of `tasks/umbrella/038`.** `038` is the compaction task for
+this file and it is `blocked`, correctly — its `In flux: yes` argument holds, because
+`tasks/umbrella/033` is open and is exactly a check-17 `doctor`-chain row change. A compaction
+*pass* rewrites and shortens argument, and doing that over a table about to be rewritten is the
+thing the park exists to prevent. **A verbatim mission split is a different operation and the flux
+argument cannot forbid it** (`DOC-COMPACTION.md` §2; `.claude/leg.md`'s split-first rule) — moving
+text unchanged restates nothing, so there is no argument to get wrong. So I filed
+`tasks/umbrella/046` as a split, scoped it explicitly as *not* a compaction pass, and **left `038`
+blocked and untouched**. It is still parked on `033`, and its clock still reads 2026-09-12; what
+changed is that the file it guards is no longer one row-edit from a wall.
+
+**The result.** `spec.md` **10,144 → 5,795 B**, out of reserve entirely and off
+`check-doc-size.py --pressure`. `open.md` is **unchanged at 4,996 B (97.6%)** — I told the worker
+not to grow it by a byte and it did not, which matters because `038`'s ledger entry covers both
+files and only one of them is now paid. The moved section is `embarch-umbrella/interfaces/doctor-chain.md`;
+the worker picked that path against `embarch-core/interfaces/constants.md`'s precedent rather than
+against my guess, which is what I asked for.
+
+**I verified "verbatim" mechanically before merging, and it is worth saying how**, because
+"verbatim" is the entire safety argument and a reviewer cannot re-derive it from the diff: I
+diffed the eighteen removed rows against the new file's body with relative-link prefixes
+normalised out. **Identical, every row.** The only textual differences in the whole move are
+required link re-basings (`decisions/x.md` → `../decisions/x.md`, `../embarch-core/…` →
+`../../embarch-core/…`) and the new file's own header. Six sibling `decisions/*.md` files had
+their pointers into the moved section repointed.
+
+**Merged:** `agent/umbrella/046-split-doctor-chain` (code **none** — documentation-only, the
+`embarch-umbrella` branch was pushed with zero commits; doc `fc6f738`). Ownership check base
+`a2e993ab72cd`, 10 paths, all owned. Gate on the merge result: `check-docs.py` **11/11 green**.
+**Blocked:** nothing.
+**Reviewer:** 1 finding — inbox/umbrella-doctor-md-current-truth-pointer-stale.md
+**Hardware debts:** none owed by this unit — a documentation move, no board, no build. Carried
+forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still
+outstanding, carrying `core/008`, `core/020`'s `self_reported_hardware_id` rename, `core/032` and
+`core/033`; `umbrella/037`'s corrected check 13 has never met the bench that found its defects and
+needs only the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from
+the fleet's environment. No bench unit was runnable at dispatch — every `hw-gated` task in the
+queue is `toolchain` or `required`, and the bench queue is still parked by the owner's own commit.
+**Budget:** PROCEED at the leg's start, weekly **9.9%** of a 90% cap, 5-hour window inactive, wave
+**6** suggested. The 4-unit cap binds this leg, not the allowance — ninth consecutive leg.
+**Least sure about:** **whether the pointer left in `spec.md` should carry the count.** It says
+"an ordered chain of eighteen checks", and this sub-project's own `tasks/umbrella/009` recorded
+the lesson that a count goes stale the moment a row's status changes — row 18 is designed and
+unbuilt, so the number moves if anything is built before it, and now it moves in *two* files
+instead of one. I flagged it to the reviewer explicitly and it did not come back as a finding; I
+am recording it anyway because the split has, in this one respect, made a known-fragile fact
+harder to keep true rather than easier.
+
 ## 2026-09-10 16:45 — umbrella/036 a check stops trusting its own copy of another repo's loader, and the file it documents itself in is now 96 bytes from full
 
 **Decided:** three things. The first closes a task open since 2026-09-06; the third is a
