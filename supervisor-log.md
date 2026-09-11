@@ -97,6 +97,54 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 18:47 — core/019 the ledger stops reading a refusal as owed work
+
+**Decided:** one thing, and I narrowed it before dispatch rather than after. The task offered a
+`core` worker three arms and two of them name paths the `core` row cannot write, so the dispatch
+note cut it to exactly one file — `features.d/core-200-per-caller-identity-beyond-one.md` — and
+told the worker not to run `build_features.py` at all, because a stale `suite/features.md` on a
+worker branch is correct rather than an omission. What landed: the row's `Status` cell goes from a
+bare `Todo` to `Declined — single-engineer scope forbids a permission model; revisit only if Core
+ever needs to tell *which* caller`, citing `embarch-token.md` §5 where the cell previously said
+`n/a`. **I accepted `Declined` as prose rather than a new vocabulary value**, which is the only
+judgement here: `Status` has no closed vocabulary (only `Verified` does), and rows already carry
+free text after a leading word. Whether the column *should* gain a formal third value is
+`features.d/README.md`'s question and stays the owner's.
+
+**This leg also ran its refill** (`--refill-owed` fired on scope spread, 5 scopes below a wave of
+6). Two things came out of it and neither is a unit: `tasks/topology/025` was swept fresh from
+`embarch-topology/open.md` and dispatched this leg, and **`tasks/umbrella/048` was corrected from
+`open` to `blocked`** — it carried `In flux: yes` while advertising itself as dispatchable, which
+is a task no leg is allowed to take sitting in the queue looking like work. `ui`,
+`study-designer` and `outpost` hold nothing in `open.md` that is not hardware-gated or deliberately
+deferred; that is the honest result of the sweep, not a skipped one.
+**Merged:** `agent/core/019-per-caller-identity-row` (doc `5b6c980`; **no code commit** — the
+branch was pushed unchanged at `embarch-core`'s main tip, because the whole change is a `features.d`
+fragment). Ownership check base: doc `e56d302c3f15` after rebasing onto this leg's two later claim
+commits.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — one ledger row, no board and no build beyond the host.
+**And one standing debt is now known to be smaller than three entries in this log have said.** The
+last three entries recorded "this environment has no `west` and no `ZEPHYR_BASE`" as an
+`embarch-dev-bench` hardware debt. **That is false of the machine and true only of a worktree.** I
+measured it this leg: `ZEPHYR_BASE=<repo>/workspaces/native_sim/zephyr
+/home/gabriel/Github/embarch/.west-venv/bin/west build -p -b native_sim -d <dir>
+app/tests/serial_protocol` builds clean from the **main checkout** and the suite runs
+`PROJECT EXECUTION SUCCESSFUL`. The workspaces are gitignored, so a worker's worktree has `app/` and
+a `west.yml` and no Zephyr — which is exactly what `Hardware: toolchain` means, and
+`tasks/README.md` already said so. `tasks/dev-bench/008` is reclassified `none` → `toolchain` in
+this leg with that measurement written into it. Carried forward unchanged: `core/015`'s native
+Windows build of `embarch-core` is the owner's and still outstanding; `umbrella/037`'s corrected
+check 13 has never met the bench.
+**Budget:** PROCEED start to end — weekly 12.6% of a 90% cap, resets in 132h, suggested wave 6.
+**Least sure about:** whether `Declined —` in a `Status` cell will be read as a value or as prose by
+the next thing that parses that column. `build_features.py --check` does not constrain the cell's
+leading word today, so nothing fails either way — which means if a formal vocabulary ever arrives,
+this row is the one that will have pre-empted it.
+
+---
+
 ## 2026-09-10 18:36 — dev-bench/015 both overflow markers survive the case where both fire
 
 **Decided:** two things, both in the dispatch note rather than after the fact. First, the fix shape:
