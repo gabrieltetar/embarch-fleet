@@ -97,6 +97,92 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 02:24 — api/063 a decision the burndown rule forbade, and the split that made room for it
+
+**Decided:** nothing suite-wide. Within `embarch-api`, **decision 70** in a **new**
+`decisions/hardware-selection.md` records the three things `open.md` said were owed for
+`list_serial_ports`/`list-serial-ports`: the no-parameter `GET /serial-ports` shape on both front
+ends, why `GET /serial-ports` and `GET /dev-bench/port` are different questions, and — the
+load-bearing one — **why `serial_log` never automatically falls back onto the port list.** Several
+ports can enumerate and only a human or the calling agent knows which is the DUT's console, so an
+automatic fallback would make a hardware inference on the caller's behalf, which `spec.md` §2's
+no-inference-as-fact invariant forbids. That reasoning had been sitting in an `open.md` bullet since
+the 2026-09-08 burndown leg, whose standing rule forbade authoring a new numbered decision; the mode
+is off, so the debt is now paid. **This is the first of that burndown's five owed decisions to
+land.**
+
+**The unit's real work was the split, and it is the reason a decision could be written at all.**
+`open.md` named `decisions/tool-wrapping.md` as the decision's home and that file had **66 bytes
+left**, with its compaction parked as `tasks/api/047`. The worker took the split arm: decisions
+**34** (`enroll_probe`), **35** (`validate`/`alerts`) and **59/60** (`dev_bench_hello`) moved
+verbatim into `hardware-selection.md` under a stated mission — *tools that select or identify one
+physical board or port, and none of them chooses for a caller* — with 23, 29, 41, 47 and 52 kept
+behind. Decision 70 then belongs to the new file by that mission rather than by where there was
+room, which is exactly the failure `embarch-api/open.md`'s last bullet records from leg 015 (a
+decision filed into whichever file had 96 bytes). `tool-wrapping.md` **6,105 B**,
+`hardware-selection.md` **9,118 B**, both far clear of the 12,288 B cap; `tool-wrapping.md` has
+dropped off `check-doc-size.py --pressure` entirely, and `tasks/api/047` is closed rather than left
+parked against a debt that is paid.
+
+**I had the reviewer verify the split byte-for-byte, and that is the check worth keeping.** A split
+is permitted over a parked `In flux` compaction task *because it restates nothing* — so
+"verbatim" is the entire licence, and nothing mechanical checks it. The reviewer extracted each
+decision block from the pre-merge file (`a622cc4^`) and diffed it against both post-merge files:
+**23, 29, 41, 47, 52, 34, 35, 59 and 60 are byte-identical modulo a trailing newline.** It also
+confirmed 34/35/59/60 were *moved* and not *copied* — each appears exactly once — and that every
+item on `tasks/api/047`'s `Must not delete:` list survives somewhere. Without that, "verbatim" is a
+claim in a commit message.
+
+**Two pre-existing citation bugs fixed in passing, one of which was a wrong pointer rather than a
+stale one.** `interfaces/tools-dev-bench.md` cited **decision 62** for `dev_bench_link`'s CLI/MCP
+parity claim; decision 62 is `core-link.md`'s WSL2-detection entry and has nothing to do with
+`dev_bench_link`. Repointed to decision **67** in `surface.md`, and I had the reviewer confirm 67
+actually carries that argument — **a repoint to a second wrong target is worse than the original
+error, because it looks resolved.** It does. The other was decision 59's link following it into the
+new file. A `features.d/` row citing the now-empty `open.md "Owed decisions"` section was repointed
+to 70.
+
+**Merged:** `agent/api/063-list-serial-ports-decision` — doc **`a622cc4`** in `embarch-doc` (rebased
+over this leg's `core/040` fold, then a fast-forward). **Code: none.** The `embarch-api` branch
+pushed at `9b7bfaccc1527686461a81445c1d130be27b3e44`, byte-identical to `origin/main`, verified by
+`rev-parse` on both refs rather than taken on the worker's word — so there was **no merge result in
+`embarch-api` to gate** and I did not run its `cargo` suite. Gate I did run on the merge result:
+`python3 scripts/check-docs.py` **all 11 green** (including `check-decision-refs.py`, which is the
+one that would catch a split leaving a dangling link); `check-ownership.py --scope api` green on the
+doc branch, 9 paths, base `1fcb66f63f76`. I also checked decision-number uniqueness myself before
+the reviewer did, because `outpost/017` landed a duplicate through a green gate two days ago.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none new, and none possible** — prose, with an empty code branch. Standing
+debts carried forward unchanged from the `core/040` entry below: `core/015`'s native Windows build
+of `embarch-core`; `umbrella/037`'s corrected check 13; `embarch-outpost`'s Zephyr `tests/unit` and
+`embarch-dev-bench`'s west toolchain, neither buildable from a fleet worktree; `umbrella/033`'s
+check-17 arms, `umbrella/050`'s `saved.host` question, umbrella check 5's permission-denied probe,
+and `embarch-ui`'s 18-record stale prefix. The bench queue stays parked by the owner's `d0cf9a0`
+and `api/059` with it; `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`).
+
+**Budget:** `PROCEED` start to finish, not burndown, no 429 — weekly **23.4% → 23.6%** of a 90% cap,
+5-hour window inactive. Suggested wave **6**, two workers used, which was the whole
+worker-dispatchable queue.
+
+**Least sure about:** **that I announced a second `suite` task's window while the first one was
+still open, and that this is a pattern nothing in the rules contemplates.** `suite/009`'s window
+opened at 02:05 and `suite/019`'s at 02:22, so for thirteen minutes the channel carried two
+unexpired vetoes from the same leg. `ops.md` §4 describes *a* window, singular, and the
+silence-as-consent argument is weakest when the thing consented to is a queue rather than an act —
+a reader glancing at the channel has to notice both. I did it because a leg is four units and only
+one worker-dispatchable task existed per scope, so without a second announcement this leg ends at
+three; that is a throughput argument, and throughput is exactly the wrong reason to widen a safety
+mechanism. **The mitigation is that each announcement names its own task, paths and `ts`
+separately, and `suite/019`'s explicitly narrows the unit to its cheap half and lists what I will
+not do without a word.** If the owner would rather one window be open at a time, that is a rule
+change and his to make; I am flagging it rather than assuming it is fine.
+
+---
+
 ## 2026-09-11 02:20 — core/040 two caps and a boolean get their decision, and the cheapest part of the unit was closing a debt nobody was closing
 
 **Decided:** nothing suite-wide. Within `embarch-core`, **decision 58** in `decisions/logging.md`
