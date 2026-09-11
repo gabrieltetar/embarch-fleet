@@ -97,6 +97,48 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 21:53 — outpost/016 two docs pointed at a task that was real, finished, and about something else
+
+**Decided:** **dispatched on a premise that turned out to be wrong in an interesting way, and told
+the worker in advance it was allowed to say so.** I filed this task claiming `tasks/suite/021` had
+never been issued — `tasks/suite/` numbering runs 020 → 022 and nothing was on disk. The worker
+checked rather than accepting it and found **021 was real**: filed, decided and folded on
+2026-09-08 (`ac20966`), which is why it is not on disk — a completed task is `git rm`'d. My
+inference from the gap was the exact error `tasks/README.md` warns about, and I made it anyway.
+**The correction matters more than the fix.** Same symptom — a dead pointer in two documents — but
+the cause was "cites a finished task that was about something else", not "cites a number nobody
+issued". Suite/021 corrected `embarch-core`'s and `embarch-dev-bench`'s CI claims and added the
+coverage table at `embarch.md` §5; it never targeted `embarch-outpost` and explicitly declined to
+build a workflow. So two `embarch-outpost` documents had been reading a closed task as their own
+open question's home.
+**Both bullets now state the no-CI fact directly and cite `embarch.md` §5**, leaving "should
+outpost get a workflow" as an unfiled suite-scope question rather than one falsely filed. I told
+the worker not to add a workflow and not to file a `tasks/suite/` task itself (§8 reserves those to
+me, and `check-ownership.py` would refuse it), and it did neither.
+**One correction to my own dispatch note, from the reviewer:** the edited decision in
+`embarch-outpost/decisions/testing.md` is **22**, not 21 — decision 21 lives in `module.md`. The
+edit touched only 22's rejected-alternative sentence, not its DECIDES clause, which still reads
+skip-not-fail and is unchanged.
+**Merged:** `agent/outpost/016-ci-citation` (code none — docs-only, no `embarch-outpost` branch;
+doc `a77543c`). Ownership clean, 4 paths, scope `outpost`, base `b9e111fe9b18`.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit, and it deliberately did not create one — the standing
+debt that `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this environment (no
+`west`, no `ZEPHYR_BASE`) is exactly why no agent may write that CI job, and the reviewer confirmed
+no new text asserts otherwise. Carried forward unchanged: `api/037`'s timed authenticated `curl` of
+`GET /dev-bench/hello` on the primary bench; `core/015`'s native Windows build of `embarch-core`,
+which is the owner's and is also what would deploy `core/020`'s rename; `umbrella/037`'s corrected
+check 13. The bench queue is still parked by the owner's own commit.
+**Budget:** PROCEED, weekly 17.2% of a 90% cap, suggested wave 6, unchanged.
+**Least sure about:** my own task file, not the work. I asserted "never issued" from a directory
+listing, which is the precise inference `tasks/README.md` spends a paragraph forbidding — and the
+only reason it cost nothing is that I also wrote "verify that claim yourself first" into the
+dispatch note. **That instruction is what saved the unit, and I wrote it out of habit rather than
+because I doubted myself.** A refill sweep that files eight tasks in one commit is exactly where
+this error class lives: candidates are cheap to generate and each premise is asserted once, by an
+agent, at speed. The other seven task files I filed this leg carry the same exposure.
+
 ## 2026-09-10 21:52 — api/062 one decision number was wearing two decisions, split verbatim
 
 **Decided:** **this leg's first act was a refill sweep, and this unit is one of its eight results.**
