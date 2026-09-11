@@ -97,6 +97,62 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 21:27 — topology/026 the debt the previous leg filed against itself, paid by a split
+
+**Decided:** **dispatched a compaction the previous leg filed against its own fold.** `api/042`'s
+supervisor annotated `embarch-topology/decisions/links.md` — another sub-project's decisions file,
+so a supervisor-only write — and pushed it 419 B into reserve, then filed this task rather than
+shaving the annotation further. Paying it one leg later is the mechanism working.
+**I told the worker to split rather than squeeze, decisively, and named why.** `DOC-COMPACTION.md`
+§2 prefers a verbatim split, and a split cannot lose a `Must not delete:` item because it restates
+nothing — which matters more than usual here, since the annotation that caused the debt is what
+three other documents were corrected against one leg earlier. I also told it that a written "no
+safe cut" was an acceptable outcome, citing this same leg's `core/036` and `api/060`, so it was not
+under pressure to manufacture bytes.
+**11,478 B → 7,360 B + 5,155 B, both clear of reserve, nothing trimmed.** Decision 18 (the DUT
+signal link and its route) stayed at `links.md`; decisions 17 and 24 (a link's own declared port,
+and `detected_by`'s fourth answer) moved to a new `links-port.md`.
+**The worker's own design choice is the good part of this unit and I am recording it because it is
+reusable.** It kept decision 18 at the *original* path specifically because four other
+sub-projects — `embarch-ui`, `embarch-outpost`, `embarch-api` and `embarch-glossary.md` — cite
+`embarch-topology/decisions/links.md` by path for decision 18, and **none of those files is in
+this task's ownership row.** Splitting the other way would have left `check-decision-refs.py` red
+with no legal fix available to the actor who broke it. **The rule that generalises: when a split
+must choose which half keeps the filename, the half with out-of-scope citers keeps it.**
+**I checked the verbatim claim by reading the diff, not by trusting the byte counts** — the moved
+text is a clean move with the header rewritten (the file's own header, which a split must rewrite)
+and `link-declares.md`'s internal pointer to decision 24 updated in the same commit. The reviewer
+then confirmed byte-for-byte and swept the suite for mis-citations independently.
+**The compaction question, answered by the worker and endorsed:** **no** —
+`embarch-topology/spec.md` alone cannot answer what someone needs to work on this component today;
+the route/CLI/honesty reasoning lives only in the decision files. That gap is a pre-existing second
+debt, already parked under `tasks/topology/024` (blocked, `spec.md` at 9,195/10,240), not new scope
+for this unit.
+**Merged:** `agent/topology/026-compact-topology` (code none — docs-only, no `embarch-topology`
+branch; doc `1614157`). Ownership clean, 6 paths, scope `topology`, base `202949bf5bb2`. The branch
+needed a rebase onto `main` after this leg's own `api/037` fold; pre-rebase tip is not a revert
+handle.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — a documentation split, no board, no build. Carried
+forward: `api/037` (this leg) owes one timed authenticated `curl` of `GET /dev-bench/hello` on the
+primary bench, which sizes that route's budget and `serial_log`'s at once and needs only the
+dev-bench board. Unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and
+still outstanding, and is also what would deploy `core/020`'s `self_reported_hardware_id` rename;
+`umbrella/037`'s corrected check 13 has never met the bench that found its defects;
+`embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this environment. The bench
+queue is still parked by the owner's own commit.
+**Budget:** PROCEED, weekly 16.6% of a 90% cap, suggested wave 6, unchanged across the leg.
+**Least sure about:** nothing in the split itself — it is the cleanest outcome of the four units.
+What I am unsure about is leg-level: **three of this leg's four units were compaction work, and two
+of the three concluded the cap is wrong rather than the files.** `api/060` and `core/036` reached
+that independently. A fourth unit spent on a fifth `open.md` would probably reach it a third time,
+and nothing an agent may write can act on it — `DOC-BUDGET.md` is owner-reserved
+(`tasks/doc/031`, `tasks/doc/034`). The next leg should prefer non-compaction work unless the
+ledger is actually overdue.
+
+---
+
 ## 2026-09-10 21:26 — api/037 a timeout stops being inherited and starts being argued
 
 **Decided:** dispatched with two things settled before the worker started. **(1)** The task was
