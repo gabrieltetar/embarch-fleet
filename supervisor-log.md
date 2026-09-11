@@ -97,6 +97,42 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 18:36 — dev-bench/015 both overflow markers survive the case where both fire
+
+**Decided:** two things, both in the dispatch note rather than after the fact. First, the fix shape:
+make the combined case write **both** markers, and explicitly **not** a third combined marker —
+decision 45 had already rejected that shape in writing ("it would say something was cut without
+saying which"), so re-adding it would have contradicted the decision a second time while appearing
+to repair it. Second, where the bytes come from if 64 will not hold everything: shorten the *name
+list*, never a marker, because a marker is the diagnostic and a name is the payload. The landed
+change reserves both markers' full length unconditionally — `scan_seen_overflowed` is known before
+the budget is computed but `names_truncated` is not, so the budget must assume the worst case rather
+than react to it — and appends each marker independently instead of the `if/else if` priority chain
+that silently dropped `(census full)`. `BUILD_ASSERT` widened from `MAX(a,b)` to `a+b` to match.
+`scan_seen_names.h`'s header citation of a nonexistent `decisions/ble.md` decision 43 is corrected
+to decisions 32 and 45 in `decisions/scanning.md`, and decision 45 is amended in place to state the
+combined case. This is the leg's only fresh unit; the other three were recoveries.
+**Merged:** `agent/dev-bench/015-combined-truncation-markers` (code `a4ab003`, doc `7dd4b8f`).
+Ownership check bases: code `79d474345fa9`, doc `2d8d137c6ef9`.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** **one, and it is a toolchain rather than a board — the same class the
+`embarch-outpost` debt is in, and this is the second sub-project now carrying it.** The firmware was
+not built and no ztest was run: this environment has no `west` and no `ZEPHYR_BASE`. The worker said
+so plainly rather than claiming a gate it did not run, which is the right behaviour and is recorded
+in the task file. Note the coverage gap is structural, not just environmental: `ble_bridge_real.c`
+never builds under `native_sim` (decision 16), so the changed lines have no ztest coverage even in a
+session that *does* have the toolchain — only a real board compile would catch, say, a
+`BUILD_ASSERT` that no longer holds. Carried forward unchanged: `core/015`'s native Windows build of
+`embarch-core` is the owner's and still outstanding; `umbrella/037`'s corrected check 13 has never
+met the bench that found its defects.
+**Budget:** PROCEED start to end — weekly 12.2% rising to 12.5% of a 90% cap, suggested wave 6
+throughout; a recovery leg lands serially, so the wave never bound it.
+**Least sure about:** that `(truncated) (census full)` leaves enough of the 64 bytes for a useful
+name list. Prefix plus both markers is 49 bytes, so the worst case leaves about 15 for names — one
+short name — and nothing built or ran to confirm the arithmetic. The `BUILD_ASSERT` only proves it
+is non-negative, not that it is useful.
+
 ## 2026-09-10 18:30 — umbrella/045 a task that closed honestly by writing a constraint down
 
 **Decided:** I accepted a no-op as the right outcome, which is the only judgement in this unit.
