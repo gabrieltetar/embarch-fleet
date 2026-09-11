@@ -97,7 +97,91 @@ unit under **Merged** and **Blocked**:
 
 ---
 
-## 2026-09-11 02:24 — api/063 a decision the burndown rule forbade, and the split that made room for it
+## 2026-09-11 02:41 — suite/009 the suite's only architecture picture had a shipped binary missing from it, and my first repair was as false as what it replaced
+
+**Decided — suite-wide, and this is the line worth reading.** `embarch.md` §4 is the one place this
+suite writes down its dependency direction, and it is handed to every reviewer and every audit
+hunter as the measuring stick. It now draws **three** entry points instead of two — Claude Code over
+MCP, the human at `embarch-api <subcommand>`, and **the human in a browser at
+`http://127.0.0.1:4890`** — with `embarch-api` and `embarch-ui` **side by side as peers**, joining
+on **`embarch-core-client`**, the one implementation of "reach Core over HTTP+Bearer". `embarch-ui`
+is a shipped six-tab binary that enrols probes, declares and deletes signals and posts studies
+straight to Core; it was in §3's table and absent from the picture, and because the picture showed
+exactly one human path and it was the CLI, **the suite's own "reachable by an agent and by a human"
+parity principle read as satisfied by the CLI alone.**
+
+**The invariant under the sketch was wrong, my repair was also wrong, and the reviewer caught the
+second one before it committed.** The old sentence — *"everything hardware-facing funnels through
+the API to Core to the probe"* — is false for the UI, which is the finding that opened the task. The
+obvious repair is *"through Core to the probe; Core is the sole owner of the probe and the serial
+connection"*, and that is **also false**: `embarch-topology` ships its own `[[bin]]` CLI, gated on a
+`bin` feature that implies `hardware`, and that binary links `probe-rs` and `serialport` **directly,
+with no HTTP hop through Core at all**. Not scope creep — `embarch-topology` decisions **5 and 8**,
+one implementation with multiple call sites, so a human running the CLI sees *precisely* the
+validation Core enforces rather than a second opinion.
+
+So the sentence now names a **crate feature rather than a process**: *everything hardware-facing
+goes through one implementation, and `embarch-topology`'s `hardware` feature is the only code in the
+suite that touches `probe-rs` or a serial port.* Core links it for every runtime path; the CLI links
+it standalone as Core's **sibling, not its client**. **That is a stronger property than the one I
+was trying to write, not a weaker one** — two owners of a probe would be a bug, two callers of one
+owner is the design — and §4 now says so explicitly, including that the first repair was wrong and
+why, so the next reader does not re-derive it. Umbrella's `doctor` reading `/sys/bus/usb/devices` is
+named in the same breath as read-only enumeration that opens nothing.
+
+**I asked the reviewer to attack the claims rather than confirm them, and to state the corrected
+sentence rather than flag it.** It returned two findings and both were real: the false absolute
+above, and my endpoint count — I wrote **15**, `embarch-ui/spec.md` lists **16** hardware-adjacent
+endpoints plus `GET /logs/recent`. **This is the second leg running where a reviewer changed a
+supervisor-executed `suite` unit's content instead of confirming it, and both times it only worked
+because the fold had not committed yet** (leg 081's `suite/025` says the same thing). For a unit the
+supervisor writes with its own hands there is no worker and no branch, so the reviewer is the only
+thing between a wrong sentence and `main`. Spawning it **before** the fold commit, on the working
+tree, is what makes that possible.
+
+**Also corrected in passing:** the sketch's own umbrella clause. Umbrella links
+`embarch-core-client` and `doctor` does call Core, which the old "off to the side, out of the
+runtime path entirely" let a reader take as "never speaks to Core". The clause now says it calls
+Core *to diagnose one* — the reviewer checked all four call sites (`probe_topology`, `check_token`,
+`check_probes`, `check_flash_backend`) and none enrols, flashes or resets.
+
+**Merged:** no branch — a supervisor-executed `suite` unit is written directly in the leg worktree,
+so **the fold commit is the only SHA and it is the revert handle**. Files: `embarch.md` (§4 sketch
+and the three paragraphs under it, 13,905 → 16,536 B against a 25 KB cap, nowhere near reserve),
+`history/doc.md`, one `changelog.d` fragment, and the task file. `python3 scripts/check-docs.py`
+**all 11 green**, re-run after the corrections — and it caught the fragment at **202 B against a
+200 B cap** first, which I shortened rather than raising anything. No code changed in any repo, so
+no `cargo` gate applies.
+
+**Blocked:** nothing.
+
+**Reviewer:** 2 findings — no `inbox/` drop; both were applied to `embarch.md` and the task file in
+this fold before anything was committed.
+
+**Hardware debts:** **none new, and none possible** — the unit is prose. Standing debts unchanged
+from the two entries below: `core/015`'s native Windows build of `embarch-core`; `umbrella/037`'s
+corrected check 13; `embarch-outpost`'s Zephyr `tests/unit` and `embarch-dev-bench`'s west
+toolchain, neither buildable from a fleet worktree; `umbrella/033`'s check-17 arms,
+`umbrella/050`'s `saved.host` question, umbrella check 5's permission-denied probe, and
+`embarch-ui`'s 18-record stale prefix. **The bench queue stays parked by the owner's `d0cf9a0`**,
+`api/059` with it, and **`fleet-hardware.py --refresh` still raises an `AttributeError`**
+(`tasks/doc/041`, `Owner: required`), so the bench buffer could not be refreshed this leg and I
+did not treat it as current.
+
+**Budget:** `PROCEED` start to finish, not burndown, no 429 — weekly **23.6% → 24.2%** of a 90% cap,
+5-hour window inactive, reset in ~124 h. Suggested wave **6**; two workers is all the queue could
+feed.
+
+**Least sure about:** **that a picture this load-bearing was wrong for as long as it was, and that
+nothing mechanical could have told anyone.** `check-staleness.py` watches status tables,
+`collect-open-questions.py` watches `open.md` bullets, `check-decision-refs.py` watches citations —
+**none of them reads a prose architecture sketch**, so a shipped binary was missing from the suite's
+only dependency picture and every gate stayed green. What worries me more is the second half: my own
+repair was confidently false, gate-green, and would have shipped as the corrected version if I had
+not asked a reviewer to attack it. **A supervisor-executed `suite` unit has no worker's independent
+reading and no branch to revert cheaply, so the reviewer is the only adversarial step it gets**, and
+whether it happens depends on the supervisor remembering to ask for it *before* the fold. That is a
+habit, not a mechanism.
 
 **Decided:** nothing suite-wide. Within `embarch-api`, **decision 70** in a **new**
 `decisions/hardware-selection.md` records the three things `open.md` said were owed for
