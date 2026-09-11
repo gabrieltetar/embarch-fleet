@@ -97,6 +97,57 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 22:29 — suite/016 a column named `_utc_ms` that carries uptime, and three contracts that denied it
+
+**Decided:** **correct the false claims, do not rename the column, and split the rename out as its
+own scheduled decision.** `Sample::rx_utc_ms` is milliseconds since the dev-bench board booted.
+The seed-and-resync from `Hello.host_utc_ms` that would make it UTC is designed and **never built**:
+the firmware decodes the field, stores it, reads it from nothing but a round-trip test, and stamps
+`k_uptime_get()` with no offset anywhere. Three contracts asserted the opposite, and in stronger
+words the closer they got to a reader — `interfaces/decoders.md`, decision 12's own text ("that is
+what makes a sample's timestamp a real UTC one"), and `src/protocol.rs`'s doc comment. All three
+corrected, plus `src/gatt.rs` and `src/outpost.rs` at their read points; recorded as
+`embarch-study-designer` decision 72.
+
+**The two defects here are not the same defect, and that is the whole judgement.** A contract
+asserting a mechanism that does not exist is a lie a reader acts on, and it is cheap to fix. The
+*name* being wrong reaches four repos — Core's CSV header and its `study.rs` assertion,
+`embarch-study-designer`'s `Sample` and `GattTranscriptEntry`, dev-bench's wire struct, `embarch-ui`
+— **plus every capture file already written, which no code change touches**, and the same name in an
+outpost trace carries Core's real epoch clock. Fixing both in one pass would leave nobody able to
+attribute a broken reader to either half. So the rename, and the firmware alternative that would
+make the name honest instead, are **`tasks/suite/027`** with the argument attached.
+
+**I refused the firmware arm deliberately**, and it is worth the next leg knowing why rather than
+re-deciding it: one subtraction at the stamp site closes this permanently, but it silently makes
+every capture taken before it incomparable with every capture taken after, with nothing in the file
+saying which side it is on — and it needs the bench, which a leg does not touch.
+
+`tasks/suite/016`'s first acceptance condition has two arms and I took the second — *"or the
+exception is named at the point a consumer reads it."* That is written into the task rather than
+claimed, because it is the weaker arm.
+**Merged:** `agent/suite/016-rx-utc-ms` (code `e5e5d88` in `embarch-study-designer`, doc `d1f4345`).
+Supervisor-executed, no worker branch pair; committed directly on the leg's detached HEAD for the
+doc half.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** **one named and deliberately not taken** — the firmware offset arm of
+`tasks/suite/027` needs the dev-bench board, and it is the owner's call because of what it does to
+capture comparability, not merely because it needs hardware. `embarch-dev-bench/open.md`'s
+"Clock-resync accuracy is not validated" bullet is left standing because it is still true. Carried
+forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still
+outstanding; `umbrella/037`'s corrected check 13 has never met the bench that found its defects;
+`embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this environment. The bench queue
+is still parked by the owner's own commit.
+**Budget:** PROCEED at start and end, weekly 18.4% → 18.8% of a 90% cap, wave 6.
+**Least sure about:** whether leaving the name is the right call or the comfortable one. The task's
+own framing is that the **name** is the false witness, and naming the exception at four read points
+only helps someone who opens the doc — while the failure mode is someone who opens the CSV. I filed
+`suite/027` so that this is a scheduled decision rather than something settled by inaction, but a
+leg that agrees with the task's framing should feel free to take it.
+
+---
+
 ## 2026-09-10 22:24 — api/044 the deferred `hardware_id` rename is cancelled rather than scheduled
 
 **Decided:** **the rename does not happen — neither a compatibility window nor a coordinated
