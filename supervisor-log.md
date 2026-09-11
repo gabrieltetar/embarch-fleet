@@ -97,6 +97,46 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 21:17 — core/036 a compaction that ends in "no safe cut", recovered from a killed leg
+
+**Decided:** **recovered rather than re-ran.** Leg 074 was killed after pushing this worker's
+branch and before folding it. The branch was present on `origin` with commits, which §6 makes a
+positive liveness signal, so I rebased it onto `main`, re-ran the gate on the merge result and
+landed it — nothing was re-derived and no worker was re-dispatched.
+**I accepted a documented non-outcome as a completed unit.** The worker read
+`embarch-core/open.md` bullet by bullet against the task's `Must not delete:` list and found no
+safe 102 B cut: the only connective text in the file is the two words *"Deferred below."* closing
+the `study_schema_mismatch` bullet, which resolves to nothing later in the file — a dangling
+pointer worth ~17 B, well short of the target. It also considered and rejected a verbatim split:
+the six sections are a real seam but each is 1–4 bullets with no outside consumers, so a split
+relocates the open-questions surface rather than shrinking it. **The file is unchanged, zero bytes
+moved, and that is the correct result** — `core/022` is the counter-example, the unit that
+manufactured a cut by trimming real claims and had a fact put back by hand.
+**The task stays `open` with its debt dated 2026-09-26 and unpaid, and I left it that way
+deliberately.** Closing it would strand the size ledger's entry, which points at this file by path;
+`check-doc-size.py --due` lists it with 16 days left and nothing is overdue.
+**The compaction question, in the worker's own words and endorsed by me:** yes —
+`embarch-core/spec.md` alone answers what someone needs to work on `embarch-core` today; `open.md`
+is deliberately the unresolved half, not a prerequisite.
+**Merged:** `agent/core/036-compact-core` (code none — docs-only, no `embarch-core` branch; doc
+`feb1c84`). Ownership clean, 2 paths, scope `core`, base `189c7658606d`.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — no board, no build, no diff to either. Carried
+forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still
+outstanding, and is also what would deploy `core/020`'s `self_reported_hardware_id` rename;
+`umbrella/037`'s corrected check 13 has never met the bench that found its defects;
+`embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this environment. The bench
+queue is still parked by the owner's own commit.
+**Budget:** PROCEED, weekly 16.6% of a 90% cap, suggested wave 6, resets in ~130h.
+**Least sure about:** whether a unit that changes zero bytes of the file it was filed against
+should stay `open` or close. I kept it open because the ledger entry needs a task to point at, but
+that means a future leg reading `--due` sees a live debt whose only honest answer is already
+written in the task body — and the next pass may spend a unit rediscovering it. The task says so
+in its own words, which is the mitigation, not a fix.
+
+---
+
 ## 2026-09-10 21:08 — api/042 two capabilities stop being GUI-only
 
 **Decided:** dispatched this as an ordinary unit with three things pre-settled in the task file, so
