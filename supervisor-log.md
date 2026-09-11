@@ -97,6 +97,41 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 18:51 — topology/025 the crate says how long its answers are good for
+
+**Decided:** two, and the first is why this unit exists at all. **I filed this task myself in this
+leg's refill**, off `embarch-topology/open.md`'s standing bullet that "nothing states what a caller
+may assume beyond" fresh-every-call — a question that had been open while three consumers grew
+around it. The dispatch note made the constraint explicit: **describe the contract the crate has,
+do not invent a stronger one**, and read other repos' call sites without writing to them. Second, I
+let the worker's numbered decision stand: **decision 29** in `decisions/scope.md` records that an
+explicit invalidation signal was *considered and rejected*, on the grounds that every real caller
+already re-resolves per operation. That is a rejection with its reason attached rather than a
+silence, and §5 rule 4 puts a single-sub-project decision in the worker's own hands.
+What `spec.md` now says: an answer is good only at the instant it was taken; no cache, no watcher,
+no invalidation signal; a caller may hold a result for the one operation it was taken for and never
+across a retry; a board unplugged, re-enrolled or moved between calls is invisible until the next
+call.
+**Merged:** `agent/topology/025-caller-granularity-contract` (doc `6633072`; **no code commit** —
+doc-only). Ownership check base: doc `07a632e76d6f` after rebasing onto api/054's fold. The same
+commit paid `spec.md`'s reserve debt — the new section pushed it to 10,001 B and it landed at
+9,195 B (89.8%) — with `tasks/topology/024`'s `Must not delete:` list untouched and now naming the
+new section too; `024` stays blocked.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit. Carried forward unchanged: `core/015`'s native Windows
+build of `embarch-core` is the owner's and still outstanding; `umbrella/037`'s corrected check 13
+has never met the bench.
+**Budget:** PROCEED — weekly 12.6% of a 90% cap, suggested wave 6.
+**Least sure about:** **the half the reviewer did not check.** It confirmed the *crate* holds no
+cache (`src/software.rs:268`, `src/hardware/signal.rs:191` already say so) and that decision 29
+agrees with 2, 3 and 9. What nobody verified is the other direction — whether `embarch-core`,
+`embarch-api` or `embarch-umbrella` actually holds an answer across operations today. If one does,
+`spec.md` now states a contract a consumer is already violating, and the new section is what turns
+that from an unwritten assumption into a bug.
+
+---
+
 ## 2026-09-10 18:48 — api/054 decision 26 retitled about intent, and its file's debt paid on the way
 
 **Decided:** one thing before dispatch, and it is the reusable half. `decisions/core-link.md` had
