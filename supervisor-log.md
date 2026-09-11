@@ -97,6 +97,67 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 01:28 — umbrella/051 a mechanical citation sweep, checked twice because the gate is not currently evidence about decision numbers
+
+**Decided:** nothing new — this unit executes `core/039`'s renumber across one repo. Five
+citations of "`embarch-core` decision 54" meaning the `EnrolledBoardResponse` **label** rule
+("Enrolled, not Validated") became 57: four in
+`tasks/umbrella/045-relabel-confirmed-at-utc-ms-if-doctor-ever-renders-it.md` and one in
+`embarch-umbrella/src/doctor.rs`'s module doc comment. **No citation was deliberately left
+alone**, because none in this scope meant `flashing.md`'s unrelated decision 54
+(`Backend::NrfJprog` retired) — the worker looked for one and found none, and the reviewer
+confirmed that independently.
+
+**What I made the reviewer do, and why.** `outpost/017` landed a duplicate decision number through
+a green gate an hour before this leg started, so "the gate said yes" is not evidence about decision
+numbers in this suite until `tasks/doc/033` exists. So the reviewer was told to **verify the
+renumber target itself** rather than only read the diff for contradictions. It did: it found
+`embarch-core/decisions/surfaces.md` carries an explicit tombstone —
+`### 54 — moved to decision 57 (tasks/core/039, collided with decisions/flashing.md 54)` — and that
+57 is in fact the label rule while `flashing.md` 54 is the `NrfJprog` retirement. It then re-grepped
+both repos for `decision 54` / `decision-54` / `#54` and found no sixth site; every remaining bare
+`54` in the code repo is an `nRF54L15` part number. **The target being right is the part a green
+gate could not have told me.**
+
+**Merged:** `agent/umbrella/051-decision-54-citations` (code **`479069c`** in `embarch-umbrella`,
+one file `src/doctor.rs`; doc **`d3f3f75`**). The doc branch was rebased over this leg's own refill
+commit and force-pushed before the fast-forward, so its pre-rebase tip `0f5394a` is **not** a revert
+handle. Ownership bases: code `3fecfa4b38c6` (whole-tree owned), doc `474d6d6e38e9` (3 paths, all
+`umbrella`). Gate re-run by me on the merge result: `cargo build`, `cargo test` (**226 passed, 0
+failed**), `cargo clippy --all-targets -- -D warnings` clean; `python3 scripts/check-docs.py` **all
+11 green**; `check-client-names.py --repo embarch-umbrella` clean against 7 denylist entries. The
+edit is byte-neutral (54 → 57, same digit count), so none of `umbrella`'s three reserve files
+(`decisions/bind.md` 841 B left, `decisions/doctor.md` 1206 B left, `open.md` 807 B left) moved.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none new, and none possible** — this unit is five digits in two files.
+Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and
+still outstanding; `umbrella/037`'s corrected check 13 has never met the bench that found its
+defects and needs only the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be
+built from a fleet worktree (no `west`, no `ZEPHYR_BASE`); `umbrella/033`'s check-17 narrow-bind
+arms and `umbrella/050`'s `saved.host` clearing question both still need a real machine. The bench
+queue is still parked by the owner's own commit `d0cf9a0`. **New this leg and not a hardware debt
+but adjacent to one:** `fleet-hardware.py --refresh` raises an `AttributeError` and writes nothing,
+so the bench buffer has been **79 hours stale** while the plain form still prints a confident
+`attached: yes` for both boards. Filed as `tasks/doc/041`, `Owner: required` — `scripts/` is
+reserved.
+
+**Budget:** PROCEED at start, weekly **21.3%** of a 90% cap with 125h39m to the reset, suggested
+wave **6**. Percentages are DERIVED, not from `rate_limits`. Not burndown.
+
+**Least sure about:** **that a byte-neutral citation sweep deserved a reviewer told to re-verify
+the target.** It cost about thirty seconds and it found nothing wrong, which is the outcome I
+expected. The reason I did it anyway is that the failure mode here is silent and permanent — five
+citations repointed at a wrong number read exactly like five citations repointed at a right one,
+forever — and the suite has a fresh, concrete instance of a decision-number error surviving a green
+gate. If that judgement is wrong, it is wrong in the direction of spending a reviewer on the
+cheapest unit of the leg.
+
+---
+
 ## 2026-09-11 01:17 — umbrella/050 a saved `--host` attests to a keystroke, not to a topology
 
 **Decided:** **accept `embarch-umbrella` decision 48 as written, in a new topic file, and accept
