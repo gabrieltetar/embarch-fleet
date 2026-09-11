@@ -97,6 +97,64 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 03:16 — api/064 the mis-citation that was propagating by being copied, and the check that cannot see it
+
+**Decided:** nothing suite-wide. One path substitution inside `embarch-api` `decisions/surface.md`
+decision 67: the suite release archive is `embarch-umbrella` **`decisions/install.md`**, not
+`decisions/release.md`. Both the worker and the reviewer established that independently and from the
+same two sources — `embarch-umbrella/decisions.md`'s index row for `install.md` lists `3, 4, 5, 14,
+21, 25, 28` and `release.md`'s lists only `1, 2, 27, 29`, and `install.md:25` carries the decision 14
+body itself. The task's premise was correct as filed, which is worth saying in a week where three
+consecutive legs found a filed premise stale.
+
+**What makes this small unit worth its slot.** Leg 082's reviewer found this because `suite/019` was
+*about to copy it* — the next author trusted the last one, which is the mechanism that makes a
+mis-citation spread rather than sit still. **`check-decision-refs.py` passed all 1,490 refs straight
+through it**, because `release.md` exists and the link resolves: the file is real, the decision is
+not in it, and nothing in this suite checks that pairing. That is a sibling of `tasks/doc/033`
+(nothing checks a decision number is unique) and of `tasks/doc/022` (a link survives a mission split
+pointing at the wrong file) — three defects, one missing check, and all three are `Owner: required`
+because the checker would live in `scripts/`. The reviewer independently re-grepped the whole doc
+tree for the old path and found no second live instance, so this class is *narrow today*; what it is
+not is *detected*.
+
+**Merged:** `agent/api/064-decision-67-citation` (code **none** — the `embarch-api` branch is empty
+by design, code tree byte-identical to `main` at `9b7bfac`; doc **`ba85d8c`**). Ownership check
+bases: doc `79ef95bd3a87`, 3 changed paths, all owned; code repo `9b7bfaccc152`, whole tree owned, 0
+paths. Gate on the merge result: `check-docs.py` **11/11 green**, `check-client-names.py --repo
+<embarch-api worktree>` clean. No `cargo` run — the code tree has a zero diff.
+`decisions/surface.md` is 8,746 B before and after (the substitution is the same length), well under
+its 12,288 B cap; no compaction debt filed or owed.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none, and none possible — one path inside one prose sentence. Standing debts
+carried forward unchanged and not restated per-unit: `core/015`'s native Windows build of
+`embarch-core` (the owner's, the fleet cannot run it), `umbrella/037`'s corrected check 13,
+`embarch-outpost`'s Zephyr `tests/unit` and `embarch-dev-bench`'s west toolchain (neither buildable
+from a fleet worktree), `umbrella/033`'s check-17 arms, `umbrella/050`'s `saved.host` question,
+umbrella check 5's permission-denied probe, and `embarch-ui`'s 18-record stale prefix. **The bench
+queue is still parked by the owner's `d0cf9a0`; `api/059` is the one `open` bench task and I left it
+open and untouched** — it needs a live study reaching the DUT, which is precisely the class the owner
+said on 2026-09-07 he would take himself. `fleet-hardware.py --refresh` still raises an
+`AttributeError` (`tasks/doc/041`, `Owner: required`), so no leg can refresh the bench buffer and
+this one did not treat it as current.
+
+**Budget:** `PROCEED` at the unit's start — weekly **24.5%** of a 90% cap, 5-hour window inactive,
+reset in ~124 h, suggested wave **6**. The leg used **2** workers, which was the entire
+worker-dispatchable queue.
+
+**Least sure about:** **that `tasks/doc/038` is genuinely not dispatchable, and that
+`queue-status.py` says otherwise.** It prints as a plain `open doc` task in the dispatchable list;
+its `Owner:` value is `**required**` with the bold *inside* the value, which is exactly the defect
+`tasks/doc/039` already records, and the file it asks to edit is `DOC-PROTOCOL.md` — owner-reserved.
+I read the file and did not dispatch it. **So this leg's true worker-dispatchable queue was two, not
+three, and `dispatchable: 15` overstates by one for that reason and by twelve more because the rest
+are `suite/` tasks no worker may take.** A leg that trusted the count would have sent a worker at a
+reserved file and had it refused by `check-ownership.py` after twenty minutes of work.
+
+---
+
 ## 2026-09-11 03:01 — suite/019 three of the task's premises were stale, and reconciling them was most of the unit
 
 **Decided:** suite-wide. A reader of `suite/user-guide.md` is now told that **there is a fourth
