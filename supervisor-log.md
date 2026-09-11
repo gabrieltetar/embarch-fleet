@@ -97,6 +97,34 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 18:30 — umbrella/045 a task that closed honestly by writing a constraint down
+
+**Decided:** I accepted a no-op as the right outcome, which is the only judgement in this unit.
+`doctor` renders no `confirmed_at_utc_ms` and calls no `POST /validate` — it takes no `hw_lock` by
+design, so it cannot show a live-check instant at all — and leg 069's pre-dispatch note had already
+told the worker not to manufacture a rendering in order to have something to relabel. What landed is
+ten lines of module doc in `src/doctor.rs` saying that if any future umbrella surface ever renders
+that field it must be labelled "Enrolled", never "Validated"/"Last validated"/"Verified", with
+`embarch-core` decision 54 cited for why Core keeps no real last-validation instant beside it. The
+constraint sits where the next person to add such a line will actually be reading. Third recovery
+landing of leg 069's pushed, gate-green, unfolded work; this leg re-ran every gate rather than
+trusting the worker's report.
+**Merged:** `agent/umbrella/045-confirmed-at-label` (code `584f7e7`, doc `66f9788`). Ownership check
+bases: code `6c423e1cd9eb`, doc `95831bb0fa0b` after rebasing onto api/027's fold.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — a comment, no board, no rendering. Carried forward
+unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still outstanding;
+`umbrella/037`'s corrected check 13 has never met the bench that found its defects and needs only
+the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this
+environment.
+**Budget:** PROCEED — weekly 12.2% of a 90% cap, suggested wave 6, unchanged across the leg; a
+recovery leg lands serially, so the wave never bound it.
+**Least sure about:** that a constraint recorded only in one file's module doc will be found. It is
+in `embarch-umbrella`'s `doctor.rs` and in this task file, and nowhere in `embarch-ui`, whose
+Topology tab is the other surface decision 54 names and the one more likely to render the field
+first.
+
 ## 2026-09-10 18:29 — api/027 decision 55's sweep clause said something untrue about its own test
 
 **Decided:** nothing new by me — another recovery landing of leg 069's pushed, gate-green,
