@@ -97,6 +97,41 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 22:19 — ui/024 a decision 334 bytes over the per-decision cap, compacted rather than split
+
+**Decided:** **nothing suite-wide; the judgement was whether "compact, do not split" is honest at 8%
+over, and I accepted the worker's argument.** `DOC-COMPACTION.md` §2 prefers a verbatim split
+because a split restates nothing, and leg 075 refused to shave files on exactly that ground. It does
+not apply here: `embarch-ui/decisions/topology-tab.md` holds **one** decision (10), so a file split
+would have moved half of one entry into a second file and relocated the cap problem rather than
+solving it. What was cut is four spans of provenance and investigation narrative — when the
+surrounding sentences were written, that building the tab also touched `embarch-api`'s workspace,
+and two "I found this by rendering it" notes. Every invariant, rejected alternative and failure
+signature survives verbatim, and the reviewer checked that independently against the pre-merge text.
+4,430 B → 4,034 B, 62 B of headroom left deliberately rather than shaved to the byte.
+
+**A note the next leg should carry:** this task came from `check-doc-size.py --decisions`, which is
+**not** the size ledger — the ledger clocks whole files and cannot see an over-cap decision inside an
+under-cap file. The same sweep names three more, none filed: `embarch-topology/decisions/validation.md#25`
+(6,224 B), `embarch-outpost/decisions/testing.md#22` (4,442 B), `embarch-core/decisions/logging.md#44`
+(4,352 B). Leg 076 left the third deliberately unflagged as an open inconsistency and I have not
+disturbed that.
+**Merged:** `agent/ui/024-decision-10-over-cap` (code none — docs-only, zero commits on the
+`embarch-ui` branch; doc `9780cc6`). Ownership check base `170f5b867691`.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — a documentation compaction, no board, no build. Carried
+forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still
+outstanding; `umbrella/037`'s corrected check 13 has never met the bench that found its defects and
+needs only the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from
+this environment (no `west`, no `ZEPHYR_BASE`). The bench queue is still parked by the owner's own
+commit.
+**Budget:** PROCEED at start, weekly 18.4% of a 90% cap, wave 6. Unchanged at the fold.
+**Least sure about:** that 62 B of headroom is enough — the file is one decision, so the next
+sentence anyone adds to it puts it back over, and there is now no filed task to catch that.
+
+---
+
 ## 2026-09-10 22:07 — suite/024 the two chip matchers stay separate, and the task's reason for asking was already false
 
 **Decided:** **declined the unification, and the interesting part is why the question was askable at
