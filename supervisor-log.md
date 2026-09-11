@@ -97,6 +97,56 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 21:54 — study-designer/028 four deferred primitives now refuse by name instead of rendering a wrong answer
+
+**Decided:** **this is the unit I would keep if I could keep only one, and its value is that a
+silent wrong answer became a loud refusal.** `embarch-study-designer` parses four EAP protocol
+primitives — `repeat`, `bitpack`, `crc32`, `fixed` — each pinned by its own test, and then rendered
+them as though the render half existed. Anyone plotting such a frame got numbers. Wrong ones, in
+range, from a CSV that parses, with nothing anywhere marking them as wrong.
+**I dispatched this with an explicit licence to come back and say the premise was wrong**, because
+the claim came from `open.md:20` and I had not read the renderer. It half was. The worker found
+`fixed` did carry a scalar through with its scale dropped — the flat-wrong-layout the task
+described — but `bitpack`, `crc32` and `repeat`-with-`count_from` produced **no layout at all**,
+silently dropped from `struct_layouts()`, and literal-count `repeat` already rendered correctly and
+needed nothing. Three different behaviours under one description. **A worker that had taken my
+framing at face value would have written the wrong fix for three of the four.**
+**The fix is additive and that was the right call.** `ResolvedProtocol::render_layout(frame)` is a
+new accessor returning `Err(EapErrorKind::RenderUnimplemented { frame, primitive })` naming which
+primitive is missing; `Ok(None)` still means a shape `StructLayout` never described; `struct_layouts()`
+is untouched. Five tests, one per primitive plus a control.
+**I checked the two things that could make "additive" a lie, because this is a shared crate.**
+`EapErrorKind` gaining a variant breaks any exhaustive match outside the crate — there are none;
+the enum is not named anywhere in `embarch-api`, `embarch-core` or `embarch-ui`. And the reviewer
+independently confirmed suite-wide that **nothing outside this crate calls `struct_layouts()`**,
+which is the load-bearing claim: if a consumer called it, the silent path this unit exists to close
+would still be wide open for the only caller that matters, and the unit would have closed the
+question on the wrong function. The `struct_layouts` hits in `embarch-ui` are decision 52's
+unrelated `StructRegistry`.
+**New decision 71 in `decisions/protocols.md`, and it refuses rather than converts** — it does not
+add scaling logic for `fixed`, so it stays consistent with the standing rule that this crate states
+element width, type and byte order only and never claims what a DUT's bytes mean. That rule is the
+reason the unit is shaped as a refusal at all.
+**Merged:** `agent/study-designer/028-primitives-fail-loudly` (code `2652e11`, doc `19614f8`).
+Ownership clean, 5 doc paths, scope `study-designer`, base `a77543cb73ce`. Gate: `cargo build`,
+`clippy --all-targets -D warnings` clean; `cargo test --features eap-parse` green, 152 + 12 + 10
+tests. `open.md` went 4,649 → 4,569 B, still in reserve, and the worker correctly filed no second
+compaction task because `tasks/study-designer/026` already parks that file.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — host-side Rust, every new test runs in `cargo test`,
+no board and no firmware. Carried forward unchanged: `api/037`'s timed authenticated `curl` of
+`GET /dev-bench/hello` on the primary bench; `core/015`'s native Windows build of `embarch-core`,
+the owner's, which is also what would deploy `core/020`'s rename; `umbrella/037`'s corrected check
+13; `embarch-outpost`'s Zephyr `tests/unit` suite, unbuildable here. The bench queue is still
+parked by the owner's own commit.
+**Budget:** PROCEED, weekly 17.2% of a 90% cap, suggested wave 6, unchanged across the leg.
+**Least sure about:** whether `Ok(None)` is now carrying too much. It means "a shape `StructLayout`
+never described" — span, a second repeat group, an empty frame — which is a *different* kind of
+not-rendered from the four that now error, and the distinction is real but lives only in a doc
+comment. A caller that treats `None` as "nothing to plot" is fine; one that treats it as "no data
+in this frame" is making the old mistake in a new place, and nothing in the type stops it.
+
 ## 2026-09-10 21:53 — outpost/016 two docs pointed at a task that was real, finished, and about something else
 
 **Decided:** **dispatched on a premise that turned out to be wrong in an interesting way, and told
