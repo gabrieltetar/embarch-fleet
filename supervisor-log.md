@@ -97,6 +97,62 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 20:25 — api/026 the second compaction this leg to end with a fact put back
+
+**Decided:** the worker's pass was real and well-argued — `embarch-api/open.md` 5,068 → 3,914 B and
+`spec.md` 9,441 → 9,038 B, both by tightening prose in place, no split, matching the steer in the
+task. It also **corrected the task file's own stated floor for `spec.md`** from 9,216 to 9,040 B
+(`check-doc-size.py` computes `10240 - max(1200, 1024)`), which is the number its success was
+judged against and was wrong in the task text I dispatched.
+**Then my reviewer found a deleted fact and I put it back.** The worker self-reported cutting one
+"tangential aside" — that **`embarch init` never writes `serial_port` at all** — and the reviewer
+swept nine files for it (`embarch-umbrella/spec.md`, `decisions/projects.md`,
+`decisions/integration.md`, `embarch-api/interfaces/config.md`, `interfaces/tools.md`,
+`decisions/core-link.md`, `history/api.md`, `suite/features.md`, `features.d/*`) and found it
+**recorded nowhere else in the suite**: umbrella decision 17 describes `init`'s minimal discovery
+schema without ever naming `serial_port`. Deleted, not moved. Restored to the "Owed decisions"
+bullet with its umbrella-17 pointer. The reviewer's second point stands too and is the reason the
+loss was findable at all only by reading the whole diff: `DOC-COMPACTION-PASS.md` requires a squeeze
+to **quote** the first dozen words of every deleted hunk verbatim, and this commit **described** its
+one real cut instead.
+**The restoration costs 227 B and puts the file back inside reserve by 221 B, so `tasks/api/060` is
+filed** — same shape as `core/036` earlier in this leg, and deliberately so.
+**The pattern across both compaction units is the finding I would most want read.** Two independent
+workers, two different sub-projects, both tuned a file to within single digits of its floor
+(`embarch-core/open.md` cleared by 9 B, `embarch-api/open.md` by **6**), and **both lost exactly one
+real claim doing it**, each caught only by a reviewer. `embarch-api/open.md` has now been squeezed
+twice in three days. I do not think this is two sloppy passes; I think it is evidence that the
+`open.md` caps are too tight for what those files hold, and both new debt tasks say so and are
+explicitly permitted to conclude "no safe cut remains, the cap is the thing that should move."
+**Changing a cap is `DOC-BUDGET.md`'s and I did not touch it.**
+**Merged:** `agent/api/026-compact-api` (code none — documentation-only, `embarch-api` has no diff;
+doc `04929b8`, a merge commit — `suite/008` had advanced `main`, so this was not a fast-forward; the
+worker's own commit is `b01f8d2`). Ownership clean, 4 paths, all `api`.
+**Blocked:** nothing.
+**Reviewer:** 1 finding — inbox/api-026-squeeze-quoting-and-lost-fact.md
+**A defect of my own, landed and then fixed one commit later:** `suite/008`'s fold left
+`suite/decisions.md` linking to the task file that the same fold `git rm`'d, so `04929b8` reached
+`main` with a broken link. The gate was green when I ran it and red afterwards, because
+`fold-commit.py` stages the removal *after* the last gate run and nothing re-runs it. Fixed in this
+unit's fold. **Worth knowing for the next leg: a fold that cites its own task file by link will do
+this every time**, and the window is one commit on `main`.
+**Hardware debts:** none owed by this unit — documentation, no board, no build. Carried forward
+unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still outstanding,
+and is also what would deploy `core/020`'s `self_reported_hardware_id` rename; `umbrella/037`'s
+corrected check 13 has never met the bench that found its defects and needs only the dev-bench
+board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this environment (no
+`west`, no `ZEPHYR_BASE`). The bench queue is still parked by the owner's own commit.
+**Budget:** PROCEED throughout, weekly 14.4% of a 90% cap, suggested wave 6. Unchanged; scope
+spread, not budget, is what limited this leg to three units.
+**Least sure about:** restoring the fact into `embarch-api/open.md` rather than into
+`embarch-umbrella`'s docs, which is where `embarch init` actually lives and which the reviewer
+offered as the alternative. I put it back where it was because that keeps it inside one scope and
+needs no cross-repo judgement from me at a fold — but it means an `api` file is carrying an
+`umbrella` fact, which is the kind of thing that gets cut again by the next compactor for looking
+tangential. It looked tangential to this one for exactly that reason.
+
+---
+
 ## 2026-09-10 20:18 — suite/008 suite-wide decisions get a home
 
 **Decided:** **created `suite/decisions.md`** and moved `embarch.md` §5's rustfmt bullet into it
