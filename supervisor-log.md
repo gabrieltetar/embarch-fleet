@@ -97,6 +97,103 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 02:01 — suite/025 the task's premise was false, and a reviewer cut down my second-best argument before it was committed
+
+**Decided:** **`embarch-umbrella` keeps its own nine-entry debug-probe vendor-ID table.**
+`embarch-umbrella` decision **49**, in a new `decisions/probe-vendors.md`. Announced at 01:23:21
+MDT, `ts 1789111401.646499`; **window closed 01:53:21 with no objection in the thread and none in
+the channel**, so it ran as this leg's fourth unit. No code changed in any repo.
+
+**The task asked the wrong question, and finding that out *is* the answer.** `tasks/suite/025` was
+filed as *"two sub-projects hold independent probe-vendor-ID tables"* — a drift bug, where an
+engineer whose probe is misidentified has to guess which repo to fix. **They are not two copies of
+one fact.** `embarch-topology/src/hardware/port.rs`'s three constants are a **serial-port
+selection** table: `SILABS_VID`'s own doc comment says that chip *"has no JTAG/debug capability at
+all"*, and `ESPRESSIF_VID`'s says it is **"Not a `select` link candidate"**. A list containing a VID
+that is deliberately not a probe is not a probe-vendor table. Probe identification in that crate
+goes through `probe_rs`'s `Lister` in `src/hardware/validate.rs` — a different mechanism that never
+touches those three constants, which the reviewer confirmed by grepping the whole crate. **Exactly
+one value is in both lists, SEGGER's `0x1366`, and it means a different thing in each**: in umbrella
+"this device is a debug probe", in topology "this serial port is a J-Link VCOM". So there is nothing
+to route and no drift to prevent — a shared table would have to contain `SILABS_VID` and make
+umbrella call a USB-UART bridge a debug probe, or exclude it and break port selection.
+
+**The rule I wrote down, rather than just the instance:** *a fact whose wrongness produces a wrong
+diagnostic message belongs where the diagnostic lives; a fact whose wrongness produces wrong
+hardware behaviour belongs in the crate that owns hardware.* Umbrella's nine are load-bearing for
+one sentence of `doctor` prose; topology's three decide which port a study talks to. The decision
+carries a **trigger** that would move it — anything other than `doctor`'s own message consuming the
+list, or a check requiring umbrella's answer and Core's enumeration to *agree*, which would make
+them one fact — and three rejected alternatives.
+
+**The part worth carrying: I asked the reviewer to attack my weakest argument and it did, and I
+corrected the decision before committing it.** I had written that routing the list to Core *"would
+be answering through the same enumeration whose gap this check was built to expose"*. The reviewer
+called that **"rhetoric dressed as necessity"** and was right: `/sys/bus/usb/devices` is as
+world-readable from Core's process as from umbrella's, so Core could carry a parallel sysfs reader
+and dodge `Lister` entirely. The claim is true of the *natural* implementation, not of the
+architecture. So that bullet now says so in as many words, names itself **"a cost, not a proof"**,
+and points at the wrong-machine hazard (decision 31's `CoreElsewhere`) as the load-bearing cost —
+and the decision states explicitly that the *sufficient* argument is "there is no shared fact", so
+a later reader does not lean on the wrong leg. `spec.md`'s new clause lost the blind-spot half too.
+**This is the first unit this leg where a reviewer changed the content rather than confirming it,
+and it happened only because the fold had not committed yet and I told it which argument I
+distrusted.**
+
+**Merged:** no branch — a supervisor-executed `suite` unit is written directly in the leg worktree,
+so **the fold commit is the only SHA** and it is the revert handle: **`5cec95e`** (log `44d1ea9`).
+Files: new `embarch-umbrella/decisions/probe-vendors.md` (7,888 B), plus `decisions.md`'s index row,
+`spec.md`'s "two named exceptions" clause now naming the *reason* rather than the fact,
+`open.md`'s check-5 bullet, `history/umbrella.md`, and the task file. `check-ownership.py
+--supervisor` green across the leg's 12 paths, 16 top-level docs all classified. Gate: `python3
+scripts/check-docs.py` **all 11 green** — it caught my `changelog.d` fragment at **282 B against a
+200 B cap** and I shortened it to 167 B rather than raise anything.
+
+**Doc-size:** `open.md` **4313 → 4306 B** (the rewrite is a net shrink, so its parked
+`tasks/umbrella/038` debt is no worse); `spec.md` 5867 → 6133 B, still far out of reserve at ~57%
+of cap. `decisions/doctor.md` was **not** touched — it has 1,206 B left with its compaction parked
+as `tasks/umbrella/048`, which is exactly why decision 49 went in a new topic file per
+`DOC-BUDGET.md`'s split-first rule, following `umbrella/020` and `umbrella/050`. The reviewer
+checked that precedent was landed work rather than a forward reference, and that decision numbers
+1–49 each appear exactly once — worth doing, since `outpost/017` landed a duplicate number through
+a green gate the day before.
+
+**Blocked:** nothing. **Four units dispatched or executed, four landed, none blocked.**
+
+**Reviewer:** 1 finding — no `inbox/` drop; the correction was applied to `decisions/probe-vendors.md`
+and `spec.md` in this fold before either was committed.
+
+**Hardware debts:** **none new, and none possible** — the unit is prose. **One retired as a
+question and kept as a debt:** whether the nine vendor IDs are the *right* nine is still unmeasured,
+and check 5's not-permitted fail has still never met a real permission-denied probe; both stay in
+`open.md`, and settling the second needs a Linux box running Core natively with a probe attached and
+its udev rules removed. Carried forward: `core/015`'s native Windows build of `embarch-core` is the
+owner's and outstanding; `umbrella/037`'s corrected check 13 has never met the bench;
+`embarch-outpost`'s Zephyr `tests/unit` cannot be built from a fleet worktree; `umbrella/033`'s
+check-17 arms, `umbrella/050`'s `saved.host` clearing question and `embarch-ui`'s 18-record stale
+prefix all need a real machine. **The bench queue is still parked by the owner's commit `d0cf9a0`,
+and `api/059` — the one `open` bench task — falls under that park by its own terms**: it needs a
+live study, which is the DUT-reaching fact the park reserves to him. I left it `open` and untouched.
+**`fleet-hardware.py --refresh` raises an `AttributeError` and writes nothing**, so the buffer
+printed `attached: yes` for both boards while being 79 hours old — `tasks/doc/041`, `Owner:
+required`.
+
+**Budget:** PROCEED start to finish — weekly **21.3% → 22.3%** of a 90% cap, 125 h to the reset,
+suggested wave **6** throughout, of which I used **3**, because three was the entire
+worker-dispatchable queue. Percentages DERIVED, not from `rate_limits`. Not burndown, no 429.
+
+**Least sure about:** **that I should have been the one to answer this at all, at two in the
+morning, unattended.** The window worked exactly as designed and nobody objected — but silence at
+01:23 MDT is a weaker signal than silence at midday, and this decision closes a cross-repo routing
+question by declaring the question malformed. I am confident in the finding (the reviewer verified
+`port.rs` independently and found no probe-identification use of those three VIDs anywhere in the
+crate). What I am less sure of is the **precedent**: a supervisor that can dissolve a suite task by
+reclassifying its premise has a move available that looks like rigour and can be used as an escape.
+The protection here was that I wrote down the trigger that reverses it. If a later leg does this
+twice in a row, that is the thing to look at.
+
+---
+
 ## 2026-09-11 01:36 — topology/024 a compaction whose two suspicious cuts were both already written down somewhere better
 
 **Decided:** **accept the compaction as a genuine shortening, after checking the two cuts that did
