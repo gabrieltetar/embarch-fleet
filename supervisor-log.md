@@ -97,6 +97,36 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 18:29 — api/027 decision 55's sweep clause said something untrue about its own test
+
+**Decided:** nothing new by me — another recovery landing of leg 069's pushed, gate-green,
+unfolded work. The unit's substance is a correction *inside* decision 55's own rejection text: the
+clause saying `reqwest`'s `default_headers` would "leave the sweep nothing to assert" was false —
+the sweep asserts the header on the wire at `MockCore`, which `default_headers` would not change —
+so the clause is gone and the remaining `handle-hands-out-http()` reason is now marked prospective
+rather than current. Two test-side repairs ride with it: the funnel guard matches file+function
+instead of function alone, and the SSE sweep gains an untimed-stream case. I let the decision edit
+stand rather than filing it as a new decision, because correcting a rejection's stated reason in the
+decision that owns it is not a new decision. `tasks/api/026-compact-api.md`'s "must not delete" note
+was updated in the same commit to preserve the corrected form, which is the part a future
+compaction would otherwise silently undo.
+**Merged:** `agent/api/027-decision-55-sweep-clause` (code `0350c8c`, doc `b96c98c`). Ownership
+check bases: code `7e859b541302`, doc `b78e0fb5d906` after rebasing the doc branch onto core/013's
+fold.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — two test files and a decision paragraph, no board and
+no build beyond the host. Carried forward unchanged: `core/015`'s native Windows build of
+`embarch-core` is the owner's and still outstanding, and now gates three landed changes;
+`umbrella/037`'s corrected check 13 has never met the bench that found its defects;
+`embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this environment.
+**Budget:** PROCEED throughout — weekly 12.2% of a 90% cap, suggested wave 6; this leg is spending
+its units on recovery rather than on a wave, so the wave size never bound it.
+**Least sure about:** whether the `handle-hands-out-http()` reason, now labelled prospective,
+still justifies rejecting `default_headers` at all. The unit removed the false half of a two-part
+argument and kept the other half without re-testing it; if that half is also stale, decision 55 is
+now a rejection resting on nothing, and nobody has checked.
+
 ## 2026-09-10 18:27 — core/013 decision 14's 503 on hw_lock contention, built at last
 
 **Decided:** nothing new by me — leg 069 had already picked the build arm over the retire arm and
