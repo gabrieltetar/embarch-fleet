@@ -97,6 +97,66 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 20:40 — api/039 a new decision landed with its own reversal condition already fired
+
+**Decided:** dispatched this to author the missing decision — `embarch-core-client` is the suite's
+third shared crate and the only one with no written reason for where it lives — after discharging
+the task's own blocker myself: its fourth `Done when` box forbade putting the decision in
+`decisions/core-link.md` until that file's reserve was spent, naming `tasks/api/026` as the thing
+that would spend it, and `api/026` had landed two units earlier in this leg. I wrote that into the
+dispatch note with the current byte counts so the worker chose a file rather than inherited a
+prohibition. It landed **decision 66**, corrected `interfaces/modules.md`'s core-client row for
+decision 56's workspace-member change, and filed `tasks/api/061-compact-api.md` for the reserve its
+own decision spent — which is the rule working.
+**Then my reviewer found the decision's premise false, and I amended it in the fold.** Decision 66
+said the crate has **two** consumers and set its reversal trigger at *"a third Cargo consumer with
+its own release cadence appears"* — **and the third was already there when it was written.**
+`embarch-umbrella/Cargo.toml:47` has path-depended on this crate since `umbrella/036` on
+2026-09-08, calling `token_discovery::resolve_token` directly. **I verified both manifests myself
+rather than taking the reviewer's grep**: `embarch-ui` and `embarch-umbrella` both path-depend
+across the repo boundary, plus `embarch-api`'s own workspace member. A decision that states its own
+falsifying condition and is falsified by evidence already in the suite is not sound, so the count
+is now three and the trigger is a fourth.
+**The reviewer's second point was also right and I checked it at the source.** Decision 66
+attributed an FFI/C-boundary rationale to *both* precedents; `embarch-topology` decision 13 states
+no such thing — its argument is only that "a shared crate needs *somewhere* for three consumers to
+depend on", and the hardware feature it names is a Cargo feature flag added by Core, not a
+consumer-side boundary. Only `embarch-study-designer` decision 8 states the FFI rationale. Fixed.
+**The conclusion survives both corrections, which is why I amended rather than reverted**: all
+three consumers are plain Cargo path dependents with no FFI/C boundary, and that — not the count —
+is the distinction from decision 8 the argument rests on, since decision 8's third consumer was an
+FFI/C one. Number and conclusion kept, premise repaired; decision numbers are permanent.
+**Merged:** `agent/api/039-core-client-home` (code none — documentation-only, `embarch-api` has no
+diff; doc `fcbcb6f`, a merge commit; the worker's own commit is `17155cc`). Ownership clean, 6
+paths, all `api`.
+**Blocked:** nothing.
+**Reviewer:** 1 finding — inbox/api-review-039-third-consumer.md
+**One thing I made worse and then partly fixed.** My first amendment ran 680 B and pushed
+`decisions/core-link.md` to 1,390 B over its 12,288 B cap; I rewrote it to about half that
+(13,164 B, 876 B over) and corrected `decisions.md`'s index row, which the worker had left at
+12.0 KB. The file is on the ledger via `tasks/api/061`, due 2026-09-24, so this is recorded debt
+rather than a silent overrun — but **a supervisor that spent this leg arguing the caps are too
+tight should not then be the one writing 680 B of correction prose into an over-cap file**, and
+that is worth someone pushing back on.
+**Hardware debts:** none owed by this unit — documentation, no board, no build. Carried forward
+unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still
+outstanding, and is also what would deploy `core/020`'s `self_reported_hardware_id` rename;
+`umbrella/037`'s corrected check 13 has never met the bench that found its defects and needs only
+the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this
+environment (no `west`, no `ZEPHYR_BASE`). The bench queue is still parked by the owner's own
+commit.
+**Budget:** PROCEED throughout, weekly 14.4% of a 90% cap, suggested wave 6 — unchanged from the
+leg's start. Wave size was never the constraint.
+**Least sure about:** amending a landed numbered decision in a fold at all. The alternative was to
+file it as a task and leave a decision with a false premise standing on `main` overnight, which I
+judged worse — but I made a substantive edit to somebody else's decision text without the context
+the author had, and the reviewer that found the problem is not the one checking my repair of it.
+**Three of this leg's four units ended with me correcting the unit inside its own fold**, each time
+on a reviewer finding; that is either per-unit review earning its cost several times over, or a
+sign I am dispatching work with under-specified task files. I think it is mostly the first.
+
+---
+
 ## 2026-09-10 20:25 — api/026 the second compaction this leg to end with a fact put back
 
 **Decided:** the worker's pass was real and well-argued — `embarch-api/open.md` 5,068 → 3,914 B and
