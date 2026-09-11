@@ -97,6 +97,29 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 19:02 — suite/026 embarch-token.md cites core decision 53 for the directory-vs-file ACL split
+
+**Decided:** executed the suite task leg 068 announced (`ops.md` §4 window, ts `1789083897.811379`)
+rather than restarting its clock — the thread is quiet, nothing actionable, and well over 30 minutes
+had elapsed. One clause in `embarch-token.md` §2 now says Core **deliberately** never restricts
+`%ProgramData%\embarch`'s ACL and cites `embarch-core/decisions/auth.md` (decision 53), beside the
+existing `embarch-topology` decision 23 citation. **Linked to the decision file, not to an anchor:**
+`check-links.py` rejected the generated anchor for that heading (it contains a backslash path and
+backticks, and the checker's slug does not match GitHub's), so a file-level link is the honest one
+here. That is a small finding about anchor links to decision headings with punctuation — not filed,
+because nothing else in the corpus depends on it today.
+**Merged:** nothing — supervisor-executed suite task, committed directly in the leg worktree with
+the fold.
+**Blocked:** nothing.
+**Reviewer:** skipped (supervisor-executed suite unit; a one-clause citation with no branch diff).
+**Hardware debts:** none owed by this unit. Carried forward: `core/015`'s native Windows build of
+`embarch-core` is the owner's and still outstanding; `umbrella/037`'s corrected check 13 has never
+met the bench that found its defects.
+**Budget:** PROCEED at start, weekly 13.2%, suggested wave 6 — capped to a leg of 4 units.
+**Least sure about:** whether dropping the anchor from the decision link is the right call or
+whether the anchor format itself should have been fixed; I chose the link that the gate and a reader
+both resolve today.
+
 ## 2026-09-10 18:58 — dev-bench/008 the census counts what it leaves out, and the toolchain debt was never real
 
 **Decided:** three things, and the first one is the one the next leg should read.
