@@ -97,6 +97,61 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 21:26 — api/037 a timeout stops being inherited and starts being argued
+
+**Decided:** dispatched with two things settled before the worker started. **(1)** The task was
+written *before* the route existed and says so; `api/036` has since landed, so I pointed the worker
+at `crates/embarch-core-client/src/client.rs:1810` and narrowed the unit to "state the budget or
+change it", rather than letting it re-derive whether there was anything to do. **(2)** The task
+carries two notes from `umbrella/030`, one of which asks for **a timed `curl` against the primary
+bench** — that is hardware, a leg never touches it, so I forbade the measurement explicitly in the
+dispatch note and told it the chosen value is stated as **assumed** or not at all.
+**The worker chose `serial_timeout` (15 s) over `status_timeout` (10 s), and the argument is the
+unit.** Nine call sites reuse `status_timeout` on a justification that is genuinely true of them —
+*"a pure local-file read on Core's side, no hardware"*, an OS-cached USB descriptor. That
+justification is false for `/dev-bench/hello`: Core opens the bench's serial link, completes the
+`Hello`/`HelloAck` exchange, and only then reads the boot log the bench flushes *after* that ack
+(`embarch-core` decision 37), before closing the link. `serial_log` already budgets for that shape
+of cost on the same physical link. I read both the diff and the doc comment rather than the
+worker's summary; the comment now says what Core does before it can answer, which is exactly what
+`embarch-umbrella`'s decisions 44/45 say was missing when the same mistake left `doctor` checks 11
+and 13 reporting *unavailable* on a working bench for weeks.
+**I approved the decision's placement, which the worker argued rather than assumed.** Decision 68
+went in `decisions/dev-bench.md`, not `decisions/core-link.md` — the topically obvious home, which
+is 13,164/12,288 B, **over cap**, with `api/061` blocked. My dispatch note named the reserve
+situation in this sub-project up front (`tool-wrapping.md`: 66 B left, blocked; `open.md`: 204 B
+inside reserve after this leg's own `api/060`) so the choice was planned rather than discovered
+mid-edit. `dev-bench.md` went 3.6 → 4.9 KB and is not in reserve.
+**The value is assumed and is labelled that way in both places it appears** — the doc comment and
+the decision — with the one experiment that would settle it named: a single timed authenticated
+`curl` of the endpoint on the primary bench sizes this budget and `serial_log`'s at once. The
+reviewer checked the three copies of that claim independently and found none overstating it.
+**Merged:** `agent/api/037-dev-bench-hello-timeout` (code `57d27f7`, doc `0fdf709`). Ownership
+clean on both: code repo 1 path, doc branch 4 paths, all `api`. The doc branch needed a rebase onto
+`main` after this leg's own `api/060` fold and `topology/026` claim moved it — pre-rebase tip is
+not a revert handle. Gate green including `cargo clippy --all-targets -- -D warnings` and
+`check-client-names.py`.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** **one new, and it is small and precise.** No handshake duration has ever been
+timed on any bench, so both `serial_timeout`'s 15 s and the `status_timeout` it replaced are
+assumed. One timed authenticated `curl` of `GET /dev-bench/hello` on the primary bench (dev-bench
+board attached, Core running) sizes this route and `serial_log` at the same time. It needs only the
+dev-bench board. Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is
+the owner's and still outstanding, and is also what would deploy `core/020`'s
+`self_reported_hardware_id` rename; `umbrella/037`'s corrected check 13 has never met the bench
+that found its defects; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this
+environment. The bench queue is still parked by the owner's own commit.
+**Budget:** PROCEED, weekly 16.6% of a 90% cap, suggested wave 6.
+**Least sure about:** `serial_timeout` is reused, not sized — 15 s is `serial_log`'s number, picked
+for a different route, and this unit's whole complaint about `status_timeout` was that it was
+inherited rather than argued. What changed is that the *justification* now matches the work the
+route actually does, which is the property the convention checks; the number itself is still
+somebody else's. A fifth named budget sized for a handshake is the honest end state, and it cannot
+be written until something times one.
+
+---
+
 ## 2026-09-10 21:20 — api/060 84 bytes of filler, and a second sub-project arguing the cap is wrong
 
 **Decided:** **recovered, like `core/036`, rather than re-run** — leg 074 pushed this branch and
