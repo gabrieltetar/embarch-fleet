@@ -97,6 +97,67 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 01:17 — umbrella/050 a saved `--host` attests to a keystroke, not to a topology
+
+**Decided:** **accept `embarch-umbrella` decision 48 as written, in a new topic file, and accept
+that it deliberately fixes nothing.** `state::State.host` is written by `apply_plan` on every
+`setup` run as `host.map(str::to_string).or(saved.host)` — the current run's `--host` if one was
+given, else whatever was on disk, carried forward — with **no branch on the concluded class
+anywhere in that expression**, and nothing in the crate ever clears it. So a stored value attests
+to *"some past run passed `--host`"*, not to this machine being `remote`, and `state.rs`'s old
+"Only meaningful for `remote`" comment described what the field is *for* rather than what a stored
+one *means*. Decision 48 enumerates what `doctor` check 2 may infer (an explicit host is on
+record; `infer_class` would call this machine `remote` **given that host** — a fact about the
+function, not about the bench) and what it may not (that the current topology *is* remote; that
+the string is still reachable or even the same Core; that a missing value means none was ever
+given). It concludes check 2's existing `umbrella/026` wording is already right and needs no edit
+— the decision is the record of *why* it was right, so a later pass does not "fix" it into
+overclaiming.
+
+**A new file rather than a second squeeze, and I checked the precedent rather than taking it.**
+`decisions/bind.md` is 11,447/12,288 B with its compaction parked as `tasks/umbrella/009`, and
+`DOC-BUDGET.md` — which `DOC-COMPACTION.md` §2 now redirects to — says a split is the default
+remedy and squeezing the exception. `umbrella/020` set the same precedent by splitting decision 22
+out of `doctor.md` into `bind.md` verbatim. The reviewer read both and called the citation
+accurate rather than recruited.
+
+**What it refuses to do is the part worth carrying.** Clearing `saved.host` on a `local`/`wsl-host`
+conclusion is the fix `open.md` still names as unmade, and decision 48 leaves it unmade on purpose:
+it changes what a real `doctor` run reports on a real machine, which needs the bench to confirm.
+`open.md`'s bullet is rewritten to say exactly that — the inference question settled, the clearing
+question open, with the hardware debt attached.
+
+**And the check I ran because of the previous unit:** I had the reviewer grep every `### <n> —`
+heading in `embarch-umbrella/decisions/` before I wrote this. All of 1–48 appear exactly once.
+After `outpost/017` landed a duplicate number through a green gate an hour earlier, "the gate said
+yes" is not evidence about decision numbers in this suite until `tasks/doc/033` exists.
+**Merged:** `agent/umbrella/050-saved-host-check-2` (code `3fecfa4`, doc `b644685`). The only unit
+of this leg with a code half. Ownership check bases: doc `6cb5d450aa49`, code `46ec5c0a64b5`; the
+doc branch's pre-rebase tip `efbc97c` is not a revert handle.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** **one, named by the decision itself and deliberately not discharged.** Whether
+`apply_plan` should clear `saved.host` on a non-`remote` conclusion cannot be settled without
+running `doctor` on a real machine whose state file carries a stale host — the fleet does not touch
+hardware, and `embarch-umbrella/open.md` now carries it explicitly. Nothing else here needs a
+board: the change is a doc comment and a decision, and `cargo build`/`test`/`clippy --all-targets
+-- -D warnings` are green (226 tests). Carried forward unchanged: `core/015`'s native Windows build
+of `embarch-core` is the owner's and still outstanding; `umbrella/037`'s corrected check 13 has
+never met the bench that found its defects and needs only the dev-bench board; `embarch-outpost`'s
+Zephyr `tests/unit` suite cannot be built from a fleet worktree (no `west`, no `ZEPHYR_BASE`). The
+bench queue is still parked by the owner's own commit.
+**Budget:** DEGRADED at the leg's start (percentages unavailable, stale cache; 5 h burn 49% of the
+22.6 M calibrated ceiling; wave 4) → **PROCEED at the end, weekly 21.1% of a 90% cap, wave 6**, with
+125 h to the reset. The wave was never used: this leg landed four already-finished workers and
+dispatched nothing.
+**Least sure about:** that decision 48 is a decision at all rather than a very good comment. It
+changes no behaviour, and its whole value is that a future reader does not "fix" check 2's hedged
+wording into a claim. That is a real thing to write down, but it means `embarch-umbrella` now
+spends a permanent number on a settlement whose only artifact is prose — and the defect it
+describes is still live in the code.
+
+---
+
 ## 2026-09-11 01:09 — topology/027 an `open.md` bullet whose own content was the answer it pointed at
 
 **Decided:** **accept that the bullet states a permanent limitation rather than pending work, and
