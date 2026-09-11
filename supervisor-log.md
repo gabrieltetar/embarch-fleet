@@ -97,6 +97,53 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 18:05 — umbrella/047 a one-line pointer fix, and the red `main` I found underneath it
+
+**Decided:** nothing new in `embarch-umbrella` — this unit corrects a pointer, and I dispatched it
+explicitly as a one-line unit with instructions not to re-word the sentence, not to touch the five
+siblings `umbrella/046` already fixed, and not to author a decision. It did exactly that.
+`decisions/doctor.md` line 7's `Current truth:` now names `../interfaces/doctor-chain.md`, matching
+the five files `046` repointed when it moved the eighteen-row chain table out of `spec.md`.
+
+**What I decided that was not in the task: `main`'s `check-links.py` was already red when I took
+it, and I fixed it inside this unit rather than filing it.** Leg 067's `dev-bench/007` fold
+`git rm`'d that task file, and `tasks/dev-bench/008` links to `007` by relative path — so the
+removal broke the link. **Leg 067's own entry records `check-docs.py` 11/11 green for that fold**,
+which cannot have been true of the tree it committed; the gate ran before the removal was staged.
+Every unit of this leg would otherwise have gated red on something none of them caused, which is
+precisely the "same failure blocks two units" shape. I repointed `008`'s opening paragraph at what
+`007` actually left behind — decision 45, `scan_seen_names.c`, and the still-open
+`tasks/dev-bench/015` — rather than at a file that no longer exists, and said in the file that leg
+068 did it and why. **The ordering defect in `fold-commit.py`'s gate is not mine to fix** (it is
+under `scripts/`): filed as an observation here and nothing more.
+
+**The worker filed its own size debt without being asked**, which is the rule working:
+`decisions/doctor.md` is now 11,082/12,288 B (90.2%), so `tasks/umbrella/048-compact-umbrella.md`
+exists, dated 2026-09-20. A one-line fix that had to stay one line could not have avoided it.
+
+**Merged:** `agent/umbrella/047-doctor-current-truth` (code **none** — the `embarch-umbrella`
+branch carried no commits, this is documentation only; doc `73e7678`). Fast-forward onto
+`404c387`. Ownership check base `404c387ae6db`: 4 paths, all owned by the `umbrella` worker. Gate on
+the merge result: `check-docs.py` **11/11 green**, after my `008` fix; `check-client-names.py` clean.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — a relative link in a documentation file, no board, no
+build, no code in any repo. Carried forward unchanged: `core/015`'s native Windows build of
+`embarch-core` is the owner's and still outstanding, carrying `core/008`, `core/020`'s
+`self_reported_hardware_id` rename, `core/032` and `core/033`; `umbrella/037`'s corrected check 13
+has never met the bench that found its defects; `embarch-outpost`'s Zephyr `tests/unit` suite and
+now `embarch-dev-bench`'s `app/src/scan_seen_names.c` (landed unbuilt by leg 067) both need a
+session with a Zephyr toolchain. No bench unit was runnable — every `hw-gated` task in the queue is
+`toolchain` or `required`.
+**Budget:** PROCEED at the leg's start, weekly **11.0%** of a 90% cap, 5-hour window inactive, wave
+**6** suggested. **The 4-unit cap binds, not the allowance — tenth consecutive leg.**
+**Least sure about:** **that fixing `main`'s red link inside this unit was better than filing it.**
+It is a queue file, so it is mine and the owner's rather than any worker's, and leaving it would
+have gated three unrelated units red on a defect none of them caused. But it means this unit's
+commit carries an edit to a `dev-bench` task that has nothing to do with `umbrella`, and the
+ownership check passed only because `tasks/` is supervisor territory — a reader diffing this fold
+for what `umbrella/047` did will find a paragraph about advertiser censuses in it.
+
 ## 2026-09-10 17:41 — dev-bench/007 two truncations get two markers, and the reviewer found the case where they get one
 
 **Decided:** new `embarch-dev-bench` **decision 45** in `decisions/scanning.md` — two distinct
