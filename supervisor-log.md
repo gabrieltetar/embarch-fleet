@@ -97,6 +97,46 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 18:15 — core/021 a fold recovered from a killed leg, not a unit re-run
+
+**Decided:** **nothing new — this is leg 068's work, finished.** Leg 068 merged both branches to
+`main` in both repos and was killed mid-fold, before its log entry and before `fold-commit.py`. What
+I found in the leg worktree was exactly the half-state that ordering is designed to make survivable:
+`status.d/core-logs-stream-retired.md` already consumed into `embarch-ui/decisions/debug-tab.md` and
+`embarch-ui/spec.md`, `changelog.d/core-retire-logs-stream.removed.md` already assembled into
+`history/core.md`, and `tasks/core/021` already `done` — all uncommitted. **I re-ran nothing and
+re-read nothing for intent.** I verified both merges were ancestors of `origin/main`, re-ran
+`build_features.py` and the full gate on the working tree, and committed what was there.
+
+The one judgement I did make is that this was **recovery rather than re-dispatch**. The prompt that
+spawned me named three branches as unfolded; two of them (`umbrella/047`, `api/051`) already had
+entries at 18:05 and 18:08 and were fully landed, so leg 068 died **after** folding those two and
+partway through its third. Re-running any of them would have duplicated landed work.
+
+**Merged:** `agent/core/021-retire-logs-stream` (code `1262839` in `embarch-core`, doc `6c902c7`) —
+both by leg 068, both already on `origin/main` before I started, both recorded here for the first
+time because that leg never wrote them down. The code diff is `src/api.rs`, `src/logs.rs`,
+`src/main.rs` only — 27 insertions, 296 deletions, all inside the `core` scope. Gate on the merge
+result: `check-docs.py` **11/11 green**, `check-client-names.py` clean.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — a route retirement and its documentation, no board.
+Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and
+still outstanding, carrying `core/008`, `core/020`'s `self_reported_hardware_id` rename, `core/032`
+and `core/033` — **and now this retirement too**, since the running Windows service still serves
+`GET /logs/stream`. `umbrella/037`'s corrected check 13 has never met the bench that found its
+defects; `embarch-outpost`'s Zephyr `tests/unit` suite and `embarch-dev-bench`'s
+`app/src/scan_seen_names.c` both need a session with a Zephyr toolchain. No bench unit was runnable
+— every `hw-gated` task in the queue is `toolchain` or `required`.
+**Budget:** PROCEED, weekly **11.8%** of a 90% cap, wave **6** suggested.
+**Least sure about:** **whether the `embarch-ui` edits in this fold were the right shape, because I
+did not author them and cannot re-derive the author's intent.** They came from leg 068's consumption
+of a `status.d/` fragment and they modify a *different* sub-project's decisions file from the unit's
+scope, which is legitimate for a supervisor fold and is exactly the kind of edit nobody re-reads. I
+read them and they are accurate — decision 7's SSE half is marked gone rather than rewritten, which
+is the right treatment for a historical decision — but a fold I inherited is a weaker review than a
+fold I performed.
+
 ## 2026-09-10 18:08 — api/051 the split that a blocked park had already named, and the decision it made room for
 
 **Decided:** two calls, both mine, both written into the task before dispatch so the worker was not
