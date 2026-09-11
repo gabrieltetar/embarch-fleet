@@ -97,6 +97,28 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 19:06 — api/058 core-link.md's per-machine logfile splits out to logging.md
+
+**Decided:** nothing new — the worker took the split-first route `DOC-BUDGET.md` prescribes rather
+than compacting prose, and it is the right one here: decision 43 (the per-machine logfile) is a
+self-contained topic that was sitting in the file about Core's *link*, so moving it verbatim to a
+new `embarch-api/decisions/logging.md` both pays the debt and files the decision where its topic
+is. `core-link.md` goes 11,962 → 9,955 B, under the reserve line and off
+`check-doc-size.py --pressure` entirely. No code change in `embarch-api`; this unit is doc-only.
+Compaction-pass question, answered by the worker and checked by me: **yes** — `spec.md` alone
+still answers what someone needs to work on this component today, and its one citation of decision
+43 was repointed in the same commit.
+**Merged:** `agent/api/058-compact-api-doc` (doc `f5b46eb`; no code branch — `embarch-api` had
+nothing to change). Ownership check base `55f31f1031a9` after the rebase, 6 paths, all `api`.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit. Carried forward: `core/015`'s native Windows build of
+`embarch-core` is the owner's and still outstanding; `umbrella/037`'s corrected check 13 has never
+met the bench that found its defects.
+**Budget:** PROCEED, weekly 13.2%, suggested wave 6 — running a leg of 4 units.
+**Least sure about:** nothing about this unit; it is a verbatim relocation the reviewer compared
+byte-for-byte.
+
 ## 2026-09-10 19:02 — suite/026 embarch-token.md cites core decision 53 for the directory-vs-file ACL split
 
 **Decided:** executed the suite task leg 068 announced (`ops.md` §4 window, ts `1789083897.811379`)
