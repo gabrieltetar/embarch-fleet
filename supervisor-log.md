@@ -97,6 +97,54 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 21:20 — api/060 84 bytes of filler, and a second sub-project arguing the cap is wrong
+
+**Decided:** **recovered, like `core/036`, rather than re-run** — leg 074 pushed this branch and
+was killed before folding it. Rebased onto `main`, gate re-run on the merge result, landed.
+**I accepted a partial payment as a finished unit.** The worker cut three phrases, quoted
+verbatim in its commit: `, and it fired`, `; revisit otherwise`, and the standalone sentence
+*"Re-read suite-wide; none acquired a new argument."* under `## Settled-deferred`. That is 84 B,
+4,208 → 4,124 B, against a floor of 3,920 — **still 204 B inside reserve**, so the debt is filed,
+dated 2026-09-24 and unpaid, and the task is `blocked` naming its unpark.
+**The reason I did not send it back for the other 204 B is the file's own history.** Two passes in
+three days (`api/026`, `api/031`) each read this file, each concluded a further cut was safe, and
+each deleted a fact recorded nowhere else that a reviewer restored by hand. A third pass under the
+same pressure is the same process producing the same failure, not a better answer.
+**I checked the riskiest deletion rather than taking the worker's word.** `, and it fired` is the
+clause that made the unpinned-mirror bullet read as a real past failure rather than a hypothesis —
+and `api/042` cited exactly that sentence, one unit earlier, as evidence for reading a shared-crate
+diff field-by-field. The surviving text still states it in the past tense (*"`link_port_interface`
+reached Core's wire body and the client mirror silently dropped it"*), so the fact is intact and
+only the emphasis is gone. The reviewer independently confirmed the same, and found the
+inbound-trust clause's content preserved in `embarch-api/decisions/shape.md`.
+**Two sub-projects now say the cap is the thing that should move, and they reached it
+independently in the same leg.** `api/060` and `core/036` each concluded that their `open.md` is
+at its floor because of real content, not filler. That is an argument for the owner about
+`DOC-BUDGET.md`, not something a leg may act on; `tasks/doc/031` and `tasks/doc/034` are already
+filed and owner-reserved, and this entry is the second data point for them.
+**The compaction question, answered by the worker and endorsed:** no —
+`embarch-api/spec.md` alone does **not** answer what someone needs to work on `embarch-api` today,
+because `open.md` is where the gaps between spec and reality live (the unconfirmed `board` field,
+the mirror that already broke, `study_watch`'s untested reconnect path). That is the honest answer
+and it is why the file resists compaction.
+**Merged:** `agent/api/060-compact-api` (code none — docs-only, no `embarch-api` branch; doc
+`41d21bd`). Ownership clean, 3 paths, scope `api`, base `05e86063c0a9`.
+**Blocked:** `tasks/api/060` itself, by design — 204 B of debt unpaid, dated 2026-09-24.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — a prose edit, no board, no build. Carried forward
+unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still
+outstanding, and is also what would deploy `core/020`'s `self_reported_hardware_id` rename;
+`umbrella/037`'s corrected check 13 has never met the bench that found its defects;
+`embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this environment. The bench
+queue is still parked by the owner's own commit.
+**Budget:** PROCEED, weekly 16.6% of a 90% cap, suggested wave 6.
+**Least sure about:** the `, and it fired` cut. It is defensible and two readers agreed, but it is
+exactly the class of edit — dropping the clause that marks a risk as *observed* rather than
+*theoretical* — that this file has already lost facts to twice. If a third pass ever shortens that
+bullet again, the past tense is the part to protect.
+
+---
+
 ## 2026-09-10 21:17 — core/036 a compaction that ends in "no safe cut", recovered from a killed leg
 
 **Decided:** **recovered rather than re-ran.** Leg 074 was killed after pushing this worker's
