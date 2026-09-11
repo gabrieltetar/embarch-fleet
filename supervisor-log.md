@@ -97,2936 +97,1134 @@ unit under **Merged** and **Blocked**:
 
 ---
 
-## 2026-09-10 22:29 — suite/016 a column named `_utc_ms` that carries uptime, and three contracts that denied it
+## 2026-09-11 00:58 — core/039 two `embarch-core` decisions numbered 54, and the later one becomes 57
 
-**Decided:** **correct the false claims, do not rename the column, and split the rename out as its
-own scheduled decision.** `Sample::rx_utc_ms` is milliseconds since the dev-bench board booted.
-The seed-and-resync from `Hello.host_utc_ms` that would make it UTC is designed and **never built**:
-the firmware decodes the field, stores it, reads it from nothing but a round-trip test, and stamps
-`k_uptime_get()` with no offset anywhere. Three contracts asserted the opposite, and in stronger
-words the closer they got to a reader — `interfaces/decoders.md`, decision 12's own text ("that is
-what makes a sample's timestamp a real UTC one"), and `src/protocol.rs`'s doc comment. All three
-corrected, plus `src/gatt.rs` and `src/outpost.rs` at their read points; recorded as
-`embarch-study-designer` decision 72.
+**Decided:** **land the four orphaned units rather than re-run them, and spend the whole leg doing
+it.** `core/039`, `outpost/017`, `topology/027` and `umbrella/050` were dispatched by leg 078; all
+four workers finished and pushed both branches, and then **two supervisors died before merging
+anything** — leg 078 after writing its four claim commits (`76afe2b`, `04badb0`, `2186de4`,
+`8617c7a`), leg 079 after draining one `inbox/` drop into `tasks/umbrella/051` and `tasks/ui/025`
+(`e7f8923`). A branch on `origin` carrying commits is the one positive signal
+`.claude/leg.md` lets retire a worker, and all four had it, so this leg is four
+landings and **no dispatch at all**. Re-running them would have burned four spawns to get four
+second opinions on work already gated green, and would have thrown away each worker's own written
+record of how it read every citation — which for this unit is the substance of the task.
 
-**The two defects here are not the same defect, and that is the whole judgement.** A contract
-asserting a mechanism that does not exist is a lie a reader acts on, and it is cheap to fix. The
-*name* being wrong reaches four repos — Core's CSV header and its `study.rs` assertion,
-`embarch-study-designer`'s `Sample` and `GattTranscriptEntry`, dev-bench's wire struct, `embarch-ui`
-— **plus every capture file already written, which no code change touches**, and the same name in an
-outpost trace carries Core's real epoch clock. Fixing both in one pass would leave nobody able to
-attribute a broken reader to either half. So the rename, and the firmware alternative that would
-make the name honest instead, are **`tasks/suite/027`** with the argument attached.
+**On this unit itself: nothing suite-wide.** `embarch-core` had two live decisions numbered 54 —
+`decisions/flashing.md` (retiring `Backend::NrfJprog`, suite review 2026-09-06) and
+`decisions/surfaces.md` (`EnrolledBoardResponse` gets an honest label rather than a persisted
+validation timestamp, `tasks/core/027`). The worker renumbered the **later-written** one, the
+`surfaces.md` entry, to 57, left a one-line `### 54 — moved to decision 57` tombstone at the old
+number so a stale citation landing in that file finds an explanation instead of a plausible wrong
+match, and swept three citations (`decisions.md`'s index row, `surfaces.md`'s own internal forward
+reference in decision 50, `interfaces/topology.md:9`). It read each remaining "decision 54" hit one
+by one and left alone the ones that mean `flashing.md`'s own 54 or another sub-project's separate 54
+— its task file records the judgement per hit, which is why re-running it would have been a loss.
 
-**I refused the firmware arm deliberately**, and it is worth the next leg knowing why rather than
-re-deciding it: one subtraction at the stamp site closes this permanently, but it silently makes
-every capture taken before it incomparable with every capture taken after, with nothing in the file
-saying which side it is on — and it needs the bench, which a leg does not touch.
-
-`tasks/suite/016`'s first acceptance condition has two arms and I took the second — *"or the
-exception is named at the point a consumer reads it."* That is written into the task rather than
-claimed, because it is the weaker arm.
-**Merged:** `agent/suite/016-rx-utc-ms` (code `e5e5d88` in `embarch-study-designer`, doc `d1f4345`).
-Supervisor-executed, no worker branch pair; committed directly on the leg's detached HEAD for the
-doc half.
+**Two citations it could not reach became queue, not silence.** `embarch-umbrella` and `embarch-ui`
+both cite the moved decision and neither is `core`'s to write, so the worker dropped an `inbox/`
+file; leg 079 filed it as `tasks/umbrella/051` and `tasks/ui/025`, both `open` and dispatchable
+now. `history/core.md`'s two hits are deliberately uncorrected: that file is assembled by
+`build_changelog.py`, not hand-edited, and the reviewer independently confirmed that argument is
+accurate rather than a convenient one.
+**Merged:** `agent/core/039-decision-54-collision` (code none — `embarch-core`'s branch carries zero
+commits and is identical to that repo's `main` at `31a2e09`; doc `851a3d4`). Ownership check base
+`e7f8923050e9`; the branch's pre-rebase tip `3a86dc6` is not a revert handle.
 **Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** **none new, and none possible** — the whole unit is a decision number and three
+citations. Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is the
+owner's and still outstanding (and this unit adds nothing to it — no `embarch-core` code changed);
+`umbrella/037`'s corrected check 13 has never met the bench that found its defects and needs only
+the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from a fleet
+worktree (no `west`, no `ZEPHYR_BASE`). The bench queue is still parked by the owner's own commit.
+`embarch-core/decisions/surfaces.md` is 97.1% of cap with `tasks/core/038` parked `In flux: yes`
+until 2026-09-24; this unit spent a few more of those 351 B.
+**Budget:** DEGRADED at start — the usage cache was 865 s stale so the percentages are unavailable,
+5 h burn 11.0 M billable tokens over 3,105 requests = 49% of the 22.6 M calibrated ceiling, no 429
+in 90 minutes, **wave 4**. Irrelevant to this leg's shape: with four finished workers to land there
+was nothing to size a wave for.
+**Least sure about:** whether 57 was the right free number rather than 58 or higher. The worker's
+argument is that `handshake.md` already held 56 so 57 is next, and the reviewer grepped for a
+collision and found none — but nothing checks decision-number *uniqueness* in this suite at all
+(that is `tasks/doc/033`, the owner's), so both of us were grepping, not asserting.
+
+---
+
+## 2026-09-10 — 55 units
+
+*Folded by leg 080 on 2026-09-11. Fifty-five per-unit entries collapse here with every SHA, every
+hardware debt naming a board, and every `**Reviewer:**` line preserved — reviewer lines stay one per
+unit and line-anchored so `grep '^\*\*Reviewer:' supervisor-log.md` still tallies correctly, and the
+11 of 55 hardware debts that actually name a board are carried in the day's own words. What is gone
+is the narrative reasoning behind each accepted judgement; git holds it in `embarch-fleet` at the
+commit before this fold and earlier.*
+
+**The day, compressed.** Roughly a dozen legs ran (~062 through ~080). Four cross-cutting patterns
+run through nearly all of them, and matter more than any single unit:
+
+1. **Recovery-fold traffic was heavy, and it kept working.** Legs 062, 063, 068, 069 and 071 were
+   each killed mid-fold or mid-leg with green, pushed worker branches still unmerged. Every successor
+   leg recovered rather than re-dispatched — `api/060`, `core/036`, `core/021`, `core/017`, `api/051`,
+   `umbrella/047`, `umbrella/045`, `api/027`, `core/013`, `api/056` are all recoveries, not re-runs —
+   because `fold-commit.py`'s one-commit-per-fold rule kept every half-landed state legible. One
+   genuine gap surfaced: leg 062's `umbrella/043` sweep was uncommitted in its worktree when killed
+   and was correctly discarded per `ops.md` §3 (nothing to recover), while leg 069's `api/056` split
+   across a landed code commit and an unmerged doc branch, leaving the suite ~22 hours with a shipped
+   behaviour change and no decision recording it — a shape `leg.md` does not yet name.
+2. **Several sub-projects independently concluded a doc-size cap is wrong rather than their files
+   being sloppy.** `api/060` and `core/036` reached it independently in one leg; `study-designer/026`
+   and `study-designer/027` reached it a third and fourth time. Five of eight sub-projects now carry
+   an `open.md` in the same reserve against the same 5 KB role cap, every one of those compaction
+   tasks `blocked`, and `study-designer/026` is the first hard evidence one has **no payable form at
+   all** without deleting a live question. Filed to `tasks/doc/031`, `tasks/doc/034` and a new
+   `inbox/doc-a-full-open-md-of-live-questions-has-no-payable-debt.md` — `DOC-BUDGET.md` is
+   owner-reserved and no leg touched it. Where a cap was hit, **verbatim splits** were preferred over
+   squeezes throughout the day (`topology/026`, `api/062`, `api/051`, `umbrella/046`, `outpost/008`,
+   `outpost/014`, `topology/019`, `api/058`) and two compactions (`api/026`, `core/022`) each lost one
+   real fact to an over-eager squeeze, caught only by a reviewer and repaired at the fold.
+3. **Citation sweeps kept finding real miscitations hiding behind mechanical dead-pointer fixes.**
+   `umbrella/043`, `core/032`, `core/033`, `core/008`, `study-designer/027` each swept or repaired a
+   sub-project's decision citations and each found the filed estimate wrong (four sweeps running) and
+   at least one citation that was a **real but wrong** decision number rather than a dead one — the
+   dangerous case, because `check-decision-refs.py` only resolves a number and cannot tell a plausible
+   wrong citation from a correct one. The settled citation-form convention (bare `` decision M `` for
+   a same-repo citation, `` `<repo>` decision M `` cross-repo) was independently reinvented wrong twice
+   this day — a `` `decision N` `` backtick-wrapped form in `core/032`'s sweep, and a fabricated
+   "`embarch-ui milestone 1`" form in the work `core/008` corrected — both caught and either filed
+   forward or fixed in the same fold.
+4. **A standing hardware debt turned out to be false, and is now corrected everywhere it was
+   recorded.** Three earlier log entries said "this environment has no `west` and no `ZEPHYR_BASE`"
+   as an `embarch-dev-bench` hardware debt. `dev-bench/008` and `core/019` each measured it this day
+   from the **main checkout** (not a worker's gitignored worktree) and it builds and runs clean,
+   `esptool>=5.0.2` installed into the shared `.west-venv` as a result. `tasks/dev-bench/008` is
+   reclassified `none` → `toolchain`, which is the accurate class `tasks/README.md` already defined:
+   undispatchable to a worker's worktree, not unrunnable on the machine. `embarch-outpost`'s Zephyr
+   suite remains genuinely unbuildable here throughout the day — that debt is real and unchanged.
+
+### Decided — the suite-wide and owner-facing calls
+
+- **`suite/016` (22:29):** `Sample::rx_utc_ms` is dev-bench uptime, not UTC — the seed-and-resync
+  from `Hello.host_utc_ms` that would make it real UTC was designed and never built. Three contracts
+  (`interfaces/decoders.md`, decision 12's own text, `src/protocol.rs`'s doc comment) plus two read
+  points (`src/gatt.rs`, `src/outpost.rs`) corrected; recorded as `embarch-study-designer` decision
+  72. **The rename itself is deliberately not done** — it reaches four repos plus every capture file
+  already on disk — and is split out as `tasks/suite/027` with the firmware alternative argued and
+  refused (it would make every capture before the fix incomparable with every capture after, silently).
+  A scheduled decision, not a settled one; a leg that agrees with the task's own framing (that the
+  **name** is the false witness, not just the doc text) should feel free to take it.
+- **`api/044` (22:24):** the deferred `hardware_id` rename is **cancelled**, not merely deferred
+  again — `embarch-core` decision 56 is the settlement. Unprefixed `hardware_id` stays the suite's
+  name for the probe-read identity; `probe_hardware_id` stays confined to the one route
+  (`GET /dev-bench/hello`) where the two IDs are neighbours. All three `embarch-core-client` structs
+  now carry a doc comment naming which ID they hold, in exchange. Also filed `core/039`: two live
+  `embarch-core` decisions are both numbered 54 (`flashing.md:46`, `surfaces.md:45`) —
+  `check-decision-refs.py` is green on both because it resolves per sub-project, not per file; the
+  missing uniqueness check is `doc/033`, owner-reserved.
+- **`suite/024` (22:07):** declined unifying `embarch-topology`'s chip-family classifier with
+  `embarch-core`'s `flash_backend.rs` prefix match. The task's own premise — that the two "already
+  agree" on the nRF54H boundary — was false since `embarch-core` decision 49: one abstains from
+  naming a register pair, the other definitively refuses probe-rs; reading the second as agreement
+  with the first is exactly what a unification would be built on. Two false corroborating claims
+  deleted (topology decision 25's amendment, `classify_chip`'s own doc comment); `embarch-core` was
+  not touched.
+- **`suite/023` (21:02):** completed leg 073's parked §4 window. `DOC-CONVENTIONS.md`'s existing
+  `[measured]`/`[assumed]` marker earns a **scope correction**, not a new convention: its own earning
+  test already covers a check-table arm distinguishing an exercised arm from a merely-designed one,
+  found via 17 `open.md` bullets across five sub-projects converging on the same word independently.
+  **`DOC-CONVENTIONS.md` is owner-reserved** (`protocol.md` §3 — `never` for the supervisor too, not
+  only workers) so the task could not be closed; a drafted ~560 B paragraph is left for the owner,
+  marked `Owner: required`. Also recorded: leg 042's routing of this drop to `suite/` scope conflated
+  "keeps it off a worker" with write access — scope does not confer write access to an owner-reserved
+  file, and a leg can burn its one §4 window on a task it then cannot finish.
+- **`suite/008` (20:18):** created `suite/decisions.md`; moved `embarch.md` §5's ~5 KB rustfmt
+  decision into it verbatim as decision 1 (`embarch.md` 17,832 → 14,090 B). Both of the task's own
+  boundary conditions checked, not assumed: the new file needs no ownership classification, and
+  neither `DOC-PROTOCOL.md` nor `DOC-COMPACTION.md` needed amending. What *is* left — `DOC-PROTOCOL.md`'s
+  two enumerations of suite-level docs now under-list rather than mis-list them — is filed as
+  `tasks/doc/038`, not edited, because amending doc-structure rules to accommodate a file the
+  supervisor just created is the one thing a supervisor should not do to its own constraints.
+- **`suite/026` (19:02):** `embarch-token.md` §2 now cites `embarch-core` decision 53 (auth.md) for
+  why Core deliberately never restricts `%ProgramData%\embarch`'s ACL, alongside the existing
+  `embarch-topology` decision 23 citation — linked to the decision **file**, not an anchor, because
+  `check-links.py` rejects an anchor slug containing a backslash and backticks.
+
+### Merged
+
+Every unit below in the day's own order, newest first. Every `Merged:` paragraph is carried close to
+verbatim so every SHA and ownership-check base survives; narrative is condensed to the load-bearing
+judgement, what a next reader must not re-derive, and (for the 11 real ones) the hardware debt in the
+day's own words. "Hardware debts: none." means the unit's own line said so — no board, no board-shaped
+follow-up.
+
+---
+
+**`suite/016`** (22:29) — see Decided above.
+**Merged:** `agent/suite/016-rx-utc-ms` (code `e5e5d88` in `embarch-study-designer`, doc `d1f4345`).
+Supervisor-executed, no worker branch pair; committed directly on the leg's detached HEAD for the doc
+half.
+**Blocked:** nothing. 
 **Reviewer:** no findings.
 **Hardware debts:** **one named and deliberately not taken** — the firmware offset arm of
 `tasks/suite/027` needs the dev-bench board, and it is the owner's call because of what it does to
 capture comparability, not merely because it needs hardware. `embarch-dev-bench/open.md`'s
-"Clock-resync accuracy is not validated" bullet is left standing because it is still true. Carried
-forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still
-outstanding; `umbrella/037`'s corrected check 13 has never met the bench that found its defects;
-`embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this environment. The bench queue
-is still parked by the owner's own commit.
-**Budget:** PROCEED at start and end, weekly 18.4% → 18.8% of a 90% cap, wave 6.
-**Least sure about:** whether leaving the name is the right call or the comfortable one. The task's
-own framing is that the **name** is the false witness, and naming the exception at four read points
-only helps someone who opens the doc — while the failure mode is someone who opens the CSV. I filed
-`suite/027` so that this is a scheduled decision rather than something settled by inaction, but a
-leg that agrees with the task's framing should feel free to take it.
+"Clock-resync accuracy is not validated" bullet stands.
 
 ---
 
-## 2026-09-10 22:24 — api/044 the deferred `hardware_id` rename is cancelled rather than scheduled
-
-**Decided:** **the rename does not happen — neither a compatibility window nor a coordinated
-commit — and `embarch-core` decision 56 is the settlement.** This question has now been deferred
-three times (`tasks/core/020` raised it, decision 47 recorded the deferral, `tasks/api/044`
-inherited it), and the reason it kept surviving is that everyone re-read the *original* defect
-rather than the current one. The original was one **spelling** carrying two **concepts**:
-`hardware_id` meant the JTAG-read ID on the three probe routes and the bench's self-reported ID on
-`GET /dev-bench/hello`, four fields apart in one body. `core/020` renaming the hello field to
-`self_reported_hardware_id` ended that outright. What is left is one **concept** under two
-spellings, which no single response can make a reader get wrong.
-
-Against that: renaming `hardware_id` on `/probes/enroll`, `/probes/enrolled` and `POST /validate`
-is **not a compile error anywhere** — `embarch-core-client`'s structs are freestanding, not shared
-with Core — so it fails at runtime, on the first call, in another repo, reaching the CLI, every MCP
-tool and `embarch-ui` at once. A compatibility window buys that back only by serving two live names
-for one field. So: unprefixed `hardware_id` is the suite's name for the probe-read identity, and
-the `probe_hardware_id` prefix stays confined to the one route where the two IDs are neighbours and
-have to say which they are. **What the decision owes in exchange** is that the concept be legible at
-the struct rather than only on the wire — all three client structs now carry a doc comment naming
-which ID they hold.
-
-**Also filed `tasks/core/039`: two live `embarch-core` decisions are both numbered 54**
-(`decisions/flashing.md:46` and `decisions/surfaces.md:45`), found while picking this decision's
-number. `check-decision-refs.py` is green on both because it resolves a number against the
-sub-project rather than against a file — the same blind spot leg 076 hit from the other direction
-with `umbrella/042`. The missing uniqueness check is already `tasks/doc/033` and stays the owner's.
+**`api/044`** (22:24) — see Decided above.
 **Merged:** `agent/api/044-hardware-id-rollout` (code `9b7bfac`, doc `7a066e2`). Ownership check
 bases: code `57d27f70cff7`, doc derived at the fold.
-**Blocked:** nothing.
+**Blocked:** nothing. 
 **Reviewer:** no findings.
-**Hardware debts:** none owed by this unit — doc comments and a decision, no board, no wire change.
-Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and
-still outstanding; `umbrella/037`'s corrected check 13 has never met the bench that found its
-defects and needs only the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be
-built from this environment. The bench queue is still parked by the owner's own commit.
-**Budget:** PROCEED throughout, weekly 18.4% of a 90% cap, wave 6.
-**Least sure about:** two things, and the second is my own error. First, that `probe_hardware_id` on
-one route beside `hardware_id` on three will not re-confuse someone reading the two side by side —
-the decision's answer is that a prefix earns its keep only where it disambiguates against a
-neighbour, which is judgement, not proof. Second: **the landed `embarch-api` commit message
-`9b7bfac` says "decision 55" where every line of actual content says 56.** I renumbered mid-unit
-after the `core/037` worker took 55 concurrently, amended the file and missed the message body. It
-is on `main` and not worth rewriting; anyone grepping commit messages for "decision 55" will land
-here wrongly. The reviewer caught it, not me.
+**Hardware debts:** none. Note for the record: the landed `embarch-api` commit message `9b7bfac` says
+"decision 55" where the content is decision 56 — renumbered mid-unit after `core/037` took 55
+concurrently, message not amended; on `main`, not worth rewriting, flagged so a grep for "decision 55"
+is not misled.
 
 ---
 
-## 2026-09-10 22:19 — core/037 a documented error code that no enum was ever going to produce
-
-**Decided:** **retire the name rather than build the member, and the finding is bigger than the
-task.** `embarch-core/open.md:9` said `study_schema_mismatch` "names a member of the error `code`
-enum that does not exist". It is stranger than that: **`embarch-core` has no error-code enum at
-all.** The `{code, message, cause}` body is designed and deliberately deferred by `embarch-core`
-decision 12, cross-repo, with its own trigger condition — and `study_schema_mismatch` was a name
-typed into *that decision's prose* for a hypothetical future enum, then left behind with nothing to
-reconcile it against. Building the member would have meant building the whole deferred wire body,
-which §5 puts outside one worker's repo, so the name is retired from `decisions/surfaces.md` and
-`open.md` and recorded as `embarch-core` decision 55 — with a forward note that prior mention does
-not owe the name a seat if the enum is ever built. The reviewer independently confirmed nothing
-outside `embarch-core` names it, and that decision 55 amends decision 12's trigger clause rather
-than contradicting its deferral.
-
-**A caution for whoever reads `open.md` bullets as findings:** this task's source claim was
-confidently specific and wrong in a way only reading the code could show. The task file told the
-worker the claim was doc-sourced and unverified, and that is why the outcome is a correction rather
-than a change built on a false premise.
+**`core/037`** (22:19) — retired the name `study_schema_mismatch` rather than build the member: it
+was typed into decision 12's prose for a hypothetical future error-code enum `embarch-core` has never
+had, and building the member would mean building the whole deferred `{code, message, cause}` body,
+which §5 puts outside one worker's repo. Recorded as decision 55, with a forward note that prior
+mention owes the name no seat if the enum is ever built.
 **Merged:** `agent/core/037-study-schema-mismatch-code` (code none — docs-only, zero commits on the
 `embarch-core` branch; doc `4b39245`). Ownership check base `9780cc65d8fd`.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none owed by this unit — no code diff, no board, no build. Carried forward
-unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still outstanding;
-`umbrella/037`'s corrected check 13 has never met the bench that found its defects and needs only
-the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this
-environment (no `west`, no `ZEPHYR_BASE`). The bench queue is still parked by the owner's own commit.
-**Budget:** PROCEED throughout, weekly 18.4% of a 90% cap, wave 6.
-**Least sure about:** the doc-size debt this created. Decision 55 put
-`embarch-core/decisions/surfaces.md` at 11,937/12,288 B and the worker filed `tasks/core/038-compact-core.md`
-`blocked` on `In flux: yes` with a 2026-09-24 due date — correct by the rule, but it means the next
-`embarch-core` decision to land in `surfaces.md` has 351 B and will meet the cap mid-flight.
+**Blocked:** nothing. 
+**Reviewer:** no findings. 
+**Hardware debts:** none.
 
 ---
 
-## 2026-09-10 22:19 — ui/024 a decision 334 bytes over the per-decision cap, compacted rather than split
-
-**Decided:** **nothing suite-wide; the judgement was whether "compact, do not split" is honest at 8%
-over, and I accepted the worker's argument.** `DOC-COMPACTION.md` §2 prefers a verbatim split
-because a split restates nothing, and leg 075 refused to shave files on exactly that ground. It does
-not apply here: `embarch-ui/decisions/topology-tab.md` holds **one** decision (10), so a file split
-would have moved half of one entry into a second file and relocated the cap problem rather than
-solving it. What was cut is four spans of provenance and investigation narrative — when the
-surrounding sentences were written, that building the tab also touched `embarch-api`'s workspace,
-and two "I found this by rendering it" notes. Every invariant, rejected alternative and failure
-signature survives verbatim, and the reviewer checked that independently against the pre-merge text.
-4,430 B → 4,034 B, 62 B of headroom left deliberately rather than shaved to the byte.
-
-**A note the next leg should carry:** this task came from `check-doc-size.py --decisions`, which is
-**not** the size ledger — the ledger clocks whole files and cannot see an over-cap decision inside an
-under-cap file. The same sweep names three more, none filed: `embarch-topology/decisions/validation.md#25`
-(6,224 B), `embarch-outpost/decisions/testing.md#22` (4,442 B), `embarch-core/decisions/logging.md#44`
-(4,352 B). Leg 076 left the third deliberately unflagged as an open inconsistency and I have not
-disturbed that.
+**`ui/024`** (22:19) — a decision 334 B (8%) over the 4,096 B per-decision cap, compacted in place
+rather than split, because the file holds exactly one decision and a split would only relocate the
+cap problem. 4,430 → 4,034 B; reviewer independently checked every invariant, rejected alternative and
+failure signature survived. Flagged: `check-doc-size.py --decisions` (not the size ledger) shows three
+more over-cap decisions with nothing filed — `embarch-topology/decisions/validation.md#25`,
+`embarch-outpost/decisions/testing.md#22`, `embarch-core/decisions/logging.md#44` (the last left
+deliberately unflagged by leg 076).
 **Merged:** `agent/ui/024-decision-10-over-cap` (code none — docs-only, zero commits on the
 `embarch-ui` branch; doc `9780cc6`). Ownership check base `170f5b867691`.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none owed by this unit — a documentation compaction, no board, no build. Carried
-forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still
-outstanding; `umbrella/037`'s corrected check 13 has never met the bench that found its defects and
-needs only the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from
-this environment (no `west`, no `ZEPHYR_BASE`). The bench queue is still parked by the owner's own
-commit.
-**Budget:** PROCEED at start, weekly 18.4% of a 90% cap, wave 6. Unchanged at the fold.
-**Least sure about:** that 62 B of headroom is enough — the file is one decision, so the next
-sentence anyone adds to it puts it back over, and there is now no filed task to catch that.
+**Blocked:** nothing. 
+**Reviewer:** no findings. 
+**Hardware debts:** none.
 
 ---
 
-## 2026-09-10 22:07 — suite/024 the two chip matchers stay separate, and the task's reason for asking was already false
-
-**Decided:** **declined the unification, and the interesting part is why the question was askable at
-all.** `tasks/suite/024` proposed that `embarch-topology` export its Nordic chip-family classifier
-so `embarch-core`'s `flash_backend.rs` could stop carrying a second prefix match, on the stated
-ground that the two "already agree on where the family boundary sits (both stop at nRF54L; both
-refuse nRF54H rather than guess)". **I checked that before judging it, and it has not been true
-since `embarch-core` decision 49 landed.** `classify_chip` returns `None` for nRF54H;
-`requires_vendor_tool` returns `true` for it — decision 49 extended the match precisely because an
-nRF54H name had been falling through to `false` and reaching probe-rs with no message at all.
-**Both repos refuse nRF54H in opposite directions**: one abstains from answering which register
-pair holds the ID, the other answers definitively that probe-rs must be kept away. Reading the
-second as agreement with the first is exactly what a unification would be built on.
-**Declined on the codomain, not on the coupling the task proposed.** `classify_chip` is
-`fn(&str) -> Option<ChipFamily>` — a three-way judgment over which register pair or eFuse holds a
-factory device ID. `requires_vendor_tool` is `fn(&str) -> bool` over whether probe-rs's flat-NVM
-erase/write model is safe. No shared return type serves both without one caller re-deriving its own
-answer from the other's, which is two matchers again with an indirection in front. **They agree on
-the nRF54L prefix by shared evidence, not shared code, and that is the intended arrangement.**
-**The durable half of this unit is two false claims deleted**, both saying `embarch-core` stops
-where topology stops: the corroborating sentence in topology decision 25
-(`embarch-topology/decisions/validation.md`), **deleted rather than softened**, with an amendment
-paragraph recording the decline and the abstain-versus-assert distinction; and the same claim in
-`classify_chip`'s own doc comment in `hardware_id.rs`, corrected in place and saying what it used
-to claim and why that was wrong. `embarch-core` decision 49 needed no edit — it already declines
-from its side and already describes nRF54H correctly — so **nothing in `embarch-core` was written
-by this unit**, which is the right shape for a suite task that could easily have sprawled.
-**This is a supervisor-executed unit, so the reviewer was the only second pair of eyes on it and I
-told it so**, and asked it to start by re-deriving the factual claim from both sources rather than
-from my summary. It did, and confirmed decision 25's DECIDES clause survived intact, that the
-amendment asserts nothing about nRF54H silicon that nobody has evidence for, and that the
-codomain argument matches the real signatures rather than rationalising them.
-**`ops.md` §4 window:** announced at ts `1789097484.647639`, ran its full 30 minutes, closed with
-no objection. Two further windows were opened this leg and **not** consumed — see the leg note in
-the final report and the `State:` lines of `tasks/suite/016` and `tasks/api/044`.
+**`suite/024`** (22:07) — see Decided above. Its `ops.md` §4 window was announced at
+`ts 1789097484.647639`, ran its full 30 minutes, closed with no objection; two further windows opened
+this leg (`suite/016`, `api/044`) were not consumed the same way.
 **Merged:** `agent/suite/024` — none; executed directly on `main` as a supervisor unit. Code
 `embarch-topology` `b872f6d`; doc half in this fold. Ownership clean, scope `suite`, base
-`f0b7389602a0`; `check-ownership.py --supervisor` clean, 16 of 16 top-level docs classified.
-Gate: `cargo build`/`test --all-features` (69 + 5 tests)/`clippy --all-targets --all-features
--D warnings` green in `embarch-topology`; `check-docs.py` 11/11.
-**Blocked:** nothing.
+`f0b7389602a0`; `check-ownership.py --supervisor` clean, 16 of 16 top-level docs classified. Gate:
+`cargo build`/`test --all-features` (69 + 5 tests)/`clippy --all-targets --all-features -D warnings`
+green in `embarch-topology`; `check-docs.py` 11/11.
+**Blocked:** nothing. 
 **Reviewer:** no findings.
-**Hardware debts:** **none owed, and one deliberately not discharged.** The way to settle nRF54H
-for either matcher is a register read and an erase/write check on real silicon, and **no nRF54H
-part exists on this bench or in this suite** — so this unit refuses on both sides rather than
-promoting a prefix to a fact, which is the same discipline decision 49 and topology decision 25
-already apply. Carried forward unchanged: `api/037`'s timed authenticated `curl` of
-`GET /dev-bench/hello` on the primary bench; `core/015`'s native Windows build of `embarch-core`,
-the owner's, also what would deploy `core/020`'s rename; `umbrella/037`'s corrected check 13;
-`embarch-outpost`'s Zephyr `tests/unit` suite, unbuildable here. The bench queue is still parked by
-the owner's own commit.
-**Budget:** PROCEED, weekly 17.2% of a 90% cap, suggested wave 6, unchanged across the leg.
-**Least sure about:** **I filed `tasks/outpost/017-compact-outpost.md` against this leg's own
-`outpost/016`**, because `check-doc-size.py --decisions` shows `testing.md#22` at 4,442 B against a
-4,096 B cap. It was **already over at 4,258 B before that unit touched it** and nothing had filed
-it, so the debt is not one `outpost/016` created — but it is one `outpost/016` made worse, and I
-judged that the same obligation. I am not certain that is the right reading of the rule: the filing
-rule is written about the *file-level reserve*, and the per-decision cap has no equivalent clause.
-Two other decisions are over that cap right now with nothing filed against them
-(`embarch-ui/decisions/topology-tab.md#10`, which I filed as `ui/024`, and
-`embarch-core/decisions/logging.md#44`, which I did **not** file). If the reading is right, core/44
-is owed a task too.
+**Hardware debts:** **none owed, and one deliberately not discharged.** The way to settle nRF54H for
+either matcher is a register read and an erase/write check on real silicon, and **no nRF54H part
+exists on this bench or in this suite** — refusing on both sides rather than promoting a prefix to a
+fact. Also carried: `outpost/017-compact-outpost.md` was filed this unit against `outpost/016`'s
+`testing.md#22`, already over cap before that unit touched it.
 
-## 2026-09-10 21:54 — study-designer/028 four deferred primitives now refuse by name instead of rendering a wrong answer
+---
 
-**Decided:** **this is the unit I would keep if I could keep only one, and its value is that a
-silent wrong answer became a loud refusal.** `embarch-study-designer` parses four EAP protocol
-primitives — `repeat`, `bitpack`, `crc32`, `fixed` — each pinned by its own test, and then rendered
-them as though the render half existed. Anyone plotting such a frame got numbers. Wrong ones, in
-range, from a CSV that parses, with nothing anywhere marking them as wrong.
-**I dispatched this with an explicit licence to come back and say the premise was wrong**, because
-the claim came from `open.md:20` and I had not read the renderer. It half was. The worker found
-`fixed` did carry a scalar through with its scale dropped — the flat-wrong-layout the task
-described — but `bitpack`, `crc32` and `repeat`-with-`count_from` produced **no layout at all**,
-silently dropped from `struct_layouts()`, and literal-count `repeat` already rendered correctly and
-needed nothing. Three different behaviours under one description. **A worker that had taken my
-framing at face value would have written the wrong fix for three of the four.**
-**The fix is additive and that was the right call.** `ResolvedProtocol::render_layout(frame)` is a
-new accessor returning `Err(EapErrorKind::RenderUnimplemented { frame, primitive })` naming which
-primitive is missing; `Ok(None)` still means a shape `StructLayout` never described; `struct_layouts()`
-is untouched. Five tests, one per primitive plus a control.
-**I checked the two things that could make "additive" a lie, because this is a shared crate.**
-`EapErrorKind` gaining a variant breaks any exhaustive match outside the crate — there are none;
-the enum is not named anywhere in `embarch-api`, `embarch-core` or `embarch-ui`. And the reviewer
-independently confirmed suite-wide that **nothing outside this crate calls `struct_layouts()`**,
-which is the load-bearing claim: if a consumer called it, the silent path this unit exists to close
-would still be wide open for the only caller that matters, and the unit would have closed the
-question on the wrong function. The `struct_layouts` hits in `embarch-ui` are decision 52's
-unrelated `StructRegistry`.
-**New decision 71 in `decisions/protocols.md`, and it refuses rather than converts** — it does not
-add scaling logic for `fixed`, so it stays consistent with the standing rule that this crate states
-element width, type and byte order only and never claims what a DUT's bytes mean. That rule is the
-reason the unit is shaped as a refusal at all.
+**`study-designer/028`** (21:54) — four EAP protocol primitives (`repeat`, `bitpack`, `crc32`,
+`fixed`) were parsed but silently rendered wrong or not at all. `render_layout(frame)` is a new
+accessor returning `Err(RenderUnimplemented{frame, primitive})` naming the missing primitive; `Ok(None)`
+still means a shape never described. Additive: `EapErrorKind` is not named outside this crate and
+nothing calls `struct_layouts()` outside it (reviewer-confirmed suite-wide), so nothing broke. New
+decision 71 refuses rather than converts, consistent with the crate never claiming what a DUT's bytes
+mean.
 **Merged:** `agent/study-designer/028-primitives-fail-loudly` (code `2652e11`, doc `19614f8`).
 Ownership clean, 5 doc paths, scope `study-designer`, base `a77543cb73ce`. Gate: `cargo build`,
 `clippy --all-targets -D warnings` clean; `cargo test --features eap-parse` green, 152 + 12 + 10
-tests. `open.md` went 4,649 → 4,569 B, still in reserve, and the worker correctly filed no second
-compaction task because `tasks/study-designer/026` already parks that file.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none owed by this unit — host-side Rust, every new test runs in `cargo test`,
-no board and no firmware. Carried forward unchanged: `api/037`'s timed authenticated `curl` of
-`GET /dev-bench/hello` on the primary bench; `core/015`'s native Windows build of `embarch-core`,
-the owner's, which is also what would deploy `core/020`'s rename; `umbrella/037`'s corrected check
-13; `embarch-outpost`'s Zephyr `tests/unit` suite, unbuildable here. The bench queue is still
-parked by the owner's own commit.
-**Budget:** PROCEED, weekly 17.2% of a 90% cap, suggested wave 6, unchanged across the leg.
-**Least sure about:** whether `Ok(None)` is now carrying too much. It means "a shape `StructLayout`
-never described" — span, a second repeat group, an empty frame — which is a *different* kind of
-not-rendered from the four that now error, and the distinction is real but lives only in a doc
-comment. A caller that treats `None` as "nothing to plot" is fine; one that treats it as "no data
-in this frame" is making the old mistake in a new place, and nothing in the type stops it.
+tests.
+**Blocked:** nothing. 
+**Reviewer:** no findings. 
+**Hardware debts:** none — host-side Rust throughout.
 
-## 2026-09-10 21:53 — outpost/016 two docs pointed at a task that was real, finished, and about something else
+---
 
-**Decided:** **dispatched on a premise that turned out to be wrong in an interesting way, and told
-the worker in advance it was allowed to say so.** I filed this task claiming `tasks/suite/021` had
-never been issued — `tasks/suite/` numbering runs 020 → 022 and nothing was on disk. The worker
-checked rather than accepting it and found **021 was real**: filed, decided and folded on
-2026-09-08 (`ac20966`), which is why it is not on disk — a completed task is `git rm`'d. My
-inference from the gap was the exact error `tasks/README.md` warns about, and I made it anyway.
-**The correction matters more than the fix.** Same symptom — a dead pointer in two documents — but
-the cause was "cites a finished task that was about something else", not "cites a number nobody
-issued". Suite/021 corrected `embarch-core`'s and `embarch-dev-bench`'s CI claims and added the
-coverage table at `embarch.md` §5; it never targeted `embarch-outpost` and explicitly declined to
-build a workflow. So two `embarch-outpost` documents had been reading a closed task as their own
-open question's home.
-**Both bullets now state the no-CI fact directly and cite `embarch.md` §5**, leaving "should
-outpost get a workflow" as an unfiled suite-scope question rather than one falsely filed. I told
-the worker not to add a workflow and not to file a `tasks/suite/` task itself (§8 reserves those to
-me, and `check-ownership.py` would refuse it), and it did neither.
-**One correction to my own dispatch note, from the reviewer:** the edited decision in
-`embarch-outpost/decisions/testing.md` is **22**, not 21 — decision 21 lives in `module.md`. The
-edit touched only 22's rejected-alternative sentence, not its DECIDES clause, which still reads
-skip-not-fail and is unchanged.
-**Merged:** `agent/outpost/016-ci-citation` (code none — docs-only, no `embarch-outpost` branch;
-doc `a77543c`). Ownership clean, 4 paths, scope `outpost`, base `b9e111fe9b18`.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none owed by this unit, and it deliberately did not create one — the standing
-debt that `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this environment (no
-`west`, no `ZEPHYR_BASE`) is exactly why no agent may write that CI job, and the reviewer confirmed
-no new text asserts otherwise. Carried forward unchanged: `api/037`'s timed authenticated `curl` of
-`GET /dev-bench/hello` on the primary bench; `core/015`'s native Windows build of `embarch-core`,
-which is the owner's and is also what would deploy `core/020`'s rename; `umbrella/037`'s corrected
-check 13. The bench queue is still parked by the owner's own commit.
-**Budget:** PROCEED, weekly 17.2% of a 90% cap, suggested wave 6, unchanged.
-**Least sure about:** my own task file, not the work. I asserted "never issued" from a directory
-listing, which is the precise inference `tasks/README.md` spends a paragraph forbidding — and the
-only reason it cost nothing is that I also wrote "verify that claim yourself first" into the
-dispatch note. **That instruction is what saved the unit, and I wrote it out of habit rather than
-because I doubted myself.** A refill sweep that files eight tasks in one commit is exactly where
-this error class lives: candidates are cheap to generate and each premise is asserted once, by an
-agent, at speed. The other seven task files I filed this leg carry the same exposure.
+**`outpost/016`** (21:53) — filed on the false premise that `tasks/suite/021` was never issued (a
+directory-listing inference `tasks/README.md` warns against); the worker checked and found 021 was
+real, finished, folded 2026-09-08 (`ac20966`), and about something else (`embarch-core`/
+`embarch-dev-bench` CI claims, not `embarch-outpost`) — which is why it was not on disk (a completed
+task is `git rm`'d). Two `embarch-outpost` docs corrected to state the no-CI fact directly
+and cite `embarch.md` §5, leaving "should outpost get a workflow" unfiled rather than falsely filed.
+**Merged:** `agent/outpost/016-ci-citation` (code none — docs-only, no `embarch-outpost` branch; doc
+`a77543c`). Ownership clean, 4 paths, scope `outpost`, base `b9e111fe9b18`.
+**Blocked:** nothing. 
+**Reviewer:** no findings. 
+**Hardware debts:** none — and deliberately created
+none: the standing outpost toolchain debt is exactly why no agent may author that CI job.
 
-## 2026-09-10 21:52 — api/062 one decision number was wearing two decisions, split verbatim
+---
 
-**Decided:** **this leg's first act was a refill sweep, and this unit is one of its eight results.**
-The queue I inherited reported 21 dispatchable and had **two** tasks a worker could actually take:
-15 were supervisor-only `suite/` tasks needing an announcement window, and one — `tasks/doc/038` —
-writes `**Owner:** **required**` with the value bolded, which `queue-status.py` reads as dispatchable
-because the bold markers are inside the field. That is exactly the defect `tasks/doc/039` already
-describes, so it is filed and not mine; I note it because the *count* is what a leg sizes its wave
-against, and it was wrong by a factor of ten.
-**The sweep's own finding is worth more than any one task it produced:** `check-doc-size.py
---decisions` reports decisions over the 4,096 B per-decision cap, and **the size ledger cannot see
-them.** The ledger clocks *files*. An over-cap decision inside an under-cap file therefore has no
-due date, nothing schedules it, and it grows every time somebody amends it — which is plausibly how
-`embarch-api/decisions/zephyr.md` reached 14,269/12,288 B. Two of the eight tasks I filed
-(`api/062`, `ui/024`) came from that check alone and neither was on any ledger.
-**This unit:** decision 19 in `embarch-api/decisions/target-json.md` at 5,510 B, 34% over. I told
-the worker to prefer a verbatim split, that the half with out-of-scope citers keeps the filename
-(`topology/026`'s rule, leg 075), and that a written "no safe cut" was an acceptable outcome so it
-was not under pressure to manufacture bytes. It found the better answer: **19 was one number
-carrying two decisions** — the FNV-1a hash for `extra_args`, and the `target.json` descriptor file's
-own semantics — and split them verbatim into 19 and a new 69, **both staying in `target-json.md`,
-because only the decision was over cap and the file never was.** `decisions.md`'s index row and
-`interfaces/config.md`'s absence-semantics citation were repointed to 69.
-**The filename rule did not bind here and the worker said so rather than applying it anyway** —
-every citation of api decision 19 is inside `embarch-api/` itself. That is the right way to handle
-a rule I handed down: check whether its precondition holds, and record that it did not.
-**Merged:** `agent/api/062-compact-target-json` (code none — docs-only, no `embarch-api` branch;
-doc `b9e111f`). Ownership clean, 5 paths, scope `api`, base `0c70e6814dd3`.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none owed by this unit — a documentation split, no board, no build. Carried
-forward: `api/037` (leg 075) owes one timed authenticated `curl` of `GET /dev-bench/hello` on the
-primary bench. Unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and
-still outstanding, and is also what would deploy `core/020`'s `self_reported_hardware_id` rename;
-`umbrella/037`'s corrected check 13 has never met the bench that found its defects;
-`embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this environment. The bench queue
-is still parked by the owner's own commit.
-**Budget:** PROCEED at start, weekly 17.2% of a 90% cap, suggested wave 6.
-**Least sure about:** the reviewer flagged that this task file's own Resolution section says
-`decisions/build.md` and `decisions/zephyr.md` "cite decision 19" when in fact they link the file
-generically and name no number. It judged that a completeness quibble rather than a contradiction
-and filed nothing, and I agree — but it means **the worker's stated reason for leaving those two
-alone is not the true reason**, and the true reason (there was nothing there to repoint) is better.
+**`api/062`** (21:52) — `embarch-api` decision 19 (34% over cap) turned out to be one number wearing
+two decisions — the FNV-1a hash for `extra_args`, and `target.json`'s own file semantics — split
+verbatim into 19 and new 69, both staying in `target-json.md` since only the decision, not the file,
+was over cap. Came out of this leg's refill sweep, which also surfaced that `check-doc-size.py
+--decisions` (not the ledger) is where such over-cap-decision debt hides.
+**Merged:** `agent/api/062-compact-target-json` (code none — docs-only, no `embarch-api` branch; doc
+`b9e111f`). Ownership clean, 5 paths, scope `api`, base `0c70e6814dd3`.
+**Blocked:** nothing. 
+**Reviewer:** no findings. 
+**Hardware debts:** none.
 
-## 2026-09-10 21:27 — topology/026 the debt the previous leg filed against itself, paid by a split
+---
 
-**Decided:** **dispatched a compaction the previous leg filed against its own fold.** `api/042`'s
-supervisor annotated `embarch-topology/decisions/links.md` — another sub-project's decisions file,
-so a supervisor-only write — and pushed it 419 B into reserve, then filed this task rather than
-shaving the annotation further. Paying it one leg later is the mechanism working.
-**I told the worker to split rather than squeeze, decisively, and named why.** `DOC-COMPACTION.md`
-§2 prefers a verbatim split, and a split cannot lose a `Must not delete:` item because it restates
-nothing — which matters more than usual here, since the annotation that caused the debt is what
-three other documents were corrected against one leg earlier. I also told it that a written "no
-safe cut" was an acceptable outcome, citing this same leg's `core/036` and `api/060`, so it was not
-under pressure to manufacture bytes.
-**11,478 B → 7,360 B + 5,155 B, both clear of reserve, nothing trimmed.** Decision 18 (the DUT
-signal link and its route) stayed at `links.md`; decisions 17 and 24 (a link's own declared port,
-and `detected_by`'s fourth answer) moved to a new `links-port.md`.
-**The worker's own design choice is the good part of this unit and I am recording it because it is
-reusable.** It kept decision 18 at the *original* path specifically because four other
-sub-projects — `embarch-ui`, `embarch-outpost`, `embarch-api` and `embarch-glossary.md` — cite
-`embarch-topology/decisions/links.md` by path for decision 18, and **none of those files is in
-this task's ownership row.** Splitting the other way would have left `check-decision-refs.py` red
-with no legal fix available to the actor who broke it. **The rule that generalises: when a split
-must choose which half keeps the filename, the half with out-of-scope citers keeps it.**
-**I checked the verbatim claim by reading the diff, not by trusting the byte counts** — the moved
-text is a clean move with the header rewritten (the file's own header, which a split must rewrite)
-and `link-declares.md`'s internal pointer to decision 24 updated in the same commit. The reviewer
-then confirmed byte-for-byte and swept the suite for mis-citations independently.
-**The compaction question, answered by the worker and endorsed:** **no** —
-`embarch-topology/spec.md` alone cannot answer what someone needs to work on this component today;
-the route/CLI/honesty reasoning lives only in the decision files. That gap is a pre-existing second
-debt, already parked under `tasks/topology/024` (blocked, `spec.md` at 9,195/10,240), not new scope
-for this unit.
+**`topology/026`** (21:27) — paid the 419 B debt `api/042`'s supervisor filed against its own fold one
+leg earlier. Split rather than squeezed: decision 18 (DUT signal link/route) stayed at `links.md`
+because four other sub-projects cite it by path and none is in this task's ownership row; decisions 17
+and 24 moved to new `links-port.md`. 11,478 B → 7,360 + 5,155 B, verified verbatim by diff, not by
+trusting the report. **Rule recorded as reusable: when a split must choose which half keeps the
+filename, the half with out-of-scope citers keeps it.**
 **Merged:** `agent/topology/026-compact-topology` (code none — docs-only, no `embarch-topology`
 branch; doc `1614157`). Ownership clean, 6 paths, scope `topology`, base `202949bf5bb2`. The branch
-needed a rebase onto `main` after this leg's own `api/037` fold; pre-rebase tip is not a revert
-handle.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none owed by this unit — a documentation split, no board, no build. Carried
-forward: `api/037` (this leg) owes one timed authenticated `curl` of `GET /dev-bench/hello` on the
-primary bench, which sizes that route's budget and `serial_log`'s at once and needs only the
-dev-bench board. Unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and
-still outstanding, and is also what would deploy `core/020`'s `self_reported_hardware_id` rename;
-`umbrella/037`'s corrected check 13 has never met the bench that found its defects;
-`embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this environment. The bench
-queue is still parked by the owner's own commit.
-**Budget:** PROCEED, weekly 16.6% of a 90% cap, suggested wave 6, unchanged across the leg.
-**Least sure about:** nothing in the split itself — it is the cleanest outcome of the four units.
-What I am unsure about is leg-level: **three of this leg's four units were compaction work, and two
-of the three concluded the cap is wrong rather than the files.** `api/060` and `core/036` reached
-that independently. A fourth unit spent on a fifth `open.md` would probably reach it a third time,
-and nothing an agent may write can act on it — `DOC-BUDGET.md` is owner-reserved
-(`tasks/doc/031`, `tasks/doc/034`). The next leg should prefer non-compaction work unless the
-ledger is actually overdue.
+needed a rebase onto `main` after this leg's own `api/037` fold; pre-rebase tip is not a revert handle.
+**Blocked:** nothing. 
+**Reviewer:** no findings. 
+**Hardware debts:** none.
 
 ---
 
-## 2026-09-10 21:26 — api/037 a timeout stops being inherited and starts being argued
-
-**Decided:** dispatched with two things settled before the worker started. **(1)** The task was
-written *before* the route existed and says so; `api/036` has since landed, so I pointed the worker
-at `crates/embarch-core-client/src/client.rs:1810` and narrowed the unit to "state the budget or
-change it", rather than letting it re-derive whether there was anything to do. **(2)** The task
-carries two notes from `umbrella/030`, one of which asks for **a timed `curl` against the primary
-bench** — that is hardware, a leg never touches it, so I forbade the measurement explicitly in the
-dispatch note and told it the chosen value is stated as **assumed** or not at all.
-**The worker chose `serial_timeout` (15 s) over `status_timeout` (10 s), and the argument is the
-unit.** Nine call sites reuse `status_timeout` on a justification that is genuinely true of them —
-*"a pure local-file read on Core's side, no hardware"*, an OS-cached USB descriptor. That
-justification is false for `/dev-bench/hello`: Core opens the bench's serial link, completes the
-`Hello`/`HelloAck` exchange, and only then reads the boot log the bench flushes *after* that ack
-(`embarch-core` decision 37), before closing the link. `serial_log` already budgets for that shape
-of cost on the same physical link. I read both the diff and the doc comment rather than the
-worker's summary; the comment now says what Core does before it can answer, which is exactly what
-`embarch-umbrella`'s decisions 44/45 say was missing when the same mistake left `doctor` checks 11
-and 13 reporting *unavailable* on a working bench for weeks.
-**I approved the decision's placement, which the worker argued rather than assumed.** Decision 68
-went in `decisions/dev-bench.md`, not `decisions/core-link.md` — the topically obvious home, which
-is 13,164/12,288 B, **over cap**, with `api/061` blocked. My dispatch note named the reserve
-situation in this sub-project up front (`tool-wrapping.md`: 66 B left, blocked; `open.md`: 204 B
-inside reserve after this leg's own `api/060`) so the choice was planned rather than discovered
-mid-edit. `dev-bench.md` went 3.6 → 4.9 KB and is not in reserve.
-**The value is assumed and is labelled that way in both places it appears** — the doc comment and
-the decision — with the one experiment that would settle it named: a single timed authenticated
-`curl` of the endpoint on the primary bench sizes this budget and `serial_log`'s at once. The
-reviewer checked the three copies of that claim independently and found none overstating it.
-**Merged:** `agent/api/037-dev-bench-hello-timeout` (code `57d27f7`, doc `0fdf709`). Ownership
-clean on both: code repo 1 path, doc branch 4 paths, all `api`. The doc branch needed a rebase onto
-`main` after this leg's own `api/060` fold and `topology/026` claim moved it — pre-rebase tip is
-not a revert handle. Gate green including `cargo clippy --all-targets -- -D warnings` and
-`check-client-names.py`.
-**Blocked:** nothing.
+**`api/037`** (21:26) — `GET /dev-bench/hello`'s timeout stops silently reusing `status_timeout` (10s,
+justified as "pure local-file read") and is argued to `serial_timeout` (15s) instead, because Core
+actually opens the bench's serial link and completes a Hello/HelloAck exchange before reading the
+flushed boot log — the same shape of cost `serial_log` already budgets for. New decision 68 in
+`decisions/dev-bench.md` (not the topically obvious `decisions/core-link.md`, which is over cap).
+**Merged:** `agent/api/037-dev-bench-hello-timeout` (code `57d27f7`, doc `0fdf709`). Ownership clean
+on both: code repo 1 path, doc branch 4 paths, all `api`. The doc branch needed a rebase onto `main`
+after this leg's own `api/060` fold and `topology/026` claim moved it. Gate green including `cargo
+clippy --all-targets -- -D warnings` and `check-client-names.py`.
+**Blocked:** nothing. 
 **Reviewer:** no findings.
 **Hardware debts:** **one new, and it is small and precise.** No handshake duration has ever been
-timed on any bench, so both `serial_timeout`'s 15 s and the `status_timeout` it replaced are
-assumed. One timed authenticated `curl` of `GET /dev-bench/hello` on the primary bench (dev-bench
-board attached, Core running) sizes this route and `serial_log` at the same time. It needs only the
-dev-bench board. Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is
-the owner's and still outstanding, and is also what would deploy `core/020`'s
-`self_reported_hardware_id` rename; `umbrella/037`'s corrected check 13 has never met the bench
-that found its defects; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this
-environment. The bench queue is still parked by the owner's own commit.
-**Budget:** PROCEED, weekly 16.6% of a 90% cap, suggested wave 6.
-**Least sure about:** `serial_timeout` is reused, not sized — 15 s is `serial_log`'s number, picked
-for a different route, and this unit's whole complaint about `status_timeout` was that it was
-inherited rather than argued. What changed is that the *justification* now matches the work the
-route actually does, which is the property the convention checks; the number itself is still
-somebody else's. A fifth named budget sized for a handshake is the honest end state, and it cannot
-be written until something times one.
+timed on any bench, so both `serial_timeout`'s 15s and the `status_timeout` it replaced are assumed.
+One timed authenticated `curl` of `GET /dev-bench/hello` on the primary bench (dev-bench board
+attached, Core running) sizes this route and `serial_log` at the same time. Needs only the dev-bench
+board.
 
 ---
 
-## 2026-09-10 21:20 — api/060 84 bytes of filler, and a second sub-project arguing the cap is wrong
-
-**Decided:** **recovered, like `core/036`, rather than re-run** — leg 074 pushed this branch and
-was killed before folding it. Rebased onto `main`, gate re-run on the merge result, landed.
-**I accepted a partial payment as a finished unit.** The worker cut three phrases, quoted
-verbatim in its commit: `, and it fired`, `; revisit otherwise`, and the standalone sentence
-*"Re-read suite-wide; none acquired a new argument."* under `## Settled-deferred`. That is 84 B,
-4,208 → 4,124 B, against a floor of 3,920 — **still 204 B inside reserve**, so the debt is filed,
-dated 2026-09-24 and unpaid, and the task is `blocked` naming its unpark.
-**The reason I did not send it back for the other 204 B is the file's own history.** Two passes in
-three days (`api/026`, `api/031`) each read this file, each concluded a further cut was safe, and
-each deleted a fact recorded nowhere else that a reviewer restored by hand. A third pass under the
-same pressure is the same process producing the same failure, not a better answer.
-**I checked the riskiest deletion rather than taking the worker's word.** `, and it fired` is the
-clause that made the unpinned-mirror bullet read as a real past failure rather than a hypothesis —
-and `api/042` cited exactly that sentence, one unit earlier, as evidence for reading a shared-crate
-diff field-by-field. The surviving text still states it in the past tense (*"`link_port_interface`
-reached Core's wire body and the client mirror silently dropped it"*), so the fact is intact and
-only the emphasis is gone. The reviewer independently confirmed the same, and found the
-inbound-trust clause's content preserved in `embarch-api/decisions/shape.md`.
-**Two sub-projects now say the cap is the thing that should move, and they reached it
-independently in the same leg.** `api/060` and `core/036` each concluded that their `open.md` is
-at its floor because of real content, not filler. That is an argument for the owner about
-`DOC-BUDGET.md`, not something a leg may act on; `tasks/doc/031` and `tasks/doc/034` are already
-filed and owner-reserved, and this entry is the second data point for them.
-**The compaction question, answered by the worker and endorsed:** no —
-`embarch-api/spec.md` alone does **not** answer what someone needs to work on `embarch-api` today,
-because `open.md` is where the gaps between spec and reality live (the unconfirmed `board` field,
-the mirror that already broke, `study_watch`'s untested reconnect path). That is the honest answer
-and it is why the file resists compaction.
+**`api/060`** (21:20) — recovered leg 074's killed fold. Accepted a partial payment: worker cut 84 B
+of filler (`, and it fired`; `; revisit otherwise`; a settled-deferred sentence), 4,208 → 4,124 B,
+still 204 B inside reserve — filed and unpaid, due 2026-09-24, rather than pushed for a third squeeze
+after two prior passes (`api/026`, `api/031`) each lost a real fact doing exactly that. Second
+sub-project (with `core/036`) concluding independently the cap is the thing that should move.
 **Merged:** `agent/api/060-compact-api` (code none — docs-only, no `embarch-api` branch; doc
 `41d21bd`). Ownership clean, 3 paths, scope `api`, base `05e86063c0a9`.
 **Blocked:** `tasks/api/060` itself, by design — 204 B of debt unpaid, dated 2026-09-24.
-**Reviewer:** no findings.
-**Hardware debts:** none owed by this unit — a prose edit, no board, no build. Carried forward
-unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still
-outstanding, and is also what would deploy `core/020`'s `self_reported_hardware_id` rename;
-`umbrella/037`'s corrected check 13 has never met the bench that found its defects;
-`embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this environment. The bench
-queue is still parked by the owner's own commit.
-**Budget:** PROCEED, weekly 16.6% of a 90% cap, suggested wave 6.
-**Least sure about:** the `, and it fired` cut. It is defensible and two readers agreed, but it is
-exactly the class of edit — dropping the clause that marks a risk as *observed* rather than
-*theoretical* — that this file has already lost facts to twice. If a third pass ever shortens that
-bullet again, the past tense is the part to protect.
+**Reviewer:** no findings. **Hardware debts:** none.
 
 ---
 
-## 2026-09-10 21:17 — core/036 a compaction that ends in "no safe cut", recovered from a killed leg
-
-**Decided:** **recovered rather than re-ran.** Leg 074 was killed after pushing this worker's
-branch and before folding it. The branch was present on `origin` with commits, which §6 makes a
-positive liveness signal, so I rebased it onto `main`, re-ran the gate on the merge result and
-landed it — nothing was re-derived and no worker was re-dispatched.
-**I accepted a documented non-outcome as a completed unit.** The worker read
-`embarch-core/open.md` bullet by bullet against the task's `Must not delete:` list and found no
-safe 102 B cut: the only connective text in the file is the two words *"Deferred below."* closing
-the `study_schema_mismatch` bullet, which resolves to nothing later in the file — a dangling
-pointer worth ~17 B, well short of the target. It also considered and rejected a verbatim split:
-the six sections are a real seam but each is 1–4 bullets with no outside consumers, so a split
-relocates the open-questions surface rather than shrinking it. **The file is unchanged, zero bytes
-moved, and that is the correct result** — `core/022` is the counter-example, the unit that
-manufactured a cut by trimming real claims and had a fact put back by hand.
-**The task is left `blocked`, not `done` and not `open`, with its debt dated 2026-09-26 and
-unpaid.** `fold-commit.py` refuses an `open` task at a fold, correctly — an open task with a
-finished branch is one the next leg re-dispatches — and `done` would strand the size ledger's
-entry, which points at this file by path. `blocked` keeps the debt on the clock (`leg.md`: a
-blocked debt is still picked up as a leg's first unit once overdue) and names its two unpark
-conditions in the task body: the cap being revisited, or a live question retiring on its own.
-`check-doc-size.py --due` lists it with 16 days left and nothing is overdue.
-**The compaction question, in the worker's own words and endorsed by me:** yes —
-`embarch-core/spec.md` alone answers what someone needs to work on `embarch-core` today; `open.md`
-is deliberately the unresolved half, not a prerequisite.
+**`core/036`** (21:17) — recovered leg 074's killed fold. Accepted a documented **no-safe-cut** as a
+completed unit: the worker read `embarch-core/open.md` bullet by bullet and found nothing strikeable
+beyond ~17 B, and rejected a verbatim split (no outside consumers). File unchanged, zero bytes moved —
+the correct result, contrasted with `core/022`'s manufactured cut. `blocked`, not `done`, debt dated
+2026-09-26 — `blocked` keeps the ledger's debt on the clock without stranding it in a deleted `done`
+task.
 **Merged:** `agent/core/036-compact-core` (code none — docs-only, no `embarch-core` branch; doc
 `feb1c84`). Ownership clean, 2 paths, scope `core`, base `189c7658606d`.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none owed by this unit — no board, no build, no diff to either. Carried
-forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still
-outstanding, and is also what would deploy `core/020`'s `self_reported_hardware_id` rename;
-`umbrella/037`'s corrected check 13 has never met the bench that found its defects;
-`embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this environment. The bench
-queue is still parked by the owner's own commit.
-**Budget:** PROCEED, weekly 16.6% of a 90% cap, suggested wave 6, resets in ~130h.
-**Least sure about:** whether a unit that changes zero bytes of the file it was filed against
-should stay `open` or close. I kept it open because the ledger entry needs a task to point at, but
-that means a future leg reading `--due` sees a live debt whose only honest answer is already
-written in the task body — and the next pass may spend a unit rediscovering it. The task says so
-in its own words, which is the mitigation, not a fix.
+**Blocked:** nothing. 
+**Reviewer:** no findings. 
+**Hardware debts:** none.
 
 ---
 
-## 2026-09-10 21:08 — api/042 two capabilities stop being GUI-only
-
-**Decided:** dispatched this as an ordinary unit with three things pre-settled in the task file, so
-the worker chose rather than discovered. **(1)** `decisions/tool-wrapping.md` is the topically
-obvious home for the new decision and has **66 bytes** left, so I named the constraint rather than
-letting a worker meet it mid-flight; it wrote **decision 67 in `decisions/surface.md`** and argued
-the placement in the decision itself. **(2)** `interfaces/tools.md` had 1,008 B left and this unit
-adds rows to it, so per `DOC-COMPACTION.md` §2 I authorised the worker to compact it as part of its
-own unit — it is the actor making the flux — carrying `tasks/api/053`'s `Must not delete:` list.
-It did the **verbatim section split `api/053` named as its own unpark clause**, into
-`tools-discovery.md`, `tools-build-flash.md`, `tools-dev-bench.md` and `tools-topology.md`, and
-closed `api/053`. **(3)** the task's third `Done when` box names three docs in *other*
-sub-projects, which a worker may not write; I told it to satisfy that box with a `status.d/`
-fragment, which I then consumed.
-**I read the shared-crate diff before merging, and checked the one thing this repo has been bitten
-by.** `embarch-api/open.md` records a real past failure — *"the alert/enrolled-board response types
-were unpinned mirrors, and it fired: `link_port_interface` reached Core's wire body and the client
-mirror silently dropped it."* The new `SetDevBenchLinkRequest` is exactly such a mirror, so I
-checked it against `embarch-core/src/api.rs:737` field-for-field rather than taking the worker's
-word: `serial: Option<String>`, `interface: Option<u8>`, matching. The reviewer independently
-confirmed no *other* new unpinned mirror is in the diff.
-**The split's riskiest item was the one the split itself falsifies.** `api/053`'s
-`Must not delete:` list protects *"the one-table premise sentence in the header"* — and splitting
-one table into five makes "one table" literally false. The worker kept the sentence verbatim as the
-lead and added that the premise *"is a property of the crate's tools, not of any one doc file
-holding their description."* That is the right resolution and I checked it by reading the header
-rather than by grep.
-**Merged:** `agent/api/042-signal-and-link-writers` (code `234ca66`, doc `8840ebc`). Ownership
-clean on both: code repo 6 paths, doc branch 14 paths, all `api`. The doc branch needed a rebase
-onto `main` after this leg's own `suite/023` fold moved it; pre-rebase tip is not a revert handle.
-**Blocked:** nothing.
+**`api/042`** (21:08) — surfaced two capabilities to CLI/MCP that were GUI-only: decision 67
+(`decisions/surface.md`) and a verbatim section split of `interfaces/tools.md` (closing `api/053`) into
+`tools-discovery.md`, `tools-build-flash.md`, `tools-dev-bench.md`, `tools-topology.md`. New
+`SetDevBenchLinkRequest` checked field-for-field against `embarch-core/src/api.rs:737` against exactly
+the class of unpinned-mirror defect `embarch-api/open.md` already records having fired once. Consuming
+this unit's own `status.d/` fragment spent doc reserve in *another* sub-project's file
+(`embarch-topology/decisions/links.md`) — trimmed in the fold and filed as `topology/026` (above)
+rather than cut into the four clauses the note exists for.
+**Merged:** `agent/api/042-signal-and-link-writers` (code `234ca66`, doc `8840ebc`). Ownership clean
+on both: code repo 6 paths, doc branch 14 paths, all `api`. The doc branch needed a rebase onto `main`
+after this leg's own `suite/023` fold moved it.
+**Blocked:** nothing. 
 **Reviewer:** no findings.
-**I spent doc reserve myself at this fold, and filed the debt rather than shaving the content.**
-Consuming the `status.d/` fragment meant annotating `embarch-topology/decisions/links.md`
-decision 18 — another sub-project's decisions file, so a supervisor-only write — and
-`embarch-ui/decisions/topology-tab.md` and `suite/studies-guide.md`. **The gate went red on two
-files and I trimmed both**, cutting the topology annotation from ~1,020 B to 537 B and the
-studies-guide edit to one sentence; `studies-guide.md` came back out of reserve and `links.md` did
-not (11,478/12,288 B, 419 B inside). **I stopped trimming there rather than cutting into the four
-clauses the note exists for** and filed `tasks/topology/026-compact-topology.md`, dated
-2026-09-24, with those clauses as its `Must not delete:` list. The immediately preceding entry
-records the opposite choice being flagged as worth pushing back on, which is why this one is
-written out.
 **Hardware debts:** **none new, and the unit deliberately needed none** — the client wrappers it
-surfaced were already round-trip tested, so this was surfacing rather than new behaviour. One note
-that is *not* a new debt but is now easier to misread: `embarch-topology` decision 18's stated cost
-— *"a bench with no Core running has no terminal path to declare a signal"* — **still stands**,
-because `embarch-api` needs Core running exactly as the UI does. I annotated it in place for that
-reason. Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is the
-owner's and still outstanding, and is also what would deploy `core/020`'s
-`self_reported_hardware_id` rename; `umbrella/037`'s corrected check 13 has never met the bench
-that found its defects; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this
-environment (no `west`, no `ZEPHYR_BASE`). The bench queue is still parked by the owner's own
-commit.
-**Budget:** PROCEED, weekly 15.7% of a 90% cap, suggested wave 6, unchanged across the leg.
-**Least sure about:** authorising the `tools.md` split inside a unit that was also adding rows to
-it. It is what `DOC-COMPACTION.md` §2 prescribes and the reviewer read the result as verbatim, but
-it made one unit both the flux-maker and the compactor of the same file, and the header sentence it
-had to rewrite was on the protected list — the one place where "verbatim" could not be literally
-true. A second pair of eyes on that header is worth more than my own re-read of it.
+surfaced were already round-trip tested. One re-affirmed cost, not new: `embarch-topology` decision
+18's *"a bench with no Core running has no terminal path to declare a signal"* still stands, because
+`embarch-api` needs Core running exactly as the UI does.
 
 ---
 
-## 2026-09-10 21:02 — suite/023 a check-table row should say which arms have run
-
-**Decided:** **completed leg 073's parked §8 window rather than restarting it** — announced
-`ts 1789093650.796139` at 20:27:31 MDT, closed 20:57:31 with no reply, executed 20:58. The
-question was whether `DOC-CONVENTIONS.md` should adopt a `measured`-style marker suite-wide for
-check/table rows distinguishing an exercised arm from a merely-designed one. **Decided: adopt, but
-as a scope correction to the section that already exists, not as a new convention.**
-**I corrected the task's own premise in both directions before deciding, and the second correction
-is the one that matters.** Its third cited instance is not real as a doc convention —
-`embarch-topology` has no `interfaces/` directory and no class-gated check table, so that one is a
-code branch, leaving two genuine instances and both in the same file
-(`embarch-umbrella/interfaces/doctor-chain.md`). Two instances in one file is thin evidence for a
-suite-wide rule. **But the real evidence base is 17 `open.md` bullets across five sub-projects**
-carrying exactly the "designed but never exercised" shape, and that inverts the question: the
-suite does not lack a convention for this, it has a strong and working one, and
-`collect-open-questions.py` sweeps every instance. What is missing is only the **table-side
-pointer**, because the person reading a capability table to use it never goes looking in
-`open.md`. **The decisive argument is an independent convergence**: `DOC-CONVENTIONS.md` already
-mandates `[measured <date>, <how>]`/`[assumed]` for constants, and `umbrella/032`'s author,
-solving a different problem in a different file, reached for the same word with the same meaning.
-So the marker is right and the section's **scope line** is what is wrong — it says "constant",
-while its own earning test ("an inventoried item, in a table or declared list, where provenance
-would otherwise be vague") already covers a check-table arm exactly.
-**Three things I refused, deliberately:** no second vocabulary beside `measured`/`assumed`; no
-suite-wide marking sweep, because that section already settled the same trade-off for itself
-("mark an inventory, leave good prose alone, and mark the rest as each doc reaches a compaction
-pass"); and no treating the table marker as replacing the `open.md` bullets, which carry the
-closing trigger a table cell cannot — left unsaid, those 17 bullets start getting deleted as
-redundant.
-**Merged:** nothing. This unit committed one file, `tasks/suite/023-*.md`, in its own fold commit —
-no branch, no worker, no code diff. The fold commit's SHA is the only handle.
-**Blocked:** nothing, but **the task is not closeable and I could not do its second half.**
-`DOC-CONVENTIONS.md` is owner-reserved — `protocol.md` §3's table says *every* `DOC-*.md` is
-`never` for the supervisor, not merely for a worker, and I verified it directly rather than
-assuming (`check-ownership.py --supervisor --stdin` on the path exits 1). I wrote the decision, a
-drafted ~560 B paragraph so the owner's commit is mechanical, and marked the remainder
-`Owner: required`.
-**A filing correction the next leg should know about.** Leg 042 moved this drop from `doc/` to
-`suite/` on the argument that *"`suite/` is the mechanism that keeps a task off a worker"*. That is
-half right — it did, and the §8 window was genuinely owed for the *decision* — but **scope does not
-confer write access**, and a `suite/`-scoped task whose only deliverable is an edit to a reserved
-file is not executable by the actor `suite/` routes it to. A leg can burn its one announcement
-window per leg on a task it then cannot finish. Worth a rule; not mine to write.
-**Reviewer:** no findings.
-**Hardware debts:** none owed by this unit — a design decision recorded in a task file, no board,
-no build. Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is the
-owner's and still outstanding, and is also what would deploy `core/020`'s
-`self_reported_hardware_id` rename; `umbrella/037`'s corrected check 13 has never met the bench
-that found its defects and needs only the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit`
-suite cannot be built from this environment (no `west`, no `ZEPHYR_BASE`). The bench queue is still
-parked by the owner's own commit.
-**Budget:** PROCEED, weekly 15.7% of a 90% cap, suggested wave 6, unchanged from the leg's start.
-**Least sure about:** that "adopt" is the right answer at all, given I spent most of the analysis
-establishing that the existing `open.md` convention already works across 17 instances. The honest
-counter-argument is that a table marker duplicates a fact the `open.md` bullet already states, and
-`DOC-CONVENTIONS.md`'s own constant rule explicitly warns against marking where prose already does
-the job. I think the two-readers argument survives that — the table's reader and `open.md`'s
-reader are different people — but it rests on a claim about who reads what, which nobody has
-measured, and one worked instance is a thin basis for a suite-wide sentence.
+**`suite/023`** (21:02) — see Decided above. Completed leg 073's parked §4 window (`ts 1789093650.796139`,
+announced 20:27:31 MDT, closed 20:57:31 with no reply) rather than restarting it.
+**Merged:** nothing. This unit committed one file, `tasks/suite/023-*.md`, in its own fold commit — no
+branch, no worker, no code diff. The fold commit's SHA is the only handle.
+**Blocked:** nothing, but **the task is not closeable and I could not do its second half** —
+`DOC-CONVENTIONS.md` is owner-reserved (verified via `check-ownership.py --supervisor --stdin`, exits
+1); marked `Owner: required` with a drafted paragraph.
+**Reviewer:** no findings. **Hardware debts:** none.
 
 ---
 
-## 2026-09-10 20:40 — api/039 a new decision landed with its own reversal condition already fired
-
-**Decided:** dispatched this to author the missing decision — `embarch-core-client` is the suite's
-third shared crate and the only one with no written reason for where it lives — after discharging
-the task's own blocker myself: its fourth `Done when` box forbade putting the decision in
-`decisions/core-link.md` until that file's reserve was spent, naming `tasks/api/026` as the thing
-that would spend it, and `api/026` had landed two units earlier in this leg. I wrote that into the
-dispatch note with the current byte counts so the worker chose a file rather than inherited a
-prohibition. It landed **decision 66**, corrected `interfaces/modules.md`'s core-client row for
-decision 56's workspace-member change, and filed `tasks/api/061-compact-api.md` for the reserve its
-own decision spent — which is the rule working.
-**Then my reviewer found the decision's premise false, and I amended it in the fold.** Decision 66
-said the crate has **two** consumers and set its reversal trigger at *"a third Cargo consumer with
-its own release cadence appears"* — **and the third was already there when it was written.**
-`embarch-umbrella/Cargo.toml:47` has path-depended on this crate since `umbrella/036` on
-2026-09-08, calling `token_discovery::resolve_token` directly. **I verified both manifests myself
-rather than taking the reviewer's grep**: `embarch-ui` and `embarch-umbrella` both path-depend
-across the repo boundary, plus `embarch-api`'s own workspace member. A decision that states its own
-falsifying condition and is falsified by evidence already in the suite is not sound, so the count
-is now three and the trigger is a fourth.
-**The reviewer's second point was also right and I checked it at the source.** Decision 66
-attributed an FFI/C-boundary rationale to *both* precedents; `embarch-topology` decision 13 states
-no such thing — its argument is only that "a shared crate needs *somewhere* for three consumers to
-depend on", and the hardware feature it names is a Cargo feature flag added by Core, not a
-consumer-side boundary. Only `embarch-study-designer` decision 8 states the FFI rationale. Fixed.
-**The conclusion survives both corrections, which is why I amended rather than reverted**: all
-three consumers are plain Cargo path dependents with no FFI/C boundary, and that — not the count —
-is the distinction from decision 8 the argument rests on, since decision 8's third consumer was an
-FFI/C one. Number and conclusion kept, premise repaired; decision numbers are permanent.
+**`api/039`** (20:40) — authored the missing decision for why `embarch-core-client` lives where it
+does (decision 66), after discharging the task's own blocker (its reserve-spending prohibition,
+already lifted by `api/026` two units earlier). **The reviewer found the decision's own reversal
+condition — "a third Cargo consumer appears" — had already fired** (`embarch-umbrella` has
+path-depended on the crate since `umbrella/036`, 2026-09-08); amended in the fold rather than left
+standing false overnight, count corrected to three consumers, an FFI/C-boundary rationale wrongly
+attributed to `embarch-topology` decision 13 also corrected. Conclusion survived both corrections;
+decision numbers are permanent so it was amended, not reverted.
 **Merged:** `agent/api/039-core-client-home` (code none — documentation-only, `embarch-api` has no
-diff; doc `fcbcb6f`, a merge commit; the worker's own commit is `17155cc`). Ownership clean, 6
-paths, all `api`.
-**Blocked:** nothing.
-**Reviewer:** 1 finding — inbox/api-review-039-third-consumer.md
-**One thing I made worse and then partly fixed.** My first amendment ran 680 B and pushed
-`decisions/core-link.md` to 1,390 B over its 12,288 B cap; I rewrote it to about half that
-(13,164 B, 876 B over) and corrected `decisions.md`'s index row, which the worker had left at
-12.0 KB. The file is on the ledger via `tasks/api/061`, due 2026-09-24, so this is recorded debt
-rather than a silent overrun — but **a supervisor that spent this leg arguing the caps are too
-tight should not then be the one writing 680 B of correction prose into an over-cap file**, and
-that is worth someone pushing back on.
-**Hardware debts:** none owed by this unit — documentation, no board, no build. Carried forward
-unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still
-outstanding, and is also what would deploy `core/020`'s `self_reported_hardware_id` rename;
-`umbrella/037`'s corrected check 13 has never met the bench that found its defects and needs only
-the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this
-environment (no `west`, no `ZEPHYR_BASE`). The bench queue is still parked by the owner's own
-commit.
-**Budget:** PROCEED throughout, weekly 14.4% of a 90% cap, suggested wave 6 — unchanged from the
-leg's start. Wave size was never the constraint.
-**Least sure about:** amending a landed numbered decision in a fold at all. The alternative was to
-file it as a task and leave a decision with a false premise standing on `main` overnight, which I
-judged worse — but I made a substantive edit to somebody else's decision text without the context
-the author had, and the reviewer that found the problem is not the one checking my repair of it.
-**Three of this leg's four units ended with me correcting the unit inside its own fold**, each time
-on a reviewer finding; that is either per-unit review earning its cost several times over, or a
-sign I am dispatching work with under-specified task files. I think it is mostly the first.
+diff; doc `fcbcb6f`, a merge commit; the worker's own commit is `17155cc`). Ownership clean, 6 paths,
+all `api`.
+**Blocked:** nothing. 
+**Reviewer:** 1 finding — inbox/api-review-039-third-consumer.md.
+**Hardware debts:** none. Note: the supervisor's own amendment pushed `decisions/core-link.md` further
+over its cap (13,164 B, 876 B over) — filed via the existing `tasks/api/061`, due 2026-09-24, not a
+new debt, but a supervisor arguing the caps are too tight then writing 680 B of over-cap correction
+prose is worth someone pushing back on.
 
 ---
 
-## 2026-09-10 20:25 — api/026 the second compaction this leg to end with a fact put back
-
-**Decided:** the worker's pass was real and well-argued — `embarch-api/open.md` 5,068 → 3,914 B and
-`spec.md` 9,441 → 9,038 B, both by tightening prose in place, no split, matching the steer in the
-task. It also **corrected the task file's own stated floor for `spec.md`** from 9,216 to 9,040 B
-(`check-doc-size.py` computes `10240 - max(1200, 1024)`), which is the number its success was
-judged against and was wrong in the task text I dispatched.
-**Then my reviewer found a deleted fact and I put it back.** The worker self-reported cutting one
-"tangential aside" — that **`embarch init` never writes `serial_port` at all** — and the reviewer
-swept nine files for it (`embarch-umbrella/spec.md`, `decisions/projects.md`,
-`decisions/integration.md`, `embarch-api/interfaces/config.md`, `interfaces/tools.md`,
-`decisions/core-link.md`, `history/api.md`, `suite/features.md`, `features.d/*`) and found it
-**recorded nowhere else in the suite**: umbrella decision 17 describes `init`'s minimal discovery
-schema without ever naming `serial_port`. Deleted, not moved. Restored to the "Owed decisions"
-bullet with its umbrella-17 pointer. The reviewer's second point stands too and is the reason the
-loss was findable at all only by reading the whole diff: `DOC-COMPACTION-PASS.md` requires a squeeze
-to **quote** the first dozen words of every deleted hunk verbatim, and this commit **described** its
-one real cut instead.
-**The restoration costs 227 B and puts the file back inside reserve by 221 B, so `tasks/api/060` is
-filed** — same shape as `core/036` earlier in this leg, and deliberately so.
-**The pattern across both compaction units is the finding I would most want read.** Two independent
-workers, two different sub-projects, both tuned a file to within single digits of its floor
-(`embarch-core/open.md` cleared by 9 B, `embarch-api/open.md` by **6**), and **both lost exactly one
-real claim doing it**, each caught only by a reviewer. `embarch-api/open.md` has now been squeezed
-twice in three days. I do not think this is two sloppy passes; I think it is evidence that the
-`open.md` caps are too tight for what those files hold, and both new debt tasks say so and are
-explicitly permitted to conclude "no safe cut remains, the cap is the thing that should move."
-**Changing a cap is `DOC-BUDGET.md`'s and I did not touch it.**
+**`api/026`** (20:25) — second compaction this leg to lose a fact to a squeeze. Worker's pass was real
+(`open.md` 5,068→3,914 B, `spec.md` 9,441→9,038 B) but self-reported cutting one "tangential aside" —
+that `embarch init` never writes `serial_port` at all — which the reviewer swept nine files for and
+found recorded **nowhere else in the suite**. Restored (227 B), putting the file back inside reserve
+by 221 B — filed as `tasks/api/060` (above), same shape as `core/036` deliberately. A defect of the
+supervisor's own landed and fixed one commit later: `suite/008`'s fold had left `suite/decisions.md`
+linking to a task file the same fold `git rm`'d.
 **Merged:** `agent/api/026-compact-api` (code none — documentation-only, `embarch-api` has no diff;
 doc `04929b8`, a merge commit — `suite/008` had advanced `main`, so this was not a fast-forward; the
 worker's own commit is `b01f8d2`). Ownership clean, 4 paths, all `api`.
-**Blocked:** nothing.
-**Reviewer:** 1 finding — inbox/api-026-squeeze-quoting-and-lost-fact.md
-**A defect of my own, landed and then fixed one commit later:** `suite/008`'s fold left
-`suite/decisions.md` linking to the task file that the same fold `git rm`'d, so `04929b8` reached
-`main` with a broken link. The gate was green when I ran it and red afterwards, because
-`fold-commit.py` stages the removal *after* the last gate run and nothing re-runs it. Fixed in this
-unit's fold. **Worth knowing for the next leg: a fold that cites its own task file by link will do
-this every time**, and the window is one commit on `main`.
-**Hardware debts:** none owed by this unit — documentation, no board, no build. Carried forward
-unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still outstanding,
-and is also what would deploy `core/020`'s `self_reported_hardware_id` rename; `umbrella/037`'s
-corrected check 13 has never met the bench that found its defects and needs only the dev-bench
-board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this environment (no
-`west`, no `ZEPHYR_BASE`). The bench queue is still parked by the owner's own commit.
-**Budget:** PROCEED throughout, weekly 14.4% of a 90% cap, suggested wave 6. Unchanged; scope
-spread, not budget, is what limited this leg to three units.
-**Least sure about:** restoring the fact into `embarch-api/open.md` rather than into
-`embarch-umbrella`'s docs, which is where `embarch init` actually lives and which the reviewer
-offered as the alternative. I put it back where it was because that keeps it inside one scope and
-needs no cross-repo judgement from me at a fold — but it means an `api` file is carrying an
-`umbrella` fact, which is the kind of thing that gets cut again by the next compactor for looking
-tangential. It looked tangential to this one for exactly that reason.
+**Blocked:** nothing. 
+**Reviewer:** 1 finding — inbox/api-026-squeeze-quoting-and-lost-fact.md.
+**Hardware debts:** none.
 
 ---
 
-## 2026-09-10 20:18 — suite/008 suite-wide decisions get a home
-
-**Decided:** **created `suite/decisions.md`** and moved `embarch.md` §5's rustfmt bullet into it
-verbatim as decision 1. That bullet was ~5 KB of measurement history, reversal condition, two
-rejected command spellings and a named trap, sitting in a list of five one-line principles whose
-next longest is 193 characters — a decision record wearing a principle's clothes. Three rounds of
-text had landed in it and leg 017 asked that the next one force the question rather than be
-absorbed; this is the answer. `embarch.md` went **17,832 B → 14,090 B**, §5 reads as five
-principles again, and §6's index gained a row. The new file is 5,826 B against the 10 KB
-`suite/*.md` cap it inherited from `DOC-BUDGET.md` with no edit.
-**This was the parked §8 window from leg 018, completed rather than restarted** (`ops.md` §4):
-announced 2026-09-06 04:17:43 MDT, `ts 1788689863.494449`, closed 04:47:43. I re-read the thread
-before acting — **no replies, then or since** — which is the precondition the task's own first
-`Done when` box names.
-**Both boundary conditions the task set were checked, not assumed.** `suite/decisions.md` is not
-top-level, so it does not need classifying, and `check-ownership.py --supervisor` confirms all 16
-top-level docs are still classified and none of my paths is owner-reserved. And **neither
-`DOC-PROTOCOL.md` nor `DOC-COMPACTION.md` needed amending for the file to be legitimate** — which
-was the task's stated stop condition. What *is* left is narrower: two enumerations of the
-suite-level docs inside `DOC-PROTOCOL.md` (its directory sketch and its prose definition) are now
-**incomplete rather than wrong**, and that file is reserved. **Filed as `tasks/doc/038`, not
-edited** — a supervisor that amended the doc-structure rules to accommodate a file it had just
-created would be doing the one thing it exists not to do. Filed as a task rather than left in this
-entry on purpose: this file folds daily and rolls into `log-archive/`, and nothing dispatches from
-a log line.
-**Also repaired the two live inbound citations of the moved text** — `embarch-api/decisions/tests.md`
-and `tasks/api/039`, both of which said "`embarch.md` §5" for a paragraph that is no longer there.
-`history/suite.md`'s two mentions were left alone deliberately: they are dated shipped-record
-entries describing what §5 said at the time, and history is not rewritten. The `tests.md` repair
-tipped that file into reserve by 6 B against a 1,228.8 B floor, so I shortened my own parenthetical
-rather than file a debt for a courtesy note.
-**Merged:** nothing — this unit is the supervisor's own work under §8 and had no worker, no branch
-and no code repo. It lands in this fold commit alone; that commit's SHA is the only revert handle.
+**`suite/008`** (20:18) — see Decided above. Completed leg 018's parked §4 window rather than
+restarting it: announced 2026-09-06 04:17:43 MDT (`ts 1788689863.494449`), closed 04:47:43, re-read
+before acting with no replies then or since.
+**Merged:** nothing — this unit is the supervisor's own work under §8 and had no worker, no branch and
+no code repo. It lands in this fold commit alone; that commit's SHA is the only revert handle.
 **Blocked:** nothing.
-**Reviewer:** skipped (reviewer did not report — spawned at the change, still silent 18 minutes
-later with no completion and no drop; I stopped waiting rather than strand a finished `api/026`
+**Reviewer:** skipped (reviewer did not report — spawned at the change, still silent 18 minutes later
+with no completion and no drop; supervisor stopped waiting rather than strand a finished `api/026`
 branch behind it).
-**Hardware debts:** none owed by this unit — a documentation move, no board, no build, no repo but
-`embarch-doc`. Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is
-the owner's and still outstanding, and is also what would deploy `core/020`'s
-`self_reported_hardware_id` rename; `umbrella/037`'s corrected check 13 has never met the bench
-that found its defects and needs only the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit`
-suite cannot be built from this environment (no `west`, no `ZEPHYR_BASE`). The bench queue is still
-parked by the owner's own commit.
-**Budget:** PROCEED throughout, weekly 14.4% of a 90% cap, suggested wave 6. Unchanged.
-**Least sure about:** whether creating a new shared suite-level doc was mine at all. I read the
-task's stop condition literally — it says stop if `DOC-PROTOCOL.md` or `DOC-COMPACTION.md` *must*
-be amended, and neither must be — but a more conservative reading is that introducing a doc *class*
-is structural whatever the reserved files technically require, and that the owner should have
-created the file. I went ahead because the alternative was a fourth round of decision text landing
-in a principle bullet, and because `tasks/doc/038` leaves him the one edit that is unambiguously
-his. **The reviewer that would have second-guessed this is the one that did not report**, which is
-the worst unit of this leg to have lost it on.
+**Hardware debts:** none.
 
 ---
 
-## 2026-09-10 19:56 — core/022 open.md squeezed, then 111 bytes put back
-
-**Decided:** dispatched this as a compaction with `In flux: no` and exactly one file left on its
-`Compacts:` line, and the worker's pass was real — `embarch-core/open.md` 4,551 B → 3,911 B, clear
-of the 3,920 B floor, every number and hedge preserved, only connective prose cut. **Then I put 111
-bytes back and did not close the task**, on my reviewer's finding. Two of the worker's cuts were not
-connective prose and were absent from the commit message's own verbatim residue list, which is the
-accounting `DOC-COMPACTION-PASS.md` requires precisely so a reviewer can do this arithmetic instead
-of re-deriving it. The `Alert` subject-discriminator bullet had gone from *"Not-needed-yet with a
-named trigger"* to a flat *"Not needed"* — **that is a status change, not a shortening**: an open
-deferral with a named trigger became a closed judgement, in a file whose entire purpose is holding
-open questions. The Espressif port-selection bullet had lost the claim that decision 23's
-replacement knob is missing *independently of* whether the ESP32-C5's single-interface enumeration
-is ever confirmed; what survived read as if confirming the enumeration were the whole gap. Restored
-both, in shorter wording than the originals.
-**The restoration puts the file back inside reserve by 102 B** (4,022 B, 1,098 B left against a
-1,200 B floor), so the debt is not paid. I first tried to leave `tasks/core/022` `open`, and
-**`fold-commit.py` refused the fold** — correctly: a landed unit may not leave its task `open`,
-because the next leg's recovery cannot tell that from a live claim. So `022` closes and **the
-102 B residue is filed as its own debt, `tasks/core/036-compact-core.md`**, which is the better
-shape anyway: the ledger points at an `open` task instead of at a `done` one holding an unpaid
-balance, and that is exactly the `core/009` failure `022`'s own `State:` line was written to
-record. `036` carries both restored claims on its `Must not delete:` list, tells its taker the
-easy seams are gone and ~102 B is all that is wanted, and says plainly that concluding *no safe
-cut remains* is an acceptable outcome. `interfaces.md`'s item stays closed; due date unchanged
-(2026-09-26). The worker left
-the task `claimed`; supervisors should expect to set the terminal state themselves here.
-**Merged:** `agent/core/022-compact-core` (code none — documentation-only, `embarch-core` has no
-diff; doc `25b5239`). The 111-byte restoration and the task state are in this fold commit, not in
-`25b5239`. Ownership check clean, 3 paths, all `core`.
-**Blocked:** nothing.
-**Reviewer:** 1 finding — inbox/core-open-md-compaction-residue.md
-**Hardware debts:** none owed by this unit — a documentation squeeze, no board, no build. It leaves
-one hardware-gated *question* better stated than it found it: the ESP32-C5-WROOM-1 DK's
-single-USB-Serial/JTAG enumeration is still **[assumed]** and confirming it needs that board.
-Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and
-still outstanding, and is also what would deploy `core/020`'s `self_reported_hardware_id` rename;
-`umbrella/037`'s corrected check 13 has never met the bench that found its defects and needs only
-the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this
-environment (no `west`, no `ZEPHYR_BASE`). The bench queue is still parked by the owner's own commit.
-**Budget:** PROCEED at start, weekly 14.4% of a 90% cap, suggested wave 6 — re-checked before this
-fold and unchanged. The wave is not what limited this leg; scope spread was.
-**Least sure about:** whether restoring those 111 bytes was mine to do in a fold rather than a
-task for the next `core` unit. The reviewer's own `Done when` asked a human to decide between
-restoring and confirming the shorter forms lose nothing, and I decided it from the diff alone. I
-think the `Alert` one is not arguable — a flat "Not needed" in an open-questions file is wrong
-whatever the byte budget — but the Espressif one is a judgement I made without the surrounding
-context a `core` worker would have had, and I shortened the restored wording to fit a budget, which
-is the same pressure that produced the defect.
+**`core/022`** (19:56) — `embarch-core/open.md` squeezed 4,551→3,911 B, real cut. **Reviewer found two
+cuts that were status changes, not shortenings**: an `Alert` deferral's named trigger flattened to a
+closed "Not needed", and an Espressif port-selection claim that reads as if confirming an enumeration
+were the whole gap. 111 B put back in the fold. `fold-commit.py` refused leaving the task `open`, so it
+closes and the 102 B unpaid residue is filed fresh as `tasks/core/036` (above) rather than left as an
+unpaid balance on a deleted `done` task.
+**Merged:** `agent/core/022-compact-core` (code none — documentation-only, `embarch-core` has no diff;
+doc `25b5239`). The 111-byte restoration and the task state are in this fold commit, not in `25b5239`.
+Ownership check clean, 3 paths, all `core`.
+**Blocked:** nothing. 
+**Reviewer:** 1 finding — inbox/core-open-md-compaction-residue.md.
+**Hardware debts:** none — but names one question still hardware-gated: the ESP32-C5-WROOM-1 DK's
+single-USB-Serial/JTAG enumeration is still **[assumed]**.
 
 ---
 
-## 2026-09-10 19:42 — api/035 the event stream has met a real Core, and the docs stop saying it has not
-
-**Decided:** scoped this as truth-repair and told the worker explicitly not to reproduce the
-observation — it has no hardware and the bench reading already exists in the record (leg 021,
-2026-09-06). `embarch-api/open.md`'s bullet no longer says the stream has never met a real Core; it
-now says what was actually seen (`study_watch` received pushed live frames, `transport: live`, plus
-an observed `polled` fallback in the same session) and, in the same sentence, what was **not**:
-`study-status --follow`, the drop path, `lagged`, a reconnect. The worker also found that the debt
-the old bullet pointed at, `tasks/api/001-sse-client.md`, **was never filed at all** — so the
-pointer resolved to nothing — and replaced it with a real one,
-`tasks/api/059-sse-client-remaining-observations.md`. No code branch: `embarch-api` had nothing to
-change.
-**Then I corrected the unit's own second half.** `api/035` re-judged `tasks/api/026-compact-api.md`'s
-`In flux:` premise — correctly, the event-stream flux that parked it is gone — and then left the
-task `blocked` anyway, writing an unpark condition that reads *"actually compacting `spec.md` and
-`open.md`, which is this task's own remaining job"*. That is a description of dispatching the task,
-not an external precondition, and it would have hidden a dispatchable size-debt task (due
-2026-09-14) from `queue-status.py` for four more days. My reviewer caught it independently and filed
-`inbox/api-026-blocked-on-nothing.md`; I resolved the drop in this fold rather than filing it as a
-task, setting `026` to `open` and its `In flux:` to `no`, each with the correction written into the
-field it changes and `api/035`'s own reasoning left intact underneath as the evidence.
+**`api/035`** (19:42) — `embarch-api/open.md`'s stream-status bullet no longer claims the event stream
+has never met a real Core; it now states what was actually seen (leg 021, 2026-09-06: pushed live
+frames, `transport: live`, an observed `polled` fallback) and what was not (`study-status --follow`,
+the drop path, `lagged`, a reconnect). The debt pointer it replaced, `tasks/api/001-sse-client.md`,
+**was never filed at all** — a phantom, replaced with real `tasks/api/059`. Supervisor also corrected
+the unit's own second half: it had left `tasks/api/026` `blocked` on a self-referential condition
+("this task's own remaining job"), which would have hidden a dispatchable size-debt task for four
+days — reviewer caught it, `026` reset to `open`/`In flux: no` in this fold.
 **Merged:** `agent/api/035-sse-live` (doc `3e7bde8` after the rebase; no code branch — the remote
-`agent/api/035-sse-live` carried zero commits, which is the correct outcome for this unit, not a
-dead worker). Ownership check base `04290f1a20f7`, 5 paths, all `api`. Gate green, 11/11 doc checks.
-**Blocked:** nothing.
-**Reviewer:** 1 finding — inbox/api-026-blocked-on-nothing.md
-**Hardware debts:** **none new; one restated more honestly and one retired.** No board was touched
-and the worker was directed away from the one action that would have needed one. What remains owed
-is now written down as a task rather than as a sentence in `open.md`: `tasks/api/059` carries
-`study-status --follow`, the drop path, `lagged` and a reconnect, all of which want a live Core and
-a running study. The retired one is the phantom `tasks/api/001`, which two documents pointed at as
-the run that would settle this and which never existed. Carried forward unchanged: `core/015`'s
-native Windows build of `embarch-core` is the owner's and still outstanding; `umbrella/037`'s
-corrected check 13 has never met the bench that found its defects; `ui/023` leaves
-`/study/{id}/streams` end-to-end unmeasured pending a live Core.
-**Budget:** PROCEED, weekly 13.7%, suggested wave 6. Leg ends here at its 4-unit cap.
-**Least sure about:** **my own correction, more than the worker's error.** I changed `026`'s
-`In flux:` to `no` on the strength of an argument the worker wrote while concluding `yes` — the text
-says neither file on the `Compacts:` line is in flux, so `no` is what it supports, but I did not
-re-read `spec.md` and `open.md` myself to test that. If a worker takes `026` and finds a live
-question in either file, the honest answer is `per file`, not `no`, and that worker should change it
-without treating my line as settled. Second, smaller: `tasks/api/059` is a task I have only read as
-a diff. Also filed `tasks/doc/037` from my own earlier `inbox/` drop about `.claude/leg.md`'s
-worktree link table.
+`agent/api/035-sse-live` carried zero commits, correct for this unit). Ownership check base
+`04290f1a20f7`, 5 paths, all `api`. Gate green, 11/11 doc checks.
+**Blocked:** nothing. 
+**Reviewer:** 1 finding — inbox/api-026-blocked-on-nothing.md.
+**Hardware debts:** **none new; one restated more honestly and one retired.** No board was touched,
+and the worker was directed away from the one action that would have needed one. `tasks/api/059` now
+carries what's owed — `study-status --follow`, the drop path, `lagged`, a reconnect — all needing a
+live Core and a running study. The phantom `tasks/api/001` is retired.
 
-## 2026-09-10 19:37 — ui/023 the request path gets a number, and the part that still cannot have one is named
+---
 
-**Decided:** accepted a partial answer as the right answer. The task asked for the request path
-timed at 250k/500k/1M rows; the worker timed the in-process half — `parse` plus the same
-`serde_json::to_vec` axum's `Json` extractor runs — and **stopped at the boundary**, because
-`decode_trace` opens with three awaited calls into Core (`study_streams`, `get_study_stream`,
-`study_steps`) and nothing synthetic stands in for a live Core answering real HTTP. Encode
-4.6 → 8.3 → 23.5 ms, in-process total 210 ms → 518 ms → 1.32 s [measured 2026-09-10, release]. The
-bullet says in bold that the end-to-end cost is **still unmeasured**, which is what the task asked
-for in the case it could not be measured, and it is the better outcome than a number that would
-have read as measured and not been. The cap stays 250,000 and nothing in the diff argues otherwise.
-Second half: this unit also paid the `embarch-ui/open.md` reserve debt, because it was rewriting the
-very bullet `tasks/ui/021`'s park calls settled — the compaction rule for an actor making the flux.
-I dispatched that instruction with `tasks/ui/021`'s `Must not delete:` list attached; the reviewer
-checked every protected figure against the post-compaction file and all of them survive verbatim.
-Compaction-pass question, answered by the worker and checked by me and the reviewer: **yes** —
-`spec.md` alone still answers what someone needs to work on `embarch-ui` today; the deleted prose
-restated context that `decisions.md`/`spec.md` already carry, and no claim, invariant or named
-identifier went with it. `open.md` 4191 → out of reserve; `tasks/ui/021`'s `open.md` item closed,
-the rest of it left standing.
+**`ui/023`** (19:37) — timed the request path's in-process half only (parse + JSON encode: 4.6→8.3→
+23.5 ms; in-process total 210 ms→518 ms→1.32 s at 250k/500k/1M rows, [measured 2026-09-10, release]),
+and stopped honestly at the boundary where `decode_trace` calls into a live Core with nothing synthetic
+standing in. Cap stays 250,000. Also paid `embarch-ui/open.md`'s reserve debt as the actor making the
+flux, per `tasks/ui/021`'s park.
 **Merged:** `agent/ui/023-trace-request-timing` (code `20bb3a9`, doc `04290f1`). Ownership check
-bases: code `9361329a3af1` (`--code-repo`, 1 path), doc `6608755477a8`, 4 paths, all `ui`. Gate
-green in both repos. Note the code merge also fast-forwarded `embarch-ui` past three commits of
-another unit's work that my local checkout was behind on (`408e3b1` → `20bb3a9`); this unit's own
-diff is `src/trace.rs` alone.
-**Blocked:** nothing.
+bases: code `9361329a3af1` (`--code-repo`, 1 path), doc `6608755477a8`, 4 paths, all `ui`. Gate green
+in both repos. Note the code merge also fast-forwarded `embarch-ui` past three commits of another
+unit's work (`408e3b1` → `20bb3a9`); this unit's own diff is `src/trace.rs` alone.
+**Blocked:** nothing. 
 **Reviewer:** no findings.
 **Hardware debts:** **none new, and one sharpened.** The unit needed no board and took none. What it
-does is name precisely what a board is still owed for: the three Core calls in front of `parse` have
-no number and cannot get one without a live Core, so `/study/{id}/streams` end-to-end remains
-unmeasured and 1.32 s must not be read as the whole cost. `embarch-ui/open.md`'s older stale-prefix
-debt is unchanged and still the owner's own session (the 18-record capture, decision 19). Carried
-forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still
-outstanding; `umbrella/037`'s corrected check 13 has never met the bench that found its defects.
-**Budget:** PROCEED, weekly 13.7%, suggested wave 6.
-**Least sure about:** whether `handler_in_process` is a number anyone will read correctly six months
-from now. It is decode + JSON encode and nothing else, and the test's own doc comment says so at
-length — but it sits in `open.md` one clause away from the phrase "request path", and the thing a
-hurried reader wants from that bullet is exactly the number this one is not.
+names is precisely what a board is still owed for: `/study/{id}/streams` end-to-end remains
+unmeasured and 1.32 s must not be read as the whole cost — the three Core calls in front of `parse`
+have no number and cannot get one without a live Core. `embarch-ui/open.md`'s older stale-prefix debt
+(the 18-record capture, decision 19) is unchanged and is the owner's own session.
 
-## 2026-09-10 19:15 — umbrella/049 the last hand-kept mirror is half closed and half guarded
+---
 
-**Decided:** approved the worker's two-armed answer rather than sending it back for the single one
-the task's first sentence asks for, because the two halves genuinely differ. `CoreConfig` goes the
-way the token mirror went — `embarch-umbrella/src/config.rs` now re-exports
-`embarch_core_client::CoreConfig` and deletes its parallel struct, including the five
-`*_timeout_secs` fields it was carrying for shape-fidelity and nothing read. `ProjectConfig` could
-not follow, because that type lives inside `embarch-api`'s own binary and not in the shared crate,
-so it gets the cheaper half the task named: a test parsing the real
-`embarch-api/config.example.toml` through a `deny_unknown_fields` shadow struct *and* through this
-repo's own mirror, so a field `embarch-api` adds and starts using in its example config fails here.
-Recorded as decision 20's second amendment in `embarch-umbrella/decisions/mirrors.md`. The worker
-wrote the test's own limit into the test: it only sees fields that reach the fixture's
-**uncommented** lines, and most of that file's optional fields are commented out. That honesty is
-why I took it — "narrower than a diff job, and a real improvement on nothing-fails-when-they-drift"
-is the true claim, and widening the fixture is `embarch-api`'s call, not this repo's. This unit was
-a recovery: leg 071 dispatched it and died before reviewing or merging; the branches were already
-pushed, so I gated and landed them rather than re-running the work.
-**Merged:** `agent/umbrella/049-coreconfig-mirror` (code `46ec5c0`, doc `2fecd0e` after the rebase;
-the doc branch's pre-rebase tip `1499bba` is not a revert handle). Ownership check bases: code
-`584f7e7a3658` (`--code-repo`, 1 path), doc `a8e6642145746e` after the rebase, 4 paths, all
-`umbrella`. Gate green in both repos — 226 tests, clippy `-D warnings` clean, 11/11 doc checks.
-**Blocked:** nothing.
+**`umbrella/049`** (19:15) — recovery of leg 071's pushed, unreviewed work. Two-armed answer approved:
+`CoreConfig` re-exports `embarch_core_client::CoreConfig` outright (the token-mirror pattern);
+`ProjectConfig` cannot follow (lives in `embarch-api`'s own binary), so it gets a
+`deny_unknown_fields`-shadow test against the real `embarch-api/config.example.toml` instead — narrower
+than a diff job, a real improvement on nothing-fails-when-they-drift. Decision 20's second amendment in
+`decisions/mirrors.md`.
+**Merged:** `agent/umbrella/049-coreconfig-mirror` (code `46ec5c0`, doc `2fecd0e` after the rebase; the
+doc branch's pre-rebase tip `1499bba` is not a revert handle). Ownership check bases: code `584f7e7a3658`
+(`--code-repo`, 1 path), doc `a8e6642145746e` after the rebase, 4 paths, all `umbrella`. Gate green in
+both repos — 226 tests, clippy `-D warnings` clean, 11/11 doc checks.
+**Blocked:** nothing. 
 **Reviewer:** no findings.
-**Hardware debts:** none owed by this unit — a type dependency and a host-side test, no board.
-Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and
-still outstanding; `umbrella/037`'s corrected check 13 has never met the bench that found its
-defects and needs only the dev-bench board. The bench queue is still parked by the owner's own
-commit.
-**Budget:** PROCEED, weekly 13.7%, suggested wave 6.
-**Least sure about:** **the worktree link table in `.claude/leg.md` is wrong for `embarch-umbrella`
-and this unit is the first thing that can fail on it.** The table says umbrella links
-`embarch-topology` and `embarch-study-designer`; its `Cargo.toml` has path-depended on
-`../embarch-api/crates/embarch-core-client` for some time, and this unit's new test reads
-`../embarch-api/config.example.toml` through that same sibling path — so an umbrella worktree built
-strictly to the table now fails the test with a missing-file panic naming a path inside the fleet's
-scratch directory. It did not bite here only because an earlier leg had already made the link by
-hand at 15:35. That file is owner-reserved, so I have filed
-`inbox/leg-md-worktree-link-table-omits-embarch-api-for-umbrella.md` rather than editing it.
+**Hardware debts:** none. Flagged instead: `.claude/leg.md`'s worktree link table omits
+`embarch-api` from `embarch-umbrella`'s links even though `Cargo.toml` has path-depended on
+`embarch-core-client` for some time, and this unit's new test reads across that same sibling path —
+filed as `inbox/leg-md-worktree-link-table-omits-embarch-api-for-umbrella.md` (owner-reserved file).
 
-## 2026-09-10 19:12 — core/017 the fourth flashing backend nobody ever selected is gone
+---
 
-**Decided:** nothing new by me — this is leg 072 completing a fold leg 071 started and did not
-finish. Both branches were already merged and pushed to `main`; what was missing was the log entry,
-the fragment consumption and the task removal. I re-derived nothing about the change itself: the
-worker's own record and the already-landed diff are what this entry reports. The substantive call
-was the worker's and leg 071's — `Backend::NrfJprog` retired rather than documented, on the
-evidence that no recorded bench in this suite has ever selected it, recorded as decision 54 in
-`embarch-core/decisions/flashing.md`. That file crossed into doc-size reserve (93.5%) on the way
-and the worker filed `tasks/core/035-compact-core.md` for it, `blocked` on `In flux: yes` with a
-size-debt-due date — so the next leg whose `check-doc-size.py --due` goes red owes that one its
-first unit.
+**`core/017`** (19:12) — completed a fold leg 071 started and did not finish; both branches already
+merged and pushed. `Backend::NrfJprog` retired rather than documented (no bench in this suite has ever
+selected it), decision 54 in `decisions/flashing.md`, which crossed into reserve (93.5%) on the way —
+filed `tasks/core/035-compact-core.md`, blocked on `In flux: yes`.
 **Merged:** `agent/core/017-nrfjprog` (code `31a2e09`, doc `d9fa167`).
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none owed by this unit — the deletion is host-side and no board was touched.
-The one thing a board would settle is now moot: `doctor` check 14 reports the selected backend and
-would have been the disambiguating read, but the variant it might have reported is gone. Carried
-forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still
-outstanding; `umbrella/037`'s corrected check 13 has never met the bench that found its defects and
-needs only the dev-bench board. The bench queue is still parked by the owner's own commit.
-**Budget:** PROCEED, weekly 13.7%, suggested wave 6 — leg 072 opens by recovering two units leg 071
-left unfolded, then continues to its cap.
-**Least sure about:** the `**Reviewer:** no findings` line. I did not spawn that reviewer and did
-not see its report; it is carried from leg 071's handoff, which says the reviewer ran and came back
-clean. Every other field here is read off the landed commits. Second: this is the **third** time
-this session a supervisor has died mid-fold with no error surfacing — leg 071 died between
-consuming the fragment and writing this entry, which is exactly the window `fold-commit.py`'s
-one-commit rule was built to close, and it closed it correctly (the state I inherited was
-recoverable in full). The deaths themselves are worth investigating as a possible turn or timeout
-limit on long legs.
-
-## 2026-09-10 19:06 — api/058 core-link.md's per-machine logfile splits out to logging.md
-
-**Decided:** nothing new — the worker took the split-first route `DOC-BUDGET.md` prescribes rather
-than compacting prose, and it is the right one here: decision 43 (the per-machine logfile) is a
-self-contained topic that was sitting in the file about Core's *link*, so moving it verbatim to a
-new `embarch-api/decisions/logging.md` both pays the debt and files the decision where its topic
-is. `core-link.md` goes 11,962 → 9,955 B, under the reserve line and off
-`check-doc-size.py --pressure` entirely. No code change in `embarch-api`; this unit is doc-only.
-Compaction-pass question, answered by the worker and checked by me: **yes** — `spec.md` alone
-still answers what someone needs to work on this component today, and its one citation of decision
-43 was repointed in the same commit.
-**Merged:** `agent/api/058-compact-api-doc` (doc `f5b46eb`; no code branch — `embarch-api` had
-nothing to change). Ownership check base `55f31f1031a9` after the rebase, 6 paths, all `api`.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none owed by this unit. Carried forward: `core/015`'s native Windows build of
-`embarch-core` is the owner's and still outstanding; `umbrella/037`'s corrected check 13 has never
-met the bench that found its defects.
-**Budget:** PROCEED, weekly 13.2%, suggested wave 6 — running a leg of 4 units.
-**Least sure about:** nothing about this unit; it is a verbatim relocation the reviewer compared
-byte-for-byte.
-
-## 2026-09-10 19:02 — suite/026 embarch-token.md cites core decision 53 for the directory-vs-file ACL split
-
-**Decided:** executed the suite task leg 068 announced (`ops.md` §4 window, ts `1789083897.811379`)
-rather than restarting its clock — the thread is quiet, nothing actionable, and well over 30 minutes
-had elapsed. One clause in `embarch-token.md` §2 now says Core **deliberately** never restricts
-`%ProgramData%\embarch`'s ACL and cites `embarch-core/decisions/auth.md` (decision 53), beside the
-existing `embarch-topology` decision 23 citation. **Linked to the decision file, not to an anchor:**
-`check-links.py` rejected the generated anchor for that heading (it contains a backslash path and
-backticks, and the checker's slug does not match GitHub's), so a file-level link is the honest one
-here. That is a small finding about anchor links to decision headings with punctuation — not filed,
-because nothing else in the corpus depends on it today.
-**Merged:** nothing — supervisor-executed suite task, committed directly in the leg worktree with
-the fold.
-**Blocked:** nothing.
-**Reviewer:** skipped (supervisor-executed suite unit; a one-clause citation with no branch diff).
-**Hardware debts:** none owed by this unit. Carried forward: `core/015`'s native Windows build of
-`embarch-core` is the owner's and still outstanding; `umbrella/037`'s corrected check 13 has never
-met the bench that found its defects.
-**Budget:** PROCEED at start, weekly 13.2%, suggested wave 6 — capped to a leg of 4 units.
-**Least sure about:** whether dropping the anchor from the decision link is the right call or
-whether the anchor format itself should have been fixed; I chose the link that the gate and a reader
-both resolve today.
-
-## 2026-09-10 18:58 — dev-bench/008 the census counts what it leaves out, and the toolchain debt was never real
-
-**Decided:** three things, and the first one is the one the next leg should read.
-
-**1. `embarch-dev-bench` has a working toolchain, and three log entries before this one said it did
-not.** They recorded "this environment has no `west` and no `ZEPHYR_BASE`" as a hardware debt. That
-is **false of the machine** and true only of a *worktree*. Measured this leg from the main checkout:
-`ZEPHYR_BASE=<repo>/workspaces/native_sim/zephyr /home/gabriel/Github/embarch/.west-venv/bin/west
-build -p -b native_sim -d <dir> app/tests/serial_protocol` builds and the suite runs
-`PROJECT EXECUTION SUCCESSFUL`; the `esp32c5_devkitc/esp32c5/hpcore` app build works too, once
-`esptool>=5.0.2` is installed (**I installed it into `/home/gabriel/Github/embarch/.west-venv` — a
-change to shared fleet tooling, additive, and the next leg should know it happened**). The
-workspaces are gitignored, so a worker's worktree has `app/` and a `west.yml` and no Zephyr — which
-is exactly `Hardware: toolchain`, undispatchable rather than unrunnable, as `tasks/README.md`
-already said. **A false standing debt had begun to propagate as a fact about the suite**, and three
-`dev-bench` tasks (`003`, `004`, `010`) had been parked behind it. `tasks/dev-bench/008` is
-reclassified `none` → `toolchain` with the measurement written into it, and I ran it myself.
-
-**2. The fix shape.** The `fail_reason` list still carries names only — there is nothing else to
-print — but its prefix carries two counts: `no name match; 2/10 named: 'A', 'B'`. **Rejected:
-widening `OUTCOME_MAX_FAIL_REASON_LEN`**, which is a wire size; the gap was never that 64 bytes was
-too small, it was that the field did not say what it was omitting. The two `named == 0` phrases are
-gone because `0/10 named` says the same thing in fewer bytes. And `report_scan_seen()` moved out of
-the name-filter arm, so an address-filtered connect that times out writes a census at all.
-
-**3. I made `(census full)`'s runtime reservation conditional, which amends decision 45 from
-hours earlier.** 45 reserved both markers unconditionally and said so deliberately. That reasoning
-holds for `(truncated)` — undecided until the summary returns — and not for `(census full)`, which
-is already known; reserving it anyway spent 14 of 64 bytes on nothing in every census ever run. 45
-is amended in place and 46 says so. The `BUILD_ASSERT` still proves the worst case (56 of 64).
-**Merged:** no branch and no merge — a supervisor-executed `toolchain` unit. Code `a0bf1d8` in
-`embarch-dev-bench`, committed and pushed straight to `main`; the doc half is in this fold commit.
-**Blocked:** nothing, but **`tasks/dev-bench/008` stays `open` on purpose.** Both substantive gates
-are fixed and landed; its third `Done when` box — tests over a mixed named/nameless set — is
-**unsatisfiable from here**, because both gates live in `ble_bridge_real.c` and that file never
-builds under `native_sim` (decision 16). What is left of `008` is a *testability extraction* along
-`scan_seen_names.c`'s lines, or a bench. I left the box unticked rather than reworded.
-**Reviewer:** no findings.
-**Hardware debts:** **one new and it is the honest half of this unit — the behaviour has never been
-observed.** The only compile gate `ble_bridge_real.c` has is a board build, which is what I ran; no
-test reaches either changed gate, and nothing has watched a real nameless advertiser appear in a
-`2/10 named` line. It needs the dev-bench board and a 20-second census. Carried forward unchanged:
-`core/015`'s native Windows build of `embarch-core` is the owner's and still outstanding;
-`umbrella/037`'s corrected check 13 has never met the bench.
-**And one defect found while gating this unit, filed as `tasks/doc/036`:**
-`check-ownership.py --scope dev-bench` answers `unknown scope 'dev-bench' (known: doc, suite)` when
-run from inside a code repo — which is where §10 says to run it, and where a `bench` or `toolchain`
-unit works by design. It derives its scope list from the `embarch-*` directories the cwd can see.
-**Same root cause as `tasks/doc/035`** (`queue-status.py` reporting an empty queue from the wrong
-cwd), and I hit *that* one too at my own step 0: run from the fleet repo it said **0 dispatchable**,
-run from the instance it said **29**. A leg that trusted the first reading would have gone to
-`ops.md` §7's dream with a full queue. `036` says to decide both together.
-**Budget:** PROCEED start to end — weekly 12.6% of a 90% cap, resets in 132h, suggested wave 6
-throughout; this leg ran three workers concurrently and its fourth unit with its own hands.
-**Least sure about:** the conditional marker reservation, because it is the one place I overrode a
-decision written by someone with more context on that file than I had. The arithmetic is checked and
-the `BUILD_ASSERT` is conservative, so nothing can be silently cut — but if there was a reason to
-reserve unconditionally beyond the one decision 45 states, I did not find it, and decision 45's
-author is a worker that no longer exists.
+**Blocked:** nothing. 
+**Reviewer:** no findings (carried from leg 071's handoff, not re-witnessed).
+**Hardware debts:** none — the one thing a board would have settled (doctor check 14 reporting the
+selected backend) is now moot, since the variant it might have reported is gone.
 
 ---
 
-## 2026-09-10 18:51 — topology/025 the crate says how long its answers are good for
-
-**Decided:** two, and the first is why this unit exists at all. **I filed this task myself in this
-leg's refill**, off `embarch-topology/open.md`'s standing bullet that "nothing states what a caller
-may assume beyond" fresh-every-call — a question that had been open while three consumers grew
-around it. The dispatch note made the constraint explicit: **describe the contract the crate has,
-do not invent a stronger one**, and read other repos' call sites without writing to them. Second, I
-let the worker's numbered decision stand: **decision 29** in `decisions/scope.md` records that an
-explicit invalidation signal was *considered and rejected*, on the grounds that every real caller
-already re-resolves per operation. That is a rejection with its reason attached rather than a
-silence, and §5 rule 4 puts a single-sub-project decision in the worker's own hands.
-What `spec.md` now says: an answer is good only at the instant it was taken; no cache, no watcher,
-no invalidation signal; a caller may hold a result for the one operation it was taken for and never
-across a retry; a board unplugged, re-enrolled or moved between calls is invisible until the next
-call.
-**Merged:** `agent/topology/025-caller-granularity-contract` (doc `6633072`; **no code commit** —
-doc-only). Ownership check base: doc `07a632e76d6f` after rebasing onto api/054's fold. The same
-commit paid `spec.md`'s reserve debt — the new section pushed it to 10,001 B and it landed at
-9,195 B (89.8%) — with `tasks/topology/024`'s `Must not delete:` list untouched and now naming the
-new section too; `024` stays blocked.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none owed by this unit. Carried forward unchanged: `core/015`'s native Windows
-build of `embarch-core` is the owner's and still outstanding; `umbrella/037`'s corrected check 13
-has never met the bench.
-**Budget:** PROCEED — weekly 12.6% of a 90% cap, suggested wave 6.
-**Least sure about:** **the half the reviewer did not check.** It confirmed the *crate* holds no
-cache (`src/software.rs:268`, `src/hardware/signal.rs:191` already say so) and that decision 29
-agrees with 2, 3 and 9. What nobody verified is the other direction — whether `embarch-core`,
-`embarch-api` or `embarch-umbrella` actually holds an answer across operations today. If one does,
-`spec.md` now states a contract a consumer is already violating, and the new section is what turns
-that from an unwritten assumption into a bug.
+**`api/058`** (19:06) — split-first: decision 43 (the per-machine logfile) moved verbatim out of
+`core-link.md` (about Core's *link*) into new `embarch-api/decisions/logging.md`, paying the reserve
+debt by relocating rather than squeezing. `core-link.md` 11,962 → 9,955 B, off `--pressure` entirely.
+No code change.
+**Merged:** `agent/api/058-compact-api-doc` (doc `f5b46eb`; no code branch — `embarch-api` had nothing
+to change). Ownership check base `55f31f1031a9` after the rebase, 6 paths, all `api`.
+**Blocked:** nothing. 
+**Reviewer:** no findings. 
+**Hardware debts:** none.
 
 ---
 
-## 2026-09-10 18:48 — api/054 decision 26 retitled about intent, and its file's debt paid on the way
-
-**Decided:** one thing before dispatch, and it is the reusable half. `decisions/core-link.md` had
-206 bytes left and its compaction task `tasks/api/026` is `blocked` on `In flux: yes`, which is
-exactly the state that made an earlier leg stop at a **22-byte** edit and leave the real question
-unanswered. `DOC-COMPACTION.md` §2 says a blocked compaction task parks the *pass* and not the
-*reserve*, so I cleared the worker to spend the reserve **because it was also required to pay it**,
-in the same commit, carrying `026`'s `Must not delete:` list and striking only that one file off
-`026`'s `Compacts:` line. That turned a task that had been deferred twice for want of room into an
-ordinary unit. **The judgement I deliberately did not pre-make** was retire-vs-retitle; the worker
-chose retitle, on the grounds that the surviving intent correction is true and current and only the
-mechanism claim was ever false, and I accept that — `DOC-CONVENTIONS.md`'s bar for `retired` is a
-decision that stops describing anything true, and this one does not meet it.
-**Merged:** `agent/api/054-decision-26-retire-or-retitle` (doc `212f4a4`; **no code commit** — a
-doc-only unit, the branch was pushed at `embarch-api`'s main tip). Ownership check base: doc
-`253abc67f692` after rebasing onto core/019's fold. `decisions/core-link.md` went 12,082 → 11,962 B
-and is **still in reserve** at 326 B left, so the worker filed a fresh
-`tasks/api/058-compact-api.md` recommending a topic split rather than a third squeeze — which is
-the right call and is the first time this ledger has been paid down and re-filed in one unit.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none owed by this unit — one decision entry, no board, no build beyond the host.
-Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and
-still outstanding; `umbrella/037`'s corrected check 13 has never met the bench. The
-`embarch-dev-bench` "no toolchain" debt is **retired as mis-stated** — see the `core/019` entry
-below for the measurement.
-**Budget:** PROCEED — weekly 12.6% of a 90% cap, suggested wave 6.
-**Least sure about:** that `core-link.md` is genuinely a two-concern file and so genuinely
-splittable. `058` asserts it is (a per-machine logfile concern and an auth-funnel concern), and
-nobody has checked that against the file's actual contents; if it is really one concern, the next
-leg to pick `058` up will find no split available and will be back to squeezing prose with 326
-bytes of room.
-
----
-
-## 2026-09-10 18:47 — core/019 the ledger stops reading a refusal as owed work
-
-**Decided:** one thing, and I narrowed it before dispatch rather than after. The task offered a
-`core` worker three arms and two of them name paths the `core` row cannot write, so the dispatch
-note cut it to exactly one file — `features.d/core-200-per-caller-identity-beyond-one.md` — and
-told the worker not to run `build_features.py` at all, because a stale `suite/features.md` on a
-worker branch is correct rather than an omission. What landed: the row's `Status` cell goes from a
-bare `Todo` to `Declined — single-engineer scope forbids a permission model; revisit only if Core
-ever needs to tell *which* caller`, citing `embarch-token.md` §5 where the cell previously said
-`n/a`. **I accepted `Declined` as prose rather than a new vocabulary value**, which is the only
-judgement here: `Status` has no closed vocabulary (only `Verified` does), and rows already carry
-free text after a leading word. Whether the column *should* gain a formal third value is
-`features.d/README.md`'s question and stays the owner's.
-
-**This leg also ran its refill** (`--refill-owed` fired on scope spread, 5 scopes below a wave of
-6). Two things came out of it and neither is a unit: `tasks/topology/025` was swept fresh from
-`embarch-topology/open.md` and dispatched this leg, and **`tasks/umbrella/048` was corrected from
-`open` to `blocked`** — it carried `In flux: yes` while advertising itself as dispatchable, which
-is a task no leg is allowed to take sitting in the queue looking like work. `ui`,
-`study-designer` and `outpost` hold nothing in `open.md` that is not hardware-gated or deliberately
-deferred; that is the honest result of the sweep, not a skipped one.
-**Merged:** `agent/core/019-per-caller-identity-row` (doc `5b6c980`; **no code commit** — the
-branch was pushed unchanged at `embarch-core`'s main tip, because the whole change is a `features.d`
-fragment). Ownership check base: doc `e56d302c3f15` after rebasing onto this leg's two later claim
-commits.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none owed by this unit — one ledger row, no board and no build beyond the host.
-**And one standing debt is now known to be smaller than three entries in this log have said.** The
-last three entries recorded "this environment has no `west` and no `ZEPHYR_BASE`" as an
-`embarch-dev-bench` hardware debt. **That is false of the machine and true only of a worktree.** I
-measured it this leg: `ZEPHYR_BASE=<repo>/workspaces/native_sim/zephyr
-/home/gabriel/Github/embarch/.west-venv/bin/west build -p -b native_sim -d <dir>
-app/tests/serial_protocol` builds clean from the **main checkout** and the suite runs
-`PROJECT EXECUTION SUCCESSFUL`. The workspaces are gitignored, so a worker's worktree has `app/` and
-a `west.yml` and no Zephyr — which is exactly what `Hardware: toolchain` means, and
-`tasks/README.md` already said so. `tasks/dev-bench/008` is reclassified `none` → `toolchain` in
-this leg with that measurement written into it. Carried forward unchanged: `core/015`'s native
-Windows build of `embarch-core` is the owner's and still outstanding; `umbrella/037`'s corrected
-check 13 has never met the bench.
-**Budget:** PROCEED start to end — weekly 12.6% of a 90% cap, resets in 132h, suggested wave 6.
-**Least sure about:** whether `Declined —` in a `Status` cell will be read as a value or as prose by
-the next thing that parses that column. `build_features.py --check` does not constrain the cell's
-leading word today, so nothing fails either way — which means if a formal vocabulary ever arrives,
-this row is the one that will have pre-empted it.
-
----
-
-## 2026-09-10 18:36 — dev-bench/015 both overflow markers survive the case where both fire
-
-**Decided:** two things, both in the dispatch note rather than after the fact. First, the fix shape:
-make the combined case write **both** markers, and explicitly **not** a third combined marker —
-decision 45 had already rejected that shape in writing ("it would say something was cut without
-saying which"), so re-adding it would have contradicted the decision a second time while appearing
-to repair it. Second, where the bytes come from if 64 will not hold everything: shorten the *name
-list*, never a marker, because a marker is the diagnostic and a name is the payload. The landed
-change reserves both markers' full length unconditionally — `scan_seen_overflowed` is known before
-the budget is computed but `names_truncated` is not, so the budget must assume the worst case rather
-than react to it — and appends each marker independently instead of the `if/else if` priority chain
-that silently dropped `(census full)`. `BUILD_ASSERT` widened from `MAX(a,b)` to `a+b` to match.
-`scan_seen_names.h`'s header citation of a nonexistent `decisions/ble.md` decision 43 is corrected
-to decisions 32 and 45 in `decisions/scanning.md`, and decision 45 is amended in place to state the
-combined case. This is the leg's only fresh unit; the other three were recoveries.
-**Merged:** `agent/dev-bench/015-combined-truncation-markers` (code `a4ab003`, doc `7dd4b8f`).
-Ownership check bases: code `79d474345fa9`, doc `2d8d137c6ef9`.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** **one, and it is a toolchain rather than a board — the same class the
-`embarch-outpost` debt is in, and this is the second sub-project now carrying it.** The firmware was
-not built and no ztest was run: this environment has no `west` and no `ZEPHYR_BASE`. The worker said
-so plainly rather than claiming a gate it did not run, which is the right behaviour and is recorded
-in the task file. Note the coverage gap is structural, not just environmental: `ble_bridge_real.c`
-never builds under `native_sim` (decision 16), so the changed lines have no ztest coverage even in a
-session that *does* have the toolchain — only a real board compile would catch, say, a
-`BUILD_ASSERT` that no longer holds. Carried forward unchanged: `core/015`'s native Windows build of
-`embarch-core` is the owner's and still outstanding; `umbrella/037`'s corrected check 13 has never
-met the bench that found its defects.
-**Budget:** PROCEED start to end — weekly 12.2% rising to 12.5% of a 90% cap, suggested wave 6
-throughout; a recovery leg lands serially, so the wave never bound it.
-**Least sure about:** that `(truncated) (census full)` leaves enough of the 64 bytes for a useful
-name list. Prefix plus both markers is 49 bytes, so the worst case leaves about 15 for names — one
-short name — and nothing built or ran to confirm the arithmetic. The `BUILD_ASSERT` only proves it
-is non-negative, not that it is useful.
-
-## 2026-09-10 18:30 — umbrella/045 a task that closed honestly by writing a constraint down
-
-**Decided:** I accepted a no-op as the right outcome, which is the only judgement in this unit.
-`doctor` renders no `confirmed_at_utc_ms` and calls no `POST /validate` — it takes no `hw_lock` by
-design, so it cannot show a live-check instant at all — and leg 069's pre-dispatch note had already
-told the worker not to manufacture a rendering in order to have something to relabel. What landed is
-ten lines of module doc in `src/doctor.rs` saying that if any future umbrella surface ever renders
-that field it must be labelled "Enrolled", never "Validated"/"Last validated"/"Verified", with
-`embarch-core` decision 54 cited for why Core keeps no real last-validation instant beside it. The
-constraint sits where the next person to add such a line will actually be reading. Third recovery
-landing of leg 069's pushed, gate-green, unfolded work; this leg re-ran every gate rather than
-trusting the worker's report.
-**Merged:** `agent/umbrella/045-confirmed-at-label` (code `584f7e7`, doc `66f9788`). Ownership check
-bases: code `6c423e1cd9eb`, doc `95831bb0fa0b` after rebasing onto api/027's fold.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none owed by this unit — a comment, no board, no rendering. Carried forward
-unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still outstanding;
-`umbrella/037`'s corrected check 13 has never met the bench that found its defects and needs only
-the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this
-environment.
-**Budget:** PROCEED — weekly 12.2% of a 90% cap, suggested wave 6, unchanged across the leg; a
-recovery leg lands serially, so the wave never bound it.
-**Least sure about:** that a constraint recorded only in one file's module doc will be found. It is
-in `embarch-umbrella`'s `doctor.rs` and in this task file, and nowhere in `embarch-ui`, whose
-Topology tab is the other surface decision 54 names and the one more likely to render the field
-first.
-
-## 2026-09-10 18:29 — api/027 decision 55's sweep clause said something untrue about its own test
-
-**Decided:** nothing new by me — another recovery landing of leg 069's pushed, gate-green,
-unfolded work. The unit's substance is a correction *inside* decision 55's own rejection text: the
-clause saying `reqwest`'s `default_headers` would "leave the sweep nothing to assert" was false —
-the sweep asserts the header on the wire at `MockCore`, which `default_headers` would not change —
-so the clause is gone and the remaining `handle-hands-out-http()` reason is now marked prospective
-rather than current. Two test-side repairs ride with it: the funnel guard matches file+function
-instead of function alone, and the SSE sweep gains an untimed-stream case. I let the decision edit
-stand rather than filing it as a new decision, because correcting a rejection's stated reason in the
-decision that owns it is not a new decision. `tasks/api/026-compact-api.md`'s "must not delete" note
-was updated in the same commit to preserve the corrected form, which is the part a future
-compaction would otherwise silently undo.
-**Merged:** `agent/api/027-decision-55-sweep-clause` (code `0350c8c`, doc `b96c98c`). Ownership
-check bases: code `7e859b541302`, doc `b78e0fb5d906` after rebasing the doc branch onto core/013's
+**`suite/026`** (19:02) — see Decided above. Executed leg 068's announced `ops.md` §4 window
+(`ts 1789083897.811379`) rather than restarting its clock — the thread was quiet and well over 30
+minutes had elapsed.
+**Merged:** nothing — supervisor-executed suite task, committed directly in the leg worktree with the
 fold.
 **Blocked:** nothing.
+**Reviewer:** skipped (supervisor-executed suite unit; a one-clause citation with no branch diff).
+**Hardware debts:** none.
+
+---
+
+**`dev-bench/008`** (18:58) — see the toolchain-debt correction in the day summary above (measured
+`west`/`ZEPHYR_BASE` working from the main checkout; three prior "no toolchain" debt entries were
+false). Also: the `fail_reason` census prefix now carries two counts (`no name match; 2/10 named:
+'A', 'B'`), rejecting the tempting fix of widening `OUTCOME_MAX_FAIL_REASON_LEN` (a wire-size change
+that would not have fixed the actual gap — the field not saying what it omitted); and the runtime
+reservation for `(census full)` was made conditional, amending decision 45 (it is always known ahead
+of time, unlike `(truncated)`).
+**Merged:** no branch and no merge — a supervisor-executed `toolchain` unit. Code `a0bf1d8` in
+`embarch-dev-bench`, committed and pushed straight to `main`; the doc half is in this fold commit.
+**Blocked:** nothing, but **`tasks/dev-bench/008` stays `open` on purpose** — its third `Done when` box
+(tests over a mixed named/nameless set) is unsatisfiable from here, since both gates live in
+`ble_bridge_real.c`, which never builds under `native_sim`.
 **Reviewer:** no findings.
-**Hardware debts:** none owed by this unit — two test files and a decision paragraph, no board and
-no build beyond the host. Carried forward unchanged: `core/015`'s native Windows build of
-`embarch-core` is the owner's and still outstanding, and now gates three landed changes;
-`umbrella/037`'s corrected check 13 has never met the bench that found its defects;
-`embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this environment.
-**Budget:** PROCEED throughout — weekly 12.2% of a 90% cap, suggested wave 6; this leg is spending
-its units on recovery rather than on a wave, so the wave size never bound it.
-**Least sure about:** whether the `handle-hands-out-http()` reason, now labelled prospective,
-still justifies rejecting `default_headers` at all. The unit removed the false half of a two-part
-argument and kept the other half without re-testing it; if that half is also stale, decision 55 is
-now a rejection resting on nothing, and nobody has checked.
+**Hardware debts:** **one new and it is the honest half of this unit — the behaviour has never been
+observed.** No test reaches either changed gate; nothing has watched a real nameless advertiser appear
+in a `2/10 named` line. Needs the dev-bench board and a 20-second census. Also filed `tasks/doc/036`:
+`check-ownership.py --scope dev-bench` fails with "unknown scope" when run from inside a code repo
+(same root cause as `tasks/doc/035`'s cwd-dependent `queue-status.py` misreport — 0 dispatchable from
+the fleet repo, 29 from the instance).
 
-## 2026-09-10 18:27 — core/013 decision 14's 503 on hw_lock contention, built at last
+---
 
-**Decided:** nothing new by me — leg 069 had already picked the build arm over the retire arm and
-written the argument into the task file before dispatch, and this leg only landed the result. The
-work was pushed and gate-green by its worker; leg 069 died mid-fold before merging it, so this is a
-recovery landing, not a re-run. I read the code diff before merging because it changes a lock the
-whole hardware surface shares: `hw_lock` becomes `Arc<Mutex<Option<HolderInfo>>>` behind one
-`acquire_hw_lock` helper used by all 8 hardware sites, with a 500 ms acquire timeout, a `503` naming
-the holder, and an info/warn split so a wait and a refusal are distinguishable in `core.log`. The
-contention test holds the lock across the window and observes the refusal host-side — no board.
-**Merged:** `agent/core/013-hw-lock-503` (code `0411c14`, doc `1128a74`). Ownership check bases:
-code `126283970b49`, doc `f52e18686389` after rebasing the doc branch onto the two later claim
-commits leg 069 had made.
-**Blocked:** nothing.
+**`topology/025`** (18:51) — filed by this leg's own refill off `embarch-topology/open.md`'s standing
+"nothing states what a caller may assume" bullet. New decision 29 in `decisions/scope.md`: no cache, no
+watcher, no invalidation signal (considered and rejected — every real caller already re-resolves per
+operation); a caller may hold a result only for the one operation it was taken for, never across a
+retry.
+**Merged:** `agent/topology/025-caller-granularity-contract` (doc `6633072`; no code commit —
+doc-only). Ownership check base: doc `07a632e76d6f` after rebasing onto api/054's fold. The same
+commit paid `spec.md`'s reserve debt — landed at 9,195 B (89.8%); `tasks/topology/024` stays blocked.
+**Blocked:** nothing. 
+**Reviewer:** no findings. 
+**Hardware debts:** none — and flags an unverified
+direction: nobody has checked whether `embarch-core`, `embarch-api` or `embarch-umbrella` actually
+holds an answer across operations today, which the new contract would make a bug if so.
+
+---
+
+**`api/054`** (18:48) — `decisions/core-link.md`'s decision 26 retitled (not retired) about intent,
+freeing the compaction task `api/026` that had been stuck twice for want of room — the reserve was
+cleared **because it was also required to be paid** in the same commit, carrying `026`'s
+`Must not delete:` list. First time this ledger has been paid down and re-filed (as `api/058`, above,
+recommending a topic split) in one unit.
+**Merged:** `agent/api/054-decision-26-retire-or-retitle` (doc `212f4a4`; no code commit — a doc-only
+unit, the branch was pushed at `embarch-api`'s main tip). Ownership check base: doc `253abc67f692`
+after rebasing onto core/019's fold. `decisions/core-link.md` went 12,082 → 11,962 B, still in reserve
+at 326 B left.
+**Blocked:** nothing. 
+**Reviewer:** no findings. 
+**Hardware debts:** none.
+
+---
+
+**`core/019`** (18:47) — see the toolchain-debt correction in the day summary above (this is the twin
+measurement to `dev-bench/008`). `embarch-token.md` §5's per-caller-identity row moved from bare
+`Todo` to `Declined — single-engineer scope forbids a permission model; revisit only if Core ever needs
+to tell which caller`, accepted as prose since `Status` has no closed vocabulary. This leg's refill
+(`--refill-owed`) also corrected `tasks/umbrella/048` from `open` to `blocked` (it carried
+`In flux: yes` while advertising itself as dispatchable).
+**Merged:** `agent/core/019-per-caller-identity-row` (doc `5b6c980`; no code commit — the branch was
+pushed unchanged at `embarch-core`'s main tip, the whole change is a `features.d` fragment). Ownership
+check base: doc `e56d302c3f15` after rebasing onto this leg's two later claim commits.
+**Blocked:** nothing. 
+**Reviewer:** no findings. 
+**Hardware debts:** none.
+
+---
+
+**`dev-bench/015`** (18:36) — completed the combined-truncation-marker fix `dev-bench/007`'s reviewer
+found the gap in: both `(truncated)` and `(census full)` now write independently rather than one
+priority chain silently dropping the other, exactly what decision 45 forbids re-collapsing. Budget
+widened `BUILD_ASSERT` from `MAX(a,b)` to `a+b`.
+**Merged:** `agent/dev-bench/015-combined-truncation-markers` (code `a4ab003`, doc `7dd4b8f`).
+Ownership check bases: code `79d474345fa9`, doc `2d8d137c6ef9`.
+**Blocked:** nothing. 
 **Reviewer:** no findings.
-**Hardware debts:** none new — every test here is host-side and nothing was flashed. But this unit
-makes an existing debt matter more: the `503` only reaches an operator once a native Windows build
-of `embarch-core` is deployed, and `core/015`'s Windows build is still the owner's and still
-outstanding — it is now load-bearing three times over (`core/020`'s `self_reported_hardware_id`
-rename, `core/021`'s SSE retirement, and this). Carried forward unchanged: `umbrella/037`'s
-corrected check 13 has never met the bench that found its defects and needs only the dev-bench
-board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this environment.
-**Budget:** PROCEED at leg start — weekly 12.2% of a 90% cap, reset in 132h — suggested wave 6.
-**Least sure about:** the 500 ms acquire timeout. It is a number the worker chose, not one any
-decision states, and it is long enough to serialise a fast flash cleanly but short enough that a
-legitimately slow hardware call will start refusing callers that would previously have queued and
-succeeded. Nothing in the corpus records why 500 ms rather than 2 s.
+**Hardware debts:** **one, and it is a toolchain rather than a board — the same class the
+`embarch-outpost` debt is in, and this is the second sub-project now carrying it.** Firmware not built,
+no ztest run — no `west`, no `ZEPHYR_BASE` in that worker's environment. `ble_bridge_real.c` never
+builds under `native_sim` regardless (decision 16), so even a toolchain session would not cover these
+lines by ztest — only a real board compile would catch a `BUILD_ASSERT` that no longer holds.
 
-## 2026-09-10 18:15 — core/021 a fold recovered from a killed leg, not a unit re-run
+---
 
-**Decided:** **nothing new — this is leg 068's work, finished.** Leg 068 merged both branches to
-`main` in both repos and was killed mid-fold, before its log entry and before `fold-commit.py`. What
-I found in the leg worktree was exactly the half-state that ordering is designed to make survivable:
-`status.d/core-logs-stream-retired.md` already consumed into `embarch-ui/decisions/debug-tab.md` and
-`embarch-ui/spec.md`, `changelog.d/core-retire-logs-stream.removed.md` already assembled into
-`history/core.md`, and `tasks/core/021` already `done` — all uncommitted. **I re-ran nothing and
-re-read nothing for intent.** I verified both merges were ancestors of `origin/main`, re-ran
-`build_features.py` and the full gate on the working tree, and committed what was there.
+**`umbrella/045`** (18:30) — accepted a no-op as the right outcome: `doctor` renders no
+`confirmed_at_utc_ms` and never will without a hardware-lock-taking change nobody asked for. Landed ten
+lines of module doc in `src/doctor.rs` instead, naming the required label ("Enrolled", never
+"Validated"/"Verified") for any future umbrella surface that does render the field, citing `embarch-core`
+decision 54. Third recovery landing of leg 069's pushed work.
+**Merged:** `agent/umbrella/045-confirmed-at-label` (code `584f7e7`, doc `66f9788`). Ownership check
+bases: code `6c423e1cd9eb`, doc `95831bb0fa0b` after rebasing onto api/027's fold.
+**Blocked:** nothing. 
+**Reviewer:** no findings. 
+**Hardware debts:** none.
 
-The one judgement I did make is that this was **recovery rather than re-dispatch**. The prompt that
-spawned me named three branches as unfolded; two of them (`umbrella/047`, `api/051`) already had
-entries at 18:05 and 18:08 and were fully landed, so leg 068 died **after** folding those two and
-partway through its third. Re-running any of them would have duplicated landed work.
+---
 
+**`api/027`** (18:29) — recovery of leg 069's pushed work. Corrected a false clause inside decision
+55's own rejection text (claiming `reqwest`'s `default_headers` would "leave the sweep nothing to
+assert" — false, the sweep asserts the header on the wire at `MockCore`); the remaining rejection
+reason marked prospective rather than current. Two test-side repairs rode with it.
+**Merged:** `agent/api/027-decision-55-sweep-clause` (code `0350c8c`, doc `b96c98c`). Ownership check
+bases: code `7e859b541302`, doc `b78e0fb5d906` after rebasing the doc branch onto core/013's fold.
+**Blocked:** nothing. 
+**Reviewer:** no findings. 
+**Hardware debts:** none.
+
+---
+
+**`core/013`** (18:27) — recovery of leg 069's pushed work; the substantive build-vs-retire call was
+already leg 069's. Decision 14's 503 on `hw_lock` contention built at last: `hw_lock` is now
+`Arc<Mutex<Option<HolderInfo>>>` behind one `acquire_hw_lock` helper used by all 8 hardware sites, a
+500 ms acquire timeout, a `503` naming the holder.
+**Merged:** `agent/core/013-hw-lock-503` (code `0411c14`, doc `1128a74`). Ownership check bases: code
+`126283970b49`, doc `f52e18686389` after rebasing the doc branch onto the two later claim commits leg
+069 had made.
+**Blocked:** nothing. 
+**Reviewer:** no findings.
+**Hardware debts:** none new (host-side test only), but this unit makes an existing debt matter more:
+the 503 only reaches an operator once `core/015`'s outstanding native Windows build of `embarch-core`
+is deployed — now load-bearing three times over (`core/020`'s rename, `core/021`'s SSE retirement, and
+this).
+
+---
+
+**`core/021`** (18:15) — recovered leg 068's dead fold: both merges already ancestors of `origin/main`,
+gate re-run and committed with nothing re-derived or re-read for intent. Substantive call was leg 068's
+worker: `GET /logs/stream` retired (decision 7's SSE half marked gone, not rewritten).
 **Merged:** `agent/core/021-retire-logs-stream` (code `1262839` in `embarch-core`, doc `6c902c7`) —
-both by leg 068, both already on `origin/main` before I started, both recorded here for the first
-time because that leg never wrote them down. The code diff is `src/api.rs`, `src/logs.rs`,
-`src/main.rs` only — 27 insertions, 296 deletions, all inside the `core` scope. Gate on the merge
-result: `check-docs.py` **11/11 green**, `check-client-names.py` clean.
-**Blocked:** nothing.
+both by leg 068, both already on `origin/main`, recorded here for the first time because leg 068 never
+wrote them down. Code diff `src/api.rs`, `src/logs.rs`, `src/main.rs` only — 27 insertions, 296
+deletions. Gate on the merge result: `check-docs.py` 11/11 green, `check-client-names.py` clean.
+**Blocked:** nothing. 
 **Reviewer:** no findings.
-**Hardware debts:** none owed by this unit — a route retirement and its documentation, no board.
-Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and
-still outstanding, carrying `core/008`, `core/020`'s `self_reported_hardware_id` rename, `core/032`
-and `core/033` — **and now this retirement too**, since the running Windows service still serves
-`GET /logs/stream`. `umbrella/037`'s corrected check 13 has never met the bench that found its
-defects; `embarch-outpost`'s Zephyr `tests/unit` suite and `embarch-dev-bench`'s
-`app/src/scan_seen_names.c` both need a session with a Zephyr toolchain. No bench unit was runnable
-— every `hw-gated` task in the queue is `toolchain` or `required`.
-**Budget:** PROCEED, weekly **11.8%** of a 90% cap, wave **6** suggested.
-**Least sure about:** **whether the `embarch-ui` edits in this fold were the right shape, because I
-did not author them and cannot re-derive the author's intent.** They came from leg 068's consumption
-of a `status.d/` fragment and they modify a *different* sub-project's decisions file from the unit's
-scope, which is legitimate for a supervisor fold and is exactly the kind of edit nobody re-reads. I
-read them and they are accurate — decision 7's SSE half is marked gone rather than rewritten, which
-is the right treatment for a historical decision — but a fold I inherited is a weaker review than a
-fold I performed.
+**Hardware debts:** none — a route retirement. `core/015`'s outstanding Windows build now also carries
+this retirement, since the running Windows service still serves `GET /logs/stream` until deployed.
 
-## 2026-09-10 18:08 — api/051 the split that a blocked park had already named, and the decision it made room for
+---
 
-**Decided:** two calls, both mine, both written into the task before dispatch so the worker was not
-asked to make them.
+**`api/051`** (18:08) — landed the drain-decoding policy as its own decision 65 (`decisions/log-capture.md`)
+rather than widening decision 18, on the axis argument that 18 is about a *truncated* log while the
+drain fires on every line regardless of cap proximity. **Unparked `api/050`, blocked on `In flux: yes`,
+by pointing at its own written unpark condition** — a verbatim split "restates nothing, so `In flux:
+yes` cannot forbid one." Four missions moved to four files (`build.md`, `log-capture.md`,
+`target-json.md`, `flash-address.md`); reviewer verified item-by-item against `050`'s `Must not
+delete:` list.
+**Merged:** `agent/api/051-drain-decoding-decision` (code none — the `embarch-api` branch carried no
+commits; doc `989faa9`, cherry-picked from the branch tip `a7ac87b`, which is not a revert handle —
+cherry-picked because the branch was based on `404c387` and `main` had moved to `9c15974`, and
+`embarch-dev-workflow.md` §6 forbids a merge commit). Ownership check base `9c15974b52f0`: 11 paths,
+all owned. Gate: `check-docs.py` 11/11 green; `check-client-names.py` clean.
+**Blocked:** nothing. 
+**Reviewer:** no findings. 
+**Hardware debts:** none.
 
-**First: the drain-decoding policy gets its own numbered decision** — `embarch-api` **decision 65**
-in the new `decisions/log-capture.md` — rather than widening decision 18 to cover it. The task
-offered both arms. I closed it on the axis argument: decision 18 is what a *truncated* log keeps and
-fires only past `OUTPUT_CAP_BYTES`, while the drain's per-line decoding fires on every line whether
-or not the log nears the cap. `embarch-decision-reversals.md` calls a decisions file that describes
-the wrong thing the worse variant of its commonest failure. Decision 65 carries the two rejected
-alternatives the task named — decode the whole buffer lossily, fail the build on bad bytes — which
-`api/030` had recorded nowhere.
+---
 
-**Second, and this is the one worth reading: I unparked a blocked compaction task by pointing at
-its own unpark condition.** `decisions/build.md` had 1,154 B left and `tasks/api/050` was blocked on
-`In flux: yes`, so the naive reading is that nothing may be written there. But `api/050`'s own
-`In flux` text names the unpark: *"once a mission split ... is judged safe to do verbatim"*, and
-`.claude/leg.md` is explicit that **a verbatim split restates nothing, so `In flux: yes` cannot
-forbid one**. So the unit did the split first and authored decision 65 into the room it made. The
-four missions went to four files: decision 5 stays in `build.md` (1.7 KB), 18 and the new 65 to
-`log-capture.md` (3.9 KB), 19 to `target-json.md` (5.7 KB), 42 to `flash-address.md` (1.7 KB).
-**A park that names its own unpark is not really blocked**, and there are fifteen more like it in
-the ledger — this is the first one paid that way and it cost one unit.
-
-**The reviewer verified the split was verbatim rather than my trusting it**, item by item against
-`api/050`'s `Must not delete:` list: decision 18's `[assumed]` 1:3 provenance note and the exact
-condition that would move it, the "defect closed, not a polish" point, decision 19's full three-call
-`target.json` reasoning, decision 42's rejected per-call `base_address` override. All four present,
-the moved bodies textually unchanged, 18 and 65 non-overlapping.
-
-**I repaired one thing in the fold.** The worker repointed `decisions/zephyr.md`'s cross-reference
-line — *"How a build then runs and what it produces"* — at `../decisions.md`, the index, rather than
-at the two files that now hold the answer. That trades a stale pointer for a vague one, which is the
-same defect class this unit existed to fix, and `zephyr.md` is 14,238/12,288 B so a longer line was
-unattractive. It now reads *"How a build then runs: `build.md`; what it produces:
-`target-json.md`"*, which is both accurate and shorter than what the worker wrote.
-
-**Merged:** `agent/api/051-drain-decoding-decision` (code **none** — the `embarch-api` branch
-carried no commits; the unit was forbidden from touching `src/` and decisions live in `embarch-doc`;
-doc `989faa9`, cherry-picked from the branch tip `a7ac87b`, which is **not** a revert handle).
-Cherry-picked rather than merged because the branch was based on `404c387` and `main` had moved to
-`9c15974` — `--ff-only` would have refused and a plain merge made a merge commit, which
-`embarch-dev-workflow.md` §6 does not allow. Ownership check base `9c15974b52f0`: 11 paths, all
-owned by the `api` worker. Gate on the merge result: `check-docs.py` **11/11 green**;
-`check-client-names.py` clean. `tasks/api/050` is now `done`, with `decisions/build.md` struck off
-its `Compacts:` line by deletion rather than annotation.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none owed by this unit — a documentation split and a new decision, no board, no
-build, and no code in any repo. Carried forward unchanged: `core/015`'s native Windows build of
-`embarch-core` is the owner's and still outstanding, carrying `core/008`, `core/020`'s
-`self_reported_hardware_id` rename, `core/032` and `core/033`; `umbrella/037`'s corrected check 13
-has never met the bench that found its defects; `embarch-outpost`'s Zephyr `tests/unit` suite and
-`embarch-dev-bench`'s `app/src/scan_seen_names.c` both need a session with a Zephyr toolchain. No
-bench unit was runnable — every `hw-gated` task in the queue is `toolchain` or `required`.
-**Budget:** PROCEED, weekly **11.0%** of a 90% cap at the leg's start, wave **6** suggested.
-**Least sure about:** **that unparking a blocked compaction task on its own written unpark condition
-is a move the next leg should copy.** I am confident it was right here, because `api/050` spelled
-the condition out and the reviewer confirmed the split was verbatim. What I cannot tell is whether
-the other fifteen parks in the ledger are as explicit, or whether a leg reading this entry will
-generalise it into "a verbatim split is always allowed" and shorten something it should not. The
-rule is narrow and the entry is the only place it is written down as *applied*. Separately, I did
-check 65 is unique — it is the next number after 64 across the whole sub-project — because
-`tasks/doc/033` records that **nothing checks a decision number is unique** and that gap is
-owner-reserved; a leg that assumes the gate caught it will eventually be wrong.
-
-## 2026-09-10 18:05 — umbrella/047 a one-line pointer fix, and the red `main` I found underneath it
-
-**Decided:** nothing new in `embarch-umbrella` — this unit corrects a pointer, and I dispatched it
-explicitly as a one-line unit with instructions not to re-word the sentence, not to touch the five
-siblings `umbrella/046` already fixed, and not to author a decision. It did exactly that.
-`decisions/doctor.md` line 7's `Current truth:` now names `../interfaces/doctor-chain.md`, matching
-the five files `046` repointed when it moved the eighteen-row chain table out of `spec.md`.
-
-**What I decided that was not in the task: `main`'s `check-links.py` was already red when I took
-it, and I fixed it inside this unit rather than filing it.** Leg 067's `dev-bench/007` fold
-`git rm`'d that task file, and `tasks/dev-bench/008` links to `007` by relative path — so the
-removal broke the link. **Leg 067's own entry records `check-docs.py` 11/11 green for that fold**,
-which cannot have been true of the tree it committed; the gate ran before the removal was staged.
-Every unit of this leg would otherwise have gated red on something none of them caused, which is
-precisely the "same failure blocks two units" shape. I repointed `008`'s opening paragraph at what
-`007` actually left behind — decision 45, `scan_seen_names.c`, and the still-open
-`tasks/dev-bench/015` — rather than at a file that no longer exists, and said in the file that leg
-068 did it and why. **The ordering defect in `fold-commit.py`'s gate is not mine to fix** (it is
-under `scripts/`): filed as an observation here and nothing more.
-
-**The worker filed its own size debt without being asked**, which is the rule working:
-`decisions/doctor.md` is now 11,082/12,288 B (90.2%), so `tasks/umbrella/048-compact-umbrella.md`
-exists, dated 2026-09-20. A one-line fix that had to stay one line could not have avoided it.
-
-**Merged:** `agent/umbrella/047-doctor-current-truth` (code **none** — the `embarch-umbrella`
-branch carried no commits, this is documentation only; doc `73e7678`). Fast-forward onto
-`404c387`. Ownership check base `404c387ae6db`: 4 paths, all owned by the `umbrella` worker. Gate on
-the merge result: `check-docs.py` **11/11 green**, after my `008` fix; `check-client-names.py` clean.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none owed by this unit — a relative link in a documentation file, no board, no
-build, no code in any repo. Carried forward unchanged: `core/015`'s native Windows build of
-`embarch-core` is the owner's and still outstanding, carrying `core/008`, `core/020`'s
-`self_reported_hardware_id` rename, `core/032` and `core/033`; `umbrella/037`'s corrected check 13
-has never met the bench that found its defects; `embarch-outpost`'s Zephyr `tests/unit` suite and
-now `embarch-dev-bench`'s `app/src/scan_seen_names.c` (landed unbuilt by leg 067) both need a
-session with a Zephyr toolchain. No bench unit was runnable — every `hw-gated` task in the queue is
-`toolchain` or `required`.
-**Budget:** PROCEED at the leg's start, weekly **11.0%** of a 90% cap, 5-hour window inactive, wave
-**6** suggested. **The 4-unit cap binds, not the allowance — tenth consecutive leg.**
-**Least sure about:** **that fixing `main`'s red link inside this unit was better than filing it.**
-It is a queue file, so it is mine and the owner's rather than any worker's, and leaving it would
-have gated three unrelated units red on a defect none of them caused. But it means this unit's
-commit carries an edit to a `dev-bench` task that has nothing to do with `umbrella`, and the
-ownership check passed only because `tasks/` is supervisor territory — a reader diffing this fold
-for what `umbrella/047` did will find a paragraph about advertiser censuses in it.
-
-## 2026-09-10 17:41 — dev-bench/007 two truncations get two markers, and the reviewer found the case where they get one
-
-**Decided:** new `embarch-dev-bench` **decision 45** in `decisions/scanning.md` — two distinct
-markers for two distinct overflows, and the name list is bounded *before* it is written rather
-than trimmed after. `(truncated)` means the 64-byte `fail_reason` name list filled; `(census full)`
-means the 256-entry `SCAN_SEEN_MAX` census (decision 32) dropped advertisers. A combined marker was
-considered and rejected in the decision body: it would say something was cut without saying which.
-
-**The second defect is the one that was surprising and it is now structurally impossible.** The old
-code called `snprintk` and *then* checked its return — so the bytes were already in the buffer, and
-a partial name or a bare trailing separator stayed there. The new `scan_seen_names_append()`
-(`app/src/scan_seen_names.c`, pure C, no BT host) formats each entry into scratch and copies it in
-only whole, so a rejected entry changes nothing. I read it line by line for an unsigned underflow
-in `max_len - *used` — the early `*used > max_len` return makes it unreachable. A ztest suite under
-`app/tests/scan_seen_names/` pins it under `native_sim`.
-
-**I told the worker not to widen `OUTCOME_MAX_FAIL_REASON_LEN`** — 64 bytes is `embarch-core`'s
-wire contract, not `embarch-dev-bench`'s to relax — and it did not. It instead budgeted the name
-list against prefix + longest-marker, with a `BUILD_ASSERT` holding the room, so the final
-`outcome_fail` write cannot silently eat the marker the way the unbudgeted version could.
-
-**Then the reviewer found the hole in exactly the property the decision claims.** When *both*
-conditions are true at once, the implemented priority order writes `(truncated)` and drops
-`(census full)` entirely — so an advertiser lost to the 256-entry cap reads as an ordinary
-name-list truncation, which is precisely what decision 32 forbids: *"'not in the list' has to mean
-'not on the air', not 'the list was full.'"* Decision 45's own text says the two conditions are
-always independently signalled, and in the combined case the code re-collapses them. Filed as
-`tasks/dev-bench/015`, and I folded the reviewer's secondary note into the same task rather than
-letting it become a second unit: `scan_seen_names.h`'s header cites a decision 43 in `ble.md` that
-does not exist. **I did not fix either in the fold** — the marker fix is a real budget change in
-firmware I cannot compile, and hand-patching that from a diff is how this suite has produced
-citation defects all week.
-
-**Merged:** `agent/dev-bench/007-census-truncation-marker` (code `79d4743`, doc `07a5062`). Doc
-branch rebased onto `ui/022`'s fold; the code branch fast-forwarded `embarch-dev-bench` `main` from
-`07f15bd`. Ownership check bases: code `07f15bd4ccc2` (whole tree owned, 8 paths), doc
-`dc1ff1a82cce` (4 paths, all owned). Gate on the merge result: `check-docs.py` **11/11 green**;
-`check-client-names.py` clean. **The firmware itself was not built or tested by anyone** — see
-below.
-**Blocked:** nothing.
-**Reviewer:** 1 finding — inbox/dev-bench-census-marker-priority.md
-**Hardware debts:** **one, and it is the biggest of the leg.** This is the only unit of the four
-that landed real code into a repo whose toolchain this environment does not have: no `west`, no
-`ZEPHYR_BASE`, so **`app/src/scan_seen_names.c` has never been compiled, and the ztest suite the
-worker wrote for it has never been run — not by the worker, not by me.** It went in on two careful
-reads. That is the already-open `embarch-outpost`-shaped debt now reaching a second repo, and it is
-owed in a session with a Zephyr toolchain. The task also owes **one 20-second study** to re-observe
-the original `fail_reason` on a real bench; that is an attended-leg debt and I did not attempt it,
-per the standing no-hardware rule. Carried forward unchanged: `core/015`'s native Windows build of
-`embarch-core` is the owner's and still outstanding, carrying `core/008`, `core/020`'s
-`self_reported_hardware_id` rename, `core/032` and `core/033`; `umbrella/037`'s corrected check 13
-has never met the bench that found its defects. No bench unit was runnable at any point this leg —
-every `hw-gated` task in the queue is `toolchain` or `required`, and the bench queue is still
-parked by the owner's own commit.
-**Budget:** PROCEED at both ends; weekly **9.9%** of a 90% cap, 5-hour window inactive, wave **6**
-suggested at start and at the last check. **The 4-unit cap bound this leg, not the allowance —
-ninth consecutive leg.**
-**Least sure about:** **that I was right to land unbuilt firmware at all.** The alternative was to
-block the task on the missing toolchain, and I judged that wrong — the change is well-reasoned, the
-new file is deliberately pure C with its own test, and blocking would park a real fix indefinitely
-on a debt nobody has scheduled. But the reviewer then found a genuine logic hole by reading the
-same code I had read and passed, which is evidence about how far a read gets you: **`main` now
-carries firmware that no compiler has seen, and a leg's gate reported green over it.** If one thing
-from this leg is worth the owner's attention, it is that.
-
-## 2026-09-10 17:35 — ui/022 decision 54's label finally reaches a screen, and it was rendered twice
-
-**Decided:** nothing new — this unit *implements* `embarch-core` decision 54 rather than deciding
-anything. What it settles is a factual question the task itself could not answer.
-
-**The task was written not knowing whether the cell existed**, and said so honestly: a grep for
-`confirmed_at_utc_ms` in `src/` at filing time found nothing, so the filer left two legitimate
-outcomes open — relabel it if it renders, or write the guard into the docs if it does not. My
-dispatch note kept both arms open and asked for the evidence, not the guess.
-
-**It renders, and it renders twice.** Not in `src/` at all — in `assets/index.html`, as a
-`<th>Confirmed</th>` over `formatTimestamp(b.confirmed_at_utc_ms)`, in **two** copies of the
-"Enrolled boards" table: the Dashboard's and the Topology/Enroll tab's. Both are now **"Enrolled"**.
-The worker also did the *other* arm anyway — a guard comment on `Snapshot::enrolled` in
-`src/snapshot.rs` and above `enrolledTableRows` in `assets/app.js`, citing decision 54 — which I
-think is right: the next person to add such a display reads the code, not this log.
-
-**This is the first thing in the decision-54 chain that a human can actually see.** `core/027`
-decided the fix is a label; its own entry recorded that the decision "ends with nothing on any
-screen having changed" and that two `inbox/` drops were the only thing carrying it. One of those
-two is now landed. The other is `tasks/umbrella/045`, still open, and it is the weaker of the pair
-— `doctor` may never render the field at all.
-
-**Merged:** `agent/ui/022-confirmed-at-label` (code `9361329`, doc `d2f52ee`). Doc branch rebased
-onto `core/034`'s fold; the code branch fast-forwarded `embarch-ui` `main` from `408e3b1`.
-Ownership check bases: code `408e3b17fd7c` (whole tree owned, 3 paths), doc `424f5cc00961` (2
-paths, all owned). Gate on the merge result: `embarch-ui` `cargo build` clean, `cargo test` **101
-passed, 0 failed, 3 ignored** plus **2 passed** in the second target, `clippy --all-targets --
--D warnings` **zero** warnings; `check-docs.py` **11/11 green**; `check-client-names.py` clean
-against 7 denylist entries. **This is the only unit of the leg so far with a code merge.**
-**Blocked:** nothing.
-**Reviewer:** no findings. It swept the whole `embarch-ui` tree for a third "Confirmed"/"Validated"
-sibling the relabel could have missed, and for a paraphrase of decision 54 stronger than 54 says.
-**Hardware debts:** none owed by this unit — a column header and two comments, no board, no study.
-It does not touch `embarch-core`, so `core/015`'s native Windows build did not grow. Carried
-forward unchanged: that build is still the owner's and still outstanding, carrying `core/008`,
-`core/020`'s `self_reported_hardware_id` rename, `core/032` and `core/033`; `umbrella/037`'s
-corrected check 13 has never met the bench that found its defects; `embarch-outpost`'s Zephyr
-`tests/unit` suite cannot be built from the fleet's environment. No bench unit runnable this leg.
-**Budget:** PROCEED, weekly **9.9%** of a 90% cap at the leg's start, wave **6**.
-**Least sure about:** **that "Enrolled" alone is enough on a dashboard.** The column now says what
-the number *is* rather than what a reader wanted it to mean, which is decision 54 exactly — but a
-timestamp column headed "Enrolled" next to live probe state still sits in a context that invites
-being read as recency, and nothing on either table tells the reader that answering "is this still
-the right board?" costs a `POST /validate`. Decision 54 chose a word; whether a word is the whole
-fix is a UI question no one has tested on a human.
-
-## 2026-09-10 17:26 — core/034 a forward-reference stops lying about its own three consumers
-
-**Decided:** nothing new. This unit deliberately decides nothing — decision 50's design stands,
-decision 54 narrows it correctly, and the only thing wrong was a status sentence. **I told the
-worker explicitly not to amend decision 54**, which is one day old and correct, and not to
-re-litigate 50. It did neither.
-
-**What changed is one paragraph, and the pointer in it is the load-bearing half.** Decision 50's
-closing sentence said three consumers were "filed and blocked on this task" (`tasks/api/045`,
-`tasks/umbrella/041`, `tasks/ui/020`). It now says `api/045` landed (`a687baf`) and the other two
-closed unsatisfiable (`e0dc52b`), and **points forward to decision 54 for what replaced the latter
-two's intent**. A forward-reference exists to be read alone; read alone, the old sentence gave a
-wrong status for all three of its own consumers with no route to the decision that superseded them.
-
-**My dispatch note made the verification the deliverable, not the edit.** The task asserted all
-three statuses and two fold SHAs, and the edit is *nothing but* those assertions restated in a
-decision body — so a worker that trusted the task file would have replaced one wrong status
-sentence with another and nothing would have failed. I told it to open each task file and each
-fold commit and to stop rather than write a corrected sentence that was also wrong. It checked,
-and the reviewer independently re-checked all three tasks and both SHAs afterwards.
-
-**Bookkeeping I did myself:** the worker ticked both `Done when` boxes and left `**State:**
-claimed`. I set it to `done` in the fold.
-
-**Merged:** `agent/core/034-decision-50-consumers` (code **none** — documentation-only, the
-`embarch-core` branch was pushed with zero commits; doc `af785d8`). Rebased onto `umbrella/046`'s
-fold before merging. Ownership check base `5d79b29a1934`, 3 paths, all owned. Gate on the merge
-result: `check-docs.py` **11/11 green**.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none owed by this unit — one sentence in a decision file, no board, no build,
-no `embarch-core` code touched, so `core/015`'s native Windows build did not grow. Carried forward
-unchanged: that build is still the owner's and still outstanding, carrying `core/008`, `core/020`'s
-`self_reported_hardware_id` rename, `core/032` and `core/033`; `umbrella/037`'s corrected check 13
-has never met the bench that found its defects; `embarch-outpost`'s Zephyr `tests/unit` suite
-cannot be built from the fleet's environment. No bench unit runnable this leg.
-**Budget:** PROCEED, weekly **9.9%** of a 90% cap at the leg's start, wave **6**.
-**Least sure about:** **that this is the last of them.** The reviewer checked `surfaces.md` and the
-other `embarch-core` docs for the same stale status and found none, but this is the fourth
-citation-or-status defect this fleet has landed a fix for in two days, and every one of them was
-found by a human-shaped read rather than by a gate. `check-decision-refs.py` resolves a decision
-*number*; nothing anywhere checks whether a sentence *about* a task's state is still true, and
-task states change every twenty minutes now.
-
-## 2026-09-10 17:18 — umbrella/046 the 96-byte wall is gone, paid by the move nobody had considered until yesterday
-
-**Decided:** that leg 066's **option 2** is the right answer for `embarch-umbrella/spec.md`, and I
-took it as this leg's first unit rather than waiting for the 2026-09-12 clock.
-
-**Why I dispatched a new task instead of `tasks/umbrella/038`.** `038` is the compaction task for
-this file and it is `blocked`, correctly — its `In flux: yes` argument holds, because
-`tasks/umbrella/033` is open and is exactly a check-17 `doctor`-chain row change. A compaction
-*pass* rewrites and shortens argument, and doing that over a table about to be rewritten is the
-thing the park exists to prevent. **A verbatim mission split is a different operation and the flux
-argument cannot forbid it** (`DOC-COMPACTION.md` §2; `.claude/leg.md`'s split-first rule) — moving
-text unchanged restates nothing, so there is no argument to get wrong. So I filed
-`tasks/umbrella/046` as a split, scoped it explicitly as *not* a compaction pass, and **left `038`
-blocked and untouched**. It is still parked on `033`, and its clock still reads 2026-09-12; what
-changed is that the file it guards is no longer one row-edit from a wall.
-
-**The result.** `spec.md` **10,144 → 5,795 B**, out of reserve entirely and off
-`check-doc-size.py --pressure`. `open.md` is **unchanged at 4,996 B (97.6%)** — I told the worker
-not to grow it by a byte and it did not, which matters because `038`'s ledger entry covers both
-files and only one of them is now paid. The moved section is `embarch-umbrella/interfaces/doctor-chain.md`;
-the worker picked that path against `embarch-core/interfaces/constants.md`'s precedent rather than
-against my guess, which is what I asked for.
-
-**I verified "verbatim" mechanically before merging, and it is worth saying how**, because
-"verbatim" is the entire safety argument and a reviewer cannot re-derive it from the diff: I
-diffed the eighteen removed rows against the new file's body with relative-link prefixes
-normalised out. **Identical, every row.** The only textual differences in the whole move are
-required link re-basings (`decisions/x.md` → `../decisions/x.md`, `../embarch-core/…` →
-`../../embarch-core/…`) and the new file's own header. Six sibling `decisions/*.md` files had
-their pointers into the moved section repointed.
-
-**Merged:** `agent/umbrella/046-split-doctor-chain` (code **none** — documentation-only, the
-`embarch-umbrella` branch was pushed with zero commits; doc `fc6f738`). Ownership check base
-`a2e993ab72cd`, 10 paths, all owned. Gate on the merge result: `check-docs.py` **11/11 green**.
-**Blocked:** nothing.
-**Reviewer:** 1 finding — inbox/umbrella-doctor-md-current-truth-pointer-stale.md
-**Hardware debts:** none owed by this unit — a documentation move, no board, no build. Carried
-forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still
-outstanding, carrying `core/008`, `core/020`'s `self_reported_hardware_id` rename, `core/032` and
-`core/033`; `umbrella/037`'s corrected check 13 has never met the bench that found its defects and
-needs only the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from
-the fleet's environment. No bench unit was runnable at dispatch — every `hw-gated` task in the
-queue is `toolchain` or `required`, and the bench queue is still parked by the owner's own commit.
-**Budget:** PROCEED at the leg's start, weekly **9.9%** of a 90% cap, 5-hour window inactive, wave
-**6** suggested. The 4-unit cap binds this leg, not the allowance — ninth consecutive leg.
-**Least sure about:** **whether the pointer left in `spec.md` should carry the count.** It says
-"an ordered chain of eighteen checks", and this sub-project's own `tasks/umbrella/009` recorded
-the lesson that a count goes stale the moment a row's status changes — row 18 is designed and
-unbuilt, so the number moves if anything is built before it, and now it moves in *two* files
-instead of one. I flagged it to the reviewer explicitly and it did not come back as a finding; I
-am recording it anyway because the split has, in this one respect, made a known-fragile fact
-harder to keep true rather than easier.
-
-## 2026-09-10 16:45 — umbrella/036 a check stops trusting its own copy of another repo's loader, and the file it documents itself in is now 96 bytes from full
-
-**Decided:** three things. The first closes a task open since 2026-09-06; the third is a
-bookkeeping correction I made against this leg's own work.
-
-**First, that `doctor` check 6 answers from the loader its title names.** The defect was the
-suite's fourth instance of the liftable-copy pattern going wrong: check 6, titled *"embarch-api
-config loads"*, answered entirely from `embarch-umbrella`'s own hand-mirrored `ProjectConfig`, so
-it could report **Pass on a config `embarch-api` would refuse** — an engineer whose `doctor` is
-green and whose `embarch-api` then will not start had no way to see which was lying. Fixed the way
-check 8 already solved the identical problem **one function away** in the same file: shell out to
-the located `embarch-api` (`--config <path> --json list-projects`) and take its verdict. The shape
-that makes this right rather than merely different is the three-arm `LoaderVerdict`: `Ok` → Pass,
-`Rejected(why)` → Fail **carrying `embarch-api`'s own error text**, and `Unanswerable(why)` →
-falls back to the local mirror as a **Warn — never a Pass and never a Fail**. The mirror is no
-longer trusted to issue a verdict; it is kept for the job decision 16 actually needs it for,
-explaining *which* field looks wrong and feeding checks 7–9 project data on a config the real
-loader rejects for a reason none of them read.
-
-**Second, that `artifact_path_for_core` is not drift and stays.** The task, written 2026-09-06,
-called it a phantom field and asked for its removal — a fourth strand alongside the three real
-ones. The worker declined, citing `embarch-api` `decisions/shape.md` **decision 64, dated
-2026-09-10, today**, which tolerates the field by name *specifically because* `embarch-umbrella`
-scaffolds it in `init.rs` and reads it in check 9. **I had the reviewer read decision 64's body
-before I accepted that**, because a citation to a decision written the same day is exactly where
-this leg has been finding trouble, and because "the task says remove it" is the easy path. It
-holds: removing the field needs `init.rs`'s write removed **and** decision 64's toleration retired
-in the same change, and the second half is another repo's. Three strands fixed, one correctly
-refused — recorded as an amendment to decision 16 rather than silently skipped.
-
-**Third — and this is mine, not the worker's — `tasks/umbrella/038`'s size-debt clock moved from
-2026-09-30 to 2026-09-12.** This unit **spent the reserve rather than paying it**, on both of that
-task's files: `spec.md` 10,104 → **10,144 B (99.1%, 96 bytes left)** and `open.md` 4,870 →
-**4,996 B (97.6%, 124 bytes left)**. Nothing was done wrong — my dispatch note offered two paths
-and the worker took the sanctioned one, staying inside the 136 bytes it was told it had. But its
-closing note calls this *"no new debt was created and none was paid down"*, which is true of the
-ledger's bookkeeping and **misleading about the file: 96 bytes is not headroom, it is a wall one
-row-edit away.** `038` stays `blocked` — its `In flux: yes` is still correct, `tasks/umbrella/033`
-is open and is exactly a check-17 `doctor`-chain row change — but the earlier date puts it in front
-of a leg's first-unit ledger check in two days instead of twenty. I wrote three options into that
-task and flagged the one nobody has considered: **a verbatim mission split of the eighteen-row
-`doctor` chain table**, which `outpost/008` proved safe under flux *this same leg*, and which would
-leave `spec.md` stable while giving the volatile table room to move.
-
-**Merged:** `agent/umbrella/036-mirrors-two-and-three` (code `6c423e1`, doc `293a647`). Ownership
-check bases: code `d06bb6472fb4` (whole tree owned, 2 paths), doc `7dce408b7caf` (5 paths, all
-owned). Gate on the merge result: `cargo build` clean, `cargo test` **225 passed, 0 failed** — up
-from leg 051's 216, the nine new ones being `LoaderVerdict` decoding tests and two `check_config`
-integration tests mirroring check 8's existing shape — `clippy --all-targets -- -D warnings`
-**zero** warnings; `check-docs.py` **11/11 green**; `check-client-names.py` clean. **This is the
-only unit of the leg with a code merge**; the other three were documentation-only and pushed
-zero-commit code branches.
-**Blocked:** nothing.
-**Reviewer:** no findings. It confirmed the four claims I flagged and the one behaviour change I
-was unsure of — see below.
-**Hardware debts:** none owed by this unit. It is host-side throughout, and the one thing it added
-that *could* have needed a board — check 6 shelling out to a real `embarch-api` — is exercised by
-two integration tests rather than a live binary. Carried forward unchanged: `core/015`'s native
-Windows build of `embarch-core` is the owner's and still outstanding; `umbrella/037`'s corrected
-check 13 has never met the bench that found its defects and needs only the dev-bench board;
-`embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from the fleet's environment. **No
-bench unit was runnable at any point this leg** — every `hw-gated` task in the queue is `toolchain`
-or `required`, and the bench queue is still parked by the owner's own commit.
-**Budget:** PROCEED at both ends; weekly **8.6% → 9.5%** of a 90% cap, 5-hour window inactive, wave
-**6** suggested at start and at the last check. The leg cost about **0.9 points** of the weekly
-allowance for four units, in line with leg 065's 0.8. **The 4-unit cap bound this leg, not the
-allowance — eighth consecutive leg for which that is true.** Closing reading taken before this
-entry was written, per leg 065's correction.
-**Least sure about:** **the one thing the reviewer settled, which I would otherwise have merged on
-faith.** The old check 6 Failed when any project's `source_path` did not exist; the new
-`LoaderVerdict::Ok` arm Passes on `embarch-api`'s say-so and checks `source_path` nowhere. That is
-only safe if upstream's own loader refuses a missing `source_path` — and the worker's `Unanswerable`
-arm *does* still check it, which reads either as care or as the author knowing the check mattered
-and dropping it anyway. The reviewer found `embarch-api`'s `validate()` bails on a missing
-`source_path` for every project, so the deleted check is redundant rather than lost. **I want this
-recorded because a reviewer is the only thing in this design that reads a diff for intent, and this
-is the first time in four legs of tallying that it changed what I would have written** — not by
-finding a contradiction, but by turning a merge-on-green into a merge on evidence.
-
-## 2026-09-10 16:41 — core/027 the answer was "do not build it", and the reviewer found the sentence that unit should also have written
-
-**Decided:** that `EnrolledBoardResponse` does **not** grow a persisted last-validation timestamp,
-and that the fix is a label. New `embarch-core` **decision 54** in `decisions/surfaces.md`.
-
-**This was a genuine fork and I deliberately did not pre-pick it.** The task posed both arms —
-persist a real last-validation instant so passive readers can answer "how stale is this identity
-check?", or label the existing field honestly and never claim freshness at all — and said either
-answer closes it. My dispatch note said only what would make **each** arm wrong. The worker took
-the label arm, and the argument it wrote is better than the one I would have accepted:
-
-- **`EnrolledBoard` is `embarch-topology`'s storage, not this crate's.** So the persist arm is a
-  cross-repo change — `embarch-topology`'s enrollment file gains a field, `POST /validate`'s
-  handler writes it back — and §8 reserves that to me, not to a `core`-scoped worker. Half-landing
-  the response side without the storage side is the failure `embarch-topology` decision 26 already
-  named.
-- **And the migration has no honest value to write.** Every board enrolled before the field existed
-  comes back `None`, and a `None` rendered as "never validated" is a **lie about every board on the
-  bench today**, each of which has passed `/validate` calls this suite simply never recorded. I put
-  that trap in the dispatch note as the sentence I would look for first; the worker found it
-  independently and made it the load-bearing half.
-
-**The label is specific enough to act on, which is what makes it a decision rather than a
-deferral**: render `confirmed_at_utc_ms` as **"Enrolled"**, never "Validated" or "Last validated",
-and a reader wanting to say something is stale must call `POST /validate` and show
-`validated_at_utc_ms` from *that* response. The two follow-ups went to `inbox/` rather than
-`tasks/umbrella/` and `tasks/ui/`, correctly — those are not a `core` worker's to write.
-
-**The reviewer earned its slot on this one.** It confirmed the two factual claims I flagged
-(`EnrolledBoard` really is an `embarch-topology` type; decision 26's body really does give that
-reasoning rather than the decision borrowing a nearby argument), confirmed both `inbox/` drops
-describe reachable work, and confirmed no reversals row is owed. Then it found what neither the
-worker nor I had: **decision 50, immediately above 54 in the same file, still says "three consumers
-are filed and blocked on this task: `tasks/api/045`, `tasks/umbrella/041`, `tasks/ui/020`."** One
-landed a leg ago and two closed unsatisfiable — and **decision 54 is built on exactly that**, in
-the same diff, without amending the sentence above it. Not a design contradiction: 54 narrows 50
-correctly and 50's additive field stands. It is a stale forward-reference, which is worse in the
-one way that matters — a forward-reference exists to be read alone, and read alone decision 50 now
-gives a wrong status for all three of its own consumers with no pointer to the decision that
-supersedes them. Filed as `tasks/core/034`, **re-scoped from the drop's `doc` to `core`** on the
-way in, because the file is `embarch-core/decisions/surfaces.md` and `doc` scope would have made it
-undispatchable to the only worker who can fix it.
-
-**Merged:** `agent/core/027-validated-at-reaches-no-reader` (code **none** — the label arm needs no
-code, and the branch was pushed with zero commits; doc `56cb0b1`). Ownership check base
-`317795f077fb`, 4 paths, all owned. Gate on the merge result: `embarch-core` `cargo build` clean,
-`cargo test` **192 passed, 0 failed, 2 ignored** plus **1 passed** in the second target,
-`clippy --all-targets -- -D warnings` **zero** warnings; `check-docs.py` **11/11 green**;
+**`umbrella/047`** (18:05) — a one-line pointer fix (`decisions/doctor.md`'s `Current truth:` line
+repointed at `../interfaces/doctor-chain.md`), dispatched deliberately narrow. **Also fixed a red
+`main`** found underneath it: leg 067's `dev-bench/007` fold had `git rm`'d a task file that
+`tasks/dev-bench/008` links to by relative path, breaking `check-links.py` for every unit since — the
+gate had run before that removal was staged in leg 067's own fold. Repointed `008`'s opening paragraph
+at what actually survived (decision 45, `scan_seen_names.c`, `tasks/dev-bench/015`).
+**Merged:** `agent/umbrella/047-doctor-current-truth` (code none — the `embarch-umbrella` branch
+carried no commits, documentation only; doc `73e7678`). Fast-forward onto `404c387`. Ownership check
+base `404c387ae6db`: 4 paths, all owned. Gate: `check-docs.py` 11/11 green after the `008` fix;
 `check-client-names.py` clean.
+**Blocked:** nothing. 
+**Reviewer:** no findings. 
+**Hardware debts:** none.
+
+---
+
+**`dev-bench/007`** (17:41) — new `embarch-dev-bench` decision 45: two distinct overflow markers,
+`(truncated)` (64-byte name-list cap) and `(census full)` (256-entry `SCAN_SEEN_MAX`), deliberately not
+combined into one (would say something was cut without saying which). Rewrote `scan_seen_names_append()`
+to format-then-copy-whole so a rejected entry changes nothing — closing a real underflow-adjacent bug
+class. **Reviewer found the priority-order hole**: when both conditions fire, the code wrote
+`(truncated)` and silently dropped `(census full)`, exactly what decision 32 forbids — filed as
+`tasks/dev-bench/015` (above, landed same leg).
+**Merged:** `agent/dev-bench/007-census-truncation-marker` (code `79d4743`, doc `07a5062`). Doc branch
+rebased onto `ui/022`'s fold; the code branch fast-forwarded `embarch-dev-bench` `main` from `07f15bd`.
+Ownership check bases: code `07f15bd4ccc2` (whole tree owned, 8 paths), doc `dc1ff1a82cce` (4 paths,
+all owned). Gate: `check-docs.py` 11/11 green; `check-client-names.py` clean.
+**Blocked:** nothing. 
+**Reviewer:** 1 finding — inbox/dev-bench-census-marker-priority.md.
+**Hardware debts:** **one, and it is the biggest of the leg.** This is the only unit of the four
+that landed real code into a repo whose toolchain this environment does not have: `app/src/scan_seen_names.c` has
+**never been compiled**, and the ztest suite the worker wrote for it has **never been run** — by
+anyone. Landed on two careful reads. Also owes one 20-second study to re-observe the original
+`fail_reason` on a real bench; an attended-leg debt, not attempted here.
+
+---
+
+**`ui/022`** (17:35) — implements `embarch-core` decision 54 rather than deciding anything: the
+`confirmed_at_utc_ms` column renders **twice** (Dashboard and Topology/Enroll "Enrolled boards"
+tables), both now labelled "Enrolled" rather than any variant of "Validated". Guard comments added at
+`Snapshot::enrolled` and `enrolledTableRows`. First thing in the decision-54 chain a human can actually
+see; `tasks/umbrella/045` (above, landed same leg) is the weaker remaining half.
+**Merged:** `agent/ui/022-confirmed-at-label` (code `9361329`, doc `d2f52ee`). Doc branch rebased onto
+`core/034`'s fold; the code branch fast-forwarded `embarch-ui` `main` from `408e3b1`. Ownership check
+bases: code `408e3b17fd7c` (whole tree owned, 3 paths), doc `424f5cc00961` (2 paths, all owned). Gate:
+`embarch-ui` `cargo build` clean, `cargo test` 101 passed/0 failed/3 ignored plus 2 passed in the
+second target, `clippy --all-targets -- -D warnings` zero warnings; `check-docs.py` 11/11 green;
+`check-client-names.py` clean against 7 denylist entries.
+**Blocked:** nothing. 
+**Reviewer:** no findings — swept the whole `embarch-ui` tree for a third
+"Confirmed"/"Validated" sibling the relabel could have missed. **Hardware debts:** none.
+
+---
+
+**`core/034`** (17:26) — decided nothing new; corrected decision 50's closing sentence, which still
+said three consumers were "filed and blocked" when one had landed (`api/045`, `a687baf`) and two closed
+unsatisfiable (`e0dc52b`) — now forward-pointing to decision 54 for what replaced their intent.
+Verification was made the deliverable rather than the edit, per dispatch instruction; reviewer
+independently re-checked all three tasks and both SHAs.
+**Merged:** `agent/core/034-decision-50-consumers` (code none — documentation-only, the `embarch-core`
+branch was pushed with zero commits; doc `af785d8`). Rebased onto `umbrella/046`'s fold before
+merging. Ownership check base `5d79b29a1934`, 3 paths, all owned. Gate: `check-docs.py` 11/11 green.
+**Blocked:** nothing. 
+**Reviewer:** no findings. 
+**Hardware debts:** none.
+
+---
+
+**`umbrella/046`** (17:18) — took leg 066's parked option 2 as this leg's first unit: verbatim mission
+split (not a compaction pass, deliberately, since `038` is blocked correctly on real flux) of
+`embarch-umbrella/spec.md`'s eighteen-row `doctor`-chain table into new
+`embarch-umbrella/interfaces/doctor-chain.md`. `spec.md` 10,144 → 5,795 B, entirely out of reserve.
+Verified verbatim mechanically: every row identical, only link re-basing and the new header differ.
+**Merged:** `agent/umbrella/046-split-doctor-chain` (code none — documentation-only, the
+`embarch-umbrella` branch was pushed with zero commits; doc `fc6f738`). Ownership check base
+`a2e993ab72cd`, 10 paths, all owned. Gate: `check-docs.py` 11/11 green.
+**Blocked:** nothing. 
+**Reviewer:** 1 finding — inbox/umbrella-doctor-md-current-truth-pointer-stale.md.
+**Hardware debts:** none.
+
+---
+
+**`umbrella/036`** (16:45) — `doctor` check 6 ("embarch-api config loads") stopped answering entirely
+from `embarch-umbrella`'s own hand-mirrored `ProjectConfig` — it could Pass on a config `embarch-api`
+would refuse. Now shells out to the real `embarch-api --config <path> --json list-projects` via a
+three-arm `LoaderVerdict` (`Ok`→Pass, `Rejected(why)`→Fail carrying `embarch-api`'s own error text,
+`Unanswerable(why)`→Warn, never Pass/Fail). `artifact_path_for_core` confirmed **not** drift (decision
+64, dated the same day) and kept. Supervisor's own bookkeeping correction: this unit spent, rather than
+paid, `tasks/umbrella/038`'s reserve on both files, moving its size-debt clock from 2026-09-30 to
+2026-09-12 — three options written into `038` including a verbatim mission split of the table
+`outpost/008` proved safe under flux this same leg.
+**Merged:** `agent/umbrella/036-mirrors-two-and-three` (code `6c423e1`, doc `293a647`). Ownership check
+bases: code `d06bb6472fb4` (whole tree owned, 2 paths), doc `7dce408b7caf` (5 paths, all owned). Gate:
+`cargo build` clean, `cargo test` 225 passed/0 failed (up from leg 051's 216), `clippy --all-targets --
+-D warnings` zero warnings; `check-docs.py` 11/11 green; `check-client-names.py` clean.
 **Blocked:** nothing.
-**Reviewer:** 1 finding — inbox/doc-decision-50-stale-consumer-list-after-decision-54.md
-**Hardware debts:** none owed by this unit, and it is the first thing this leg has landed that
-*reduces* one: the arm it declined is the arm that would have needed a store migration and a bench
-to prove. Note that **`core/015`'s native Windows build did not grow** either — this unit changed
-no `embarch-core` code at all. That build is still the owner's and still outstanding, carrying
-`core/008`, `core/020`'s `self_reported_hardware_id` rename, `core/032` and `core/033`. Carried
-forward unchanged: `umbrella/037`'s corrected check 13 has never met the bench that found its
-defects; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from the fleet's
-environment. **No bench unit runnable this leg.**
-**Budget:** PROCEED, weekly **8.6%** of a 90% cap at the leg's start, wave **6**.
-**Least sure about:** **whether "label, do not add" survives the next person who wants freshness on
-a screen.** The decision is right about cost and right about the migration, but it leaves the
-original defect — a human reading enrolment time as freshness — fixed only by *wording*, on two
-surfaces neither of which has been changed yet, by two `inbox/` drops that are now the only thing
-carrying it. If those two drops are lost or deprioritised, this unit will read as having closed a
-four-task chain that in fact ends with nothing on any screen having changed.
+**Reviewer:** no findings — confirmed `embarch-api`'s `validate()` bails on a missing `source_path` for
+every project, so the one check the new `Ok` arm skips is redundant rather than lost; the first time in
+four legs of tallying a reviewer changed what the supervisor would have written, not by finding a
+contradiction but by turning a merge-on-green into a merge on evidence.
+**Hardware debts:** none — host-side throughout, the one thing that could have needed a board (check 6
+shelling to a real `embarch-api`) is exercised by integration tests instead.
 
-## 2026-09-10 16:33 — outpost/008 a decision that could not be written for four days, and the split that made room for it
+---
 
-**Decided:** two things, and the first is the reason this unit existed at all.
+**`core/027`** (16:41) — `EnrolledBoardResponse` does **not** grow a persisted last-validation
+timestamp; the fix is a label. New decision 54: render `confirmed_at_utc_ms` as "Enrolled", never
+"Validated"/"Last validated" — a reader wanting staleness must call `POST /validate` and read
+`validated_at_utc_ms` from *that* response. Declined the persist arm because `EnrolledBoard` is
+`embarch-topology`'s storage (a cross-repo change, §8's not a `core` worker's) and because every board
+enrolled before the field existed would come back `None`, rendered as "never validated" — a lie about
+every board on the bench today. **Reviewer found decision 50, immediately above 54 in the same file,
+still gave a stale status for its own three consumers** (one landed, two closed unsatisfiable) with no
+pointer to 54 — filed as `core/034` (above, landed same leg), re-scoped from `doc` to `core` since
+`doc` scope would have made it undispatchable to the only worker able to fix it.
+**Merged:** `agent/core/027-validated-at-reaches-no-reader` (code none — the label arm needs no code,
+branch pushed with zero commits; doc `56cb0b1`). Ownership check base `317795f077fb`, 4 paths, all
+owned. Gate: `embarch-core` `cargo build` clean, `cargo test` 192 passed/0 failed/2 ignored plus 1
+passed in the second target, `clippy --all-targets -- -D warnings` zero warnings; `check-docs.py`
+11/11 green; `check-client-names.py` clean.
+**Blocked:** nothing. 
+**Reviewer:** 1 finding — inbox/doc-decision-50-stale-consumer-list-after-decision-54.md.
+**Hardware debts:** none, and it is the first thing this leg landed that *reduces* one — the declined
+arm is the one that would have needed a store migration and a bench to prove.
 
-**First, that the mission split is the right move for a file in reserve, and I pre-committed to it
-before dispatch rather than leaving the choice open.** `decisions/tracing.md` had **784 bytes left**
-against this sub-project's tightened **8 KB** cap — `embarch-outpost` is the only entry in
-`check-doc-size.py`'s `TIGHTENED` table — and the decision it needed to hold was drafted on
-2026-09-06 and **thrown away by that worker because the gate refused it**. So the defect was not
-that anyone got it wrong; it is that a correct, already-written decision has been missing from the
-record for four days purely because of a byte count.
+---
 
-`decision 6` (manual markers, build-registered IDs) moved **verbatim** into a new
-`decisions/markers.md`. That is the whole argument for a split over a compaction: **a verbatim
-move restates nothing**, so it cannot lose an argument, and this file's `Must not delete:` list is
-unusually specific because a previous pass *did* lose one — decision 19's rejected-alternative
-price read "and a layout bump" until 2026-09-06 and was wrong in three places at once. I checked
-that sentence and the measured duty-cycle result myself in the diff before merging, and had the
-reviewer check both independently; both survived word for word. `tracing.md` is now
-**6,940 / 8,192 B** and has left the size ledger entirely — this task was the only filing against
-it, so the debt is paid rather than reassigned.
-
-**Second, that `decision 25` records the two traps in the *decision*, not only in `wire.md`.** The
-GPIO-dispatch family (`GpioDispatch` kind 9, `GpioCallbackDone` kind 10, `OUTPOST_FLAG_TRACE_GPIO`)
-has shipped and been documented since `007`; what was missing was why it exists and what it
-deliberately does not do. It traces a **handler timeline, not pin state** — the hook is a
-callback-list boundary, not a level sample. The two traps are the useful half and both are the kind
-that leave a *readable* trace saying the wrong thing:
-
-- **`GpioCallbackDone` is an exit marker**, placed after `cb->handler()` returns. Read as an entry
-  marker it attributes every handler's span to the wrong handler, and nothing looks broken.
-- **`GpioDispatch`'s `b` is `0`, not a pin mask** — the hook's mask parameter is 8 bits while
-  `gpio_fire_callbacks()` passes 32, so pins above 7 are gone before the record is made. Which pins
-  a dispatch covered has to come from `pin_mask` on the `GpioCallbackDone` records after it.
-
-**Merged:** `agent/outpost/008-gpio-family-decision` (code **none** — documentation-only by my
-dispatch instruction, and the branch was pushed with zero commits; doc `896f9c9`). Ownership check
-base `3236e9ab5870`, 5 paths, all owned. Gate on the merge result: `check-docs.py` **11/11 green**;
-`check-decision-refs.py` re-run explicitly after the split — **all 18 topic-file links resolve to
-the file that defines the number**, and all 19 reversal-row citations resolve. Decision numbers 1–25
-are contiguous with no duplicate, checked by hand because `tasks/doc/033` records that nothing
-checks that automatically.
-**Blocked:** nothing.
-**Reviewer:** no findings. It confirmed the verbatim survival of both protected passages in
-decision 19, matched decision 25's two traps against `interfaces/wire.md` field by field, confirmed
-the one surviving prose reference to decision 6 now names `markers.md`, and confirmed
-`embarch-decision-reversals.md` holds no `embarch-outpost` rows at all.
+**`outpost/008`** (16:33) — decision 6 (manual markers, build-registered IDs) moved verbatim into new
+`decisions/markers.md`, freeing `decisions/tracing.md` from four days of a correct decision being
+unwritable purely on byte count (thrown away by a 2026-09-06 worker when the gate refused it).
+6,940/8,192 B, debt paid rather than reassigned. New decision 25 records two GPIO-dispatch traps in the
+*decision*, not only `wire.md`: `GpioCallbackDone` is an exit marker (read as entry, every handler's
+span attributes to the wrong handler); `GpioDispatch`'s mask is `0`, not a pin mask (8-bit hook vs.
+32-bit `gpio_fire_callbacks()`, pins above 7 gone before the record is made).
+**Merged:** `agent/outpost/008-gpio-family-decision` (code none — documentation-only by dispatch
+instruction, branch pushed with zero commits; doc `896f9c9`). Ownership check base `3236e9ab5870`, 5
+paths, all owned. Gate: `check-docs.py` 11/11 green; `check-decision-refs.py` re-run explicitly after
+the split — all 18 topic-file links and all 19 reversal-row citations resolve; decision numbers 1–25
+contiguous, checked by hand (`tasks/doc/033` records nothing checks this automatically).
+**Blocked:** nothing. 
+**Reviewer:** no findings — confirmed verbatim survival of both protected
+passages in decision 19, matched decision 25's two traps against `interfaces/wire.md` field by field.
 **Hardware debts:** **one, unchanged and re-stated because it is now several units deep.**
-`embarch-outpost`'s Zephyr `tests/unit` ztest suite was **not run** — no `west`, no `ZEPHYR_BASE` in
-the fleet's environment — and this is the standing condition, not this unit's failure. It costs
-nothing here specifically: this unit changed no C and no Kconfig, by instruction. But **no leg has
-been able to claim that suite green after any `embarch-outpost` change for several days**, and this
-is the second such change to land in that window. Carried forward unchanged: `core/015`'s native
-Windows build of `embarch-core` is the owner's and still outstanding; `umbrella/037`'s corrected
-check 13 has never met the bench that found its defects. **No bench unit is runnable this leg** —
-every `hw-gated` task is `toolchain` or `required`.
-**Budget:** PROCEED, weekly **8.6%** of a 90% cap at the leg's start, wave **6**.
-**Least sure about:** **whether a split leaves the sub-project easier or harder to read, and I have
-no way to measure it.** `decisions/markers.md` is 1,725 bytes holding a single decision. That is a
-file a reader has to find, against a paragraph they would have scrolled past — and the index row is
-the only thing pointing at it. `DOC-COMPACTION.md` §2 names the split as the cheaper move and it is
-plainly cheaper *to write*; whether an eleven-topic-file `decisions/` directory is still navigable
-at twelve is a question this suite keeps answering one file at a time.
+`embarch-outpost`'s Zephyr `tests/unit` ztest suite was not run (no `west`, no `ZEPHYR_BASE`) — the
+standing condition, not this unit's failure; this unit changed no C or Kconfig. No leg has been able
+to claim that suite green after any `embarch-outpost` change for several days.
 
-## 2026-09-10 16:31 — study-designer/027 the citation was wrong, and so is every replacement anyone would have guessed
+---
 
-**Decided:** that a question may cite **nothing**, and that this is the correct output rather than a
-gap to fill later.
+**`study-designer/027`** (16:31) — `open.md`'s power-profiling deferral cited decision 24 (about the
+`StudyStart`/`StudyDone` wire messages, nothing to do with an analog front end) for a hardware pick.
+The worker searched for the correct number and **found none exists** — no decision records a
+power-profiling front-end pick at all — and wrote "No decision records this pick; none is cited" rather
+than reach for the nearest plausible number. Reviewer independently re-derived the negative and checked
+the file's four other citations.
+**Merged:** `agent/study-designer/027-open-md-decision-24-citation` (code none — the branch was pushed
+with zero commits, correctly: this unit changed no code; doc `eb06bae`). Ownership check base
+`09109e782502`, 4 paths, all owned. Gate: `check-docs.py` 11/11 green; `cargo test` / `clippy
+--all-targets -- -D warnings` clean in the code worktree (0 tests); `check-client-names.py` clean.
+**Blocked:** nothing. 
+**Reviewer:** no findings. 
+**Hardware debts:** none.
 
-`embarch-study-designer/open.md`'s power-profiling deferral rested on "decision 24's front-end pick
-is still provisional". Decision 24's body (`decisions/wire.md`) is about the `StudyStart`/`StudyDone`
-wire messages — whole-vector transfer, `steps_crc` atomicity, per-step `StepResult` streaming — and
-mentions no analog front end, no radio and no bench hardware. So far this is leg 064's and leg 065's
-pattern: a flagged citation, read against the body rather than the heading.
+---
 
-**What is different here is that the search for the right number came back empty**, and the worker
-said so instead of reaching for the nearest plausible decision. Nothing in this sub-project records
-a power-profiling front-end hardware pick: the only hits for "power" / "front end" / "BLE radio"
-are `PowerFrontEnd` as a `StreamSource` *type variant* and decision 25's throughput argument for why
-per-sample framing does not scale — a type name and a bandwidth argument, neither of which picks
-hardware. `open.md` now reads *"No decision records this pick; none is cited."* **A question whose
-premise cites no decision is honest; one citing the wrong decision is worse than one citing none** —
-that was in my dispatch note, and this is the first unit to actually land on the "none" arm.
-
-**The negative claim is the load-bearing one and I had the reviewer re-derive it independently**,
-because it is exactly the kind of assertion a later reader will rely on without rechecking. It
-confirmed the absence and separately confirmed all four of the other citations in the file (45, 48,
-57, 64) against their bodies.
-
-**Also: this is the third leg running to touch a `study-designer` size debt without paying it, and
-that is now deliberate rather than incidental.** `open.md` went 4,662 → 4,649 B (**−13**), so the
-file is fractionally better off and still 91% full. I told the worker explicitly not to attempt
-`tasks/study-designer/026`'s compaction pass — leg 065 established that nothing in that file is
-strikeable and filed an `inbox/` drop saying the debt has no payable form, which I filed into the
-queue this leg as `tasks/doc/034`. A leg rediscovering that would be the exact waste that drop
-predicts.
-
-**Merged:** `agent/study-designer/027-open-md-decision-24-citation` (code **none** — the branch was
-pushed with zero commits, correctly: this unit changed no code at all; doc `eb06bae`). Ownership
-check base `09109e782502`, 4 paths, all owned. Gate on the merge result: `check-docs.py` **11/11
-green**; `cargo test` / `clippy --all-targets -- -D warnings` clean in the code worktree (0 tests —
-the crate's suite is untouched by a docs-only unit); `check-client-names.py` clean.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none owed by this unit — a documentation citation, no board, no build. Carried
-forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still
-outstanding, now carrying `core/008`, `core/020`'s `self_reported_hardware_id` rename, `core/032`'s
-corrected operator message and `core/033`; `umbrella/037`'s corrected check 13 has never met the
-bench that found its defects and needs only the dev-bench board; `embarch-outpost`'s Zephyr
-`tests/unit` suite cannot be built from the fleet's environment. **No bench unit is runnable this
-leg either** — every `hw-gated` task in the queue is `toolchain` or `required`, and the bench queue
-is still parked by the owner's own commit.
-**Budget:** PROCEED at the leg's start, weekly **8.6%** of a 90% cap, 5-hour window inactive, wave
-**6** suggested. The 4-unit cap binds this leg, not the allowance — seventh consecutive leg for
-which that is true.
-**Least sure about:** **whether "cites nothing" survives contact with the next reader.** A citation
-is self-defending — someone who doubts it opens the decision. A stated absence is not: the only way
-to doubt it is to redo the search, and nothing in `open.md` records *when* the search was done or
-how wide it was. That evidence lives in this entry and in the task file's Result section, both of
-which are further from the claim than a decision number would have been.
-
-## 2026-09-10 15:28 — core/033 the four citations nobody would guess at are settled, and the citation-form question is closed
-
-**Decided:** two things, and the first closes a thread that has been open across three legs.
-
-**First, that `core/032`'s refusal was worth the extra unit, and the evidence is that all four
-resolved cleanly and one of them changed a *claim*, not a number.** Leg 064's worker left four
-citations carrying their original numbers rather than guessing, and leg 064's supervisor filed them
-here rather than hand-patching them in a fold. Both calls look right in hindsight:
-
-- `src/chip_resolve.rs:46` and `src/api.rs:1273` — `embarch-dev-bench` **decision 26** confirmed
-  (the ESP32-C5 board substitution), and the worker **deleted a "reversing that repo's decision 13"
-  clause** because 13's body is *"Core can flash dev-bench firmware"* and has nothing to do with
-  the JTAG/board choice. That deletion is the part a guess would have missed entirely: the number
-  was defensible and **the sentence around it was false**. A wrong reversal claim is worse than a
-  missing one, because a reader takes it as a record that something was overturned.
-- `src/dev_bench_link.rs:115` — "an outpost frame carries its own CRC" was citing `embarch-outpost`
-  **decision 5**, which is the overflow/gap-record policy. The worker's stronger finding is that
-  **no `embarch-outpost` decision covers frame CRC at all**, so it repointed to that repo's
-  `interfaces/wire.md`, which states it (`frame := COBS(body || crc32_ieee(body) …)`). I verified
-  that file myself before merging and the reviewer verified the negative half. **Citing an
-  interface doc because no decision exists is the honest move**, and it is one a number-substituting
-  script can never make.
-- `src/api.rs:970` — repointed from decision 7 (the Axum choice, zero overlap) to **decision 28**,
-  `NotEnrolled`/404. Confirmed against the body.
-- `src/study.rs:2471` — left **unchanged** at `embarch-study-designer` decision 30, confirmed
-  correct. One of four flagged citations was simply fine, which is the base rate this class of task
-  should expect.
-
-**Second, the citation-form drift leg 064 declined to fix in a fold is now fixed as a unit, which
-is where it belonged.** ~47 sites written as `` `decision N` `` are normalised to the plain-prose
-form the two prior sweeps used, by a scripted `perl -pi` whose diff the worker read by hand. **Zero
-`design.md` citations and zero competing citation forms now remain in `embarch-core`.** I checked
-comment-only-ness mechanically before merging — filtering comment-prefixed lines out of
-`git diff -U0` left **nothing at all** — which matters more here than in leg 064, where the same
-check found one shipped error string; this diff touches no user-visible text.
-
-**Also worth recording: `embarch-core`'s main checkout was two commits behind `origin/main` when I
-merged**, so the fast-forward brought `core/032`'s landed work down with `core/033`. Nothing was
-wrong and nothing was lost — the branch was based on `origin/main`, and `--ff-only` is what made
-this safe rather than lucky. But a leg that merges in the owner's code checkout should expect that
-checkout to be stale, and read the diffstat it gets rather than the one it expected.
-
+**`core/033`** (15:28) — settled the four citations `core/032` refused to guess at, and all four
+resolved cleanly. Two verified: `chip_resolve.rs`/`api.rs:1273` confirmed `embarch-dev-bench` decision
+26, and a false "reversing that repo's decision 13" clause deleted (13 is unrelated — the sentence
+around a defensible number was itself false); `dev_bench_link.rs:115` repointed from a nonexistent
+`embarch-outpost` CRC decision to that repo's `interfaces/wire.md`, which actually states it — citing
+an interface doc because no decision exists is the honest move. `api.rs:970` repointed to decision 28;
+`study.rs:2471` confirmed unchanged. Also normalized ~47 sites from a worker-invented `` `decision N` ``
+form back to the settled plain-prose form — zero `design.md` citations and zero competing citation
+forms now remain in `embarch-core`.
 **Merged:** `agent/core/033-flagged-miscitations` (code `1ba44af`, doc `b4a036e`). Ownership check
-bases: code `9b8e716e5d1a` (10 paths, whole tree owned), doc `58d17c026201` after the rebase (2
-paths, both owned). Gate on the merge result: `embarch-core` `cargo build` clean, `cargo test`
-**192 passed, 0 failed, 2 ignored** plus **1 passed** in the second target,
-`clippy --all-targets -- -D warnings` **zero** warnings; `check-docs.py` **11/11 green**;
-`check-client-names.py` against the code worktree clean.
-**Blocked:** nothing.
-**Reviewer:** no findings. It independently confirmed all four citations against decision bodies,
-confirmed no `embarch-outpost` decision covers frame CRC, found no reversals-index entry for
-dev-bench 13/26, outpost 5 or core 7/28, and confirmed the ~47 mechanical edits touched no shipped
-string literal and altered no decision number.
-**Hardware debts:** none owed by this unit — comment-only, no board, no flash. It deepens the
-standing one by one more commit: this diff is in `embarch-core`, so **`core/015`'s native Windows
-build** — the owner's, still outstanding — now carries `core/008`, `core/020`'s
-`self_reported_hardware_id` rename, `core/032`'s corrected operator message and this unit.
-Unchanged otherwise: `umbrella/037`'s corrected check 13 has never met the bench that found its
-defects and needs only the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be
-built from the fleet's environment. **No bench unit was runnable at any point this leg** — every
-`hw-gated` task in the queue is `toolchain` or `required`, and the bench queue is still parked by
-the owner's own commit.
-**Budget:** PROCEED at both ends of the leg; weekly **7.8% → 8.6%** of a 90% cap, 5-hour window
-inactive, wave **6** suggested at start and at the last check. *(Corrected after the fold: I wrote
-"7.8% → 7.8%" from the reading I took at step 0 and folded before taking the closing one. The
-closing reading is 8.6%, so the leg cost about 0.8 points of the weekly allowance for four units —
-the arithmetic a later leg would want, and I nearly recorded a null. Take the closing reading
-before writing the last entry, not after.)* **The 4-unit cap bound this leg, not the allowance — sixth consecutive
-leg for which that is true**, and at four legs an hour that is now the fleet's real throughput
-limit rather than a safety margin.
-**Least sure about:** **whether the citation-sweep class is finished or has just moved.** Four
-repos have now been swept and each one found real miscitations hiding behind mechanical ones, which
-argues the remaining repos hold them too. What I cannot tell from here is whether the *four*
-sweeps' worth of filed follow-ups (`core/033` was one) are converging or accumulating — this unit
-closed its own follow-up cleanly, but it closed it because a supervisor happened to pick it two
-legs later, not because anything schedules that.
+bases: code `9b8e716e5d1a` (10 paths, whole tree owned), doc `58d17c026201` after the rebase (2 paths,
+both owned). Gate: `embarch-core` `cargo build` clean, `cargo test` 192 passed/0 failed/2 ignored plus
+1 passed in the second target, `clippy --all-targets -- -D warnings` zero warnings; `check-docs.py`
+11/11 green; `check-client-names.py` clean.
+**Blocked:** nothing. 
+**Reviewer:** no findings — independently confirmed all four citations, found no
+reversals-index entry for any of dev-bench 13/26, outpost 5, or core 7/28.
+**Hardware debts:** none — deepens the standing `core/015` Windows-build debt by one more commit.
 
-## 2026-09-10 15:26 — topology/011 the CLI stops racing Core's lock, and I fixed the refusal's own error message before pushing
+---
 
-**Decided:** three things, and one of them is a behaviour change to a shared crate that every other
-sub-project depends on.
-
-**First, to land a refusal rather than a routing layer, and I pre-committed to that before
-dispatch.** The defect was real and old: `embarch-topology`'s CLI performed four mutations —
-`enroll`, `validate`, and two `set-dev-bench-link` writers — that this crate's **own decision 15**
-places inside Core, because Core does the identical thing under a hardware lock that is
-`Arc<Mutex<()>>` and therefore **in-process only** and blind to a second process. On the suite's one
-validated topology it is worse than a race: `hardware/paths.rs` resolves `#[cfg(unix)]
-/var/lib/embarch` while the Windows-service Core reads `%ProgramData%\embarch`, so
-`embarch-topology enroll` run from WSL wrote **a different store than Core reads**, silently.
-
-The task's own candidate direction was to route mutations through Core's three endpoints. **I
-forbade that in the dispatch note** and said so in writing: `embarch-topology` is path-depended on
-by `embarch-api`, `embarch-core`, `embarch-ui` and `embarch-umbrella`, so adding an HTTP client to
-it is a suite-wide cost paid by four consumers for a CLI convenience. What landed instead is
-`refuse_if_core_reachable`, built on `resolve_software_topology` — **already in the crate** — which
-refuses with Core's base URL and the route to use, and lets the mutation run in-process only when
-no Core answers at all. That last arm is the local-bootstrap machine, and it is why this is a
-property rather than a rewrite. New **decision 28** in `decisions/enrollment.md` records it and,
-more usefully, records *why decision 15 read as done when it was half-done*: 15 says "this crate's
-UI reverted to fully read-only" and never mentions the CLI, so the rule looked applied.
-
-**Second, I fixed the refusal's own message before pushing, in the code repo, as a separate
-commit.** It printed `curl -X /probes/enroll <base_url>` — a route passed where `curl` expects an
-HTTP **method**, so an operator copying the line gets an error from curl rather than from EmbArch.
-I did not substitute `POST`: nothing I could verify states the method for those three routes, and
-**inventing one would be exactly the inferred-fact failure this suite has paid for** — so the
-message now prints `<base_url><route>` and leaves the method to the operator. Trivial and in scope,
-so I fixed it rather than filing it (`3508dc8`), but it is worth naming that **this is the third leg
-running in which a citation-or-comment unit rewrote text a real user sees** — `umbrella/043` changed
-a generated rc-file header, `core/032` changed a study-refusal string, and this one writes a whole
-new operator message. That class is no longer "comment-only" in practice.
-
-**Third, the reviewer's negative result is the one I actually wanted, and it is worth reading as
-evidence rather than as a green tick.** A CLI that refuses whenever any Core answers is a
-behaviour change for every existing caller, so I asked it specifically whether anything documented
-anywhere expects those three subcommands to work with a Core running. It swept `suite/user-guide.md`,
-`embarch-umbrella/decisions/topology.md` and `mirrors.md`, and the topology task files, and found
-**nothing** — `embarch-umbrella`'s `status`/`setup`/`doctor` call the shared crate's *read* paths,
-not these mutating subcommands. It also corrected a mislabel in my own spawn prompt: the code
-comment's `embarch-core/decisions/surfaces.md:30` is a **line** reference into decision 27's
-paragraph, not a citation of a "decision 30", and is correct as written.
-
-**Merged:** `agent/topology/011-cli-mutations-lock` (code `3a9937c`, plus `3508dc8` for my
+**`topology/011`** (15:26) — `embarch-topology`'s CLI performed four mutations
+(`enroll`/`validate`/two `set-dev-bench-link` writers) that decision 15 places inside Core, in-process
+only and blind to a second process — on the one validated topology, `hardware/paths.rs`'s
+`#[cfg(unix)]` resolution meant `embarch-topology enroll` from WSL wrote **a different store than Core
+reads**, silently. Landed `refuse_if_core_reachable` (a refusal naming Core's base URL and route,
+falling back to in-process only when no Core answers) rather than an HTTP-client routing layer,
+explicitly forbidden in the dispatch note as a suite-wide cost for a CLI convenience. New decision 28.
+Also fixed the refusal message's own bug (`curl -X /probes/enroll <base_url>` passed a route where curl
+wants a method) as a separate commit, without inventing the unverified HTTP method.
+**Merged:** `agent/topology/011-cli-mutations-lock` (code `3a9937c`, plus `3508dc8` for the
 error-message fix; doc `6cba4ff`). Ownership check bases: code `2e94db47cda0` (1 path, whole tree
-owned), doc `3e0b168ff9a0` (6 paths, all owned). Gate on the merge result: `embarch-topology`
-`cargo build` clean, `cargo test` **15 passed, 0 failed** across the suite's targets,
-`clippy --all-targets -- -D warnings` **zero** warnings; `check-docs.py` **11/11 green**;
-`check-client-names.py` against the code worktree clean.
-**Blocked:** nothing. One item was left undone on purpose and named in decision 28:
-`set-dev-bench-link --clear-serial` / `--clear-interface` refuse the same way, but Core's
-`/dev-bench/link` has **no documented clear semantics** to point an operator at. That is
-`embarch-core`'s gap, the worker correctly did not reach into another repo to fix it, and decision
-28 records it where the next `embarch-core` unit will find it.
+owned), doc `3e0b168ff9a0` (6 paths, all owned). Gate: `embarch-topology` `cargo build` clean, `cargo
+test` 15 passed/0 failed across the suite's targets, `clippy --all-targets -- -D warnings` zero
+warnings; `check-docs.py` 11/11 green; `check-client-names.py` clean.
+**Blocked:** nothing, one item left undone on purpose (named in decision 28): `--clear-serial`/
+`--clear-interface` refuse the same way but Core's `/dev-bench/link` has no documented clear semantics
+to point an operator at — `embarch-core`'s gap, not this worker's to fix.
 **Reviewer:** no findings.
-**Hardware debts:** **one new, and it is small but real.** The refusal path has never been exercised
-on a `wsl-host` machine with the live Windows-service Core answering — which is the exact
-configuration the whole change is about, and the only one where the wrong-store bug bites. It needs
-no board, only the owner's machine with Core running: run `embarch-topology validate <role>` from
-WSL and confirm it refuses and names the right base URL. Until then the fix is argued, not observed.
-Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and
-still outstanding; `umbrella/037`'s corrected check 13 has never met the bench that found its
-defects and needs only the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be
-built from the fleet's environment. The bench queue is still parked by the owner's own commit.
-**Budget:** PROCEED, unchanged; weekly **7.8%** of a 90% cap, 5-hour window inactive, wave **6**
-suggested. The 4-unit cap binds.
-**Least sure about:** **whether "refuse whenever any Core answers" is too wide a net.**
-`resolve_software_topology` finding a winner means *some* Core answered on the default port — not
-necessarily the Core that owns this machine's store. On a developer box running a scratch Core on
-the default port, this now refuses a mutation that would have been correct and safe, and the escape
-hatch is to stop the Core. The reviewer found nothing documented that breaks, which is real
-evidence, but "nothing documents it" and "nobody does it" are not the same claim, and the owner
-runs this CLI by hand on the bench.
+**Hardware debts:** **one new, and it is small but real.** The refusal path has never been exercised on
+a `wsl-host` machine with the live Windows-service Core answering — the exact configuration the whole
+change is about, and the only one where the wrong-store bug bites. Needs no board, only the owner's
+machine with Core running: `embarch-topology validate <role>` from WSL should refuse and name the
+right base URL. Until then the fix is argued, not observed.
 
-## 2026-09-10 15:23 — study-designer/026 a compaction pass that struck nothing, and why I landed it as a result rather than a failure
+---
 
-**Decided:** three things, and the first is the one that matters beyond this unit.
+**`study-designer/026`** (15:23) — a compaction pass that struck **zero bytes** and is landed as a
+completed unit rather than a failure: worker checked all six of `embarch-study-designer/open.md`'s
+bullets against current `spec.md`/`decisions/`/`interfaces/` and found none strikeable (reviewer
+independently verified all six). `blocked` with the clock kept (due 2026-10-04) rather than `done`,
+because a `done` task is deleted at the fold and would leave a 91.1%-full file with nothing filed
+against it. Filed `inbox/doc-a-full-open-md-of-live-questions-has-no-payable-debt.md` — five of eight
+sub-projects now carry an `open.md` in the same reserve against the same 5 KB cap, every compaction
+task blocked, and this is the first hard evidence at least one has no payable form at all.
+**Merged:** `agent/study-designer/026-compact-open` (code none — the `embarch-study-designer` branch is
+empty by design, zero changed paths; doc `02775af`). Ownership check base `b1bce56f2c72` after the
+rebase, 2 paths, both owned; code repo base `7063dc84dcec`, whole tree owned, 0 paths. Gate 11/11 green
+on the merge result plus `check-client-names.py` clean; no `cargo` run against a zero-diff tree.
+**Blocked:** `tasks/study-designer/026-compact-study-designer.md` — deliberately, by the worker, with a
+named unpark condition and its 2026-10-04 clock intact.
+**Reviewer:** no findings — also found a pre-existing citation defect this unit did not introduce (the
+same decision-24 miscitation `study-designer/027` fixed, above).
+**Hardware debts:** none.
 
-**First, that a compaction unit which strikes zero bytes can be a completed unit, and that this one
-is.** The task was to compact `embarch-study-designer/open.md` (4,662 / 5,120 B, 91.1%, inside its
-reserve floor). Leg 064's supervisor had asserted `In flux: no` on it over its own worker's
-objection, and that assertion was right in its reasoning — *the move for an `open.md` is striking
-questions that have since been answered, which restates nothing, so flux cannot forbid it.* The
-worker then did exactly that pass, question by question, against current `spec.md`, `decisions/`
-and `interfaces/`, and **found nothing strikeable**, naming a source for each of the six:
-power-profiling still deferred with no trigger fired; the bench UTC clock-resync still unmeasured;
-`repeat`/`bitpack`/`crc32`/`fixed` still without a render consumer (`interfaces/decoders.md`'s
-`StructLayout` covers only the flat case); decision 45 reading literally *"Designed, never built"*;
-`Study.protocols` still with no builder row type; and `decisions/ci.md` decision 64 saying *"That
-build root does not exist yet."* **The reviewer independently verified all six against source and
-confirmed every one.** So the honest output is a verified negative, and I would rather land that
-than send a second worker at it in three weeks to rediscover it.
+---
 
-**Second, that `State: blocked` with the clock kept is the right park here, and I accept the
-worker's reasoning over a literal read of the rule.** `blocked` is supposed to mean "nothing here
-can be done", and `In flux: no` is supposed to imply the task is *not* blocked — so this looks like
-a violation and it is not. The worker's argument, which I checked: a `done` task is deleted by the
-fold and cannot carry a debt forward, so closing it `done` would leave a 91.1% file in reserve with
-**nothing filed against it** — the exact gap the size gate exists to catch. It kept
-`Size debt due: 2026-10-04` unchanged and wrote a named unpark condition, so the park is not
-absorbing. `check-task-state.py` passes it, and the reviewer, asked directly whether the two
-sections are coherent, said they answer different axes: 064's `In flux: no` rejects *"the file is
-still being edited"* as a reason to leave it alone, and this leg's `blocked` is a conclusion
-reached by actually doing the pass. I agree, and I am recording the agreement because the next leg
-will see a `blocked` task whose own file says `In flux: no` and should not "fix" it.
+**`umbrella/044`** (15:20) — a drop asked to replace `decision 14` with `decision 24` in
+`src/manifest.rs`; leg 063's supervisor had already refused, and this unit took the third option: cite
+both, with the split named ("decision 14, and decision 24 for why a mismatch is a warning rather than a
+refusal"). Three independent readers (leg 063, this worker, the reviewer) reached the same conclusion
+from the same two bodies without taking the task title at face value. Dispatched specifically to
+complete an un-audited Done-when item (does any other `umbrella/043`-sweep comment pair 14 with 24's
+claim?) — came back audited in full and negative.
+**Merged:** `agent/umbrella/044-manifest-decision-14` (code `d06bb64`, doc `5c87654`). Ownership check
+bases: code `ea9b72a85b7f` (1 path, whole tree owned), doc `3e0b168ff9a0` (2 paths, both owned). Gate:
+`embarch-umbrella` `cargo build` clean, `cargo test` 218 passed/0 failed, `clippy --all-targets --
+-D warnings` zero warnings; `check-docs.py` 11/11 green; `check-client-names.py` clean.
+**Blocked:** nothing. 
+**Reviewer:** no findings — read both decision bodies independently and confirmed
+both citations accurate. **Hardware debts:** none.
 
-**Third, that the real finding here is about `DOC-BUDGET.md`, and it is not mine to act on — so I
-filed it.** Five of eight sub-projects now have an `open.md` inside the same reserve against the
-same 5 KB role cap (`api` 4,763, `dev-bench` 4,782, `umbrella` 4,870, `core` 4,813, and this one),
-and **every one of those compaction tasks is blocked.** A cap that nearly every instance of a role
-exceeds is more likely to be a wrong cap than five wrong files, and this unit is the first hard
-evidence that at least one of those debts **has no payable form at all** — it cannot be paid at any
-date without deleting a live question or inventing an answer to it. `DOC-BUDGET.md` and
-`check-doc-size.py` are both owner-reserved, so I wrote
-`inbox/doc-a-full-open-md-of-live-questions-has-no-payable-debt.md` with two candidate answers
-(move the role cap, or give the ledger a third state for "verified unpayable") and touched neither
-file. It also names the adjacent pattern: **four decisions in a week placed by a byte count**
-(`api/048`, `api/055`, and this leg's `umbrella/044` shaped the same way).
+---
 
-**The reviewer also found a live citation defect this unit did not introduce, and I filed it as
-`tasks/study-designer/027`.** `open.md`'s power-profiling deferral cites decision 24 for a
-front-end pick, and decision 24 appears to be about the `StudyStart` wire message. `026` changed
-zero lines of `open.md`, so it is pre-existing — but **`026`'s own Result repeats the reading**,
-which is two agents in a row taking the number at face value. The task tells whoever runs it to
-read the body and to treat the reviewer as possibly wrong too, because `core/032` and `umbrella/044`
-both ended with the original number vindicated.
-
-**Merged:** `agent/study-designer/026-compact-open` (code **none** — the `embarch-study-designer`
-branch is empty by design, zero changed paths, the tree is byte-identical to `main`; doc
-`02775af`). Ownership check base `b1bce56f2c72` after the rebase, 2 paths, both owned; code repo
-base `7063dc84dcec`, whole tree owned, 0 paths. Gate **11/11 green** on the merge result plus
-`check-client-names.py` clean; no `cargo` run against a zero-diff tree.
-**Blocked:** `tasks/study-designer/026-compact-study-designer.md` — deliberately, by the worker,
-with a named unpark condition and its 2026-10-04 clock intact. This is a park, not a failure; the
-first two Decided paragraphs are why.
-**Reviewer:** no findings.
-**Hardware debts:** none owed by this unit — a documentation pass, no board, no build, no flash.
-Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and
-still outstanding, carrying `core/008`, `core/020`'s `self_reported_hardware_id` rename and
-`core/032`'s corrected operator message; `umbrella/037`'s corrected check 13 has never met the
-bench that found its defects and needs only the dev-bench board; `embarch-outpost`'s Zephyr
-`tests/unit` suite cannot be built from the fleet's environment. The bench queue is still parked by
-the owner's own commit.
-**Budget:** PROCEED, unchanged; weekly **7.8%** of a 90% cap, 5-hour window inactive, wave **6**
-suggested. The 4-unit cap binds.
-**Least sure about:** **whether I should have overruled the worker and closed this `done`.** The
-case for closing: a `blocked` compaction task is what `check-doc-size.py` itself called *"the
-parked state that absorbed 13 of 28 debts"*, and I have just added a fourteenth. The case for the
-park, which I took: the debt is real, the file is genuinely in reserve, and a `done` task that
-deletes itself would leave that file unfiled — which is worse than a park carrying a date. What
-makes me uneasy is that both readings are defensible from the same rules, which is usually a sign
-the rules have a gap rather than that one of us read them wrong; that gap is what the `inbox/` drop
-is about.
-
-## 2026-09-10 15:20 — umbrella/044 a reviewer's finding survived contact with two decision bodies, and the previous leg was right
-
-**Decided:** one thing, and it was decided twice before this unit ran — I am recording that the
-disagreement resolved, not that I resolved it.
-
-**The drop asked for `decision 14` to be replaced by `decision 24` in `src/manifest.rs`, leg 063's
-supervisor read both bodies and refused, and this unit took the third option: cite both, with the
-split named.** The comment now reads *"decision 14, and decision 24 for why a mismatch is a warning
-rather than a refusal"* — 14 for `doctor` reading the suite manifest at all, 24 for the
-warn-not-refuse posture. Two lines, comment-only. What makes this worth an entry is that **three
-independent readers reached the same conclusion from the same two bodies**: leg 063's supervisor,
-this unit's worker, and the reviewer, none of whom took the task title at face value. The title said
-"miscite"; the body of decision 14 says *"A version mismatch against the suite manifest is a warning
-(decision 24)"*, which is a cross-reference and not a handover, and decision 24's body is entirely
-about Core/API skew — a different pair of binaries. Pointing `manifest.rs` at 24 alone would have
-been the *real but wrong decision* failure `api/031` is the recorded case of.
-
-**Second, that I dispatched this at all rather than closing it from the drop.** Leg 063 had already
-written the argument, so a cheaper leg would have closed it "no change needed" without spending a
-worker. I sent one because the drop's Done-when item 2 — *does any other comment from the
-`umbrella/043` sweep pair a 14 citation with 24's claim?* — was explicitly un-audited, and that is
-the half a supervisor cannot answer from a drop. **It came back audited in full and negative**:
-`decision 14` occurs exactly once in `embarch-umbrella/src/`, the line just fixed; `decision 24`
-occurs twice more (`src/doctor.rs:2348`, `:4634`), both citing 24 alone for the warn-never-fail
-posture, correctly, with no 14 alongside. That audit is the unit's durable output — the comment fix
-is two lines.
-
-**Third, the doc reserve held with nothing spent.** `embarch-umbrella`'s `spec.md` has 136 B free
-and `open.md` 250 B, both parked behind compaction tasks blocked on `In flux: yes`. I told the
-worker in its dispatch note to write no prose into either and to keep the doc side to a
-`changelog.d/` fragment; it did, so this unit neither paid nor deepened that debt. **That is the
-fourth decision in a week placed or shaped by a byte count** — leg 064 counted three — and it is
-worth saying that here the cap cost nothing, because the honest change genuinely was two lines.
-
-**Merged:** `agent/umbrella/044-manifest-decision-14` (code `d06bb64`, doc `5c87654`). Ownership
-check bases: code `ea9b72a85b7f` (1 path, whole tree owned), doc `3e0b168ff9a0` (2 paths, both
-owned). Gate on the merge result: `embarch-umbrella` `cargo build` clean, `cargo test` **218
-passed, 0 failed**, `clippy --all-targets -- -D warnings` **zero** warnings; `check-docs.py`
-**11/11 green**; `check-client-names.py` against the code worktree clean.
-**Blocked:** nothing.
-**Reviewer:** no findings. It read both decision bodies independently and confirmed the citation of
-both is accurate to each, with no reversals-index entry for either number.
-**Hardware debts:** none owed by this unit — a comment-only change in a host-side crate, no board,
-no flash, no build beyond `cargo`. It adds nothing to the standing set, which is unchanged:
-`core/015`'s native Windows build of `embarch-core` is the owner's and still outstanding, and now
-carries `core/008`, `core/020`'s `self_reported_hardware_id` rename and `core/032`'s corrected
-operator message; `umbrella/037`'s corrected check 13 has never met the bench that found its
-defects and needs only the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be
-built from the fleet's environment. The bench queue is still parked by the owner's own commit.
-**Budget:** PROCEED at the start of the leg and unchanged here; weekly **7.8%** of a 90% cap,
-5-hour window inactive, wave **6** suggested. The 4-unit cap binds, not the allowance — fifth
-consecutive leg.
-**Least sure about:** **whether this unit was worth a worker rather than a supervisor's one-line
-close**, and I would not defend it on the comment fix alone. The two-line change was already
-designed by leg 063 and needed no agent; what justified the spawn is the negative audit, and a
-negative audit is exactly the result that looks like nothing was accomplished. If a later leg finds
-itself spending workers on drops whose argument a predecessor already wrote, the thing to check is
-whether an un-audited Done-when item is really there or whether it is being read into the task to
-justify the dispatch.
-
-## 2026-09-10 15:05 — core/032 the last repo's citation sweep, and a worker that refused to guess four times
-
-**Decided:** three things, and the first is the one I would defend hardest.
-
-**First, to land a sweep that deliberately left four citations unresolved, and to file them rather
-than fix them.** 170 occurrences across 14 files (`src/*.rs`, `Cargo.toml`,
-`.github/workflows/release.yml`) — the filed estimate was 68, so **that is four sweeps in a row
-where the filed count was wrong**, and the next one should not spend a paragraph re-arguing it. Zero
-`design.md` occurrences remain in the repo. Of five citations whose *number* looked wrong, the
-worker resolved **one** with confidence and left the other four carrying their original numbers,
-flagged in the task file with its candidate for each. That is exactly the discipline this class of
-work needs — `api/052` and `umbrella/043` each had real miscitations behind the mechanical ones, and
-the failure mode is a plausible guess nothing can catch — so I landed it and filed
-`tasks/core/033-four-flagged-miscitations-core-032-refused-to-guess.md` with all four, each carrying
-the worker's candidate and the instruction to read bodies rather than headings.
-
-**Second, I verified three of the five myself before merging, because one of them ships.**
-- `src/dev_bench_link.rs`: `embarch-dev-bench/design.md §4` → core's own `decision 40`. **Correct** —
-  core decision 40 (`decisions/studies.md`) *is* "an undecodable frame costs the frame, not the
-  link", which is what the comment says. This is the one repoint the worker made on its own
-  judgement and it is right.
-- `src/study.rs`'s **shipped error string** for an undeclared signal tap: now
-  `embarch-topology decision 18`. **Correct** — topology's `decisions/links.md` holds 17/18/24 as
-  declared facts about wires including a DUT signal's route. Worth naming that this is the second
-  leg running where a citation sweep rewrote text that reaches a real user: `umbrella/043` changed a
-  generated rc-file header, and this one changes what an operator sees when `POST /study` refuses.
-- `Cargo.toml`'s `known_boards.toml` comment → bare `decision 22`: core decision 22 is the
-  probe/board identity gate. Fine.
-- I also independently confirmed the worker's read on flagged item 2: `embarch-outpost` decision 5
-  is *"Overflow policy: drop, count, and emit an explicit gap record"*, not CRC framing, so that
-  citation is wrong — but **it was wrong before this unit** and the sweep carried the number
-  unchanged. It goes to `core/033` as an inherited defect, not a regression.
-
-**Third, the sweep invented a third citation form and I did not fix it in the fold.** It wrote
-roughly fifty citations as `` `decision 40` ``, with the number inside the code markup, where both
-prior sweeps wrote the number in plain prose (`embarch-umbrella/src/deploy.rs`'s `(decision 32)`,
-`embarch-api/src/config.rs`'s `` `embarch-study-designer` decision 35 ``). The task file told it
-**"the convention is settled — do not invent a second one"**, and this is a third. I left it and put
-it in `core/033` rather than normalising ~50 sites by hand in the fold: it renders as inline code in
-rustdoc so it is visible rather than merely stylistic, and the safe fix is scriptable *with* a diff
-read — which is a unit, not a fold. The next leg should expect that item to be the cheap half of
-`core/033`.
-
+**`core/032`** (15:05) — the last repo's citation sweep: 170 occurrences across 14 files (filed
+estimate was 68 — the fourth sweep in a row where the filed count was wrong). Of five citations with a
+suspect number, resolved one with confidence and left four flagged with candidates rather than guessed,
+filed as `core/033` (above, landed same leg). Verified three of the five personally, including one that
+ships: `study.rs`'s shipped error string for an undeclared signal tap repointed to `embarch-topology`
+decision 18 — the second leg running where a citation sweep rewrote text a real operator sees.
+Deliberately did not fix in the fold a citation-form drift the sweep itself introduced (~50 sites in a
+`` `decision N` `` form, a third form beside the two settled ones) — filed into `core/033` rather than
+hand-patched.
 **Merged:** `agent/core/032-design-md-citations` (code `9b8e716`, doc `a555eac`). Ownership check
-bases: doc `29ee8e6258a7` after the rebase, 2 paths; code repo, whole tree owned. Gate on the merge
-result: `embarch-core` `cargo build` clean, `cargo test` **192 passed, 0 failed, 2 ignored**,
-`clippy --all-targets -- -D warnings` **zero** warnings; `check-docs.py` **11/11 green**;
-`check-client-names.py` against the code worktree clean. I verified comment-only-ness mechanically —
-`git diff -U0 -- '*.rs'` filtered of comment-prefixed lines returned exactly **one** hit, the shipped
-error string above, which the worker disclosed.
-**Blocked:** nothing.
-**Reviewer:** no findings. It spot-checked eleven citations I had not — core decisions 3, 6, 8, 9,
-15, 16, 28, 29, 30(c), 34 and `embarch-api` decision 15 in `src/api.rs`'s multipart-upload comment —
-all matching their comments' claims, and found no reversals-index hit for any touched number.
-**Hardware debts:** none owed by this unit — comment-only plus one error-message string, no board,
-no flash. It adds to an existing one: this diff is in `embarch-core`, so the corrected operator
-message does not reach the owner's machine until **`core/015`'s native Windows build** happens,
-which is the owner's and still outstanding, and which now carries `core/008`'s two commits,
-`core/020`'s `self_reported_hardware_id` rename and this unit as well. Carried forward unchanged:
-`umbrella/037`'s corrected check 13 has never met the bench that found its defects and needs only
-the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built here. **No bench
-unit was runnable at any point this leg** — every `hw-gated` task in the queue is `toolchain` or
-`required`, and the bench queue is still parked by the owner's own commit.
-**Budget:** PROCEED throughout; weekly **6.7% → 7.5%** of a 90% cap, 5-hour window inactive, wave
-**6** suggested at start and at the last check. **The 4-unit cap bound this leg, not the allowance —
-fourth consecutive leg for which that is true.**
-**Least sure about:** **whether landing a sweep with four known-suspect citations is better than
-blocking it**, and I want the disagreement on record rather than assumed settled. The argument for
-landing: 166 of 170 are unambiguous repairs, the four keep the numbers they already had, and the
-task file plus `core/033` name every one. The argument against: a bare `decision 7` reads as
-verified where `design.md §7` read as stale, so for those four the sweep made a wrong citation
-*more* credible, and `check-decision-refs.py` cannot catch it — it resolves a number and falls back
-to "defined somewhere in this sub-project". If `core/033` does not run within a few legs, that
-trade goes negative.
+bases: doc `29ee8e6258a7` after the rebase, 2 paths; code repo, whole tree owned. Gate: `embarch-core`
+`cargo build` clean, `cargo test` 192 passed/0 failed/2 ignored, `clippy --all-targets -- -D warnings`
+zero warnings; `check-docs.py` 11/11 green; `check-client-names.py` clean.
+**Blocked:** nothing. 
+**Reviewer:** no findings — spot-checked eleven citations independently, all
+correct, no reversals-index hit for any touched number.
+**Hardware debts:** none — deepens the standing `core/015` Windows-build debt.
 
-## 2026-09-10 14:52 — api/055 an owed decision finally authored, in a file I picked because the right one is over its cap
+---
 
-**Decided:** two things, one of them before dispatch and consequential.
-
-**First, that `embarch-api` decision 64 goes in `decisions/shape.md` rather than `decisions/zephyr.md`,
-and I wrote the argument into the task file before the worker read it.** `zephyr.md` is
-**14,238 B against a 12,288 B cap** — over, not merely in reserve — and its compaction task
-`api/057` is `blocked` on `In flux: yes`. `zephyr.md` holds decision 13 (`soc_chip_overrides`)
-because *that key* was Zephyr-shaped; a policy about retired keys **as a class** is not. So the new
-decision cites 13 and 53 across files and moves neither. This is the same pre-pick leg 063 made for
-`api/048`, for the same reason, and it is worth naming what it is: **`DOC-BUDGET.md` warns that a
-cap which misfiles is worse than a cap which refuses, and this is the third decision in a week
-placed by a byte count.** The queue now carries **six** `compact-api` tasks, every one of them
-`blocked` on `In flux: yes`. That is the wall, not this unit.
-
-**Second, that the decision records the shipped behaviour and changes no code.** Decision 64:
-`[[projects.targets]]` (53) and `soc_chip_overrides` (13) are refused **by name** at config load;
-`artifact_path_for_core` (15) is not, and loads silently unread because `ProjectConfig` carries no
-`deny_unknown_fields`. The asymmetry is deliberate — an installed base umbrella still writes — and
-the decision states **the default for the next retired key (refuse by name)** and **what ends the
-tolerance**, which is the half that makes it worth a number rather than a comment. `open.md`'s
-prose became a citation and got *shorter* (4,859 → 4,763 B).
-
-**The reviewer found the premise the whole exception rests on was never checked, and I checked it
-in the code.** It reported that "`embarch-umbrella` still scaffolds `artifact_path_for_core` into
-every config it writes" appears nowhere in `embarch-umbrella`'s docs, and that umbrella decision 17
-says the opposite for `zephyr-west` repos. **It looked in the docs; the answer is in the source, and
-both halves turn out to be true.** `embarch-umbrella/src/init.rs` emits
-`artifact_path_for_core = …` for a **static** project on a WSL2 split where a Windows-visible UNC
-form exists (its decision 16), `render_zephyr_west_config` deliberately writes none of those keys
-(its decision 17), and `doctor.rs`'s check 9 reads the field. So the installed base is real and
-**narrower than "every config"** — I rewrote that clause in decision 64 to say exactly which
-configs, marked `[verified 2026-09-10]`, and deleted the drop. **Then the fix itself pushed
-`shape.md` into reserve (11,229 B against an 11,059 B floor) and turned the size gate red**, which
-is the cap doing its job to a supervisor for once; I tightened my own clause to 10,969 B rather than
-file a seventh `compact-api` task.
-
-**Merged:** `agent/api/055-retired-config-keys` (code **none** — the `embarch-api` branch is empty
-by design; the task forbade a code change and the worker verified `src/config.rs` instead; doc
-`2f42558`). Ownership check base `5621bb545ac5` after the rebase, 5 paths, all owned. Gate
-**11/11 green** on the merge result plus `check-client-names.py --repo embarch-api` clean; no
-`cargo` run, the code tree is byte-identical to `main`.
+**`api/055`** (14:52) — authored `embarch-api` decision 64 (retired config keys: `[[projects.targets]]`
+and `soc_chip_overrides` refused by name at load; `artifact_path_for_core` not, and loads silently
+unread) in `decisions/shape.md` rather than the topically obvious `decisions/zephyr.md`, which is over
+its cap (14,238/12,288 B). **Reviewer found the exception's premise — "`embarch-umbrella` still
+scaffolds `artifact_path_for_core` into every config it writes" — was never checked**; verified in the
+source and narrower than claimed (only a static-project/WSL2-UNC path, per umbrella decisions 16/17),
+rewritten and marked `[verified 2026-09-10]`.
+**Merged:** `agent/api/055-retired-config-keys` (code none — the `embarch-api` branch is empty by
+design; doc `2f42558`). Ownership check base `5621bb545ac5` after the rebase, 5 paths, all owned. Gate
+11/11 green on the merge result plus `check-client-names.py --repo embarch-api` clean; no `cargo` run,
+code tree byte-identical to `main`.
 **Blocked:** nothing.
 **Reviewer:** 1 finding — accepted, verified in `embarch-umbrella/src` and fixed in this fold
 (`inbox/api-055-review-finding.md` deleted, having been acted on).
-**Hardware debts:** none owed by this unit — a documentation decision, no board, no build. It does
-narrow an existing one usefully: the tolerance decision 64 records is about configs
-`embarch-umbrella` writes on this machine, and `umbrella/037`'s corrected check 13 still needs the
-dev-bench board. Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` (the
-owner's, outstanding, carrying `core/008`'s commits and `core/020`'s `self_reported_hardware_id`
-rename), and `embarch-outpost`'s Zephyr `tests/unit` suite which cannot be built here.
-**Budget:** PROCEED, weekly 6.7% of a 90% cap, wave 6 suggested; unchanged from the leg's start.
-**Least sure about:** **that decision 64's "ends when" is testable by anyone but the owner.** It
-ends when umbrella stops scaffolding the key *and no config in the field still carries it* — and
-nothing in this suite can enumerate configs in the field. A future leg reading that clause could
-reasonably conclude the condition is unfalsifiable and refuse the key anyway; the safer reading is
-that it ends when the owner says his own machines are clean.
+**Hardware debts:** none — narrows an existing one: the tolerance decision 64 records is about configs
+`embarch-umbrella` writes on this machine; `umbrella/037`'s corrected check 13 still needs the
+dev-bench board.
 
-## 2026-09-10 14:51 — study-designer/006 a compaction that was a duplicate-removal, and a `blocked` I put back to `open`
+---
 
-**Decided:** two things about this task's own state, and the second is a rule I am asserting rather
-than one I found written down.
-
-**First, that this pass is a repoint rather than a split, and that this is legitimate.** My dispatch
-note told the worker to prefer a verbatim split. It did not split, and it was right not to:
-`spec.md` §7's closing two paragraphs restated `Study`'s host size (1,080 B), the `no_std` sizes
-(`Study` 83,512 B, `DevBenchMessage` 75,288 B) **and the same measurement date** that
-`decisions/limits.md` decision 63's table already carries — so a split would have relocated a
-duplicate rather than removed one. It cut the restatement and pointed at decision 63 by number.
-`spec.md` **9,600 → 8,941 B**, out of reserve. The worker's own first attempt was the wrong version
-of this — appending the paragraph verbatim to `interfaces/limits.md`, which pushed *that* file from
-10,334 to 11,205 B, past its 11,059 B reserve floor — and it reverted itself and said so, which is
-the second time this leg a worker caught itself relocating a debt.
-
-**Second, and this is the part worth arguing with: the worker left the task `blocked` on the
-grounds that `open.md`, its one remaining file, "is still in flux", and I put it back to `open`.**
-The every-file-in-flux test is the right test, and `blocked` would have been formally satisfied —
-but not for an `open.md` **specifically**. An open-questions file is edited every week in every
-sub-project, so "in flux" applied to one is a property of the filename rather than a fact about a
-subsystem settling down, and accepting it parks that debt permanently. It is also the wrong test
-for the work: the compaction move for an `open.md` is **striking questions that have since been
-answered**, which restates nothing and which no flux forbids. `blocked` has to keep meaning
-"nothing here can be done". The `**Size debt due:** 2026-10-04` clock is unchanged.
-
-**Two fold-time repairs I made by hand, both of them the failure this file already records.** The
-worker did **not** delete `spec.md` from the `Compacts:` line after paying it, so the size gate
-would have gone on reporting a paid file as filed — leg 057's defect from the other direction, and
-I deleted the path rather than annotating it. And its `State:` token needed the correction above.
-Both were edits to a task file at fold time, which is exactly what half-landed leg 063's fold, so I
-staged them through `fold-commit.py`'s own `--path` list and used no `git rm`.
-
-**`DOC-COMPACTION-PASS.md`'s human question, answered by the worker that read the file whole:** can
-`embarch-study-designer/spec.md` alone answer what someone needs to work on this component today?
-**Yes for its own job** — what the crate is, its invariants, the feature/target split, what a
-`Study` carries, the result-file shapes, the three consumers — and deliberately not for *why* or for
-exact values, which are one pointer hop away by design. I accept that, and note the answer is
-easier here than usual precisely because this unit removed a duplicate instead of moving text.
-
-**Merged:** `agent/study-designer/006-compact-study-designer` (code **none** — the
+**`study-designer/006`** (14:51) — a repoint, not a split (correctly — the worker's first attempt
+appending to `interfaces/limits.md` would have relocated a debt rather than removed it, and it
+self-reverted). `spec.md` §7's closing paragraphs, which duplicated `decisions/limits.md` decision 63's
+own measurement table, were cut and pointed at decision 63 by number: 9,600 → 8,941 B, out of reserve.
+Supervisor overrode the worker's `blocked` (on grounds `open.md` "is still in flux") back to `open` —
+an open-questions file is edited every week by design, so "in flux" applied to it is a property of the
+filename, not a fact about a subsystem settling; task split into `006` (done, empty `Compacts:`) and
+new `study-designer/026` (carries the unpaid `open.md` half, same clock). **Reviewer found a genuinely
+homeless fact** (the 77,368-byte pre-reduction `Study` baseline and its three-pass reduction history) —
+restored into decision 49, arithmetic checked (77,368 ÷ 2 ÷ 35 ≈ 1,105, against decision 63's 1,080);
+the reviewer's second claim (a "97% of what remained" mismatch) was checked and found wrong.
+**Merged:** `agent/study-designer/006-compact-study-designer` (code none — the
 `embarch-study-designer` branch is empty by design, docs-only; doc `4705746`). Ownership check base
-`5621bb545ac5` after the rebase onto `topology/019`'s fold, 3 paths, all owned. Gate **11/11 green**
-on the merge result. No `cargo` run in `embarch-study-designer`: its tree is byte-identical to
-`main`.
-**Blocked:** nothing. **Task 006 is closed `done`, and its surviving half is now
-`tasks/study-designer/026-compact-study-designer.md`** — `open.md`, `In flux: no`, same
-`Size debt due: 2026-10-04`, with the argument above written into it.
+`5621bb545ac5` after the rebase onto `topology/019`'s fold, 3 paths, all owned. Gate 11/11 green on the
+merge result. No `cargo` run: tree byte-identical to `main`.
+**Blocked:** nothing. Task 006 closed `done`; surviving half is `tasks/study-designer/026-compact-study-designer.md`.
+**Reviewer:** 1 finding — half accepted and fixed in this fold, half refused;
+`inbox/study-designer-review-006-lost-77368-provenance.md` deleted, having been acted on.
+**Hardware debts:** none.
 
-**Why a new task and not the `open` state I first wrote: `fold-commit.py` refused the fold, and it
-was right to.** It will not fold a unit whose own task file reads `open` — a live-looking claim the
-next leg's recovery would reclaim and re-dispatch (`tasks/doc/028`, six instances). That refusal
-collides with the ledger's rule that a debt must keep a clock rather than be closed with the task
-that paid *part* of it. **Splitting the task is the move that satisfies both**: 006 goes `done`
-with an empty `Compacts:` line, 026 carries the unpaid file and the original date. Two smaller
-traps on the way, both worth the next leg knowing: the `Compacts:` line cannot be left with
-placeholder prose on it (`check-task-state.py` reads the placeholder as a filename and fails the
-`In flux: per file` block), so the line is **deleted** and the explanation moved below it; and
-`fold-commit.py` refuses *before* writing anything, so the retype cost nothing.
-**Reviewer:** 1 finding — half accepted and fixed in this fold, half refused; see below. The drop
-`inbox/study-designer-review-006-lost-77368-provenance.md` is deleted because I acted on it.
+---
 
-**The reviewer's finding, and what I did with it.** It reported that the deleted passage's
-**77,368-byte** pre-reduction baseline for host `Study`, and its three-pass history, live nowhere
-else — and, separately, that the passage's "97% of what remained" claim was about a different
-type's buffer. **The first half is right and I fixed it in this fold**; the second is wrong and I
-checked it myself. `decisions/removed.md`'s decision 48 carries exactly that chain — *"after
-decision 46 fixed the field that actually crashed a debug build, this was 97% of what remained.
-Decision 46 got a 2× reduction; removing this got a further 35×"* — about post-hoc validation, the
-same subject the cut sentence named. The arithmetic settles it: 77,368 ÷ 2 ÷ 35 ≈ 1,105, against
-the 1,080 decision 63 measures. So one number was genuinely homeless, not a claim.
-I added it to **decision 49** in `decisions/limits.md` (8,184 → 8,941 B against a 12 KB cap, well
-clear of reserve) — the decision that already holds the before/after table — naming all three
-passes and citing decision 48 for the multipliers. That is a supervisor writing in a sub-project's
-decision file at fold time, which `core/008` did yesterday for the same reason: the fix was small,
-verifiable and in the unit's own subject.
-**Hardware debts:** none owed by this unit — a documentation duplicate removal, no board, no build.
-Carried forward unchanged from `topology/019`'s entry below: `core/015`'s native Windows build of
-`embarch-core` (the owner's, outstanding, and carrying `core/008`'s commits plus `core/020`'s
-`self_reported_hardware_id` rename), `umbrella/037`'s corrected check 13 needing only the dev-bench
-board, and `embarch-outpost`'s Zephyr `tests/unit` suite which cannot be built here.
-**Budget:** PROCEED, weekly 6.7% of a 90% cap, wave 6 suggested; unchanged from the leg's start.
-**Least sure about:** **my own `open.md` rule.** I asserted that "in flux" can never park an
-`open.md`, and that is a general claim about a file class made at fold time by one leg, from one
-task. It is a judgement, not something `DOC-BUDGET.md` or `DOC-COMPACTION.md` says — and if the
-owner disagrees, the right place for it is his files, not mine. A next leg that finds this reasoning
-wrong should say so rather than quietly re-blocking the task.
+**`topology/019`** (14:45) — verbatim split along a seam decision 20 itself had already drawn
+("Two independent gaps, one event"): decisions 20 and 27 moved out of `decisions/enrollment.md`
+(11,346/12,288 B, 92.3%) into new `decisions/link-declares.md` (8,157 B), leaving `enrollment.md` at
+4,034 B. Diffed the moved text directly rather than trusting the report — byte-identical. Considered
+and rejected folding into `decisions/links.md` (would push a second file over cap).
+**Merged:** `agent/topology/019-compact-topology` (code none — the `embarch-topology` branch is empty
+by design, a docs-only compaction with a zero-line diff; doc `867945d`). Ownership check base
+`12563915c73a`, 5 paths, all owned. Gate 11/11 green on the merge result, plus
+`check-client-names.py --repo embarch-topology` clean. No `embarch-topology` `cargo` run: tree
+byte-identical to `main`.
+**Blocked:** nothing. 
+**Reviewer:** no findings. 
+**Hardware debts:** none.
 
-## 2026-09-10 14:45 — topology/019 a verbatim split whose seam the decision text had already drawn
+---
 
-**Decided:** nothing suite-wide. Two dispatch-time calls, both recorded in the task file before the
-worker ran: that this task's single `Compacts:` file answers `In flux: no` and so is an ordinary
-compaction unit, and that the worker must leave `open.md`, `spec.md` and `decisions/validation.md`
-alone because `tasks/topology/014`/`017` own those. **I also refused a fourth reviewer-shaped
-inbox drop before this leg's first dispatch** — see the `core/032` entry for it; it is recorded
-here only because it was the leg's first act.
-
-**The pass itself, and why I merged it on a read rather than on green alone.** `decisions/enrollment.md`
-was 11,346/12,288 B (92.3%). Decisions 20 and 27 moved **verbatim** into a new
-`decisions/link-declares.md` (8,157 B), leaving `enrollment.md` at **4,034 B**; `decisions.md`'s
-routing table gained the new row in the same commit and `enrollment.md`'s header gained a
-cross-pointer. **I diffed the moved text rather than trusting the report** — the new file's two
-sections are byte-identical to what left, so nothing was restated and nothing was cut, which is
-exactly the case `DOC-BUDGET.md`'s split-first rule exists for and the case where `In flux` cannot
-forbid the move.
-
-**The seam was the worker's best contribution and it did not invent it.** Decision 20's own first
-line is "Two independent gaps, one event", and 27 is the follow-up fix to the same failure: 14/15/16
-are enrolment's human-interaction surface, while 20/27 are what a *role* carries across an
-enrollment change and how `NotFound` reports which declared fact emptied the candidate list. It
-also considered and rejected folding them into `decisions/links.md` (10,941 B) because that would
-push a second file over cap — the right trade, and it said so with the byte numbers.
-
-**`DOC-COMPACTION-PASS.md`'s human question, answered by the actor that read the file whole:** can
-`embarch-topology/spec.md` alone answer what someone needs to work on enrollment today? Its answer,
-which I accept: **yes for the mechanics, no for two specific traps** — why a role *displaces*
-rather than merges on upsert (the inherited stale link serial), and why `NotFound`'s message cannot
-call `embarch-topology status` inline (the `hardware`/`software` feature split that keeps `reqwest`
-out of `embarch-core`'s build). Someone extending this code without reading `link-declares.md`
-first would plausibly re-introduce one of those two.
-
-**Merged:** `agent/topology/019-compact-topology` (code **none** — the `embarch-topology` branch is
-empty by design, a docs-only compaction with a zero-line diff; doc `867945d`). Ownership check base
-`12563915c73a`, 5 paths, all owned. Gate **11/11 green** on the merge result, plus
-`check-client-names.py --repo embarch-topology` clean. No `embarch-topology` `cargo` run: the code
-tree is byte-identical to `main`.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none owed by this unit — a verbatim documentation split, no board, no build.
-Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and
-still outstanding, and it also carries `core/008`'s commits and `core/020`'s
-`self_reported_hardware_id` rename; `umbrella/037`'s corrected check 13 has never met the bench that
-found its defects and needs only the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite
-cannot be built here. **No bench unit was runnable at dispatch time** — every `hw-gated` task in the
-queue is `toolchain` or `required`, and the bench queue is still parked by the owner's own commit.
-**Budget:** PROCEED at the leg's start, weekly **6.7%** of a 90% cap, 5-hour window inactive, wave
-**6** suggested — so the 4-unit cap binds this leg, not the allowance, for the fourth leg running.
-**Least sure about:** that `decisions/link-declares.md` is the right *name* for a file whose two
-decisions are really "what a role carries across an enrollment change" — the worker itself noted the
-mission sits closer to `links.md` than to `enrollment.md`, and if a later unit finds `links.md` has
-room after its own compaction, merging these two files back would be a reasonable reversal.
-
-## 2026-09-10 14:31 — umbrella/043 a sweep redone from scratch, four real miscitations with one root cause, and a reviewer finding I refused
-
-**Decided:** three things, and the third is a disagreement I want on the record rather than resolved
-quietly.
-
-**First, to redo this sweep from nothing rather than salvage it.** Leg 062's worker was killed by the
-`fleet stop` with the **entire sweep uncommitted** in its worktree — 14 files, 60 insertions, never a
-commit, never pushed. `ops.md` §3 says delete a worktree with no commits, and I did, so ~10 minutes
-of a worker's output was thrown away deliberately. That is the right call for a mechanical sweep and
-it would be the wrong call for something expensive; `tasks/README.md` already records `tasks/ui/002`,
-where the same reclaim rule discarded **306 uncommitted insertions that built clean and passed 97
-tests**, and was saved only because a second defect cancelled it out. What made this cheap to discard
-is that leg 062 left the one thing that was not reproducible — `api/052`'s settled convention, copied
-into the task file because `api/052`'s own fold had deleted the file it was written in.
-
-**Second, the sweep found more than filed and the miscitations had a single root cause.** Filed for
-68 across 15 files; actual **75 across 13**. Third sweep in a row where the filed count was wrong
-(`study-designer/018` filed 290, landed 522; `api/052` filed 320, found 160), which is now a reliable
-enough pattern that the next one should not bother re-arguing it.
-
-**Four real miscitations, not dead pointers, and all four were the same error:** `src/state.rs`
-(`deploy_source_root`'s doc comment), `src/setup.rs` (that field's assignment, twice) and
-`src/deploy.rs` (the module doc and `elevated_script`'s generated-script comment) all cited umbrella
-**decision 37** — `reporting.md`'s *"a check may carry a machine-readable `code`"* — for
-`deploy-core`'s subject. The match is **decision 32** (`decisions/deploy.md`, the `deploy-core`
-command itself), which the very field names those comments describe (`deploy_source_root`,
-`deploy_windows_root`, `deploy_cargo_exe`) point at directly. **I verified both decision bodies
-myself** before accepting the fix. One of the four is not a comment: `deploy.rs`'s `elevated_script`
-emits an rc-file header carrying the citation, so this text ships onto real machines — the reviewer
-confirmed nothing (`install.rs`'s `LEGACY_MARKER`, `doctor.rs`, any uninstall path) matches on that
-header string.
-
-**Third — I refused the reviewer's finding, and the reason is the same lesson `core/008` taught two
-hours earlier in this leg.** The reviewer dropped
-`inbox/umbrella-review-043-manifest-decision-14-miscite.md` arguing `src/manifest.rs`'s `decision 14`
-should be `decision 24`, because decision 14's own body ends *"A version mismatch against the suite
-manifest is a warning (decision 24)."* **I read both bodies and decision 14 is the better citation.**
-The clause the comment quotes is *in* decision 14; decision 14's third paragraph is also the only
-text anywhere saying `doctor` reads the manifest at all, which is precisely `manifest.rs`'s subject;
-and decision 24 (`schema-skew.md`) is *"version skew between **Core and the API** stays a warning"* —
-a different pair entirely. Decision 14 cites 24 for the warn-not-refuse **posture**, by analogy; it
-does not hand the manifest behaviour over. Re-pointing `manifest.rs` at 24 would send a reader about
-the suite manifest to a decision about Core-versus-API skew, which is exactly `api/031`'s recorded
-*real-but-wrong-decision* failure. **This is the mirror image of `core/008`'s trap in the same leg:**
-there a correct citation looked wrong from its heading; here a correct citation looks wrong from a
-parenthetical. Both times only the body settles it. **I left the drop in place rather than deleting
-it** — the worker and the reviewer stopped on that line independently, which is evidence the line
-reads ambiguously even though it is right — and wrote my counter-argument into the drop itself, with
-an explicit warning not to apply its title. Its honest resolution is probably to cite both decisions,
-and closing it as "no change needed" is a legitimate outcome.
-
-**Two things the worker left alone and was right to.** `install.rs`'s `LEGACY_MARKER` literal is
-matched against rc files on machines set up before the four-file doc split, so changing it breaks
-uninstall for those installs; and `doctor.rs`'s guard test asserting no *production* line names a
-deleted doc is the check, not a violation of it. The reviewer confirmed the guard still guards after
-the sweep.
-
+**`umbrella/043`** (14:31) — leg 062's version of this sweep was killed uncommitted (~10 minutes of
+work correctly discarded per `ops.md` §3); redone from scratch. Filed for 68 across 15 files, actual 75
+across 13 (third sweep running with a wrong filed count). **Four real miscitations, all the same
+error**: `state.rs`, `setup.rs` (twice) and `deploy.rs` cited decision 37 (`reporting.md`'s machine-readable
+`code`) for `deploy-core`'s subject; the match is decision 32 (`decisions/deploy.md`, the `deploy-core`
+command itself), verified by reading both bodies. One of the four ships: `deploy.rs`'s `elevated_script`
+emits an rc-file header carrying the citation onto real machines. **Supervisor refused a reviewer
+finding** proposing `manifest.rs`'s `decision 14` become `decision 24` — read both bodies and 14 is the
+better citation (its own third paragraph is the only text anywhere saying `doctor` reads the suite
+manifest at all); left the drop in place with the counter-argument written into it rather than deleted,
+since two readers stopped on the same ambiguous line independently. Resolved for real one leg later as
+`umbrella/044` (above): cite both.
 **Merged:** `agent/umbrella/043-design-md-citations` (code `ea9b72a`, doc `18c859d`). Ownership check
 bases: code `cffed3d96c9a` (code repo, whole tree owned, 15 paths), doc `07bab8221f82` after rebasing
-onto `outpost/014`'s fold, 2 changed paths. Gate green on both merge results: `check-docs.py`
-**11/11**, `embarch-umbrella` `cargo build` / `test` (**218 tests**) / `clippy --all-targets --
--D warnings` clean, `check-client-names.py --repo embarch-umbrella` clean. I verified
-comment-only-ness mechanically — `git diff -U0 -- '*.rs'` filtered of comment-prefixed lines returned
-exactly **4** hits, all four the one generated rc-file header string the worker disclosed.
-**Blocked:** nothing.
+onto `outpost/014`'s fold, 2 changed paths. Gate green on both merge results: `check-docs.py` 11/11,
+`embarch-umbrella` `cargo build`/`test` (218 tests)/`clippy --all-targets -- -D warnings` clean,
+`check-client-names.py --repo embarch-umbrella` clean.
+**Blocked:** nothing. 
 **Reviewer:** 1 finding — inbox/umbrella-review-043-manifest-decision-14-miscite.md
-**Hardware debts:** none owed by this unit — comment-only across 15 files, no board, no flash. One
-adjacent fact worth naming rather than a debt: the rc-file header this unit rewrote is emitted by
-`deploy-core`, and `deploy-core` is the command `core/015`'s outstanding native Windows build would
-run — so the corrected text does not appear on the owner's machine until that build happens. Carried
-forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still
-outstanding, and now carries `core/008`'s two commits plus `core/020`'s `self_reported_hardware_id`
-rename; `umbrella/037`'s corrected check 13 has never met the bench that found its defects and needs
-only the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built here (no
-`west`, no `ZEPHYR_BASE`). The bench queue is still parked by the owner's own commit, and **no bench
-unit was runnable at any point this leg** — every `hw-gated` task in the queue is `toolchain` or
-`required`.
-**Budget:** PROCEED at start and end; weekly **5.7% → 6.6%** of a 90% cap, 5-hour window inactive
-throughout, wave **6** suggested both times. **The 4-unit cap bound this leg, not the allowance** —
-third consecutive leg for which that is true, and the fleet is now rate-limited by leg length rather
-than by quota.
-**Postscript, written after the fold: correcting that token by hand broke the fold, exactly as
-`tasks/doc/028` predicts.** `fold-commit.py` committed this entry to the fleet repo (`9d19d3c`) and
-then **refused its own second half** — `git rm` will not remove a task file carrying local
-modifications, and I had edited the `State:` line in the same sitting. That leaves precisely the
-ordering the script is designed to prefer, "an entry for a fold that did not happen" rather than "a
-fold nobody logged", so nothing was lost and the recovery was one commit. I completed the leg half by
-hand (`ba7f742`) with the same paths `fold-commit.py` was given and nothing else staged. **The
-generalisable rule for the next leg: if you correct a task file's `State:` token at fold time, use
-`git rm -f`, or the fold will half-land.** `tasks/doc/028` has this and it is worth believing.
+(refused by the supervisor, left standing for the next reader; resolved by `umbrella/044`).
+**Hardware debts:** none — the corrected rc-file header text does not reach the owner's machine until
+`core/015`'s outstanding native Windows build runs `deploy-core`.
+**Postscript:** correcting a task's `State:` token by hand at fold time broke the fold exactly as
+`tasks/doc/028` predicts: `fold-commit.py` committed this entry to the fleet repo (`9d19d3c`) and then
+refused its own second half — `git rm` will not remove a task file carrying local modifications, since
+the `State:` line had been hand-edited in the same sitting. Recovered as a second commit (`ba7f742`)
+with the same paths, nothing lost. **Rule for the next leg: use `git rm -f`
+after a hand-edited `State:` token at fold time, or the fold half-lands.**
 
-**Least sure about:** **the worker left this task's `State:` token at `claimed` while ticking every
-`Done when` box, and I corrected it to `done` by hand at fold time.** The gate does not catch that —
-`claimed` is a legal token — so a fold could have landed a completed unit whose task file still read
-as in-flight, and the next leg's recovery scan would have found a claim with no worker and reclaimed
-a finished task to `open`. `tasks/doc/028` already names a hand-edited `State:` line as a recurring
-failure; this is the same field going wrong from the opposite direction and I have not filed it,
-because I am not confident whether the fix belongs in the worker contract or in `fold-commit.py`'s
-refusals, and both of those are the owner's files.
+---
 
-## 2026-09-10 14:27 — outpost/014 the split-first rule again, and a worker that caught itself relocating the debt
-
-**Decided:** nothing suite-wide. What I decided about this unit is that **a compaction that clears
-one file's reserve by pushing another file into its own is not a compaction**, and the worker had
-already decided the same thing before I saw it — which is the most useful thing in this entry.
-
-**The pass itself.** `embarch-outpost/spec.md` §5 "Host-side outputs" — the three `streams/` file
-formats, their exact columns, and the `us`/`cycles` formatting and wrap rules — moved **verbatim**
-into a new `## Host-side outputs` section in `embarch-outpost/interfaces/integration.md`, with a
-pointer paragraph left behind naming what moved. 9,775 B → **8,316 B**, clearing the 9,216 B reserve
-threshold with room, and `check-doc-size.py` no longer names the file. Second consecutive day the
-split-first rule has paid: `core/030` did the same thing to `embarch-core/spec.md` yesterday, and
-between them these two units have taken 2,630 B out of two `spec.md` files without removing a single
-fact from the corpus.
-
-**I verified verbatim-ness by diffing, not by reading the report.** Every line removed from `spec.md`
-against every line added to `integration.md`: the only textual difference in the whole move is the
-relative link `[interfaces/wire.md](interfaces/wire.md)` → `[wire.md](wire.md)`, which the
-one-directory-deeper location *requires*. Both `Must not delete:` items are still in `spec.md` §3 and
-did not move — the `--allow-unverified-join`/`--allow-build-id-mismatch` posture pairing, and the
-missing/short `frame_bytes` degrade-not-refuse sentence, which is on the list precisely because a
-reader who loses it concludes there is a **third** refusal alongside the manifest and build-ID ones.
-
-**The worker's first attempt is the part worth recording.** It moved the section into
-`interfaces/wire.md`, which cleared `spec.md`'s reserve and pushed `wire.md` to **94.8%** of its own
-cap — into *its* reserve, so the gate still failed. It caught that by re-running
-`check-doc-size.py` rather than by being told, retargeted to `integration.md` (6,096 → 7,953 B of a
-12,288 B cap), and **reported the false start rather than hiding it.** That is the failure mode a
-squeeze-vs-split rule cannot catch on its own: a verbatim move is always accuracy-safe and is *not*
-always budget-safe, and "the file with headroom" and "the file a reader would look in" are different
-criteria that happened to agree on the second try.
-
-**`DOC-COMPACTION-PASS.md`'s human question, and this time the actor who read the file whole answered
-it.** *Can `embarch-outpost/spec.md` alone answer what someone needs to work on this component
-today?* **Mostly yes, with one narrower exception than before.** The architecture, the invariants,
-the measured-cost table and the manifest/join refusal rules are all still in `spec.md` untouched.
-What it no longer answers standalone is the **exact byte layout of the three `streams/` output
-files** — for that it points one hop to `interfaces/integration.md § Host-side outputs`, next to the
-Kconfig table already governing the same integration surface. I agree with that answer and I asked
-the reviewer to judge the home specifically, given `core/030`'s recorded wart about a spec-level
-table landing under `interfaces/`. It called this a **closer fit** than that case, because the
-receiving doc is the one about *consuming* outpost's output and the new section sits directly under
-`integration.md`'s own "Reading the trace" heading — the question it answers. I am recording that as
-settled rather than a wart.
-
-**Merged:** `agent/outpost/014-compact-outpost` (code **none** — docs-only by design, the
-`embarch-outpost` code branch had a zero diff, and the worker was told not to invent one; doc
-`cb64fcf`). Ownership check base `d6fefc7fe17d`, 5 changed paths, all owned by the `outpost` worker.
-The doc branch was rebased onto `core/008`'s fold before merging. Gate green **11/11** on the merge
+**`outpost/014`** (14:27) — a compaction that clears one file's reserve by pushing another file into
+its own is not a compaction, and the worker caught its own first attempt doing exactly that (moving
+`spec.md` §5's host-side-output formats into `interfaces/wire.md` cleared `spec.md` but pushed
+`wire.md` to 94.8% of its own cap) — retargeted to `interfaces/integration.md` (6,096 → 7,953 B of a
+12,288 B cap) instead, and reported the false start rather than hiding it. `spec.md` 9,775 → 8,316 B.
+Second consecutive day the split-first rule paid without removing a single fact from the corpus
+(`core/030` did the same to `embarch-core/spec.md` the day before).
+**Merged:** `agent/outpost/014-compact-outpost` (code none — docs-only by design, the `embarch-outpost`
+code branch had a zero diff; doc `cb64fcf`). Ownership check base `d6fefc7fe17d`, 5 changed paths, all
+owned. The doc branch was rebased onto `core/008`'s fold before merging. Gate green 11/11 on the merge
 result, first run, no fold fixes needed.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none owed by this unit — a verbatim documentation split, no board, no build, no C
-touched. **The standing outpost debt is unchanged and was correctly not claimed away:**
-`embarch-outpost`'s Zephyr `tests/unit` ztest suite cannot be built from this environment (no `west`,
-no `ZEPHYR_BASE`) and the worker said so rather than reporting it green — but since this unit changed
-no C, it does not deepen it either. Carried forward unchanged: `core/015`'s native Windows build of
-`embarch-core` is the owner's and still outstanding, and now carries `core/008`'s two commits as well
-as `core/020`'s `self_reported_hardware_id` rename; `umbrella/037`'s corrected check 13 has never met
-the bench that found its defects and needs only the dev-bench board. The bench queue is still parked
-by the owner's own commit, and no bench unit is runnable — every `hw-gated` task in the queue is
-`toolchain` or `required`.
-**Budget:** PROCEED, weekly 5.7%, wave 6 suggested; unchanged from the leg's start.
-**Least sure about:** that `embarch-outpost/spec.md` is now **8,316 B against a 10,240 B cap with a
-9,216 B reserve line**, which is 900 B of runway — a comfortable margin today and one more paragraph
-away from being back in reserve. The split took the one obviously-liftable reference section out, so
-the *next* compaction of this file will not have an easy seam and will be a genuine squeeze against
-`Must not delete:` items that are there because losing them produces a wrong conclusion. Nothing
-needs doing now; I want the next leg to know the cheap move has been spent.
+**Blocked:** nothing. 
+**Reviewer:** no findings. 
+**Hardware debts:** none — the standing outpost
+toolchain debt is unchanged and correctly not claimed away (no C touched, so it is not deepened either).
 
-## 2026-09-10 14:24 — core/008 a citation form invented by a worker, caught by a reviewer, and verified by reading bodies rather than headings
+---
 
-**Decided:** to **fix the reviewer's finding in the fold rather than queue it**, and to do that only
-after re-deriving its verdict myself — because the first time I read it, it looked wrong.
-
-The unit itself was clean and slightly larger than filed. `embarch-core/spec.md` §4's module table
-was missing exactly one row (`outpost_manifest`, confirmed by enumerating all 14 `mod` declarations
-in `main.rs`), and the two `decision 48` comments really do mean **36** — `decisions/flashing.md`'s
-decision 36 is literally *"a flashing backend per chip family, refusing probe-rs where the vendor's
-semantics are not implemented"*, which is what both comments claim. The task said there were **two**
-stale `milestone-N.md` citations; there were **five**.
-
-**The finding, and why it is a real one.** For four of those five the worker wrote
-`embarch-ui milestone 1`, arguing that naming a deleted milestone doc is the suite's established
-convention and citing `embarch.md`'s "deleted, not indexed" note. **It is not a convention.** That
-note is about recovering an old file with `git show`; the actual form, settled by `api/052` and
-adopted unchanged by `umbrella/043` an hour before this, is bare `decision M` same-repo and
-`` `<repo>` decision M `` cross-repo. So the unit replaced four dead pointers with four
-*plausible-looking* pointers into a doc that does not exist — which is strictly worse than a dead
-one, because it reads as though it resolves. It also dropped the section numbers (§4.9, §4.7,
-§4.4/§4.6) the old citations carried, so it lost locating information at the same time.
-
-**And the decision numbers were already sitting in the repo**, which is the part that makes this a
-fold fix rather than a task: `embarch-core`'s own `decisions/surfaces.md:29` already tombstones the
-`/enroll` retirement as *"see `embarch-ui` decision 1"*, and `embarch-ui/decisions/wiring.md`'s
-decision 6 is verbatim the no-client-side-interval-polling rule `logs.rs` describes.
-
-**The method note is the thing I want the next leg to take.** `embarch-ui` decision 1 is titled
-*"One consolidated process, not a shared library three separate binaries keep depending on"* — read
-as a heading it is a packaging decision and has nothing to do with an enrollment page, and I nearly
-recorded the reviewer's proposal as itself a miscitation on exactly that basis. It is correct, and
-only its **body** says why: *"Core's enroll page's HTML moves out of Core, which keeps the enroll
-endpoint it already had."* **A heading-only check rejects correct citations, and its mirror accepts
-wrong ones.** I applied the fix only after reading both decision bodies, not on the reviewer's word —
-leg 062 recorded the same discipline and it earned its keep here.
-
-**One thing I did not fix, and filed instead.** The lines I was repairing sit three lines from
-untouched `` `embarch-topology/design.md` decisions 2/8/14 `` and `` `embarch-ui/design.md` §3 ``
-citations. `embarch-core` is the **fourth** sub-project with this defect and the only substantial one
-with no sweep — and it is the repo the other three most often cite *into*, so a wrong bare number
-here has the widest blast radius in the suite. Dropped as
-`inbox/core-src-still-cites-a-design-md-embarch-core-no-longer-has.md`, carrying the settled
-convention verbatim plus the three lessons the earlier sweeps paid for (every filed count has been
-wrong; the bare form is the dangerous one; read bodies not headings) and the two look-alikes
-`umbrella/043` correctly left alone. I did **not** widen this unit to cover it.
-
+**`core/008`** (14:24) — `embarch-core/spec.md` §4's module table was missing one row
+(`outpost_manifest`); two `decision 48` comments really mean decision 36 (verified against the body).
+Task said two stale `milestone-N.md` citations; there were five. **Reviewer caught a worker-invented
+form**: four of the five had been repointed to `` embarch-ui milestone 1 `` on a claimed "deleted, not
+indexed" convention that is not a real convention — the settled form (from `api/052`, adopted by
+`umbrella/043` an hour earlier) is bare `decision M` same-repo / `` `<repo>` decision M `` cross-repo,
+and the decision numbers were already sitting in the repo unused
+(`decisions/surfaces.md:29` already tombstones `/enroll`'s retirement as `embarch-ui` decision 1;
+`embarch-ui/decisions/wiring.md` decision 6 is verbatim the polling rule `logs.rs` describes). Fixed in
+the fold after re-deriving the verdict from both bodies, not the reviewer's word — a heading-only check
+(`embarch-ui` decision 1's title reads as a packaging decision) would have rejected this correct
+citation; only the body says why. One adjacent look-alike (three lines away, citing
+`embarch-topology/design.md`) deliberately not widened into this unit — filed as
+`inbox/core-src-still-cites-a-design-md-embarch-core-no-longer-has.md`, `embarch-core` being the
+fourth sub-project with this defect class and the one most cited into by the others.
 **Merged:** `agent/core/008-outpost-manifest-module` (code `61bce4f`, doc `1b03ce0`), plus the fold's
 own citation fix `a5daef6` in `embarch-core`. Ownership check bases: code `586b6d60f84d` (code repo,
-whole tree owned), doc `b0ad6110e7cf` after rebasing onto `api/056`'s fold, 3 changed paths. Gate
-green on the merge result and again after the fold fix: `check-docs.py` **11/11**, `embarch-core`
-`cargo build` / `test` (193 tests) / `clippy --all-targets -- -D warnings` clean,
-`check-client-names.py --repo embarch-core` clean. I read the whole code diff myself — comment-only,
-7 insertions and 7 deletions, no behavioural line touched.
+whole tree owned), doc `b0ad6110e7cf` after rebasing onto `api/056`'s fold, 3 changed paths. Gate green
+on the merge result and again after the fold fix: `check-docs.py` 11/11, `embarch-core` `cargo
+build`/`test` (193 tests)/`clippy --all-targets -- -D warnings` clean, `check-client-names.py --repo
+embarch-core` clean.
 **Blocked:** nothing.
-**Reviewer:** 1 finding — inbox/core-review-008-milestone-citation-form.md
-**Hardware debts:** none owed by this unit — comment-only plus one `spec.md` table row, no board, no
-flash, and the worker was told explicitly that a native Windows build is not its to attempt and
-correctly did not claim one. Carried forward unchanged: `core/015`'s native Windows build of
-`embarch-core` is the owner's and still outstanding, and is also what would deploy `core/020`'s
-`self_reported_hardware_id` rename — **this unit adds a third thing riding on it**, since `a5daef6`
-and `61bce4f` are `embarch-core` source and reach the running service only through that build;
-`umbrella/037`'s corrected check 13 has never met the bench that found its defects and needs only the
-dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built here (no `west`, no
-`ZEPHYR_BASE`). The bench queue is still parked by the owner's own commit, and no bench unit is
-runnable — every `hw-gated` task in the queue is `toolchain` or `required`.
-**Budget:** PROCEED, weekly 5.7%, wave 6 suggested; unchanged from the leg's start.
-**Least sure about:** **I deleted the reviewer's `inbox/` drop after fixing what it reported**, and
-the `**Reviewer:**` line above still names that file, so the tally now points at a path that is not
-on disk. I think fixing a verified comment-only citation in the fold is right and leaving a duplicate
-task in the queue is wrong — but the grep that settles whether per-unit review earns its cost reads
-that line, and an entry naming a deleted file is a worse artefact than I would like. If this recurs,
-the honest form is probably `1 finding — fixed in the fold, drop removed`, and that is a fourth form
-`leg.md` forbids, so it is the owner's call and not mine.
+**Reviewer:** 1 finding — inbox/core-review-008-milestone-citation-form.md (deleted after being acted
+on in the fold).
+**Hardware debts:** none — comment-only plus one table row; adds a third thing riding on `core/015`'s
+outstanding native Windows build.
 
-## 2026-09-10 14:19 — api/056 a unit that shipped its code and lost its documentation for a day
+---
 
-**Decided:** to land this as a **reconstruction rather than a re-run**, and the reason is the state I
-found `main` in. Leg 062 was stopped by a `fleet stop` at 2026-09-09 16:21 and its `api/056` worker
-had already finished: it pushed both branches, and the **code half reached `embarch-api` `main`**
-(`d6fec7a`, `src/zephyr.rs` +191). The **doc half never merged** — `agent/api/056-zephyr-apps-dir-doc`
-sat on the remote at `0a0af12` for a day carrying decision 63, its index row, the
-`interfaces/modules.md` update, the changelog fragment and `tasks/api/057-compact-api.md`. So for
-~22 hours the suite shipped a behaviour change with **no decision recording it**, no history entry,
-and a task file still reading `claimed`. That is precisely the state `leg.md` names when it says to
-land a worker's code and doc branches *together*; here they were split by a kill rather than by a
-gate, which is a shape the rule does not currently cover.
-
-**What I did not do, deliberately: I did not re-derive the work.** The worker's own record ticked
-every `Done when` box, the code was already on `main` and green, and the reviewer (spawned on the
-merge, given both worktree paths as absolute) read the day-old code against the day-old decision —
-which is the one check nobody had run, because the two halves were written together and landed apart.
-It confirmed all three clauses of decision 63 against the implementation: `app_dir` tries
-`["apps", "app"]` in that order so **`apps/` wins a same-name collision exactly as documented**;
-neither directory present is a distinct `NoAppDir` and is tested as such
-(`neither_app_dir_is_a_distinct_error…`, `one_app_dir_present_but_empty_is_a_plain_empty_result`);
-and the merge dedups after sort. Decision 12's never-cached live discovery is untouched — the scan is
-still pure filesystem. It also checked the wider `app/`-singular claim the task worried about and
-found the remaining occurrences (`interfaces/config.md`'s `[dev_bench]` section,
-`decisions/dev-bench.md`'s build path) belong to the **separate** hardcoded `build_dev_bench`
-single-board path, which decision 63 never governs — not stale, not a contradiction.
-
-**One thing worth the next leg's attention.** `tasks/api/057-compact-api.md` arrived with this merge
-and it is real: decision 63 put `embarch-api/decisions/zephyr.md` **1,950 B past its 12,288 B cap**.
-The doc gate is green only because the debt is *filed*. `embarch-api` now has **six** open or blocked
-compaction tasks (026, 047, 050, 053, 057, plus `interfaces/tools.md`'s), which is more than any
-other sub-project, and four of them are `blocked` on `In flux: yes`. That is a scope accumulating doc
-debt faster than it pays it, and it is a fact about the queue rather than about this unit.
-
+**`api/056`** (14:19) — reconstruction, not a re-run. Leg 062 was killed by `fleet stop`; its worker had
+already pushed both branches, and the **code half had already reached `embarch-api` `main`** while the
+**doc half sat unmerged on the remote at `0a0af12` for ~22 hours** — so the suite shipped a behaviour change (`apps/`
+directory discovery, `["apps","app"]` collision order) with no decision recording it for the better
+part of a day. Nobody re-derived the work; the reviewer, given both worktree paths, confirmed all three
+clauses of decision 63 against the implementation directly, the one check nobody had run because the
+two halves were written together and landed apart. `tasks/api/057-compact-api.md` arrived with the
+merge: decision 63 put `decisions/zephyr.md` 1,950 B past cap, and `embarch-api` now has six open or
+blocked compaction tasks, more than any other sub-project.
 **Merged:** `agent/api/056-zephyr-apps-dir` (code `d6fec7a` — already on `main` before this leg, not
-merged by me; doc `be4c155` after rebasing onto this leg's claim commits, merged `--ff-only`).
-Ownership check base `887a948ff735`, 6 changed paths, all owned by the `api` worker. Gate re-run on
-the merge result by me, not taken from the worker's report: `check-docs.py` **11/11 green**, and
-`embarch-api` `cargo build` / `test` / `clippy --all-targets -- -D warnings` all clean on `main`
-(201 tests across 11 binaries), plus `check-client-names.py --repo embarch-api` clean.
-**Blocked:** nothing.
+merged by the supervisor; doc `be4c155` after rebasing onto this leg's claim commits, merged
+`--ff-only`). Ownership check base `887a948ff735`, 6 changed paths, all owned. Gate re-run on the merge
+result, not taken from the worker's report: `check-docs.py` 11/11 green, `embarch-api` `cargo
+build`/`test`/`clippy --all-targets -- -D warnings` all clean on `main` (201 tests across 11 binaries),
+`check-client-names.py --repo embarch-api` clean.
+**Blocked:** nothing. 
 **Reviewer:** no findings.
-**Hardware debts:** none owed by this unit — a filesystem scan and a decision, no board, no build of
-anything. It does **narrow the reason to care** about one: `list_targets` returning real targets for
-an `apps/`-layout repo is now implemented and unit-tested, but has never been exercised against the
-real repo that motivated it (`chargerito-fw`, `apps/{chargerito,driver_test,mlp_test}`, two boards) —
-that is a client repo, so it is the owner's to point EmbArch at, not mine. Carried forward unchanged:
-`core/015`'s native Windows build of `embarch-core` is the owner's and still outstanding, and is also
-what would deploy `core/020`'s `self_reported_hardware_id` rename; `umbrella/037`'s corrected check 13
-has never met the bench that found its defects and needs only the dev-bench board;
-`embarch-outpost`'s Zephyr `tests/unit` suite cannot be built here (no `west`, no `ZEPHYR_BASE`). The
-bench queue is still parked by the owner's own commit, and **no bench unit is runnable** — every
-`hw-gated` task in the queue is `toolchain` or `required`.
-**Budget:** PROCEED at the leg's start, weekly **5.7%** of a 90% cap, 5-hour window inactive,
-suggested wave **6**. The 4-unit cap binds this leg, not the allowance — the second leg in a row for
-which that is true.
-**Least sure about:** whether landing this doc branch a day late without re-reading `src/zephyr.rs`
-myself was the right call. The reviewer read it and cleared it, and the code was already on `main` so
-refusing to document it would have made things strictly worse — but a 191-line code change whose only
-human reading is a subagent's is thinner review than the same unit would have got had it landed
-normally, and I want that said out loud rather than hidden behind a green gate.
+**Hardware debts:** none — narrows a reason to care about one: `list_targets` for an `apps/`-layout
+repo is implemented and unit-tested but never exercised against the real repo that motivated it
+(`chargerito-fw`), which is a client repo and the owner's to point EmbArch at.
 
+---
+
+### Standing hardware debts, carried across the whole day and still open at the fold
+
+Unchanged throughout 2026-09-10 and not repeated per-unit above: **`core/015`'s native Windows build of
+`embarch-core`** is the owner's and still outstanding — by day's end it is load-bearing for `core/008`,
+`core/013`, `core/020`'s `self_reported_hardware_id` rename, `core/021`'s SSE retirement, `core/032`,
+`core/033`, and `umbrella/043`'s corrected operator-facing rc-file header, none of which reach the
+running service until that build lands. **`umbrella/037`'s corrected check 13** has never met the bench
+that found its defects; needs only the dev-bench board. **`embarch-outpost`'s Zephyr `tests/unit` ztest
+suite** cannot be built from this environment (no `west`, no `ZEPHYR_BASE` in a worker's worktree) and
+this remains true even after `dev-bench/008`/`core/019` corrected the false "no toolchain at all" version
+of the same claim for `embarch-dev-bench` — the two are not the same debt. **The bench queue is still
+parked by the owner's own commit** — no bench unit was runnable on any leg this day.
+
+---
+
+*Days before 2026-09-10 already stand rolled into `log-archive/`.*
 ## 2026-09-09 — 19 units
 
 *Folded by an `embarch-log-folder` subagent on 2026-09-10, per protocol.md §11. Dropped: the
@@ -3949,657 +2147,4 @@ six instances in one leg is not one observation, and the reason I did not file i
 leg. **If a later leg meets any of these again, the honest reading is that I under-filed to avoid
 adding to a queue the fleet has one pair of hands for**, and the right move is a single task naming
 the whole class rather than three narrow ones.
-## 2026-09-08 — 32 units
-
-*Folded by a supervisor leg (`embarch-log-folder`) on 2026-09-09, per protocol.md §11. Dropped:
-the per-unit narrative reasoning behind each accepted judgement, and every "least sure about"
-self-critique — git and the day's own commits hold the diffs, and each unit's own entry (now in
-`log-archive/` after the next roll) holds the argument if anyone wants it. Kept below: every SHA,
-every `**Reviewer:**` line, every `**Hardware debts:**` line that names a board or a standing
-hardware debt, and — first, out of ledger order — the handful of things the day decided on the
-owner's behalf, left mid-flight, or found recurring, which is what a leg picking up tomorrow
-actually needs.*
-
-### What the next leg cannot recover from git alone
-
-- **Three `Owner: required` doc tasks were filed today, on top of one closed by the owner mid-day
-  (`doc/025`):** `tasks/doc/026` (a squeeze's own description of its cuts is never complete — three
-  proposed fixes, no preference smuggled in), `tasks/doc/027` (`check-decision-refs.py` needs to
-  resolve a decision-link *href* against the file it names, not just the number — full spec
-  written), and `inbox/worker-inbox-drops-land-in-a-worktree-that-is-deleted.md` /
-  `tasks/doc/025-worker-inbox-drops-land-in-a-deleted-worktree.md` (a worker's `inbox/` drop dies
-  with its worktree unless a supervisor happens to go looking). A supervisor flagged that filing
-  three reserved-path items in one day may be a rate problem rather than three individually
-  justified ones.
-- **`ui/011`'s fold landed `embarch-ui/decisions/study-designer.md` at 11,007 B against an 11,059 B
-  reserve line — 53 bytes of clearance, deliberately not trimmed further.** Expect
-  `check-doc-size.py` to re-file this one immediately.
-- **Two workers left their task file at `State: claimed` after finishing** (`topology/021`,
-  `outpost/009`) — both would have been indistinguishable from an abandoned claim under a dead
-  supervisor. No mechanism checks this; a third instance is the finding worth filing.
-- **A second push after a first was already landed** (`outpost/012`) stranded finished work on a
-  live branch past its own fold; caught only by an end-of-leg remote sweep, not by anything
-  mechanical. Third time this shape has occurred (after legs 035, 055).
-- **33 stale local `agent/*` branches** (all already on `origin/main`) were deleted suite-wide with
-  `git branch -d` to unblock a deferred framework deploy pinned at `9acf44a93b`; one
-  (`embarch-study-designer`'s `agent/study-designer/019-...`) refused because that repo's local
-  `main` is stale, a false positive. `fold-commit.py` prunes the *remote* branch on landing but
-  never the local copy — nine legs' worth had accumulated.
-- **Two `In flux: yes` tasks were found sitting `open`** (`umbrella/038`, `dev-bench/014`) and moved
-  to `blocked`; conversely `study-designer/006` was correctly unparked because its flux condition
-  (the `crate.md` FFI content) had been paid. Nothing checks that `In flux: yes` implies `blocked`.
-- **`api/030`'s UTF-8 fix left a design amendment sitting in the wrong decision** on purpose —
-  burndown forbids authoring a new one — and the reviewer's finding was deliberately left in
-  `inbox/api-030-review-finding.md` rather than fixed, for a later non-burndown leg to file as its
-  own numbered decision in `embarch-api/decisions/build.md`.
-- **Reserve-driven placement recurred all day**: decisions were routed away from full files
-  (`tool-wrapping.md` at 66 B, `ble.md` at 6 B of headroom) toward the file with room, each time with
-  the argument written into the task *before* dispatch rather than found afterward to agree with the
-  byte count — a pattern now logged across several consecutive legs and still unresolved as a rule.
-- **`check-decision-refs.py`/`check-links.py` blind spots hit three times today**: a citation that
-  *resolves* to the wrong file inside a sub-project (`umbrella/042`, `api/048`'s
-  `study-events.md`→`surface.md`), and a decision citing a transient `status.d/` fragment filename
-  that the very fold consuming it deletes. None of this is fixed — `scripts/` is the owner's.
-  `suite/021`'s own unit hit the same class again re-titling stale CI decisions.
-- **`embarch-dev-bench/decisions/ble.md` was split** (`dev-bench/012`) after being found at *six
-  bytes* of headroom — the tightest file in the suite — dispatched as a split-only exception to an
-  `In flux: yes` compaction task, on the reading that a verbatim split restates nothing so the bar
-  doesn't apply to it. Not settled as a rule; flagged for the owner or `.claude/leg.md`.
-  `embarch-dev-bench/open.md` (338 B left) and `spec.md` (780 B left) remain `In flux: yes` squeezes
-  on the same task, unresolved.
-- **A `suite`-scope unit (`suite/021`) exposed that `embarch-dev-bench` and `embarch-outpost` have no
-  CI and no `Cargo.toml`**, so the fleet's own merge gate cannot reach either repo at all — a change
-  there is checked by a human/agent diff-read and nothing else.
-- **`fold-commit.py` has no clean path for a `suite` unit**: it `git rm`s a closed task file that
-  always has local modifications (fails — remove it by hand first), commits the log before settling
-  instance paths (a failure there leaves the log committed and the instance half not — recover by
-  hand-committing the staged instance paths with the same message, do not write a second entry), and
-  `--check` requires a merge SHA a `suite` unit never has (the fold commit itself, `ac20966`, is the
-  only honest answer). None of this is fixed; it cost one leg three retries.
-- **`umbrella/026` and `api/036` landed on `main` on 2026-09-07 under leg 047 and were never logged**
-  — leg 047 was killed (`fleet stop` at 21:06) between merge and fold. Reconstructed today rather
-  than re-run: `umbrella/026` — `embarch-umbrella` `95f2975`, `embarch-doc` `2156553`, merged
-  `2b29d67`; `api/036` — `embarch-api` `95c1954`, `embarch-doc` `cf12cae` then `8005396`. These four
-  SHAs existed nowhere but `git log` until this entry. Recorded as a reconstruction, not a review —
-  nothing was re-gated.
-- **A supervisor corrected worker prose at two folds and was wrong once** (`core/028`): a
-  cross-repo relative doc link it added at the merge was the exact shape `decisions/platform.md`
-  decision 46 already rejected; caught by the reviewer, fixed in `11f5dc3`. Lesson recorded: any
-  supervisor correction at a fold now goes into the reviewer's prompt, not just the merge.
-  Separately, `core/028` sharpened an `[assumed]` ESP32-C5 USB-enumeration hardware "fact" whose
-  provenance was circular (two task files citing each other, neither a measurement) rather than
-  letting it launder into a third document as settled.
-- **Standing hardware debts carried across the whole day, repeated in nearly every unit's own
-  `**Hardware debts:**` line below:** a native Windows build of `embarch-core` is owed and the
-  fleet cannot run one (stacked behind `core/028`, `core/015`, `core/010`); `umbrella/037`'s
-  corrected check 13 has never met the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit`
-  cannot be built here (no `west`, no `ZEPHYR_BASE`); the bench queue is parked by the owner's own
-  commit; the ESP32-C5 USB-enumeration fact tagged `[assumed]` needs one look at one board;
-  `dev-bench/002`'s 17-to-64-step study has never been attempted on the bench, newly written down
-  today as a real, unexercised silent-failure gap.
-
-### Per-unit ledger
-
-**ui/011** — reflash-selector squeeze cut the `allow_version_mismatch` override out of decision 11
-entirely (a false statement about a live API), while `open.md`'s carry-forward of the same decision
-still names it; also fixed `decisions.md`'s missing decision-22 routing row.
-Merged: `agent/ui/011-compact-ui-study-designer-decisions` (code no commits, `embarch-ui` unchanged;
-doc `f3054e1`, corrected in this fold). Ownership check base `0f58c163dd9b`.
-**Reviewer:** 1 finding — inbox/ui-011-mismatch-override-dropped.md
-**Hardware debts:** **none new.** All standing debts unchanged from this leg's first entry.
-
-**outpost/009** — `src/outpost_priv.h`'s top comment wrongly said any wire-format change bumps
-`OUTPOST_RECORD_LAYOUT_VERSION`; corrected to say only shape changes do, matching `interfaces/wire.md`
-and the file's own lower block. Also: two workers in a row (this one and `topology/021`) left their
-task file `State: claimed` after finishing.
-Merged: `agent/outpost/009-outpost-priv-layout-version-comment` (code `dd8cb22`, doc `b841489`).
-Ownership check base `df11eaa4f469`.
-**Reviewer:** no findings.
-**Hardware debts:** **none new.** `embarch-outpost`'s Zephyr `tests/unit` still cannot be built
-here. All other standing debts unchanged.
-
-**topology/021** — `decisions/crate.md` split (93.4%→63.3%, `PAID`), decision 23 moved verbatim into
-new `decisions/storage.md`, byte-diff confirmed by the reviewer. First unit of a leg that opened by
-reclaiming 33 stale local `agent/*` branches suite-wide (see above) and correcting two
-misclassified `In flux: yes` tasks to `blocked`.
-Merged: `agent/topology/021-compact-topology` (code no commits, `embarch-topology` unchanged at
-`b722895`; doc `8b0e87c`). Ownership check base `f80786a8b869`. Two `In flux: yes` tasks corrected
-to `blocked` in commit `133076d`.
-**Reviewer:** no findings.
-**Hardware debts:** **none new.** Standing debts carried forward unchanged from leg 056's last
-entry: a native Windows build of `embarch-core` is owed and the fleet cannot run one (`core/028`,
-`core/015`, `core/010`); `umbrella/037`'s corrected check 13 has never met the bench;
-`embarch-outpost`'s Zephyr `tests/unit` cannot be built here; `embarch-dev-bench`'s west/Zephyr
-toolchain is absent; the four DUT-gated bench tasks are unchanged; `core/028`'s `[assumed]`
-ESP32-C5 USB-enumeration fact still needs one look at one board; `dev-bench/002`'s 17-to-64-step
-study has never been attempted on the bench.
-
-**outpost/012 (continuation)** — the same task's worker kept working after its first push was
-landed; found alive with unlanded finished work at `ce98982` during an end-of-leg branch sweep,
-landed as a second entry rather than folded silently into the first. `spec.md` 9,187→8,987 B
-(87.8%), `decisions/transport.md` 7,114→6,978 B (85.2%), task fully closed.
-Merged: `agent/outpost/012-compact-outpost` (code no commits, `embarch-outpost` unchanged at
-`2f6aba3`; doc `0d4ae25`). Ownership check base `21e6b8a6620f`.
-**Reviewer:** skipped (leg ending at its unit cap — a reviewer spawned here would outlive the leg).
-**Hardware debts:** **none new.**
-
-**doc/022** — task wanted a gate rule plus a corpus sweep so a decision-link can't survive a
-mission split still naming the old topic file; both halves are outside a `doc` worker's or a
-supervisor's write set (`scripts/`, `history/*.md` has no ownership-map row at all), so 22
-hand-edited links were reverted without committing and the follow-up (`doc/027`) was filed instead.
-Also corrected a landed sentence claiming `scripts/` is writable by "supervisor and owner" — it is
-never/never/write for both.
-Merged: `agent/doc/022-decision-link-mission-split` (code none; doc `553a582`). Ownership check base
-`49702cb3a369`.
-**Reviewer:** 1 finding — inbox/doc-022-review-scripts-ownership-misstatement.md
-**Hardware debts:** **none new.** No unit this leg touched hardware; all four were doc-side.
-Standing debts, carried forward in full: a native Windows build of `embarch-core` is owed and the
-fleet cannot run one (`core/028`, `core/015`, `core/010`); `umbrella/037`'s corrected check 13 has
-never met the bench; `embarch-outpost`'s Zephyr `tests/unit` cannot be built here, which `outpost/012`
-met again; `embarch-dev-bench`'s west/Zephyr toolchain is likewise absent; the four DUT-gated bench
-tasks are unchanged; `core/028`'s `[assumed]` ESP32-C5 USB-enumeration fact still needs one look at
-one board; `dev-bench/002`'s 17-to-64-step study has never been attempted on the bench.
-
-**study-designer/019** — `decisions/registry.md` squeezed 11,827→10,074 B (four decisions, one
-mission, no seam); cut two sentences beyond its own commit message's description (a ranking claim
-and a design maxim) — the second occurrence of an under-described squeeze this leg, which is what
-turned the note into `tasks/doc/026`. `spec.md` gained two sentences on the registry, 9,136→9,600 B
-(93.8%). Unparked `study-designer/006` as a state correction (its flux ended when `crate.md` was
-paid).
-Merged: `agent/study-designer/019-compact-study-designer` (code no commits, `embarch-study-designer`
-unchanged; doc `f6c307b`). Ownership check base `9e70e5bea0b3`.
-**Reviewer:** no findings.
-**Hardware debts:** **none new.** A doc compaction touches no hardware. Standing debts carry forward
-unchanged from the entries below.
-
-**topology/017** — `decisions/validation.md` split (decision 26 → new `decisions/validate-timing.md`,
-91.0%→71.4%); `spec.md` squeezed 97.3%→87.8% (1,245 B left) — the first under-described squeeze this
-leg, four named deletion categories verified but two further sentences and a caveat also went,
-unnamed in the commit message. Task fully closed.
-Merged: `agent/topology/017-compact-topology` (code no commits, `embarch-topology` unchanged at
-`b722895`; doc `f7506fa`). Ownership check base `097e96a37e61`.
-**Reviewer:** no findings.
-**Hardware debts:** **none new.** A doc compaction touches no hardware. Standing debts carry forward
-unchanged from the entries below.
-
-**outpost/012** — `decisions/module.md` split (decision 22 → new `decisions/testing.md`, byte-diff
-verified) and `open.md` squeezed (four bullets deleted against named homes): 8,192→3,632 B (44.3%)
-and 5,120→3,606 B (70.4%). Repointed all inbound references across both `embarch-doc` and
-`embarch-outpost` (`README.md`, `tests/run-all.sh`, `tests/vocab_check.py`). Task left `open` (two
-of four `Compacts:` files unpaid, crossed the reserve line on the 2026-09-07 rule change rather than
-on an edit).
-Merged: `agent/outpost/012-compact-outpost` (code `2f6aba3`, doc `a620d08`). Ownership check base
-`b7a88e4243e2`. Recovery commit for a stale `State: claimed` on `ui/019` (landed at `412b541` last
-leg) and the `doc/025` inbox drop, both `2abd45c`.
-**Reviewer:** no findings.
-**Hardware debts:** **none new.** Standing debts carry forward unchanged from the entries below: a
-native Windows build of `embarch-core` is owed and the fleet cannot run one; `umbrella/037`'s
-corrected check 13 has never met the bench; `embarch-outpost`'s Zephyr `tests/unit` cannot be built
-here, which this unit met again; `embarch-dev-bench`'s west/Zephyr toolchain is likewise absent; the
-four DUT-gated bench tasks are unchanged; `core/028`'s `[assumed]` ESP32-C5 USB-enumeration fact
-still needs one look at one board; `dev-bench/002`'s 17-to-64-step study has never been attempted.
-
-**topology/014** — `open.md` delete pass (no split seam available): three of eleven open-question
-bullets deleted, each verified against the decision or `spec.md` line it had quietly become a
-duplicate of (decision 24, decision 21, `spec.md:103`). 5,016→3,669 B (98.0%→71.7%), out of reserve.
-Merged: `agent/topology/014-compact-topology` (code no commits, `embarch-topology` unchanged at
-`b722895`; doc `ec0e42f`). Ownership check base `10f2d37896e8`; diffed against pre-image `10f2d37`.
-**Reviewer:** no findings.
-**Hardware debts:** **none new.** A doc compaction touches no hardware. Standing debts, unchanged and
-carried forward in full: a native Windows build of `embarch-core` is owed and the fleet cannot run one
-(`core/028`, `core/015`, `core/010`); `umbrella/037`'s corrected check 13 has never met the bench;
-`embarch-outpost`'s Zephyr `tests/unit` cannot be built here (no `west`, no `ZEPHYR_BASE`);
-`embarch-dev-bench`'s west/Zephyr toolchain is likewise absent, so `dev-bench/002` ran no firmware
-test; the four DUT-gated bench tasks are unchanged; `core/028`'s `[assumed]` ESP32-C5
-USB-enumeration fact still needs one look at one board; **new this leg**, `dev-bench/002` recorded
-that a 17-to-64-step study is accepted by the host and unrunnable on the bench, and nobody has ever
-tried one.
-
-**dev-bench/002** — `decisions/link.md` decision 35 said the 16-step local cap was removed; firmware
-(`app/src/serial_protocol.h:55,714`, both encode/decode refusal paths, a pinning ztest) proves it was
-never built. Amended (not retired) as "not implemented as of 2026-09-08" with the live consequence:
-crate cap is 64, bench cap is 16, so a 17–64-step study the host accepts is silently unrunnable on
-this board. Pushed `decisions/link.md` to 91.5% (1,047 B left); filed `tasks/dev-bench/014`, `In
-flux: yes`.
-Merged: `agent/dev-bench/002-decision-35-step-cap` (code no commits, `embarch-dev-bench` unchanged;
-doc `84243a3`). Ownership check base `412b541756cb`.
-**Reviewer:** no findings.
-**Hardware debts:** **one restated, none new.** The 17-to-64-step gap is a real bench fact that is
-now written down and has never been exercised — a study with more than 16 steps has not been
-attempted against this board, and doing so is what would confirm the failure is silent rather than a
-clean refusal. That needs the bench and an attended leg; burndown forbids bench work outright. Prior
-debts carry forward unchanged from the entries below.
-
-**ui/019** — `decisions/trace-chart.md` split (decision 23 → new `decisions/outcome-decode.md`,
-11,833→8,801 B, nothing deleted). Reviewer caught the split was not verbatim (a closing sentence
-gained a link); reverted in the fold rather than softening the "verbatim" claim.
-Merged: `agent/ui/019-compact-ui-trace-chart` (code no commits, `embarch-ui` unchanged at `34210c0`;
-doc `0470b61`), plus this fold's own revert. Ownership check base `1638b96afd41`; decision 23 diffed
-against its pre-move text at `1638b96`.
-**Reviewer:** 1 finding — inbox/ui-019-verbatim-split-drift.md
-**Hardware debts:** **none new.** A decisions-file split touches no hardware and needs none. All
-prior debts carry forward unchanged from the entry below.
-
-**outpost/013** — `README.md`'s Status section called measured instrumentation overhead
-"deliberately uncharacterised" against a `spec.md` §4 measurement standing since 2026-08-27; restated
-with the real figures (1.6% DUT CPU, misread as 78.1% on host clock). Fixed a broken relative link in
-`tasks/api/051` (one `../` short) as the supervisor's own error. Flagged (not fixed — `scripts/` is
-reserved) that `--refill-owed` fires unconditionally in burndown against only 10 dispatchable scopes,
-making it unsatisfiable by construction at a wave of 12.
-Merged: `agent/outpost/013-readme-overhead-status` (code `ea2273e`, doc `b13901f`). Ownership check
-bases: doc `b4d8a7d9f64d`, code `9621112764f6`.
-**Reviewer:** no findings.
-**Hardware debts:** **none new.** This unit asserts a hardware measurement but took none — it cites
-one `spec.md` already carried. All prior debts carry forward unchanged: a native Windows build of
-`embarch-core` is owed and the fleet cannot run one (`core/028`, `core/015`, `core/010`);
-`umbrella/037`'s corrected check 13 has never met the bench; `embarch-outpost`'s Zephyr `tests/unit`
-cannot be built here (no `west`, no `ZEPHYR_BASE`); the four DUT-gated bench tasks are unchanged; and
-`core/028`'s `[assumed]` ESP32-C5 USB-enumeration fact still needs one look at one board.
-
-**umbrella/025** — four user-visible strings (`doctor.rs` check 1/check 9, an `install.rs` marker
-written into `~/.bashrc`, two `embarch.toml` init comments) named documents a four-file split had
-deleted; repointed and all resolved verified by the reviewer against real files. `install.rs` gained
-a `LEGACY_MARKER` constant, verified byte-identical to the prior value so an uninstall on a
-pre-change machine still removes its own comment. Merge process note: `git merge --ff-only <worktree
-path>` fails and `set -e` did not abort the script — merge by branch name and read the merge output,
-not just the gate's.
-Merged: `agent/umbrella/025-stale-doc-pointers` (code `db08b1e`, doc `01ecd2e`). Ownership check base
-`13df60743463`.
-**Reviewer:** no findings.
-**Hardware debts:** **none new, and one deliberately not incurred.** This unit changes what `doctor`
-and `install` print; exercised only via `cargo test`, never against the owner's real installation —
-no `install`, no `uninstall`, no live `doctor`, no service operation, per burndown's ban on bench
-work. All prior debts carry forward unchanged: a native Windows build of `embarch-core` is owed and
-the fleet cannot run one (`core/028`, `core/015`, `core/010`); `umbrella/037`'s corrected check 13
-has never met the bench that found its defects; `embarch-outpost`'s Zephyr `tests/unit` cannot be
-built here (no `west`, no `ZEPHYR_BASE`); the four DUT-gated bench tasks are unchanged; and the
-ESP32-C5 USB-enumeration fact `core/028` tagged `[assumed]` still needs one look at one board. **A
-real uninstall on a pre-change machine is the only way the legacy-marker path is ever exercised end
-to end** — not a hardware debt, but a debt, owed to an attended session.
-
-**api/030** — `src/build.rs`'s log drain used `next_line()`, which decodes UTF-8 per line and treats
-the first bad byte as EOF — one latin-1 path silently dropped the rest of a build log, worst on
-failing builds. Now reads raw bytes via `read_until`, falls back to `from_utf8_lossy` only for the
-failing line, names substituted lines by number. Reviewer said the fix should have been its own
-decision rather than an amendment to decision 18 (truncation) — agreed, but burndown forbids
-authoring one, so the finding was left in `inbox/` rather than fixed, for a later non-burndown leg to
-file properly. Pushed `decisions/build.md` from 10,934→11,134 B (crossed 11,059 B reserve);
-`tasks/api/050` filed in the same commit, blocked, `In flux: yes`.
-Merged: `agent/api/030-build-log-utf8` (code `a0950ec`, doc `d2ab624`). Ownership check base
-`2e58fb9694c0`.
-**Reviewer:** 1 finding — inbox/api-030-review-finding.md
-**Hardware debts:** **none new.** A build-log drain is host-side and exercised against a real child
-process in-crate. Prior debts carry forward unchanged from the two entries above — including that a
-native Windows build of `embarch-core` is owed and the fleet cannot run one.
-
-**study-designer/010** — `AstProtocol`'s public shape changed (line numbers threaded through error
-paths; `sources`/`session` grew a 4th tuple field, `line: u32` added) after confirming no consumer
-outside the crate exists, independently by the supervisor and the reviewer. `validate_protocol`'s
-protocol-wide errors report at the `protocol` line by design, not a shortcut. Supervisor edited
-`interfaces/eap.md` in the fold to correct "Every error carries its source line" (the false claim this
-whole task existed to fix), over the reviewer's own read that it was out of scope for a finding.
-Merged: `agent/study-designer/010-eap-error-lines` (code `9089feb`, doc `2fd192f`), plus this fold's
-own edit to `embarch-study-designer/interfaces/eap.md`. Ownership check base `2fd192f3a015`.
-**Reviewer:** no findings.
-**Hardware debts:** **none new.** This unit is a host-side parser change in a `no_std`-adjacent crate
-and touched no board. Prior debts carry forward unchanged from the `topology/022` entry above. The
-`.eap` interpreter this parser feeds has a firmware half on dev-bench pinned against this module by
-a literal frame; nothing in this unit exercised that side, so no bench debt is owed but the question
-is recorded rather than left absent.
-
-**topology/022** — first burndown leg of the day (re-armed 22:06, deadline 06:59, 97%/97% caps, wave
-12; a 4-unit leg cap makes wave 12 unreachable by construction). `decisions/crate.md` decision 4 —
-the token mirror in `embarch-umbrella/src/token.rs` closed, no longer live — corrected against
-source (worker found 3 call sites, reviewer re-derived and found 4; commit-message-only discrepancy,
-nothing on disk wrong). Reviewer's own finding — `open.md`'s mirrors bullet had gone stale one layer
-down from this same diff — fixed in the fold: `open.md` now 5,016/5,120 B (104 B left, tightest the
-file has been).
-Merged: `agent/topology/022-crate-md-mirror-retired` (code none — dispatched doc-only; doc `e420bf5`),
-plus this fold's own edits to `embarch-topology/open.md` and `tasks/topology/014-compact-topology.md`.
-Ownership check base `10f8e75a35a8`. Dispatch note for this leg (announced at 22:06) misattributed
-as "leg 053" in four claim commits, left uncorrected once workers were live; leg is actually 054.
-**Reviewer:** 1 finding — inbox/topology-open-md-line-27-stale-token-mirror.md
-**Hardware debts:** **none new, and none possible** — this unit changed documentation only and
-touched no code repo and no board. All prior debts carry forward unchanged: a native Windows build
-of `embarch-core` is owed and the fleet cannot run one (`core/028`, `core/015`, `core/010`);
-`umbrella/037`'s corrected check 13 has never met the bench that found its defects; `embarch-outpost`'s
-Zephyr `tests/unit` cannot be built here (no `west`, no `ZEPHYR_BASE`); the four DUT-gated bench
-tasks are unchanged; and the ESP32-C5 USB-enumeration fact `core/028` tagged `[assumed]` still needs
-one look at one board. Burndown forbids bench units outright, including by the supervisor's own
-hands, so none of these could have been touched regardless.
-
-**core/029** — split `decisions.md` along the file's real seam rather than the task's suggested one:
-`platform.md` keeps decisions 1,2,3,4,7,14,15,17 (5,820 B); new `embarch-core/decisions/auth.md`
-takes 5,6,11,42,46 (6,627 B), both out of reserve, byte-identity re-derived independently by the
-reviewer including the three protected passages (decision 1/2/7/17's Corrected paragraph, decision
-3's SCM handshake detail, decision 46's rejected `include_str!` arm). Reviewer's finding — a stale
-`history/core.md` link naming `decisions/platform.md` directly for a decision that moved to
-`auth.md` — fixed in the fold.
-Merged: `agent/core/029-compact-core-platform` (code none — dispatched doc-only; doc `5c55b4b`), plus
-this fold's own one-line edit to `history/core.md`. Ownership check base `608c7223f81b`.
-**Reviewer:** 1 finding — inbox/doc-history-core-decision-42-link-stale-after-029-split.md
-**Hardware debts:** **none new, and none possible** — this unit changed documentation only and
-touched no code repo and no board. All prior debts carried forward unchanged: a native Windows build
-of `embarch-core` is owed and the fleet cannot run one (`core/028`, `core/015`, `core/010`);
-`umbrella/037`'s corrected check 13 has never met the bench that found its defects; `embarch-outpost`'s
-Zephyr `tests/unit` cannot be built here (no `west`, no `ZEPHYR_BASE`); the four DUT-gated bench
-tasks are unchanged; the bench queue is parked by the owner's own commit; and the ESP32-C5
-USB-enumeration fact `core/028` tagged `[assumed]` still needs one look at one board.
-
-**suite/021** — a `suite`-scope unit (no worker, whole diff the supervisor's, announced and parked
-31 minutes with no objection). Re-measured the task's own evidence and found it incomplete in three
-places (`embarch-doc`'s `docs-ci.yml`, `embarch-umbrella`'s manual `assemble-suite.yml`, and
-`embarch-outpost` never having had `.github` either — task had only asserted the last of
-`embarch-dev-bench`). Both `embarch-core` decision 1/2/7/17 and `embarch-dev-bench` decision 9 gained
-dated **Corrected 2026-09-08** paragraphs retiring the CI-implemented claim, keeping the reasoning.
-Surfaced that `embarch-dev-bench` and `embarch-outpost` have no CI and no `Cargo.toml`, so the
-fleet's own merge gate cannot reach either at all. Pushed `embarch-core/decisions/platform.md` into
-reserve (11,701/12,288 B) and filed `tasks/core/029` in the same commit, split-first, dispatchable.
-Merged: doc `ac20966` — **the fold commit itself, not a merge** (a `suite` unit has no branch and no
-worker). Announced and parked at `ts` `1788917508.792199` (2026-09-08 19:31:48), 31 minutes with no
-objection before executing.
-**Reviewer:** no findings.
-**Hardware debts:** **none new, and none possible** — this unit changed three documents and touched
-no code repo. All prior debts carried forward unchanged: a native Windows build of `embarch-core` is
-owed and the fleet cannot run one (`core/028` added to it, `core/015` and `core/010` behind it);
-`umbrella/037`'s corrected check 13 has never met the bench that found its defects; `embarch-outpost`'s
-Zephyr `tests/unit` cannot be built here (no `west`, no `ZEPHYR_BASE`); the bench queue is parked by
-the owner's own commit; and the ESP32-C5 USB-enumeration fact `core/028` tagged `[assumed]` needs one
-look at one board.
-
-**core/028** — `embarch-core/README.md` documented four env overrides
-(`EMBARCH_DEV_BENCH_PORT`/`_SERIAL`/`_PRODUCT`/`_INTERFACE`) that `decisions/probes.md` decision 23
-had already removed with no replacement knob; replaced with prose naming the real mechanism
-(`embarch_topology::hardware::resolve_dev_bench_port`, `POST /probes/enroll`, `POST
-/dev-bench/link`). Supervisor over-tightened worker prose at the merge, introducing a wrong noun and
-then a relative cross-repo link the reviewer caught as the exact shape decision 46 rejects — fixed in
-`11f5dc3` (noun fix in `4e0e7f4`). Reviewer's second flag — an `[assumed]` ESP32-C5 USB-enumeration
-hardware "fact" with circular provenance across two task files, neither a measurement — rewritten to
-say so plainly rather than being landed as fact.
-Merged: `agent/core/028-readme-env-overrides` (code `fec6841`, doc `74cbc87`), plus two supervisor
-follow-ups on `embarch-core`: `4e0e7f4` (noun correction) and `11f5dc3` (relative link → URL), and
-this fold's own edit to `embarch-core/open.md`.
-**Reviewer:** 1 finding — inbox/core-readme-relative-doc-link-contradicts-decision-46.md
-**Hardware debts:** **one, and it is the standing `embarch-core` one, now owed by this unit too.**
-The native Windows build was not run — `hidapi`'s `build.rs` wants an MSVC `cc` WSL lacks, and
-Windows `cargo.exe` cannot follow this worktree's Linux symlinks. It takes ~52 s from the main
-checkout and it is the owner's; the diff is `README.md` only, no `src/` change. Newly sharpened
-rather than added: the ESP32-C5 USB-enumeration fact now carries an `[assumed]` tag and a named
-discharge — one board, one look. Carried forward unchanged: `umbrella/037`'s corrected check 13 has
-never met the bench that found its defects; `embarch-outpost`'s Zephyr `tests/unit` cannot be built
-here (no `west`, no `ZEPHYR_BASE`); the bench queue is parked by the owner's own commit.
-
-**study-designer/008** — `DeclaredGatt`, `Study.gatt`, `MAX_DECLARED_SERVICES` never existed at any
-commit (`git log -S` empty); withdrew all three from `interfaces/types.md`, `spec.md`, and a fourth
-document the worker found unprompted — `decisions/seals.md`, which listed `gatt` among fields
-outside the study's integrity seals despite the field never existing. Decision 45's tombstone kept
-its reasoning, opened "Designed, never built," and named the real types (`GattServiceInfo`,
-`GattCharacteristicInfo`) it would reuse if ever built — reviewer confirmed both types are real.
-Merged: `agent/study-designer/008-declaredgatt` (doc `ffed7ca`; no code SHA — doc-only unit).
-**Reviewer:** no findings.
-**Hardware debts:** **none new, and none possible** — this unit removed descriptions of code that has
-never existed. All prior debts carried forward unchanged and none was touched: a native Windows build
-of `embarch-core` is owed and the fleet cannot run one (`core/015`, `core/010` behind it);
-`umbrella/037`'s corrected check 13 has never met the bench that found its defects; `embarch-outpost`'s
-Zephyr `tests/unit` cannot be built here (no `west`, no `ZEPHYR_BASE`); the bench queue is parked by
-the owner's own commit.
-
-**umbrella/036** — narrowed a three-mirror task to one before dispatch (WSL2 token detection only);
-`src/token.rs` (245 lines) deleted, `embarch-umbrella` now calls
-`embarch_core_client::token_discovery::resolve_token` in process, closing a promise `topology/020`
-had made in `decisions/crate.md`. `decisions/mirrors.md` decision 20's cost argument (declining a
-shared crate as "more machinery than the problem justifies") had a four-day shelf life —
-`embarch-api/crates/embarch-core-client` already existed for exactly this function — amended to say
-so. Task left **partially done**: `CoreConfig`/`ProjectConfig` mirror drift and `doctor` check 6's
-title still open. Reviewer flagged (unprompted) that `topology/020`'s own qualification of
-`crate.md`, written one leg earlier, was made false by this same diff hours later — filed as
-`tasks/topology/022` rather than fixed here.
-Merged: `agent/umbrella/036-token-mirror` (code `e1a5e7c`, doc `444f84d`).
-**Reviewer:** no findings.
-**Hardware debts:** **none new, and none possible** — this is a dependency swap and comment
-repointing, host-side throughout, and no board can observe it. All prior debts carried forward
-unchanged and none was touched: a native Windows build of `embarch-core` is owed and the fleet
-cannot run one (`core/015`, `core/010` behind it); `umbrella/037`'s corrected check 13 has never met
-the bench that found its defects; `embarch-outpost`'s Zephyr `tests/unit` cannot be built here (no
-`west`, no `ZEPHYR_BASE`); the bench queue is parked by the owner's own commit.
-
-**study-designer/023** — `interfaces/limits.md`'s `MAX_DISCOVERED_SERVICES` row credited one decision
-(57, static source extraction) with both a 3-service figure it validates and a 7-service figure that
-belongs to a different, live-discovery decision (44) behind an encrypted link — split into two
-correctly-credited clauses. No code SHA, doc-only, one table row.
-Merged: `agent/study-designer/023-limits-row-provenance` (doc `46ac546`; no code SHA — doc-only
-unit).
-**Reviewer:** no findings.
-**Hardware debts:** **none new, and none possible** — one table row. All prior debts carried forward
-unchanged and none was touched: a native Windows build of `embarch-core` is owed and the fleet cannot
-run one (`core/015`, `core/010` behind it); `umbrella/037`'s corrected check 13 has never met the
-bench that found its defects; `embarch-outpost`'s Zephyr `tests/unit` cannot be built here (no
-`west`, no `ZEPHYR_BASE`); the bench queue is parked by the owner's own commit. This leg touched no
-hardware and incurred no hardware debt in any of its four units.
-
-**api/049** — `dev_bench_hello()`'s CLI success object named a key `schema_version`, which
-`json_out::stamped()` unconditionally overwrites with the crate's own envelope constant — the
-dev-bench handshake's real compat number reached no machine reader. Renamed to
-`dev_bench_schema_version`. The existing test suite could not have caught it (it drives every
-subcommand against a closed port, so `dev-bench-hello` only ever builds its error object); a new
-`tests/dev_bench_hello_success.rs` drives the real subprocess against a `MockCore` with a
-deliberately distinct handshake number. Supervisor mutation-tested the new test by reverting the fix
-locally and confirming it fails.
-Merged: `agent/api/049-json-schema-collision` (code `4ceedc8`, doc `739b19f`).
-**Reviewer:** no findings.
-**Hardware debts:** **none new.** This is host-side throughout and no board can see it; confirming
-the *rendered* value against a real Core is possible but adds nothing the mock does not already
-establish. All prior debts carried forward unchanged: a native Windows build of `embarch-core` is
-owed and the fleet cannot run one (`core/015`, `core/010` behind it); `umbrella/037`'s corrected
-check 13 has never met the bench that found its defects; `embarch-outpost`'s Zephyr `tests/unit`
-cannot be built here (no `west`, no `ZEPHYR_BASE`); the bench queue is parked by the owner's own
-commit.
-
-**dev-bench/012** — `embarch-dev-bench/decisions/ble.md` found at 12,282/12,288 B (six bytes of
-headroom, the tightest file in the corpus) despite a size-debt date two weeks out; dispatched a
-split-only exception against its `In flux: yes` compaction task on the reasoning that a verbatim
-split restates nothing so the bar doesn't forbid it. Split into pairing/security (decisions 11, 15,
-33, 34, 37, stayed) and a new `decisions/scanning.md` (17, 23, 31, 32, 44) along a "before a
-connection exists" seam. Supervisor mechanically diffed every `###`-delimited section pre/post split
-(9/9 identical) rather than trusting the report.
-Merged: `agent/dev-bench/012-split-ble` (doc `ec5cdf4`; no code SHA — doc-only unit).
-**Reviewer:** no findings.
-**Hardware debts:** **none new, and none possible** — this unit moved text between two files. All
-prior debts carried forward unchanged: a native Windows build of `embarch-core` is owed and the fleet
-cannot run one (`core/015`, `core/010` stacked behind it); `umbrella/037`'s corrected check 13 has
-never met the bench that found its defects; `embarch-outpost`'s Zephyr `tests/unit` cannot be built
-here (no `west`, no `ZEPHYR_BASE`); the bench queue is parked by the owner's own commit. `ble.md`
-went 12,282 B (99.95%)→64.3% of cap, out of reserve, marked PAID; `open.md` (338 B left) and
-`spec.md` (780 B left) remain `In flux: yes` squeezes, untouched.
-
-**topology/020** — `decisions/crate.md` decisions 4 and 8 claimed linking the shared crate leaves
-"nothing left to mirror" and "no way for the two to disagree" — true of the crate, false of callers:
-`api/038` had already found `embarch-core-client` linking the crate while still running its own
-narrower `is_wsl2` check beside a `detect_wsl2` call it never made. Qualified (not reversed) with
-dated paragraphs; `open.md` gained a bullet recording that no cheap detector exists for a caller
-writing a second predicate beside a call it never makes. Reviewer flagged one thing it could not
-verify (an `embarch-api` SHA, unreachable from a doc-repo reviewer) — supervisor verified it by hand:
-`861f30f api/038: token_discovery's WSL2 check delegates to embarch_topology::detect_wsl2`.
-Merged: `agent/topology/020-crate-md-uniqueness` (doc `a8a35a0`; no code SHA — doc-only unit).
-**Reviewer:** no findings.
-**Hardware debts:** **none new, and nothing here can incur one** — the whole unit is two paragraphs
-in a decisions file and one bullet in an `open.md`. Carried forward unchanged from the last leg: a
-native Windows build of `embarch-core` is owed and the fleet cannot run one, with `core/015` and
-`core/010` stacked behind it; `umbrella/037`'s corrected check 13 has never met the bench that found
-its defects; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this environment (no
-`west`, no `ZEPHYR_BASE`); the bench queue is parked by the owner's own commit. Pushed
-`decisions/crate.md` into reserve (91.9%, 998 B left); `tasks/topology/021` records it — now four
-open compaction tasks in the `topology` scope (`014`, `017`, `019`, `021`).
-
-**api/038** — `status.d/api-038-...` fragment named the wrong mechanism (a shared suite-level doc
-fragment for a change to a sub-project decisions file `check-ownership.py` has no allow-list row for
-at all); converted into `tasks/topology/020` instead of folded. Decision 62 as landed cited a
-`status.d/` filename that didn't match the actual fragment and, more importantly, that fragments are
-transient — consumed and deleted by the very fold that lands the citing decision, so it was born
-pointing at nothing (third instance of this class this leg) — repointed at the durable
-`tasks/topology/020`. `token_discovery::is_wsl2` narrowed to delegate to
-`embarch_topology::software::detect_wsl2` (accepts only "microsoft" ∪ `$WSL_DISTRO_NAME`, strictly
-less accepting than the old "microsoft" ∪ "wsl" union) — accepted as an honestly-hedged decision, with
-a real narrow surviving failure case named.
-Merged: `agent/api/038-wsl2-predicate` (code `861f30f`, doc `bbceeae`).
-**Reviewer:** no findings.
-**Hardware debts:** **none new.** Nothing here needs a board: the predicate is host-side, the tests
-are host-side, and no token was read from a real install. One inherited debt is sharper: this change
-alters where `embarch-api` looks for the token on a WSL2 host, and nobody has run it against a real
-deployed Core. Carried forward unchanged: a native Windows build of `embarch-core` is owed and the
-fleet cannot run one, with two changes now stacked behind it (`core/015` and this leg's `core/010`);
-`umbrella/037`'s corrected check 13 has never met the bench that found its defects; `embarch-outpost`'s
-Zephyr `tests/unit` suite cannot be built from this environment (no `west`, no `ZEPHYR_BASE`). The
-bench queue is still parked by the owner's own commit.
-
-**study-designer/020** — `tasks/study-designer/007` cited a sentence in
-`embarch-study-designer/open.md` that has never carried it; the bullet lives in
-`embarch-dev-bench/open.md` under "Never exercised" and was amended 2026-09-07 to record leg 039's
-stopped attempt. Re-quoted with the full amended sentence. Supervisor added a merge-time assertion
-reading `007`'s `State:` line before merging, to confirm an owner-parked task (`blocked` since
-2026-09-07) wasn't silently unparked by a unit that just noticed the old quote was wrong.
-Merged: `agent/study-designer/020-source-cites-wrong-open-md` (doc `bc211fa`; doc-only, no code SHA).
-Ownership check base `ac88483f1d8f`.
-**Reviewer:** no findings.
-**Hardware debts:** **none new, and one deliberately not discharged.** This unit's whole subject is a
-bench debt — bond clearing has never been observed firing on real hardware, decision 11's clearing
-step has only been reasoned about — and the correct outcome was to fix the citation and leave the
-debt exactly where it is. It needs the bench, the bench queue is parked by the owner's own commit,
-and `study-designer/007` stays `blocked`. Carried forward unchanged: a native Windows build of
-`embarch-core` is owed and the fleet cannot run one, now with two changes stacked behind it
-(`core/015` and this leg's `core/010`); `umbrella/037`'s corrected check 13 has never met the bench
-that found its defects; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this
-environment (no `west`, no `ZEPHYR_BASE`).
-
-**core/010** — supervisor mis-provisioned this unit's doc worktree inside `embarch-core` itself
-(wrong-repo `cd`); the first worker correctly wrote/committed/pushed nothing and reported it, cost
-one wasted spawn. `src/flash_backend.rs`'s cited line numbers had aged out (`locate()` at :270-274
-not :270-272, unreachable arm at :308 not :273-274) — third consecutive leg a task file's own
-numbers were stale. Deleted (rather than resurrected) the dead `.with_context("...is not a known
-backend")` unreachable arm on the argument that keeping a fallible arm there would be a second lie
-about an unreachable path; reviewer independently confirmed the other `build()` call site (the
-non-forced `preferred_for` loop) keeps its own guard untouched.
-Merged: `agent/core/010-flash-backend-unknown-name` (code `b278e96`, doc `b51abda`).
-**Reviewer:** no findings.
-**Hardware debts:** **one new, and it is the ordinary Windows one rather than a board.**
-`embarch-core` changed, so a native Windows build is owed before anything ships — the fleet cannot
-run one, and this is the second `embarch-core` change now stacked behind it (`core/015` is the
-other). Nothing here needs a probe: every new test is host-side, no flash was performed. Carried
-forward unchanged: `umbrella/037`'s corrected check 13 has never met the bench that found its
-defects and needs only the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be
-built from this environment (no `west`, no `ZEPHYR_BASE`) and no leg can currently claim it green.
-The bench queue is still parked by the owner's own commit.
-
-**dev-bench/005** — README's espressif section still instructed setting the dead
-`EMBARCH_DEV_BENCH_PORT`; removed rather than replaced, since the ESP32-C5-WROOM-1 DK enumerates as
-a plain USB Serial/JTAG device with no VCOM — no `link_port_interface` exists to state, and inventing
-one would have been an inferred hardware fact. Filed the resulting gap (`tasks/core/028`). A
-`manifest/west.yml` NCS-pin caveat was also removed on the argument the nordic board has since been
-enrolled/flashed/run repeatedly — not independently verified that the specific pin used matches those
-runs.
-Merged: `agent/dev-bench/005-readme-board-and-links` (code `8854f3e`, doc `37efe77`). Ownership check
-bases: code `973483ef1e67`, doc `2bddaba24832`.
-**Reviewer:** no findings.
-**Hardware debts:** **none new, and one narrowed.** This unit needed no board and took none. What it
-did do is write the enrolment fact an operator cannot infer — `link_port_interface = 2`, because the
-DK's console is VCOM1 and detection's lowest-index fallback lands on a port that accepts bytes and
-never answers — into the build instructions, scoped to the nRF54L15DK, never promoted to measured.
-Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and
-still outstanding; `umbrella/037`'s corrected check 13 has never met the bench that found its
-defects; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this environment (no
-`west`, no `ZEPHYR_BASE`) and no leg can currently claim it green. The bench queue is still parked by
-the owner's own commit.
-
-**outpost/004** — 22 mechanical-looking `design.md`→`decisions.md` reference fixes across 14 files,
-re-derived (task's 22 had aged to 26) and split into genuinely-mechanical decision-number citations
-vs. section citations needing the target file opened. Comment-only verified by the supervisor
-(`git diff -U0` filtering comment-prefixed lines returned nothing) since the Zephyr `tests/unit`
-ztest suite cannot run in this environment (no `west`/`ZEPHYR_BASE`) — a real, opened debt. Reviewer
-line qualified by the supervisor as possibly manufactured: the worker had already found the stale
-"deliberately uncharacterised" README sentence and logged it as out-of-scope; the supervisor told the
-reviewer to file a drop if it agreed, and it did.
-Merged: `agent/outpost/004-design-md-citations` (code `9621112`, doc `a06da6f`). Ownership check
-bases: code `0517e598f8c1`, doc `6fd3210ba83b`.
-**Reviewer:** 1 finding — inbox/outpost-readme-status-overhead-stale.md
-**Hardware debts:** **one new, and it is a toolchain rather than a board.** `embarch-outpost`'s
-Zephyr `tests/unit` ztest suite has not been built or run by this unit, and cannot be from the
-fleet's environment — no `west`, no `ZEPHYR_BASE`. It is owed in a session that has the Zephyr
-toolchain; no leg can currently claim that suite is green after any `embarch-outpost` change. Carried
-forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still
-outstanding, and is also what would deploy `core/020`'s rename; `umbrella/037`'s corrected check 13
-has never met the bench that found its defects and needs only the dev-bench board. The bench queue
-is still parked by the owner's own commit.
-
-**umbrella/042** — one-line fix, dispatched as one on purpose (`embarch-umbrella`'s stale
-`decisions/surface.md` citation for decision 52, which had moved to `decisions/shape.md`). Widened
-the acceptance grep to every `embarch-api/decisions/` path cited under `embarch-umbrella/` rather
-than only the task-named file, since `api/048` had split a decision into `shape.md` an hour earlier
-in this same leg. Surfaced the underlying gate gap: `check-decision-refs.py` resolves a decision
-number and falls back to "defined somewhere in this sub-project," so a citation naming the wrong file
-still resolves — third unit this leg to hit the same blind spot.
-Merged: `agent/umbrella/042-schema-skew-path` (code none — docs-only, zero diff in `embarch-umbrella`;
-doc `640012c`). Ownership check base `893a62977f05`; the doc branch's pre-rebase tip `2030a07` is not
-a revert handle.
-**Reviewer:** no findings.
-**Hardware debts:** none owed by this unit — a documentation citation, no board, no build. Carried
-forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still
-outstanding, and is also what would deploy `core/020`'s rename; `umbrella/037`'s corrected check 13
-has never met the bench that found its defects and needs only the dev-bench board. The bench queue is
-still parked by the owner's own commit.
-
-**api/048** — directed the worker to the CLI-subcommand arm of a two-arm task (restoring CLI ⊇ MCP)
-rather than the decision-amendment arm, since `suite/features.md` already claimed the superset as
-shipped. Landed two adjacent one-line repairs (`interfaces/tools.md`'s "no CLI twin" line;
-`decisions/study-events.md`'s stale link to a decision that had since moved). Pre-picked
-`decisions/shape.md` over the blocked, near-empty `tool-wrapping.md` for the new decision 61, with the
-argument written into the task before dispatch. Reviewer found the same `schema_version`-overwrite
-collision that became `api/049` — supervisor verified the overwrite mechanism in `src/json_out.rs`
-before filing rather than fixing it in the fold, since the fix needed a mock-Core test to be real.
-Merged: `agent/api/048-cli-superset` (code `4bd3b5e`, doc `13b5bf6`). Ownership check bases: code
-`ddd820ec7cd9`, doc `a29b5cfae5aa` after the rebase; the doc branch's pre-rebase tip `9e1ba86` is not
-a revert handle.
-**Reviewer:** 1 finding — inbox/api-dev-bench-hello-json-schema-version-collision.md
-**Hardware debts:** none owed by this unit. It adds a reason to care about an existing one:
-`api/049`'s missing test wants a mock Core, not a board — while the human check that
-`dev-bench-hello` renders sensibly against a real Core still rides on `core/015`'s native Windows
-build, which is the owner's and still outstanding, and which is also what would deploy `core/020`'s
-`self_reported_hardware_id` rename this whole tool chain is written around. Carried forward
-unchanged: `umbrella/037`'s corrected check 13 has never met the bench that found its defects and
-needs only the dev-bench board. The bench queue is still parked by the owner's own commit.
-
-**study-designer/022** — worker deliberately not sent to read `reference-dut-fw` source (the same
-shortcut that created the original defect); restored a citation to decision 57 in
-`src/limits.rs:80-84` rather than re-deriving a number. Reviewer caught a misattribution the
-supervisor's own four pre-asked questions had missed: the landed row credited decision 57 with both a
-3-service figure (correct) and a 7-service figure that belongs to decision 44 (live discovery behind
-an encrypted link, a different mechanism) — filed as `tasks/study-designer/023` rather than
-hand-patched a third time from memory.
-Merged: `agent/study-designer/022-limits-service-count` (code `c58f592`, doc `4ff55eb`). Ownership
-check base `345f0978cee8`.
-**Reviewer:** 1 finding — inbox/study-designer-022-decision-57-cited-for-a-number-it-does-not-state.md
-**Hardware debts:** none owed by this unit — a citation fix, no board touched, and the worker was
-directed away from the one action that would have needed one. Carried forward unchanged: `core/015`'s
-native Windows build of `embarch-core` is the owner's and still outstanding; `umbrella/037`'s
-corrected check 13 has never met the bench that found its defects and needs only the dev-bench
-board. The bench queue is still parked by the owner's own commit.
-
-**umbrella/026** — a reconstruction, not a re-run: leg 047 had merged and pushed both `umbrella/026`
-and `api/036` to `main` on 2026-09-07 and was killed (`fleet stop` 21:06) before folding either. The
-work was correct on `main` already; what was missing was the bookkeeping (`changelog.d/` fragments
-never consumed, `suite/features.md` never reassembled, `tasks/umbrella/026` still reading
-`State: claimed — leg 046`). Every Done-when box was ticked by the worker's own record; nothing was
-re-run or re-read for intent, and the task file's state line says so explicitly. Also corrected the
-prior day's closing note: `api/036`'s `inbox/` drop was not lost — the owner rescued it as
-`tasks/umbrella/042-schema-skew-cites-a-moved-api-decision-path.md`, `State: open`.
-Merged: nothing by this unit's actor. SHAs recorded because they had none anywhere until this entry:
-`umbrella/026` — `embarch-umbrella` `95f2975`, `embarch-doc` `2156553`, merged to `main` as `2b29d67`.
-`api/036` — `embarch-api` `95c1954`, `embarch-doc` `cf12cae` then `8005396`.
-**Reviewer:** skipped (no diff of mine to review — this fold consumes two already-merged units'
-fragments and corrects one task's state).
-**Hardware debts:** none owed by this recovery. Carried forward unchanged from the 2026-09-07 fold:
-`core/015`'s native Windows build of `embarch-core` is still outstanding and is the owner's, and it
-is load-bearing twice over — it is also what would deploy `core/020`'s `self_reported_hardware_id`
-rename; `umbrella/037`'s corrected check 13 has never been run against the bench that found its
-defects, and needs only the dev-bench board. The bench queue is still parked by the owner's own
-commit.
-*Days 2026-09-07 to 2026-09-07 rolled to [log-archive/supervisor-log-2026-09-07-to-2026-09-07.md](log-archive/supervisor-log-2026-09-07-to-2026-09-07.md).*
+*Days 2026-09-08 to 2026-09-08 rolled to [log-archive/supervisor-log-2026-09-08-to-2026-09-08.md](log-archive/supervisor-log-2026-09-08-to-2026-09-08.md).*
