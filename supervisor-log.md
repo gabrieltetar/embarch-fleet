@@ -146,7 +146,8 @@ Core *to diagnose one* — the reviewer checked all four call sites (`probe_topo
 `check_probes`, `check_flash_backend`) and none enrols, flashes or resets.
 
 **Merged:** no branch — a supervisor-executed `suite` unit is written directly in the leg worktree,
-so **the fold commit is the only SHA and it is the revert handle**. Files: `embarch.md` (§4 sketch
+so **the fold commit is the only SHA and it is the revert handle: `353a285`** (log `fe7220a`, with
+this SHA added in a follow-up commit — see the note at the end of this entry). Files: `embarch.md` (§4 sketch
 and the three paragraphs under it, 13,905 → 16,536 B against a 25 KB cap, nowhere near reserve),
 `history/doc.md`, one `changelog.d` fragment, and the task file. `python3 scripts/check-docs.py`
 **all 11 green**, re-run after the corrections — and it caught the fragment at **202 B against a
@@ -182,6 +183,18 @@ not asked a reviewer to attack it. **A supervisor-executed `suite` unit has no w
 reading and no branch to revert cheaply, so the reviewer is the only adversarial step it gets**, and
 whether it happens depends on the supervisor remembering to ask for it *before* the fold. That is a
 habit, not a mechanism.
+
+**The same fold failure as leg 081, in the same place, and it is now twice.** `fold-commit.py`
+committed this entry to `embarch-fleet` (`fe7220a`) and then **failed on the instance side**,
+leaving the ordering it is designed to prefer: an entry for a fold that had not happened. The cause
+is narrow and repeatable — the script's `git rm` of the settled task file refuses while that file
+has **unstaged modifications**, and a supervisor-executed `suite` unit *always* edits its own task
+file last, so it is always dirty at that moment. Leg 081 hit it on `suite/025` with a
+`changelog.d/` fragment; this is the same refusal on a different path. **The fix is to `git add` (or
+`git rm`) the task file before calling `fold-commit.py`**, and a `suite` unit should do that as a
+matter of course. I completed the instance commit by hand as `353a285` and added its SHA to the
+**Merged:** line above in a follow-up commit. Twice is a pattern, and `scripts/` is the owner's, so
+it is recorded here rather than filed — but the next leg meeting it should file it.
 
 **Decided:** nothing suite-wide. Within `embarch-api`, **decision 70** in a **new**
 `decisions/hardware-selection.md` records the three things `open.md` said were owed for
