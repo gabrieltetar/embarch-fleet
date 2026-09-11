@@ -97,6 +97,54 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 22:24 — api/044 the deferred `hardware_id` rename is cancelled rather than scheduled
+
+**Decided:** **the rename does not happen — neither a compatibility window nor a coordinated
+commit — and `embarch-core` decision 56 is the settlement.** This question has now been deferred
+three times (`tasks/core/020` raised it, decision 47 recorded the deferral, `tasks/api/044`
+inherited it), and the reason it kept surviving is that everyone re-read the *original* defect
+rather than the current one. The original was one **spelling** carrying two **concepts**:
+`hardware_id` meant the JTAG-read ID on the three probe routes and the bench's self-reported ID on
+`GET /dev-bench/hello`, four fields apart in one body. `core/020` renaming the hello field to
+`self_reported_hardware_id` ended that outright. What is left is one **concept** under two
+spellings, which no single response can make a reader get wrong.
+
+Against that: renaming `hardware_id` on `/probes/enroll`, `/probes/enrolled` and `POST /validate`
+is **not a compile error anywhere** — `embarch-core-client`'s structs are freestanding, not shared
+with Core — so it fails at runtime, on the first call, in another repo, reaching the CLI, every MCP
+tool and `embarch-ui` at once. A compatibility window buys that back only by serving two live names
+for one field. So: unprefixed `hardware_id` is the suite's name for the probe-read identity, and
+the `probe_hardware_id` prefix stays confined to the one route where the two IDs are neighbours and
+have to say which they are. **What the decision owes in exchange** is that the concept be legible at
+the struct rather than only on the wire — all three client structs now carry a doc comment naming
+which ID they hold.
+
+**Also filed `tasks/core/039`: two live `embarch-core` decisions are both numbered 54**
+(`decisions/flashing.md:46` and `decisions/surfaces.md:45`), found while picking this decision's
+number. `check-decision-refs.py` is green on both because it resolves a number against the
+sub-project rather than against a file — the same blind spot leg 076 hit from the other direction
+with `umbrella/042`. The missing uniqueness check is already `tasks/doc/033` and stays the owner's.
+**Merged:** `agent/api/044-hardware-id-rollout` (code `9b7bfac`, doc `7a066e2`). Ownership check
+bases: code `57d27f70cff7`, doc derived at the fold.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — doc comments and a decision, no board, no wire change.
+Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and
+still outstanding; `umbrella/037`'s corrected check 13 has never met the bench that found its
+defects and needs only the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be
+built from this environment. The bench queue is still parked by the owner's own commit.
+**Budget:** PROCEED throughout, weekly 18.4% of a 90% cap, wave 6.
+**Least sure about:** two things, and the second is my own error. First, that `probe_hardware_id` on
+one route beside `hardware_id` on three will not re-confuse someone reading the two side by side —
+the decision's answer is that a prefix earns its keep only where it disambiguates against a
+neighbour, which is judgement, not proof. Second: **the landed `embarch-api` commit message
+`9b7bfac` says "decision 55" where every line of actual content says 56.** I renumbered mid-unit
+after the `core/037` worker took 55 concurrently, amended the file and missed the message body. It
+is on `main` and not worth rewriting; anyone grepping commit messages for "decision 55" will land
+here wrongly. The reviewer caught it, not me.
+
+---
+
 ## 2026-09-10 22:19 — core/037 a documented error code that no enum was ever going to produce
 
 **Decided:** **retire the name rather than build the member, and the finding is bigger than the
