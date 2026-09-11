@@ -97,6 +97,73 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 18:08 — api/051 the split that a blocked park had already named, and the decision it made room for
+
+**Decided:** two calls, both mine, both written into the task before dispatch so the worker was not
+asked to make them.
+
+**First: the drain-decoding policy gets its own numbered decision** — `embarch-api` **decision 65**
+in the new `decisions/log-capture.md` — rather than widening decision 18 to cover it. The task
+offered both arms. I closed it on the axis argument: decision 18 is what a *truncated* log keeps and
+fires only past `OUTPUT_CAP_BYTES`, while the drain's per-line decoding fires on every line whether
+or not the log nears the cap. `embarch-decision-reversals.md` calls a decisions file that describes
+the wrong thing the worse variant of its commonest failure. Decision 65 carries the two rejected
+alternatives the task named — decode the whole buffer lossily, fail the build on bad bytes — which
+`api/030` had recorded nowhere.
+
+**Second, and this is the one worth reading: I unparked a blocked compaction task by pointing at
+its own unpark condition.** `decisions/build.md` had 1,154 B left and `tasks/api/050` was blocked on
+`In flux: yes`, so the naive reading is that nothing may be written there. But `api/050`'s own
+`In flux` text names the unpark: *"once a mission split ... is judged safe to do verbatim"*, and
+`.claude/leg.md` is explicit that **a verbatim split restates nothing, so `In flux: yes` cannot
+forbid one**. So the unit did the split first and authored decision 65 into the room it made. The
+four missions went to four files: decision 5 stays in `build.md` (1.7 KB), 18 and the new 65 to
+`log-capture.md` (3.9 KB), 19 to `target-json.md` (5.7 KB), 42 to `flash-address.md` (1.7 KB).
+**A park that names its own unpark is not really blocked**, and there are fifteen more like it in
+the ledger — this is the first one paid that way and it cost one unit.
+
+**The reviewer verified the split was verbatim rather than my trusting it**, item by item against
+`api/050`'s `Must not delete:` list: decision 18's `[assumed]` 1:3 provenance note and the exact
+condition that would move it, the "defect closed, not a polish" point, decision 19's full three-call
+`target.json` reasoning, decision 42's rejected per-call `base_address` override. All four present,
+the moved bodies textually unchanged, 18 and 65 non-overlapping.
+
+**I repaired one thing in the fold.** The worker repointed `decisions/zephyr.md`'s cross-reference
+line — *"How a build then runs and what it produces"* — at `../decisions.md`, the index, rather than
+at the two files that now hold the answer. That trades a stale pointer for a vague one, which is the
+same defect class this unit existed to fix, and `zephyr.md` is 14,238/12,288 B so a longer line was
+unattractive. It now reads *"How a build then runs: `build.md`; what it produces:
+`target-json.md`"*, which is both accurate and shorter than what the worker wrote.
+
+**Merged:** `agent/api/051-drain-decoding-decision` (code **none** — the `embarch-api` branch
+carried no commits; the unit was forbidden from touching `src/` and decisions live in `embarch-doc`;
+doc `989faa9`, cherry-picked from the branch tip `a7ac87b`, which is **not** a revert handle).
+Cherry-picked rather than merged because the branch was based on `404c387` and `main` had moved to
+`9c15974` — `--ff-only` would have refused and a plain merge made a merge commit, which
+`embarch-dev-workflow.md` §6 does not allow. Ownership check base `9c15974b52f0`: 11 paths, all
+owned by the `api` worker. Gate on the merge result: `check-docs.py` **11/11 green**;
+`check-client-names.py` clean. `tasks/api/050` is now `done`, with `decisions/build.md` struck off
+its `Compacts:` line by deletion rather than annotation.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — a documentation split and a new decision, no board, no
+build, and no code in any repo. Carried forward unchanged: `core/015`'s native Windows build of
+`embarch-core` is the owner's and still outstanding, carrying `core/008`, `core/020`'s
+`self_reported_hardware_id` rename, `core/032` and `core/033`; `umbrella/037`'s corrected check 13
+has never met the bench that found its defects; `embarch-outpost`'s Zephyr `tests/unit` suite and
+`embarch-dev-bench`'s `app/src/scan_seen_names.c` both need a session with a Zephyr toolchain. No
+bench unit was runnable — every `hw-gated` task in the queue is `toolchain` or `required`.
+**Budget:** PROCEED, weekly **11.0%** of a 90% cap at the leg's start, wave **6** suggested.
+**Least sure about:** **that unparking a blocked compaction task on its own written unpark condition
+is a move the next leg should copy.** I am confident it was right here, because `api/050` spelled
+the condition out and the reviewer confirmed the split was verbatim. What I cannot tell is whether
+the other fifteen parks in the ledger are as explicit, or whether a leg reading this entry will
+generalise it into "a verbatim split is always allowed" and shorten something it should not. The
+rule is narrow and the entry is the only place it is written down as *applied*. Separately, I did
+check 65 is unique — it is the next number after 64 across the whole sub-project — because
+`tasks/doc/033` records that **nothing checks a decision number is unique** and that gap is
+owner-reserved; a leg that assumes the gate caught it will eventually be wrong.
+
 ## 2026-09-10 18:05 — umbrella/047 a one-line pointer fix, and the red `main` I found underneath it
 
 **Decided:** nothing new in `embarch-umbrella` — this unit corrects a pointer, and I dispatched it
