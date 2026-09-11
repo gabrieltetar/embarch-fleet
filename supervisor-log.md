@@ -97,6 +97,62 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 20:18 — suite/008 suite-wide decisions get a home
+
+**Decided:** **created `suite/decisions.md`** and moved `embarch.md` §5's rustfmt bullet into it
+verbatim as decision 1. That bullet was ~5 KB of measurement history, reversal condition, two
+rejected command spellings and a named trap, sitting in a list of five one-line principles whose
+next longest is 193 characters — a decision record wearing a principle's clothes. Three rounds of
+text had landed in it and leg 017 asked that the next one force the question rather than be
+absorbed; this is the answer. `embarch.md` went **17,832 B → 14,090 B**, §5 reads as five
+principles again, and §6's index gained a row. The new file is 5,826 B against the 10 KB
+`suite/*.md` cap it inherited from `DOC-BUDGET.md` with no edit.
+**This was the parked §8 window from leg 018, completed rather than restarted** (`ops.md` §4):
+announced 2026-09-06 04:17:43 MDT, `ts 1788689863.494449`, closed 04:47:43. I re-read the thread
+before acting — **no replies, then or since** — which is the precondition the task's own first
+`Done when` box names.
+**Both boundary conditions the task set were checked, not assumed.** `suite/decisions.md` is not
+top-level, so it does not need classifying, and `check-ownership.py --supervisor` confirms all 16
+top-level docs are still classified and none of my paths is owner-reserved. And **neither
+`DOC-PROTOCOL.md` nor `DOC-COMPACTION.md` needed amending for the file to be legitimate** — which
+was the task's stated stop condition. What *is* left is narrower: two enumerations of the
+suite-level docs inside `DOC-PROTOCOL.md` (its directory sketch and its prose definition) are now
+**incomplete rather than wrong**, and that file is reserved. **Filed as `tasks/doc/038`, not
+edited** — a supervisor that amended the doc-structure rules to accommodate a file it had just
+created would be doing the one thing it exists not to do. Filed as a task rather than left in this
+entry on purpose: this file folds daily and rolls into `log-archive/`, and nothing dispatches from
+a log line.
+**Also repaired the two live inbound citations of the moved text** — `embarch-api/decisions/tests.md`
+and `tasks/api/039`, both of which said "`embarch.md` §5" for a paragraph that is no longer there.
+`history/suite.md`'s two mentions were left alone deliberately: they are dated shipped-record
+entries describing what §5 said at the time, and history is not rewritten. The `tests.md` repair
+tipped that file into reserve by 6 B against a 1,228.8 B floor, so I shortened my own parenthetical
+rather than file a debt for a courtesy note.
+**Merged:** nothing — this unit is the supervisor's own work under §8 and had no worker, no branch
+and no code repo. It lands in this fold commit alone; that commit's SHA is the only revert handle.
+**Blocked:** nothing.
+**Reviewer:** skipped (reviewer did not report — spawned at the change, still silent 18 minutes
+later with no completion and no drop; I stopped waiting rather than strand a finished `api/026`
+branch behind it).
+**Hardware debts:** none owed by this unit — a documentation move, no board, no build, no repo but
+`embarch-doc`. Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is
+the owner's and still outstanding, and is also what would deploy `core/020`'s
+`self_reported_hardware_id` rename; `umbrella/037`'s corrected check 13 has never met the bench
+that found its defects and needs only the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit`
+suite cannot be built from this environment (no `west`, no `ZEPHYR_BASE`). The bench queue is still
+parked by the owner's own commit.
+**Budget:** PROCEED throughout, weekly 14.4% of a 90% cap, suggested wave 6. Unchanged.
+**Least sure about:** whether creating a new shared suite-level doc was mine at all. I read the
+task's stop condition literally — it says stop if `DOC-PROTOCOL.md` or `DOC-COMPACTION.md` *must*
+be amended, and neither must be — but a more conservative reading is that introducing a doc *class*
+is structural whatever the reserved files technically require, and that the owner should have
+created the file. I went ahead because the alternative was a fourth round of decision text landing
+in a principle bullet, and because `tasks/doc/038` leaves him the one edit that is unambiguously
+his. **The reviewer that would have second-guessed this is the one that did not report**, which is
+the worst unit of this leg to have lost it on.
+
+---
+
 ## 2026-09-10 19:56 — core/022 open.md squeezed, then 111 bytes put back
 
 **Decided:** dispatched this as a compaction with `In flux: no` and exactly one file left on its
