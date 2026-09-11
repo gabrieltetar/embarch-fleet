@@ -97,6 +97,68 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 18:58 — dev-bench/008 the census counts what it leaves out, and the toolchain debt was never real
+
+**Decided:** three things, and the first one is the one the next leg should read.
+
+**1. `embarch-dev-bench` has a working toolchain, and three log entries before this one said it did
+not.** They recorded "this environment has no `west` and no `ZEPHYR_BASE`" as a hardware debt. That
+is **false of the machine** and true only of a *worktree*. Measured this leg from the main checkout:
+`ZEPHYR_BASE=<repo>/workspaces/native_sim/zephyr /home/gabriel/Github/embarch/.west-venv/bin/west
+build -p -b native_sim -d <dir> app/tests/serial_protocol` builds and the suite runs
+`PROJECT EXECUTION SUCCESSFUL`; the `esp32c5_devkitc/esp32c5/hpcore` app build works too, once
+`esptool>=5.0.2` is installed (**I installed it into `/home/gabriel/Github/embarch/.west-venv` — a
+change to shared fleet tooling, additive, and the next leg should know it happened**). The
+workspaces are gitignored, so a worker's worktree has `app/` and a `west.yml` and no Zephyr — which
+is exactly `Hardware: toolchain`, undispatchable rather than unrunnable, as `tasks/README.md`
+already said. **A false standing debt had begun to propagate as a fact about the suite**, and three
+`dev-bench` tasks (`003`, `004`, `010`) had been parked behind it. `tasks/dev-bench/008` is
+reclassified `none` → `toolchain` with the measurement written into it, and I ran it myself.
+
+**2. The fix shape.** The `fail_reason` list still carries names only — there is nothing else to
+print — but its prefix carries two counts: `no name match; 2/10 named: 'A', 'B'`. **Rejected:
+widening `OUTCOME_MAX_FAIL_REASON_LEN`**, which is a wire size; the gap was never that 64 bytes was
+too small, it was that the field did not say what it was omitting. The two `named == 0` phrases are
+gone because `0/10 named` says the same thing in fewer bytes. And `report_scan_seen()` moved out of
+the name-filter arm, so an address-filtered connect that times out writes a census at all.
+
+**3. I made `(census full)`'s runtime reservation conditional, which amends decision 45 from
+hours earlier.** 45 reserved both markers unconditionally and said so deliberately. That reasoning
+holds for `(truncated)` — undecided until the summary returns — and not for `(census full)`, which
+is already known; reserving it anyway spent 14 of 64 bytes on nothing in every census ever run. 45
+is amended in place and 46 says so. The `BUILD_ASSERT` still proves the worst case (56 of 64).
+**Merged:** no branch and no merge — a supervisor-executed `toolchain` unit. Code `a0bf1d8` in
+`embarch-dev-bench`, committed and pushed straight to `main`; the doc half is in this fold commit.
+**Blocked:** nothing, but **`tasks/dev-bench/008` stays `open` on purpose.** Both substantive gates
+are fixed and landed; its third `Done when` box — tests over a mixed named/nameless set — is
+**unsatisfiable from here**, because both gates live in `ble_bridge_real.c` and that file never
+builds under `native_sim` (decision 16). What is left of `008` is a *testability extraction* along
+`scan_seen_names.c`'s lines, or a bench. I left the box unticked rather than reworded.
+**Reviewer:** no findings.
+**Hardware debts:** **one new and it is the honest half of this unit — the behaviour has never been
+observed.** The only compile gate `ble_bridge_real.c` has is a board build, which is what I ran; no
+test reaches either changed gate, and nothing has watched a real nameless advertiser appear in a
+`2/10 named` line. It needs the dev-bench board and a 20-second census. Carried forward unchanged:
+`core/015`'s native Windows build of `embarch-core` is the owner's and still outstanding;
+`umbrella/037`'s corrected check 13 has never met the bench.
+**And one defect found while gating this unit, filed as `tasks/doc/036`:**
+`check-ownership.py --scope dev-bench` answers `unknown scope 'dev-bench' (known: doc, suite)` when
+run from inside a code repo — which is where §10 says to run it, and where a `bench` or `toolchain`
+unit works by design. It derives its scope list from the `embarch-*` directories the cwd can see.
+**Same root cause as `tasks/doc/035`** (`queue-status.py` reporting an empty queue from the wrong
+cwd), and I hit *that* one too at my own step 0: run from the fleet repo it said **0 dispatchable**,
+run from the instance it said **29**. A leg that trusted the first reading would have gone to
+`ops.md` §7's dream with a full queue. `036` says to decide both together.
+**Budget:** PROCEED start to end — weekly 12.6% of a 90% cap, resets in 132h, suggested wave 6
+throughout; this leg ran three workers concurrently and its fourth unit with its own hands.
+**Least sure about:** the conditional marker reservation, because it is the one place I overrode a
+decision written by someone with more context on that file than I had. The arithmetic is checked and
+the `BUILD_ASSERT` is conservative, so nothing can be silently cut — but if there was a reason to
+reserve unconditionally beyond the one decision 45 states, I did not find it, and decision 45's
+author is a worker that no longer exists.
+
+---
+
 ## 2026-09-10 18:51 — topology/025 the crate says how long its answers are good for
 
 **Decided:** two, and the first is why this unit exists at all. **I filed this task myself in this
