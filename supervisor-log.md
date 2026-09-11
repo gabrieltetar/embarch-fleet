@@ -97,6 +97,74 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 01:04 — outpost/017 a verbatim decision split, and the duplicate number it created
+
+**Decided:** **accept the split and renumber it myself rather than block the task.**
+`embarch-outpost/decisions/testing.md`'s decision 22 was 4,442 B against the 4,096 B per-decision
+cap — one of the three over-cap decisions `ui/024`'s entry named as unfiled a day earlier — and it
+bundled two judgements under one number because they landed in one edit: the `WEST`-guard ordering
+fix, and `cross_decoder.py`'s skip-not-fail behaviour with its `EXIT`-trap restatement. The worker
+split it **verbatim**, no prose cut, both halves comfortably under the cap. The reviewer diffed the
+pre-merge text against the result and confirmed all three `Must not delete:` items, the rejected
+alternative and the failure signature survive word for word; the only edits are split glue.
+
+**Then the thing worth the next leg's attention: the worker numbered the new half 23, and
+`embarch-outpost/decisions/wire.md` already held a live decision 23.** A second duplicate decision
+number in this suite, landed **fifty minutes after** the unit that closed the identical defect in
+`embarch-core` (`core/039`, immediately below). It went green through the whole gate, because
+`check-decision-refs.py` resolves a number against the sub-project rather than against a file —
+the blind spot leg 076 hit from the other direction with `umbrella/042` — and
+`embarch-outpost/decisions.md`'s own index listed `23` in two different rows without complaint.
+I renumbered the new half to **26**, the next free number (max was 25), across
+`decisions/testing.md`, `decisions.md`, `decisions/module.md`, `decisions/wire.md`, the
+`changelog.d/` fragment and the task file's Resolution. **Deliberately no tombstone at 23**, unlike
+`core/039`: 23 still legitimately resolves to `wire.md`'s own decision, so a "moved to 26" stub in
+`testing.md` would recreate the duplicate it is meant to fix. The duplicate existed on `main` for
+one commit and is gone in this fold.
+
+**I swept every sub-project for others, and the good news is worth recording so nobody re-runs it.**
+Two hits, both intentional: `embarch-core` 54 (`flashing.md`'s live decision plus `core/039`'s new
+tombstone — so any uniqueness check must tolerate tombstones, which is a fact `tasks/doc/033` needs
+and does not currently carry), and `embarch-ui` 10, which is a documented three-part split whose
+index row labels each half `(routing)`, `(trace)`, `(chart)`. Nothing else in the suite duplicates a
+number. **The missing uniqueness check stays the owner's** — it is `scripts/`, and
+`tasks/doc/033` already holds it. Two instances in one hour is the argument for it.
+
+**The compaction pass's human question**, answered rather than skipped: *can `embarch-outpost/spec.md`
+alone answer what someone needs to work on this component today?* **Yes, and this unit does not move
+that answer** — `spec.md` was not touched. It carries the architecture, the three wire invariants,
+the measured instrument cost and the host-side output shapes, and carries no testing or CI content
+at all, deliberately. Somebody modifying `tests/run-all.sh` does need the harness rationale, and
+`decisions.md`'s index routes both 22 and 26 to `decisions/testing.md`. The reviewer reached the
+same reading independently.
+**Merged:** `agent/outpost/017-compact-outpost` (code none — `embarch-outpost`'s branch carries zero
+commits and is identical to that repo's `main` at `f58e6d2`; doc `66751d2`, with the renumber
+correction in this unit's own fold commit). Ownership check base `39cdcbbcd583`; the branch's
+pre-rebase tip `7b0de3a` is not a revert handle.
+**Blocked:** nothing. The duplicate number was a fix, not a block — trivial and in scope, and
+leaving it would have meant shipping on `main` the exact defect this leg had just spent a unit
+removing from another repo.
+**Reviewer:** no findings.
+**Hardware debts:** **none new.** The unit is a documentation split; nothing was built and no board
+was touched. One inherited debt is unchanged and this unit is a reminder of it:
+`embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from a fleet worktree (no `west`, no
+`ZEPHYR_BASE`), so no leg can claim it green — and decision 26 is *about* that test harness, though
+it changes no test code. Carried forward unchanged: `core/015`'s native Windows build of
+`embarch-core` is the owner's and still outstanding; `umbrella/037`'s corrected check 13 has never
+met the bench that found its defects and needs only the dev-bench board. The bench queue is still
+parked by the owner's own commit. **Per-decision caps after this unit:** two still OVER and unfiled
+— `embarch-topology/decisions/validation.md#25` (6,224 B) and `embarch-core/decisions/logging.md#44`
+(4,352 B, left deliberately unflagged by leg 076 and not disturbed).
+**Budget:** DEGRADED throughout — percentages unavailable (stale usage cache), 5 h burn 49% of the
+22.6 M calibrated ceiling at the leg's start, no 429, wave 4 and unused: this leg landed four
+already-finished workers and dispatched nothing.
+**Least sure about:** whether renumbering was mine to do rather than a task for the `outpost` scope.
+I judged it trivial-and-in-scope, and the alternative was knowingly leaving a duplicate on `main`
+behind a green gate — but it is a *decision number*, which `DOC-CONVENTIONS.md` calls permanent, and
+I reassigned one an hour after it was written without the worker that wrote it in the room.
+
+---
+
 ## 2026-09-11 00:58 — core/039 two `embarch-core` decisions numbered 54, and the later one becomes 57
 
 **Decided:** **land the four orphaned units rather than re-run them, and spend the whole leg doing
