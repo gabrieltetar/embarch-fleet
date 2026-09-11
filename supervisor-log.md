@@ -97,6 +97,68 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 21:02 — suite/023 a check-table row should say which arms have run
+
+**Decided:** **completed leg 073's parked §8 window rather than restarting it** — announced
+`ts 1789093650.796139` at 20:27:31 MDT, closed 20:57:31 with no reply, executed 20:58. The
+question was whether `DOC-CONVENTIONS.md` should adopt a `measured`-style marker suite-wide for
+check/table rows distinguishing an exercised arm from a merely-designed one. **Decided: adopt, but
+as a scope correction to the section that already exists, not as a new convention.**
+**I corrected the task's own premise in both directions before deciding, and the second correction
+is the one that matters.** Its third cited instance is not real as a doc convention —
+`embarch-topology` has no `interfaces/` directory and no class-gated check table, so that one is a
+code branch, leaving two genuine instances and both in the same file
+(`embarch-umbrella/interfaces/doctor-chain.md`). Two instances in one file is thin evidence for a
+suite-wide rule. **But the real evidence base is 17 `open.md` bullets across five sub-projects**
+carrying exactly the "designed but never exercised" shape, and that inverts the question: the
+suite does not lack a convention for this, it has a strong and working one, and
+`collect-open-questions.py` sweeps every instance. What is missing is only the **table-side
+pointer**, because the person reading a capability table to use it never goes looking in
+`open.md`. **The decisive argument is an independent convergence**: `DOC-CONVENTIONS.md` already
+mandates `[measured <date>, <how>]`/`[assumed]` for constants, and `umbrella/032`'s author,
+solving a different problem in a different file, reached for the same word with the same meaning.
+So the marker is right and the section's **scope line** is what is wrong — it says "constant",
+while its own earning test ("an inventoried item, in a table or declared list, where provenance
+would otherwise be vague") already covers a check-table arm exactly.
+**Three things I refused, deliberately:** no second vocabulary beside `measured`/`assumed`; no
+suite-wide marking sweep, because that section already settled the same trade-off for itself
+("mark an inventory, leave good prose alone, and mark the rest as each doc reaches a compaction
+pass"); and no treating the table marker as replacing the `open.md` bullets, which carry the
+closing trigger a table cell cannot — left unsaid, those 17 bullets start getting deleted as
+redundant.
+**Merged:** nothing. This unit committed one file, `tasks/suite/023-*.md`, in its own fold commit —
+no branch, no worker, no code diff. The fold commit's SHA is the only handle.
+**Blocked:** nothing, but **the task is not closeable and I could not do its second half.**
+`DOC-CONVENTIONS.md` is owner-reserved — `protocol.md` §3's table says *every* `DOC-*.md` is
+`never` for the supervisor, not merely for a worker, and I verified it directly rather than
+assuming (`check-ownership.py --supervisor --stdin` on the path exits 1). I wrote the decision, a
+drafted ~560 B paragraph so the owner's commit is mechanical, and marked the remainder
+`Owner: required`.
+**A filing correction the next leg should know about.** Leg 042 moved this drop from `doc/` to
+`suite/` on the argument that *"`suite/` is the mechanism that keeps a task off a worker"*. That is
+half right — it did, and the §8 window was genuinely owed for the *decision* — but **scope does not
+confer write access**, and a `suite/`-scoped task whose only deliverable is an edit to a reserved
+file is not executable by the actor `suite/` routes it to. A leg can burn its one announcement
+window per leg on a task it then cannot finish. Worth a rule; not mine to write.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — a design decision recorded in a task file, no board,
+no build. Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is the
+owner's and still outstanding, and is also what would deploy `core/020`'s
+`self_reported_hardware_id` rename; `umbrella/037`'s corrected check 13 has never met the bench
+that found its defects and needs only the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit`
+suite cannot be built from this environment (no `west`, no `ZEPHYR_BASE`). The bench queue is still
+parked by the owner's own commit.
+**Budget:** PROCEED, weekly 15.7% of a 90% cap, suggested wave 6, unchanged from the leg's start.
+**Least sure about:** that "adopt" is the right answer at all, given I spent most of the analysis
+establishing that the existing `open.md` convention already works across 17 instances. The honest
+counter-argument is that a table marker duplicates a fact the `open.md` bullet already states, and
+`DOC-CONVENTIONS.md`'s own constant rule explicitly warns against marking where prose already does
+the job. I think the two-readers argument survives that — the table's reader and `open.md`'s
+reader are different people — but it rests on a claim about who reads what, which nobody has
+measured, and one worked instance is a thin basis for a suite-wide sentence.
+
+---
+
 ## 2026-09-10 20:40 — api/039 a new decision landed with its own reversal condition already fired
 
 **Decided:** dispatched this to author the missing decision — `embarch-core-client` is the suite's
