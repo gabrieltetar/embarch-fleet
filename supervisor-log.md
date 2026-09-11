@@ -97,6 +97,46 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 19:15 — umbrella/049 the last hand-kept mirror is half closed and half guarded
+
+**Decided:** approved the worker's two-armed answer rather than sending it back for the single one
+the task's first sentence asks for, because the two halves genuinely differ. `CoreConfig` goes the
+way the token mirror went — `embarch-umbrella/src/config.rs` now re-exports
+`embarch_core_client::CoreConfig` and deletes its parallel struct, including the five
+`*_timeout_secs` fields it was carrying for shape-fidelity and nothing read. `ProjectConfig` could
+not follow, because that type lives inside `embarch-api`'s own binary and not in the shared crate,
+so it gets the cheaper half the task named: a test parsing the real
+`embarch-api/config.example.toml` through a `deny_unknown_fields` shadow struct *and* through this
+repo's own mirror, so a field `embarch-api` adds and starts using in its example config fails here.
+Recorded as decision 20's second amendment in `embarch-umbrella/decisions/mirrors.md`. The worker
+wrote the test's own limit into the test: it only sees fields that reach the fixture's
+**uncommented** lines, and most of that file's optional fields are commented out. That honesty is
+why I took it — "narrower than a diff job, and a real improvement on nothing-fails-when-they-drift"
+is the true claim, and widening the fixture is `embarch-api`'s call, not this repo's. This unit was
+a recovery: leg 071 dispatched it and died before reviewing or merging; the branches were already
+pushed, so I gated and landed them rather than re-running the work.
+**Merged:** `agent/umbrella/049-coreconfig-mirror` (code `46ec5c0`, doc `2fecd0e` after the rebase;
+the doc branch's pre-rebase tip `1499bba` is not a revert handle). Ownership check bases: code
+`584f7e7a3658` (`--code-repo`, 1 path), doc `a8e6642145746e` after the rebase, 4 paths, all
+`umbrella`. Gate green in both repos — 226 tests, clippy `-D warnings` clean, 11/11 doc checks.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — a type dependency and a host-side test, no board.
+Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and
+still outstanding; `umbrella/037`'s corrected check 13 has never met the bench that found its
+defects and needs only the dev-bench board. The bench queue is still parked by the owner's own
+commit.
+**Budget:** PROCEED, weekly 13.7%, suggested wave 6.
+**Least sure about:** **the worktree link table in `.claude/leg.md` is wrong for `embarch-umbrella`
+and this unit is the first thing that can fail on it.** The table says umbrella links
+`embarch-topology` and `embarch-study-designer`; its `Cargo.toml` has path-depended on
+`../embarch-api/crates/embarch-core-client` for some time, and this unit's new test reads
+`../embarch-api/config.example.toml` through that same sibling path — so an umbrella worktree built
+strictly to the table now fails the test with a missing-file panic naming a path inside the fleet's
+scratch directory. It did not bite here only because an earlier leg had already made the link by
+hand at 15:35. That file is owner-reserved, so I have filed
+`inbox/leg-md-worktree-link-table-omits-embarch-api-for-umbrella.md` rather than editing it.
+
 ## 2026-09-10 19:12 — core/017 the fourth flashing backend nobody ever selected is gone
 
 **Decided:** nothing new by me — this is leg 072 completing a fold leg 071 started and did not
