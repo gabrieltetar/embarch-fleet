@@ -97,6 +97,59 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 01:09 — topology/027 an `open.md` bullet whose own content was the answer it pointed at
+
+**Decided:** **accept that the bullet states a permanent limitation rather than pending work, and
+separately unpark `tasks/topology/024`.** `embarch-topology/open.md` carried a bullet — nothing can
+cheaply detect a caller writing a second predicate beside a call it never makes to this crate —
+ending in a pointer to `tasks/topology/020`, which is `done`. The worker's judgement, which I
+accepted, is that the bullet's content *is* what `020` produced: a general detector would have to
+recognise duplicated logic rather than a duplicated file, and no cheap static check does that. So
+the pointer came out and the bullet now says plainly that both known instances (`api/038`,
+`umbrella/036`) are closed and nothing further is pending. The reviewer corroborated both closures
+in three independent places — `decisions/crate.md` 4 and 8, `embarch-api/decisions/core-link.md`
+62, and `embarch-umbrella/open.md`'s own bullet — and confirmed the new wording restates
+`crate.md`'s conclusion rather than overriding its qualification.
+
+**The reviewer found a park held open by a spent reason, and I fixed it in this fold.**
+`tasks/topology/024-compact-topology.md`'s `State:` line read *"blocked — in flux, `tasks/topology/004`
+and `020` still moving in this file"*. **All four tasks that park ever named are `done`** — `020` at
+leg 050 on 2026-09-08, `004`, `011` and `025` since — and `024` is now the only task left in the
+`topology` scope, so nothing is moving in `spec.md` for a compactor to race. Flipped to `open` with
+`In flux: no` answered per file and the argument written in; the `Must not delete:` list is
+untouched and still binds. `embarch-topology/spec.md` (9,195/10,240 B, due 2026-09-24) is therefore
+a **payable** debt now instead of a parked one, and `check-doc-size.py --due` no longer marks it
+`[BLOCKED]`. This is exactly the absorbing-`blocked` failure `check-doc-size.py`'s own clock was
+added to fight — 13 of 28 debts once sat in it — and the thing that made it visible was a reviewer
+reading a citation, not any script.
+
+**What I did not do:** re-check the bullet's premise myself. `open.md`'s header says "Unresolved
+only", and a standing limitation with nothing pending is arguably not unresolved — deletion rather
+than rewording may have been the honest move. I left the worker's call standing because the
+neighbouring bullet ("the config mirrors…") is built the same way, states what is closed and keeps
+what is genuinely open, so the file's own convention supports it.
+**Merged:** `agent/topology/027-open-md-stale-task-pointer` (code none — `embarch-topology`'s branch
+carries zero commits and is identical to that repo's `main` at `b872f6d`; doc `a8b951e`, with the
+`tasks/topology/024` unpark in this unit's own fold commit). Ownership check base `9cf646af3ae9`;
+the branch's pre-rebase tip `e9c9299` is not a revert handle.
+**Blocked:** nothing. The opposite: this unit *un*blocked one.
+**Reviewer:** no findings.
+**Hardware debts:** **none new, and none possible** — the unit is one bullet in an `open.md` and one
+task's state line. Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is
+the owner's and still outstanding; `umbrella/037`'s corrected check 13 has never met the bench that
+found its defects and needs only the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite
+cannot be built from a fleet worktree (no `west`, no `ZEPHYR_BASE`). The bench queue is still parked
+by the owner's own commit.
+**Budget:** DEGRADED throughout — percentages unavailable (the usage cache was stale at step 0),
+5 h burn 49% of the 22.6 M calibrated ceiling at the leg's start, no 429, wave 4 and unused: four
+already-finished workers to land, nothing dispatched.
+**Least sure about:** unparking `024` on my own read. Every task its park named is demonstrably
+`done`, but "is `spec.md` in flux" is a judgement about a file I did not read, and the worker who
+filed the park had context I do not. If the next `topology` unit meets the cap mid-flight in
+`spec.md`, this is why.
+
+---
+
 ## 2026-09-11 01:04 — outpost/017 a verbatim decision split, and the duplicate number it created
 
 **Decided:** **accept the split and renumber it myself rather than block the task.**
