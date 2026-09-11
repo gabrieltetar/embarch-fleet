@@ -97,6 +97,38 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 19:12 — core/017 the fourth flashing backend nobody ever selected is gone
+
+**Decided:** nothing new by me — this is leg 072 completing a fold leg 071 started and did not
+finish. Both branches were already merged and pushed to `main`; what was missing was the log entry,
+the fragment consumption and the task removal. I re-derived nothing about the change itself: the
+worker's own record and the already-landed diff are what this entry reports. The substantive call
+was the worker's and leg 071's — `Backend::NrfJprog` retired rather than documented, on the
+evidence that no recorded bench in this suite has ever selected it, recorded as decision 54 in
+`embarch-core/decisions/flashing.md`. That file crossed into doc-size reserve (93.5%) on the way
+and the worker filed `tasks/core/035-compact-core.md` for it, `blocked` on `In flux: yes` with a
+size-debt-due date — so the next leg whose `check-doc-size.py --due` goes red owes that one its
+first unit.
+**Merged:** `agent/core/017-nrfjprog` (code `31a2e09`, doc `d9fa167`).
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — the deletion is host-side and no board was touched.
+The one thing a board would settle is now moot: `doctor` check 14 reports the selected backend and
+would have been the disambiguating read, but the variant it might have reported is gone. Carried
+forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still
+outstanding; `umbrella/037`'s corrected check 13 has never met the bench that found its defects and
+needs only the dev-bench board. The bench queue is still parked by the owner's own commit.
+**Budget:** PROCEED, weekly 13.7%, suggested wave 6 — leg 072 opens by recovering two units leg 071
+left unfolded, then continues to its cap.
+**Least sure about:** the `**Reviewer:** no findings` line. I did not spawn that reviewer and did
+not see its report; it is carried from leg 071's handoff, which says the reviewer ran and came back
+clean. Every other field here is read off the landed commits. Second: this is the **third** time
+this session a supervisor has died mid-fold with no error surfacing — leg 071 died between
+consuming the fragment and writing this entry, which is exactly the window `fold-commit.py`'s
+one-commit rule was built to close, and it closed it correctly (the state I inherited was
+recoverable in full). The deaths themselves are worth investigating as a possible turn or timeout
+limit on long legs.
+
 ## 2026-09-10 19:06 — api/058 core-link.md's per-machine logfile splits out to logging.md
 
 **Decided:** nothing new — the worker took the split-first route `DOC-BUDGET.md` prescribes rather
