@@ -135,8 +135,8 @@ against "there is no README" could never have found.
 
 **Merged:** two repos, no branch in either — a supervisor-executed `suite` unit.
 - `embarch-ui` **`58a0537`** (README only, no code).
-- `embarch-doc`: **the fold commit is the SHA and the revert handle** — see the correction note at
-  the end of this entry. Files: `suite/user-guide.md`, `suite/studies-guide.md`,
+- `embarch-doc`: **the fold commit is the SHA and the revert handle — `56a6ac5`** (log `f9002e7`,
+  with this SHA added in a follow-up commit). Files: `suite/user-guide.md`, `suite/studies-guide.md`,
   `embarch-ui/open.md`, `tasks/suite/004`, new `tasks/ui/026`, new `tasks/api/064`,
   `history/doc.md`, one `changelog.d` fragment, and the task file.
 `python3 scripts/check-docs.py` **all 11 green**, and it went **RED twice on the way** and both were
