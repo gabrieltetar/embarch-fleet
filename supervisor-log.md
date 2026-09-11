@@ -97,6 +97,34 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 18:27 — core/013 decision 14's 503 on hw_lock contention, built at last
+
+**Decided:** nothing new by me — leg 069 had already picked the build arm over the retire arm and
+written the argument into the task file before dispatch, and this leg only landed the result. The
+work was pushed and gate-green by its worker; leg 069 died mid-fold before merging it, so this is a
+recovery landing, not a re-run. I read the code diff before merging because it changes a lock the
+whole hardware surface shares: `hw_lock` becomes `Arc<Mutex<Option<HolderInfo>>>` behind one
+`acquire_hw_lock` helper used by all 8 hardware sites, with a 500 ms acquire timeout, a `503` naming
+the holder, and an info/warn split so a wait and a refusal are distinguishable in `core.log`. The
+contention test holds the lock across the window and observes the refusal host-side — no board.
+**Merged:** `agent/core/013-hw-lock-503` (code `0411c14`, doc `1128a74`). Ownership check bases:
+code `126283970b49`, doc `f52e18686389` after rebasing the doc branch onto the two later claim
+commits leg 069 had made.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none new — every test here is host-side and nothing was flashed. But this unit
+makes an existing debt matter more: the `503` only reaches an operator once a native Windows build
+of `embarch-core` is deployed, and `core/015`'s Windows build is still the owner's and still
+outstanding — it is now load-bearing three times over (`core/020`'s `self_reported_hardware_id`
+rename, `core/021`'s SSE retirement, and this). Carried forward unchanged: `umbrella/037`'s
+corrected check 13 has never met the bench that found its defects and needs only the dev-bench
+board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this environment.
+**Budget:** PROCEED at leg start — weekly 12.2% of a 90% cap, reset in 132h — suggested wave 6.
+**Least sure about:** the 500 ms acquire timeout. It is a number the worker chose, not one any
+decision states, and it is long enough to serialise a fast flash cleanly but short enough that a
+legitimately slow hardware call will start refusing callers that would previously have queued and
+succeeded. Nothing in the corpus records why 500 ms rather than 2 s.
+
 ## 2026-09-10 18:15 — core/021 a fold recovered from a killed leg, not a unit re-run
 
 **Decided:** **nothing new — this is leg 068's work, finished.** Leg 068 merged both branches to
