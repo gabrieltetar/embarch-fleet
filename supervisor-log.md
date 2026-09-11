@@ -97,6 +97,58 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 19:56 — core/022 open.md squeezed, then 111 bytes put back
+
+**Decided:** dispatched this as a compaction with `In flux: no` and exactly one file left on its
+`Compacts:` line, and the worker's pass was real — `embarch-core/open.md` 4,551 B → 3,911 B, clear
+of the 3,920 B floor, every number and hedge preserved, only connective prose cut. **Then I put 111
+bytes back and did not close the task**, on my reviewer's finding. Two of the worker's cuts were not
+connective prose and were absent from the commit message's own verbatim residue list, which is the
+accounting `DOC-COMPACTION-PASS.md` requires precisely so a reviewer can do this arithmetic instead
+of re-deriving it. The `Alert` subject-discriminator bullet had gone from *"Not-needed-yet with a
+named trigger"* to a flat *"Not needed"* — **that is a status change, not a shortening**: an open
+deferral with a named trigger became a closed judgement, in a file whose entire purpose is holding
+open questions. The Espressif port-selection bullet had lost the claim that decision 23's
+replacement knob is missing *independently of* whether the ESP32-C5's single-interface enumeration
+is ever confirmed; what survived read as if confirming the enumeration were the whole gap. Restored
+both, in shorter wording than the originals.
+**The restoration puts the file back inside reserve by 102 B** (4,022 B, 1,098 B left against a
+1,200 B floor), so the debt is not paid. I first tried to leave `tasks/core/022` `open`, and
+**`fold-commit.py` refused the fold** — correctly: a landed unit may not leave its task `open`,
+because the next leg's recovery cannot tell that from a live claim. So `022` closes and **the
+102 B residue is filed as its own debt, `tasks/core/036-compact-core.md`**, which is the better
+shape anyway: the ledger points at an `open` task instead of at a `done` one holding an unpaid
+balance, and that is exactly the `core/009` failure `022`'s own `State:` line was written to
+record. `036` carries both restored claims on its `Must not delete:` list, tells its taker the
+easy seams are gone and ~102 B is all that is wanted, and says plainly that concluding *no safe
+cut remains* is an acceptable outcome. `interfaces.md`'s item stays closed; due date unchanged
+(2026-09-26). The worker left
+the task `claimed`; supervisors should expect to set the terminal state themselves here.
+**Merged:** `agent/core/022-compact-core` (code none — documentation-only, `embarch-core` has no
+diff; doc `25b5239`). The 111-byte restoration and the task state are in this fold commit, not in
+`25b5239`. Ownership check clean, 3 paths, all `core`.
+**Blocked:** nothing.
+**Reviewer:** 1 finding — inbox/core-open-md-compaction-residue.md
+**Hardware debts:** none owed by this unit — a documentation squeeze, no board, no build. It leaves
+one hardware-gated *question* better stated than it found it: the ESP32-C5-WROOM-1 DK's
+single-USB-Serial/JTAG enumeration is still **[assumed]** and confirming it needs that board.
+Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and
+still outstanding, and is also what would deploy `core/020`'s `self_reported_hardware_id` rename;
+`umbrella/037`'s corrected check 13 has never met the bench that found its defects and needs only
+the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this
+environment (no `west`, no `ZEPHYR_BASE`). The bench queue is still parked by the owner's own commit.
+**Budget:** PROCEED at start, weekly 14.4% of a 90% cap, suggested wave 6 — re-checked before this
+fold and unchanged. The wave is not what limited this leg; scope spread was.
+**Least sure about:** whether restoring those 111 bytes was mine to do in a fold rather than a
+task for the next `core` unit. The reviewer's own `Done when` asked a human to decide between
+restoring and confirming the shorter forms lose nothing, and I decided it from the diff alone. I
+think the `Alert` one is not arguable — a flat "Not needed" in an open-questions file is wrong
+whatever the byte budget — but the Espressif one is a judgement I made without the surrounding
+context a `core` worker would have had, and I shortened the restored wording to fit a budget, which
+is the same pressure that produced the defect.
+
+---
+
 ## 2026-09-10 19:42 — api/035 the event stream has met a real Core, and the docs stop saying it has not
 
 **Decided:** scoped this as truth-repair and told the worker explicitly not to reproduce the
