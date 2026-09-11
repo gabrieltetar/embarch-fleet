@@ -97,6 +97,46 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 19:37 — ui/023 the request path gets a number, and the part that still cannot have one is named
+
+**Decided:** accepted a partial answer as the right answer. The task asked for the request path
+timed at 250k/500k/1M rows; the worker timed the in-process half — `parse` plus the same
+`serde_json::to_vec` axum's `Json` extractor runs — and **stopped at the boundary**, because
+`decode_trace` opens with three awaited calls into Core (`study_streams`, `get_study_stream`,
+`study_steps`) and nothing synthetic stands in for a live Core answering real HTTP. Encode
+4.6 → 8.3 → 23.5 ms, in-process total 210 ms → 518 ms → 1.32 s [measured 2026-09-10, release]. The
+bullet says in bold that the end-to-end cost is **still unmeasured**, which is what the task asked
+for in the case it could not be measured, and it is the better outcome than a number that would
+have read as measured and not been. The cap stays 250,000 and nothing in the diff argues otherwise.
+Second half: this unit also paid the `embarch-ui/open.md` reserve debt, because it was rewriting the
+very bullet `tasks/ui/021`'s park calls settled — the compaction rule for an actor making the flux.
+I dispatched that instruction with `tasks/ui/021`'s `Must not delete:` list attached; the reviewer
+checked every protected figure against the post-compaction file and all of them survive verbatim.
+Compaction-pass question, answered by the worker and checked by me and the reviewer: **yes** —
+`spec.md` alone still answers what someone needs to work on `embarch-ui` today; the deleted prose
+restated context that `decisions.md`/`spec.md` already carry, and no claim, invariant or named
+identifier went with it. `open.md` 4191 → out of reserve; `tasks/ui/021`'s `open.md` item closed,
+the rest of it left standing.
+**Merged:** `agent/ui/023-trace-request-timing` (code `20bb3a9`, doc `04290f1`). Ownership check
+bases: code `9361329a3af1` (`--code-repo`, 1 path), doc `6608755477a8`, 4 paths, all `ui`. Gate
+green in both repos. Note the code merge also fast-forwarded `embarch-ui` past three commits of
+another unit's work that my local checkout was behind on (`408e3b1` → `20bb3a9`); this unit's own
+diff is `src/trace.rs` alone.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** **none new, and one sharpened.** The unit needed no board and took none. What it
+does is name precisely what a board is still owed for: the three Core calls in front of `parse` have
+no number and cannot get one without a live Core, so `/study/{id}/streams` end-to-end remains
+unmeasured and 1.32 s must not be read as the whole cost. `embarch-ui/open.md`'s older stale-prefix
+debt is unchanged and still the owner's own session (the 18-record capture, decision 19). Carried
+forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still
+outstanding; `umbrella/037`'s corrected check 13 has never met the bench that found its defects.
+**Budget:** PROCEED, weekly 13.7%, suggested wave 6.
+**Least sure about:** whether `handler_in_process` is a number anyone will read correctly six months
+from now. It is decode + JSON encode and nothing else, and the test's own doc comment says so at
+length — but it sits in `open.md` one clause away from the phrase "request path", and the thing a
+hurried reader wants from that bullet is exactly the number this one is not.
+
 ## 2026-09-10 19:15 — umbrella/049 the last hand-kept mirror is half closed and half guarded
 
 **Decided:** approved the worker's two-armed answer rather than sending it back for the single one
