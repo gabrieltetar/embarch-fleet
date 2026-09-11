@@ -97,6 +97,69 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 22:07 — suite/024 the two chip matchers stay separate, and the task's reason for asking was already false
+
+**Decided:** **declined the unification, and the interesting part is why the question was askable at
+all.** `tasks/suite/024` proposed that `embarch-topology` export its Nordic chip-family classifier
+so `embarch-core`'s `flash_backend.rs` could stop carrying a second prefix match, on the stated
+ground that the two "already agree on where the family boundary sits (both stop at nRF54L; both
+refuse nRF54H rather than guess)". **I checked that before judging it, and it has not been true
+since `embarch-core` decision 49 landed.** `classify_chip` returns `None` for nRF54H;
+`requires_vendor_tool` returns `true` for it — decision 49 extended the match precisely because an
+nRF54H name had been falling through to `false` and reaching probe-rs with no message at all.
+**Both repos refuse nRF54H in opposite directions**: one abstains from answering which register
+pair holds the ID, the other answers definitively that probe-rs must be kept away. Reading the
+second as agreement with the first is exactly what a unification would be built on.
+**Declined on the codomain, not on the coupling the task proposed.** `classify_chip` is
+`fn(&str) -> Option<ChipFamily>` — a three-way judgment over which register pair or eFuse holds a
+factory device ID. `requires_vendor_tool` is `fn(&str) -> bool` over whether probe-rs's flat-NVM
+erase/write model is safe. No shared return type serves both without one caller re-deriving its own
+answer from the other's, which is two matchers again with an indirection in front. **They agree on
+the nRF54L prefix by shared evidence, not shared code, and that is the intended arrangement.**
+**The durable half of this unit is two false claims deleted**, both saying `embarch-core` stops
+where topology stops: the corroborating sentence in topology decision 25
+(`embarch-topology/decisions/validation.md`), **deleted rather than softened**, with an amendment
+paragraph recording the decline and the abstain-versus-assert distinction; and the same claim in
+`classify_chip`'s own doc comment in `hardware_id.rs`, corrected in place and saying what it used
+to claim and why that was wrong. `embarch-core` decision 49 needed no edit — it already declines
+from its side and already describes nRF54H correctly — so **nothing in `embarch-core` was written
+by this unit**, which is the right shape for a suite task that could easily have sprawled.
+**This is a supervisor-executed unit, so the reviewer was the only second pair of eyes on it and I
+told it so**, and asked it to start by re-deriving the factual claim from both sources rather than
+from my summary. It did, and confirmed decision 25's DECIDES clause survived intact, that the
+amendment asserts nothing about nRF54H silicon that nobody has evidence for, and that the
+codomain argument matches the real signatures rather than rationalising them.
+**`ops.md` §4 window:** announced at ts `1789097484.647639`, ran its full 30 minutes, closed with
+no objection. Two further windows were opened this leg and **not** consumed — see the leg note in
+the final report and the `State:` lines of `tasks/suite/016` and `tasks/api/044`.
+**Merged:** `agent/suite/024` — none; executed directly on `main` as a supervisor unit. Code
+`embarch-topology` `b872f6d`; doc half in this fold. Ownership clean, scope `suite`, base
+`f0b7389602a0`; `check-ownership.py --supervisor` clean, 16 of 16 top-level docs classified.
+Gate: `cargo build`/`test --all-features` (69 + 5 tests)/`clippy --all-targets --all-features
+-D warnings` green in `embarch-topology`; `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** **none owed, and one deliberately not discharged.** The way to settle nRF54H
+for either matcher is a register read and an erase/write check on real silicon, and **no nRF54H
+part exists on this bench or in this suite** — so this unit refuses on both sides rather than
+promoting a prefix to a fact, which is the same discipline decision 49 and topology decision 25
+already apply. Carried forward unchanged: `api/037`'s timed authenticated `curl` of
+`GET /dev-bench/hello` on the primary bench; `core/015`'s native Windows build of `embarch-core`,
+the owner's, also what would deploy `core/020`'s rename; `umbrella/037`'s corrected check 13;
+`embarch-outpost`'s Zephyr `tests/unit` suite, unbuildable here. The bench queue is still parked by
+the owner's own commit.
+**Budget:** PROCEED, weekly 17.2% of a 90% cap, suggested wave 6, unchanged across the leg.
+**Least sure about:** **I filed `tasks/outpost/017-compact-outpost.md` against this leg's own
+`outpost/016`**, because `check-doc-size.py --decisions` shows `testing.md#22` at 4,442 B against a
+4,096 B cap. It was **already over at 4,258 B before that unit touched it** and nothing had filed
+it, so the debt is not one `outpost/016` created — but it is one `outpost/016` made worse, and I
+judged that the same obligation. I am not certain that is the right reading of the rule: the filing
+rule is written about the *file-level reserve*, and the per-decision cap has no equivalent clause.
+Two other decisions are over that cap right now with nothing filed against them
+(`embarch-ui/decisions/topology-tab.md#10`, which I filed as `ui/024`, and
+`embarch-core/decisions/logging.md#44`, which I did **not** file). If the reading is right, core/44
+is owed a task too.
+
 ## 2026-09-10 21:54 — study-designer/028 four deferred primitives now refuse by name instead of rendering a wrong answer
 
 **Decided:** **this is the unit I would keep if I could keep only one, and its value is that a
