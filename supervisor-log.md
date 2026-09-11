@@ -97,6 +97,69 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 01:31 — ui/025 the same sweep one repo over, and the citation it was right not to touch
+
+**Decided:** nothing new — the `ui` half of `core/039`'s renumber. Two citations of "`embarch-core`
+decision 54" meaning the `EnrolledBoardResponse` **label** rule became 57: `src/snapshot.rs:25` and
+`assets/app.js:163` above `enrolledTableRows`. **A third hit was deliberately left alone and that is
+the whole interest of this unit.**
+
+**`src/study_designer.rs:627` cites `embarch-study-designer/design.md` §3 decision 54** — a
+*different sub-project's* independent numbering, nothing to do with `embarch-core` at all. The
+worker judged it out of scope; I had the reviewer adjudicate it rather than accept the judgement,
+because a citation repointed at the wrong document reads exactly like one repointed at the right
+one, forever, and nothing in the gate looks at citation *targets*. The reviewer confirmed it two
+ways: `embarch-study-designer/decisions/removed.md` 27 gives that decision 54's actual text —
+`StepResult.gatt_activity` retired outright, with the replacement described as an automatically
+declared transcript tap, which is the `GattTranscript` tap the worker named — and
+`embarch-study-designer/decisions.md` explicitly sanctions a citation still phrased as
+`design.md` §3, since the numbers survived the move into seventeen topic files untouched. **So the
+`design.md` §3 form is not stale, it is load-bearing.**
+
+**On legibility, which I asked about and got a better answer than I expected.** Three sub-projects
+now have a live decision 54, so I asked whether `design.md §3 decision 54` is legible enough. The
+reviewer's answer is that the disambiguator doing the work is the **sub-project name**, not the
+file fragment, and `embarch-ui`'s own decisions top out at 25 so there is no fourth collision from
+this repo. I accept that and filed nothing. **The general shape — that a bare decision number is
+only ever meaningful with its sub-project — is already `tasks/doc/033`'s territory.**
+
+**Merged:** `agent/ui/025-decision-54-citations` (code **`3d2f870`** in `embarch-ui`, two files
+`src/snapshot.rs` and `assets/app.js`, one line each; doc **`646a37b`**). The doc branch was rebased
+over `umbrella/051`'s fold and force-pushed before the fast-forward, so its pre-rebase tip
+`2b789cb` is **not** a revert handle. Ownership bases: code `20bb3a908dcf` (whole-tree owned), doc
+`1ed8cd7e05b2` (2 paths, all `ui`). Gate re-run by me on the merge result: `cargo build`,
+`cargo test` (**2 passed, 0 failed** — `embarch-ui` has a small suite and this diff is two doc
+comments in code), `cargo clippy --all-targets -- -D warnings` clean; `python3
+scripts/check-docs.py` **all 11 green**; `check-client-names.py --repo embarch-ui` clean. No
+`embarch-ui` file is in doc-size reserve and none moved.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none new, and none possible** — two one-line edits. Carried forward unchanged
+from this leg's `umbrella/051` entry, in full: `core/015`'s native Windows build of `embarch-core`
+is the owner's and still outstanding; `umbrella/037`'s corrected check 13 has never met the bench;
+`embarch-outpost`'s Zephyr `tests/unit` cannot be built from a fleet worktree; `umbrella/033`'s
+check-17 narrow-bind arms and `umbrella/050`'s `saved.host` clearing question both need a real
+machine; `embarch-ui`'s own stale-prefix drop (decision 19) has still never met the **18 records** a
+real capture opened with, and that one is explicitly the owner's own session. The bench queue is
+still parked by the owner's commit `d0cf9a0`. `fleet-hardware.py --refresh` is still broken
+(`tasks/doc/041`).
+
+**Budget:** PROCEED, weekly **21.8%** of a 90% cap, 125h29m to reset, suggested wave **6**.
+Percentages DERIVED, not from `rate_limits`. Not burndown.
+
+**Least sure about:** **that two units in a row spent a reviewer on a diff of four changed lines
+total.** Both came back clean and both verified something a green gate cannot see — that a citation
+points at the document it names. I think that is the right trade while `tasks/doc/033` is unbuilt
+and `outpost/017`'s duplicate number is a day old. But if `doc/033` lands and decision numbers get
+a real check, this reviewer usage becomes redundant rather than cheap, and the `**Reviewer:**`
+tally will read as two more "no findings" without recording that the reason was a gap that has
+since closed. **This sentence is that record.**
+
+---
+
 ## 2026-09-11 01:28 — umbrella/051 a mechanical citation sweep, checked twice because the gate is not currently evidence about decision numbers
 
 **Decided:** nothing new — this unit executes `core/039`'s renumber across one repo. Five
