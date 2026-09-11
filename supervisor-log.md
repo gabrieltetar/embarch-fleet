@@ -112,8 +112,12 @@ the six sections are a real seam but each is 1–4 bullets with no outside consu
 relocates the open-questions surface rather than shrinking it. **The file is unchanged, zero bytes
 moved, and that is the correct result** — `core/022` is the counter-example, the unit that
 manufactured a cut by trimming real claims and had a fact put back by hand.
-**The task stays `open` with its debt dated 2026-09-26 and unpaid, and I left it that way
-deliberately.** Closing it would strand the size ledger's entry, which points at this file by path;
+**The task is left `blocked`, not `done` and not `open`, with its debt dated 2026-09-26 and
+unpaid.** `fold-commit.py` refuses an `open` task at a fold, correctly — an open task with a
+finished branch is one the next leg re-dispatches — and `done` would strand the size ledger's
+entry, which points at this file by path. `blocked` keeps the debt on the clock (`leg.md`: a
+blocked debt is still picked up as a leg's first unit once overdue) and names its two unpark
+conditions in the task body: the cap being revisited, or a live question retiring on its own.
 `check-doc-size.py --due` lists it with 16 days left and nothing is overdue.
 **The compaction question, in the worker's own words and endorsed by me:** yes —
 `embarch-core/spec.md` alone answers what someone needs to work on `embarch-core` today; `open.md`
