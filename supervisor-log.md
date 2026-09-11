@@ -97,6 +97,80 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 01:36 — topology/024 a compaction whose two suspicious cuts were both already written down somewhere better
+
+**Decided:** **accept the compaction as a genuine shortening, after checking the two cuts that did
+not look like one.** `embarch-topology/spec.md` went **9195 → 8726 B** (89.8% → 85.2% of a 10,240 B
+cap, 1,514 B of headroom). A prose-only pass: no section added, none removed. The file is **out of
+the size ledger entirely** — `check-doc-size.py --due` no longer lists it, and this was one of only
+two payable (non-parked) entries on that ledger.
+
+**I read the diff before merging even though nothing required it**, because compaction is the one
+class where a deletion that reads as tightening can be a status change, and `core/022` is this
+log's own precedent — a reviewer there found two cuts that were status changes and 111 B went back
+in the fold. I flagged two candidates and four smaller ones to the reviewer **before** committing
+the fold, so a restore would still have been cheap. **Both flagged cuts came back clean, and the
+reason is the interesting part:**
+
+- **`— every bench with one VCOM declares nothing, but a guess says so`** is not lost. It survives
+  near-verbatim in `embarch-topology/decisions/link-declares.md` decision 20. So the cut is not a
+  shortening at all — it is a **de-duplication**, and `DOC-COMPACTION-PASS.md` explicitly runs
+  `check-duplication.py` first on the grounds that a claim held in two of the four files is a §3
+  error rather than a cold sentence. **It was removed from the right file of the two.**
+- **`, with no replacement`** is redundant inside `spec.md` itself: the opening section still says
+  *"the override mechanism was removed rather than merely detected (decision 9, retired)"*, and
+  `decisions/scope.md` 9 says every topology-shaped env var and registry override is abandoned
+  outright rather than checked for disagreement.
+
+The four smaller ones also held: "the only thing separating" survives verbatim in the next clause,
+"two VCOMs under one serial" survives verbatim in the declared-facts table, and the dropped
+`currently`s are local emphasis of the standing invariant *"an answer is good only at the instant it
+was taken"* two sections down. **The reviewer also read `open.md` itself** rather than taking the
+worker's word on the `Must not delete:` item about section names — and found `open.md` quotes no
+`spec.md` section name at all, so that item could not have been broken.
+
+**`DOC-COMPACTION-PASS.md`'s human question, answered in the worker's words and accepted in mine:**
+*can `spec.md` alone answer what someone needs to work on this component today?* **Yes** — every
+invariant, constraint-with-reason, rejected alternative and failure signature survives; what left
+was wordiness and one claim that belongs to a decision record. My own read of the diff agrees.
+
+**Merged:** `agent/topology/024-compact-topology` (code **none** — the `embarch-topology` branch
+carried **zero commits**, correct for a doc-only compaction, and that repo's `main` stands at
+`b872f6d`; doc **`d373fd4`**). The doc branch was rebased over `ui/025`'s fold and force-pushed
+before the fast-forward, so its pre-rebase tip is not a revert handle. Ownership base
+`b7863d959cc2`, 3 paths, all `topology`. Gate re-run by me on the merge result: `python3
+scripts/check-docs.py` **all 11 green**; in `embarch-topology`, `cargo build`, `cargo test`
+(**0 tests — that crate's suite lives behind feature flags and the branch changed no code**),
+`cargo clippy --all-targets -- -D warnings` clean.
+
+**Blocked:** nothing. Three units dispatched this leg, **three landed, none blocked.**
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none new, and none possible** — a prose pass over one doc. Carried forward in
+full: `core/015`'s native Windows build of `embarch-core` is the owner's and still outstanding;
+`umbrella/037`'s corrected check 13 has never met the bench; `embarch-outpost`'s Zephyr
+`tests/unit` cannot be built from a fleet worktree; `umbrella/033`'s check-17 narrow-bind arms,
+`umbrella/050`'s `saved.host` clearing question and `embarch-ui`'s 18-record stale prefix all need a
+real machine. The bench queue is still parked by the owner's commit `d0cf9a0`, and **`api/059` — the
+one `open` bench task — falls under that park by its own terms**: it needs a live study, which is
+the DUT-reaching fact the park says the owner is taking himself. Left `open`, untouched.
+**`fleet-hardware.py --refresh` raises and writes nothing**, so the bench buffer read
+`attached: yes` for both boards while being **79 hours old**; `tasks/doc/041`, `Owner: required`.
+
+**Budget:** PROCEED throughout, weekly **21.3% → 22.0%** of a 90% cap, 125h24m to the reset,
+suggested wave **6** — of which I used **3**, because three was the whole worker-dispatchable queue.
+Percentages DERIVED, not from `rate_limits`. Not burndown, no 429.
+
+**Least sure about:** **that I flagged the right two cuts and would have missed a subtler one.** The
+two I caught were the two whose *deleted words* looked load-bearing. A compaction can also go wrong
+by leaving every word and changing what a sentence is about, and I have no procedure for that
+beyond reading carefully — which is exactly what the worker was also doing when it made the cut.
+The reviewer reading the decision files independently is the only thing here that was not a second
+pass by someone with the same blind spot.
+
+---
+
 ## 2026-09-11 01:31 — ui/025 the same sweep one repo over, and the citation it was right not to touch
 
 **Decided:** nothing new — the `ui` half of `core/039`'s renumber. Two citations of "`embarch-core`
