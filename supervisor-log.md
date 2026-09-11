@@ -97,6 +97,50 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 21:52 — api/062 one decision number was wearing two decisions, split verbatim
+
+**Decided:** **this leg's first act was a refill sweep, and this unit is one of its eight results.**
+The queue I inherited reported 21 dispatchable and had **two** tasks a worker could actually take:
+15 were supervisor-only `suite/` tasks needing an announcement window, and one — `tasks/doc/038` —
+writes `**Owner:** **required**` with the value bolded, which `queue-status.py` reads as dispatchable
+because the bold markers are inside the field. That is exactly the defect `tasks/doc/039` already
+describes, so it is filed and not mine; I note it because the *count* is what a leg sizes its wave
+against, and it was wrong by a factor of ten.
+**The sweep's own finding is worth more than any one task it produced:** `check-doc-size.py
+--decisions` reports decisions over the 4,096 B per-decision cap, and **the size ledger cannot see
+them.** The ledger clocks *files*. An over-cap decision inside an under-cap file therefore has no
+due date, nothing schedules it, and it grows every time somebody amends it — which is plausibly how
+`embarch-api/decisions/zephyr.md` reached 14,269/12,288 B. Two of the eight tasks I filed
+(`api/062`, `ui/024`) came from that check alone and neither was on any ledger.
+**This unit:** decision 19 in `embarch-api/decisions/target-json.md` at 5,510 B, 34% over. I told
+the worker to prefer a verbatim split, that the half with out-of-scope citers keeps the filename
+(`topology/026`'s rule, leg 075), and that a written "no safe cut" was an acceptable outcome so it
+was not under pressure to manufacture bytes. It found the better answer: **19 was one number
+carrying two decisions** — the FNV-1a hash for `extra_args`, and the `target.json` descriptor file's
+own semantics — and split them verbatim into 19 and a new 69, **both staying in `target-json.md`,
+because only the decision was over cap and the file never was.** `decisions.md`'s index row and
+`interfaces/config.md`'s absence-semantics citation were repointed to 69.
+**The filename rule did not bind here and the worker said so rather than applying it anyway** —
+every citation of api decision 19 is inside `embarch-api/` itself. That is the right way to handle
+a rule I handed down: check whether its precondition holds, and record that it did not.
+**Merged:** `agent/api/062-compact-target-json` (code none — docs-only, no `embarch-api` branch;
+doc `b9e111f`). Ownership clean, 5 paths, scope `api`, base `0c70e6814dd3`.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — a documentation split, no board, no build. Carried
+forward: `api/037` (leg 075) owes one timed authenticated `curl` of `GET /dev-bench/hello` on the
+primary bench. Unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and
+still outstanding, and is also what would deploy `core/020`'s `self_reported_hardware_id` rename;
+`umbrella/037`'s corrected check 13 has never met the bench that found its defects;
+`embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this environment. The bench queue
+is still parked by the owner's own commit.
+**Budget:** PROCEED at start, weekly 17.2% of a 90% cap, suggested wave 6.
+**Least sure about:** the reviewer flagged that this task file's own Resolution section says
+`decisions/build.md` and `decisions/zephyr.md` "cite decision 19" when in fact they link the file
+generically and name no number. It judged that a completeness quibble rather than a contradiction
+and filed nothing, and I agree — but it means **the worker's stated reason for leaving those two
+alone is not the true reason**, and the true reason (there was nothing there to repoint) is better.
+
 ## 2026-09-10 21:27 — topology/026 the debt the previous leg filed against itself, paid by a split
 
 **Decided:** **dispatched a compaction the previous leg filed against its own fold.** `api/042`'s
