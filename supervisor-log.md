@@ -97,6 +97,41 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 18:48 — api/054 decision 26 retitled about intent, and its file's debt paid on the way
+
+**Decided:** one thing before dispatch, and it is the reusable half. `decisions/core-link.md` had
+206 bytes left and its compaction task `tasks/api/026` is `blocked` on `In flux: yes`, which is
+exactly the state that made an earlier leg stop at a **22-byte** edit and leave the real question
+unanswered. `DOC-COMPACTION.md` §2 says a blocked compaction task parks the *pass* and not the
+*reserve*, so I cleared the worker to spend the reserve **because it was also required to pay it**,
+in the same commit, carrying `026`'s `Must not delete:` list and striking only that one file off
+`026`'s `Compacts:` line. That turned a task that had been deferred twice for want of room into an
+ordinary unit. **The judgement I deliberately did not pre-make** was retire-vs-retitle; the worker
+chose retitle, on the grounds that the surviving intent correction is true and current and only the
+mechanism claim was ever false, and I accept that — `DOC-CONVENTIONS.md`'s bar for `retired` is a
+decision that stops describing anything true, and this one does not meet it.
+**Merged:** `agent/api/054-decision-26-retire-or-retitle` (doc `212f4a4`; **no code commit** — a
+doc-only unit, the branch was pushed at `embarch-api`'s main tip). Ownership check base: doc
+`253abc67f692` after rebasing onto core/019's fold. `decisions/core-link.md` went 12,082 → 11,962 B
+and is **still in reserve** at 326 B left, so the worker filed a fresh
+`tasks/api/058-compact-api.md` recommending a topic split rather than a third squeeze — which is
+the right call and is the first time this ledger has been paid down and re-filed in one unit.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — one decision entry, no board, no build beyond the host.
+Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and
+still outstanding; `umbrella/037`'s corrected check 13 has never met the bench. The
+`embarch-dev-bench` "no toolchain" debt is **retired as mis-stated** — see the `core/019` entry
+below for the measurement.
+**Budget:** PROCEED — weekly 12.6% of a 90% cap, suggested wave 6.
+**Least sure about:** that `core-link.md` is genuinely a two-concern file and so genuinely
+splittable. `058` asserts it is (a per-machine logfile concern and an auth-funnel concern), and
+nobody has checked that against the file's actual contents; if it is really one concern, the next
+leg to pick `058` up will find no split available and will be back to squeezing prose with 326
+bytes of room.
+
+---
+
 ## 2026-09-10 18:47 — core/019 the ledger stops reading a refusal as owed work
 
 **Decided:** one thing, and I narrowed it before dispatch rather than after. The task offered a
