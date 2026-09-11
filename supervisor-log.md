@@ -97,6 +97,51 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 19:42 — api/035 the event stream has met a real Core, and the docs stop saying it has not
+
+**Decided:** scoped this as truth-repair and told the worker explicitly not to reproduce the
+observation — it has no hardware and the bench reading already exists in the record (leg 021,
+2026-09-06). `embarch-api/open.md`'s bullet no longer says the stream has never met a real Core; it
+now says what was actually seen (`study_watch` received pushed live frames, `transport: live`, plus
+an observed `polled` fallback in the same session) and, in the same sentence, what was **not**:
+`study-status --follow`, the drop path, `lagged`, a reconnect. The worker also found that the debt
+the old bullet pointed at, `tasks/api/001-sse-client.md`, **was never filed at all** — so the
+pointer resolved to nothing — and replaced it with a real one,
+`tasks/api/059-sse-client-remaining-observations.md`. No code branch: `embarch-api` had nothing to
+change.
+**Then I corrected the unit's own second half.** `api/035` re-judged `tasks/api/026-compact-api.md`'s
+`In flux:` premise — correctly, the event-stream flux that parked it is gone — and then left the
+task `blocked` anyway, writing an unpark condition that reads *"actually compacting `spec.md` and
+`open.md`, which is this task's own remaining job"*. That is a description of dispatching the task,
+not an external precondition, and it would have hidden a dispatchable size-debt task (due
+2026-09-14) from `queue-status.py` for four more days. My reviewer caught it independently and filed
+`inbox/api-026-blocked-on-nothing.md`; I resolved the drop in this fold rather than filing it as a
+task, setting `026` to `open` and its `In flux:` to `no`, each with the correction written into the
+field it changes and `api/035`'s own reasoning left intact underneath as the evidence.
+**Merged:** `agent/api/035-sse-live` (doc `3e7bde8` after the rebase; no code branch — the remote
+`agent/api/035-sse-live` carried zero commits, which is the correct outcome for this unit, not a
+dead worker). Ownership check base `04290f1a20f7`, 5 paths, all `api`. Gate green, 11/11 doc checks.
+**Blocked:** nothing.
+**Reviewer:** 1 finding — inbox/api-026-blocked-on-nothing.md
+**Hardware debts:** **none new; one restated more honestly and one retired.** No board was touched
+and the worker was directed away from the one action that would have needed one. What remains owed
+is now written down as a task rather than as a sentence in `open.md`: `tasks/api/059` carries
+`study-status --follow`, the drop path, `lagged` and a reconnect, all of which want a live Core and
+a running study. The retired one is the phantom `tasks/api/001`, which two documents pointed at as
+the run that would settle this and which never existed. Carried forward unchanged: `core/015`'s
+native Windows build of `embarch-core` is the owner's and still outstanding; `umbrella/037`'s
+corrected check 13 has never met the bench that found its defects; `ui/023` leaves
+`/study/{id}/streams` end-to-end unmeasured pending a live Core.
+**Budget:** PROCEED, weekly 13.7%, suggested wave 6. Leg ends here at its 4-unit cap.
+**Least sure about:** **my own correction, more than the worker's error.** I changed `026`'s
+`In flux:` to `no` on the strength of an argument the worker wrote while concluding `yes` — the text
+says neither file on the `Compacts:` line is in flux, so `no` is what it supports, but I did not
+re-read `spec.md` and `open.md` myself to test that. If a worker takes `026` and finds a live
+question in either file, the honest answer is `per file`, not `no`, and that worker should change it
+without treating my line as settled. Second, smaller: `tasks/api/059` is a task I have only read as
+a diff. Also filed `tasks/doc/037` from my own earlier `inbox/` drop about `.claude/leg.md`'s
+worktree link table.
+
 ## 2026-09-10 19:37 — ui/023 the request path gets a number, and the part that still cannot have one is named
 
 **Decided:** accepted a partial answer as the right answer. The task asked for the request path
