@@ -97,6 +97,69 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 21:08 — api/042 two capabilities stop being GUI-only
+
+**Decided:** dispatched this as an ordinary unit with three things pre-settled in the task file, so
+the worker chose rather than discovered. **(1)** `decisions/tool-wrapping.md` is the topically
+obvious home for the new decision and has **66 bytes** left, so I named the constraint rather than
+letting a worker meet it mid-flight; it wrote **decision 67 in `decisions/surface.md`** and argued
+the placement in the decision itself. **(2)** `interfaces/tools.md` had 1,008 B left and this unit
+adds rows to it, so per `DOC-COMPACTION.md` §2 I authorised the worker to compact it as part of its
+own unit — it is the actor making the flux — carrying `tasks/api/053`'s `Must not delete:` list.
+It did the **verbatim section split `api/053` named as its own unpark clause**, into
+`tools-discovery.md`, `tools-build-flash.md`, `tools-dev-bench.md` and `tools-topology.md`, and
+closed `api/053`. **(3)** the task's third `Done when` box names three docs in *other*
+sub-projects, which a worker may not write; I told it to satisfy that box with a `status.d/`
+fragment, which I then consumed.
+**I read the shared-crate diff before merging, and checked the one thing this repo has been bitten
+by.** `embarch-api/open.md` records a real past failure — *"the alert/enrolled-board response types
+were unpinned mirrors, and it fired: `link_port_interface` reached Core's wire body and the client
+mirror silently dropped it."* The new `SetDevBenchLinkRequest` is exactly such a mirror, so I
+checked it against `embarch-core/src/api.rs:737` field-for-field rather than taking the worker's
+word: `serial: Option<String>`, `interface: Option<u8>`, matching. The reviewer independently
+confirmed no *other* new unpinned mirror is in the diff.
+**The split's riskiest item was the one the split itself falsifies.** `api/053`'s
+`Must not delete:` list protects *"the one-table premise sentence in the header"* — and splitting
+one table into five makes "one table" literally false. The worker kept the sentence verbatim as the
+lead and added that the premise *"is a property of the crate's tools, not of any one doc file
+holding their description."* That is the right resolution and I checked it by reading the header
+rather than by grep.
+**Merged:** `agent/api/042-signal-and-link-writers` (code `234ca66`, doc `8840ebc`). Ownership
+clean on both: code repo 6 paths, doc branch 14 paths, all `api`. The doc branch needed a rebase
+onto `main` after this leg's own `suite/023` fold moved it; pre-rebase tip is not a revert handle.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**I spent doc reserve myself at this fold, and filed the debt rather than shaving the content.**
+Consuming the `status.d/` fragment meant annotating `embarch-topology/decisions/links.md`
+decision 18 — another sub-project's decisions file, so a supervisor-only write — and
+`embarch-ui/decisions/topology-tab.md` and `suite/studies-guide.md`. **The gate went red on two
+files and I trimmed both**, cutting the topology annotation from ~1,020 B to 537 B and the
+studies-guide edit to one sentence; `studies-guide.md` came back out of reserve and `links.md` did
+not (11,478/12,288 B, 419 B inside). **I stopped trimming there rather than cutting into the four
+clauses the note exists for** and filed `tasks/topology/026-compact-topology.md`, dated
+2026-09-24, with those clauses as its `Must not delete:` list. The immediately preceding entry
+records the opposite choice being flagged as worth pushing back on, which is why this one is
+written out.
+**Hardware debts:** **none new, and the unit deliberately needed none** — the client wrappers it
+surfaced were already round-trip tested, so this was surfacing rather than new behaviour. One note
+that is *not* a new debt but is now easier to misread: `embarch-topology` decision 18's stated cost
+— *"a bench with no Core running has no terminal path to declare a signal"* — **still stands**,
+because `embarch-api` needs Core running exactly as the UI does. I annotated it in place for that
+reason. Carried forward unchanged: `core/015`'s native Windows build of `embarch-core` is the
+owner's and still outstanding, and is also what would deploy `core/020`'s
+`self_reported_hardware_id` rename; `umbrella/037`'s corrected check 13 has never met the bench
+that found its defects; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this
+environment (no `west`, no `ZEPHYR_BASE`). The bench queue is still parked by the owner's own
+commit.
+**Budget:** PROCEED, weekly 15.7% of a 90% cap, suggested wave 6, unchanged across the leg.
+**Least sure about:** authorising the `tools.md` split inside a unit that was also adding rows to
+it. It is what `DOC-COMPACTION.md` §2 prescribes and the reviewer read the result as verbatim, but
+it made one unit both the flux-maker and the compactor of the same file, and the header sentence it
+had to rewrite was on the protected list — the one place where "verbatim" could not be literally
+true. A second pair of eyes on that header is worth more than my own re-read of it.
+
+---
+
 ## 2026-09-10 21:02 — suite/023 a check-table row should say which arms have run
 
 **Decided:** **completed leg 073's parked §8 window rather than restarting it** — announced
