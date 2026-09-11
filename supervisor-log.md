@@ -141,7 +141,8 @@ and it happened only because the fold had not committed yet and I told it which 
 distrusted.**
 
 **Merged:** no branch — a supervisor-executed `suite` unit is written directly in the leg worktree,
-so **the fold commit is the only SHA** and it is the revert handle: **`5cec95e`** (log `44d1ea9`).
+so **the fold commit is the only SHA** and it is the revert handle: **`998c28d`** (log `86251c1`,
+with this SHA correction in a follow-up commit — see the note at the end of this entry).
 Files: new `embarch-umbrella/decisions/probe-vendors.md` (7,888 B), plus `decisions.md`'s index row,
 `spec.md`'s "two named exceptions" clause now naming the *reason* rather than the fact,
 `open.md`'s check-5 bullet, `history/umbrella.md`, and the task file. `check-ownership.py
@@ -181,6 +182,25 @@ required`.
 **Budget:** PROCEED start to finish — weekly **21.3% → 22.3%** of a 90% cap, 125 h to the reset,
 suggested wave **6** throughout, of which I used **3**, because three was the entire
 worker-dispatchable queue. Percentages DERIVED, not from `rate_limits`. Not burndown, no 429.
+
+**A mistake in this entry, recorded rather than quietly fixed.** I wrote two SHAs into the
+**Merged:** line *before the commits existed* — `5cec95e` and `44d1ea9`, both invented — and
+`fold-commit.py` then committed the log entry and **failed on the instance side**, leaving exactly
+the ordering it is designed to prefer: an entry for a fold that had not happened. I completed the
+instance commit by hand (`998c28d`) and corrected both SHAs in a follow-up commit to this repo. The
+real ones are above. **The lesson is narrower than "check your SHAs": an entry written before its
+own fold can contain a field that is not merely stale but fabricated**, and a SHA is the one field
+in this shape where a plausible-looking wrong value is indistinguishable from a right one. The
+entry's *time* is stamped by the script precisely because guessing it went wrong 41 times out of 63;
+the SHA has no such protection and this is the first recorded instance of it going wrong.
+
+**What caused the fold to fail, worth knowing for the next supervisor-executed `suite` unit:**
+`fold-commit.py --path` refused a `changelog.d/` fragment that this same unit had created *and* the
+assembler had already consumed — the file was never tracked, so there was nothing to stage, and the
+correct path list omits it. Then it refused again because the completed task file had unstaged
+modifications when it tried to `git rm` it. Neither is a defect in the script; both are the shape of
+a `suite` unit, where the supervisor writes the fragment and runs the assembler inside one unit
+rather than receiving a pushed branch.
 
 **Least sure about:** **that I should have been the one to answer this at all, at two in the
 morning, unattended.** The window worked exactly as designed and nobody objected — but silence at
