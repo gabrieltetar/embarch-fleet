@@ -97,6 +97,42 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-10 22:19 — core/037 a documented error code that no enum was ever going to produce
+
+**Decided:** **retire the name rather than build the member, and the finding is bigger than the
+task.** `embarch-core/open.md:9` said `study_schema_mismatch` "names a member of the error `code`
+enum that does not exist". It is stranger than that: **`embarch-core` has no error-code enum at
+all.** The `{code, message, cause}` body is designed and deliberately deferred by `embarch-core`
+decision 12, cross-repo, with its own trigger condition — and `study_schema_mismatch` was a name
+typed into *that decision's prose* for a hypothetical future enum, then left behind with nothing to
+reconcile it against. Building the member would have meant building the whole deferred wire body,
+which §5 puts outside one worker's repo, so the name is retired from `decisions/surfaces.md` and
+`open.md` and recorded as `embarch-core` decision 55 — with a forward note that prior mention does
+not owe the name a seat if the enum is ever built. The reviewer independently confirmed nothing
+outside `embarch-core` names it, and that decision 55 amends decision 12's trigger clause rather
+than contradicting its deferral.
+
+**A caution for whoever reads `open.md` bullets as findings:** this task's source claim was
+confidently specific and wrong in a way only reading the code could show. The task file told the
+worker the claim was doc-sourced and unverified, and that is why the outcome is a correction rather
+than a change built on a false premise.
+**Merged:** `agent/core/037-study-schema-mismatch-code` (code none — docs-only, zero commits on the
+`embarch-core` branch; doc `4b39245`). Ownership check base `9780cc65d8fd`.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by this unit — no code diff, no board, no build. Carried forward
+unchanged: `core/015`'s native Windows build of `embarch-core` is the owner's and still outstanding;
+`umbrella/037`'s corrected check 13 has never met the bench that found its defects and needs only
+the dev-bench board; `embarch-outpost`'s Zephyr `tests/unit` suite cannot be built from this
+environment (no `west`, no `ZEPHYR_BASE`). The bench queue is still parked by the owner's own commit.
+**Budget:** PROCEED throughout, weekly 18.4% of a 90% cap, wave 6.
+**Least sure about:** the doc-size debt this created. Decision 55 put
+`embarch-core/decisions/surfaces.md` at 11,937/12,288 B and the worker filed `tasks/core/038-compact-core.md`
+`blocked` on `In flux: yes` with a 2026-09-24 due date — correct by the rule, but it means the next
+`embarch-core` decision to land in `surfaces.md` has 351 B and will meet the cap mid-flight.
+
+---
+
 ## 2026-09-10 22:19 — ui/024 a decision 334 bytes over the per-decision cap, compacted rather than split
 
 **Decided:** **nothing suite-wide; the judgement was whether "compact, do not split" is honest at 8%
