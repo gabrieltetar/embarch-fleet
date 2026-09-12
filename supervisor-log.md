@@ -97,6 +97,38 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 21:32 — ui/027 the fifth use of a shared modal that used neither of its two classes
+
+**Decided:** `embarch-ui/spec.md` describes *"a `.dialog`/`.dialog-backdrop` modal used in five
+places"*. Four used the classes; the fifth — the Enroll tab's assign modal — re-implemented both
+inline (`position:fixed; inset:0; background:oklch(0% 0 0 / 0.5); z-index:50` on the backdrop, and
+the whole of `.dialog`'s geometry on the panel). Now `class="dialog-backdrop"` and
+`class="dialog card"`, with `display:none`, `top:30%` and `width:340px` the only inline survivors,
+each justified in the task file: this is a short chip-enrollment form deliberately narrower than
+the shared `min(720px, 92vw)`, and `.dialog`'s `top:8%` is sized for the taller scrollable modals.
+`app.js` only ever toggles `style.display` and was untouched. **The rendered surface changed and
+not only the positioning** — `.dialog` also brings `max-height:84vh; overflow-y:auto; padding:20px`
+and its own background and border, which the inline version had from `card` alone; that is the
+point of sharing the rule, and it is why the reviewer was pointed at it explicitly rather than at
+the two-line diff. `spec.md` needed no correction: its sentence is now true as written.
+**Merged:** `agent/ui/027-assign-dialog-classes` (code `69882c4`, doc `2742efd` after rebasing onto
+`core/042`'s fold — the doc branch had diverged and `--ff-only` correctly refused it). Ownership
+checks green: 2 doc paths `ui`-owned, code repo whole-tree, 1 path. Gate on the merge results:
+`check-docs.py` 11/11, `embarch-ui` `cargo build` / `test` / `clippy --all-targets -- -D warnings`
+clean, `check-client-names.py --repo embarch-ui` clean.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none — markup only, and the UI is not in the suite release archive
+(`embarch-ui/open.md`'s standing item), so nothing here waits on a deploy.
+**Budget:** PROCEED, weekly 31.0% of a 90% cap.
+**Least sure about:** whether `class="dialog card"` is right or whether `card` is now redundant.
+Both set a background, border, radius and padding, so which wins is pure source order in
+`style.css`, and nobody chose it — the reviewer confirmed no decision pins the modal's appearance,
+which means nothing would catch it if the answer were wrong. The other four modals are the
+precedent and were not changed, so this is at worst consistent.
+
+---
+
 ## 2026-09-11 21:30 — core/042 a route count that outlived the route it was counting
 
 **Decided:** `embarch-core/open.md` claimed decision 42's auth sweep asserts *"all 27 registered
