@@ -97,6 +97,47 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 00:41 — suite/027 one field name, two clocks, and the name stays
+
+**Decided:** suite decision 3 — **`rx_utc_ms` keeps its name in both homes, and every home now says
+which clock it is.** An outpost trace's `rx_utc_ms` is Core's real epoch clock; a study's CSV,
+transcript and `Sample` carry dev-bench **uptime** under the identical name. Neither arm the task
+proposed was taken.
+
+**The task offered two arms and I took a third, which is the part to check me on.** Leg 093's
+announcement is what bounded this, and it is narrower than the task file: it named
+`embarch-study-designer` decision 72's text, `embarch-outpost/spec.md:88-89` and the suite-level
+guides, and explicitly disclaimed the firmware arm. **It did not promise the rename**, and consent
+for a doc pass is not consent for a four-repo rename — one of those repos being `embarch-dev-bench`,
+whose wire struct nothing in this fleet can build — **plus every capture file already on disk, which
+no code change reaches.** A rename no already-written file follows replaces one ambiguity with two.
+So the rename stays open and is the owner's, with the board in front of him, and the decision says
+so in its own text.
+
+**What was actually wrong, and is now fixed.** `suite/016` disclosed the collision where a *study*
+reader looks and left the other home alone. `embarch-outpost` decision 17 asserted that a trace's
+stamp is *"the same wall clock every other stream in a study carries"* — **false, and false in the
+direction that invites exactly the join this decision refuses.** Corrected there, plus the column
+listing in `interfaces/integration.md` and `spec.md` §5, each naming the other clock. Decision 72
+now points forward to the settlement instead of to an open task.
+**Merged:** doc `<this fold>`, my own hands, no branch and no worker (`suite` scope, §8). Gate on
+the result: `check-docs.py` 11/11 green after the ledger entry below. No code touched in any repo.
+**Blocked:** nothing. `tasks/suite/027` closed and removed.
+**Reviewer:** skipped (a `suite` unit run by the supervisor's own hands under an announced window
+that closed unanswered — there is no worker diff to review, and the announcement thread is the
+review surface this path was given).
+**Hardware debts:** none. It **names** one and declines to take it: the firmware arm — one
+subtraction at `ble_bridge_real.c`'s stamp site — is written into the decision as its reversal
+condition rather than left in a task nobody reads.
+**Budget:** PROCEED (weekly 37.3%), wave 6.
+**Least sure about:** `suite/decisions.md` went **1,794 B over its 10 K cap** on this decision,
+landing on the once-on-a-clock allowance with `tasks/suite/033` filed and due 2026-09-19. The file
+was compacted out of reserve **two hours earlier** by `suite/031`, and one new decision undid it. I
+read that as the file being the wrong shape — three unrelated subjects, no `suite/decisions/`
+directory where every sub-project has one — and filed a split rather than trimming decision 3 into
+something less true. The other reading is that I simply wrote too much, and if so the fix is to cut
+this entry's decision text, not to split the file.
+
 ## 2026-09-12 00:40 — suite/014 decision 7's two false claims, adopted from a killed leg rather than redone
 
 **Decided:** `embarch-study-designer` decision 7 no longer claims `cbindgen` generates the C header
