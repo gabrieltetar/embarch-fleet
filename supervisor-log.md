@@ -97,6 +97,44 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 23:22 — suite/031 suite/decisions.md out of reserve, and two facts about the size ledger itself
+
+**Decided:** nothing new — a compaction. **9,472 → 9,035 B**, out of reserve, task closed and its
+ledger item struck. Every hunk is a sentence merge or a redundant-phrase cut, quoted
+first-dozen-words verbatim in the commit; no fact, measurement, reversal condition or rejected
+alternative left the file. The `Must not delete:` list was the command-spelling analysis, and all of
+it survives: the three spellings reaching three different file sets, `--all` reaching sideways
+through path deps into sibling repos, `fmt` following `members` while `clippy --all-targets` follows
+`default-members`, the 57/33/24/9 counts, and both decisions' reversal conditions.
+**Two facts about the ledger came out of doing it, and both would have cost the next leg time.**
+**(a) The reserve floor is not 90% of cap.** `check-doc-size.py`'s `RESERVE_FLOOR` is **1200 B**, and
+reserve is `max(1200, 10% of the limit)` below the cap — so for a 10,240 B cap the 1200 wins and the
+floor is **9,040 B, not 9,216**. I derived 9,216 from the percentage first and spent three rounds of
+edits landing on exactly 9,216, which the checker still called in-reserve. Read `--pressure`'s
+verdict, never the percentage. **(b) `suite/decisions.md` is invisible to the per-decision cap.**
+Decision 1 is roughly 4.2 KB for a single call, above the suite's 4,096 B per-decision cap, and it
+does not appear in `check-doc-size.py --decisions` because that scan walks `*/decisions/*.md` and
+this file is not under such a directory. Recorded in the commit rather than acted on — shortening a
+decision *as a decision* is a different judgement from clearing a file's reserve, and the reserve is
+what was owed.
+**Merged:** doc `45e010e`, plus the fold. **No code repo and no agent branch** — a `suite` unit run
+with my own hands, announced by this leg (`ts` `1789188682.978919`), window closed with no objection.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none — docs only.
+**Budget:** PROCEED throughout (weekly 35.2% of a 90% cap), wave 6.
+**Least sure about:** whether this file should have been compacted at all rather than left for a
+decision-level pass. It was never unclear; it was disproportionate, and 437 B of wording changes do
+not fix a 4.2 KB decision — they buy about two more decisions of room before the same task is filed
+again. I judged the filed reserve debt to be the thing actually owed and said so in the commit.
+**Postscript:** the leg's parked `suite/015` is left `open` with `ts` `1789189358.707879`; its
+window closes at **1789191158** (about 23:33 local). That is a **public-route retirement** across
+`embarch-core`, `embarch-api` and `embarch-ui` — three fixed-channel study-data aliases kept "for
+one release" against a release boundary nothing can reach. The next leg should read that thread
+before running it, not restart the clock.
+
+---
+
 ## 2026-09-11 23:03 — suite/030 the user guide has no fat, and the split is blocked by the other reserved file
 
 **Decided:** two things, and the first is a correction to the task that sent me. **(a)
