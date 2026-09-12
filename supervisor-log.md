@@ -97,6 +97,51 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 10:58 — umbrella/057 a repo-wide invariant that walked one file, and exempted the half the defect lives in
+
+**Decided:** **an exemption has to be structural, not a pattern that happens to match** — and the
+worker got that right where the obvious fix would not have. `doctor.rs`'s guard test
+(`no_check_text_names_a_document_the_four_file_split_deleted`) `include_str!`'d **itself** and
+`continue`d past every line starting `//`, so a test whose name asserts a repo-wide claim enforced it
+over one file out of twelve, with comments — where every instance of this suite's live defect class
+lives — exempt by construction. It now walks `src/*.rs` and reads comments. The two exemptions are
+both nameable: `doctor.rs` is skipped **by file name** (it necessarily contains the forbidden strings
+in its own assertion), and a line naming `install.rs`'s `LEGACY_MARKER` is skipped **by that
+identifier**, because that constant's value has to stay byte-for-byte equal to a marker line already
+present in real installs' rc files, `design.md` and all. Neither is a comment-shaped skip, which is
+the property that makes the widening real.
+**The worker demonstrated the test failing** — inserted `let _ = "design.md";` into `src/env.rs`, saw
+it go red naming `env.rs:10`, reverted. The task asked for that and it is the part that would have
+been cheapest to claim without doing: a guard nobody has seen fail is the defect being fixed.
+**Fold fix, mine:** the widened test's own doc comment said it walked every `.rs` file *under*
+`src/`, while `read_dir` does not recurse. `src/` is flat today (12 files, no subdirectories) so the
+two sets are identical and nothing is wrong — but the first module moved into a subdirectory would
+leave this guard silently enforcing less than it claims, which is precisely the shape it exists to
+catch. Comment corrected to say `src/*.rs` and to state the limit outright rather than leave it to be
+rediscovered (`9a8f89b`).
+**Merged:** `agent/umbrella/057-deleted-doc-guard` (code `6f494b4`, doc `6232c87`), plus the fold's
+own `9a8f89b` in `embarch-umbrella`. Ownership check base `4823b8c71365`, 4 changed doc paths, all
+owned. Gate re-run on the merge result and again after the fold fix: `check-docs.py` 11/11,
+`embarch-umbrella` `cargo build`/`test` (229 tests)/`clippy --all-targets -- -D warnings` clean,
+`check-client-names.py --repo embarch-umbrella` clean.
+**Blocked:** nothing.
+**Reviewer:** no findings. It answered the topic-file question directly rather than deferring:
+decision 52 is about a guard's own scope, which is territory `reporting.md` already holds
+(decisions 11, 37, 39, 46 live there), so `reporting.md` is the right home on its merits and not
+merely the file that had room. It also confirmed 52 is a free number and correctly indexed, and that
+the `LEGACY_MARKER` exemption opens no hole.
+**Hardware debts:** none — a test and two comments; nothing reaches a board or a running service.
+**Budget:** PROCEED; weekly 43.5% of a 90% cap.
+**Least sure about:** the unit filed **`embarch-umbrella` decision 52 into `decisions/reporting.md`
+rather than `decisions/doctor.md`, because `doctor.md` is in blocked size reserve** (1,206 B left,
+`tasks/umbrella/048`) and the task said to stay out of it. That is the task's own instruction and the
+worker followed it — but "a decision landed in the wrong topic file because the right one was full"
+is a failure this suite has already paid for once (`embarch-api`, 2026-09-05, 96 bytes left in
+`decisions/zephyr.md`). I gave the reviewer that question explicitly. If `reporting.md` turns out to
+be the wrong home, the fix is to unpark `umbrella/048` with a split, not to move decision 52.
+
+---
+
 ## 2026-09-12 10:56 — api/078 eight dead citations, and the whole-repo grep found ten
 
 **Decided:** **a dead clause with a live co-citation beside it gets deleted, not repointed, and that
