@@ -97,6 +97,37 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 11:20 — api/079 the module map had a row for everything except the module the bench is built on
+
+**Decided:** nothing — one row in `embarch-api/interfaces/modules.md` for `src/dev_bench.rs`, the
+186-line module declared at `main.rs:4` that turns `[dev_bench]` config into a `resolve::Resolved` so
+`build_dev_bench`/`flash_dev_bench`/`build_and_flash_dev_bench`/`reset_dev_bench` reuse `build.rs`'s
+`BuildLocks`/`run_build` and `CoreClient::flash` unchanged. That table had a row for every other
+module in the repo; the only other absentee is `lib.rs`, which is the `build.rs` lib target its own
+row already describes. **The file states its own job** — *"Read it when you need to know where
+something lives"* — which is what made one omission a defect rather than a gap, and the omitted one
+is the path a reader is least likely to guess, because the bench is deliberately **outside**
+`[[projects]]`.
+**Merged:** `agent/api/079-dev-bench-module-row` (code **none** — the `embarch-api` branch is empty
+by design and was pushed only to signal completion, `check-ownership.py --code-repo` reporting 0
+changed paths; doc `839057d`, parent `fcbeb27`). Gate green: `check-docs.py` 11/11,
+`check-client-names.py` and `check-ownership.py` clean on both halves. **No `embarch-api` `cargo`
+run: the code tree is byte-identical to `main`.**
+**Blocked:** nothing. Task `079` closed `done`.
+**Reviewer:** no findings.
+**Hardware debts:** none — a docs-only row; nothing reaches a board and it adds nothing to
+`core/015`'s outstanding native Windows build.
+**Budget:** PROCEED; weekly 45.1% of a 90% cap, resets in ~92h, wave 6.
+**Least sure about:** the row cites `embarch-api` decisions 32 and 45 as the pair that puts the bench
+outside `[[projects]]`. The worker read both bodies and said so explicitly rather than taking my task
+file's word for it, and the reviewer re-derived both independently — it also cross-checked
+`interfaces/config.md`, which cites the same two decisions for the same `[dev_bench]` section. That
+is the check I wanted, because I had written those two numbers into the task file from a sweep
+agent's report and had not read them myself. Two readers who did is better evidence than my not
+having.
+
+---
+
 ## 2026-09-12 11:15 — dev-bench/019 a filename cleared out of eleven comments, and the section numbers left riding along
 
 **Decided:** nothing new — this applied the citation form settled in `api/052` to eleven C comments
