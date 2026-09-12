@@ -97,6 +97,50 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 23:03 — suite/030 the user guide has no fat, and the split is blocked by the other reserved file
+
+**Decided:** two things, and the first is a correction to the task that sent me. **(a)
+`DOC-BUDGET.md` does not block splitting `suite/user-guide.md` §7 into a `suite/agent-guide.md`** —
+`tasks/suite/030` said it did, on the belief that a new suite doc needs its own cap entry. Line 26
+already carries a glob — *Suite-level doc | 10 KB | `suite/*.md`* — and line 29's 25 KB entry is the
+*exception* for the two narrative guides, not the mechanism by which a suite doc is capped at all.
+Verified rather than reasoned: a placeholder `suite/agent-guide.md` was created and
+`check-doc-size.py` run, which counted 290 docs instead of 289 and raised nothing. **(b) What does
+block it is `DOC-PROTOCOL.md` §43 and §61**, which name `suite/user-guide.md` **by filename** as the
+one place the link-don't-restate rule does not apply. A second suite guide made entirely of restated
+tool lists would fall under that rule with no exception covering it — which is exactly what §7.1 is,
+and the only reason it is compliant where it sits today. Owner-reserved, so filed as
+`tasks/doc/045` rather than done, with two shapes offered (add the filename, or state the property
+§43 is already reaching for and has frozen a count of one into).
+**Merged:** doc `197f728`, plus the fold. **No code repo and no agent branch** — a `suite` unit I
+ran with my own hands after leg 091's announcement (`ts` `1789187481.992469`) ran its 30 minutes to
+close with no objection. I did not re-announce it.
+**Blocked:** `tasks/suite/030` — left **blocked**, not closed. The squeeze fork was genuinely
+attempted and **saved 317 B of the 2,004 B needed** (25,044 → 24,727 B, still in reserve). Six hunks
+were rewritten and every one is a sentence merge, quoted first-dozen-words verbatim in the commit
+message per `DOC-COMPACTION-PASS.md`; no fact left the corpus. That number *is* the finding — there
+is nothing in that file that is merely long. It is the one doc written for a reader outside the
+project, so every paragraph is a distinct operational fact or a distinct failure mode, and the two
+sections holding the most bytes (§7.1's 29-tool permission split, §8's ten-row failure table) are
+the two that must stay exhaustive. Reaching the floor from here means deleting claims, which
+`api/026` and `api/031` already cost this suite twice.
+**Reviewer:** no findings.
+**Hardware debts:** none — docs only.
+**Budget:** PROCEED at start and at the fold (weekly 35.2% of a 90% cap, resets in 104h), wave 6.
+**Least sure about:** leaving `suite/030` blocked rather than closed. Its own "Done when" allows
+closing *with a written argument*, and I wrote one — but closing it would delete the argument for
+the split along with the task, and the split is the move the task itself preferred. Blocked keeps
+the debt visible with a real unpark condition; the cost is one more `[BLOCKED]` on a ledger that
+already carries thirteen, which `check-doc-size.py` calls out by name.
+**Postscript for the next leg:** a third fact the pass turned up and the task did not ask for —
+**`embarch-promptu/design.md` cites `user-guide.md` §7.1 by section number twice** (lines 7 and 13,
+the second an explicit promise *not* to restate the lists because that section holds them). Any
+split must repoint both in the same commit. `tasks/suite/030` asked whether `embarch.md` §6 or
+`suite/studies-guide.md` cite §7; neither cites it at all, so the check as written would have come
+back clean and missed the two that matter.
+
+---
+
 ## 2026-09-11 22:53 — topology/032 decision 56's third route, paid in the repo that owns the type
 
 **Decided:** nothing — this closes a debt an existing decision already named. `embarch-core`
