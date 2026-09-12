@@ -97,6 +97,50 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 00:44 — suite/033 the suite decisions file becomes an index, and the debt is paid in the leg that made it
+
+**Decided:** `suite/decisions.md` is now an **index** and the decision text lives in
+`suite/decisions/tooling.md` (1, 2) and `suite/decisions/naming.md` (3) — the shape every
+sub-project's own `decisions.md` already has, and which the suite level did not. **Nothing was
+re-worded**: the three entries are byte-identical moves, with only the relative link paths re-based
+for the extra directory level, the same allowance `suite/008` took when it moved decision 1 in.
+12,034 B → 2,470 + 8,116 + 3,268, all three comfortably under cap.
+
+**This is the debt the unit before it created, paid one unit later.** `suite/027`'s decision 3 put
+the file 1,794 B over on the once-on-a-clock allowance; I filed `tasks/suite/033` in that fold and
+closed it in this one, so the ledger entry existed for about fifteen minutes. **The argument for a
+split rather than a trim is that `suite/031` had compacted this file out of reserve two hours
+earlier and one new decision undid it** — a file a single decision can blow past is the wrong shape,
+not a badly compacted one.
+
+**An index, not a redirect stub**, which is the difference from `api/074` the night before. That
+split deleted nothing and kept a stub because `history/` linked at the old path and a compaction may
+not edit `history/`. Here the old path is genuinely an index — it has a routing table and a reason
+to exist — so `history/suite.md`'s three links at it stay correct with no stub semantics at all.
+
+**The gate taught me something mid-unit and I reverted eight edits because of it.** I re-pointed
+every citation at the new topic files, as the task file told me to; `check-decision-refs.py` went
+RED with `DOC-CONVENTIONS.md`'s rule — **link the index, not the topic file**, precisely because a
+split moves an entry while the old path keeps resolving and naming the wrong file. Every citation
+now points at `suite/decisions.md`, which is what the index is for.
+
+**One extra fix, same defect as the unit before.** `embarch-outpost/spec.md` §2's third property
+carried the *same* false clause `suite/027` had just corrected in decision 17 — "the same wall clock
+every other stream in the study carries". The spec is where a reader arrives first. Fixed here
+rather than filed.
+**Merged:** doc `<this fold>`, my own hands. **No ops §4 announcement, deliberately**: §4's window
+is for a suite-wide *design* act or a wire-schema bump, and a verbatim split that decides nothing is
+neither. If that reading is wrong, this is the unit to object to.
+Gate on the result: `check-docs.py` 11/11 green; `check-doc-size.py` reads **PAID, 24.1%**.
+**Blocked:** nothing. `tasks/suite/033` closed and removed in the same fold that created it.
+**Reviewer:** skipped (supervisor's own hands, `suite` scope, no worker diff to review).
+**Hardware debts:** none — docs only, no repo outside `embarch-doc` touched.
+**Budget:** PROCEED (weekly 37.3%), wave 6.
+**Least sure about:** whether `tooling.md` is one topic or two. Decision 1 is a formatting-policy
+sequencing call and decision 2 is a CI-coverage call, and I grouped them as "how the suite's checks
+are run" mostly because a two-decision file and a one-decision file is a thinner seam than a
+three-way split of three decisions. The next suite decision that is neither will force the question.
+
 ## 2026-09-12 00:41 — suite/027 one field name, two clocks, and the name stays
 
 **Decided:** suite decision 3 — **`rx_utc_ms` keeps its name in both homes, and every home now says
