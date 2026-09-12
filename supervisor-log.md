@@ -97,6 +97,49 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 22:44 — core/044 a decision's "whole remaining work" that was never done
+
+**Decided:** nothing new — decision 56's own unpaid half was paid rather than the decision weakened.
+`decisions/handshake.md:49` said `EnrollProbeResponse`, `ValidateResponse` and `EnrolledBoardResponse`
+each carry a `hardware_id` doc comment pointing at it, and called that *"the whole remaining work"*.
+None of the three was true: the first two carried **no comment at all**, the second type is actually
+named `ValidateOkResponse`, and the third **does not exist in this crate** — `src/api.rs:737` serves
+`embarch_topology::hardware::EnrolledBoard` directly, so the promised comment could not have lived
+here even in principle. Decision 56 traded away a rename on the explicit condition that the
+probe-read-versus-self-reported distinction be legible at the struct and not only on the wire, which
+is the confusion decision 47 was written about; **the trade was made and the payment never was.** The
+two comments that belong here now exist, verbatim to decision 56's own required text, and the
+decision's sentence names the types that exist.
+
+**The third one crossed a repo line and was filed rather than reached for.** The owed comment lives on
+`embarch-topology`'s `EnrolledBoard::hardware_id`; the worker dropped it to `inbox/` instead of
+editing another sub-project, and I filed it as `tasks/topology/032`. That is the ownership map working
+as designed on the exact shape it exists for — a decision in one repo owing a change in another.
+
+**Second item, and the reviewer checked the trap.** `src/flash_backend.rs:47-49` cited **decision 50**
+for the `nrfjprog` retirement; the retirement is `flashing.md`'s **decision 54**, and decision 50 is
+`enrollment.md`'s `/validate` timestamp. The trap is that `enrollment.md:25` records its *own* 54 being
+renumbered to 57 for colliding with `flashing.md`'s — so a heading-only check could talk itself into
+either number. Both the worker and the reviewer re-derived it from the bodies and agree: `flashing.md`
+54, dated 2026-09-06, not the comment's 2026-09-10.
+
+**Merged:** `agent/core/044-decision-56-doc-comments` (code `3ab54e3`, doc `beeae6a`). Ownership check
+base `325e00e0a80a`, 4 doc paths, all owned. Gate green on the merge result: `check-docs.py` 11/11,
+`embarch-core` `cargo build`/`test`/`clippy --all-targets -- -D warnings` clean,
+`check-client-names.py --repo embarch-core` clean. `decisions/flashing.md` untouched at 11487/12288 B,
+so no new size debt.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none new, but this is now one more thing riding on `core/015`'s outstanding
+native Windows build of `embarch-core` — comment-only, so it changes no behaviour the running service
+would show, but it does not reach the owner's machine until that build lands.
+**Budget:** PROCEED, weekly 34.3%, wave 6.
+**Least sure about:** that `--only` takes one fragment per flag. `build_changelog.py --only 'a.md,b.md'`
+does not split on the comma — it reported `--only matched none of ['a.md,b.md']` and consumed nothing,
+silently doing no work rather than failing. Repeating the flag (`--only a.md --only b.md`) is what
+works. A unit with two fragments is the case that hits this, and the failure mode is a fold that
+leaves fragments unfolded, which `.claude/leg.md` calls a failed unit.
+
 ## 2026-09-11 22:42 — topology/031 a rustdoc value no regime can return
 
 **Decided:** nothing new; a behaviour change was explicitly refused. `src/hardware/port.rs:79-81`
