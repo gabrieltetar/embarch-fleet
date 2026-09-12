@@ -97,6 +97,48 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 22:35 — ui/030 a documented vertex count from a trace that does not ship
+
+**Decided:** nothing new — both halves were drift, and both were paid rather than argued down. Decision
+25's inline header glyph was documented as **16 vertices for the E**; the worker re-counted
+`assets/index.html:34`'s first path itself (coordinate pairs before the first `Z`) and got **22 plus a
+4-vertex counter**, confirming the task's recount rather than taking its number. The union-mode clause
+that *explains* why the E carries more vertices than an E — the path is the whole silhouette with the A
+painted over it — is what made the stale number survive this long, and it stays. The sentence's other
+two numbers (53-vertex/693 B `embarch-mark.svg`, `657 B inline`) were re-measured and were correct.
+The second half is the one worth noting: `decisions/gatt-capture.md:29`'s *"a separate value class opts
+out"* described `.sd-param > span.sd-param-value`, dead since decision 17 replaced the inline checkbox
+list with the targets dialog. **The CSS and the sentence went in the same commit**, per the task's own
+"not one without the other" — either alone leaves the same drift pointing the other way.
+
+**This leg's queue was the real finding.** `queue-status.py` reported 12 dispatchable and **11 of them
+were `suite`-scoped** — supervisor's-own-hands work no worker can take — so the wave of 6 had exactly
+**one** worker-dispatchable task in the whole queue. That is `tasks/doc/043` (`queue-status` counts
+suite tasks in a number that sizes a worker wave) costing real throughput, not hypothetically. Refill
+for scope spread ran alongside unit 1 rather than after it; three tasks filed, below.
+
+**Merged:** `agent/ui/030-e-vertex-count` (code `bfceb82`, doc `15762d1`). Ownership check base
+`62fa533abf7a`, 4 doc paths, all owned; the code-repo arm could not be run as `--scope ui` from a code
+repo (`unknown scope 'ui' (known: doc, suite)` — `tasks/doc/036`, still open), so the code diff was read
+instead: one path, `assets/style.css`. Gate green on the merge result: `check-docs.py` 11/11,
+`embarch-ui` `cargo build`/`test`/`clippy --all-targets -- -D warnings` clean,
+`check-client-names.py --repo embarch-ui` clean against 7 denylist entries.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none — no rendered pixel changed, and the standing debts are unchanged.
+**Budget:** PROCEED at start, weekly 34.3% of a 90% cap, resets in 104h30m; wave 6.
+**Least sure about:** whether filing three sweep-derived tasks in one leg is refill or invention. They
+are drift findings, each verified on both sides by the sweep and each carrying an explicit
+"re-check every line number yourself" caveat — but none came from `open.md`, the roadmap, or the
+reversals page, which is what `.claude/leg.md` names as the sources. I judged a queue with one
+worker-dispatchable task to be the condition the low-water rule exists for.
+
+**Recovered at step 0:** a stray `leg` worktree registered against **`embarch-outpost`**, not
+`embarch-doc` — `/home/gabriel/Github/embarch/.worktrees/embarch-outpost/leg`, detached at `f58e6d2`,
+clean, zero commits ahead of `origin/main`. Removed. Some earlier leg ran its `worktree add --detach …/leg`
+with the wrong `-C` repo; worth watching for, since a leg standing in the wrong repo's worktree would
+fold against the wrong tree.
+
 ## 2026-09-11 22:27 — study-designer/031 three seals said to follow their spans, two of which do not
 
 **Decided:** nothing new, and the fork was the interesting part. `embarch-study-designer/spec.md` §4 said
