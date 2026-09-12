@@ -97,6 +97,66 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 20:07 — api/066 an open question that had been answered for days, and the one place the answer did not reach
+
+**Decided:** nothing suite-wide. `embarch-api/open.md` asserted that Core's half of the
+alert/enrolled-board wire mirror was **unpinned** — *"`api`'s half is pinned against a JSON literal
+now (task `032`); **Core's is not** — filed to `embarch-core`'s inbox."* **Core's half has been
+pinned since `tasks/core/024`**: `embarch-core/src/api.rs` carries `ENROLLED_BOARD_RESPONSE_JSON`
+and `ALERT_RESPONSE_JSON` and two round-trip tests against **the same literals** this crate's
+client-side tests use, `link_port_interface` included. I confirmed that by reading `api.rs` before
+filing the task, so the unit was a reconciliation from the start rather than a suspicion.
+
+**What the worker chose, and why I think it chose right.** Nothing about the bullet was open any
+more, so it does not belong in `open.md` at all. The topical decision home is
+`decisions/core-link.md`, which is **over cap and parked** — and the task's own reserve line forbade
+filing into it. Rather than pick whichever decisions file had room (the exact move that put an
+`api` decision in the wrong topic file on 2026-09-05), it **deleted the bullet and moved its content
+into the two test doc comments it corrects** in `crates/embarch-core-client/src/client.rs`, both of
+which said the Core-side counterpart test *"does not exist yet"* and now name it and `core/024`,
+restating the interlock: the two literals are a **copy, not a shared constant**, so a disagreement
+between them — not merely a red test on one side — is the finding.
+
+**The sweep was the actual value of the unit.** Four other `open.md` bullets assert something about
+a *different* repo, and nothing in the gate compares a sentence here against source there. All four
+re-checked **against source, not docs**, and all four still true: `embarch-umbrella` still scaffolds
+`artifact_path_for_core` (`config.rs:101`, `init.rs:534`, `doctor.rs:1373-1471`); `embarch init`
+still never writes `serial_port`; Core's `{code, message, cause}` body still does not exist
+anywhere in `embarch-core/src/`; Core's `serial_log` is still bounded and one-shot
+(`serial.rs:43`, `api.rs:577-601`). `embarch-api/open.md` is down to **3,469 B**, well clear of
+reserve, so `tasks/api/060`'s item is payable.
+
+**The reviewer found the one place the correction did not reach**, and it is a good catch: decision
+**37/38** in `decisions/core-link.md` still closes with *"The alert and enrolled-board mirrors still
+have that coupling unpinned."* That is the superseded fact sitting in the file a reader opens to ask
+whether it is still unpinned — stale **by this unit's own premise**, not by drift. Not a revert: the
+diff is right. Filed as **`tasks/api/067`**, `blocked`, because the one-clause fix lands in that
+same over-cap parked file and whoever takes it pays the compaction with it.
+
+**Merged:** `agent/api/066-open-md-mirror` (code `f4734c9`, doc `2323c38`). Both branches rebased
+onto this leg's own claim commits before merging; the doc rebase **conflicted on the task file's
+`State:` line** — my claim-shape fix against the worker's `done` — resolved in the worker's favour.
+Ownership check base `558002c06609`, 3 changed paths, all owned. Gate re-run on the merge result,
+not taken from the worker's report: `check-docs.py` 11/11, `embarch-api` `cargo build`/`test`/
+`clippy --all-targets -- -D warnings` clean, `check-client-names.py --repo embarch-api` clean.
+**Blocked:** `tasks/api/067`, as above — recorded, not worked.
+**Reviewer:** 1 finding — inbox/api-066-core-link-decision-still-says-unpinned.md (filed as
+`tasks/api/067`; drop deleted).
+**Hardware debts:** none. It narrows a reason to care about one: the cross-repo mirror contract is
+now guarded on both sides by tests that need no live Core, so the `link_port_interface` class of
+silent drop is caught on the host.
+**Budget:** PROCEED, weekly 29.4% of a 90% cap, suggested wave 6.
+**Least sure about:** a mechanical mistake of mine, not a judgement. I ran
+`git rebase … | tail -1` inside an `&&` chain under `set -e`; a pipeline returns `tail`'s status, so
+a **failed** rebase read as success and the next command **force-pushed the worker's branch back to
+`origin/main`**, discarding its commit on the remote. Recovered in full from the local reflog
+(`e03930e` → `2323c38`) and nothing was lost, but the shape is the danger: **piping a git command
+into `tail` inside an `&&` chain silently disarms `set -e`.** The same rebase conflicted again on
+`umbrella/052` and I caught it only because I had stopped piping by then. The next leg should treat
+any `git … | tail` in its own commands as unchecked.
+
+---
+
 ## 2026-09-11 19:55 — topology/028 a split down a seam the task had already found, and a reviewer that checked "verbatim" byte for byte
 
 **Decided:** nothing suite-wide. `embarch-topology/decisions/validation.md` was at **12,278 / 12,288 B
