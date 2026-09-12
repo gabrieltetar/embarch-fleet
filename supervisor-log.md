@@ -97,6 +97,61 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 19:53 — suite/013 a leg's uncommitted work recovered rather than redone, and the citation its reviewer caught
+
+**Decided:** power sampling is documented as **deferred** everywhere a newcomer meets it, and a study
+step is stated never to be a power-sampling window. This unit is **leg 083's work, not mine.** That
+leg was killed ~16 h ago with `suite/013` complete and uncommitted in the shared leg worktree —
+seven modified files and two new ones, living nowhere else. `ops.md` §3 says *inspect before
+resetting*; I read the whole diff, found it coherent and self-consistent (including its own honest
+split of the code half into `tasks/suite/029`), and **adopted it instead of discarding and redoing
+it.** That is a departure from the `umbrella/043` precedent, which discarded ~10 minutes of killed
+work; the difference is that this diff had already been reviewed and I could re-derive every claim
+in it. **Least certain thing in this leg**: whether "recovered a dead leg's uncommitted unit" should
+be a normal move or a reported exception — it is not written down either way.
+
+Three corrections I made to the recovered work before landing it:
+
+- **The reviewer's finding was right and I took it.** The `features.d` row cited `embarch-dev-bench`
+  **decision 21**; 21 is *`main.c` dispatches a real `Study`* and says nothing about power. The
+  decision that actually defers the front end is **24** (`decisions/boards.md`, the PPK2: *"not
+  ordered, not wired into any workspace"*). Verified by reading both bodies, not the reviewer's
+  word. The bad number came from `app/src/main.c:685`'s comment *"(decision 21's scope)"*, which is
+  shorthand for the decision that function was written under — so the same trap is annotated in
+  `tasks/suite/029` to stop it propagating a third time.
+- **Leg 083 hand-edited `history/suite.md`**, which is assembled from `changelog.d/` and which
+  `changelog.d/README.md`'s first line forbids editing directly. Nothing failed — the gate was green
+  with the hand edit in place, because `build_changelog.py --check` validates fragments and never
+  the assembled file. Reverted and refiled as
+  `changelog.d/suite-power-sampling-reads-as-deferred.fixed.md`.
+- `build_features.py` re-run to prove the assembled row matches its fragment; it was already
+  byte-identical apart from the citation.
+
+**Merged:** no worker branches — a supervisor-executed `suite` task, landed as this fold commit.
+Announcement window is leg 083's and was properly served: announced 03:05:38 MDT
+(`ts` `1789117538.021209`), closed with no objection at 03:37:09. I re-read the thread and the
+channel at 19:44 before landing: still nothing, 0 actionable.
+**Blocked:** nothing. `tasks/suite/029` carries the code half (a declared `PowerFrontEnd` tap is
+indistinguishable from an authoring mistake), correctly left `open` rather than guessed at.
+**Reviewer:** 1 finding — inbox/suite-features-power-row-mis-cites-dev-bench-decision-21.md
+(acted on in this fold; drop deleted).
+**Hardware debts:** none new. This unit *removes* a false one: the studies guide's first worked
+command fetched `--name power`, which on today's bench returns a 0-byte CSV. The standing debts are
+unchanged — `core/015`'s native Windows build, `umbrella/037`'s check 13, `embarch-outpost`'s ztest
+suite, and the bench queue still parked by the owner's `d0cf9a0`.
+**Also in this commit, from the inbox drain:** leg 083's own finding that a reviewer which finishes
+and never notifies has **no legal `**Reviewer:**` form** — filed as
+`tasks/doc/042`, `Owner: required`, because the fix is in `.claude/leg.md`'s template. Leg 083
+recovered that verdict from a 4 KB transcript tail and flagged its own departure rather than hiding
+it; I have not treated it as precedent.
+**Budget:** PROCEED at leg start — weekly 29.0% of a 90% cap, 5-hour window inactive, suggested wave 6.
+**Least sure about:** adopting a killed leg's uncommitted unit instead of discarding it. `ops.md` §3
+says "inspect before resetting" for a leg worktree, and every worked example of that phrase is about
+an unpushed *fold*, not an unpushed *unit*. I read the whole diff and re-derived its claims, so I am
+confident in the content; I am not confident the move is the one the rule intends.
+
+---
+
 ## 2026-09-11 03:36 — ui/026 a compaction that turned prose into a table, and a reviewer whose completion notification went missing again
 
 **Decided:** nothing suite-wide. `embarch-ui/open.md` **4,295 → 3,875 B** (75.7% of its 5,120 B cap,
