@@ -97,6 +97,50 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 10:22 — ui/039 a Cargo.toml's own comments were the last place a dead design.md survived
+
+**Decided:** **landed by recovery, not by its own leg.** Leg 098 dispatched this and died before folding
+it — the fleet was then wedged for ~7 hours with no diagnosis available and the deadman watchdog
+unlatched the pump; the owner relatched it and this leg (099) picked the finished work up. The worker
+had already pushed both branches, so per `.claude/leg.md`'s presence-may-retire-a-worker rule this was
+landed on the evidence of the pushed branches rather than on a notification that never arrived.
+The unit itself: `ui/033` repointed every `embarch-ui` **source** comment off the nonexistent
+`embarch-doc/embarch-ui/design.md`, but `Cargo.toml` is not a `*.md` file, so `check-decision-refs.py`
+could never see the three citations still living in its comments — including the package `description`
+field, which ships to anyone reading the crate's metadata and claimed a nonexistent file was "the
+source of truth". Now points at `spec.md`/`decisions.md`. The two `design.md §3 decision 5` prefixes
+became bare `decision 5`, and the cross-repo `embarch-api/design.md §11` became `` `embarch-api`
+decisions 37/38 `` — the settled citation form from `api/052`. The worker checked the cross-repo half
+against `embarch-api`'s own decisions rather than repointing it blind, which is what the task asked
+for and the part it would have been cheapest to skip.
+**Merged:** `agent/ui/039-cargo-toml-design-md` (code `2bd3460`, doc `6dc43d4`). Doc branch was rebased
+onto `main` (it was two folds behind after the wedge); the code branch fast-forwarded as-is. Ownership
+check on the doc branch: base `5b1fd40eb006`, 2 changed paths, all owned by the `ui` worker. Gate green
+on both merge results, re-run by this leg rather than taken from the worker's report: `check-docs.py`
+11/11, `embarch-ui` `cargo build`/`test`/`clippy --all-targets -- -D warnings` clean,
+`check-client-names.py --repo` clean.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none — comments and crate metadata only, nothing that reaches a board.
+**Budget:** PROCEED at leg start — weekly 42.4% of a 90% cap, 5-hour window inactive, suggested wave 6
+(cache 210 s old, DERIVED percentages as always on this machine).
+**Least sure about:** whether landing a worker's branches on the evidence of the push alone, ~7 hours
+after the worker died with its leg, is the same fact as landing a fresh one. The rule permits it and
+the gate was re-run from scratch on the merge result, so nothing rests on the worker's own report —
+but the branch had gone stale by two folds and I rebased it myself, which is a supervisor editing a
+worker's history. It was a clean rebase of a two-path doc diff, and I read it; a conflicting one I
+would have left blocked.
+**Postscript for the next leg:** `agent/ui/037-milestone-1-comments-doc` is still on `embarch-doc`'s
+remote and is a **false positive** — that work is already on `main` (fold `0871915`) and the ref is an
+unpruned leftover from a rebase, per `fleet-triage.py`. Do not re-land it.
+**Also:** `check-ownership.py --scope ui --repo <a code repo>` answers `unknown scope 'ui' (known:
+doc, suite)` — the code-repo half of a unit's ownership check cannot be run the way the leg doc
+describes. Already filed as `tasks/doc/036`, owner-only; noting it so the next leg does not
+re-diagnose it. The code repo's whole tree is the worker's anyway, so nothing was skipped that
+matters.
+
+---
+
 ## 2026-09-12 02:56 — suite/034 studies-guide §3b finally names a worked example
 
 **Decided:** **approved and executed on the owner's behalf under `ops.md` §4's silence-as-consent
