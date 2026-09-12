@@ -97,6 +97,61 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 11:32 — core/049 one bad citation was the seed; the sweep found twelve more, and seven were wrong NUMBERS
+
+**Decided:** nothing new in design terms, but this is the unit of the week worth reading. I filed it
+as a one-line repoint — `main.rs:163`'s bare `decisions 31/32` are `embarch-study-designer`'s GATT
+decisions, not Core's version gate and `erase` footgun — and asked for a sweep of the class rather
+than the line. The worker checked **~150 citation sites** across `src/` and `bin/`, reading decision
+**bodies** in five repos, and changed **13**.
+**The important half is that only six were the defect I filed.** The other seven were *wrong
+numbers*, which is a strictly worse class than a missing repo prefix and one nothing in this suite
+had gone looking for:
+
+- `elevate.rs:90` 7 → 3 (7 is Core's Axum/CI decision; 3 is the self-elevation fallback)
+- `api.rs:2032` 20 → 22 (22 is the identity gate that fails closed naming both values)
+- `study.rs:268` 18 → 39 (39's body literally reads "the two indices a manifest cannot check about
+  itself")
+- `study.rs:1518` 36 → 40 (40 is truncated-transcript/`completed: false`; 36 is a flash backend)
+- `study.rs:2307` and `:3464` 36 → `embarch-study-designer` 14 (step_index by array position)
+- `study.rs:3571` 58 → `embarch-study-designer` 58 — **the same number in a different repo**, which
+  is the single most invisible form of this defect: both repos have a 58, so the citation resolved,
+  to Core's `/serial-log` caps
+- `api.rs:1488` cited `decisions/platform.md` for decision 42, which lives in `decisions/auth.md`
+  and has no 42 in `platform.md` at all
+
+**Reviewer verified all thirteen, old body against new body, and cleared them** — and caught one
+thing I would not have: the worker's **commit message** justifies `api.rs:2032` by saying Core has no
+decision 20. It does; 20 is a handshake/crash-mid-study decision that is simply unrelated. The
+citation that landed is right and nothing misroutes, so there was nothing to file, but the *stated
+reason* on `main` is wrong. Recording it here because a later reader re-deriving that change from
+the commit message would be re-deriving it from a false premise.
+**Merged:** `agent/core/049-bare-decisions-31-32` (code `2dfff12` in `embarch-core`, parent
+`1e7a6bd`; doc `e7f1565`, parent `c0202e5`). Doc branch rebased onto `api/079`'s fold first. Gate
+green on both merge results: `check-docs.py` 11/11, `embarch-core` `cargo build`/`test` (196 + 1
+tests)/`clippy --all-targets -- -D warnings` clean, `check-client-names.py --repo embarch-core`
+clean, `check-ownership.py` green on both halves.
+**Blocked:** nothing. Task `049` closed `done`, with the full per-site list written into the task
+file rather than left only in the commit message.
+**Reviewer:** no findings.
+**Hardware debts:** **`core/015`'s native Windows build now carries an eighth landed `embarch-core`
+change.** Comment-only, so nothing here alters behaviour — but the debt is the owner's and it is
+growing, and this is the second consecutive day a `core` unit has added to it.
+**Budget:** PROCEED at leg start and end; weekly 44.5% → 45.1% of a 90% cap, resets in ~92h, wave 6.
+**Least sure about:** **whether this class is bigger than anyone has assumed, and nothing can see
+it.** Three units this week each expected one bad citation and found more — `core/008` expected two
+and found five, `topology/034` found its one, and this found twelve beyond its seed. `check-decision-refs.py`
+resolves decision numbers in `*.md` under a repo root only, so **every one of these lived in source
+comments, where no gate reaches, and a wrong number that resolves fails nothing.** `ui/040` is
+queued and expects twenty-two. I did not file a task for a checker because a checker that reads
+*bodies* is not a grep — it is the judgement the reviewer just spent thirteen reads on — but the
+owner should know the corpus is dirtier than the queue implies. Second: `§3 decision N` prose
+survives in `study.rs:268` and `:1521`; the reviewer confirmed `embarch-core/decisions.md` documents
+that numbers survived the move out of the old `design.md` §3, so it is stale prose rather than a
+broken reference. Same residue `tasks/dev-bench/026` covers for that repo; nobody has filed Core's.
+
+---
+
 ## 2026-09-12 11:20 — api/079 the module map had a row for everything except the module the bench is built on
 
 **Decided:** nothing — one row in `embarch-api/interfaces/modules.md` for `src/dev_bench.rs`, the
