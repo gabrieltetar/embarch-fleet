@@ -97,6 +97,35 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 21:43 — study-designer/029 a table that said "every" and was two short
+
+**Decided:** `embarch-study-designer/interfaces/limits.md` opens by claiming it lists *"Every bound
+the crate declares"*, and omitted `MAX_RECORD_MAGIC_LEN` (8, bounding `RecordFraming.magic`) and
+`MAX_BAD_RECORDS_REPORTED` (32, bounding `RecordReport.bad_offsets`). Both added, **both marked
+`[assumed]`** — neither constant's doc comment establishes a measurement, only a sizing rationale,
+and the task said in as many words not to promote one because the number looks deliberate. The
+rationale in each new row is the source comment's own words rather than a fresh composition. A full
+pass over all **46** public constants in `src/limits.rs` found no further gap, which is the half of
+this unit that makes "every" true rather than merely less wrong.
+**Merged:** `agent/study-designer/029-limits-md` (doc `65286b2` after rebasing onto this leg's
+`umbrella/053` claim — the branch had diverged and `--ff-only` correctly refused it; **code branch
+had a zero diff** and was never merged). Ownership check green, 3 changed paths, all
+`study-designer`-owned. Gate on the merge result: `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none — `[assumed]` is the honest marker precisely because no board has sized
+either constant, and that is recorded rather than owed.
+**Budget:** PROCEED, weekly 31.9% of a 90% cap.
+**Least sure about:** nothing in the unit itself. What it turned up is worth more than what it
+fixed: the worker flagged, and left alone, a truncated doc comment at `src/limits.rs:98-104` where
+**`MAX_DECODERS_PER_STUDY`'s prose stops mid-sentence and splices straight into
+`MAX_RECORD_MAGIC_LEN`'s**, so that constant's rustdoc opens with three lines about decoders. I
+verified it against the source and **filed `tasks/study-designer/030`** rather than widening this
+unit. The missing clause is recoverable verbatim from `limits.md`'s own row, which the task says.
+**Filed:** `tasks/study-designer/030-max-decoders-per-study-doc-comment-is-truncated-and-spliced-onto-the-wrong-constant.md`.
+
+---
+
 ## 2026-09-11 21:39 — topology/029 a precondition that came true and told nobody
 
 **Decided:** `embarch-topology/spec.md` said *"`embarch-core`'s `POST /validate` does not yet expose
