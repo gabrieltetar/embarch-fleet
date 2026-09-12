@@ -97,6 +97,58 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 20:11 — umbrella/052 the guard that exists because a check shipped eighteen stray spaces twice can now see all seventeen checks
+
+**Decided:** nothing suite-wide. `doctor.rs`'s stray-space guard could not reach **checks 4 and 12**:
+both are `async` and decide nothing without a live Core, so their rendered text never entered
+`pure_verdicts()` and nothing tested it. That blind spot was named in the guard's own header, which
+is why it was findable at all. The guard exists because a `\`-continued literal wrapped **without**
+the `\` keeps the newline *and* the next line's indentation — the spaces land in the rendered
+sentence while every `contains` assertion on a fragment either side of the break still passes.
+**Check 14's two skip arms each shipped eighteen stray spaces, and the second survived the first's
+fix.** A text-rendering defect has nothing to do with whether a Core is reachable, so the two checks
+nothing could test were being excused by an irrelevance.
+
+Closed by following the seam already in the file rather than inventing one: `judge_growth` /
+`check_growth` (check 16) splits gather from judge because the wrapper resolves a real data
+directory no test may touch. Now `judge_token(TokenAttempt)` and `judge_dev_bench(DevBenchAttempt)`
+do the same — one enum variant per outcome the `async` half can gather, `check_token` and
+`check_dev_bench` reduced to gathering and matching straight into the judge. **14 corpus entries,
+every arm of both enums, `covered` widened to 4 and 12 — the guard now covers 17 of 17 checks.**
+No decision filed, correctly: the same shape applied twice more is an implementation.
+
+**The interesting result is the negative one.** Nothing was shipping a stray space in either check's
+text. So this unit bought no bug fix at all — it bought the property that the next one cannot ship
+silently, which is the whole argument for a corpus guard over a per-arm assertion, and it is worth
+recording that it came up clean rather than quietly not mentioning it.
+
+**Reviewer checked the thing I most wanted checked**: whether the refactor recreated its own blind
+spot one level down — an enum arm that exists but is never pushed into the corpus. It is not:
+`TokenAttempt`'s 6 and `DevBenchAttempt`'s 7 variants are each hit at least once (the tokens `Ok200`
+arm twice, valid and malformed JSON), verdict text/status/`Option` shape are 1:1 across the split,
+and the rewritten header paragraph claims exactly what is true. It also noted that the diff's
+decision-39 citations for test purity continue a citation pattern **already in the file before this
+unit**, rather than being a fresh stretch of that decision — a distinction I would not have drawn
+from the diff alone.
+
+**Merged:** `agent/umbrella/052-pure-judges` (code `00c57d3`, doc `c7ae15f`). Doc branch rebased
+twice — once onto this leg's claim commits, conflicting on the task file's `State:` line exactly as
+`api/066` did, and once onto `api/066`'s fold. Ownership check base `baf2ff291ba3`, 3 changed paths,
+all owned. Gate re-run on the merge result: `check-docs.py` 11/11, `embarch-umbrella` `cargo
+build`/`test` (**226 pass**)/`clippy --all-targets -- -D warnings` clean,
+`check-client-names.py --repo embarch-umbrella` clean.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none, and none deepened — the point of the unit is coverage that needs no Core.
+`embarch-umbrella`'s standing bench debts are untouched: `umbrella/037`'s corrected check 13 has
+still never met the bench, and `umbrella/033`'s check-17 arms still need a narrow-bound Core.
+**Budget:** PROCEED, weekly 29.4% of a 90% cap, suggested wave 6.
+**Least sure about:** nothing in the unit. One thing about the queue, recorded here because it is
+the next leg's problem: **after this unit every remaining dispatchable task in the queue is
+`suite`-scoped**, which no worker may take. See the closing note below.
+
+---
+
 ## 2026-09-11 20:07 — api/066 an open question that had been answered for days, and the one place the answer did not reach
 
 **Decided:** nothing suite-wide. `embarch-api/open.md` asserted that Core's half of the
