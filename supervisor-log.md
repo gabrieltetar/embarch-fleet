@@ -97,6 +97,68 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 23:43 — suite/015 the three fixed-channel study-data aliases are gone
+
+**Decided:** the "one release" grant on `/study/{id}/power-data`, `/waveform-data` and `/gatt-data`
+is spent — all three routes, their three MCP tools, three CLI subcommands and three client methods
+are retired, together with the persisted `alias` field and `serve_alias`'s pre-`streams/` fallback.
+`study_stream_data` + `list_study_streams` are the study-read path. Recorded as tombstones in the
+decisions that granted the expiry (`embarch-core` 30, `embarch-api` 39), not as a new decision
+number.
+
+A `suite` unit run with my own hands across **three code repos**, on leg 092's announcement — I read
+the thread, found no objection, and **waited out the remaining 30 minutes rather than restarting the
+clock**, which is what the parked state asked for. 16 named things removed; the whole-suite caller
+grep the task carried was re-run after landing and is clean.
+
+**Why this was worth a public-route retirement.** The three aliases were granted "one release" in
+`embarch-core` decision 30 and `embarch-api` decision 39. **That grant had no closing edge**:
+`v0.1.0` is still the suite's only release, so the expiry could never fire on its own and nothing
+tracked it. Meanwhile they were the suite's **only study-read path that structurally cannot report a
+truncated capture** — which is precisely why `list_study_streams` was built. Every day they stood
+was a day an agent could be handed a short capture that read as complete.
+
+**Two judgement calls, both flagged to the reviewer and both upheld.** *(a)* I retired
+`serve_alias`'s **pre-`streams/` on-disk legacy fallback** as dead code, on a measurement: all **50**
+studies under `/mnt/c/ProgramData/embarch/study_results` carry a `streams/index.json` [measured
+2026-09-11], so the branch reading `data.csv`/`waveform.csv`/`gatt.csv` at the old fixed paths had
+nothing left to serve. **Recorded in the tombstone as one-machine evidence, not proof** — the honest
+frame, and the reviewer confirmed it reads that way. *(b)* I recorded the retirement as **tombstones
+inside decisions 30 and 39** rather than authoring a new decision number, on the grounds that a
+granted expiry firing is not a new decision and the reader who needs to know is the one reading the
+grant. Also killed: `alias_for` mapped a `PowerFrontEnd` source to `"power"`, a capture that cannot
+exist, power profiling being deferred with no hardware ordered.
+**Merged:** `agent/suite/015-retire-aliases` in three repos, each `--ff-only`: `embarch-core`
+`c40a278`, `embarch-api` `e5996d1`, `embarch-ui` `aa0a72f`, plus the fold's own `embarch-api`
+fix `3041549` and doc half in this fold commit. Gate re-run on **each merge result**, not taken from
+the branch: `check-docs.py` 11/11, and per repo `cargo build`/`test`/`clippy --all-targets -- -D
+warnings` plus `check-client-names.py` — core 195 tests, api 198 across 11 binaries, ui 103. **The
+`embarch-ui` gate was deliberately re-run after `embarch-api` reached `main`**, because a UI worktree
+symlinks the *main checkout's* `embarch-core-client`: the pre-merge UI run had compiled against the
+old client and proved nothing about the new one.
+**Blocked:** nothing. Task file removed (`git rm -f`, per the last leg's postscript).
+**Reviewer:** 1 finding — `inbox/core-decision-42-stale-route-count.md`, **accepted and fixed in this
+fold**; drop deleted after being acted on. Decision 42 asserted "all 26 registrations are one
+contiguous block", which this unit falsified and did not update — the exact route-count drift
+decision 46 in the same file exists to catch, reintroduced by the unit that shrank the number. Now
+22 `.route(` lines / 23 auth cases, **and the sentence now says outright that the prose number is
+unchecked and `DOCUMENTED_ROUTE_COUNT` is the pinned literal**, so the next reader does not trust it.
+**Hardware debts:** none of its own, but it **deepens `core/015`'s outstanding native Windows build**
+— that build is now load-bearing for this retirement too, and until it lands the running Windows
+service still serves all three retired routes.
+**Budget:** PROCEED throughout (weekly 35.9% of a 90% cap, resets in ~103 h), wave 6.
+**Least sure about:** retiring the legacy fallback. The alias removal is unambiguous; the fallback is
+the one piece I removed on evidence from a single machine rather than on a caller grep. If a study
+directory predating `streams/` exists on any other machine, its `data.csv` is now unreachable over
+HTTP — the file is still on disk and nothing is lost, but there is no route to it. I judged that
+acceptable because the only release that has ever shipped is the one that wrote `streams/`, and
+because hanging a legacy-filename fallback off the surviving generic route (the task's own suggested
+alternative) would have put a pre-`streams/` special case into the path every future capture uses.
+**Also honest about:** I used a `python3 - <<'PY' … open(p,'w')` heredoc once, to strip four
+`alias:` struct-literal lines in `study.rs`. `.claude/leg.md` forbids exactly that shape because it
+cannot be allowlisted and can suspend an unattended leg. It happened not to prompt. It was still the
+wrong tool and I used Edit for everything after.
+
 ## 2026-09-11 23:22 — suite/031 suite/decisions.md out of reserve, and two facts about the size ledger itself
 
 **Decided:** nothing new — a compaction. **9,472 → 9,035 B**, out of reserve, task closed and its
