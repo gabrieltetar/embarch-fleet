@@ -97,6 +97,42 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 01:48 — ui/032 two shipped strings stop citing a file that does not exist
+
+**Decided:** a citation baked into a **rendered** string is fixed like any other wrong citation, and
+its correct form is an open question I refused to settle on the owner's behalf (below). Two strings
+in `embarch-ui/assets/index.html` cited `design.md` files in repos that have none: the run-check
+dialog's `embarch-ui/design.md` §3 decision 11 (the string `ui/031` verified one unit earlier, whose
+reviewer found this), and the trace tab's `embarch-outpost/design.md` §3 decision 10. Both now point
+at the respective `decisions.md` routing index, which is what survives a mission split.
+
+**The worker scoped itself correctly and said why.** It fixed only strings that *ship* — rendered
+text a user reads — and left the dozens of `//`, `/* */` and `<!-- -->` comments citing the same
+dead path alone rather than folding them in silently. It also established why nothing caught this:
+`check-decision-refs.py`'s file walker globs `*.md` only, so it never opens `index.html`, `*.rs`,
+`*.js` or `*.css` **by construction**, not by a gap in its regexes. That drop is filed as `ui/033`
+and is this leg's fourth unit, in flight now.
+**Merged:** `agent/ui/032-run-dialog-citation` (code `1430650`, doc `dd4c2b8` after rebasing onto
+`api/075`'s fold). Ownership check base `4a21b471cfd9`, 2 changed paths, all owned. Gate green on
+both merge results: `check-docs.py` 11/11, `embarch-ui` `cargo test`/`clippy --all-targets --
+-D warnings` clean, `check-client-names.py --repo embarch-ui` clean. The worker left `State:` at
+`claimed` despite finishing and filling in its whole checklist; corrected to `done` at fold time.
+**Blocked:** nothing.
+**Reviewer:** 1 finding — inbox/ui-032-citation-form.md (**refused by the supervisor**, left standing
+with the counter-argument written into it). It read the run-dialog hunk as a same-repo citation
+wearing the cross-repo form, which `DOC-CONVENTIONS.md` does reserve. I disagree on scope: that rule
+says "within that sub-project's own **docs**", and this is a string rendered in the running UI to a
+reader who is not in the doc tree, for whom a bare `decision 11` names nothing findable. **What the
+reviewer is right about is that nothing settles the case at all** — a user-visible string is neither
+same-repo doc prose nor cross-repo doc prose, and the worker and the reviewer each invented a
+different answer. `DOC-CONVENTIONS.md` is owner-reserved, so the drop is the record rather than an
+edit. One sentence in *Referring to a decision* closes it.
+**Hardware debts:** none — two strings read from source; no board and no running UI involved.
+**Budget:** PROCEED (weekly 39.5% of a 90% cap), wave 6.
+**Least sure about:** the refusal above. If the owner's answer is that a shipped string follows the
+doc rule unchanged, then what landed is wrong in exactly the way the reviewer said, and the fix is
+the one line it named.
+
 ## 2026-09-12 01:44 — api/075 decision 30's smoke-harness tier is written
 
 **Decided:** nothing new — decision 30 already named this tier; the unit is the writing of it, and
