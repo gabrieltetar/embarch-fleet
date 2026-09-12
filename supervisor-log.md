@@ -97,6 +97,51 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 02:03 — ui/033 a path sweep that turned out to be a correctness sweep
+
+**Decided:** the citation cleanup `ui/032` scoped out is done, and **it was not the cosmetic task it
+was filed as.** Every `design.md` citation in `embarch-ui`'s source comments is repointed (9 files:
+`src/{main,study_designer,trace,logs,snapshot,config}.rs`, `assets/{app.js,style.css,index.html}`).
+Along the way, reading each cited decision's **body** rather than its heading — `core/008`'s
+precedent, written into the dispatch note — found **seven citations pointing at the wrong decision
+number entirely**, which no amount of path-fixing would have caught:
+
+- `src/main.rs`: `embarch-topology` decision 14 → `embarch-core` decision 25 (the retired
+  `GET /enroll` and its `hw_lock` bypass; topology's 14 is the human-enrolment scope call, a
+  different subject in a different repo); `embarch-outpost` decisions 9, 16 → `embarch-outpost`
+  decision 18.
+- `src/study_designer.rs` and `assets/app.js`: `embarch-ui` 15 → 14 (twice), 14 → 15 in a section
+  banner, `embarch-study-designer` 34 → 35, 39 → 41, 41 → 43.
+
+**Two citations were left deliberately unrepointed, and that is the right answer.** `src/logs.rs:58`
+and `src/snapshot.rs:73-75` attribute a "Core being unreachable is an expected, renderable state"
+reasoning to `embarch-ui` decision 5, and **no `embarch-ui` decision says that** — 5
+(`decisions/wiring.md`) is about routing hardware-adjacent calls over HTTP+Bearer. The worker
+listed them in the task file instead of guessing a number, which is exactly what the dispatch note
+asked for. They are now a documented gap: shipped reasoning citing a decision nobody ever wrote.
+**Merged:** `agent/ui/033-design-md-comments` (code `eca2fa1`, doc `acdc92c` after rebasing onto
+`ui/032`'s fold). Ownership check base `ff9507911b0f`, 2 changed paths, all owned. Gate green on
+both merge results: `check-docs.py` 11/11, `embarch-ui` `cargo build`/`test`/`clippy --all-targets
+-- -D warnings` clean, `check-client-names.py --repo embarch-ui` clean. Task filed from
+`inbox/ui-design-md-comment-citations.md` at the top of this leg and dispatched in the same leg.
+This worker, like `ui/032`'s, left `State:` at `claimed` after finishing — corrected at fold. **Two
+workers in a row doing that is a pattern, not a slip**, and worth a look at the worker instructions.
+**Blocked:** nothing.
+**Reviewer:** no findings — and this is the run that earns the reviewer line its cost. It re-derived
+**all seven** renumberings from the decision bodies independently and confirmed each, and separately
+confirmed that the two unrepointed citations match nothing standing. A wrong renumbering is worse
+than the stale path it replaces, and nothing else in this pipeline would have caught one.
+**Hardware debts:** none — comments only; no board, no running UI.
+**Budget:** PROCEED (weekly 39.5% of a 90% cap), wave 6.
+**Filed with this fold:** `tasks/ui/034`, for the two orphaned citations — otherwise retiring
+`tasks/ui/033` would have left the only record in this log entry, and nothing dispatches from a log
+entry. It names the two answers (write the decision, or strike the claim) without picking one.
+**Least sure about:** whether `ui/034` is really a design call or just a comment fix. The UI
+*behaves* as though the decision exists — a down Core renders as a state, not an error, in at least
+two places — so I read it as a position that ships and was never written down, which makes writing
+it the likely answer. If it turns out to be incidental, the task is three deleted words and I will
+have spent a task file on it.
+
 ## 2026-09-12 01:48 — ui/032 two shipped strings stop citing a file that does not exist
 
 **Decided:** a citation baked into a **rendered** string is fixed like any other wrong citation, and
