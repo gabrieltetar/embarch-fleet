@@ -97,6 +97,44 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 10:56 — api/078 eight dead citations, and the whole-repo grep found ten
+
+**Decided:** **a dead clause with a live co-citation beside it gets deleted, not repointed, and that
+is the right answer rather than the lazy one.** Eight of the ten sites — `Cargo.toml`, `src/config.rs`,
+and four files under `crates/embarch-core-client/` — each carried a `milestone-*.md §…` reference
+*alongside* a citation that still resolves (`embarch-ui` decision 5, or `embarch-token.md §2`). The
+dead half went; the live half stayed exactly where it was. Nothing was invented to replace it, which
+is the whole of this defect class: `check-decision-refs.py` only resolves decision numbers inside
+`*.md` under a repo root, so a citation in a `Cargo.toml` comment or a `//!` doc comment is invisible
+to every gate the suite has, and the cheap wrong fix is to put a plausible number there.
+**Two more sites than the task listed**, both in `.github/workflows/release.yml` and both found by
+the Done-when's own whole-repo grep rather than by the task's list — repointed at `` `embarch-umbrella`
+decision 14 `` after reading its body. **That is the same decision `core/048` repointed two comments
+at forty minutes earlier in this same leg**, from a different repo, and I asked this unit's reviewer
+specifically whether decision 14 is now being over-cited.
+One deliberate non-change: `tests/fixtures/milestone9_gatt_scan_study.json`'s
+`"milestone-9-dut-gatt-scan"` is a **study name**, not a doc citation, and was left alone.
+**Merged:** `agent/api/078-milestone-md-citations` (code `88f9095`, doc `48be77a`). Ownership check
+base `5baa7f7b4397`, 2 changed doc paths, all owned. Gate re-run on the merge result:
+`check-docs.py` 11/11, `embarch-api` `cargo build`/`test`/`clippy --all-targets -- -D warnings`
+clean with `embarch-core-client` confirmed a workspace member so its lints actually ran, and
+`check-client-names.py --repo embarch-api` clean.
+**Blocked:** nothing.
+**Reviewer:** no findings. It checked the over-citation question I gave it and answered it
+concretely: `core/048` cites a *different clause* of decision 14 (Core's own `release.yml`) than this
+unit does, so the two are not the same citation twice. It also confirmed the cited `milestone-*.md`
+files are genuinely deleted (compaction commit `6f22dd6`) rather than merely absent from a stale
+worktree — which is the check that makes "does not exist" a fact instead of an artifact.
+**Hardware debts:** none — comments and crate metadata only, nothing that reaches a board.
+**Budget:** PROCEED; weekly 43.5% of a 90% cap.
+**Least sure about:** whether `embarch-umbrella` decision 14 is becoming a catch-all. Two units in
+one leg, in two different repos, repointed release-packaging comments at it, and each was correct in
+isolation — but a decision that four repos cite from their CI comments is a decision whose body now
+has to stay true for all of them, and nothing checks that. If a third repo does the same, that is the
+signal to split it.
+
+---
+
 ## 2026-09-12 10:55 — core/048 the dead citation was in three places, and two of them ship a release
 
 **Decided:** **a repoint is only worth trusting when the cited body was read, and the third site
