@@ -97,6 +97,39 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 22:01 — study-designer/030 a rustdoc that documented the constant above the one it was attached to
+
+**Decided:** nothing — a comment repair with an explicitly recoverable answer, which is what made it
+dispatchable rather than a guess. `src/limits.rs:98` carried two constants' prose fused into one
+block: three lines about `MAX_DECODERS_PER_STUDY` ending mid-clause at *"and there are at most"*,
+running straight into `MAX_RECORD_MAGIC_LEN`'s own text, with the whole block attached to
+`MAX_RECORD_MAGIC_LEN` — so that constant's rendered rustdoc opened with a sentence about decoders
+and stopped. The missing clause was **not composed**: `interfaces/limits.md`'s row for
+`MAX_DECODERS_PER_STUDY` already states the full argument (*"the arity of the thing, not a guess …
+at most that many taps"*) and the worker restored it verbatim from there. The reviewer checked both
+restored comments against that file's rows and against decision 52 independently and agreed.
+The full-file pass the task asked for found **no second splice** in all 227 lines, which is the
+answer worth recording — a splice is the signature of a bad edit rather than a typo, and the
+assumption going in was that one is rarely alone.
+**Merged:** `agent/study-designer/030-limits-doc-splice` (code `09abb1f`, doc `f833796`). Ownership
+check bases: doc `bf56bb7a385a`, 2 changed paths, all owned; code `4ef1893386df`, whole tree owned.
+Gate green on the merge result: `embarch-study-designer` `cargo build` / `test` / `clippy
+--all-targets -- -D warnings` clean, `check-client-names.py --repo` clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none — comment text only, no constant's value changed and no public item added or
+removed.
+**Budget:** PROCEED, weekly 32.9% of a 90% cap, wave 6.
+**Least sure about:** a process fact rather than the unit. I ran this unit's pre-merge ownership
+check, then **rebased its doc branch onto my leg's unpushed HEAD and re-ran it**, and the second run
+went red with three `umbrella/054` paths — the leg-010 shape exactly, an earlier unit's merge swept
+into the next worker's diff because `origin/main` had not yet caught up. The first run was the true
+one. The rule I adopted for the rest of the leg: **push each fold before rebasing the next branch**,
+after which the red went away by construction. Worth knowing the trap is still reachable in the
+window between a merge and its fold.
+
+---
+
 ## 2026-09-11 21:59 — umbrella/054 a spec that shipped an unbuilt check by counting it
 
 **Decided:** nothing — a count correction, and the sub-project already held the right answer in the
