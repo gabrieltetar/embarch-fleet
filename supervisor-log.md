@@ -97,6 +97,50 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 22:22 — api/070 one table describing one field twice, with opposite semantics
+
+**Decided:** nothing new, and the fork was named in the task so it could not be taken by accident.
+`embarch-api/interfaces/config.md` described `env` in two rows: `[[projects]]` at :44 said
+*"**Additive** over the inherited environment, not a replacement"*, `[dev_bench]` at :78 said
+*"**Replaces** the inherited environment rather than extending it"*. Both kinds clone into one
+`BuildPlan.env` with a single consumer, `src/build.rs:277`'s `.envs(&plan.env)`, and `env_clear`
+appears nowhere in the crate — so the two config kinds are byte-for-byte identical in behaviour and
+the doc asserted a difference that has never existed. **The doc was the side that moved**; making the
+code match instead would be a behaviour change needing a decision and would break every working bench
+config, which the task said in advance rather than leaving to the worker's judgement.
+
+The row's own rationale was the tell: *"`cargo` must be on `PATH` for every board"* cannot hold under
+a true replacement, because inherited `PATH` would be gone. A reader taking :78 at face value either
+re-declares `PATH`/`HOME`/toolchain vars in `embarch.toml` or trusts an isolation from the launching
+shell that is not there — a stray `ZEPHYR_BASE` in the MCP server's environment reaches every bench
+build silently.
+
+**The second flagged item resolved *below* the judgement it was filed as.** The sweep thought fixing
+*"the three dev-bench tools"* at :81 might require deciding whether `dev_bench_hello`/`dev_bench_link`
+belong in that sentence; the worker found neither calls `dev_bench_config()` at all, so they were
+never candidates and "three" was a plain miscount of four (`src/tools.rs:767, 796, 824, 884`). The
+third item — `tools-dev-bench.md`'s parameter lists — checked out against `src/tools.rs` with no
+change needed, and was reported rather than silently dropped.
+**Merged:** `agent/api/070-dev-bench-env` (code **none** — the `embarch-api` branch had a zero diff
+and this is documentation-only by design; doc `6b1ab41`). Ownership check base `dd4252cd93a5` after
+rebasing onto this leg's claim commits, 4 changed paths, all owned; the pre-rebase run at
+`20e46c300551` agreed. Gate green on the merge result: `check-docs.py` 11/11. No `cargo` gate run,
+there being no code change to gate.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none created, and one made slightly cheaper to reason about — the `[dev_bench]`
+build environment is now documented as what it is, which is the configuration any future bench unit
+will be read against. Nothing here attaches a board.
+**Budget:** PROCEED, weekly 34.1% of a 90% cap, suggested wave 6.
+**Least sure about:** the size debt this unit filed. The edit pushed `interfaces/config.md` to 91.1%
+of cap and the worker filed `tasks/api/071-compact-api.md` **blocked, `In flux: yes`** — which is
+correct by the letter of the rule and makes `embarch-api` carry **seven** open or blocked compaction
+tasks, comfortably the most in the suite. I did not second-guess the flux answer because the worker
+holds the context for it, but seven parked debts in one sub-project is the shape `check-doc-size.py`'s
+own note warns about, and nobody has looked at them as a group.
+
+---
+
 ## 2026-09-11 22:19 — core/043 two interface docs describing a struct they were three fields behind
 
 **Decided:** nothing new, and the unit's own instruction was the reason — the task told the worker to
