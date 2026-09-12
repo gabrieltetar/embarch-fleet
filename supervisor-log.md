@@ -97,6 +97,37 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 01:44 — api/075 decision 30's smoke-harness tier is written
+
+**Decided:** nothing new — decision 30 already named this tier; the unit is the writing of it, and
+`open.md`'s standing "named, unwritten" entry is struck. `tests/smoke_harness.rs` (221 lines) runs
+the **compiled binary** as a subprocess (`env!("CARGO_BIN_EXE_embarch-api")`) against a synthetic
+fixture repo whose `build_command` is a POSIX one-liner writing a fake artifact, plus
+`tests/support::MockCore` on an ephemeral loopback port: `list-projects`, `list-targets`, `status`,
+`build`, `build` again. **No hardware, no probe, no live Core** — the boundary that makes this tier
+runnable unattended at all. `#[cfg(unix)]` for the same reason decision 46's end-to-end tests are.
+
+**The tier distinction is the whole value and it holds.** Decision 46's tier calls
+`embarch_api::build` and `CoreClient` directly and never runs the binary — so arg parsing,
+`main.rs`'s config-then-client startup, and `cli::run`'s dispatch had no test of any kind before
+this. Reusing `MockCore` rather than hand-rolling a second one keeps the two tiers from drifting.
+The unit filed `tasks/api/077-compact-api.md` with its own merge, per the reserve rule.
+**Merged:** `agent/api/075-smoke-harness-tier` (code `29944ac`, doc `f556ebb` after rebasing onto
+`topology/033`'s fold). Ownership check base `46cebf2997eb`, 5 changed paths, all owned. Gate green
+on both merge results: `check-docs.py` 11/11, `embarch-api` `cargo build`/`test`/`clippy
+--all-targets -- -D warnings` clean, the two new smoke tests run and pass (verified by running the
+test target directly, not read off the worker's report), `check-client-names.py --repo embarch-api`
+clean.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none, and it retires a reason to want one: the binary's own startup path now has
+a test that needs no board.
+**Budget:** PROCEED (weekly 39.5% of a 90% cap), wave 6.
+**Least sure about:** `#[cfg(unix)]`. This is now the second `embarch-api` tier that silently does
+not exist on Windows, where the binary ships — a green Windows run reports success for a binary
+whose end-to-end and smoke tiers both compiled out. The file's own header says so to a human reader,
+which is more than decision 46's tier manages, but nothing mechanical counts the skipped tiers.
+
 ## 2026-09-12 01:42 — topology/033 the config-mirror bullet was stale, and the answer was in another repo
 
 **Decided:** the extract-or-CI-diff question is **closed and was already closed**, in
