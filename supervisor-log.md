@@ -97,6 +97,48 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 22:24 — umbrella/055 the two commands a machine is set up with, documented as verifying themselves
+
+**Decided:** nothing new — but the fork was live enough to be worth naming. `embarch-umbrella/spec.md`'s
+command table said `embarch setup` and `embarch init` each finish by **running `doctor`**. `doctor::doctor`
+has exactly one call site in the crate (`src/main.rs:184`, the subcommand itself), and both commands end
+by *pointing* somewhere else instead: `setup.rs:377` prints *"Next: `embarch status` to confirm …"*,
+`init.rs:854` prints *"Then: `embarch status`, and `embarch-api … build {name}`"*. **The doc was the side
+that moved.** Making the code chain into `doctor` is a behaviour change needing a numbered decision, and
+the task said so in advance so the worker could not take that arm by accident.
+
+Why it was worth a unit: read as written, a clean `setup` means the seventeen-check chain ran and passed.
+It never ran. That is a **green-looking setup taken for a verified one**, in the file an operator or an
+agent reads first to know what a command does — and it also mis-scripts an agent that skips its own
+`doctor` call on the grounds that setup already made it.
+
+**Two adjacent instances went the other way, which is the reason to fix them in one pass.**
+`src/doctor.rs:67`'s comment said checks *"1, 5, 10 and 14"* carry a machine-readable `code`, while
+`interfaces/doctor-chain.md:111` already had the correct six — so here the **code comment** was stale and
+the doc was right, the opposite direction from the defect above. The reviewer re-counted `with_code` in
+`src/doctor.rs` itself rather than taking the six from either doc and confirmed 1, 5, 10, 13, 14, 17, with
+3, 11, 15 and 18 carrying none. `Cargo.toml:31` cited `decisions/doctor.md 33`; decision 33 lives in
+`decisions/schema-skew.md`, and it is now the settled bare same-repo `decision M` form. The pass over the
+rest of the command table (`doctor`, `status`, `up`/`down`, `deploy-core`) found nothing further.
+**Merged:** `agent/umbrella/055-setup-init-doctor` (code `27be1f6`, doc `5b854be`). Ownership check base
+`3b92da68db46` after rebasing onto this leg's own folds, 3 changed paths, all owned. Gate green on the
+merge results: `embarch-umbrella` `cargo build` / `test` (227 tests) / `clippy --all-targets -- -D warnings`
+clean, `check-client-names.py --repo embarch-umbrella` clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none created, and the two standing `umbrella` ones are untouched — check 13's
+`umbrella/037` verification and check 17's two Fail arms (`tasks/umbrella/033`, `Owner: required`) both
+still want a real bench. Note the `doctor.rs` comment fix does **not** reach the owner's machine until
+`core/015`'s outstanding native Windows build, like most of this week's code-side work.
+**Budget:** PROCEED, weekly 34.1% of a 90% cap, suggested wave 6.
+**Least sure about:** a gate reach, not the unit. `check-ownership.py --scope umbrella --repo <code
+worktree>` answered **`unknown scope 'umbrella' (known: doc, suite)`** — `tasks/doc/036` exactly, still
+`Owner: required` and unfixed. So the pre-merge ownership check ran against the doc branch only and the
+code branch was accepted on "the whole tree is this sub-project's", which is true here and would be true
+of a bad diff too. Every leg landing a code branch is in this position and the log has not been saying so.
+
+---
+
 ## 2026-09-11 22:22 — api/070 one table describing one field twice, with opposite semantics
 
 **Decided:** nothing new, and the fork was named in the task so it could not be taken by accident.
