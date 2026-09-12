@@ -97,6 +97,55 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 02:29 — ui/037 nine dead citations, and a reviewer finding I refused after re-deriving it
+
+**Decided:** **six of nine stale `milestone-1.md` citations were dropped rather than repointed, and
+that is the answer, not a lesser one.** The worker re-grepped and found nine hits (the task listed
+two), repointed three at decision bodies that actually say the same thing — `Cargo.toml:20` and
+`style.css:7-8` kept citations they already carried alongside the dead one; `style.css:469` and
+`app.js:610` gained `decision 7`/`decision 8` — and for the Enroll tab's drag-and-drop, the Study
+Designer section banners and `index.html`'s "stop server" footer button it checked `decisions.md`'s
+index and every topic file it points at, found nothing standing that says what those comments
+claimed, and **left a plain in-place label instead of inventing a number.** Third worker in a row to
+decline an invented citation; `ui/034` is what the last one turned into.
+
+**The reviewer filed a finding and I refused it, after reading both bodies rather than taking its
+word.** It read the new `decision 7` citation on `app.js`'s Debug-tab header as contradicted by
+decision 7's own amendment — *"the SSE half no longer exists … only `/logs/recent` remains"* — while
+the comment below it still describes live lines over a `/events` SSE stream and `LOG_SOURCES` still
+opens an `EventSource`. **Two different things are called SSE in that tab.** Decision 7's amendment
+retired *`embarch-core`'s* `GET /logs/stream`; `/api/logs/events` is `embarch-ui`'s **own** stream to
+the browser, fed by the server-side `/logs/recent` poll that `logs.rs::poll_loop` runs — which is
+exactly what this leg's own `ui/034` wrote up as decision 26 an hour earlier. The citation stands.
+
+**What was genuinely wrong is that nothing said so**, and this is the second reader to stop on that
+line (`ui/033`'s worker was the first, from the other direction). So the fold fixed the ambiguity
+rather than the citation: a paragraph in `app.js` naming which SSE is which and why both exist.
+Refusing a finding and changing nothing would have left the next reader to re-derive it a third time.
+**Merged:** `agent/ui/037-milestone-1-comments` (code `8a48798`, doc `0871915`), plus the fold's own
+disambiguation commit `41b9482` in `embarch-ui`. Ownership check bases: code `aaf440b` (code repo,
+whole tree owned, 4 paths), doc `49de22c`, 2 changed paths, all owned. Gate green on the merge
+results and again after the fold fix: `check-docs.py` 11/11, `embarch-ui` `cargo build`/`test`/
+`clippy --all-targets -- -D warnings` clean, `check-client-names.py --repo embarch-ui` clean.
+**The rebase conflicted** and it was my fault, not the worker's: I created its worktrees from
+`origin/main` *before* committing the claim, so the worker's task file had no claim block to merge
+against. Resolved by taking the worker's half whole. **Claim first, then `worktree add`** — the
+order in `.claude/leg.md` is the right one and I ran it backwards.
+**Blocked:** nothing.
+**Reviewer:** 1 finding — inbox/ui-review-037-decision-7-mismatch.md (refused on the citation,
+acted on as an ambiguity; drop deleted after the fold fix landed). It independently confirmed the
+two `decision 8` repointings against decision 8's body, which name the exact CSS classes involved.
+**Hardware debts:** none — comments only. The SSE question the reviewer raised would want a board
+to settle empirically, but it did not need one: both bodies answer it.
+**Budget:** PROCEED (weekly 41.0% of a 90% cap), wave 6.
+**Filed with this fold:** `tasks/ui/039`, drained from the worker's own inbox drop —
+`embarch-ui/Cargo.toml` still cites a `design.md` that `ui/033` was scoped to sweep and missed,
+including the package `description` field, which ships.
+**Least sure about:** deleting the reviewer's drop. `umbrella/043`'s precedent was to leave a
+refused finding standing with the counter-argument written into it; I deleted this one because I
+*did* act on it, and the counter-argument now lives in this entry and in the `app.js` comment
+rather than in `inbox/`. If that reads as burying a disagreement, the entry is the trace.
+
 ## 2026-09-12 02:23 — ui/034 the decision the UI has been shipping for months gets written down
 
 **Decided:** **`embarch-ui` decision 26 now exists** — *Core being unreachable is an expected,
