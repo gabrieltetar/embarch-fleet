@@ -97,6 +97,61 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 11:05 — refill the queue had one scope in it, and a wave of six cannot use one scope
+
+**Decided:** **spent this leg's fourth unit on refill rather than on the `suite` task whose window I
+had opened**, and that is the judgement call of the leg. State when I got here: `queue-status.py`
+said 4 dispatchable, **all four in `suite`** — and "one task per sub-project" is per *slot*, so a
+wave of six could have used exactly one of them. `--refill-owed --wave 6` said `REFILL OWED` on the
+scope-spread half of its gate, which is the half `.claude/leg.md` warns you will under-read. It was
+right.
+
+**Five tasks filed, one per scope, every one verified by reading both sides** — `api/078`,
+`core/048`, `dev-bench/019`, `topology/034`, `umbrella/057`. Four are the same defect class this
+suite has been clearing all week (a source comment citing a `design.md`/`milestone-*.md` that no
+longer exists, invisible to every gate because `check-decision-refs.py` only resolves numbers in
+`*.md`): eight sites in `embarch-api`, eleven in `embarch-dev-bench`'s EAP trio, one in
+`embarch-core`'s `Cross.toml`, and one in `embarch-topology` that is subtler — `hardware_id.rs:429`
+cites a **bare** `decision 35`, meaning same-repo, but topology's index stops at 30, and the same
+file cites it correctly as `` `embarch-core` decision 35 `` 268 lines earlier. Nothing fails; a
+reader just finds a table that stops short. The fifth, `umbrella/057`, is a different shape and the
+most interesting: the test named `no_check_text_names_a_document_the_four_file_split_deleted`
+`include_str!`s **itself** and `continue`s past every `//` line — so a repo-wide invariant is
+enforced over one file, with comments (where the whole defect class lives) exempt by construction.
+**Scopes I checked and left empty, deliberately:** `ui` (cleared by `ui/039` this morning), `outpost`
+(its one hit is in untracked build output — `git ls-files tests/build` returns 0), `study-designer`
+(every retired-decision citation correctly labels itself retired). **No `open.md` bullet became a
+task**: all of them carry a named trigger, a hardware requirement, or "not this crate's to fix", and
+turning a deliberate deferral into a task is how a queue fills with work nobody wants done.
+The `dev-bench` one is bounded **only** because it was scoped to 11 hits in 3 files — that repo has
+**247** such citations, and the task says in its own body that the other six files are separate
+units whose per-hit decision numbers are unverified. Do not let a worker widen into them.
+Queue after: **9 dispatchable across 6 scopes**, `--refill-owed` now says not owed.
+**Merged:** nothing — this unit files work, it does not land any.
+**Blocked:** nothing.
+**Reviewer:** skipped (this unit landed no code or doc diff to review — it files task files only).
+**Hardware debts:** none collected. `dev-bench/019` names the standing one honestly: this repo's
+Zephyr `tests/unit` ztest suite cannot be built from a worker's worktree, which is a known debt that
+unit neither introduces nor clears.
+**Budget:** PROCEED at leg end; weekly 42.7% of a 90% cap, resets in ~92h. Four units, no HOLD, no
+429.
+**Least sure about:** I numbered all five from `ls tasks/<scope>/ | tail -1` and **every one was
+wrong** — `check-task-numbers.py` caught it (`topology/021` was reissued; history had 033, next free
+034). Numbers are monotonic per scope and **never reused**, and a completed task's file is gone from
+`tasks/`, so the directory listing is not the high-water mark. Use `check-task-numbers.py --next
+<scope>`. The gate caught it before it landed, which is the system working; it would not have caught
+me citing a stale number inside another task's prose, and I had to fix five of those by hand.
+**And the one I am least comfortable with:** I opened `suite/020`'s announcement window at 10:23 and
+then did not run it, because scoping it showed it is two units, not one — the `embarch-api` half
+retires `client.rs:1875-2126`, a block of mirror-pinning tests `api/032` built on purpose, and
+changes a shipped crate's public API. I wrote the whole scoping into the task file and left the
+window open with its `ts`, which `.claude/leg.md` explicitly provides for. But **announcing work and
+then not doing it spends a 30-minute silence-as-consent window on nothing**, and if the next leg
+re-reads and re-announces rather than completing it, the owner gets the same message twice for one
+change. The task file says in its first paragraph not to restart it.
+
+---
+
 ## 2026-09-12 10:38 — core/035 the churn was in half the file, so the split gave that half its own headroom
 
 **Decided:** **the same unpark as `api/057`, on a better-shaped file, and the flux argument turned
