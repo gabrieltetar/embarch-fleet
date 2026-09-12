@@ -97,6 +97,37 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 02:56 — suite/034 studies-guide §3b finally names a worked example
+
+**Decided:** **approved and executed on the owner's behalf under `ops.md` §4's silence-as-consent
+window — which leg 097 opened and this leg completed rather than restarted.** Announced at
+`ts 1789201472.118549`, window closed 02:54, re-read at 02:55: no objection, and in fact no human
+message of any kind in `#embarch-fleet` in the last 20 messages. `suite/studies-guide.md` §3b's
+advice — *"a real study sets `target_address` or `target_name`"* — now names
+`embarch-api/tests/fixtures/ble_connect_worked_example.json` and the test that round-trips it,
+`embarch-api/tests/ble_connect_fixture.rs`. One clause, deliberately not a worked-example section:
+the file is parked in reserve (`tasks/suite/004-compact-suite.md`, `blocked`) and the task said so.
+24,114 → 24,256 B of a 25,600 B cap, 1,344 B left — still in reserve, no deeper than it was.
+**I verified both cited paths exist on disk before writing the sentence**, rather than trusting the
+task file: `api/076` landed them as code `f402163` two legs ago.
+**Merged:** no branch and no worker — a `suite` task is the supervisor's own hands (§8). One
+content commit straight to `main`, `embarch-doc` `a4b6f53`; doc fold below. No code repo touched,
+so no `cargo` gate is meaningful here; the doc gate is `check-docs.py` 11/11 green on the content
+commit and again on the fold.
+**Blocked:** nothing.
+**Reviewer:** no findings — it read the fixture itself and confirmed all three clauses of the new
+sentence (explicit `target_address`, `target_name: null`, round-tripped through `Study`
+deserialization, never submitted to Core), and that `embarch-study-designer` decision 43, which
+§3b cites two sentences earlier, is reinforced rather than contradicted.
+**Hardware debts:** none — one sentence of prose. Note the fixture it now points at has itself
+never been run against a real DUT; it is a parse-and-round-trip test by design, which is what the
+sentence claims and no more.
+**Budget:** PROCEED at start (weekly 41.4% of a 90% cap), wave 6.
+**Least sure about:** whether naming a *test fixture* from a user-facing guide is the right
+pointer. A reader following it lands in `embarch-api`'s test tree, which is not where a guide
+usually sends someone; the alternative was inlining the JSON, which the size reserve forbids. If
+that file is ever renamed nothing checks this sentence.
+
 ## 2026-09-12 02:41 — suite/011 four repos now say what they need on disk, and two of the four closures were wrong
 
 **Decided:** **approved and executed on the owner's behalf, under `ops.md` §4's silence-as-consent
