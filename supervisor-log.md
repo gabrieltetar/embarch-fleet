@@ -97,6 +97,53 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 12:37 — ui/040 twenty-two comments cited decision numbers this sub-project has never issued
+
+**Decided:** nothing suite-wide. The convention being applied is already settled
+(`embarch-ui/decisions.md`: numbers address a sub-project, cite cross-repo ones as
+`` `<repo>` decision N ``); this unit is enforcement, not a new rule. Worth noting **why the defect
+was legible at all**: `embarch-ui`'s index stops at 26, so any bare number above 26 in its own
+source is provably not its own. That is a cheap, mechanical tell and it is the reason this class
+got caught here before it got caught in repos whose ranges overlap — which is exactly the harder
+case `dev-bench/020` ran into the same hour.
+
+**Merged:** `agent/ui/040-foreign-decision-citations` (code `baebcaf`, doc merged into the leg at
+`6cf5b58`), plus the reviewer fix `fa0a327` on `embarch-ui`.
+
+**Two of this leg's three worker units had a reviewer finding, both the same defect, and the
+finding was the same shape each time**: a bare decision number carried over unchanged and then
+given a repo prefix it had not earned. **Prefixing is not a formatting change — it is an
+assertion**, and both workers made it on the strength of what the surrounding paragraph named
+rather than what the decision body says. That is now a measured base rate, not a worry: two for two
+on the units of this class that were reviewed. **Whoever runs `dev-bench/021`–`025` or the next
+citation sweep should treat "the number was already there" as the strongest reason to re-derive it,
+not the weakest.** It is also the clearest evidence yet in this log that per-unit review pays for
+itself — both findings were real, neither would have failed any gate, and both were cheap to fix
+while the unit was still open.
+
+**Blocked:** nothing.
+
+**Reviewer:** 1 finding — inbox/ui-040-decision-39-vs-41-misattribution.md. Two `app.js` comments
+about vendor-defined GATT selection ("ids, never UUIDs") were repointed at `embarch-study-designer`
+decision 39, the generic stream-tap pipeline; the decision that says *"picked by id, never by
+typing a UUID"* verbatim is **41**, two headings away in the same file. **Fixed in this fold**
+(`fa0a327`) — two lines, in scope, on a unit still open. The reviewer confirmed everything else,
+including the `snapshot.rs` count I was least sure about (six futures, `status` plus five; "five"
+is right) and `trace.rs:2474` → `embarch-core` decision 30, which survives despite
+`embarch-study-designer` also having a decision 30.
+
+**Hardware debts:** none — comment text and one operator-facing error string. The standing
+`embarch-ui` 18-record stale-prefix debt is untouched and unrelated.
+
+**Budget:** PROCEED (weekly 45.4% at leg start, cap 90%), wave 6 suggested, three workers run.
+
+**Least sure about:** the two adjacent one-line fixes that rode along. The `snapshot.rs` one
+changes a comment's "three"/"four" to "five" against a six-call `tokio::join!`, and that arithmetic
+("six futures, one of which surfaces its error, so five others") is the worker's reading of what
+the prose meant, not a mechanical count. It is a comment, so the cost of being wrong is low — but
+it is the one edit in this unit that is a judgement rather than a lookup, and it is the sort of
+thing that rides along unexamined precisely because it is small.
+
 ## 2026-09-12 12:34 — dev-bench/020 forty-eight citations of a dead filename, and the bare ones could not be decoded by number
 
 **Decided:** nothing suite-wide. One call worth recording because it will recur in `021`–`025`,
