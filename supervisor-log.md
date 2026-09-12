@@ -97,6 +97,46 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 01:30 — ui/031 the reflash limitation is stated where a user meets it, and now somebody has looked
+
+**Decided:** nothing new. The task asked whether `open.md`'s parenthetical "(the run dialog says
+so)" was true, and it is: `embarch-ui/assets/index.html`'s run-check dialog says reflashing is
+deliberately not offered and names `embarch-api run-study --reflash`. `decisions/study-designer.md`
+decision 11 and the two suite guides already agree, so the whole unit is one bullet in `open.md`
+changing from an assertion to a checked statement. **"Nothing needed changing" was one of the
+task's own named valid outcomes and this is it** — recorded as a result rather than converted into
+a change nobody needed.
+
+**I wrote this one with my own hands, and the reason matters more than the diff.** Both workers
+dispatched to it stopped without committing: the first did the verification, the second arrived,
+found the first's uncommitted edit in the shared worktree, and correctly refused to build on dirt.
+Their findings agreed and were independently sourced from the same file; I re-read the string,
+wrote the bullet, and gated it.
+
+**The bullet is two bytes shorter than the one it replaced, and that was forced.** My first three
+drafts each pushed `embarch-ui/open.md` into its reserve — the byte floor, not the 10% band, since
+a 5,120 B cap has a floor above it — and `check-doc-size.py` went red each time with no debt filed.
+Filing a compaction task for a sub-project that had none, to pay for a sentence saying a doc was
+checked, is the wrong trade; the sentence got shorter instead.
+**Merged:** `agent/ui/031-reflash-limitation-stated` (code **none**; doc `5c762df` after rebasing
+onto `study-designer/033`'s fold). Ownership check base `a88de5936523`, 2 changed paths, all owned.
+Gate green on the merge result: `check-docs.py` 11/11, `embarch-ui` `cargo test`/`clippy
+--all-targets -- -D warnings` clean, `check-client-names.py --repo embarch-ui` clean.
+**Blocked:** nothing.
+**Reviewer:** no findings — but it turned up something better than a finding and said so honestly
+rather than stretching it into one. **The dialog string this whole unit verified cites a file that
+does not exist**: "see `embarch-ui/design.md` §3 decision 11", and `embarch-ui` has no `design.md` —
+decision 11 lives in `decisions/study-designer.md`. Pre-existing, untouched by this diff, and
+correctly out of scope for a decisions review. Filed as `tasks/ui/032` because it ships: it is a
+path a user reads inside the UI, in the one string that exists to tell them where to go next.
+**Hardware debts:** none — the string was read from source, no board and no running UI involved.
+**Budget:** PROCEED (weekly 38.1% of a 90% cap), wave 6.
+**Least sure about:** that the shortened bullet still carries why the question was ever open. It now
+says the dialog's string was read and does say so; it no longer quotes the string. A reader who
+doubts it has to go open `index.html` again — the same position the original parenthetical left
+them in, one verification later. If this question reopens, the fix is a quote in
+`decisions/study-designer.md`, which has room, not in `open.md`, which does not.
+
 ## 2026-09-12 01:28 — study-designer/033 decision 45's GATT deferral gets a trigger instead of a third state
 
 **Decided:** the deferral **stands**, and it is the deferral arm of the task that was taken, not the
