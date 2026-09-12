@@ -97,6 +97,39 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 01:24 — umbrella/056 a sticky `--host` now expires when the run that gave it stops being remote
+
+**Decided:** `embarch-umbrella` **decision 51** — `apply_plan` writes `state.host` only when the
+plan concludes `Remote`, and clears it on `local`/`wsl-host`. Decision 48 made `--host` sticky and
+said in as many words that it was *deliberately* not settling when the value is cleared; 51 closes
+that named gap rather than reversing 48, which is why the reviewer read it as settlement and not
+contradiction. The losing argument is recorded: keeping a stale value spares a user who alternates
+machines one retype, and costs a later run being steered by a host nobody typed in it.
+
+**Two workers wrote this unit concurrently and only one of them should have existed** — my dispatch
+error, described in the leg note below. The surviving worker's version is what landed; the
+duplicate was told to stand down, confirmed it had edited the same two files with the same
+one-branch fix, and committed nothing. Nothing was lost, and nothing about the diff depends on
+which one wrote it, but a leg reading this entry should not take "two workers agreed" as
+corroboration — they were the same instructions run twice, not an independent check.
+**Merged:** `agent/umbrella/056-saved-host-clearing` (code `bbe998c`, doc `d67acc4`). Ownership
+check base `139b86edf343`, 5 changed doc paths, all owned. **The code-repo half of the ownership
+check could not be run**: `check-ownership.py --scope umbrella` answers `unknown scope 'umbrella'
+(known: doc, suite)` when pointed at a code worktree — that is `tasks/doc/036`, already filed and
+owner-only, and the code repo is wholly owned by this scope anyway. Gate green on the merge
+results: `embarch-umbrella` `cargo build`/`test` (229 tests)/`clippy --all-targets -- -D warnings`
+clean, `check-docs.py` 11/11, `check-client-names.py --repo embarch-umbrella` clean.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** one, carried not created — the new clearing behaviour has never run on a real
+machine, and `embarch-umbrella/open.md` keeps that as the surviving half of the bullet rather than
+striking it. Needs no board, only the owner's own Windows/WSL setup.
+**Budget:** PROCEED at dispatch (weekly 38.1% of a 90% cap), wave 6.
+**Least sure about:** that the duplicate worker left nothing of its own in the landed diff. Both
+edited `setup.rs` and `state.rs` in the same worktree; the surviving worker's commit is what I
+merged and it builds and tests clean, but if the two Edits interleaved inside a line nobody would
+see it. The diff is 83 lines and I read it as a fast-forward, not line by line.
+
 ## 2026-09-12 01:12 — suite/012 the suite's hardest input finally has a worked example, and it is a file a test consumes
 
 **Decided:** the canonical worked study is **`embarch-api/tests/fixtures/self_test_study.json`** —
