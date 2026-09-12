@@ -97,6 +97,54 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 02:41 — suite/011 four repos now say what they need on disk, and two of the four closures were wrong
+
+**Decided:** **approved and executed on the owner's behalf, under `ops.md` §4's silence-as-consent
+window.** Leg 096 announced it at `ts 1789200593.666659` and died before the window closed; this leg
+completed that window rather than restarting its clock — 02:39 with no objection — and ran the unit
+at 02:40. Each of `embarch-core`, `embarch-api`, `embarch-umbrella` and `embarch-ui` now states in
+its README which sibling repos must be cloned into the same parent directory, why, and what the
+failure looks like when they are not.
+
+**I re-measured the closures rather than trusting the task file, and two of the four had moved:**
+
+| repo | task said | measured now |
+|---|---|---|
+| `embarch-core` | 2 | 2 — `study-designer`, `topology` |
+| `embarch-api` | 2 | 2 — `study-designer`, `topology` (the second only via its own `crates/embarch-core-client`, so invisible in the top manifest) |
+| `embarch-umbrella` | **2** | **3** — `topology`, `study-designer`, **`embarch-api`** (for `embarch-core-client`) |
+| `embarch-ui` | 3 | 3 — `study-designer`, `embarch-api`, `topology` |
+
+`embarch-umbrella`'s third sibling is the same omission `tasks/doc/037` has already filed against
+`.claude/leg.md`'s own worktree link table — **which is a rule file, so not mine to fix, and the
+task for it already exists.** The shape of the trap is identical in both places and worth saying
+once: nothing in `embarch-umbrella`'s or `embarch-ui`'s dependency list *reads* like
+"`embarch-api`", because what they name is a crate that happens to live inside that repo. Reading
+one manifest gives you a checkout that still fails its first build.
+
+**Two things in the task file were stale and I did not act on them.** It says `embarch-ui` has no
+README at all and to let another drop create it — `embarch-ui/README.md` exists now, so the
+prerequisite block went into its `## Running it` section. And it names an owner-only half:
+`embarch-dev-workflow.md:11` claiming *"nothing cross-repo is needed to compile"* against line 96
+saying the opposite. **That line has since been corrected** — it now reads "nothing cross-repo is
+needed beyond having those siblings on disk and current; stale ones compile fine and hand you a
+wrong binary" — so there is nothing left owed there and I filed no task for it.
+**Merged:** no branch and no worker — a `suite` task is the supervisor's own hands (§8). Four
+commits, one per repo, straight to each `main`: `embarch-core` `1ee95d8`, `embarch-api` `793f705`,
+`embarch-ui` `8160b84`, `embarch-umbrella` `464b48b`; doc fold below. `check-client-names.py` run
+per repo, all clean. No Rust source touched, so no `cargo` gate is meaningful on these four; the
+doc gate is `check-docs.py` 11/11 on the fold.
+**Blocked:** nothing.
+**Reviewer:** skipped (leg ending at its unit cap — a reviewer spawned here would outlive the leg
+that spawned it).
+**Hardware debts:** none — four README sections, no board, no build artifact.
+**Budget:** PROCEED at start and end (weekly 41.0% of a 90% cap), wave 6.
+**Least sure about:** whether a prose block per README is the right shape, or whether this wanted
+one shared doc the four link to. I wrote it out four times because a newcomer cloning one repo
+reads that repo's README and nothing else — the failure this task is about is *not having the other
+repos*, so a link into one of them is the one form guaranteed not to help. But it is four copies of
+a fact that will drift, and nothing checks them against the manifests.
+
 ## 2026-09-12 02:29 — ui/037 nine dead citations, and a reviewer finding I refused after re-deriving it
 
 **Decided:** **six of nine stale `milestone-1.md` citations were dropped rather than repointed, and
