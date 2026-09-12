@@ -97,6 +97,46 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 10:38 — core/035 the churn was in half the file, so the split gave that half its own headroom
+
+**Decided:** **the same unpark as `api/057`, on a better-shaped file, and the flux argument turned
+into the argument for splitting.** `embarch-core/decisions/flashing.md` (11,487/12,288 B, 93.5%) was
+parked on `In flux: yes` because `flash_backend.rs` had taken three decisions in as many weeks and
+the vendor-tool discovery path is where real hardware surprises keep landing (WSL PATH bleed,
+extensionless artifacts, a whole unused backend). True — **and confined to four of the file's seven
+decisions.** So the seam was not a compromise: 10/18 (multipart + `Format::Bin`), 21 (plain `attach`
+with a best-effort reset pulse) and 32 (`erase` must not be EmbArch's own guess) are the flashing
+operation and have been settled for weeks; 36, 49, 52 and 54 are backend selection and vendor-tool
+discovery and are the churning half. Split verbatim, the churning half gets **its own 12,288 B cap
+instead of the 801 B left of someone else's** — so the fourth `flash_backend.rs` decision does not
+reopen this task the way the third did. `flashing.md` 3.6 KB, new `flash-backend.md` 8.4 KB.
+The worker did something worth recording: **it corrected the task's `In flux:` field to `per file`
+itself**, unprompted, naming `flashing.md` settled and `flash-backend.md` in flux. That is exactly
+`tasks/doc/030`'s per-file rule applied by the actor that had just made the two files differ, and it
+is the reason `check-task-state.py` is green rather than still red on this task.
+**Merged:** `agent/core/035-compact-core` (code **none — zero diff by design**, docs-only; doc
+`23ec10c`). Ownership check base `f1ae8f2cf7c8`, 5 changed paths, all owned by the `core` worker.
+Rebased onto the `api/057` merge before landing. Gate green 11/11 on the merge result. Nothing in
+`embarch-core`'s source cites `decisions/flashing` by path — checked, not assumed — so no native
+Windows build is owed by this unit and it adds nothing to `core/015`'s pile.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED; weekly 42.7% of a 90% cap.
+**Least sure about:** the `Size debt due: 2026-09-24` date on this task is now meaningless and I left
+it — the debt it clocks is paid, and the task is `done`, so the ledger will drop it with the file.
+If a future leg sees a stale due date on a done task, that is this one and it is harmless.
+**Caught in this leg's own hands, worth the next leg reading:** I ran the doc gate as
+`python3 scripts/check-docs.py 2>&1 | tail -2 && echo GREEN`, and **`tail` ate the exit status** — the
+gate reported `1 of 11 checks RED: check-task-state.py` and my chain printed `GREEN` immediately
+underneath. I caught it by reading the output rather than the exit code, which is luck, not method.
+The red was my own `core/035` claim commit (`In flux: yes` with `**State:** claimed`, which
+`check-task-state.py` correctly refuses) and `main` carried it for ~12 minutes until this unit landed
+the worker's per-file correction. **Never put the gate behind a pipe in an `&&` chain** — use
+`${PIPESTATUS[0]}`, or run it bare.
+
+---
+
 ## 2026-09-12 10:36 — api/057 the worst debt in the ledger was a park, and a verbatim split was always allowed to clear it
 
 **Decided:** **unparked a `blocked` compaction task and dispatched it, on the split-first rule rather
