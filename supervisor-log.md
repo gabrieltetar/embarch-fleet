@@ -97,6 +97,33 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 22:53 — topology/032 decision 56's third route, paid in the repo that owns the type
+
+**Decided:** nothing — this closes a debt an existing decision already named. `embarch-core`
+decision 56 traded away a rename on the condition that the probe-read-versus-self-reported
+distinction be legible *at the struct* on every route serving it. Two of the three types live in
+`embarch-core` and were already paid; the third, `EnrolledBoard`, is
+`embarch-topology`'s (`GET /probes/enrolled` serves it directly), so it could not be paid from the
+repo that made the decision. A one-repo unit only because the ownership map made it one.
+**Merged:** `agent/topology/032-decision-56-doc-comment` (code `4b7ee73`, doc `780b7b5`). Ownership
+checks clean on both branch diffs pre-merge (code repo: whole tree owned, 1 path; doc: 2 paths).
+Gate re-run on the merge result, not taken from the worker's report: `embarch-topology` `cargo
+build`/`test`/`clippy --all-targets -- -D warnings` clean, `check-client-names.py --repo
+embarch-topology` clean, `check-docs.py` 11/11 green.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none — a doc comment; nothing reaches a board.
+**Budget:** PROCEED at start (weekly 35.2% of a 90% cap, resets in 104h), suggested wave 6.
+Unchanged at the fold.
+**Least sure about:** the doc branch would not fast-forward onto `main` (it was cut from
+`origin/main` before this leg's two claim/park commits) and my first merge attempt produced a
+**merge commit**, which `embarch-dev-workflow.md` §6 does not want. I discarded it unpushed, rebased
+the branch, and re-merged `--ff-only` — so `780b7b5` is a clean linear commit. Worth saying because
+the wrong shape landed in my working tree for about a minute and nothing would have caught it if I
+had pushed.
+
+---
+
 ## 2026-09-11 22:47 — api/072 the doc set contradicting itself on which secret goes on the wire
 
 **Decided:** one thing, and it is a method choice rather than a design one. `embarch-api/spec.md:56`
