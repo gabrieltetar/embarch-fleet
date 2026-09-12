@@ -97,6 +97,44 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 02:23 — api/076 a BleConnect worked example, landed by recovery rather than by its own leg
+
+**Decided:** nothing new — this unit is leg 096's, recovered. **Leg 096 dispatched `api/076` and
+`ui/034`, both workers finished and pushed both branches each, and the leg exited without landing
+anything.** That is the third recorded instance of the stall
+`fleet-leg-orphaned-by-worker-notification` describes: finished work stranded because the
+completion notification did not reach the supervisor. Nothing was re-derived here; both branches
+were rebased onto current `main`, re-gated by this leg, and merged. The rule that made this legal
+is the positive-signal one — a branch present on its remote carrying commits is a finished worker.
+
+The work itself: `embarch-api/tests/fixtures/ble_connect_worked_example.json` plus
+`tests/ble_connect_fixture.rs` give `suite/studies-guide.md` §3b's advice ("a real study sets
+`target_address` or `target_name`") its first worked form anywhere in the tree — a `BleConnect`
+step with an explicit `target_address`, round-tripped into `Study`, never submitted to Core. The
+same merge carried `tasks/api/077`'s compaction of `embarch-api/decisions/tests.md` (decisions
+30/46/54/56 trimmed, 22 lines net).
+**Merged:** `agent/api/076-bleconnect-fixture` (code `f402163`, doc `fa08866` after rebasing onto
+leg 096's park commit). Ownership check bases: code `29944ac` (code repo, whole tree owned, 2
+paths), doc `b5407a1`, 5 changed paths, all owned. Gate re-run by this leg on the merge results,
+not taken from the worker's report: `check-docs.py` 11/11, `embarch-api` `cargo build`/`test`/
+`clippy --all-targets -- -D warnings` clean, `check-client-names.py --repo embarch-api` clean.
+**Blocked:** nothing.
+**Reviewer:** no findings — it read the compaction against `tasks/api/077`'s own Must-not-delete
+list and confirmed every item survives, and noted one lost illustrative clause in decision 54 (the
+two named mutation directions, collapsed to "Verified by mutation per decision 46's standard") as
+detail rather than mechanism. It also checked the fixture's code comment cites
+*`embarch-study-designer`* decision 43 and not `embarch-api`'s own 43 — a real misattribution risk
+in a repo where both numbers exist.
+**The worker could not finish its own `Done when`**, and did the right thing: `suite/studies-guide.md`
+is outside the `api` ownership row, so the sentence naming the new fixture could not be added from
+inside this task. It filed `inbox/suite-studies-guide-name-ble-connect-fixture.md`, which this leg
+drained into `tasks/suite/034`.
+**Hardware debts:** none — a deserialization test that never reaches Core or a board.
+**Budget:** PROCEED at start (weekly 41.0% of a 90% cap), wave 6.
+**Least sure about:** nothing about the work; about the stall. Leg 096 wrote its park line and its
+claims correctly and still left two finished units on the remote, which means the ~25-minute
+`git ls-remote` bound is the thing that has to fire, and it did not.
+
 ## 2026-09-12 02:03 — ui/033 a path sweep that turned out to be a correctness sweep
 
 **Decided:** the citation cleanup `ui/032` scoped out is done, and **it was not the cosmetic task it
@@ -435,7 +473,7 @@ for the extra directory level, the same allowance `suite/008` took when it moved
 12,034 B → 2,470 + 8,116 + 3,268, all three comfortably under cap.
 
 **This is the debt the unit before it created, paid one unit later.** `suite/027`'s decision 3 put
-the file 1,794 B over on the once-on-a-clock allowance; I filed `tasks/suite/033` in that fold and
+the file 1,794 B over on the once-on-a-clock allowance; I filed `tasks/suite/034` in that fold and
 closed it in this one, so the ledger entry existed for about fifteen minutes. **The argument for a
 split rather than a trim is that `suite/031` had compacted this file out of reserve two hours
 earlier and one new decision undid it** — a file a single decision can blow past is the wrong shape,
@@ -460,7 +498,7 @@ rather than filed.
 is for a suite-wide *design* act or a wire-schema bump, and a verbatim split that decides nothing is
 neither. If that reading is wrong, this is the unit to object to.
 Gate on the result: `check-docs.py` 11/11 green; `check-doc-size.py` reads **PAID, 24.1%**.
-**Blocked:** nothing. `tasks/suite/033` closed and removed in the same fold that created it.
+**Blocked:** nothing. `tasks/suite/034` closed and removed in the same fold that created it.
 **Reviewer:** skipped (supervisor's own hands, `suite` scope, no worker diff to review).
 **Hardware debts:** none — docs only, no repo outside `embarch-doc` touched.
 **Budget:** PROCEED (weekly 37.3%), wave 6.
@@ -503,7 +541,7 @@ subtraction at `ble_bridge_real.c`'s stamp site — is written into the decision
 condition rather than left in a task nobody reads.
 **Budget:** PROCEED (weekly 37.3%), wave 6.
 **Least sure about:** `suite/decisions.md` went **1,794 B over its 10 K cap** on this decision,
-landing on the once-on-a-clock allowance with `tasks/suite/033` filed and due 2026-09-19. The file
+landing on the once-on-a-clock allowance with `tasks/suite/034` filed and due 2026-09-19. The file
 was compacted out of reserve **two hours earlier** by `suite/031`, and one new decision undid it. I
 read that as the file being the wrong shape — three unrelated subjects, no `suite/decisions/`
 directory where every sub-project has one — and filed a split rather than trimming decision 3 into
