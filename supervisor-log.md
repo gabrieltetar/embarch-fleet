@@ -97,6 +97,44 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 02:23 — ui/034 the decision the UI has been shipping for months gets written down
+
+**Decided:** **`embarch-ui` decision 26 now exists** — *Core being unreachable is an expected,
+renderable state, not an error to surface as a crash* (`decisions/wiring.md`, index row updated).
+Leg 096 filed this task on a guess and said in its own entry it was unsure whether it was a design
+call or a comment fix; it was a design call. The worker found the position constructed in **three**
+independent places on purpose: `snapshot.rs::poll`'s `tokio::join!` deliberately fails each of six
+Core calls independently rather than short-circuiting, `Snapshot::pending()` exists to give that
+same shape a name before the first poll, and `logs.rs::poll_loop` deliberately *withholds* a second
+error surface — a failed `logs_recent` is one `debug!` line and the loop keeps ticking, so
+`core_reachable` stays the single place a human is told. That is a standing position, not an
+unhandled `Result::Err` that a comment happened to describe.
+
+This retires the gap `ui/033` documented rather than guessed at: `src/logs.rs:58` and
+`src/snapshot.rs:73-75` had attributed this reasoning to `embarch-ui` decision 5, which is about
+routing hardware-adjacent calls over HTTP+Bearer and says nothing of the kind. Both now cite 26.
+**Two workers in a row declined to invent a decision number and filed the gap instead, and both
+times the filed gap turned out to be real work** — that is the `ui/033` method note earning its
+cost twice.
+**Merged:** `agent/ui/034-core-unreachable-decision` (code `aaf440b`, doc `a9a72e8` after rebasing
+onto `api/076`'s merge). Ownership check bases: code `eca2fa1` (code repo, whole tree owned, 2
+paths), doc `fa08866`, 4 changed paths, all owned. Gate re-run by this leg on the merge results:
+`check-docs.py` 11/11, `embarch-ui` `cargo build`/`test`/`clippy --all-targets -- -D warnings`
+clean, `check-client-names.py --repo embarch-ui` clean. Like `api/076`, this was leg 096's
+dispatch, finished and pushed and left unmerged; recovered, not re-derived.
+**Blocked:** nothing.
+**Reviewer:** no findings — it confirmed decision 26 does not collide with 5 or 6 in the same file
+(6's "no client-side interval polling" governs the browser, not this server-side poll) and that the
+decision's description matches what the code actually does.
+**Hardware debts:** none — but note the decision is *about* a down Core, and nothing here was
+exercised against a real one. It is derived from reading three code paths, not from watching the
+Dashboard render `core_reachable: false`.
+**Budget:** PROCEED (weekly 41.0% of a 90% cap), wave 6.
+**Least sure about:** the "what renders, and what does not" paragraph claims no *other* tab shows
+an error of its own when Core is down. The reviewer checked the decision against `snapshot.rs` and
+`logs.rs`, which are the two the decision names; nobody walked every tab to confirm the negative.
+It is the kind of clause that is true today and quietly stops being true.
+
 ## 2026-09-12 02:23 — api/076 a BleConnect worked example, landed by recovery rather than by its own leg
 
 **Decided:** nothing new — this unit is leg 096's, recovered. **Leg 096 dispatched `api/076` and
