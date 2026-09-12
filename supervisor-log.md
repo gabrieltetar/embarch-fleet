@@ -97,6 +97,46 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 22:19 — core/043 two interface docs describing a struct they were three fields behind
+
+**Decided:** nothing new, and the unit's own instruction was the reason — the task told the worker to
+stop rather than pick a winner if the three sources disagreed about what `self_excluded` *means*.
+They did not. `embarch-core/src/stream_store.rs:233`'s comment, `embarch-outpost/spec.md:90` and
+`embarch-outpost` decision 19 all say the same thing, so the meaning was **transcribed, not
+composed**, which is what kept a doc repair from turning into a semantics decision made unattended.
+
+`interfaces/studies.md:16` documented `/study/{id}/streams` as `{id, name, encoding, alias,
+rendered, note?}`; `StreamIndexEntryResponse` (`src/study.rs:2848-2876`) serializes those **plus
+`named`, `timed`, `self_excluded``. `interfaces/result-layout.md:22` was worse than incomplete — it
+asserted there were **two** independent booleans and that they were the whole story, so a reader who
+trusted it treats an interval no lane covers as a defect when `self_excluded` declares it deliberate.
+That route exists to answer *why a trace has no names*, and the field that answers it was the one
+omitted; a client written to the table had nothing to branch on but `note`'s prose, which the code's
+own comments warn against.
+
+**The full pass the task asked for came back empty**, which is the part worth recording: the worker
+checked `/study/{id}`, `/study/{id}/steps` (`StudyStepsResponse`/`StudyStepEntryResponse`) and
+`/study` against their structs and found no second instance. Two files wrong about the same struct
+turned out to be one edit's shadow rather than a habit.
+**Merged:** `agent/core/043-stream-index-fields` (code **none** — the `embarch-core` branch had a
+zero diff and this is documentation-only by design; doc `eb49e65`). Ownership check base
+`20e46c300551` after rebasing onto this leg's claim commits, 4 changed paths, all owned; the
+pre-rebase run at base `3e8cce4365c6` agreed. Gate green on the merge result: `check-docs.py` 11/11.
+No `cargo` gate run, there being no code change to gate.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none — no wire change and no code change, so nothing here is waiting on
+`core/015`'s outstanding native Windows build the way most of this week's `core` units are.
+**Budget:** PROCEED at leg start, weekly 33.5% of a 90% cap, suggested wave 6.
+**Least sure about:** the queue, not the unit. `queue-status.py` reported **12 dispatchable** and
+the honest number for a worker was **one** — this task. Everything else in that count is a `suite`
+task, which is the supervisor's own hands and needs a 30-minute announcement window, so the number
+that sizes a worker wave is counting work no worker can take. `tasks/doc/043` already describes
+exactly this and is `Owner: required`; I am noting it because it changed what this leg did — I spent
+the first slot dispatching and the next on a refill sweep, rather than trusting the 12.
+
+---
+
 ## 2026-09-11 22:11 — topology/030 a comment that told a maintainer the only silicon on the bench was unchecked
 
 **Decided:** nothing new, and **deliberately so** — this unit's whole risk was that fixing it would
