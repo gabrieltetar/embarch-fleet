@@ -97,6 +97,45 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 01:26 — core/045 the route sweep proves reach as well as rejection, and both lists are derived
+
+**Decided:** `embarch-core` **decision 60** in `decisions/auth.md`. Decision 42's sweep measured
+exactly one property — every registered route refuses an absent or wrong token — and a route wired
+to the wrong handler was green under it. The other half now exists: every handler carries a
+`// route: METHOD path` comment above its own definition, and a test derives `build_router`'s
+actual `.route(...)` wiring from the source and cross-checks the two. **Neither list is hand-kept**,
+which is the whole point and what the task insisted on, following `embarch-api` decision 54.
+
+**The worker mutation-tested its own check before claiming it worked** — swapped two handlers'
+wiring, watched the test go red naming both, reverted. That is the step that separates a check
+which passes from a check which can fail, and it is the one nothing in the gate would have caught
+the absence of.
+**Merged:** `agent/core/045-route-sweep-reach` (code `4459668`, doc `5a6d355` after rebasing onto
+`umbrella/056`'s fold). Ownership check base `3c9f809c7ec2`, 6 changed doc paths, all owned; the
+code-repo half is unrunnable for the same `tasks/doc/036` reason recorded under `umbrella/056`.
+Gate green on the merge results: `embarch-core` `cargo build`/`test`/`clippy --all-targets --
+-D warnings` clean, `check-docs.py` 11/11, `check-client-names.py --repo embarch-core` clean.
+`tasks/core/046-compact-core.md` arrived with the merge — decision 60 put `decisions/auth.md` at
+92.4% — filed `blocked`, `In flux: yes`, size debt due 2026-09-26.
+**Blocked:** nothing.
+**Reviewer:** no findings. It also settled a number this task's own `Source:` line got wrong: the
+task, quoting `open.md`, says decision 42 asserts **26** routes. The current router registers **22**
+`.route()` lines carrying **23** verb/handler bindings (`/signals` chains two verbs); 42's "26" is
+explicitly historical text about 2026-09-06, superseded by retirements noted in the same paragraph.
+Decision 60 uses 23, and its `> 20` plausibility guard mirrors 42's own rather than hardcoding a
+count. **Nobody should re-derive "26" from this entry.**
+**Hardware debts:** none created, one deepened. This is a host-side wiring check and touches no
+board, but it adds a fifth thing riding on the **owner's outstanding native Windows build of
+`embarch-core`** — the new test does not run in the Windows service build until that lands, and the
+service is what actually serves these 26 routes.
+**Budget:** PROCEED (weekly 38.1% of a 90% cap), wave 6.
+**Least sure about:** whether the derivation reads `.route(...)` lines robustly enough to stay true.
+It parses the router's own source text, so a future refactor that registers a route through a
+helper, a loop or a macro would drop out of the derived list silently and the test would still pass
+on a smaller set. Decision 60 does not say what happens then. That is the failure mode a
+derived-from-source check trades for, and it is worth a line in the decision if anyone touches
+`build_router`'s shape.
+
 ## 2026-09-12 01:24 — umbrella/056 a sticky `--host` now expires when the run that gave it stops being remote
 
 **Decided:** `embarch-umbrella` **decision 51** — `apply_plan` writes `state.host` only when the
