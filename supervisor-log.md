@@ -97,6 +97,37 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 01:28 — study-designer/033 decision 45's GATT deferral gets a trigger instead of a third state
+
+**Decided:** the deferral **stands**, and it is the deferral arm of the task that was taken, not the
+build arm. `decisions/declares.md` decision 45 now states its own trigger — the first study that
+needs to say which GATT table it was authored against — rather than pointing at `open.md` for it,
+and `open.md`'s verbatim duplicate of that bullet is struck. The argument for not building the
+authorable half now: a `gatt` field and a `DeclaredGatt` type, with nothing reconciling them against
+live discovery, would be designing against imagined authoring, and a declared table nothing
+reconciles reads as a validated one — `embarch-decision-reversals.md` shape 3, which this crate has
+already paid for.
+
+**The third state is what this unit actually removed.** "Designed, never built, deferred with no
+trigger" is not a decision anyone can act on or retire; "deferred until X" is. That is the whole
+change, and it is a doc change with no code, which is the honest shape for it.
+**Merged:** `agent/study-designer/033-declared-gatt` (code **none** — the `embarch-study-designer`
+branch carried a zero diff, docs-only by design, the same shape as `outpost/014`; doc `037fac2`
+after rebasing onto `core/045`'s fold). Ownership check base `5534ce842d88`, 4 changed paths, all
+owned. Gate green on the merge result: `check-docs.py` 11/11, `embarch-study-designer` `cargo
+test`/`clippy --all-targets -- -D warnings` clean.
+**Blocked:** nothing.
+**Reviewer:** no findings. It verified the load-bearing claim directly rather than taking the commit
+message's word: `src/` has no `DeclaredGatt` and no `gatt` field on `Study`, and
+`interfaces/types.md` already said so — so nothing in the tree describes the field as built.
+**Hardware debts:** none. Reconciliation against live discovery needs a radio and was explicitly
+out of scope; it is now a named trigger rather than an unowed debt.
+**Budget:** PROCEED (weekly 38.1% of a 90% cap), wave 6.
+**Least sure about:** the trigger's own testability. "The first study that needs to say which GATT
+table it was authored against" is a real condition, but nothing watches for it — no check fires, and
+the person who hits it is the person who would have to know decision 45 exists. A trigger nobody
+observes is better than no trigger and worse than it reads.
+
 ## 2026-09-12 01:26 — core/045 the route sweep proves reach as well as rejection, and both lists are derived
 
 **Decided:** `embarch-core` **decision 60** in `decisions/auth.md`. Decision 42's sweep measured
