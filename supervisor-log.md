@@ -97,6 +97,54 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 21:52 — suite/017 one built-in vocabulary, and a served list somebody finally renders
+
+**Decided:** ran a `suite` task under `ops.md` §4. **The window was leg 084's, inherited not
+restarted** — announced at `ts 1789182068.428919`, re-polled at 37 minutes, **0 actionable, no
+objection** — then executed as this leg's last unit, exactly as the standing instruction and the
+task's own state line say to. New **`embarch-study-designer` decision 73**
+(`decisions/authoring.md`).
+
+*Which built-in actions can a Study Designer row pick* was answered in three places.
+`study_builder::BuiltInActionKind` held **nine** and was authoritative because it is what the browser
+submits; `merged_actions::BuiltInAction` held **seven** and had been wrong since decision 53 added
+two; `app.js`'s `SD_BUILT_INS` held nine hand-copied `{value, label}` pairs whose label prose existed
+nowhere else. **The stale one was the machine-readable one, and it was stale because it was dead** —
+`merge_actions` built it, `embarch-ui` served it, and `app.js` filtered the response for
+`Registered`/`Unregistered` and rendered its own array. A list that is computed and thrown away
+cannot be wrong in a way anyone sees, which is the whole finding.
+
+`BuiltInAction` is deleted. `BuiltInActionKind` is the only definition and carries `ALL` (9, in the
+browser's old order) and `label()` (the browser's own strings, **moved verbatim** — the reviewer
+confirmed them character-identical). `MergedAction::BuiltIn` went from a bare string to
+`{which, label}` and `sdBuiltIns()` renders what it is served.
+
+**Three judgement calls.** The labels went to the *server*, which is the task's own closing clause and
+`embarch-ui` decision 17's rule about browser-side copies applied to a name rather than a number;
+`embarch-ui/spec.md`'s invariant was widened from "a limit" to cover a vocabulary. The count-pinned
+test was **replaced rather than updated** — `every_submittable_built_in_is_offered_with_a_label`
+asserts the property that was violated, because a count could never have caught this: seven and nine
+were each internally consistent inside their own file. And `tasks/ui/003`'s two hardcoded *numbers*
+were left alone, as this task explicitly ring-fences.
+**Merged:** committed straight to `main` in two code repos, a `suite` task being the supervisor's own
+— `embarch-study-designer` `4ef1893`, `embarch-ui` `eaa8b13`. Doc side in this fold: decision 73,
+the `decisions.md` index row, and the `embarch-ui/spec.md` invariant. Gate on both repos:
+`cargo build` / `test` / `clippy --all-targets -- -D warnings` clean in `embarch-study-designer`
+(246 tests, including the new one) and `embarch-ui` (101), plus `embarch-api` and `embarch-core`
+rebuilt because they link the crate; `check-client-names.py` clean on both; `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none — no board renders this picker. Note the change does **not** reach a running
+Core: `embarch-ui` is not in the suite release archive (`embarch-ui/open.md`'s standing item).
+**Budget:** PROCEED at leg start, weekly 31.9% of a 90% cap, suggested wave 6; unchanged at exit.
+**Least sure about:** the wire-shape change, which I judged safe on the grounds that the only
+consumer discarded the field. The reviewer verified that across all three code repos and agreed, so
+the risk is not a stale in-repo consumer — it is **anything outside the suite reading
+`GET /api/study-designer/actions`**, which nothing here can see and which I did not treat as a
+possibility. That surface is unversioned.
+
+---
+
 ## 2026-09-11 21:49 — umbrella/053 the command whose whole job is telling the truth about a deploy, finally able to
 
 **Decided:** `embarch-umbrella/decisions/deploy.md`'s amendment to decision 32 was written *from a
