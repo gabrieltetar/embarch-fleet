@@ -97,6 +97,40 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 21:10 — api/068 a wrapper that re-introduced the conflation one layer above the fix
+
+**Decided:** **recovery, not a re-run.** Leg 086 died after dispatching this task; its worker finished
+and pushed both branches, which sat unmerged on the remotes. Nothing was re-derived — the pushed work
+was gated and landed as written, per `.claude/leg.md`'s positive-only second signal (a pushed branch
+carrying commits means that worker finished). `core/041` had just fixed `embarch-core` to distinguish
+`not_attached` from `mismatch` (decision 59, a real `kind` field plus `fix_it_url: null` on the
+not-attached arm); this unit stops `embarch-api`'s wrapper from re-wrapping both under one
+`topology mismatch` lead. `embarch-core-client` now parses `kind` with a `"mismatch"` default so an
+older Core still deserializes, treats `503` the same as `409`, exposes `is_not_attached()` so no
+caller compares the literal string, and `Display` leads with `probe not attached:` versus
+`topology mismatch:` with no fix-it URL on the former. Both call sites were fixed — `src/tools.rs`
+and `src/cli.rs` — which was the task's own warning and the reason it was written as one task rather
+than two. New `embarch-api` decision 71. `tasks/api/069-compact-api.md` arrived with the merge:
+decision 71 put `decisions/surface.md` into its reserve (11,258 of 12,288 B, due 2026-10-11), so
+`embarch-api` now carries **seven** open or blocked compaction tasks, still more than any other
+sub-project.
+**Merged:** `agent/api/068-validate-wrapper` (code `5aec2a8`, doc `818453b` after rebasing onto leg
+084's `fb56c0e`). Ownership checks green on both branches before merge: code repo whole-tree, 4 paths;
+doc 6 paths, all `api`-owned. Gate re-run on the merge results, not taken from the worker's report:
+`check-docs.py` 11/11, `embarch-api` `cargo build` / `test` / `clippy --all-targets -- -D warnings`
+clean, `check-client-names.py --repo embarch-api` clean.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none new — but this is now the second half of a two-repo correction whose Core
+half (`core/041`) rides on `core/015`'s still-outstanding native Windows build, so the operator-facing
+text a live `validate` prints does not change until that lands.
+**Budget:** PROCEED at leg start, weekly 31.0% of a 90% cap, suggested wave 6.
+**Least sure about:** landing a worker's push that no supervisor ever supervised. The gate and the
+reviewer both ran on the merge result, which is the whole check this design has — but nobody saw the
+worker's own reasoning, and its report died with leg 086.
+
+---
+
 ## 2026-09-11 20:57 — suite/022 the only safety guidance in the suite named 7 of 29 tools and omitted every destructive one
 
 **Decided:** ran a `suite` task under `ops.md` §4 — announced at `ts 1789179351.424089`, channel
