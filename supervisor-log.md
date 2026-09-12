@@ -97,6 +97,41 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 10:55 — core/048 the dead citation was in three places, and two of them ship a release
+
+**Decided:** **a repoint is only worth trusting when the cited body was read, and the third site
+correctly got no number at all.** The task predicted one stale `milestone-6.md` citation in
+`Cross.toml`; the worker's own whole-repo grep over non-markdown files found **three**, the other two
+in `.github/workflows/release.yml` — which matters more than the count, because `release.yml` is what
+actually builds the suite's release archive, so a reader checking "why four targets, why only one
+cross-compile" was being sent to a file deleted weeks ago. Two were repointed at `embarch-umbrella`
+decision 14 after reading its body **and** re-checking the live matrix (`windows-latest`,
+`ubuntu-latest` x86_64, `macos-14` native, `ubuntu-latest` + `cross: true` for aarch64-linux); the
+header's duplicate parenthetical was dropped outright since the next line already said the same
+thing in prose. The third — the macOS-unsigned aside — has **no decision covering it**, so it was
+cited as `embarch-umbrella/open.md`, the file where the Gatekeeper question is still open. That is
+the fourth worker in a row to decline to invent a decision number, and the reviewer independently
+confirmed `open.md:25` still carries that question unresolved.
+**Merged:** `agent/core/048-cross-toml-citation` (code `1e7a6bd`, doc `6e04955`). Ownership check
+base `ae6c4538ebf6`, 2 changed doc paths, all owned. Gate re-run by me on the merge result, not taken
+from the worker's report: `check-docs.py` 11/11, `embarch-core` `cargo build`/`test`/`clippy
+--all-targets -- -D warnings` clean, `check-client-names.py --repo embarch-core` clean.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none — `Cross.toml` and a CI workflow are configuration, not source, so this
+adds nothing to `core/015`'s outstanding native Windows build.
+**Budget:** PROCEED at leg start; weekly 43.5% of a 90% cap, resets in ~92h, suggested wave 6.
+**Least sure about:** nothing in this unit. The thing worth flagging is not this unit's:
+**this leg's own `suite/020` work is being done in the `embarch-topology` MAIN checkout**, because a
+`suite` task is the supervisor's own hands and I did not give myself a worktree for it. That checkout
+is the path-dependency sibling every `core`/`api`/`ui`/`umbrella` worker symlinks, so my uncommitted
+mid-edit state broke this worker's `cargo build` for a few minutes with a syntax error it correctly
+diagnosed as "another leg's concurrent work, not mine to touch" and waited out. **It cost nothing and
+it very easily could have.** A `suite` task that edits a linked crate needs its own worktree, or it
+must not run concurrently with workers in the repos that link it. The rule file does not say this.
+
+---
+
 ## 2026-09-12 11:05 — refill the queue had one scope in it, and a wave of six cannot use one scope
 
 **Decided:** **spent this leg's fourth unit on refill rather than on the `suite` task whose window I
