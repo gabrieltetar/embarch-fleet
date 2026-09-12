@@ -97,6 +97,37 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 21:39 — topology/029 a precondition that came true and told nobody
+
+**Decided:** `embarch-topology/spec.md` said *"`embarch-core`'s `POST /validate` does not yet expose
+it"* about `validated_at_utc_ms`, and `decisions/validate-timing.md` carried the matching
+forward-looking clause — *"the new field only reaches the wire once its own `/validate` handler
+switches to `validate_role_timed`"*. That switch had already happened: `embarch-core/src/api.rs`'s
+`validate_handler` calls `validate_role_timed` and populates `ValidateOkResponse.validated_at_utc_ms`
+from the returned `Validation`, and `embarch-core/interfaces/topology.md` already recorded it. Both
+stale clauses retired against that evidence, citing `embarch-core` decision 50. **The decision's
+clause was written as a condition that FIRED rather than deleted**, so the sequencing stays legible —
+a reader can still see that the field was designed here before it reached the wire there. This is a
+cross-sub-project disagreement, which is the class no single-repo check can see.
+**Merged:** `agent/topology/029-validated-at` (doc `da93664`; **code branch had a zero diff** and was
+never merged — `embarch-topology`'s crate needed no change, which the worker verified by diffing its
+own code worktree rather than asserting it). Ownership check green, base `023bb2fe202d`, 4 changed
+paths, all `topology`-owned. Gate on the merge result: `check-docs.py` 11/11, and again 11/11 after
+the assemblers ran. No `cargo` run on `embarch-topology`, because the code tree is byte-identical to
+`main`.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none — a doc correction about a field already on the wire. Note it does **not**
+touch `embarch-topology/open.md`'s standing "no signal tap has read a byte" debt.
+**Budget:** PROCEED at leg start, weekly 31.9% of a 90% cap, suggested wave 6.
+**Least sure about:** the wave number versus what is actually dispatchable. The gate suggested 6, but
+**12 of the 14 "dispatchable" tasks are `suite` tasks, which no worker may take** — only 3 distinct
+scopes were reachable and only 2 of them by a worker, so this leg is running at a third of its
+budgeted width for a reason the count does not show. `tasks/doc/043` is already filed against exactly
+this and is owner-only.
+
+---
+
 ## 2026-09-11 21:34 — suite/028 the one sub-project with no CI at any commit now has half of one, and says which half
 
 **Decided:** ran a `suite` task under `ops.md` §4. **The window was leg 084's, not a fresh one** —
