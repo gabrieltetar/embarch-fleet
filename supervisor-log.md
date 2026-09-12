@@ -97,6 +97,60 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 21:34 — suite/028 the one sub-project with no CI at any commit now has half of one, and says which half
+
+**Decided:** ran a `suite` task under `ops.md` §4. **The window was leg 084's, not a fresh one** —
+announced at `ts 1789182061.785499`, inherited per `.claude/leg.md`'s "do not restart the clock",
+re-polled at 12 minutes and again at 31.6 minutes, **0 actionable, no objection** — then executed
+as this leg's last unit. New **`suite/decisions.md` 2**.
+
+`embarch-outpost` was the only code-bearing sub-project in the suite with **no CI at any commit**,
+so `decisions/testing.md` decision 22's toolchain-free leg ordering — fixed precisely because it
+had been wrong — was exercised only when a human remembered to. It now has
+`.github/workflows/host-tests.yml` running `decoder_unit.py` (31 tests) and `vocab_check.py` (11
+record kinds, 8 header flag bits) on push to `main` and on every PR. Both verified green locally
+before the workflow was written.
+
+**Two findings worth more than the workflow.** First, **`run-all.sh` cannot be invoked from CI at
+all**: its west guard is `WEST="${WEST:?…}"` under `set -euo pipefail`, so on a toolchain-free
+runner it runs the host legs and then *exits non-zero*. The obvious workflow — one step calling the
+script the README tells humans to call — could never have gone green, and would have read as a
+broken repo rather than as a missing toolchain. The workflow therefore lists the legs itself, and
+both it and the README now say that a new host-only leg must be added in the same commit.
+Second, **the cross-decoder leg is excluded on a stronger ground than cost**: it needs the sibling
+repos checked out, so on this runner it would `SKIP` every time — *a step unable to fail for the
+reason it was added*, which is the objection `embarch-study-designer/open.md` raises against a
+cross-compile job ahead of its toolchain. A permanent skip is worse than an absence because it
+reads as coverage.
+
+The task named "no CI, recorded as a decision with a trigger" as a legitimate answer and it was
+considered; it was declined because two legs needing nothing but `python3` were already written,
+already green, and already the half this repo's own history records as having been silently
+unreached. The three Zephyr legs stay uncovered, with the reversal condition written: the moment a
+provisioned runner can build them, they join the workflow and the exclusion note shrinks.
+**Merged:** `embarch-outpost` `e349e17` (workflow + README, committed straight to `main` — a
+`suite` task is the supervisor's own, no branch). Doc side in this fold: `suite/decisions.md` 2,
+`embarch-outpost/open.md`'s last bullet replaced by a pointer, and **`embarch.md` §5's CI table
+split its combined `dev-bench`/`outpost` row in two**, since the two are no longer in the same
+position. `check-docs.py` 11/11 green; `check-client-names.py --repo embarch-outpost` clean; the
+workflow YAML parsed before it was committed.
+**Blocked:** nothing.
+**Reviewer:** skipped (leg ending at its unit cap — a reviewer would outlive the leg that spawned
+it).
+**Hardware debts:** none. Note the standing `embarch-outpost` Zephyr `tests/unit` debt is
+**unchanged and explicitly not claimed away** by this unit — that is the whole content of the
+decision's exclusion note.
+**Budget:** PROCEED at leg start, weekly 31.0% of a 90% cap, suggested wave 6; unchanged at exit.
+**Least sure about:** whether a green check that covers only the Python half will be read as
+narrowly as the decision asks. The workflow header, the README and `embarch.md` §5 all say what it
+excludes, which is three places — but a badge is read by people who read none of them, and this
+repo has **no badge**, which is the only reason I left it there rather than arguing about one.
+**Filed:** `tasks/suite/031-compact-suite-decisions.md` — decision 2 put `suite/decisions.md` at
+**92.5%** of its 10,240 B cap (768 B left), on a file holding **two decisions**, so the debt is
+decision 1's 4.3 KB single paragraph rather than accumulation. Due 2026-10-11.
+
+---
+
 ## 2026-09-11 21:32 — ui/027 the fifth use of a shared modal that used neither of its two classes
 
 **Decided:** `embarch-ui/spec.md` describes *"a `.dialog`/`.dialog-backdrop` modal used in five
