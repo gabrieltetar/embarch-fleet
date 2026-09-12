@@ -97,6 +97,64 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 20:24 — api/067 a decision that outlived its own correction, and the file it lives in split rather than squeezed
+
+**Decided:** two things, and the first is a dispatch decision worth carrying forward. **A `blocked`
+task whose block names no event is not parked, it is stalled**, and `api/067` said so in its own
+words — *"it unparks the moment someone is willing to do that — it is not waiting on an event."*
+Unparked and dispatched as an ordinary unit under `.claude/leg.md`'s rule that the actor making a
+file's flux is the only one who can shorten it. The block was real work (`decisions/core-link.md`
+at 13,164/12,288 B, parked by `tasks/api/061` on `In flux: yes`), not a reason to wait; folding it
+into the unit that needed the file is what the rule is for. **Second: the split-first rule paid
+again, for the third day running.** `core-link.md` was not squeezed by a byte — decisions 11, 14,
+15, 17, 26 (address resolution, artifact transfer) stayed at 3,963 B and decisions 36, 37/38, 55,
+58, 62, 66 (the shared client crate's own lifecycle) moved **byte-for-byte** into new
+`embarch-api/decisions/client-crate.md` at 10,817 B. Both clear of the 11,059 B reserve floor,
+nothing deleted, no hunk to quote. The seam was already in the file; it just had no filename.
+
+**The underlying defect:** decision 37/38 closed with *"The alert and enrolled-board mirrors still
+have that coupling unpinned"* — false since `api/066` landed the previous day. That unit removed
+the claim from `open.md` and fixed two test doc-comments, and left the **decision file**, the one
+place a reader goes for "is this still true", asserting the pre-`core/024` state. It now reads
+"Both mirrors are now pinned" and names `alert_round_trips_against_the_client_s_pinned_shape` /
+`enrolled_board_round_trips_against_the_client_s_pinned_shape` and `tasks/core/024`.
+
+**Two bookkeeping corrections landed in the same fold, both found by measurement rather than by
+the task.** `tasks/api/060` closed `done`: `embarch-api/open.md` is 3,469/5,120 B — **67.8%, out
+of reserve by 451 B** — so its debt is paid, and *not by a further squeeze*. Later units simply
+deleted bullets that had stopped being open questions. **That closes a byte count and does not
+close the argument the task was really about**: two passes each squeezed that file to single
+digits from the floor and each deleted a fact recorded nowhere else, and the claim that the 5 KB
+cap is the wrong lever — made there and independently in `tasks/core/036` — is still unanswered
+and still `DOC-BUDGET.md`'s to answer. The size ledger went 14 dated entries to 13.
+
+**Merged:** `agent/api/067-core-link-37-38-pinned` (code **none** — the `embarch-api` branch
+carried zero commits and its tree is byte-identical to `main`, because `api/066` had already
+landed the code half; doc `d048f67`), plus this fold's own three-citation fix. Ownership check base
+`05c0f202b7a0` after rebasing onto this leg's claim commits, 8 changed paths, all owned by the
+`api` worker. Gate 11/11 green on the merge result and again after the fold fix. No `embarch-api`
+`cargo` run: nothing to run it against.
+**Blocked:** nothing.
+**Reviewer:** 1 finding — inbox/api-067-stale-core-link-citations.md (deleted after being acted on
+in this fold). It swept for citations of the six moved decisions **by path** and found three the
+diff had missed — `history/api.md:50` (decision 62), `decisions/tests.md:32` (decision 55),
+`decisions/hardware-selection.md:59` (decision 58) — all still pointing at `core-link.md`. All
+three repointed at `client-crate.md`. **Worth noting that the gate was green with all three
+wrong:** `check-decision-refs.py` passes a citation whose decision number is real, and a verbatim
+split moves the body without changing a number, so **a split is precisely the operation this
+check cannot see.** The reviewer also re-derived the split verbatim-ness itself rather than taking
+the worker's word, and confirmed `tasks/api/061`'s `Compacts:` line only ever named the one file.
+**Hardware debts:** none. Unchanged and still the owner's: `core/015`'s native Windows build of
+`embarch-core`, `umbrella/037`'s corrected check 13, and `embarch-outpost`'s ztest suite.
+**Budget:** PROCEED at both ends, weekly 29.7% → 30.0% of a 90% cap, resets in ~106h; suggested
+wave 6.
+**Least sure about:** unparking a `blocked` task on my own reading of its block text. The text was
+explicit and `.claude/leg.md` sanctions exactly this move, but `blocked` is supposed to mean
+"nothing here can be done" and I decided it did not — if that reading is wrong, the failure mode
+is a supervisor talking itself past parks generally, which is worse than the byte it saved.
+
+---
+
 ## 2026-09-11 20:11 — umbrella/052 the guard that exists because a check shipped eighteen stray spaces twice can now see all seventeen checks
 
 **Decided:** nothing suite-wide. `doctor.rs`'s stray-space guard could not reach **checks 4 and 12**:
