@@ -97,6 +97,71 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 11:03 — suite/020 (a) the gate was drawn around the module, and the seven mirrors were the bill
+
+**Decided:** **approved and executed on the owner's behalf under `ops.md` §4's silence-as-consent
+window, which leg 099 opened at 10:23 and this leg COMPLETED rather than restarted.** Re-polled the
+thread at 10:49 (26 min in) and again after it closed at 10:53: no objection, and no human message of
+any kind in `#embarch-fleet`. **And I ran only half (a)**, exactly as leg 099's scoping said to —
+half (b) is now `tasks/suite/035` with its own window owed when it runs.
+
+**The decision itself.** `embarch-topology` gated `serde` together with `probe-rs` and `serialport`,
+and gated the whole `hardware` module on that one feature. But the seven types at the *top* of those
+files — `EnrolledBoard`, `Alert`, `DetectedPort`, `SignalLink`, `Route`, `SignalDirection` — are plain
+serde data, the facts Core serves over HTTP; it is the functions *below* them that read a probe. So
+the standing rule "nothing outside Core links `probe-rs`/`serialport`" — which is right and is not
+what was wrong — was costing `embarch-api/crates/embarch-core-client` seven hand-written copies of
+data it was forbidden to reach, each with a comment explaining the type was unreachable. **New `wire`
+feature: `serde` and nothing else; `hardware` implies it.** Under `wire` alone the module compiles to
+its types and every probe read, port enumeration and `enrollment.toml` write is `#[cfg]`-ed out.
+`cargo tree -e normal --no-default-features --features wire` is `anyhow`, `serde`, `tracing` — which I
+ran, rather than reasoning about it.
+
+**Two judgement calls worth the next leg knowing.** (1) **`DetectedPort::detected_by` had to become a
+`String`** — a `&'static str` field cannot derive `Deserialize`, and a wire type a client cannot
+deserialize is not a wire type. Every value it holds is still one of the same four constants, and I
+re-ran `clippy --all-targets -- -D warnings` on all four consumers plus `bin/main.rs` after it.
+(2) **The types stay where they are.** Moving them to a top-level `wire` module — leg 099's other
+option — means rewriting `super::`-relative intra-doc links throughout, turning a mechanical change
+into a large non-verbatim diff in a crate four repos build against. `hardware/mod.rs` already
+`pub use`s all seven, so gating in place is invisible to every consumer.
+
+**Decisions 4 and 8 were qualified, not rewritten, and the qualification says they are still false.**
+Both assert there is nothing left to mirror once everyone links the crate. Each already carried a
+2026-09-08 qualification about mirrored *logic*; this adds the *data* half, and **both new clauses say
+outright that the sentence is not true as written until `suite/035` lands.** Leaving that visible was
+the point — the alternative is a decision that reads as finished work.
+**Merged:** no branch and no worker — a `suite` task is the supervisor's own hands (§8). One content
+commit to `embarch-topology` `main`, `e2725ce`; one to `embarch-doc` `main`, `94d703e`; fold below.
+Gate: `check-docs.py` 11/11, `embarch-topology` `cargo build`/`test`/`clippy --all-targets` clean at
+`--all-features`, at `--no-default-features --features wire`, and at default, plus
+`clippy --all-targets -- -D warnings` re-run clean in `embarch-core`, `embarch-api`,
+`embarch-umbrella` and `embarch-ui` against the changed crate.
+**Blocked:** nothing. `tasks/suite/020` is `done` for half (a); `tasks/suite/035` carries half (b).
+**Reviewer:** no findings. It did the check I most wanted a second pair of eyes on and did it
+concretely: every consumer of `detected_by` across all four repos plus `bin/main.rs` either formats
+or serializes the value or already holds its own `String`-typed mirror, and `embarch-ui`/
+`embarch-umbrella` never reference `DetectedPort` at all — so the `&'static str` → `String` change
+breaks nothing. It also verified no type is reachable under `wire` with a derive or a field type
+still behind `hardware`, and that `spec.md`'s three-feature paragraph matches `Cargo.toml` exactly.
+**Hardware debts:** none directly — but this is a change to the crate `embarch-core` links, so it
+joins the pile riding on **`core/015`'s outstanding native Windows build**, which is the owner's and
+still open. Nothing here reaches the running service until that runs.
+**Budget:** PROCEED at start and end; weekly 43.5% of a 90% cap, resets in ~92h, wave 6.
+**Least sure about:** **I did this in the `embarch-topology` MAIN checkout, with three workers in
+flight, and it was not safe.** That checkout is the path-dependency sibling every `core`/`api`/`ui`/
+`umbrella` worker symlinks into its worktree, so for a few minutes my half-applied edit was a syntax
+error in *their* builds — `core/048`'s worker hit it, correctly diagnosed it as another actor's
+concurrent work, refused to touch it, and waited it out. It cost nothing this time. **A `suite` task
+that edits a linked crate needs its own worktree, or it must not run beside workers in the repos that
+link it, and `.claude/leg.md` says neither.** That is a rule-file gap, so it is not mine to fix —
+it is the most useful thing in this entry. Second: the change is large and mechanical (33 `#[cfg]`
+attributes across five files) and I applied part of it with `sed`, which mangled eleven function
+signatures (`pub fnnow_utc_ms`) before I caught it in a grep. The compiler would have caught it too,
+but a supervisor editing shared code with `sed` is a worse actor than a worker editing it with Edit.
+
+---
+
 ## 2026-09-12 10:58 — umbrella/057 a repo-wide invariant that walked one file, and exempted the half the defect lives in
 
 **Decided:** **an exemption has to be structural, not a pattern that happens to match** — and the
