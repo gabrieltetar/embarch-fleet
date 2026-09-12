@@ -97,6 +97,50 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 11:15 — dev-bench/019 a filename cleared out of eleven comments, and the section numbers left riding along
+
+**Decided:** nothing new — this applied the citation form settled in `api/052` to eleven C comments
+in `app/src/eap.h`, `eap_interp.h` and `eap_interp.c` that named an
+`embarch-study-designer/design.md §3` deleted in that repo's four-file split. Numbers unchanged (58,
+59, 61 in `decisions/protocols.md`; 60, 62 in `decisions/protocol-exec.md`), each confirmed
+resolvable. The reviewer went further than resolvability and read the three bodies where **one
+decision was being asked to carry three unrelated claims** — decision 60 for the
+`has_otherwise`/`otherwise` distinction, decision 60 again for integers-only session variables, and
+decision 61 for `WriteField`/`WriteAction` — and all three hold, decision 60 literally saying
+"Session variables are therefore integers only".
+**The worker held its bound and that was the point.** `embarch-dev-bench` carries **247** such
+citations; this unit was scoped to three files and filed the other six as `tasks/dev-bench/020`–`025`,
+each stating in its own body that its decision numbers are **unverified** — only the dead filename and
+the per-file counts are confirmed. That honesty is what makes those six dispatchable without
+re-deriving this one's work.
+**I found one residual in the merge diff and filed it rather than widening the unit:**
+`tasks/dev-bench/026`. Six `§` references survive in the three files — `§4.9` five times and
+`§3 decisions 31/32` once — and they now **dangle**, because the filename they belonged to is gone
+and `embarch-study-designer/spec.md` has seven sections and no §4.9. Before this unit the section
+number was wrong-but-attributed; now it is wrong and unattributed, which reads as well-formed and is
+therefore worse. `026` also asks whether `020`–`025` carry the same residue, so those six can be
+corrected to cover both halves instead of repointing filenames twice.
+**Merged:** `agent/dev-bench/019-eap-trio-citations` (code `0eabb81` in `embarch-dev-bench`, parent
+`a0bf1d8`; doc `00ae49f`, parent `6ebc5e4`). Doc branch rebased onto `topology/034`'s fold first.
+Gate green on both merge results: `check-docs.py` 11/11, `check-client-names.py --repo
+embarch-dev-bench` clean, `check-ownership.py` green on **both** halves, `gcc -fsyntax-only` clean on
+`eap.h`/`eap_interp.h`. **No `cargo` anything: `embarch-dev-bench` has no `Cargo.toml`.**
+**Blocked:** nothing. Task `019` closed `done`; `020`–`026` are new and open.
+**Reviewer:** no findings.
+**Hardware debts:** none new, and **none cleared** — the Zephyr `tests/unit` ztest suite still cannot
+be built from a worktree (no `west`, no `ZEPHYR_BASE`). That is the standing debt, not this unit's;
+comment-only edits cannot change firmware behaviour, so nothing here needs a board to be believed.
+**Budget:** PROCEED; weekly 44.5% of a 90% cap, wave 6, unchanged from leg start.
+**Least sure about:** whether filing `026` was the right call against simply fixing the six `§`s in
+the fold. I did not, because deciding what `§4.9` *should* say is research — one of the six may want
+deleting, and `eap_interp.h:14`'s "§3 decisions 31/32" points at `embarch-study-designer`'s **GATT**
+decisions, which is a different claim from the other five and needs its own read. A supervisor
+guessing at that in a fold commit is the shape `core/008` got wrong. But it does mean the three
+files this unit touched are in a *slightly* worse state for a reader than before, until `026` runs,
+and that is a real cost I chose.
+
+---
+
 ## 2026-09-12 11:11 — topology/034 one line of a file got the citation form right and another got it wrong
 
 **Decided:** nothing — a one-word source-comment repoint, and the narrowest unit this leg will run.
