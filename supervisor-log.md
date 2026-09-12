@@ -97,6 +97,35 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 21:30 — core/042 a route count that outlived the route it was counting
+
+**Decided:** `embarch-core/open.md` claimed decision 42's auth sweep asserts *"all 27 registered
+routes"* answer `401`. The router registers **26**, and `decisions/auth.md` already said so —
+*"All 26 registrations are one contiguous block in `api.rs` today (`GET /logs/stream` retired)"* —
+so the 27 was a stale pre-retirement count that survived the retirement it should have been updated
+by, and the two docs disagreed with each other. Fixed to 26. **The interesting half was the second
+number and the answer was "change nothing":** `DOCUMENTED_ROUTE_COUNT = 25` and `AUTH_CASES`' 26
+rows are two correct counts of two different things — `.route(` call sites versus auth cases, one
+apart because `/signals` chains `.post().get()` on a single `.route()` — and `src/api.rs` already
+says which is which in comments beside both, as `embarch-core` decision 46 designed. The task was
+written to allow exactly that verdict rather than pushing one number onto the other, and both the
+worker and the reviewer reached it independently against the source.
+**Merged:** `agent/core/042-auth-route-count` (doc `d30537d`; **code branch had a zero diff** and
+was never merged — nothing in `embarch-core` needed changing). Ownership check green, 3 doc paths,
+all `core`-owned. Gate on the merge result: `check-docs.py` 11/11. No `cargo` run on `embarch-core`
+for this unit, because the code tree is byte-identical to `main`.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none — a doc count and no behaviour, so nothing here rides on `core/015`'s
+outstanding native Windows build.
+**Budget:** PROCEED, weekly 31.0% of a 90% cap.
+**Least sure about:** accepting "no code change needed" from a worker on the half of the task that
+asked it to read two counts and judge. The reviewer was pointed at that question rather than at the
+diff and confirmed it against `src/api.rs` directly, which is the only reason this reads as settled
+rather than as taken on trust.
+
+---
+
 ## 2026-09-11 21:10 — api/068 a wrapper that re-introduced the conflation one layer above the fix
 
 **Decided:** **recovery, not a re-run.** Leg 086 died after dispatching this task; its worker finished
