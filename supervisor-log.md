@@ -97,6 +97,52 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 22:11 — topology/030 a comment that told a maintainer the only silicon on the bench was unchecked
+
+**Decided:** nothing new, and **deliberately so** — this unit's whole risk was that fixing it would
+create a decision by accident. `compare_self_reported`'s rustdoc said, in bold,
+*"`esp32c5` has a declared relation; nothing else does"*, with the Nordic arm
+(`c if is_nordic_deviceid_chip(c) => nordic_expected_self_report(jtag_read)`) sitting fourteen lines
+below it in the same `match`. `embarch-topology/spec.md:83` has said *"Two chip families have a
+declared relation"* all along — so the stale copy was the one a maintainer reads **while standing in
+the code**, and it told them the check was an unverified `Undeclared` for the only silicon this bench
+has ever had attached. That is the reading most likely to make someone skip a real same-chip check.
+
+The task file carried an explicit "sharp edge" section, and it was the point of the unit: `open.md`
+records the nRF54L device-ID address as confirmed on **one** board, with
+`nRF54L10`/`nRF54L05`/`nRF54LM20A` taking the same arm with no silicon ever attached and the DUT's
+own readback uncorroborated. A comment saying the Nordic relation is *verified* would have promoted a
+stated fact to a measured one. The merged text says **"declared and derived, not verified across the
+family it covers"** and names both limits; I read the diff myself before merging (a shared crate) and
+the reviewer then checked the claim against decision 21's *body* rather than its heading and agreed.
+
+**The worker found a second instance unprompted**, which is the result worth carrying: the
+module-level doc said *"only the two chip families this suite's real hardware actually uses are
+implemented"*, a count that predates the same-day STM32G0 arm. It now **names** the families
+(Nordic, ESP32-C5, STM32G0) instead of counting them, so the next arm does not reopen the drift —
+the right repair for a count that keeps going stale.
+**Merged:** `agent/topology/030-self-reported-rustdoc` (code `cc8bab9`, doc `752ed2f`). Ownership
+check bases: doc `e0be3735f158`, 2 changed paths, all owned; code `8929ced81bfd`, whole tree owned.
+Gate green on the merge result: `embarch-topology` `cargo build` / `test` / `clippy --all-targets --
+-D warnings` **and** `clippy --all-targets --features hardware -- -D warnings` clean (72 tests under
+`hardware`), `check-client-names.py --repo` clean, `check-docs.py` 11/11. Comment-only: no `match`
+arm added, removed or reordered, no signature touched.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none created, and one **clarified rather than closed** — the nRF54L family's
+unattached silicon is now stated in the code as well as in `open.md`, which makes it visible to
+someone reading the function, but nothing here attaches a board. The bench was unplugged for this
+whole leg (`/status` reported `"probes": []`), so `tasks/api/059` was left `open`, not `blocked`, per
+`.claude/leg.md`.
+**Budget:** PROCEED at leg start and at exit, weekly 32.9% of a 90% cap, suggested wave 6.
+**Least sure about:** whether filing the *sharp edge* section in the task was what produced the
+careful answer, or whether the worker would have got there anyway. I wrote it because this is the
+error class the suite has already paid for, and it is the only part of my own task-authoring this leg
+that I would call load-bearing — but a single clean unit is not evidence either way, and I would
+rather the next leg knew I was guessing about the mechanism than assumed it was established.
+
+---
+
 ## 2026-09-11 22:02 — ui/029 a decision that counted two things and three things in one sentence
 
 **Decided:** that `assets/brand/embarch-mark.svg`'s literal `#e74c3c` is a **deliberate exception**
