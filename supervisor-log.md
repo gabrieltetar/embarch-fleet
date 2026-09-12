@@ -97,6 +97,66 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 20:48 — core/041 an unplugged board was reported with the one phrase that means "wake the owner up"
+
+**Decided:** `embarch-core` decision 59 — **a detached probe and a wrong board are two conditions,
+not one**, and `POST /validate` now says which: `kind: "not_attached"` (503, no `fix_it_url` —
+the fix is a USB cable, not the Topology tab) against `kind: "mismatch"` (409, unchanged). Found
+live, not by reading: selecting the bench unit `api/059` returned *"topology mismatch for role
+'dev-bench' ... is not currently attached (recorded hardware_id 6fcddc36cb781b71, **live None**)"*.
+The lead and the body named different conditions, and **`live None` is not a mismatch — nothing
+was compared.** This matters because `.claude/leg.md` gives the two opposite handling in
+consecutive bullets: not-attached leaves the task `open` and the leg moves on, a real mismatch
+**alerts the owner**. So the error's first two words route an unattended supervisor to wake
+somebody up over a cable nobody plugged in — and, worse in the other direction, train the phrase
+that means "decision 20's failure is happening" to mean "nothing is plugged in". The worker
+checked the other call sites on instruction and found `flash`/`reset`/`run_study` conflating the
+same pair under a single `{e:?}`; those now render distinguishing leads too. Four tests pin both
+arms; no hardware needed, since the arms differ only by `Some(id)` vs `None`.
+
+**A second parked compaction paid by split, in as many units** — `decisions/surfaces.md`, 269 B
+from its floor and parked by `tasks/core/038` on `In flux: yes`, split along its own pre-existing
+section header into `decisions/enrollment.md` (decisions 25, 27, 28, 50, 54, 57). `core/038`
+closed. The size ledger went 14 dated entries at the start of this leg to 12.
+
+**Merged:** `agent/core/041-not-attached-is-not-a-mismatch` (code `f1c18cc`, doc `7942e4f`).
+Ownership check bases: code `31a2e0960929` (code repo, whole tree owned, 2 paths), doc
+`82c62a5ba6a0` after rebasing onto `api/067`'s fold, 8 paths, all owned. Gate green on both merge
+results: `check-docs.py` 11/11, `embarch-core` `cargo build`/`test` (195 passed, 2 ignored)/`clippy
+--all-targets -- -D warnings` clean, `check-client-names.py --repo embarch-core` clean.
+**Blocked:** nothing.
+**Reviewer:** 1 finding — inbox/core-041-stale-surfaces-citations.md (deleted after being acted on
+in this fold). **Three more stale citations from a verbatim split, in the same leg as the last
+three, and the gate was green for both sets** — `tasks/topology/011:45` and
+`embarch-topology/decisions/enrollment.md:29` (decision 25, both citing `surfaces.md:30` by line)
+and `tasks/umbrella/045:34` (decision 57). **Two of the three are cross-repo**, which no
+sub-project worker could have found. All repaired here, by decision number rather than by line.
+**Say this loudly, because it is the leg's most important finding and it is structural:** a
+verbatim split is the one operation `check-decision-refs.py` cannot see — the number stays real,
+the old file still exists, nothing is deleted — and it is the operation `DOC-COMPACTION.md` §2
+pushes every compaction toward. Six citations broke this way in two units and **every one was
+caught only because a reviewer was spawned and told to sweep by hand.** Filed as `tasks/doc/044`
+with all six as its fixture. The reviewer also declined to file one honest nit that deserves
+recording: decision 28's moved copy **gained** an appended forward-pointer to decision 59, so
+"moved verbatim" is not literally true for that one entry. And it checked the 503 reuse against
+decision 14's `503 on contention` — distinguishable by response shape and endpoint, same retry
+semantics, no client branching on a bare status — and found no contradiction.
+**Hardware debts:** **the bench is unplugged.** `GET /status` returned `"probes": []` and
+`validate dev-bench` returned `live None`, so `tasks/api/059` was attempted and left **`open`, not
+`blocked`** — a board coming back is normal and needs no human to un-block anything. Also:
+`scripts/fleet-hardware.py`'s buffer claimed `attached: yes` for both roles and was **5,902
+minutes stale**, with `--refresh` broken (`tasks/doc/041`) — **the buffer's attach state is not
+usable for selection right now and the live check is the only answer.** This change also joins the
+queue waiting on `core/015`'s native Windows build, which is the owner's and still outstanding.
+**Budget:** PROCEED throughout, weekly ~30% of a 90% cap, suggested wave 6.
+**Least sure about:** the 503. The reviewer's argument that `not_attached` and `hw_lock` contention
+share "transient, retry later" is good, but two different conditions now answer with the same
+status code on the same service, and what distinguishes them is a body field — which is exactly
+the shape `embarch-core` decision 12's deferred `{code, message, cause}` body exists to fix, and
+which is still deferred.
+
+---
+
 ## 2026-09-11 20:24 — api/067 a decision that outlived its own correction, and the file it lives in split rather than squeezed
 
 **Decided:** two things, and the first is a dispatch decision worth carrying forward. **A `blocked`
