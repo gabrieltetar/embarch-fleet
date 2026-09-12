@@ -97,6 +97,86 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 12:45 — suite/035 the seven mirrors come out, and the tests that pinned them stay
+
+**Decided:** three things, and the second is a deliberate departure from what the task asked for.
+
+**(a) `embarch-api` decision 72.** `embarch-core-client` stops hand-mirroring
+`embarch_topology::hardware`'s `EnrolledBoard`, `Alert`, `DetectedPort`, `SignalLink`, `Route` and
+`SignalDirection` and names them, via that crate's `wire` feature (`embarch-topology` decision 31,
+landed by `suite/020` earlier today). Manifest is `default-features = false, features = ["software",
+"wire"]` — **not** the `features = ["wire"]` the task text specified, which would have dropped
+`software` and broken `client.rs`'s `ProbeOutcome`/`TopologyClass`. Old `*Response` names survive as
+**aliases**, so no call site in `embarch-api` or `embarch-ui` moves and the shipped crate keeps its
+public spellings.
+
+**(b) The mirror-pinning tests are KEPT, and the task said retire them.** `tasks/suite/035`'s
+"Done when" asked for the retirement of `client.rs:1875-2126` recorded as a numbered decision. I
+did not retire them. The argument: the compiler now subsumes *mirror* drift — two structs that
+never meet — but it subsumes nothing about a Core **already deployed**. Rename a field on the
+shared type and client and Core change together, compile clean, while every running Core and every
+`enrollment.toml` on disk still speaks the old name. The pinned JSON literals are the only thing
+positioned to notice, and `embarch-core` pins the same strings from its side. So they stay,
+re-scoped in their own doc comments from "our copy matches theirs" to "the wire has not moved under
+a deployed Core". **This is a supervisor overriding a written task under full delegation; if it is
+wrong, decision 72 is where to reverse it.**
+
+**(c) `embarch-topology` `Alert` gains `PartialEq`, `DetectedPort` gains `PartialEq`/`Eq`**, because
+the retired mirrors carried derives the originals lacked. Two derives upstream beat one copy kept
+alive to hold them.
+
+**Merged:** `agent/suite/035-retire-mirrored-topology-types` (`embarch-api` `7d817a3`) and
+`agent/suite/035-wire-derives` (`embarch-topology` `83af7ed`). Doc side in this fold commit.
+Pre-merge tips for revert reference: `embarch-api` `88f9095`, `embarch-topology` `2382d7a`.
+
+**Announcement window: inherited, not restarted.** Leg 101 announced at 11:08
+(`ts 1789232916.230899`, no `--action`, silence-as-consent) and hit its unit cap before the 11:38
+close, leaving the task `open` with the `ts` in the file — which is exactly what `.claude/leg.md`
+asks for. I re-polled `fleet-read.py --thread` at 12:21, 73 minutes after the announcement: one
+reply, written by an app, and **no human message of any kind in `#embarch-fleet` across both legs.**
+Window closed unobjected, clock not restarted, no second announcement posted. **The handoff
+mechanism works**, and this is the first entry in this log that can say so from the receiving end.
+
+**Also in this commit, and it is not incidental:** `embarch-api/decisions/client-crate.md` was
+**compacted**, discharging `tasks/api/073` (a `blocked` size debt due 2026-09-25). Decision 72 is
+~1.9 KB and the file had 649 B of headroom, so writing the decision *required* paying the debt —
+`.claude/leg.md`'s rule that the actor making the flux is the one who compacts, applied to the
+supervisor for once instead of to a worker. 11,639 B → 10,947 B, out of reserve with room to
+spare, every item on `api/073`'s `Must not delete:` list carried. `tasks/api/032` was already gone,
+closed by an earlier leg, so that "Done when" item was moot.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings — and this one was asked three specific questions rather than the usual
+open read, because a `suite` unit is the supervisor's own hands and gets no other outside look. It
+confirmed that (b)'s override reverses no standing decision (nothing in `embarch-api` or
+`embarch-core` says the pinned literals existed only to guard the mirrors), that every item on
+`api/073`'s `Must not delete:` list survived the compaction, and that decisions 4 and 8's new
+"holds now" claims match the landed code. That is a clean read of the thing I was least sure
+about; it is not the same as the owner having seen it.
+
+**Hardware debts:** none created. One **deepened, and it matters more than usual**: this changes a
+type `embarch-core` serves, and the running Core on this machine is the Windows service built from
+the rsync target — so `core/015`'s outstanding native Windows build now gates a **wire-adjacent**
+change rather than another doc fix. Nothing here is wrong against the deployed Core (the pinned
+literals are unchanged, which is the whole of decision 72(b)), but the gap between what `main` says
+and what is running is now wider in a place where that gap is expensive. `embarch-ui`,
+`embarch-umbrella` and `embarch-core` were all built against the landed change and all three
+`cargo tree -e normal` clean of `probe-rs` and `serialport`, which is the check the task asked for
+across all three rather than only the crate being edited.
+
+**Budget:** PROCEED throughout (weekly 45.4% of a 90% cap at leg start, resets in ~91h), wave 6
+suggested, three workers used — the queue offered three distinct scopes and the fourth unit was
+this `suite` task, which is the supervisor's own hands by rule.
+
+**Least sure about:** decision 72(b), and I want the next reader to weigh it rather than inherit it.
+I overrode an explicit "Done when" on a judgement about deployment skew, and the evidence for that
+skew is a standing gotcha (`the MCP binary goes stale`) rather than an observed break of these
+specific literals. The cheaper reading — that the literals were always only about the mirrors and
+are now dead weight — is not obviously wrong, and it is what the task's author believed. What
+tipped it: **`core/015`'s native Windows build is outstanding right now**, so a deployed Core
+running older code is not hypothetical on this machine today.
+
 ## 2026-09-12 12:37 — ui/040 twenty-two comments cited decision numbers this sub-project has never issued
 
 **Decided:** nothing suite-wide. The convention being applied is already settled
