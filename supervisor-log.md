@@ -97,6 +97,69 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 20:57 — suite/022 the only safety guidance in the suite named 7 of 29 tools and omitted every destructive one
+
+**Decided:** ran a `suite` task under `ops.md` §4 — announced at `ts 1789179351.424089`, channel
+re-polled at the close and twice in between, **0 actionable, no objection**, executed as the leg's
+last unit. Two corrections to `suite/user-guide.md`, the one doc `embarch.md` §6 sends a newcomer
+to first, both confirmed against code rather than taken from the task:
+
+**§6 denied an affordance that exists.** It said there is *"no auto-discovery the way `doctor` and
+`init` have"* and that without `--config` or `EMBARCH_API_CONFIG` *"every one of these — including
+`list-projects` — exits immediately."* Resolution is actually three steps, the third being a
+cwd-upward search for `embarch/embarch.toml` (`embarch-api` decision 25, whose rationale is that
+*no single `EMBARCH_API_CONFIG` value is ever correct* across several firmware repos). §6 now
+leads with that case — §5 has just left the reader standing in it — and the code block `cd`s in
+rather than exporting. **The belief was self-reinforcing and the fix says so**: an export makes the
+search unreachable, so the reader never discovers it, and the first thing that breaks is the exact
+case decision 25 exists for.
+
+**§7.1's permission split — the suite's only safety guidance — named 7 of 23 tools, and the
+surface is 29.** It had drifted again between the task being filed on 2026-09-06 and being run.
+Every tool is now on one side or the other, classified against **each tool's own description
+string** rather than by the look of its name: 17 allow (reads, plus `build`/`build_dev_bench`,
+whose descriptions say outright *"does not touch hardware"*), 12 ask. `run_study` and `validate`
+each get a sentence — the first builds and flashes from the working tree as it stands on **both**
+boards, the second is the only non-destructive entry on the ask side but still attaches to the
+probe. A newcomer following the old §7.1 left six hardware-touching tools at their client's
+default.
+
+**`embarch-promptu/design.md` carried the stale copy twice** and both are gone: §1's *"nine (and
+growing) MCP tools"* now names no number, and §2's inline copy of the seven-tool split is a
+pointer to §7.1 saying explicitly that the lists are not restated **because a copy is a copy that
+goes stale.** Re-creating this task's own defect one file away would have been perverse.
+
+**The one thing this unit did not do, and it is a real finding.** The task's "no larger than it is
+now" checkbox is **unmet, deliberately**: 23,796 → 25,044 B, **97.8% of a 25,600 B cap with 556 B
+left.** The filer expected both fixes to shrink the file; the §6 fix roughly broke even and **the
+§7.1 fix could not, because an exhaustive split over 29 tools cannot cost fewer bytes than naming
+7.** A squeeze was considered and refused — `api/026` and `api/031` each squeezed a full file and
+each deleted a fact recorded nowhere else — and the part that grew is the part that must keep
+growing by a line per new tool. Filed as **`tasks/suite/030`**, dated **2026-09-18**, carrying
+`suite/004`'s `Must not delete:` for this file verbatim plus a new one (§7.1's lists must stay
+exhaustive, or the defect returns). `suite/user-guide.md` was **deleted from `suite/004`'s
+`Compacts:` line**, not struck through in place — that line is data — because one shared date and
+one shared `In flux:` answer could no longer describe both it and the two files still on it. The
+split argument is written down for the owner: §7 becoming its own `suite/agent-guide.md` leaves
+the guide ~21.8 KB and gives the lists room, **and the only thing blocking it is that a new
+`suite/*.md` needs a `DOC-BUDGET.md` cap entry, which is owner-reserved.** Recorded as a fork, not
+guessed at.
+
+**Merged:** no branch — a `suite` task is executed by the supervisor in the leg worktree, so the
+work is in the fold commit itself. Gate 11/11 green.
+**Blocked:** nothing.
+**Reviewer:** skipped (leg ending at its unit cap — a reviewer would outlive the leg that spawned
+it).
+**Hardware debts:** none new. The bench is still unplugged; see `core/041`'s entry.
+**Budget:** PROCEED, weekly ~30% of a 90% cap.
+**Least sure about:** growing a file to 97.8% of cap in order to fix it. The alternative was to cut
+elsewhere in the same sitting to pay for it, which is the operation that has twice cost this suite
+a unique fact; I chose the visible debt over the invisible loss, but a 556-byte margin on the
+newcomer's first document is thin, and if the owner would rather I had squeezed, this is the
+decision to say so about.
+
+---
+
 ## 2026-09-11 20:48 — core/041 an unplugged board was reported with the one phrase that means "wake the owner up"
 
 **Decided:** `embarch-core` decision 59 — **a detached probe and a wrong board are two conditions,
