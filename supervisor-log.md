@@ -97,6 +97,35 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 21:59 — umbrella/054 a spec that shipped an unbuilt check by counting it
+
+**Decided:** nothing — a count correction, and the sub-project already held the right answer in the
+right place. `interfaces/doctor-chain.md` has said *"1-17 are what the code emits; 18 is designed and
+unbuilt"* for some time; `spec.md:64` said *"an ordered chain of eighteen checks; each emits
+pass/warn/fail plus a concrete fix line"*. The second clause is what made it cost something rather
+than read as a typo: it asserted behaviour for a check that does not exist, in **the file a newcomer
+opens first**. `spec.md` now says seventeen, names the eighteenth as designed-and-unbuilt, and points
+at `interfaces/doctor-chain.md` rather than restating its table. Both the worker and the reviewer
+counted `src/doctor.rs`'s `vec![check1 … check17]` themselves rather than taking the number from
+either doc — which is the whole method for this defect class, since a doc that is wrong about a count
+is exactly the thing not to take a count from. The rest of that paragraph checked out.
+**Merged:** `agent/umbrella/054-doctor-check-count` (code **none** — the `embarch-umbrella` branch had
+a zero diff and this is documentation-only by design; doc `44b203a`). Ownership check base
+`bf56bb7a385a`, 3 changed paths, all owned. Gate green on the merge result: `check-docs.py` 11/11.
+No `cargo` gate run, there being no code change to gate.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none, and it does not touch the two standing `umbrella` ones — check 13's
+`umbrella/037` verification and check 17's two Fail arms (`tasks/umbrella/033`, `Owner: required`)
+both still want a real bench.
+**Budget:** PROCEED at leg start, weekly 32.9% of a 90% cap, suggested wave 6.
+**Least sure about:** nothing in the unit itself. What I am unsure about is adjacent — this is the
+*third* doc-versus-code count defect in three days (`umbrella/037`, `core/042`, now this), the gate
+cannot see any of them, and `tasks/doc/033` is the only queued thing in the neighbourhood. That looks
+like a missing check rather than three coincidences, and nobody has filed it as one.
+
+---
+
 ## 2026-09-11 21:52 — suite/017 one built-in vocabulary, and a served list somebody finally renders
 
 **Decided:** ran a `suite` task under `ops.md` §4. **The window was leg 084's, inherited not
