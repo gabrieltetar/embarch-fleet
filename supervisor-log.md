@@ -97,6 +97,39 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 12:29 — study-designer/034 a doc that promises completeness was one constant short, and the missing one sizes a wire field
+
+**Decided:** nothing suite-wide. One judgement inside the sub-project, made by the worker and
+endorsed here: `MAX_BUILD_ID_LEN` gets **no provenance bracket** at all. `interfaces/limits.md`'s
+header promises every row is `[measured <date>]` or `[assumed]`, and this constant is neither — it
+mirrors another repo's Kconfig range maximum. Rather than invent a fourth marker, the row states
+the derivation in its Sizing column, following `MAX_DECODERS_PER_STUDY`'s existing precedent. The
+reviewer independently found a second precedent (`MAX_VERSION_OVERRIDES`), so the header's marker
+sentence already had a standing exception and this is not a new one.
+
+**Merged:** `agent/study-designer/034-limits-max-build-id-len` (code `<none>`, doc `d8655da`, merged
+into the leg at `c8d9988`). **The code branch carries no commit**: the defect was entirely in
+`embarch-doc`, and the worker pushed the branch empty rather than manufacture a change. Worth
+knowing for anyone reverting — there is nothing to revert on the `embarch-study-designer` side.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** none — a table row in a doc. It does **not** touch the standing
+`core/015` native Windows build or the unplugged bench; nothing here reaches a board. The value
+itself was confirmed against `embarch-outpost/Kconfig:252` (`range 16 128`) rather than trusted from
+the Rust comment, which is the check that would have caught a drifted mirror. It had not drifted.
+
+**Budget:** PROCEED at leg start (weekly 45.4% of a 90% cap, resets in 91h23m), suggested wave 6;
+the leg ran three workers because the queue offered three distinct scopes, not because the budget
+said so.
+
+**Least sure about:** whether "the crate declares 47 constants and the doc lists 47" is a property
+anything will keep true. This unit closed the gap by hand and the next constant reopens it — the
+completeness claim in that header is the only thing asserting it, and no gate reads it. A
+`check-limits-complete.py` is the obvious answer and would be `tasks/doc/`, which is the owner's.
+
 ## 2026-09-12 11:32 — core/049 one bad citation was the seed; the sweep found twelve more, and seven were wrong NUMBERS
 
 **Decided:** nothing new in design terms, but this is the unit of the week worth reading. I filed it
