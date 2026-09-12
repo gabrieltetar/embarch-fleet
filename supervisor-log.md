@@ -97,6 +97,36 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 01:42 — topology/033 the config-mirror bullet was stale, and the answer was in another repo
+
+**Decided:** the extract-or-CI-diff question is **closed and was already closed**, in
+`embarch-umbrella` rather than here. `CoreConfig`/`ProjectConfig` were never `embarch-topology`
+code — they mirror `embarch-api` inside `embarch-umbrella`, where `decisions/mirrors.md` decision 20
+(amended 2026-09-08 and 2026-09-10) settled both strands: `CoreConfig` re-exports
+`embarch-core-client`'s directly, and `ProjectConfig` is guarded by a fixture test against
+`embarch-api`'s own `config.example.toml`. `embarch-umbrella/open.md` had already dropped the
+bullet; `embarch-topology/open.md` kept a copy of it. New `embarch-topology` decision 30
+(`decisions/scope.md`) records why decision 15's topology-extraction precedent does **not** transfer
+to these two: that extraction's trigger was a shared crate that already had to exist, not a count of
+consumers.
+
+**This unit was landed by a successor leg, not the one that ran it.** Leg 084 claimed it, merged
+both halves, and died with the fold half-written — the changelog fragment consumed into
+`history/topology.md` and nothing committed. Nothing was re-run; the merge was already on
+`origin/main` and the reviewer was spawned fresh against both worktree paths.
+**Merged:** `agent/topology/033-config-mirrors` (code **none** — docs-only by design; the code
+branch points at `embarch-topology` `main` with a zero diff, and `4b7ee73` there is an unrelated
+earlier unit, not this one; doc `bc8c5ef`). Ownership check base `bbf15e19ddc9`. Gate green 11/11 on
+the merge result.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none — no source change in any repo.
+**Budget:** PROCEED (weekly 39.5% of a 90% cap), wave 6.
+**Least sure about:** that striking the bullet here rather than cross-referencing it leaves the
+question findable. `embarch-topology`'s answer now lives in its own decision 30, which cites
+`embarch-umbrella` decision 20 — so a reader arriving from the topology side is one hop away, but
+only if they open `decisions/scope.md` rather than `open.md`, which no longer mentions it at all.
+
 ## 2026-09-12 01:30 — ui/031 the reflash limitation is stated where a user meets it, and now somebody has looked
 
 **Decided:** nothing new. The task asked whether `open.md`'s parenthetical "(the run dialog says
