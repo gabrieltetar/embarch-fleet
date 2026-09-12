@@ -97,6 +97,49 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 01:12 — suite/012 the suite's hardest input finally has a worked example, and it is a file a test consumes
+
+**Decided:** the canonical worked study is **`embarch-api/tests/fixtures/self_test_study.json`** —
+the one that ran green against the real bench — and it is canonical **because two committed tests
+deserialize it into `Study` on every run**, so it cannot drift from the type model. The docs point
+at it and show a one-step excerpt; they do not carry a second copy. And the thing a `serde` reading
+will not predict is now stated where a hand-author meets it: **`Action` is externally tagged** —
+`{"BleAdvertise": {…}}`, one key, the variant name — in `embarch-study-designer/interfaces/types.md`
+and again in one line of `suite/studies-guide.md` §1.
+
+**The fixture taught a retired field for eighteen days and nothing could have caught it.** It
+carried `"validations": []`; `Study` has no such field and no `deny_unknown_fields`, so it was
+accepted and silently dropped — `embarch-decision-reversals.md` shape 3 landing inside the only
+example anyone would copy. Removed, and the *reason* it was invisible is now written next to the
+type table: **a key this table does not list is accepted and dropped, so check a hand-authored
+study against the table because nothing else will.**
+
+**One "Done when" item was deliberately not taken, and I filed it rather than stretching the
+window.** The task asked for a `BleConnect` with a `target_address` so §3b's advice has a form.
+That changes what a committed test exercises, against a bench nothing in this fleet can reach, and
+the announcement promised a worked example and explicitly disclaimed schema and reader changes.
+`tasks/api/076` carries it as a **second** fixture — leaving `self_test_study.json` untouched —
+which is the better shape anyway.
+**Merged:** doc `<this fold>`; code `embarch-api` **`7abca3d`**, my own hands, pushed to `main`.
+Gate on the result: `embarch-api` `cargo test` green (44 tests across the binaries),
+`clippy --all-targets -- -D warnings` clean, `check-client-names.py --repo embarch-api` clean,
+`check-docs.py` 11/11.
+**Blocked:** nothing. `tasks/suite/012` closed and removed; `tasks/api/076` filed.
+**Reviewer:** skipped (supervisor's own hands, `suite` scope under a closed announcement window —
+no worker diff to review).
+**Hardware debts:** **one, and it is pre-existing rather than created here.** The canonical example
+is two `BleAdvertise` steps and **no study in this suite has ever reached a DUT** — `studies-guide.md`
+§3a already says the bench half works and the DUT was never involved. Naming the fixture as the
+worked example makes that gap easier to mistake for completeness, which is why §3a now names the
+file right where it says the DUT was not involved.
+**Budget:** PROCEED at start and end (weekly 37.3% of a 90% cap), wave 6.
+**Least sure about:** putting the JSON excerpt in `interfaces/types.md` rather than in
+`suite/studies-guide.md`, which is where a newcomer actually starts. The guide is at **94.2%** of
+its cap behind a blocked compaction task, so a full example there would have spent most of what is
+left — the guide got one pointer sentence instead. If a reader still cannot get to a first study
+from the guide alone, the fix is to unblock `tasks/suite/030` and make room, not to duplicate the
+JSON.
+
 ## 2026-09-12 00:44 — suite/033 the suite decisions file becomes an index, and the debt is paid in the leg that made it
 
 **Decided:** `suite/decisions.md` is now an **index** and the decision text lives in
