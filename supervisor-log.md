@@ -97,6 +97,55 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 21:49 — umbrella/053 the command whose whole job is telling the truth about a deploy, finally able to
+
+**Decided:** `embarch-umbrella/decisions/deploy.md`'s amendment to decision 32 was written *from a
+real incident* — `deploy-core` printed its own correct diagnosis and then "landed, and the service is
+running", twice on consecutive invocations, with the installed binary unchanged and confirmed so by
+hash. It prescribed two fixes. **Neither was in the code**, and nothing carried them as owed:
+`landed()` still compared `std::fs::metadata(..).len()` on both sides, and a missing elevated
+transcript still only *printed a note* before falling through to that comparison — so the exact
+cancelled-deploy shape the amendment describes still exited **0**. Both built now. `landed` takes two
+`[u8; 32]` SHA-256 digests, its parameters renamed so a length cannot reach it by accident; a missing
+transcript returns `EXIT_FAILURE` **before** the digest comparison runs. The adjacent
+`--verify-only` message named a flag that has never existed (`DeployCore` carries only
+`print_script`) — rewritten rather than given a flag, since `--print-script` already hands the
+elevated half to a human outside the process.
+
+**Two judgement calls worth recording.** The worker filed this as a **new decision 50** rather than
+editing decision 32, because 32 is pinned and shrink-only *and* because the amendment's account of how
+the bug was found is the valuable half — a fired condition, not a rewrite of history; that matches
+what `topology/029` did earlier this leg, which is now twice in one leg that the right move on a
+satisfied precondition was to mark it fired. And it declined to narrow decision 32's *"a dialog nobody
+answered versus a dialog that never appeared"* diagnostic, which the task explicitly ring-fenced as a
+separate task; it stayed out.
+**Merged:** `agent/umbrella/053-deploy-landed` (code `6664b48`, doc `b64e000` after rebasing onto
+`study-designer/029`'s fold), plus my own fold fix `6c26fac` in `embarch-umbrella`: the new `sha2`
+dependency's comment cited **decision 33**, which lives in `decisions/schema-skew.md`; the amendment
+it means is 32 and the entry recording the fix is 50, both in `decisions/deploy.md`. Ownership checks
+green on both branches, 4 doc paths all `umbrella`-owned. Gate on the merge result, re-run rather than
+taken from the report: `embarch-umbrella` `cargo build` / `test` (227 tests) / `clippy --all-targets
+-- -D warnings` clean, `check-client-names.py --repo embarch-umbrella` clean, `check-docs.py` 11/11.
+`sha2 = "0.10"` is a new direct dependency of this crate and was already in the suite's lock tree
+transitively; pure Rust, no system OpenSSL, matching the crate's existing rustls choice.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** one, carried not closed, and it is the point of the unit: **nothing here has met a
+real cancelled UAC prompt.** The digest logic and the missing-transcript guard are unit-tested in
+isolation — `same_length_different_content_is_not_landed` pins the exact case the amendment was
+written about — but the live event both defects were found in has not been reproduced. Needs the
+owner running `deploy-core` on the Windows machine, which also waits on `core/015`'s outstanding
+native build.
+**Budget:** PROCEED, weekly 31.9% of a 90% cap.
+**Least sure about:** whether an amendment that prescribes a fix should ever have been able to sit
+unbuilt with nothing tracking it. This one was found by a refill sweep reading a decision against its
+own source — not by any check — and `embarch-umbrella/open.md` did not carry it. **I do not know how
+many other amendments in this corpus prescribe a fix nobody built**, and nothing in the gate can
+answer that. That is a suite-shaped question and I did not file a task for it, because filing one
+requires deciding what a checkable form of "a decision that prescribes" even looks like.
+
+---
+
 ## 2026-09-11 21:43 — study-designer/029 a table that said "every" and was two short
 
 **Decided:** `embarch-study-designer/interfaces/limits.md` opens by claiming it lists *"Every bound
