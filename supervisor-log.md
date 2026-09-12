@@ -97,6 +97,37 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 22:42 — topology/031 a rustdoc value no regime can return
+
+**Decided:** nothing new; a behaviour change was explicitly refused. `src/hardware/port.rs:79-81`
+documented `DetectedPort::detected_by` as returning `"segger-vid-match"`, `"espressif-vid-match"` or
+`"silabs-vid-match"`, and :163 called `NoRecognizedVid` a failure to match one of **three** recognized
+link VIDs. The gate at `port.rs:404` admits **two** — SEGGER and Silabs — and `port.rs:234`'s own
+`NotFound` message says why Espressif is out (its native USB-Serial/JTAG is JTAG-only). With the gate
+*off*, `detected_by` is overwritten to `DECLARED_SERIAL` at :413, so `"espressif-vid-match"` was
+unreachable in **every** regime. The tempting fix is to add Espressif to the gate and make the doc
+true; the task forbade it and the worker did not, because that is a numbered decision and the
+exclusion is deliberate. The doc now says two VIDs and names what the third constant is for.
+
+**Half this unit had already been paid.** The task's first finding — `compare_self_reported`'s doc
+saying *"`esp32c5` has a declared relation; nothing else does"* while the match also carries a Nordic
+arm — was fixed by `topology/030` (`cc8bab9`) before this worker started. It re-verified against
+current source, found the stale text gone, and made no edit rather than inventing one. That is the
+right outcome for a sweep-filed task and the reason each of this leg's three carried an explicit
+"re-check every line number yourself" line: **the sweep read the tree at one instant and the queue
+is not that instant.** Worth repeating in any future scope-spread refill.
+
+**Merged:** `agent/topology/031-rustdoc-drift` (code `5c2a249`, doc `7dd9d73`). Ownership check base
+`04083e2b2a70`, 2 doc paths, all owned. Gate green on the merge result: `check-docs.py` 11/11,
+`embarch-topology` `cargo build`/`test`/`clippy --all-targets -- -D warnings` clean,
+`check-client-names.py --repo embarch-topology` clean.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none — comment-only, and it touches no code path a board would exercise.
+**Budget:** PROCEED throughout, weekly 34.3%, wave 6; three workers ran concurrently without a 429.
+**Least sure about:** nothing in the unit itself. The open judgement is upstream of it — see
+`ui/030`'s entry on whether a sweep-derived task counts as refill.
+
 ## 2026-09-11 22:35 — ui/030 a documented vertex count from a trace that does not ship
 
 **Decided:** nothing new — both halves were drift, and both were paid rather than argued down. Decision
