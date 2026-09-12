@@ -97,6 +97,53 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 10:36 — api/057 the worst debt in the ledger was a park, and a verbatim split was always allowed to clear it
+
+**Decided:** **unparked a `blocked` compaction task and dispatched it, on the split-first rule rather
+than against the flux answer.** `embarch-api/decisions/zephyr.md` was **1,950 B past its cap** — not
+in reserve, *over* — the single worst entry in the ledger, and it had been parked on `In flux: yes`
+since 2026-09-10 with a 2026-10-09 clock. The park's argument is sound and unchanged: this is the
+file every Zephyr-discovery decision lands in (12, 13, 20, 21, 22, 51, 63), so *rewriting* its prose
+now would compact text a near-term unit revises again. But `.claude/leg.md` and `DOC-BUDGET.md` both
+say a verbatim split restates nothing, so `In flux: yes` cannot forbid one — and **the task's own
+`In flux:` paragraph had already named the seam** ("what a call may name and how it resolves" =
+12, 20, 21, 51 vs "what `board.yml`/app scanning trusts" = 13, 22, 63). The park was protecting
+prose from a rewrite nobody was proposing while the file went on growing past its cap. Dispatched
+with a note whose whole content was *split, do not compact*: move three decision bodies byte-for-byte,
+reword nothing on either side. **The reviewer diffed the moved sections character-by-character and
+confirmed all three, including decision 63's three concrete outcomes from the `Must not delete:`
+list.** `zephyr.md` 9.1 KB, new `zephyr-scan.md` 5.7 KB, both clear of reserve.
+**Merged:** `agent/api/057-compact-api` (code **none — the `embarch-api` code branch had a zero diff
+by design**, docs-only; doc `87a8930`). Ownership check base `f1ae8f2cf7c8`, 6 changed paths, all
+owned by the `api` worker. Doc branch rebased onto this leg's claim commits before merging. Gate
+re-run on the merge result: `check-docs.py` 11/11, `check-client-names.py --repo` clean. No `cargo`
+run was owed — nothing in `embarch-api`'s source cites `decisions/zephyr` at all, which I checked
+rather than assumed.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none — docs only.
+**Budget:** PROCEED throughout; weekly 42.7% of a 90% cap, resets in ~92h.
+**Least sure about:** whether unparking a `blocked` compaction task is a supervisor's call at all.
+The rule permits it in precisely this shape and the reviewer confirms the shape held, but I unparked
+**two** in one leg (this and `core/035`), and a leg that treats every park as an invitation to split
+is one park away from doing the shortening pass the park actually forbids. The test I used and would
+keep: the task must already name a seam, and the dispatch note must forbid rewording in words the
+worker cannot miss. `dev-bench/012` says of its own two files "squeezes with no seam" — I left it
+parked, and that is the line.
+**Postscript — this split broke a cross-repo link and the gate did not catch it.**
+`embarch-core/decisions/probes.md` linked straight at `../../embarch-api/decisions/zephyr.md` for
+`embarch-api` decision 13, which this unit moved to `zephyr-scan.md`. The link still *resolves* — the
+file exists — so `check-links.py` is green while the citation is wrong, which is the failure mode
+`DOC-CONVENTIONS.md` already predicts ("link the index, not the topic file"). The worker spotted it,
+correctly refused to reach into another sub-project, and dropped
+`inbox/embarch-core-stale-zephyr-link.md`. **Fixed in this fold** rather than queued, since it is one
+link and this leg caused it: it now points at `embarch-api/decisions.md`, the routing index, which
+survives the next split too. **The general defect is not fixed** — nothing mechanical can tell a
+topic-file link from an index link, so any future mission split can do this again silently. Worth a
+`doc/` task if the owner wants it checked; `scripts/` is not mine.
+
+---
+
 ## 2026-09-12 10:22 — ui/039 a Cargo.toml's own comments were the last place a dead design.md survived
 
 **Decided:** **landed by recovery, not by its own leg.** Leg 098 dispatched this and died before folding
