@@ -97,6 +97,42 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 22:02 — ui/029 a decision that counted two things and three things in one sentence
+
+**Decided:** that `assets/brand/embarch-mark.svg`'s literal `#e74c3c` is a **deliberate exception**
+and not an unfixed third call site — a standalone SVG has no cascade to inherit a custom property
+from, so routing it through `var(--brand)` would not work at all. The task required a verdict either
+way, and this is the one I approved; it is now stated in decision 25 rather than left for the next
+auditor to re-derive.
+
+`embarch-ui/decisions/shell.md` decision 25 read *"`--brand` … is worn by exactly two things — the
+sidebar wordmark and the header glyph … One token, three call sites."* Two and three, one sentence.
+The origin of the three is almost certainly that the token is **declared** twice (`style.css:44`
+dark, `:73` light) and **used** twice (`style.css:124`, `index.html:34`) — a declaration and a use
+counted as the same kind of thing. So the fix is not just the number: the decision now names
+declarations and call sites separately, which is the part that stops it recurring. The reviewer
+re-verified all four line numbers and the `.svg`'s literal against the real assets, and confirmed
+that no other `embarch-ui` decision requires every brand-red pixel to route through the token — so
+the exception contradicts nothing.
+**Merged:** `agent/ui/029-brand-call-sites` (code **none** — the `embarch-ui` branch had a zero diff;
+the task forbids any rendered colour change and the worker correctly made none; doc `5e9cad4`).
+Ownership check base `f0f3331cab86`, 3 changed paths, all owned. Gate green on the merge result:
+`check-docs.py` 11/11; `cargo build` / `clippy --all-targets -- -D warnings` clean in `embarch-ui`
+on an unchanged tree.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. Note the standing `embarch-ui` debt is untouched and unrelated — the
+stale-prefix drop (decision 19) has still never met a real stale prefix, and that is the owner's own
+session (`tasks/ui/007`, blocked).
+**Budget:** PROCEED, weekly 32.9% of a 90% cap, wave 6.
+**Least sure about:** the decision's *argument* survives the correction but is now weaker than it
+reads. Its whole point is that the token's blast radius is small and auditable; with the `.svg`
+carved out as an exception, an audit of `--brand` no longer covers every place the mark's red
+appears. That is honest and stated, but it means "auditable" now means "auditable in two of three
+places", and I did not widen the decision to say so.
+
+---
+
 ## 2026-09-11 22:01 — study-designer/030 a rustdoc that documented the constant above the one it was attached to
 
 **Decided:** nothing — a comment repair with an explicitly recoverable answer, which is what made it
