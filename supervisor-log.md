@@ -97,6 +97,49 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 19:55 — topology/028 a split down a seam the task had already found, and a reviewer that checked "verbatim" byte for byte
+
+**Decided:** nothing suite-wide. `embarch-topology/decisions/validation.md` was at **12,278 / 12,288 B
+— 10 bytes left**, filed the same morning by the owner's own STM32G0 amendment to decision 25. The
+worker **split rather than squeezed**: decision 21 (*the self-report comparison* — what a board says
+about itself versus JTAG) stayed in `decisions/validation.md`, **12,278 → 4,898 B**; decision 25
+(*the classifier* — which register pair holds the ID at all) moved verbatim into a new
+`embarch-topology/decisions/validation-classifier.md`, **8,402 B** against a 12,288 B cap.
+`decisions.md`'s index row split in two; one cross-reference sentence added per file. **No fact left
+the corpus** — the split-first rule paying again without a deletion.
+
+**The reviewer is why "verbatim" is a fact here rather than a claim.** It diffed decision 25's text
+across the move (7,818 B both sides, clean) and confirmed all four of the task's
+`What the pass may not delete` arguments are still present and resolvable: the nRF54H `None`-as-
+*abstention* versus `embarch-core`'s `requires_vendor_tool` *positive refusal*, why the two matchers
+are deliberately not unified, why the STM32 prefix stops at `stm32g0`, and the `read_words` two-word
+compatibility promise for the IDs already in `enrollment.toml`. It also spotted
+`tasks/ui/024:66` still naming `validation.md#25` and correctly scoped it out as a historical task
+log predating the split, not a live citation this unit broke.
+
+**Compaction question, answered by the worker in its own words:** no — `embarch-topology/spec.md`
+alone cannot tell someone how to add the next chip family. It names only that a register pair is
+confirmed against silicon "by an independent mechanism (decision 21)" and points away. The
+classifier's shape lives in decisions by design, and now has a file of its own.
+
+**Merged:** `agent/topology/028-compact-topology` (doc `7e158a1`; **code none** — the
+`embarch-topology` branch had a zero diff, docs-only by design, and the worker said so rather than
+inventing a change). Rebased onto `suite/013`'s fold before merging. Ownership check base
+`98a2cc6c5a7a`, 5 changed paths, all owned. Gate green on the merge result, not taken from the
+worker's report: `check-docs.py` 11/11, `embarch-topology` `cargo build`/`test`/`clippy
+--all-targets -- -D warnings` clean.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none — a documentation split touching no code. The STM32G0 arm it documents is
+still unexercised against real ST silicon, which is the owner's own debt and not this unit's to
+claim or deepen.
+**Budget:** PROCEED, weekly 29.0% of a 90% cap, suggested wave 6.
+**Least sure about:** nothing in this unit. It is the cleanest shape a compaction takes — a task
+that named its own seam, a worker that followed it without rewording, and a reviewer that checked
+the byte-identity claim instead of believing it.
+
+---
+
 ## 2026-09-11 19:53 — suite/013 a leg's uncommitted work recovered rather than redone, and the citation its reviewer caught
 
 **Decided:** power sampling is documented as **deferred** everywhere a newcomer meets it, and a study
