@@ -97,6 +97,43 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 23:52 — api/074 the studies decisions file splits along its own seam
+
+**Decided:** `embarch-api/decisions/studies.md` is split verbatim into `decisions/study-reads.md`
+(27, 28, 31, 33, 39) and `decisions/study-reflash.md` (40, 44), and the old path is kept as a
+**redirect stub carrying no decision text** rather than deleted.
+
+**This task existed because of the unit before it.** `suite/015`'s retirement tombstone is what put
+the file at 95.9% — I filed the debt in the same fold that spent the reserve, dispatched it as this
+leg's next unit, and it is paid within the hour. That is the size-ledger mechanism working end to
+end in one leg rather than a debt parked for a month.
+
+**The stub is the judgement worth recording.** `history/suite.md` links straight at
+`decisions/studies.md` for decision 39, and **a compaction may not edit `history/`** — it is
+assembled, not authored. Deleting the file would have broken a link no one in scope could fix. The
+stub carries `### N — moved to …` per number, so `check-decision-refs.py` still resolves the old
+path, and it is dropped from `decisions.md`'s index because it holds no decisions. The worker chose
+this itself and wrote down why; I would have accepted a deletion plus a `history/` exception request,
+and this is better.
+**Merged:** doc `592a9ba`, `--ff-only`, plus this fold. **Code branch empty by design** — docs-only,
+`embarch-api` main unmoved at `3041549`. Gate on the merge result: `check-docs.py` 11/11 green;
+`check-doc-size.py --pressure` now reads **PAID, 9.1%**, down from 95.9%. No `cargo` run: the
+`embarch-api` tree is byte-identical to `main`.
+**Blocked:** nothing. Task closed and removed (`git rm -f`).
+**Reviewer:** no findings. It diffed the moved prose against `592a9ba^` and confirmed the split is
+byte-for-byte verbatim — including decision 39's `suite/015` blockquote and decision 40's full
+argv/asymmetry text — that all seven numbers are unchanged, that the stub's per-number destinations
+match reality, and that `history/suite.md` is the only remaining external pointer at the old path.
+**Hardware debts:** none — docs only.
+**Budget:** PROCEED throughout (weekly 36.2% of a 90% cap), wave 6.
+**Least sure about:** nothing about the split itself; I checked the five "must not delete" items
+before merging and the reviewer checked them again after. The one thing a later reader should know
+is that `embarch-api` still has **three** files in reserve behind blocked tasks (`client-crate.md`
+94.7%, `surface.md` 91.6%, `interfaces/config.md` 91.1%), and this unit deliberately did not touch
+them — I told the worker in the dispatch note not to relocate text into any of them, because
+clearing one file's reserve by filling another is the failure two legs caught themselves at this
+week.
+
 ## 2026-09-11 23:43 — suite/015 the three fixed-channel study-data aliases are gone
 
 **Decided:** the "one release" grant on `/study/{id}/power-data`, `/waveform-data` and `/gatt-data`
