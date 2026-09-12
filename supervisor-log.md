@@ -97,6 +97,48 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-12 12:34 — dev-bench/020 forty-eight citations of a dead filename, and the bare ones could not be decoded by number
+
+**Decided:** nothing suite-wide. One call worth recording because it will recur in `021`–`025`,
+the five sibling tasks still open: **a bare `decision N` in a `embarch-dev-bench` comment is not
+resolvable by number.** `embarch-dev-bench`'s own decision range overlaps
+`embarch-study-designer`'s, so the same integer is a live decision in both repos, and the citations
+written without a repo prefix (an earlier sentence in the comment block having already named the
+repo) can only be resolved by reading what the surrounding paragraph is about. The worker did that
+rather than decode by number, and the split came out 45 `embarch-study-designer`, 2 this repo's own
+(left bare, matching how its `decisions.md` addresses itself), 1 `embarch-core`. **Whoever takes
+`021`–`025` should expect the same and should not assume the number identifies the repo.**
+
+**Merged:** `agent/dev-bench/020-serial-protocol-h-citations` (code `adbc380`, doc merged into the
+leg at `b1a026b`), plus the reviewer fix `656516b` on `embarch-dev-bench`. Three SHAs for one unit,
+because the fix landed after the merge and before the fold.
+
+**Blocked:** nothing.
+
+**Reviewer:** 1 finding — inbox/dev-bench-020-review.md, **and it caught exactly the failure this
+entry's first paragraph predicted.** The `DevBenchLogLevel`/Zephyr-severity comment had been
+repointed at `embarch-study-designer` decision 39 (the inbound stream-pipeline unification, which
+says nothing about log levels); the on-topic decision is `embarch-dev-bench`'s **own** decision 39,
+`decisions/logging.md`. The comment names both repos in the same paragraph, which is precisely how
+paragraph-matching picks the wrong one. **Fixed in this fold** (`656516b`) rather than left as a
+drop: one comment line, in scope, on a unit still open in front of me. The other four
+`embarch-study-designer` decision-39 cites in that file were checked by the reviewer and are right.
+The drop stays in `inbox/` as the record; it needs no further work.
+
+**Hardware debts:** none new, and the standing one is restated rather than paid: the Zephyr
+`tests/unit` ztest suite (`app/tests/serial_protocol`) still cannot be built from a worker's
+worktree, so the only check this unit could run on the header was `gcc -fsyntax-only`, which is
+clean. That is adequate here — the change is comment text and no firmware behaviour moved — but it
+is not adequate for the `Hardware: toolchain` dev-bench tasks sitting behind it in the queue.
+
+**Budget:** PROCEED (weekly 45.4% at leg start, cap 90%), wave 6 suggested, three workers run.
+
+**Least sure about:** the reviewer found one error in a **spot-check** of the bare-citation class,
+not a full pass over 48. One confirmed miss in a sample is weak evidence that the sample was
+exhaustive, and the base rate this establishes — a repo-attribution error in a class of maybe a
+dozen — says the remaining `021`–`025` should be reviewed the same way and probably will produce
+more. I did not re-check the other 47 myself and I am not claiming they are right.
+
 ## 2026-09-12 12:29 — study-designer/034 a doc that promises completeness was one constant short, and the missing one sizes a wire field
 
 **Decided:** nothing suite-wide. One judgement inside the sub-project, made by the worker and
