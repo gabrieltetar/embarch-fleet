@@ -97,6 +97,46 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 22:27 — study-designer/031 three seals said to follow their spans, two of which do not
+
+**Decided:** nothing new, and the fork was the interesting part. `embarch-study-designer/spec.md` §4 said
+*"three sibling seals … each carried immediately after the one contiguous span it covers, so a hand-written
+C decoder digests one run of bytes per seal"*. `struct Study`'s declaration order — which **is** the byte
+order, postcard being order-defined, and the worker confirmed no serde `rename`/`flatten`/`skip` on any of
+the six fields — is `steps, streams, steps_crc, streams_crc, protocols, protocols_crc`. Only `protocols_crc`
+follows its own span; the step and stream seals are **grouped after both spans**. So the doc moved and the
+struct did not: reordering fields to match the prose is a wire change and a schema bump, which is exactly
+why a sentence aimed at someone writing a C decoder by hand is the wrong thing to satisfy with a layout
+change. The three-sibling-seal argument and the *which third arrived wrong* property both survive intact —
+it was the placement claim that was false, not the design it justified.
+
+**The reviewer earned its keep on the unit's other half.** The worker added the missing `record_checks` row
+to both field tables, and `interfaces/types.md`'s version ended *"a check on **rendering** changes neither
+what dev-bench executes nor what it captures"* — which is `decoders`' rationale (decision 52), not this
+field's. I re-derived the verdict from `src/study.rs:223-234` and decision 70's own body rather than taking
+the reviewer's word: both say the reason is **whether the host checks a checksum afterwards**, and decision
+70 draws that line deliberately, a post-run integrity check being not a rendering concern. Corrected in the
+fold; the drop was deleted once acted on. `spec.md`'s own row had it right, which is what made the swap
+invisible to anyone reading one file.
+**Merged:** `agent/study-designer/031-seal-placement` (code **none** — the `embarch-study-designer` branch
+had a zero diff and this is documentation-only by design; doc `eecafc1`), plus the fold's own one-clause
+correction to `interfaces/types.md`. Ownership check base `60043b87ef9d` after rebasing onto this leg's
+`umbrella/055` fold, 5 changed paths, all owned. Gate green on the merge result and again after the fold
+fix: `check-docs.py` 11/11. No `cargo` gate run, there being no code change to gate.
+**Blocked:** nothing.
+**Reviewer:** 1 finding — inbox/study-designer-record-checks-rationale.md (accepted, fixed in the fold,
+drop deleted).
+**Hardware debts:** none — no field reordering, no wire or schema change, so nothing here needs a board or
+a reflash.
+**Budget:** PROCEED, weekly ~34% of a 90% cap, suggested wave 6.
+**Least sure about:** the debt this filed. `spec.md` crossed into its last 10% (91.3%) on this edit and the
+worker filed `tasks/study-designer/032-compact-study-designer.md` **blocked, §4 in flux** — the second unit
+of this leg to end that way (`api/071` was the first). Two of four units adding a parked compaction debt is
+not obviously wrong, since both files really are mid-change, but it is the pattern `check-doc-size.py`'s own
+note calls the absorbing one, and this leg made it worse by two rather than better by any.
+
+---
+
 ## 2026-09-11 22:24 — umbrella/055 the two commands a machine is set up with, documented as verifying themselves
 
 **Decided:** nothing new — but the fork was live enough to be worth naming. `embarch-umbrella/spec.md`'s
