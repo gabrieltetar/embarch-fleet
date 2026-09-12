@@ -97,6 +97,40 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-11 22:47 — api/072 the doc set contradicting itself on which secret goes on the wire
+
+**Decided:** one thing, and it is a method choice rather than a design one. `embarch-api/spec.md:56`
+said the outbound token resolves *"config `token`, then `token_env`, then machine-wide token-file
+discovery"*. `crates/embarch-core-client/src/token_discovery.rs:12-30` resolves `token_env` **first**.
+Two sibling docs already said so (`interfaces/config.md:24` "**Wins if both are set**",
+`embarch-token.md:23`) and so does the crate's own `lib.rs:94`, so **`spec.md` was the lone outlier
+against three** — which is the whole reason this was a doc fix and not a behaviour fix. The task said
+so explicitly and the worker did not reorder the resolution to match the prose. An engineer debugging
+a `401` with both set would have chased the inline value, which never wins.
+
+**The second half is the one worth keeping.** Decision 58 offered `grep -c 'serde(default)'` on
+`client.rs` as the check a reader runs to confirm its rule is still universal, froze the answer at
+13 attribute lines of 14 hits, and explained the gap as "one hit is a doc comment". The file now
+returns **21** — 18 attributes and 3 doc mentions — so the check no longer distinguishes "new fields
+followed the rule" from "new fields broke it", which is exactly the drift decision 58 exists to
+catch. The worker did not just update the numbers: it replaced them with
+`grep -c '^\s*#\[serde(default)\]'`, **anchored to the attribute so a doc comment cannot move it**,
+and wrote the reasoning into the body. A frozen count in a decision is a check with a shelf life;
+this is the second time this week a number in a decision has rotted quietly.
+
+**Merged:** `agent/api/072-token-precedence` (code **none** — doc-only by design, the `embarch-api`
+code worktree was untouched and its branch never created; doc `1840847`). Ownership check base
+`84792ef6bdf3`, 5 changed paths, all owned. Gate green on the merge result: `check-docs.py` 11/11.
+No `cargo` arm to run, no code changed.
+**Blocked:** nothing. `tasks/api/073-compact-api.md` arrived with the merge, correctly `blocked` with
+`In flux: yes` and a `Size debt due: 2026-09-25` — the correction put `decisions/client-crate.md` at
+94.7% of cap. **`embarch-api` now carries seven open or blocked compaction tasks**, still more than
+any other sub-project and pulling further ahead.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED at start and end, weekly 34.3% of a 90% cap, resets in ~104h; wave 6.
+**Least sure about:** nothing in the unit. The leg-level judgement is in `ui/030`'s entry.
+
 ## 2026-09-11 22:44 — core/044 a decision's "whole remaining work" that was never done
 
 **Decided:** nothing new — decision 56's own unpaid half was paid rather than the decision weakened.
