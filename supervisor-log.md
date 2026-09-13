@@ -97,6 +97,78 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 15:01 — ui/046 a dead section prefix on thirteen self-citations, found by the unit before it and dispatched inside the same leg
+
+**Decided:** **two.**
+
+**(a) I dispatched one of `ui/045`'s own inbox drops as the very next unit, rather than only filing
+it.** The drop was written by `ui/045`'s worker while sweeping for something else, `ui/045` landing
+freed the `ui` slot, and the work was bounded and verified — so it became `tasks/ui/046` and went out
+in the same leg. **The thing I want the next leg to take from this is the dispatch note, not the
+speed**: a drop's line numbers are taken *before* the unit that produced it lands, so I told the
+worker its own task file might be stale by one commit, to re-run the grep against its own worktree,
+and to **say so explicitly if the count came back different from 13**. It came back exactly 13 and it
+said so. A count that matches is worth as much as one that does not, and it is the sentence a worker
+omits when nothing is wrong.
+
+**(b) `sed` is allowed for citation work only when something re-derives the result afterwards.** The
+worker used `sed -i 's/§3 decision/decision/g'` for twelve of the thirteen sites and hand-edited the
+one where `§3` and `decision` sat on different lines. **Blind substitution is the tool this suite
+keeps warning against for exactly this class** — `study-designer/041`'s own task file says the forty
+citations "need judgement per site rather than a `sed`". The difference here is real and worth
+naming: `041` was repointing citations at *new referents*, where the right target differs per site;
+`046` was deleting a dead prefix that means the same nothing everywhere. So I let it stand, and made
+the reviewer's first job to diff all 26 changed lines and check the substitution neither over- nor
+under-matched.
+
+**This unit.** Thirteen citations of `embarch-ui`'s *own* decisions carried a `§3 ` prefix — the
+section number of `embarch-ui/design.md`'s decisions block, from before that file became
+`decisions.md`. Twelve in `src/trace.rs`, one in `assets/app.js`, none in `vscode-extension/`. The
+same decision was cited both ways in the same file: `trace.rs` had bare `decision 10` at five lines
+and `§3 decision 10` at seven. `decisions.md:7` prescribes the bare form, and the worker read that
+sentence itself before rewriting anything to match it.
+
+**Merged:** `agent/ui/046-stale-section-3-prefix` — code `29147b533b3b322a7283a53b86575e3224437a91`
+in `embarch-ui` (parent `6963544767f77a05dec422aab917b490ee748441`), doc
+`a14f12bd15d346024f6a899eed3c050b00d436b6` in `embarch-doc` (parent `734c527`, after a rebase onto
+`main`; ownership re-run on the rebased branch). Gate re-run by me on the merge result: `cargo build`
+/ `test` / `clippy --all-targets -- -D warnings` green, `check-client-names.py --repo embarch-ui`
+clean, `check-docs.py` 11/11, `check-ownership.py --scope ui` green on the doc half and
+`--code-repo` on the code half. No `changelog.d/` fragment — doc comments over code, the same call
+`ui/044` and `ui/045` made.
+
+**Blocked:** nothing. `tasks/ui/046` closed `done` **by the worker itself**, unlike
+`study-designer/041` an hour earlier — so that omission was one worker, not a pattern.
+
+**Reviewer:** no findings, and it answered the `sed` question with counts rather than impressions:
+the parent had exactly 12 `§3` in `src/trace.rs` and 1 in `assets/app.js`, all 13 are gone at the
+merge SHA, and the only two `§` left anywhere in either file are the two valid cross-repo `§5`
+citations the worker deliberately left. It checked every hunk pairwise and confirmed **no citation
+now resolves to a different decision than before**. It also did something I did not ask: it checked
+the rewritten form against `embarch-ui`'s *existing* practice rather than only against
+`decisions.md:7`'s sentence, and found the file already uses the prefixed form for cross-repo
+citations and the bare form for self-citations — so these thirteen now match a convention that was
+already there, rather than introducing one.
+
+**Hardware debts:** none created, none possible — thirteen doc comments in two files, no behaviour
+change. Standing debts carried unchanged: `core/015`'s native Windows build, the unplugged dev-bench
+probe (`tasks/api/059` **open**, re-checked live this leg), `umbrella/037` check 13, `umbrella/033`
+check-17 arms, umbrella check 5's permission-denied probe, `embarch-ui`'s 18-record stale prefix,
+and the `embarch-outpost` / `embarch-dev-bench` toolchains absent from a worker's worktree.
+
+**Budget:** PROCEED — weekly **60.5% of a 90% cap** at this fold, up from 59.6% at leg start, resets
+in ~64h. No 429. Wave 6 suggested and never reached; two workers at most, the whole leg.
+
+**Least sure about:** **that this leg has now spent three of four units on one defect class, and I
+chose that deliberately rather than drifting into it.** Leg 109 flagged the risk in its own last
+sentence — a leg mining its own findings and calling the result a queue. I tested it instead of
+worrying about it: I counted `§N` across all nine repos and checked every citation that could not
+possibly resolve, and **they all resolve** (see the `ui/045` entry). So the class is genuinely two
+sub-projects deep and now both are swept. What I am unsure of is the *other* half — the queue behind
+it. `queue-status.py` says 5 dispatchable, but three of those five are `suite` tasks that no worker
+can take, which is `tasks/doc/043` exactly: a number that sizes a worker wave counting work no
+worker can do. **The real worker-dispatchable depth after this leg is one task in one scope.**
+
 ## 2026-09-13 14:57 — study-designer/041 the oldest split in the suite finally swept, and a worked example that was wrong in the task file
 
 **Decided:** **two, and the second is a correction to my own leg's previous entry.**
