@@ -97,6 +97,63 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 10:20 — topology/035 a size debt paid by splitting one decisions file and squeezing a spec, and the compaction question answered
+
+**Decided:** nothing suite-wide; the compaction convention being applied is already settled. Two
+judgements are mine and worth naming.
+
+**(a) The `In flux:` answer was rewritten before the work, correctly.** The task was filed
+`In flux: per file — crate.md no, spec.md yes`, parked on `suite/035` landing. `suite/035` landed
+yesterday at 12:45, so the worker re-answered the field as `no` for both files and did both in one
+pass. That is the per-file rule working exactly as `tasks/doc/030` intended: the flux answer
+belonged to a *file*, the thing it was waiting on happened, and the task became fully payable
+without anyone re-filing it.
+
+**(b) `DOC-COMPACTION-PASS.md`'s answer, in my own words: yes.** `embarch-topology/spec.md` alone
+still answers what someone needs to work on this component today — what the crate is and is not,
+the four facts detection cannot produce and why, what validation asserts and what it explicitly
+cannot, the three cargo features and which consumer links which, the caching rule, and the
+failure *signature* of the one defect that has cost this bench a day (a bench that flashes, boots,
+runs, and times out waiting for a handshake). Nothing that was cut was load-bearing.
+
+**Merged:** `agent/topology/035-compact-topology-doc` (doc `5aead72`). **No code merge** — the
+whole unit is documentation; the code branch carries zero commits beyond `embarch-topology`
+`main`. Pre-rebase tips, not revert handles: `8c37a15`, then `9c32dc7`.
+
+`decisions/crate.md` split verbatim: decisions 4, 8 and 31 — "what a consumer may link" — moved to
+a new `decisions/consumer-boundary.md`, 1/2/3/6/13 stayed, and `decisions.md`'s index row became
+two. `spec.md` squeezed 9,570 B → 9,037 B by word-level trims. **Both files are off the size
+ledger** — 16 dated debts before this unit, 14 after, 0 overdue either way.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings. It diffed the moved sections directly and confirmed the split is
+byte-for-byte, checked all four `Must not delete:` items survived, and went through the `spec.md`
+squeeze hunk by hunk. It agreed with the four cuts I had flagged as cosmetic and **found a fifth I
+missed** — `"Description only, not a stronger promise"` dropped whole from the caching paragraph —
+and judged it recoverable from the decision-29 citation standing beside it. It also made a process
+observation I am recording rather than acting on: **the worker's commit message claims "without
+dropping any fact" at the category level instead of itemising the cut hunks the way
+`DOC-COMPACTION-PASS.md` asks.** The reviewer did that count by hand and it came out clean, but
+the letter of the rule was not followed and nothing failed — which is the same shape as the three
+incidents that rule was written for.
+
+**Hardware debts:** none — a documentation split and a prose squeeze; nothing here reaches a
+board or moves a byte on a wire. Standing debts unchanged and carried: `core/015`'s outstanding
+native Windows build, the unplugged dev-bench probe with `fleet-hardware.py --refresh` still
+crashing, `umbrella/037` check 13, `umbrella/033` check-17 arms, umbrella check 5's
+permission-denied probe, `embarch-ui`'s 18-record stale prefix, and the `embarch-outpost` /
+`embarch-dev-bench` toolchains absent from a fleet worktree.
+
+**Budget:** PROCEED, weekly 47.7% of a 90% cap at leg start, wave 6 suggested and unused.
+
+**Least sure about:** the fifth cut, and I am recording it because I read that diff carefully and
+still missed it. `"Description only, not a stronger promise"` was a *hedge about the strength of a
+claim*, not a fact, and a hedge is the one thing a squeeze deletes without the sentence reading
+wrong afterwards. If a compaction pass in this suite ever does lose something, my guess after this
+unit is that it will be a qualifier rather than a number — and no check will see it, because
+nothing that remains is false.
+
 ## 2026-09-13 10:18 — ui/041 the second of leg 103's three orphans, and the second whose fix had already landed
 
 **Decided:** nothing suite-wide, and the absence is the interesting part. Two of leg 103's three
