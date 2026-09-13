@@ -97,6 +97,74 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 17:23 — topology/037 a share became two copies on the day the gate changed crates, and only a doc comment ever knew
+
+**Decided:** **three.**
+
+**(a) Documented, not de-duplicated, and the dependency direction is the whole argument.**
+`embarch_topology::hardware::validate::enroll` and `embarch-core::resolve_probe` implement the same
+selection rule — list every attached probe, find by serial if given, else bail unless exactly one —
+and they were **one implementation** until `embarch-core` decision 22 moved the board-identity gate
+wholesale into this crate. `pub(crate)` cannot cross the boundary that move created, so a share
+became two independently maintained copies with nothing failing. **`embarch-core` depends on
+`embarch-topology`, not the reverse** (`embarch-core/Cargo.toml` names the path dep), so this crate
+cannot call core's copy and the only real de-dup runs the other way — core calling a `pub` helper
+this crate would expose, an edit inside `embarch-core`. Recorded as **`embarch-topology` decision
+32** (`decisions/crate.md`), which names **both** call sites so a search for either finds the other,
+plus a cross-reference on `enroll`'s own doc comment. The reviewer verified the history claim
+against `embarch-core` commit `b8da819`, whose `resolve_probe` comment at the time reads *"the exact
+selection rule, shared rather than copied a second time"* — so the decision's account of the past is
+evidence, not reconstruction.
+
+**(b) This is `embarch-core` decision 9's drift class, one repo over, and the third instance in
+`topology/open.md`.** The new bullet says so and says why its direction is the opposite of the two
+above it. The reviewer noted the bullet immediately above still ends *"nothing points at further
+work here"* and is now strictly stale; I agree and left it, because the new bullet is transparent
+about the tension rather than hiding it and rewriting a settled bullet to absorb a new one is how a
+record stops being a record.
+
+**(c) I refused the reviewer's one out-of-mandate concern, and the reason generalises.** It reported
+that the follow-up drop `inbox/core-resolve-probe-duplicates-topology-enroll-selection.md` *"does
+not exist"* and *"never appears anywhere in `embarch-doc`'s git history"*. **It does exist** — I
+listed it in `/home/gabriel/Github/embarch/embarch-doc/inbox/` two minutes before the report — and
+**drops are gitignored by design**, so absence from history is the expected state and not evidence
+of anything. The reviewer read the `inbox/` under a worktree, where drops cannot be: `.claude/leg.md`
+already says a leg must read `inbox/` by absolute path in the main checkout, and **that rule now
+demonstrably applies to reviewers too**. Worth a line in whatever the owner next touches in the
+reviewer's own definition; not mine to write.
+
+**Merged:** `agent/topology/037-enroll-copies-core-probe-selection` — code
+`9dc44dd5abea801915ee9079b9a30ded1d96d373` in `embarch-topology` (parent
+`e51f7edd7d16a6afe7f8daa44b5a1158235b77ef`), doc `d7c51a8dfd9c40a4215b7fe1f6e38781280d28f4` (parent
+`1608e85be87f34b4a09c1de8e4a23ced2e84e050`, my own link-depth fix). Gate re-run by me on the merge
+result: `cargo build` / `test` (**15 passed, 0 failed**) / `clippy --all-targets -- -D warnings`
+green, `check-client-names.py --repo embarch-topology` clean against 7 denylist entries,
+`check-docs.py` **11/11**, ownership green on both halves. I read the diff before merging because
+`embarch-topology` is a shared crate; it is one doc comment and one decision, no behaviour.
+`changelog.d/topology-enroll-probe-selection-duplication.decided.md` consumed into
+`history/topology.md` with `--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/topology/037` closed `done` by the worker.
+
+**Reviewer:** no findings — independently re-derived the dependency direction from `Cargo.toml` and
+the pre-move history from `embarch-core`'s own git history rather than trusting decision 32, and
+confirmed 32 is a free number correctly indexed. Its one extra concern is refused above, with the
+reason.
+
+**Hardware debts:** **none created.** One doc comment, one decision, one `open.md` bullet; nothing
+executed, no board, no probe, no Core. Standing debts carried unchanged — `core/015`'s native
+Windows build, the **dev-bench probe still unplugged** (confirmed live this leg by
+`validate dev-bench`: probe `001057729826`, live hardware_id `None`; `tasks/api/059` stays `open`,
+not `blocked`), `umbrella/056`'s unrun clearing behaviour, `suite/038`'s re-scoped check 9.
+
+**Budget:** PROCEED — weekly **65.0%** of a 90% cap, up from 64.3% at leg start, resets in ~62h.
+No 429, no HOLD, wave 6 suggested and 4 used because 4 is the leg cap.
+
+**Least sure about:** whether decision 32 will ever be *found* by the person it is for — it lives in
+`embarch-topology`, the crate that cannot fix the thing it describes, while the edit that closes it
+is in `embarch-core`; the only pointer from that side is an `inbox/` drop, which is gitignored and
+therefore unfindable by any search of the repos.
+
 ## 2026-09-13 16:50 — umbrella/062 the depth was fixed on four links, and the reviewer found the one whose target had gone dead underneath it
 
 **Decided:** **three, and this is my leg's last unit.**
