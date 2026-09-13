@@ -97,6 +97,101 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 10:34 — suite/010 one field name, two boards' builds, and the message that blamed the wrong one
+
+**Decided:** `embarch-study-designer` **decision 74**, plus one deliberate non-decision.
+
+**(a) `firmware_version` keeps its name on every surface, and every reader is told whose build it
+is.** `HelloAck.firmware_version` is the bench's; `Requirements.firmware_version` and
+`Provenance.firmware_version` are the DUT's; the field the first corresponds to is
+`Requirements.dev_bench_version`. Renaming the wire field is rejected **on cost** — it is a schema
+bump that reflashes every bench and redeploys Core in one sitting, against a defect whose damage is
+a misleading log line and a mis-authored study — and renaming only the host-side pair is worse than
+either, breaking every saved study and `StudyResult` on disk while leaving the wire field that
+invites the confusion.
+
+**(b) The half where that argument does NOT hold is filed, not taken.** `embarch-core` serves the
+value as `firmware_version` over **HTTP** on `GET /dev-bench/hello`, where a rename costs no
+reflash — and `embarch-core` decision 47 made exactly that rename on exactly that route for exactly
+this defect class (`hardware_id` → `self_reported_hardware_id`). I did not take it, because it
+changes a served field and **this unit's announcement window covered the `clamp_version` fix and
+the doc comments, not an API rename.** Filed as `tasks/suite/036` with both sides of the argument
+written out, including the one that cuts against it: renaming the HTTP field alone leaves the suite
+with *three* spellings instead of two.
+
+**The demonstrated defect is fixed rather than documented.** `clamp_version` warned *"dev-bench
+reported a firmware_version longer than N bytes"* for all four values that reach it — including the
+DUT's `flashed_firmware_version`, which `embarch-api` supplies out of band and which no bench ever
+reported. It now takes a `VersionSubject`, the enum decision 40 already introduced for this exact
+distinction, so the message names the board and **the compiler makes every call site say which one
+it means.**
+
+**Announcement window: inherited from leg 103 and not restarted**, which is the second consecutive
+entry able to say the handoff mechanism works from the receiving end. Announced 2026-09-12 23:37,
+`ts 1789277838.510359`, no `--action`, closed 00:07. Re-polled `fleet-read.py --thread` at 10:21 —
+one reply, written by an app, and **no human message in `#embarch-fleet` across either leg.** Ran
+unobjected, ~10.5 h after the window closed.
+
+**Merged:** `agent/suite/010-firmware-version-subject` — `embarch-core` `7914352`,
+`embarch-study-designer` `3a1920f`. Two follow-ups on `main` after the reviewer and a `cargo doc`
+run: `embarch-study-designer` `efbf76e` (three rustdoc links in the new comments did not resolve —
+`HelloAck` is a `DevBenchMessage` variant, not a `HostMsg`, and `Requirements`/`Provenance` are not
+in scope in `protocol.rs`; `cargo doc` is deliberately outside this crate's gate, decision 68, so
+nothing failed) and `embarch-core` `53f1ed1` (the test rename below). Doc side in this fold commit.
+
+**Also landed, and it is not this unit's work:** `embarch-ui` `e4d10ac` and `embarch-umbrella`
+`eacfb36`, each one line of `Cargo.lock` recording `embarch-core-client`'s `serde` dependency.
+**That lock has been stale on `main` since `suite/035` landed yesterday**, so `cargo build
+--locked` would have failed in both repos; my own `cargo check` of those consumers is what surfaced
+it. Committed rather than reverted, because leaving it meant two dirty checkouts and a `main` that
+does not build under `--locked`.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings — and this one was given five specific questions rather than an open read,
+because a `suite` unit is the supervisor's own hands and gets no other outside look. It re-derived
+decision 74's number from the decision *bodies* rather than the index and confirmed it free;
+confirmed decision 72 really was missing from `decisions.md`'s index row and that my fix is right;
+confirmed against the code that `requires.firmware_version` is only compared inside
+`if let Some(flashed) = run.flashed_firmware_version`, which is the claim my doc comments rest on;
+and checked `tasks/study-designer/035`'s byte arithmetic independently (decision 40 = 4,409 B,
+45 = 2,795 B, 74 = 3,836 B, file 11,309/12,288 = 92.02%). **It also caught something I had talked
+myself into**: the new test's name implied it pinned the fix, and it does not — clamping was always
+subject-independent, so the assertion was already true before the change, and what enforces the fix
+is the `VersionSubject` parameter at compile time. Renamed and the doc comment now leads with the
+limitation (`53f1ed1`). On the decision 47 tension it said the seam is right rather than
+inconsistent, because decision 47's target was HTTP-only with no wire half.
+
+**Hardware debts:** none created, and **one deepened in a way worth reading twice.** This changes
+`embarch-core`, and the running Core on this machine is the Windows service built from the rsync
+target — so `core/015`'s outstanding native Windows build now also gates a log-message fix in the
+study path. The change is platform-neutral and nothing here is wrong against the deployed Core (the
+old message is merely misleading, not incorrect about the value it records), but the gap between
+`main` and what is running is one commit wider. Standing debts otherwise unchanged: the unplugged
+dev-bench probe with `fleet-hardware.py --refresh` still crashing, `umbrella/037` check 13,
+`umbrella/033` check-17 arms, umbrella check 5's permission-denied probe, `embarch-ui`'s 18-record
+stale prefix, and the `embarch-outpost` / `embarch-dev-bench` toolchains absent from a fleet
+worktree.
+
+**Budget:** PROCEED throughout — weekly 47.7% of a 90% cap at leg start, 48.3% at the end, resets in
+~68h28m. Wave 6 suggested and **never used**: this leg dispatched no workers at all, because its
+four units were three of leg 103's finished orphans plus this `suite` task.
+
+**Least sure about:** **(b), and I want the next reader to weigh it rather than inherit it.** I declined
+a rename that this suite's own decision 47 made, on this same route, for this same defect class,
+and my reason is a procedural one — the announcement window covered something narrower. That is a
+correct reason to *defer*, and I am less sure it is a correct reason to have written decision 74
+in a form that reads as settling the question. If `suite/036` is picked up and the rename lands,
+decision 74 will need amending rather than just extending, and its reversal condition (the next
+wire bump taken for another reason) does not cover that path.
+
+**Also worth one line for the next leg:** `git -C <repo> worktree add <relative path>` resolves the
+path against **the repo**, not the caller's cwd, so my first attempt at this unit's two code
+worktrees created them *inside* `embarch-core/.worktrees/` and `embarch-study-designer/.worktrees/`
+— which is the layout `.claude/leg.md` forbids and `embarch-study-designer` decision 57 exists to
+prevent. Caught immediately and redone with absolute paths. Use absolute paths for every `worktree
+add`; the recipe in `.claude/leg.md` does, and that is why.
+
 ## 2026-09-13 10:20 — topology/035 a size debt paid by splitting one decisions file and squeezing a spec, and the compaction question answered
 
 **Decided:** nothing suite-wide; the compaction convention being applied is already settled. Two
