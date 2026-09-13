@@ -97,6 +97,68 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 16:41 — core/053 the stale filename was the smaller half; the sentence around it had gone false too
+
+**Decided:** **three.**
+
+**(a) A comment naming a moved file was hiding a second, quieter falsehood, and only reading the
+call graph found it.** `resolve_probe`'s doc comment justified its `pub(crate)` by claiming to be
+*"`board_gate.rs`'s one and only source of 'which probe did this call mean' (`enforce`/`enroll`) —
+the exact selection rule, **shared rather than copied***". `board_gate.rs` has not existed in this
+crate since the gate moved to `embarch_topology`; that was the filed defect. What the worker found
+beyond it: **`pub(crate)` cannot cross the crate boundary the move created**, so
+`embarch_topology::hardware::validate::enroll` has its own independently written
+`Lister`/find-by-serial/bail-if-not-exactly-one block. The comment's *"shared rather than copied"*
+became false on the day of the move, silently, and stayed that way. **The reviewer verified this
+against `embarch-topology/src/hardware/validate.rs` itself** rather than taking the claim.
+
+**(b) The reword keeps the justification and re-grounds it in what is still true.** `resolved_serial`
+in the same file does call `resolve_probe` — checked — so the visibility is still explained, now by a
+same-crate share rather than by a cross-crate one that does not exist. **Nothing was deleted**: the
+reviewer chased the one fact the new wording does not restate (the role-keyed side also not sharing
+`resolve_probe`) and found it still standing, unchanged, in `study.rs`.
+
+**(c) The cross-crate duplication itself is `topology`'s, and it was dropped rather than fixed.**
+`inbox/topology-enroll-duplicates-core-probe-selection.md` — a `core` worker may not touch
+`embarch-topology`, and de-duplicating two probe-selection blocks across a crate boundary is a
+design question, not a comment fix. **Left in `inbox/` for the next refill**, and the reviewer
+confirmed the drop's premise is correct so the next leg need not re-derive it. Decision 9 was read
+in body and **kept, not repointed** — its account of a selector that described itself as implemented
+for months matches what the comment cites it for.
+
+**Merged:** `agent/core/053-resolve-probe-board-gate-comment` — code
+`d71c45a5877ea24d640516cc2ce6cda752084a27` in `embarch-core` (parent
+`49bc726a656bc7b7ce25ce76b369e8b4ec2c8a72`), doc in this fold commit (the worker's `f7f6918`
+**cherry-picked**, same reason as this leg's other units). Gate re-run by me on the merge result:
+`cargo build` / `test` (**197 passed, 2 ignored**, plus 1) / `clippy --all-targets -- -D warnings`
+green, `check-client-names.py --repo embarch-core` clean against 7 denylist entries,
+`check-docs.py` 11/11, ownership green on both halves.
+`changelog.d/core-resolve-probe-comment.fixed.md` consumed into `history/core.md` with `--only`; 29
+of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/core/053` closed `done` by the worker.
+
+**Reviewer:** no findings. It answered all four questions it was given from source: traced `enroll`'s
+own selection block in `embarch-topology` (and confirmed the duplication is neither narrower nor
+wider than the comment says), confirmed `resolved_serial` calls `resolve_probe`, read decision 9's
+body rather than its index line, and located the one un-restated fact still standing in `study.rs`.
+
+**Hardware debts:** **one, carried not created — `core/015`'s native Windows build now carries an
+eleventh landed `embarch-core` change.** Comment-only, nothing behavioral, but that is now **five
+consecutive days** of `core` units adding to a debt nobody has paid, and the pile still includes
+`core/045`'s route-wiring test and the `suite/020`/`suite/035` wire-feature split. Everything else
+carried unchanged, including the **dev-bench probe still unplugged** (`tasks/api/059` stays `open`)
+and `fleet-hardware.py --refresh` still crashing (`tasks/doc/041`).
+
+**Budget:** PROCEED — weekly **63.2%** of a 90% cap at leg start, resets in ~62h. No 429, no HOLD.
+
+**Least sure about:** **that I asked the worker to keep the claim rather than to check it.** My task
+file said "keep the claim, fix the referent" — and the claim was false. The worker checked anyway
+and reported it, but an instruction that names the intended repair before the derivation is a thumb
+on the scale — and the previous leg recorded the same mistake one unit earlier, on `core/052`,
+where it wrote two wrong repairs into the task file and the worker took neither. Two legs running,
+in the same sub-project.
+
 ## 2026-09-13 16:37 — ui/048 a citation with no referent, dropped rather than repointed at the nearest plausible decision
 
 **Decided:** **two.**
