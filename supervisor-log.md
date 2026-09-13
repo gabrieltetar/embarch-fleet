@@ -97,6 +97,78 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 13:08 — outpost/020 a documentation section told a worker it could verify less than it can
+
+**Decided:** nothing suite-wide. The judgement worth recording is **what kind of error this was**, because
+it is the opposite of the kind this fleet usually finds. `embarch-outpost/interfaces/wire.md` claimed
+**one** host-only test where there are **three**, and its leg arithmetic summed to **five** against a
+real **six**. Every other citation unit this week fixed a doc that promised more than the code
+delivered. This one promised *less*, and that is the more expensive direction here: this exact section
+is what tells a fleet worker — which has no Zephyr toolchain in its worktree — which legs it may run
+and which it must record as an unverifiable debt. A doc that under-claims the host-only surface
+converts work that *could* have been checked into a standing "nothing was compiled" note, and this
+repo already carries one of those in every recent entry. Understating a capability is not the safe
+direction when the reader is deciding what to attempt.
+
+**The numbers, re-derived twice.** Six legs — decoder unit, vocab check, cross-decoder, ztest unit,
+module-off compile, end-to-end stream — with the west guard at `tests/run-all.sh:69`, putting **three
+ahead of it and three behind**. The worker derived that from the script and the reviewer derived it
+again independently; both landed on the same six and the same line 69. That double derivation was
+deliberate: the task's own scout had already been wrong once in the same sweep (`umbrella/058`), so
+this was dispatched as a re-derivation rather than a transcription, and I told the worker so.
+
+**The distinction the old prose collapsed, and the thing I checked hardest.** *Needs a Zephyr
+toolchain* and *needs two sibling checkouts* are different obstacles, and the old text ran them
+together into one "the other three legs" clause. It would have been easy to fix the arithmetic and
+leave the conflation — the count would then be right and the reader still misled. The new text
+separates them: `decoder_unit.py` and `vocab_check.py` need nothing external at all, while the
+cross-decoder needs no toolchain but does need `embarch-core` and `embarch-ui` beside it to compare
+anything for real. The reviewer confirmed against the script's own comments at `run-all.sh:32-42` that
+the new prose has not re-collapsed them.
+
+**Merged:** `agent/outpost/020-wire-test-legs-doc` — `embarch-doc` `60bb955bca1f93bad35a4ce063453625e7568e14`.
+**There is no code SHA**: the `embarch-outpost` branch carried zero commits, the whole correction being
+prose. The branch was pushed anyway, which is the worker contract's last act and the only signal I can
+read when a completion notification goes astray.
+
+**Blocked:** nothing. `tasks/outpost/020` closed `done`.
+
+**Reviewer:** no findings. It re-derived the six legs and the guard line from `run-all.sh` itself
+rather than trusting the worker's grep; confirmed suite decision 2 at
+`suite/decisions/tooling.md:15-21` explicitly names both `decoder_unit.py` and `vocab_check.py` as
+running toolchain-free in CI, so the citation lands on point rather than on adjacent text; read
+`decisions/testing.md` decision 26 **at the leg's current HEAD** — it was corrected by `outpost/019`
+earlier the same day, so a stale read would have judged the sentence against superseded text — and
+confirmed it still says a missing sibling fixture is a skip, not a failure; and found no
+`embarch-decision-reversals.md` entry touching `embarch-outpost` testing or CI.
+
+**Hardware debts:** none created, none possible — one prose section, and an empty code branch. One
+**narrowed, not closed**: the standing "`embarch-outpost` Zephyr toolchain is absent from a worker's
+worktree" debt is unchanged, but this unit makes it smaller in practice by correctly naming three
+host-only legs instead of one, so the next worker in this repo knows it can actually run
+`decoder_unit.py` and `vocab_check.py`. The worker did run both (31/31 and a clean vocab pass) and
+executed nothing behind the west guard, which is the correct shape. Standing debts otherwise
+unchanged: `core/015`'s native Windows build, the unplugged dev-bench probe (`tasks/api/059` **open**;
+the bench buffer is 8,351 min stale and `fleet-hardware.py --refresh` still crashes per
+`tasks/doc/041`, so it was not re-checked live this leg), `umbrella/037` check 13, `umbrella/033`
+check-17 arms, umbrella check 5's permission-denied probe, `embarch-ui`'s 18-record stale prefix, and
+the bench queue parked by the owner's `d0cf9a0`.
+
+**Budget:** PROCEED — weekly 54.7% of a 90% cap at leg start, resets in ~66h. Wave 6 suggested; three
+workers dispatched, bounded by scope spread rather than by the cap.
+
+**Least sure about:** **whether `wire.md` will still say six a month from now, and nothing will
+notice if it does not.** The count is correct today and two agents derived it, but it is a prose
+enumeration of a shell script's `echo` lines — exactly the shape `api/080` flagged yesterday about
+`tools.md`'s 26 tool attributes, and exactly the shape no gate in this suite can check. Adding a
+seventh leg to `run-all.sh` is a one-line change nobody would think of as a documentation edit. I did
+**not** file a task for a check here, because `tasks/doc/051` already asks for the same mechanism in
+`embarch-api` and a second near-identical owner-reserved request would be noise rather than signal —
+but if a third instance turns up, the right move is one task about prose enumerations as a class, not
+a third file.
+
+---
+
 ## 2026-09-13 12:55 — dev-bench/029 three units had agreed on a wrong convention without writing it down, so it is written down now
 
 **Decided:** the unit's whole point, and I approved it: **`embarch-dev-bench` decision 47, in a new
