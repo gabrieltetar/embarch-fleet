@@ -97,6 +97,79 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 17:40 — api/086 a verbatim split paid the debt without writing a sentence, and the only thing it broke was in another repo
+
+**Decided:** **four, and this is my leg's last unit.**
+
+**(a) Split, not rewrite, and the file that decided it was the ledger.** `shape.md` sat at
+11,731/12,288 B, 557 B from its cap. `check-doc-size.py --decisions` says no single decision in it
+exceeds the 4,096 B per-decision cap — the largest, 53, is 3,586 B — so this is **many independent
+decisions over-cap at the file level, not one sprawling decision**, which is exactly the condition
+`DOC-BUDGET.md`'s split-first rule is for. Decisions **53** (`[[projects.targets]]` retired) and
+**64** (retired keys refused by name) moved verbatim into a new
+`embarch-api/decisions/config-retirement.md`. **`shape.md` 11,731 → 6,093 B (49.6% full);
+`config-retirement.md` 6,488 B.** The debt is paid and `shape.md` is off the pressure list entirely.
+
+**(b) Verbatim was verified as a byte diff, not accepted as a claim.** The reviewer extracted both
+decision bodies from `shape.md` at the parent SHA and diffed them against the new file at the merge
+SHA: **both diffs empty.** All three `Must not delete` items survive intact — decision 64's
+two-clause "Ends when" with its 2026-09-13 amendment (first clause fired, second parked on one
+grep of real configs), the *"Default for the next retired key: refuse by name"* sentence, and the
+`[verified 2026-09-10]` tag **together with what it was verified against**. `tasks/doc/052` warns
+that a verbatim split silently drops per-decision size pins; neither 53 nor 64 had one, and the
+worker checked `decision-size-baseline.json` rather than assuming.
+
+**(c) The compaction pass's human question, answered in my own words: yes.** *Can `spec.md` alone
+answer what someone needs to work on `embarch-api` today?* — it can, and this unit is a case where
+that is easy to answer honestly, because **`spec.md`'s substance was not touched at all.** One link
+href moved. Nothing was summarised, nothing chosen between, no "why" collapsed into a claim; two
+settled records changed address. That is also the limit of what this unit proves: it moved bytes,
+and moving bytes is only the right answer when the file is many independent things, which is what
+`--decisions` was consulted to establish before anything was moved.
+
+**(d) I went further than the reviewer on the one thing it dismissed, and filed
+`tasks/umbrella/064`.** `embarch-umbrella/decisions/mirrors.md` names
+`` `embarch-api/decisions/shape.md` `` in a backticked path beside decision 64 — not a markdown
+link, so `check-links.py` cannot see it and no gate failed. Both the worker and the reviewer called
+it harmless under the suite's tolerated-bare-number convention, **and on the number they are
+right**: a decision number resolves through `decisions.md` whatever file holds it. But the text
+does not cite a number alone, it **names a file**, and that file no longer holds the decision — a
+reader following it lands nowhere. The `umbrella` task says to read decision 64's body while
+repointing, because four consecutive units this week found a filename repaired while the sentence
+around it had also gone false, and that paragraph is one `**Superseded by**` note away from being
+exactly that.
+
+**Merged:** `agent/api/086-compact-api` — doc `c2f1e41dd8244d20188dd7fd12187f29d729e620` (parent
+`aac4f0bd479d023b0c2058ce83dfdb9ef68482bc`). **No code SHA: the worker correctly changed nothing in
+`embarch-api` and pushed no code branch**, which is the right outcome for a doc-only compaction and
+not a missing half. Gate re-run by me on the merge result: `check-docs.py` **11/11**, ownership
+green. No `cargo` run, because no code repo is involved.
+`changelog.d/api-shape-split.changed.md` consumed into `history/api.md` with `--only`; 29 of the
+owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/api/086` closed `done` by the worker.
+
+**Reviewer:** no findings — byte-diffed both moved decisions against the parent SHA, confirmed all
+three Must-not-delete items, swept the whole tree at the merge SHA for surviving `shape.md`
+references rather than trusting the worker's list of six, and checked
+`embarch-decision-reversals.md`'s row on decision 53 (it points at `decisions.md`, so it needed no
+update).
+
+**Hardware debts:** **none created.** A doc split; nothing executed. Standing debts carried
+unchanged — `core/015`'s native Windows build (twelve landed `embarch-core` changes),
+**the dev-bench probe unplugged, confirmed live this leg**, `umbrella/056`'s unrun clearing
+behaviour, `suite/038`'s re-scoped check 9.
+
+**Budget:** PROCEED — weekly **65.0%** of a 90% cap at this fold, up from 64.3% at leg start,
+resets in ~62h. No 429, no HOLD, wave 6 suggested throughout and 4 used because 4 is the leg cap.
+
+**Least sure about:** that `embarch-api` now has **eleven** decision files, and this split added a
+twelfth topic boundary the next writer has to route by. `shape.md` at 49.6% has room for years; the
+cost of the split is not bytes but one more place a decision could be filed in the wrong file,
+which is the exact failure `embarch-api` already had on 2026-09-05 with 96 B left in
+`decisions/zephyr.md`. Splitting is still right — but the count is worth watching, and nothing
+counts it.
+
 ## 2026-09-13 17:34 — umbrella/063 two of the four fixes were not citations at all, they were sentences a decision had made false the same day
 
 **Decided:** **three.**
