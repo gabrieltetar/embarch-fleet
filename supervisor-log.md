@@ -97,6 +97,89 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 13:50 — dev-bench/030 the own-repo half of a citation rule, swept for the first time by the third pass over the same lines
+
+**Decided:** nothing suite-wide. Two findings, and the second is the one that generalises.
+
+**(a) The sweep found more than the reviewer who filed it had.** `tasks/dev-bench/030` came from a
+reviewer that found **one** wrong deletion at `eap.h:84`; the third `Done when` item — asking whether
+the *other* citations `dev-bench/029` deleted rather than repointed had the same shape — was mine,
+filed explicitly as an unmeasured generalisation rather than an assumed defect. It paid. Of the
+**8** citations `4816230` deleted outright, **3** resolve to a decision in `embarch-dev-bench`'s own
+repo and are now repointed; the other 5 genuinely resolve to nothing and stay deleted. So the
+reviewer's one instance was a third of the class, and two more would have gone unfound.
+
+**The third one was not merely uncited — it was stale.** `ble_bridge.h:82` claimed *"the crate's own
+docs state this explicitly for `Uuid` but not for `BleAddress`"*. Decision 23's 2026-09-07 amendment
+records that `embarch-study-designer` landed the `BleAddress` statement on 2026-09-06 (`79a4c00`), so
+the sentence had been false for a week. **I verified that myself against `embarch-study-designer/src/ids.rs:21`
+and decision 23 before merging**, because it is a change to a factual claim about a shared crate and
+not a citation repoint — and the reviewer then re-derived it independently at that repo's current
+HEAD and confirmed nothing in `embarch-dev-bench` still carries the old wording.
+
+**(b) The shape worth carrying forward: a citation rule has two halves and the obvious half is the
+one that gets skipped.** `embarch-dev-bench` decision 47's first branch is *resolve to the decision
+that owns the claim*. Three separate passes — `dev-bench/029` making the deletions, `dev-bench/026`
+re-verifying them, and `026`'s own closure text asserting them correct — all searched
+**`embarch-study-designer`'s** decisions and none searched **`embarch-dev-bench`'s own**. The
+cross-repo half is the harder, more interesting search, and that is exactly why three agents in a row
+did it and skipped the trivial one. `core/050`'s entry two units ago warned that a bare citation in a
+multi-repo suite is a time bomb; this is the same defect from the other direction — not *which repo
+does this number belong to*, but *did anyone look in the nearest one at all*. **If a fifth instance
+of either turns up, the right move is one task about bare citations in a multi-repo suite as a class,
+not a sixth per-repo sweep.** That advice is `core/050`'s and I am repeating it deliberately, because
+this unit is evidence for it.
+
+**Merged:** `agent/dev-bench/030-eap-h-decision-41` — `embarch-dev-bench`
+`8ff290bbd539465562b506ef407c526403a4f978` (fast-forward, so this is the worker's own commit),
+`embarch-doc` `3ffa8304a34f157b0f342fc4401736ecbb8a9b91` (merging worker commit `242c9e2`, parent
+`59ea8484f57034f6fc45f8de5a23b7e826fd05ca`). Gate re-run on the merge result: `check-docs.py` 11/11
+green, `check-ownership.py --scope dev-bench` green on both branches, `check-client-names.py` clean.
+**No compile, and that is not a lapse to gloss:** `embarch-dev-bench` is Zephyr and its toolchain is
+absent from a worker worktree — a standing, recorded debt — so "green" for this unit means the doc
+gate and the ownership checks and **not** that three edited C headers were built. The edits are
+comments inside comment blocks, which is the cheapest possible thing to get wrong without noticing.
+
+**Blocked:** nothing. `tasks/dev-bench/030` closed `done`. `tasks/dev-bench/026`'s closure checkbox
+was corrected **in place** rather than appended, and I checked that the correction does not overstate:
+`026`'s central finding — that `dev-bench/029` had already resolved the six citations `026` named —
+was verified independently and **holds**. Only one of those six was resolved the wrong way.
+
+**Reviewer:** no findings. It re-derived the 8/3/5 split line by line against `4816230`'s diff rather
+than accepting the worker's arithmetic, and reached the same answer including the five that correctly
+stay deleted; it additionally found that `serial_protocol.h:614`'s dropped `§4.3` is legitimately
+outside the count, because it defers to `ble_bridge.h`'s comment by name and so falls under decision
+47's third branch. It re-derived the `BleAddress` correction from `79a4c00` at
+`embarch-study-designer`'s current HEAD, grepped the whole dev-bench worktree for surviving instances
+of the old claim and found none, read `026`'s edited closure in full to check for overstatement, and
+confirmed no decision was renumbered in either repo. **Its completion notification was ~4 minutes
+late relative to its own transcript going quiet**, which I spent watching the transcript's mtime
+rather than concluding anything — see the debts note below; this is worth the next leg knowing,
+because the cheap wrong move there is to declare a reviewer dead and write `skipped`.
+
+**Hardware debts:** none created, none possible — three C comment blocks and two task files. **But one
+is restated and it bites harder here than usual:** nothing in this unit was compiled, because the
+`embarch-outpost` / `embarch-dev-bench` Zephyr toolchains are absent from a worker's worktree. Nothing
+in this leg has touched hardware at all — the bench queue is parked by the owner's `d0cf9a0`,
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`), the buffer is over 8,400 min stale, so
+its "attached: yes" means nothing and I did not re-check the probe live. Standing debts unchanged:
+`core/015`'s native Windows build, the unplugged dev-bench probe (`tasks/api/059` **open**),
+`umbrella/037` check 13, `umbrella/033` check-17 arms, umbrella check 5's permission-denied probe, and
+`embarch-ui`'s 18-record stale prefix.
+
+**Budget:** PROCEED — weekly 56.4% of a 90% cap at leg start, 57.0% at the previous fold, resets in
+~65h. Wave 6 suggested; four workers dispatched at once, bounded by scope spread rather than the cap.
+
+**Least sure about:** **whether I should have let a reviewer's late notification worry me as long as
+it did.** Its transcript went quiet and no notification arrived; `tasks/doc/042` records four prior
+instances of a finished agent's report landing in the listener instead of the supervisor, so the prior
+is real and the cost of getting it wrong is writing `skipped` over a review that actually happened. I
+waited on the transcript's mtime and it reported normally. I do not have a rule that separates "late"
+from "lost", and the positive-signal rule does not help here — a reviewer pushes no branch, so there
+is nothing whose *presence* can retire it. That asymmetry is worth someone's attention.
+
+---
+
 ## 2026-09-13 13:47 — api/081 fourteen size debts had no payable route, and a verbatim split is the one that flux cannot forbid
 
 **Decided:** one thing, and it is about the queue's mechanics rather than about `embarch-api`. **It is
