@@ -97,6 +97,77 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 16:08 — api/085 the citation was repointed at the right crate and the wrong thing, and the reviewer question I wrote before merging is the only reason it was caught
+
+**Decided:** **three, and the first is the unit.**
+
+**(a) Repointing a stale citation moved the route's ownership with it, and that was false.** The
+four `embarch-core-client` doc comments cited `embarch-core` decision 22, whose mechanism really did
+move into `embarch-topology` decision 14. The worker repointed all four — correctly on the number —
+but reworded them as `` `embarch-topology` decision 14's `GET /probes/enrolled` `` and
+`` …decision 14's `POST /probes/enroll` ``, **possessing an HTTP route `embarch-core` serves to a
+decision in a different crate.** `embarch-topology` decision 28's own body says the opposite in as
+many words: it names `POST /probes/enroll` as *"the Core route that owns the mutation"*, and
+decision 14 is about *where the interaction lives*, not about a route at all. **The old wording had
+the wrong decision number and the right repo; the new wording had the right number and the wrong
+repo.** I re-derived 14, 15 and 28 from their own bodies before acting rather than taking the
+reviewer's word. **Fixed in this fold** — `24ddc597770239ee2b75d89818a715884f72d414` — rewording all
+four forward (Core owns the route; decision 14 is cited for the storage behind it) rather than
+reverting, since a straight revert would also undo the correct `EnrolledBoardResponse` alias
+framing. `api/084` had already landed the same phrasing at `:188`, so this was live in **five**
+sites from two consecutive units, and that one is fixed here too.
+
+**(b) A second, quieter misattribution in the same diff.** `:199` cited *"`embarch-topology`
+decision 14's 'exactly one attached' requirement"*. **Decision 14's body does not contain that
+phrase.** It is `embarch-core` decision 22's language, and `embarch-topology` decision 15 is the
+optional override that relaxes it. Now says so.
+
+**(c) The general rule, and it is the carry-forward.** **A citation repair has two halves — the
+number and the sentence around it — and only the number is checkable.** Every gate in this suite
+reads numbers; nothing reads the claim the number is embedded in. Both defects here are in the
+*prose the worker rewrote to accommodate the new number*, which is exactly the half that has no
+check, and the worker's own task-file report paraphrases decision 28 **correctly** two paragraphs
+before writing comment text that contradicts it. **So: when a unit repoints a citation, the
+reviewer's first question should be about the rewritten sentence, not the number.** I wrote that
+question into this reviewer's spawn before the merge, having read the diff and disliked the shape;
+that is the only reason any of this was found.
+
+**Merged:** `agent/api/085-core-decision-22-citations` — code
+`44a7d4cf7a15e6a5f54d259e6f0f2ac9fff0d248` in `embarch-api` (parent
+`43ee85176356ba21b43e8aef15c87ef89b3df9cc`), **plus this fold's own follow-up
+`24ddc597770239ee2b75d89818a715884f72d414`**, doc `10b3d5a5e43e2bd254942b2bcb62116cc7f3d82a` in
+`embarch-doc` (the worker's `7920aee` **cherry-picked**; the doc branch predates this leg's later
+claim commits, so `--ff-only` refused). Gate re-run by me on the merge result: `cargo build` /
+`test` (13 green suites, 207 tests) / `clippy --all-targets -- -D warnings` green,
+`check-client-names.py --repo embarch-api` clean, `check-docs.py` 11/11, ownership green on both
+halves; build, clippy and test re-run after the follow-up.
+`changelog.d/api-core-client-decision-22-citations.fixed.md` **rewritten by me** to say what
+actually landed, then consumed into `history/api.md` with `--only`; 30 of the owner's own fragments
+left pending.
+
+**Blocked:** nothing. `tasks/api/085` closed `done` by the worker.
+
+**Reviewer:** 1 finding — inbox/api-client-rs-decision-14-route-misattribution.md, the route-ownership
+misattribution plus the `:199` "exactly one attached" half; **acted on in this fold and the drop
+deleted**, since its whole content is a fix that has now landed. It also confirmed
+`EnrolledBoardResponse` really is a `pub type` alias of `embarch_topology::hardware::EnrolledBoard`
+rather than taking the worker's word.
+
+**Hardware debts:** **none created.** Doc comments in a client crate; nothing executed, no Core, no
+board, no route called. The dev-bench probe is still unplugged (`status` returned `"probes": []`
+live at this leg's top), so `tasks/api/059` stays **open**. `core/015`'s native Windows build is
+untouched by this unit — `embarch-api`, not `embarch-core`.
+
+**Budget:** PROCEED — weekly **62.9%** of a 90% cap, resets in ~63h. No 429, no HOLD, wave 6
+suggested throughout.
+
+**Least sure about:** **whether rewording forward was better than reverting and re-filing.** The
+reviewer offered both and said a clean revert would also lose the one thing the unit got right. I
+took the forward path, which means the sentence now standing in five places is **mine**, written
+against three decision bodies I read once, and no second pair of eyes has seen it — the exact
+condition `umbrella/060` failed under yesterday. If a later reader finds it wrong, the fix is a
+normal task, not a revert of this SHA.
+
 ## 2026-09-13 16:02 — umbrella/061 four dead cross-repo links closed, two of them printed to an operator
 
 **Decided:** **three, and the first is a fact about this leg's own shape rather than about the
