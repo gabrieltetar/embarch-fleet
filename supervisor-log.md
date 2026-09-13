@@ -97,6 +97,85 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 15:08 — study-designer/042 one character, re-derived twice, and the class it closes is a sweep nobody had run
+
+**Decided:** **three, and the last one is the only thing in this leg I would call a result rather
+than a repair.**
+
+**(a) A one-character diff still gets the full ceremony, because the character is the entire
+content.** `ffi.rs:215` cited `decision 19`; it now cites `decision 17`. I told the worker in the
+dispatch note **not to take 17 on trust** — leg 109's `embarch-reviewer` had settled it in one pass
+and filed it, and that conclusion was the hypothesis under test, not the answer. The worker read 17,
+18 and 19 in full against `src/ffi.rs:170`–`286` and concluded 17; the reviewer then did it again
+independently and concluded 17. **Three separate agents, two of them explicitly forbidden from
+trusting the previous one, on one digit.** That is the right price for a decision number in this
+suite, where numbers are permanent and a wrong one *resolves*.
+
+**(b) The sentence, not the substitution, was the actual task.** The comment is a *"superseding
+neither X nor Y"* construction, and changing Y changes what the sentence contrasts. Both the worker
+and the reviewer read it whole and reached the same reading: X is the sibling FFI function
+`essd_study_decode_and_verify`, Y is now decision 17's **standing** narrow-check policy — so the
+sentence is not circular, because 17 is an independent sub-project decision this function conforms
+to rather than one the comment invents to justify itself. **No wording beyond the digit needed to
+change**, and that conclusion is a finding rather than an absence of one.
+
+**(c) The wrong-number sweep of this crate is done, and it found exactly one.** Nobody had ever swept
+for *this* shape — `study-designer/040` swept for the adjacent one (a retired mechanism stated as
+live) and found three. The worker grepped every `decision 19` citation in the crate: six besides this
+one, in `result.rs`, `study.rs` and `schema_version.rs` (×4), **all genuinely about decision 19**;
+the reviewer spot-checked four of the six against `removed.md` and agreed. So `ffi.rs:215` was the
+crate's only wrong-number citation of 19. **That closes the question `core/050` raised** about
+whether a general cross-repo sweep is owed: `040` answered "three is inside a handful" for its shape,
+and this answers "one" for the other. Neither is owed.
+
+**Merged:** `agent/study-designer/042-ffi-decision-citation` — code
+`7cfef952f3b826298d2609ea20c049ac1e88765f` in `embarch-study-designer` (parent
+`2eaa7f5fecdb3857069a992863939a0eacdec27e`), doc `42864a9b4000d29693d68160e440461f05da676e` in
+`embarch-doc` (parent `0a5958e`, after a rebase onto `main`; ownership re-run on the rebased branch).
+Gate re-run by me on the merge result: `cargo build` / `test` / `clippy --all-targets -- -D warnings`
+green, `check-client-names.py --repo embarch-study-designer` clean against 7 denylist entries,
+`check-docs.py` 11/11, `check-ownership.py --scope study-designer` green on the doc half and
+`--code-repo` on the code half.
+`changelog.d/study-designer-ffi-decode-full-decision-cite.fixed.md` consumed into
+`history/study-designer.md` with `--only`; 29 of the owner's own fragments left pending and
+untouched. The worker judged it reader-visible — it is rendered rustdoc that pointed at the wrong
+decision's rationale — and I agree.
+
+**Blocked:** nothing. `tasks/study-designer/042` closed `done` by the worker.
+
+**Reviewer:** no findings. It re-derived 17/18/19 from the decision bodies rather than from the
+worker's argument, confirmed decision 18 is Core's structural pre-flight at `POST /study` and
+therefore a different call site entirely, read the sentence for circularity and found none, and
+spot-checked four of the six other `decision 19` citations. It also noticed, unprompted, that the
+sibling `essd_study_decode_and_verify` already cites `(decision 17)` in its own doc comment — which
+is independent corroboration the worker did not use and the strongest single piece of evidence in
+the unit: **the twin check one function up was already citing 17 correctly.**
+
+**Hardware debts:** none created, none possible — one digit in one doc comment. Standing debts
+carried unchanged and untouched, and **nothing in this entire leg went near hardware**:
+`core/015`'s native Windows build, the unplugged dev-bench probe (`tasks/api/059` **open**, not
+blocked — re-checked live at the top of this leg and still `live None`), `umbrella/037` check 13,
+`umbrella/033` check-17 arms, umbrella check 5's permission-denied probe, `embarch-ui`'s 18-record
+stale prefix, and the `embarch-outpost` / `embarch-dev-bench` toolchains absent from a worker's
+worktree. `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`), so the buffer's attach
+state remains unusable for selection and the live `validate` call is the only answer.
+
+**Budget:** PROCEED throughout — weekly **59.6% of a 90% cap at leg start, 60.5% at the third fold**,
+resets in ~64h. No 429, no HOLD. Wave 6 suggested at every check and **never reached**: this leg ran
+at most two workers at once, bounded entirely by scope spread.
+
+**Least sure about:** **the queue I am handing over, and specifically that `queue-status.py` will
+tell the next leg it has five dispatchable tasks when it has one.** Three of the five are `suite`
+tasks — `018`, `029` and the `038` I filed this leg — which are the supervisor's own hands and cannot
+feed a worker wave at all; the fourth is `study-designer/043`, and that is the whole of it. So the
+next leg's first `--refill-owed` will fire, its sweep will find what mine found (every remaining
+`open.md` bullet is a hardware debt or a deferred-with-named-trigger), and it will be one task from a
+dream. **I deliberately did not invent work to prevent that.** But I also did not take a `suite` task
+myself — `018` is a multi-repo move of a 3,892-line analysis module and `029` needs a study-submit
+behaviour change a previous supervisor announced it would not make unattended, and neither is a
+fourth-unit job for an unattended leg. If that reading is wrong, the cost is a dream the owner has to
+answer.
+
 ## 2026-09-13 15:01 — ui/046 a dead section prefix on thirteen self-citations, found by the unit before it and dispatched inside the same leg
 
 **Decided:** **two.**
