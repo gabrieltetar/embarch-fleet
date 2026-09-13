@@ -97,6 +97,75 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 13:09 — ui/043 a compaction task paid its debt by splitting, and the split cost nothing
+
+**Decided:** one thing, and it is about **how a compaction unit should be judged**, not about
+`embarch-ui`. `decisions/trace-view.md` was at 11,093 / 12,288 B and carried three decisions at wildly
+different granularity: decision 10 (the trace view's rendering and clock contract) was most of the
+file's mass, and decisions 19 and 21 (stale-prefix row admission, the served row cap) were a
+different mission entirely. The worker moved 19 and 21 **verbatim** into a new
+`embarch-ui/decisions/trace-rows.md` and left 10 where it was. `trace-view.md` went to 8,798 B — out
+of reserve with 3,490 B of headroom — and **not one sentence of live reasoning was deleted anywhere
+in the suite.** The only new prose is one cross-reference line in each file's header.
+
+**That is the whole argument for `DOC-COMPACTION.md` §2's split-first rule, demonstrated rather than
+asserted.** A squeeze on this file would have had to cut into decision 10, which is where the rejected
+alternatives live, and rejected alternatives are the part of a decision that stops it being
+re-litigated. The split paid the same 2,295 B and cost nothing. I am recording it because the reserve
+ledger currently holds **fourteen** debts filed only against `blocked` compaction tasks, and the
+standard reason given is flux — but **a verbatim split restates nothing, so flux cannot forbid one.**
+Several of those fourteen almost certainly have a seam like this one. The next leg that spends its
+first unit on an overdue ledger entry should read the park for a seam before it reads it for
+permission to squeeze.
+
+**The thing I made sure was not quietly lost.** `tasks/ui/007` is **blocked** on the stale-prefix drop
+having never met a real stale prefix, and decision 19 *is* that mechanism — the 512-row
+`STALE_PREFIX_MAX_ROWS` bound, the four admission conditions, the sign-is-not-the-signal note. A
+compaction that summarised any of that would have quietly destroyed the thing a live debt is waiting
+for, and nothing would have failed. I told the worker so in the dispatch note and the reviewer
+confirmed it byte-for-byte.
+
+**Merged:** `agent/ui/043-compact-ui-doc` — `embarch-doc`
+`61fa53ae704469f2811a8cd5cbed0057f637bde4`. **No code SHA**: the `embarch-ui` branch carried zero
+commits, this being a pure documentation split.
+
+**Reviewer:** no findings. It did the one check that actually distinguishes a split from a compaction
+wearing a split's exemption: it extracted decisions 19 and 21 from the new file and `diff`ed them
+against their text in `trace-view.md` at the **parent** commit `c133703` — exit 0, byte-identical.
+It then swept both the whole doc repo (including `history/`, `tasks/` and the `reversals/` rows) and
+the `embarch-ui` source and `assets/app.js` for `trace-view`, confirming every surviving
+file-qualified citation points at decision-10 content that never moved and that `interfaces.md`'s one
+path-qualified citation was correctly repointed; it noticed that the "decision 19" mentions in code
+comments belong to `embarch-outpost` and `embarch-topology`, not here. `check-decision-refs.py`
+resolves 1,852 refs and all 33 topic-file links name the file that defines the number.
+
+**Blocked:** nothing. `tasks/ui/043` closed `done`, and the size-debt ledger entry it carried
+(`Size debt due: 2026-10-13`) is discharged 30 days early. `embarch-ui` now has **no file in reserve**.
+
+**Hardware debts:** none created, none possible — a documentation split with an empty code branch, and
+no rendered pixel changed. The standing `embarch-ui` debt is untouched and is the one this unit
+deliberately protected rather than paid: `tasks/ui/007`, the 18-record stale prefix that has never met
+a real stale prefix. Standing debts otherwise unchanged: `core/015`'s native Windows build, the
+unplugged dev-bench probe (`tasks/api/059` **open**; not re-checked live this leg — the bench buffer
+is 8,351 min stale and `fleet-hardware.py --refresh` still crashes per `tasks/doc/041`),
+`umbrella/037` check 13, `umbrella/033` check-17 arms, umbrella check 5's permission-denied probe, the
+`embarch-outpost` / `embarch-dev-bench` toolchains absent from a worker's worktree, and the bench
+queue parked by the owner's `d0cf9a0`.
+
+**Budget:** PROCEED — weekly 54.7% of a 90% cap at leg start, resets in ~66h. Wave 6 suggested; three
+workers dispatched, bounded by scope spread.
+
+**Least sure about:** **whether `decisions/trace-rows.md` is a real mission or a byte-count artifact.**
+The reviewer read all nine of this sub-project's decision files and agreed row admission is orthogonal
+to rendering, and I believe that. But the honest sequence is that the file exists because
+`trace-view.md` crossed a threshold, not because someone decided row admission deserved its own home —
+and a decisions file created to relieve pressure is a file whose boundary nobody has defended. The
+test will be the next `embarch-ui` decision about rows: if it lands naturally in `trace-rows.md` the
+seam was real, and if the author hesitates over which file it belongs in, the split was arithmetic.
+Nothing checks this and nothing will remind anyone to look.
+
+---
+
 ## 2026-09-13 13:08 — outpost/020 a documentation section told a worker it could verify less than it can
 
 **Decided:** nothing suite-wide. The judgement worth recording is **what kind of error this was**, because
