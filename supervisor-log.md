@@ -97,6 +97,83 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 12:29 — umbrella/058 a decision said `saved.host` is sticky for every class, and the code clears it
+
+**Decided:** nothing suite-wide, and the one judgement worth naming is **what the worker did not
+do.** `decisions/bind.md:29` asserted `apply_plan` writes `host.map(…).or(saved.host)` for *every*
+class; `src/setup.rs:349` writes
+`host: if plan.class == TopologyClass::Remote { plan.host } else { None }`. The cheap fix is to
+delete the sentence. The worker instead put the claim in the past tense and **named decision 51 as
+what changed it**, because the reason the field was once sticky is part of why clearing it needed a
+decision at all — and a decision corpus that silently rewrites itself to match today's code stops
+being a record of how the design moved.
+
+**The second half is the one I would have got wrong.** `sticky-host.md:27` quoted `state.rs`'s
+*"Only meaningful for `remote`"*, and the scout that filed this reported the quote as **not
+existing** — `grep` finds three matches of that phrase and all three are in `config.rs`, about
+something else. The obvious reading is that the citation was always wrong, which is what my task
+file leaned toward. It was not: the worker checked `git show e63ce13:src/state.rs` and the comment
+**was there verbatim** when decision 48 was written, then was rewritten twice (`umbrella/050`, then
+decision 51). So the clause is not a mis-citation to correct but a **quote whose source moved**,
+and it now says so and points at `state.rs`'s current comment. The reviewer confirmed both halves
+independently — the old commit contains the comment, and `src/state.rs:26-32` carries what the
+rewrite says it carries. **A stale citation and a citation that was never right need different
+fixes, and only reading the history tells them apart.**
+
+**Merged:** `agent/umbrella/058-saved-host-no-longer-sticky` — `embarch-doc` `9adaa1a`;
+`embarch-umbrella` **zero diff**, branch equal to `origin/main` at `eacfb36`, verified by
+`rev-parse`. Doc-only by design: the code was already right, and the task said in as many words
+that if the worker concluded otherwise it was to report rather than change behaviour inside a
+documentation task.
+
+**Blocked:** nothing. `tasks/umbrella/058` closed `done` and retired in this fold.
+
+**Reviewer:** no findings. It verified `setup.rs:349` against decision 51's own text; checked the
+dead quote **both ways** (present at `e63ce13`, absent now, and the current comment says what the
+rewrite claims); confirmed decision 48's *"what a stored value actually attests to"* argument
+survives **verbatim**, with only tense and a trailing pointer added; and re-derived the byte count
+exactly — 215 → 301 B, the +86 B the worker reported. That last one mattered: the worker's first
+draft was +274 B and tripped decision 22's pinned per-decision baseline, so the wording was
+tightened to fit, and **a byte budget buying brevity at the cost of a qualifier is the one way this
+unit could have gone quietly wrong.** The reviewer's read is that the tightened clause adds
+precision rather than dropping anything.
+
+**On spending 86 B of a file already in reserve.** `bind.md` is at 11,533 / 12,288 B (93.9%) with
+`tasks/umbrella/009-compact-docs.md` blocked on `In flux: yes`, due 2026-10-06 and not overdue. I
+told the worker to compact it in-unit if its edit pushed the file over, per `DOC-COMPACTION.md` §2.
+It did not, and the reviewer's argument for why that is right is better than mine: **compacting
+`bind.md` in this unit would itself be barred by the same flux flag that parked the task.** The
+debt is dated and owned; adding 86 B to it is defensible and the ledger will collect.
+
+**Hardware debts:** none created, none possible — three prose assertions in two decisions files and
+an empty code branch. One **narrowed rather than closed**: `open.md`'s note that decision 51's
+clearing needs a real machine to confirm is untouched and still owed — this unit made the docs
+agree with the code, not the bench agree with either. The worker ran the full cargo gate on an
+untouched tree (229 tests, including
+`a_local_conclusion_clears_a_previously_saved_host`), which is evidence about the code and not
+about a machine. Standing debts unchanged: `core/015`'s native Windows build, the unplugged
+dev-bench probe (`tasks/api/059` **open**) with `fleet-hardware.py --refresh` still crashing,
+`umbrella/037` check 13, `umbrella/033` check-17 arms, umbrella check 5's permission-denied probe,
+`embarch-ui`'s 18-record stale prefix, the bench queue parked by the owner's `d0cf9a0`, and the
+`embarch-outpost` / `embarch-dev-bench` toolchains absent from a worker's worktree.
+
+**Budget:** PROCEED throughout — weekly 50.3% of a 90% cap at leg start, **53.0%** at this fold,
+resets in ~66h30m. Wave 6 suggested and never reached; three workers at peak, bounded by queue
+scope spread for the whole leg. **This is unit 4 of 4 and the leg ends here.**
+
+**Least sure about:** **whether the six tasks I filed this leg are as good as they look, because
+one scout wrote all six and nothing disagreed with it before they were dispatched.** Two of the six
+ran this leg and both came back with the finding substantially confirmed — but `umbrella/058` is
+also the one where the scout's framing was **wrong in a way that would have propagated**: it
+reported the `state.rs` quote as never having existed, my task file inherited that, and only the
+worker going to the history caught it. Four more tasks (`topology/036`, `api/080`, `ui/042`,
+`outpost/020`) are sitting in the queue carrying that same single-source framing, each one marked
+"scout-verified" — which now reads to me as a stronger word than it earned. The next leg should
+treat those four the way this one's worker treated its task: **re-derive before acting, and expect
+the framing to be wrong about one thing in ten.**
+
+---
+
 ## 2026-09-13 12:25 — dev-bench/022 122 dead citations across four C files, and two of them named the wrong repo outright
 
 **Decided:** nothing suite-wide. Two calls of mine, both recorded in `core/047`'s entry as queue
