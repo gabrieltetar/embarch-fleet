@@ -97,6 +97,68 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 16:50 — umbrella/062 the depth was fixed on four links, and the reviewer found the one whose target had gone dead underneath it
+
+**Decided:** **three, and this is my leg's last unit.**
+
+**(a) The sweep, not the list.** `umbrella/061` fixed four `../embarch-doc/...` sites in
+`doctor.rs`; a drop named four more. The worker was told to grep rather than trust the list, and the
+count held at four — `config.rs` ×2, `setup.rs`, `main.rs`. **Zero shallow `../embarch-doc/` remain
+anywhere in `src/`; nine sites now sit at the correct depth**, and I resolved all six distinct
+targets from `embarch-umbrella/src/` myself: every one exists. Two bare `embarch-doc/...` mentions in
+`main.rs` are prose, not links, and were correctly left alone.
+
+**(b) The form was not allowed to change, and did not.** The suite has two conventions for citing
+`embarch-doc` from a sibling's source — a `../../embarch-doc/...` relative link and a suite-root-
+relative `embarch-doc/...` with no `../` — and `DOC-CONVENTIONS.md` settles neither. Picking one
+suite-wide is a decision and it was explicitly not the worker's; **all four changes are the same
+citation two characters longer**, confirmed by the reviewer line by line. The worker filed
+`inbox/doc-settle-cross-repo-citation-form.md` instead of deciding, which is exactly right.
+
+**(c) The reviewer found a real one, and the finding is the general lesson of this whole day.**
+`setup.rs`'s data-directory comment cites `embarch-core/spec.md` **§6**, and `spec.md` has had only
+**five** sections since `core/030` split §5 out into `interfaces/constants.md` on 2026-09-09. **The
+depth was being fixed on a link whose target section had been dead for four days.** I re-derived it
+before acting — counted `spec.md`'s headings, then found the token/`study_results/`/`logs/`/
+`enrollment.toml` convention verbatim in `interfaces/constants.md` — and repointed it there in the
+fold (`54615b7adc3f204cb2232f3cba0eb34c33ca0af4`), deleting the drop once it landed. Pre-existing,
+but this unit touched that exact line, and **a citation repair that leaves a false claim intact is
+the defect class this suite has now caught in four consecutive units.**
+
+**Merged:** `agent/umbrella/062-shallow-cross-repo-link-depth` — code
+`4f4d7b1fcede2fa50fada17f800fd38d8db8ac4b` in `embarch-umbrella` (parent
+`a8026d17cf7d2e6a759bbe584e0f3b45881eaf82`, this leg's own `suite/038`), plus reviewer fix
+`54615b7adc3f204cb2232f3cba0eb34c33ca0af4`; doc in this fold commit (the worker's `e38cdc7`
+**cherry-picked** as `d3787b3`). Gate re-run by me on the merge result: `cargo build` / `test`
+(**225 passed, 0 failed**) / `clippy --all-targets -- -D warnings` green,
+`check-client-names.py --repo embarch-umbrella` clean against 7 denylist entries, `check-docs.py`
+11/11, ownership green on both halves.
+`changelog.d/umbrella-more-shallow-cross-repo-links.fixed.md` consumed into `history/umbrella.md`
+with `--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/umbrella/062` closed `done` by the worker.
+
+**Reviewer:** 1 finding — `inbox/umbrella-setup-rs-stale-spec-section.md`, the dead `spec.md` §6
+pointer; **acted on in this fold and the drop deleted**, after I re-derived it from both files
+rather than trusting it. It also confirmed the `CoreConfig` and `/status` claims around the other
+three links still hold, and that no shallow depth survives anywhere in `src/`.
+
+**Hardware debts:** **none created.** Four comment lines plus one repointed citation; nothing
+executed, no board, no Core. Standing debts carried unchanged — `core/015`'s native Windows build
+(eleven landed `embarch-core` changes), the **dev-bench probe still unplugged** (`tasks/api/059`
+stays `open`), `umbrella/056`'s unrun clearing behaviour, and `suite/038`'s own re-scoped check 9,
+which has not been seen on a real `doctor` run either.
+
+**Budget:** PROCEED — weekly **63.9%** of a 90% cap at this fold, up from 63.2% at leg start,
+resets in ~62h. No 429, no HOLD, wave 6 suggested throughout and never the limit.
+
+**Least sure about:** **the queue this leg leaves behind.** Every one of my four units came from
+`inbox/` drops or from a `suite` task a previous leg had already parked — **the refill sweep of
+eight `open.md` files produced nothing dispatchable**, and after this fold the only
+worker-dispatchable task left is `tasks/api/086`, a compaction I filed myself an hour ago. Three
+drops sit in `inbox/` for the next leg, and all three were written by this fleet about its own code.
+That is the second consecutive leg to say this, which makes it a trend rather than an observation.
+
 ## 2026-09-13 16:41 — core/053 the stale filename was the smaller half; the sentence around it had gone false too
 
 **Decided:** **three.**
