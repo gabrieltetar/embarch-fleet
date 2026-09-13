@@ -97,6 +97,107 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 13:52 — umbrella/059 the split that pays a size debt also silently drops the decision's size pin, and the actor doing it cannot fix that
+
+**Decided:** one thing, and it is a defect in the size mechanism that this leg created three chances
+to hit and hit once. **It is the most important thing in this leg's log and the next leg should read
+it before running a split.**
+
+**`scripts/decision-size-baseline.json` keys its pins by `<file>#<decision-number>`.** A verbatim
+split moves a decision to a different file without changing its number or a byte of its text — so the
+key stops matching, the old entry orphans, and the decision reappears with no baseline at all:
+
+| | before | after |
+|---|---|---|
+| key | `embarch-umbrella/decisions/doctor.md#42` | `embarch-umbrella/decisions/locate-api.md#42` |
+| baseline | 5,376 B | **none** |
+| `--decisions` says | `pin   5157 B` | `OVER  5157 B` |
+
+The decision did not grow. Nothing about it changed. The ledger simply lost sight of it.
+
+**Three things make this worth an entry rather than a footnote.**
+
+**It is silent.** `check-doc-size.py` returns 1 only for a *pinned* decision that grew past its
+baseline. An over-cap decision with **no** baseline is an informational line and the gate stays green
+— correct for a decision nobody pinned yet, wrong for one whose pin was just dropped. The two are
+indistinguishable in the output, and there are already four unpinned overages elsewhere in the suite
+for a fifth to hide among.
+
+**The cost lands later, on someone else.** The ratchet only shrinks. Whoever next runs
+`--adopt-decisions` re-seeds an unpinned decision at whatever size it is that day, so a tightening
+already won is quietly given back, and the person doing it has no way to know a pin was ever there.
+
+**And the rare case just became the common one.** Until this week a verbatim split was unusual.
+`ui/043` demonstrated on 2026-09-13 that it pays a reserve debt without deleting a sentence, and this
+leg then ran **three** of them because fourteen debts are parked behind `In flux: yes`. That is now
+the standard way this suite pays a reserve debt, and every one of them can un-pin a decision.
+
+**Filed as `tasks/doc/052`, `Owner: required`, generalised on the way in.** The worker's drop asked
+for one key to be renamed; I widened it to the class and gave three shapes for the second half with
+**no recommendation**, because how much mechanism a rare-but-now-routine move deserves is a judgement
+about cost that is not mine: key the ledger by decision number within a sub-project; or keep the
+keying and make an orphaned pin *loud* (the cheapest, and it decides nothing); or do nothing
+mechanical and accept a drop-and-task per split. The first item is the one-line fix for decision 42
+itself, pinned at **5,157 B** and not the old 5,376 — the ratchet only shrinks, so tightening to the
+true current size is correct rather than a regression.
+
+**Why neither the worker nor I could just fix it.** The baseline file is *data*, not check logic, but
+it lives under `scripts/`, which `protocol.md` §2 reserves wholesale. That line is right and I am not
+asking for it to move — a supervisor that can edit the ledger its own gate reads has no gate. The
+consequence is worth naming anyway: **the actor performing a split is structurally unable to record
+its effect**, so every split will keep filing a drop and waiting. That is the argument for the second
+`Done when` item, and it is why I did not file this as "rename one key".
+
+**This unit.** `decisions/doctor.md` was 11,082 / 12,288 B holding exactly three decisions. Decision
+42 — `locate_api`, at 5,157 B, 47% of the file — is not a *check* at all but the resolution mechanism
+several checks consume, so it was both the cleanest mission cut and the only one that pays the debt.
+`doctor.md` is now **6,039 B**, out of reserve with ~5,000 B of headroom.
+
+**Merged:** `agent/umbrella/059-split-locate-api` — `embarch-doc` merge commit **`979af88`**, merging
+worker commit `fcb3bdf`, parent `3ffa8304a34f157b0f342fc4401736ecbb8a9b91`. **No code SHA**: the
+`embarch-umbrella` branch carried zero commits, correct for a pure documentation split. Gate re-run
+on the merge result: `check-docs.py` 11/11 green, `check-ownership.py --scope umbrella` green on both
+branches, `check-client-names.py` clean.
+
+**Blocked:** nothing. `tasks/umbrella/059` closed `done`. `tasks/umbrella/048` deliberately left
+`blocked` and untouched, its `Size debt due: 2026-09-20` — **the soonest date on the whole ledger** —
+discharged by this unit rather than paid by it.
+
+**Reviewer:** no findings. It ran the split-versus-squeeze check first — decision 42 extracted from
+the new file at the merge against `doctor.md` at the **parent**, `diff` **exit 0** — then confirmed
+`decisions.md`'s index row split so each number appears in exactly one row, and that the only other
+"decision 42" hits in the suite are `embarch-core`'s own differently-namespaced one. It re-derived
+both halves of the citation sweep: two path-qualified hits, both in `tasks/umbrella/009-compact-docs.md`,
+repointed — and it verified that the edit to that **blocked** task touched only the two link targets,
+no wording, no state, no flux answer, which was the thing I most wanted checked since `009` is parked
+on `decisions/bind.md`'s 10,691 B decision 22. It agreed the bare `(decisions 38, 42)` in
+`interfaces/doctor-chain.md` is correctly left alone, and agreed the lost pin is informational rather
+than worse.
+
+**Hardware debts:** none created, none possible — a documentation split with an empty code branch.
+Note it does **not** touch the two standing `umbrella` ones and is unrelated to both: check 13's two
+`umbrella/034` findings still unverified against a real bench, and check 17's two Fail arms never
+having met a real narrow-bound Core (`tasks/umbrella/033`, `Owner: required`). Nothing in this leg has
+touched hardware; the bench queue is parked by the owner's `d0cf9a0`, `fleet-hardware.py --refresh`
+still crashes (`tasks/doc/041`), and the buffer is over 8,400 min stale. Standing debts unchanged:
+`core/015`'s native Windows build, the unplugged dev-bench probe (`tasks/api/059` **open**),
+`umbrella/037` check 13, `umbrella/033` check-17 arms, umbrella check 5's permission-denied probe,
+`embarch-ui`'s 18-record stale prefix, and the `embarch-outpost` / `embarch-dev-bench` toolchains
+absent from a worker's worktree.
+
+**Budget:** PROCEED — weekly 56.4% of a 90% cap at leg start, 57.0% at the `api/081` fold, resets in
+~65h. Wave 6 suggested; four workers dispatched at once, bounded by scope spread rather than the cap.
+
+**Least sure about:** **whether "the pin is only informational" is a conclusion or a convenience.**
+The worker said it, the reviewer agreed, and the code says it — `main()` returns 1 only for `dfails`.
+All three are correct about *today*. What none of us established is what the pin was *for*: a 5,376 B
+baseline held for months is a ratchet somebody set deliberately, and losing it costs nothing until
+the day someone re-seeds it looser and nobody notices that either. I landed the unit on the reading
+that a green gate means no harm now, and filed the task on the reading that it means the harm is
+deferred and invisible. I believe the second and acted on the first.
+
+---
+
 ## 2026-09-13 13:50 — dev-bench/030 the own-repo half of a citation rule, swept for the first time by the third pass over the same lines
 
 **Decided:** nothing suite-wide. Two findings, and the second is the one that generalises.
