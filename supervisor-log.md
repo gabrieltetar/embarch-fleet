@@ -97,6 +97,53 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 10:18 — ui/041 the second of leg 103's three orphans, and the second whose fix had already landed
+
+**Decided:** nothing suite-wide, and the absence is the interesting part. Two of leg 103's three
+dispatches turned out to be work that had already landed — `dev-bench/028` as `656516b`, this one
+as `fa0a327` — and in **both** cases the fix was a *reviewer-finding task filed by the same leg
+that then fixed it in its own fold*. `ui/040`'s reviewer found two mis-prefixed citations; that
+leg applied the fix as `fa0a327` **and** filed `tasks/ui/041` describing it as outstanding. The
+task and the fix were produced by the same unit and only one of them knew about the other.
+
+**That is a cheap class to stop and I am not fixing it by rule here**, because the rule would have
+to live in `.claude/leg.md` or `protocol.md` and neither is mine: **when a fold applies a
+reviewer's finding itself, it must not also file a task for that finding** — or if it files one,
+it files it `done`. Both of last night's no-op dispatches cost a worker spawn, a claim commit, a
+branch pair, a rebase and a landing to discover nothing needed doing. Filed as an observation for
+the owner rather than an edit, per §2.
+
+**Merged:** `agent/ui/041-vendor-gatt-decision-41-doc` (doc `7efa9ab`). **No code merge** — the
+worker made no edit; its code branch carries zero commits beyond `embarch-ui` `main`. Pre-rebase
+tips, not revert handles: `bba6cbc`, then `46a8202`.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings. Reviewed at `46a8202`, which is the same content as the landed
+`7efa9ab` — I rebased once more after `dev-bench/028`'s fold moved `main`, and the SHA moved with
+it. It confirmed both `assets/app.js` sites cite `embarch-study-designer` decision 41, that
+decision 41's body is genuinely the vendor-defined GATT identity table, and — the question worth
+asking after two legs found this exact class — that decision 39 is not a plausible-but-wrong
+alternative at those sites but simply a different topic.
+
+**Hardware debts:** none — no code changed in this unit. Standing debts unchanged and carried, the
+same set as `dev-bench/028`'s entry above.
+
+**Budget:** PROCEED, weekly 47.7% of a 90% cap at leg start, wave 6 suggested and unused — this
+leg dispatched no workers, because its four units were three of leg 103's finished orphans plus a
+`suite` task whose announcement window it inherited.
+
+**Also in this fold:** `tasks/doc/050`, filed against `fold-commit.py` for the defect that made
+the previous unit's fold finish by hand — its `git rm` of the finished task file refuses a file
+the fold itself modified, and correcting `**State:** closed` to `done` is exactly such a
+modification, so the failure lands *after* the log commit with no way back through the script.
+
+**Least sure about:** whether the two no-op units should have been landed as units at all rather
+than closed with a single commit and not counted. I counted them, because each still needed a
+gate, an ownership check, a merge and a fold — but a leg whose cap is four units has just spent
+half of it discovering that two tasks were already done, and a reader of this log a month from now
+should know that is what "4 units" bought here.
+
 ## 2026-09-13 10:16 — dev-bench/028 a dispatched task whose fix had already landed, and a `closed` that would have kept it in the queue forever
 
 **Decided:** nothing suite-wide. One correction the worker could not have known to make, and it is
