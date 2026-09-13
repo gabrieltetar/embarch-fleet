@@ -97,6 +97,99 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 14:52 — ui/045 a citation verified against the document that no longer exists, and a sweep that came back clean and said so
+
+**Decided:** **three, and the first is a negative result I went looking for on purpose.**
+
+**(a) The dead-`§N` class is `embarch-study-designer`-specific, and I measured that rather than
+assuming it.** Leg 109 spent four units walking outward from the 2026-09-02 split and flagged, in its
+own "least sure about", that this might be a leg mining its own findings instead of a queue. So
+before filing a fifth, I counted `§[0-9]` across **every** sub-project and then checked the citations
+that could not possibly resolve — a `§N` higher than its own `spec.md`'s section count:
+`embarch-api` cites `§9`/`§10` against a 7-section spec, `embarch-core` `§8`/`§9`/`§10` against a
+5-section spec, `embarch-dev-bench` `§10` against a 5-section spec. **Every one of them resolves**:
+they point at `embarch-fleet/protocol.md §8`/`§10`, `DOC-COMPACTION.md §9`, `embarch.md §5` — other
+documents, correctly cited. **So there is no sweep owed in api, core, umbrella, topology, outpost or
+dev-bench, and the next leg should not file one.** `embarch-study-designer`'s forty are dead because
+its `design.md` was the oldest split in the suite, not because the class is suite-wide.
+
+**(b) I dispatched one of this unit's own inbox drops as the next unit rather than only queueing
+it.** `ui/045`'s worker found a second, different defect in the same sweep — a dead `§3` prefix on
+thirteen of `embarch-ui`'s citations of *its own* decisions, left from before `embarch-ui/design.md`
+became `decisions.md` — and filed it rather than fixing it, correctly, because its task's scope was
+the two cross-repo citations. `ui/045` landing freed the `ui` slot, so it became `tasks/ui/046` and
+went straight out. **The dispatch note tells that worker its own task file's line numbers are stale
+by one commit** — `ui/045` edited the very file it counts in — and to work from its own grep, saying
+so if the count is not 13.
+
+**(c) Refill found nothing dispatchable in the six under-served scopes, and that is the honest
+state of the queue rather than a gap in the sweep.** `--refill-owed --wave 6` fired on scope spread
+(3 scopes, wave 6). I swept all eleven `open.md` files, `suite/roadmap.md`'s Now/Next, and
+`embarch-decision-reversals.md`. **Roadmap Next is entirely hardware-gated** (a real `.eap` run on a
+radio; `embarch-promptu`, which has no repo). The reversals page carries no unaddressed follow-ups by
+construction. And the `open.md` bullets in `api`, `core`, `umbrella`, `topology` and `outpost` are
+almost all either hardware debts or deferred-with-a-named-trigger — that is what those files are
+*for*, and previous legs have already harvested the actionable ones. **I filed one task and only
+one**: `tasks/suite/038`, out of `embarch-api` decision 64's own **"Ends when"** clause
+(`decisions/shape.md:58`), which has fired and which nothing had been filed against — retire
+`artifact_path_for_core` in `embarch-umbrella` (`init` scaffolding, `doctor` check 9) and
+`embarch-api` (load-time toleration) together, because both repos' decisions explicitly refuse to
+move alone. It carries a section naming the one clause no agent can settle: *"no config in the field
+still carries it"* is a fact about the owner's machines, and refusing a key by name turns a stale
+field into a startup error.
+
+**This unit.** `embarch-ui/src/study_designer.rs:1524` cited `embarch-study-designer/interfaces/
+types.md §4.3` for `Uuid`'s raw-array-versus-hyphenated `Serialize` form. `ui/044` had checked this
+site yesterday and correctly left it — the *file* is right. What was wrong is the *section*, and the
+worker settled it the only way it could be settled: **it read the retired `design.md` at `d0b7608^`
+and found `§4.3` was `Action`, never `Uuid`.** The number is dropped rather than replaced, because
+`interfaces/types.md` has carried no numbered headings since the split and any `§N` written into it
+would be a fabrication — `ui/044`'s precedent.
+
+**Merged:** `agent/ui/045-uuid-citation-section` — code `6963544767f77a05dec422aab917b490ee748441`
+in `embarch-ui` (parent `364afe3e38c9fbac9192673a024d9303d0c531b6`), doc
+`310ead64165e1b12526370119d370d3660e0bcbd` in `embarch-doc` (parent
+`d8d3f4edb9bb887371fb245588f73c6dd79db17e`). Gate re-run by me on the merge result, not the branch:
+`cargo build` / `test` (101 passed, 4 ignored) / `clippy --all-targets -- -D warnings` green,
+`check-client-names.py --repo embarch-ui` clean against 7 denylist entries, `check-docs.py` 11/11,
+`check-ownership.py --scope ui` green on both branches. **The code half needs `--code-repo`** — the
+plain form reports `src/study_designer.rs` as out of scope, which is the flag confusion
+`tasks/doc/036` covers and not a real finding. No `changelog.d/` fragment: a doc comment over code,
+the same call `ui/044` made.
+
+**Blocked:** nothing. `tasks/ui/045` closed `done`. Queue deltas: `tasks/ui/046` (claimed and
+dispatched), `tasks/study-designer/043` (open — `Uuid`'s serialize form is documented nowhere in
+`embarch-study-designer`, which is a larger problem than the pointer to it), `tasks/suite/038`
+(open). `inbox/` is empty again.
+
+**Reviewer:** no findings — it re-derived the `d0b7608^` claim itself rather than taking the
+worker's word, and **checked the two citations the worker reported as clean**, which is the half
+nobody re-checks. It noted one honest nuance it declined to escalate: `assets/app.js:2542`'s claim
+about incremental writes is closer to `events.json`'s wording than `gatt.csv`'s in
+`embarch-study-designer/spec.md` §5, but the section is real, numbered and on-topic, so it resolves.
+
+**Hardware debts:** none created, none possible — one doc comment in one source file. **The bench
+was re-checked live at the top of this leg** and is still down: `validate dev-bench` answers
+`recorded hardware_id 6fcddc36cb781b71, live None` for probe `001057729826`. That is *not attached*,
+not a topology mismatch — the conflated error text is `tasks/core/041`. `tasks/api/059` stays
+**open**, not blocked. Standing debts carried unchanged: `core/015`'s native Windows build,
+`umbrella/037` check 13, `umbrella/033` check-17 arms, umbrella check 5's permission-denied probe,
+`embarch-ui`'s 18-record stale prefix, and the `embarch-outpost` / `embarch-dev-bench` toolchains
+absent from a worker's worktree.
+
+**Budget:** PROCEED — weekly **59.6% of a 90% cap at leg start**, resets in ~64h. No 429. Wave 6
+suggested and **not reached**: 2 workers, then 2, bounded by scope spread, exactly as the refill
+gate said.
+
+**Least sure about:** **whether `tasks/suite/038` should have been filed at all, given (a).** I spent
+most of a unit's reserve establishing that the citation class is *not* suite-wide — a negative result
+I believe — and then filed the one thing the sweep did turn up. But 038 is a **suite** task, so it
+cannot be dispatched to a worker and does nothing for the scope spread that made refill fire in the
+first place; it is queue depth in the one scope that already cannot be worked in parallel. The
+argument for it is that it comes from a decision's own stated end condition rather than from
+anything a leg noticed, which is precisely the source refill is supposed to draw on. The argument
+against is that the honest answer to "refill found nothing" is to say so and stop.
+
 ## 2026-09-13 14:31 — api/082 a file nothing points at, which is the other half of the blindness a verbatim split creates
 
 **Decided:** three things, and the first is the reason this unit exists at all.
