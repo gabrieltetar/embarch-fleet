@@ -97,6 +97,92 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 12:00 — core/047 two decision entries said a cross-repo fix was still owed, and both had landed
+
+**Decided:** nothing suite-wide. Two queue calls that the next leg should know about, because both
+changed what is dispatchable rather than what is documented.
+
+**(a) Four `dev-bench` task files were re-scoped into one.** `dev-bench/022`, `023`, `024` and
+`025` described one mechanical sweep — 122 citations of a deleted `embarch-study-designer/design.md`
+filename — across four files in one repo. **One-task-per-sub-project is per slot**, so they could
+never run concurrently: four task files meant four legs each spending a unit on ~30 citations of the
+same transformation. The expensive half is resolving the 28 distinct decision numbers against that
+repo's index, and it is paid once whether the sweep covers one file or four. So `022` now carries
+all four files and `023`/`024`/`025` are **`blocked` on it**, unparking from the worker's report:
+whatever `022` does not cover goes back to `open` with its remaining count. **A defect in `025`
+went with it** — it named `tests/serial_protocol/src/main.c` and the file is at
+`app/tests/serial_protocol/src/main.c`, so its own `Done when` grep would have returned zero
+against a path that does not exist, a checkbox passing for the wrong reason.
+
+**(b) Refill ran for scope spread, not depth, and filed six tasks in six scopes.**
+`queue-status.py --refill-owed --wave 6` reported three distinct scopes against a wave of six. A
+scout swept `api`, `ui`, `umbrella`, `topology`, `study-designer` and `outpost` and came back with
+one verified finding in each, all of the same class: **a doc asserting something about code, and
+the code saying otherwise.** Filed as `9a37a39` — `study-designer/036` (two interface docs say
+`StreamRef` refused a fourth field; it has one, `src/streams.rs:351`), `umbrella/058`
+(`decisions/bind.md` says `saved.host` is sticky for every class; `src/setup.rs:349` clears it),
+`topology/036` (three dead citations inside that repo's own source comments, one of them a decision
+number that was **never** right rather than one that moved), `api/080` (`interfaces/tools.md` still
+advertises three tools `suite/015` retired, while its sibling `interfaces/studies.md` already says
+they are gone), `ui/042` (a marker count off by 23 against a test that asserts the true value, plus
+three CSS line citations each off by one — the worst kind, because they land on a real line) and
+`outpost/020` (`interfaces/wire.md` describes 5 legs and 1 host-only test; `run-all.sh` has 6 and
+3). **Not one of these is visible to any gate**: `check-decision-refs.py` and `check-links.py` walk
+`embarch-doc/*.md` only, so a decision number in a source comment or a prose claim about a struct's
+field list is unchecked by anything in the suite.
+
+**A defect in my own task file, found by the worker.** I wrote that the stale paragraph was
+`embarch-core` decision **54**'s. `studies.md` has no decision 54 — the index row is
+`19, 20, 24, 33, 40, 41, 43, 45`, and `enrollment.md` carries an explicit tombstone for a 54 that
+moved to 57 (`tasks/core/039`, after a collision with `decisions/flashing.md` 54). The paragraph is
+decision **43**'s. The worker corrected it in the task file rather than doing what the task said,
+which is the right failure mode; the reviewer independently confirmed the correction against the
+index.
+
+**Merged:** `agent/core/047-cross-repo-handoff-claims` — `embarch-doc` `f50b5a6`; `embarch-core`
+**zero diff**, branch equal to `origin/main` at `53f1ed1` and verified by `rev-parse`, not taken on
+the worker's word. The task is doc-only because `embarch-core`'s decisions live in
+`embarch-doc/embarch-core/`, so an empty code branch is the correct outcome here rather than a
+worker that did not finish. Landed by cherry-pick onto current `main` rather than `--ff-only`: the
+branch was based on its own claim commit and two later claims had moved `main` underneath it.
+
+**Blocked:** nothing. `tasks/core/047` closed `done` and retired in this fold.
+
+**Reviewer:** no findings. Given four questions and it answered all four against sources rather than
+prose: it re-derived the 43-versus-54 correction from `embarch-core/decisions.md`'s index and the
+tombstone; confirmed `embarch-ui/assets/app.js:2499` renders `currentStep + 2` clamped with
+`src/study_designer.rs:1823` asserting the old `+ 1` form is gone; confirmed the Topology tab labels
+`confirmed_at_utc_ms` **"Enrolled"** citing decision 57 by name (`assets/app.js:160-175`,
+`src/snapshot.rs:21-29`) after `3d2f870` repointed it from 54; and confirmed decision 57's
+*Rejected* clause and decision 43's two-counters explanation both survived intact, amended rather
+than deleted. **It was told in the spawn that `tasks/umbrella/045` may legitimately be absent
+because it closed `done`** — it found the file present, but that line is worth keeping in future
+spawns: a retired task file is the exact shape a reviewer misreads as a broken citation.
+
+**Hardware debts:** none created, none possible — two paragraphs in two decisions files, and an
+empty code branch. Standing debts unchanged and none deepened: `core/015`'s outstanding native
+Windows build of `embarch-core` (this unit adds nothing to it — no `embarch-core` source moved),
+the unplugged dev-bench probe with `tasks/api/059` left **open**, `fleet-hardware.py --refresh`
+still crashing, `umbrella/037` check 13, `umbrella/033` check-17 arms, umbrella check 5's
+permission-denied probe, `embarch-ui`'s 18-record stale prefix, the bench queue parked by the
+owner's `d0cf9a0`, and the `embarch-outpost` / `embarch-dev-bench` toolchains absent from a
+worker's worktree.
+
+**Budget:** PROCEED throughout — weekly 50.3% of a 90% cap at leg start, 52.0% at this fold, resets
+in ~67h. Wave 6 suggested and never reached: three workers at this leg's peak, bounded by queue
+scope spread, which is exactly what the refill above was for.
+
+**Least sure about:** **whether collapsing four task files into one is a supervisor's call or a
+quiet loss of four independent reviews.** Each of `022`–`025` would have been read cold by a
+different leg, gated separately and reviewed separately; one task means one worker's judgement over
+122 citations with one reviewer behind it. I think the trade is right — the discrimination that
+matters (which hits are *not* instances of the defect) is per-hit either way, and four legs on one
+sweep is real throughput lost — but it is the kind of consolidation that looks obviously correct
+from inside a leg and obviously lossy from outside one. The guard I left is that the three parked
+tasks unpark from the worker's own report rather than from my assumption that it finished.
+
+---
+
 ## 2026-09-13 11:32 — suite/036 the argument against renaming a served field was arithmetically wrong, and the field is still not renamed
 
 **Decided:** one design call and one deliberate non-call, both mine, and the second is the one to
