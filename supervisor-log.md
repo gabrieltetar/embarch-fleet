@@ -97,6 +97,83 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 15:17 — study-designer/043 the Uuid wire form written down as prose, and the reviewer arguing for prose rather than against it
+
+**Decided:** **two, and the second is the one worth carrying forward.**
+
+**(a) Prose, not a numbered decision.** The task offered either. I told the worker in the dispatch
+note to prefer a prose addition to `interfaces/types.md` and to author a decision *only* if it
+concluded the raw-array form is a design commitment consumers may rely on that nothing records as
+such — and to say why prose was not enough if it went that way. It went with prose, on the ground
+that this states what the code already does rather than making a choice. **The reviewer then
+independently argued the same conclusion from a source I had not given it**: the paragraph
+immediately above the new one, `BleAddress`'s byte order, is the same shape of claim — an existing-
+code fact in prose with no number — and has stood as accepted precedent since 2026-09-06. A
+decision number in this suite is permanent; two agents reaching "no number" from different evidence
+is the cheapest confirmation available that it should not be spent here.
+
+**(b) Three task-file premises were checked and one of them was wrong, which is the point of
+checking.** The task was written by `ui/045`'s worker while sweeping for something else, so I
+dispatched it with all three of its assertions marked as unverified — the `[u8; 16]` derive, the
+`to_hyphenated`/`parse` pair being the only text-form crossings, and no `interfaces/*.md`
+mentioning the split. Worker confirmed all three from source. **The reviewer then found the fourth,
+unstated premise false:** the task implies `result-types.md` carries a raw-vs-symbolic UUID claim,
+and it does not mention UUIDs' raw/symbolic status at all. Nothing landed on that premise, so it
+cost nothing — but a task file written by a worker sweeping a *different* repo is exactly the input
+whose premises are most likely to be one file off, and this is the second leg running to find that.
+
+The reviewer also named an undercount I am letting stand deliberately: the new prose says two
+consumers depend on the split, and `to_hyphenated()` is in fact called from four more sites
+(`gatt.rs`, `study_builder.rs`, `vendor.rs`, `gatt_extract.rs`). Those are Display and logging uses
+whose correctness does not depend on knowing wire ≠ display form, so the narrower claim is the true
+one; widening it to a raw call-site count would make the paragraph less accurate, not more.
+
+**Merged:** `agent/study-designer/043-uuid-serialize-form-doc` — doc
+`cb48e51ce8e6786cedfede356141c748b7d2dbb4` in `embarch-doc` (parent
+`a5ea68ebcd353b038841718063d8804d480d652c`, the claim commit). **Code: none** — the code branch
+`agent/study-designer/043-uuid-serialize-form` was pushed carrying zero commits, because the unit
+turned out to be doc-only. Gate re-run by me on the merge result: `check-docs.py` 11/11 green,
+`check-ownership.py --scope study-designer` green over 3 changed paths, worker's own
+`cargo build`/`test`/`clippy --all-targets -- -D warnings` clean in `embarch-study-designer` with
+no source touched. `changelog.d/study-designer-uuid-serialize-form.added.md` consumed into
+`history/study-designer.md` with `--only`; 29 of the owner's own fragments left pending and
+untouched.
+
+`interfaces/types.md` is **12 K capped, not 10 K** — my dispatch note told the worker 10240 B and it
+corrected me from `check-doc-size.py --report`. The file is 9733/12288 B (79%), not in reserve, no
+compaction task owed. I had read the cap off the sibling `spec.md` entry rather than looking it up;
+the worker catching it is the reason nothing was mis-planned.
+
+**Blocked:** nothing. `tasks/study-designer/043` closed `done` by the worker.
+
+**Reviewer:** no findings. It re-derived `src/ids.rs`'s derive, both text-form crossings and
+decision 37's body itself rather than trusting the commit message, confirmed the new paragraph does
+not collide with `gatt-types.md`'s orthogonal raw-vs-symbolic claim, checked
+`embarch-decision-reversals.md` for a re-proposed rejected alternative and found no study-designer
+rows at all — and answered the prose-vs-decision question with precedent I had not pointed it at.
+
+**Hardware debts:** none created, none possible — one doc paragraph, no source. Standing debts
+carried unchanged and untouched: `core/015`'s native Windows build, the unplugged dev-bench probe
+(`tasks/api/059` **open**, not blocked), `umbrella/037` check 13, `umbrella/033` check-17 arms,
+umbrella check 5's permission-denied probe, `embarch-ui`'s 18-record stale prefix, and the
+`embarch-outpost` / `embarch-dev-bench` toolchains absent from a worker's worktree.
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`), so the buffer's attach state stays
+unusable for selection.
+
+**Budget:** PROCEED — weekly **60.7% of a 90% cap** at leg start, resets in ~63h48m. No 429, no
+HOLD. Wave 6 suggested; this unit ran one worker, because the queue had exactly one dispatchable
+non-`suite` task when the leg started.
+
+**Least sure about:** **whether three parallel read-only hunters are a legitimate refill source or
+an invented one.** `--refill-owed` fired on scope spread, the `open.md` sweep confirmed the last
+leg's reading — every remaining bullet is a hardware debt or a deferred-with-named-trigger — and
+the roadmap's Now/Next is entirely hardware-gated. So rather than dream immediately I spawned three
+`Explore` agents at `embarch-core`, `embarch-umbrella` and `embarch-api` to hunt *verified* defects,
+each told that "nothing found" is a real answer. **That is finding work rather than inventing it,
+and I think it is inside `ops.md` §7 — but it is a wider sweep than "read the open questions", and
+if the owner's reading is that an empty `open.md` should have gone straight to a dream, this is the
+call to reverse.**
+
 ## 2026-09-13 15:08 — study-designer/042 one character, re-derived twice, and the class it closes is a sweep nobody had run
 
 **Decided:** **three, and the last one is the only thing in this leg I would call a result rather
