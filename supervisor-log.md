@@ -97,6 +97,74 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 12:47 — topology/036 four dead citations in a shared crate's own comments, and one the sweep found
+
+**Decided:** one thing, and it is about **what a worker is allowed to leave unresolved.** The task
+named three citations. Two had targets the scout had guessed or not identified at all, and the task
+said in as many words that a line number it could not resolve must be left un-guessed — dropped to
+a file-and-section form or reported — because *"a citation that looks resolvable and is not costs
+more than no citation at all"*. The worker resolved all three anyway, and **the interesting one is
+`embarch-core/decisions/surfaces.md:30 → :17`, which the scout never identified.** I accepted it
+because the reviewer did not merely check that `:17` fits: it swept every `message` mention across
+both repos' decisions files looking for a **better** target and found that decision 12 is the only
+decision anywhere discussing a structured error `message` field. That is the difference between
+"this line is plausible" and "no other line is", and it is the standard this task family should
+hold to. An off-by-one or a wrong-paragraph citation lands on real text and reads as correct, which
+is why it survives; a reader does not notice, they just conclude something false.
+
+**The fourth citation was not in the task.** The required sweep
+(`grep -rn 'decision [0-9]'` and `grep -rnE '\.md:[0-9]+'` over `src/` and `bin/`) turned up
+`src/hardware/enrollment.rs:40` citing `embarch-core` decision 21 — *"plain `attach`, not
+`attach_under_reset`"* — for a sentence about the dev-bench's runtime link having migrated to a
+separate UART bridge chip with its own unrelated USB serial. That is decision **27**,
+`POST /dev-bench/link`. Every one of the four was wrong about *which* decision, none about the
+claim, and no decision was renumbered anywhere.
+
+**On `hardware_id.rs`'s added parenthetical.** The fix now reads "decision 25 (not 22, which is
+unrelated and was never right here)". That is a deliberate cost: it spends a clause saying the
+citation was wrong from the first commit rather than silently correcting it, because a bare
+renumber invites the next reader to assume decision numbers move in this suite — which they do not.
+Confirmed at `a40fd32`, where `validation-classifier.md` was born as 25.
+
+**Merged:** `agent/topology/036-dead-citations-in-source-comments` — `embarch-topology` `e51f7ed`,
+`embarch-doc` `56777eb`. `embarch-topology` is a shared crate, so I read the diff before merging as
+§10 requires: three files, `///` comments only, no signature, visibility or behaviour touched. The
+reviewer confirmed the same independently.
+
+**Blocked:** nothing. `tasks/topology/036` closed `done`.
+
+**Reviewer:** no findings. It re-derived all four targets against the decisions files at the merge
+SHAs, verified `platform.md:32` carries the literal `Arc<Mutex<()>>` inside decision 14's
+paragraph, did the corpus sweep described above before accepting `surfaces.md:17`, confirmed 25 was
+25 from birth at `a40fd32`, and checked `embarch-decision-reversals.md` for decisions 12, 14, 21,
+22, 25 and 27 — none appear, so nothing here re-proposes a rejected alternative.
+
+**Hardware debts:** none created, none possible — comment text in a crate that does not itself
+reach a board in this diff. Standing debts unchanged: `core/015`'s native Windows build, the
+unplugged dev-bench probe (`tasks/api/059` **open**; re-checked live this leg, `GET /status` →
+`"probes": []`, and `fleet-hardware.py --refresh` still crashes per `tasks/doc/041`),
+`umbrella/037` check 13, `umbrella/033` check-17 arms, umbrella check 5's permission-denied probe,
+`embarch-ui`'s 18-record stale prefix, the bench queue parked by the owner's `d0cf9a0`, and the
+`embarch-outpost` / `embarch-dev-bench` toolchains absent from a worker's worktree.
+
+**Budget:** PROCEED — weekly 53.3% of a 90% cap at leg start, resets in ~66h27m; wave 6 suggested,
+four workers dispatched, bounded by scope spread.
+
+**Least sure about:** **whether this class of defect is now being found faster than it is being
+created, and I do not think anyone knows.** This is the eleventh unit in the family
+(`dev-bench/019`–`022`, `ui/033`/`039`/`042`, `core/008`, `outpost/019`, `umbrella/051`, and now
+this), every one of them a citation inside a repo's own source or docs that nothing mechanical can
+see. Three of the four fixed here were *not* in the scout's list and came from the sweep, which
+says the per-task counts are floors rather than estimates. The general fix is owner-reserved and
+already filed twice (`tasks/doc/033`, `tasks/doc/044`); I added a third narrow one this leg
+(`tasks/doc/051`). What I cannot tell from inside a leg is whether the rate of new bad citations —
+every unit that writes a comment citing a decision is a chance to make one — is above or below the
+rate these sweeps retire them. If it is above, this family never closes and each sweep is
+maintenance, not progress. That is a measurement, not a judgement, and it needs someone with the
+whole history rather than four units.
+
+---
+
 ## 2026-09-13 12:46 — api/080 the tool index advertised three tools that do not exist, and two counts that were wrong at birth
 
 **Decided:** nothing suite-wide. The judgement worth naming is **the opposite of the one the
