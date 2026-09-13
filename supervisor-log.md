@@ -97,6 +97,84 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 15:33 — core/051 a comment deleted rather than repointed, because no decision anywhere supported what it claimed
+
+**Decided:** **three.**
+
+**(a) When no decision supports a sentence, the fix is to shrink the sentence, not to find the
+nearest decision.** `src/api.rs:690` attributed the `/enroll` page's always-send-a-serial behaviour
+to `§3 decision 15` — lock arbitration, plainly wrong. The obvious repair was decision 25, the
+`/enroll` entry, and I put that candidate in the task file **with the reason not to take it**: the
+hunter that found the defect had also grepped `embarch-doc` for `drag` and found the drag-and-drop
+detail recorded nowhere. The worker re-ran that grep itself, read decision 25 and `embarch-ui`
+decision 1 in full, and **deleted both the citation and the drag-and-drop claim**, keeping only what
+`embarch-core/spec.md`'s own "ambiguity fails loudly" invariant already supports. The reviewer then
+checked the harder direction — that deleting a claim lost nothing a reader needed — and agreed.
+**Repointing would have been a false citation that resolved, which is the exact defect this unit
+exists to close, written fresh.**
+
+**(b) The wrong-number-that-resolves class keeps being found by looking, and keeps coming back
+small.** `study.rs:3724` cited decision 18; the rule is 39, and **the same file carries the
+identical sentence citing 39 correctly 3,456 lines earlier.** Three agents re-derived 39
+independently — hunter, worker, reviewer, each told not to trust the last. But the worker's own
+sweep of the remaining `decision N` citations in both files found every one correct, which is the
+third consecutive leg to measure this class and get "a handful" back. `check-decision-refs.py`
+reads `*.md` only and never `src/**`, so none of this fails a gate; the number of defects is still
+small enough that filing sweeps is cheaper than building the check.
+
+**(c) A doc that contradicted itself twelve lines apart.** `embarch-core/interfaces/logs.md:7`
+said the CLI's `logs` subcommand sits "behind both routes"; line 13 of the same file records
+`/logs/stream`'s retirement and the table above it carries one row. `build_router` registers one
+`/logs*` route. Now "this route".
+
+**Merged:** `agent/core/051-wrong-decision-citations` — code
+`f852fa8d29088a29be0655456ce6ecf70713bb60` in `embarch-core` (parent
+`53f1ed183f99c7976876c73c655fe1f907902812`), doc `681854f81c05432c1a063614b9bca20e8f7205f9` in
+`embarch-doc` (parent `21e2eed`; the worker's `3a3bd32` **cherry-picked**, not fast-forwarded — the
+doc branch was cut from `origin/main` before this leg's two later claim commits, so `--ff-only`
+could not apply and a rebase-then-merge and a cherry-pick are the same commit here). Gate re-run by
+me on the merge result: `cargo build` / `test` (197 + 1 passed) / `clippy --all-targets -- -D
+warnings` green in `embarch-core`, `check-client-names.py --repo embarch-core` clean against 7
+denylist entries, `check-docs.py` 11/11, ownership green on both halves.
+`changelog.d/core-wrong-decision-citations.fixed.md` consumed into `history/core.md` with `--only`;
+29 of the owner's own fragments left pending.
+
+**Note for the next leg:** the code-half ownership check is `check-ownership.py --scope <scope>
+--code-repo --stdin`. Run **without** `--code-repo` it reports `src/api.rs` and `src/study.rs` as
+"outside what a 'core' worker may write", because it path-checks them against the *doc* repo's
+layout — a red that looks exactly like a real violation. `tasks/doc/036` covers it; this is the
+third leg to hit it and the first to write down the working invocation.
+
+**Blocked:** nothing. `tasks/core/051` closed `done` by the worker.
+
+**Reviewer:** no findings. It re-derived decision 39 from `streams.md`'s body as the third
+independent check, confirmed 18 and 15 unrelated, verified the reworded `api.rs` comment is still
+true of `EnrollProbeRequest::probe_serial` and that nothing else in the tree still asserts the
+deleted drag-and-drop claim, and checked `build_router` itself for the `/logs*` count rather than
+taking the worker's word.
+
+**Hardware debts:** **one, and it is the ninth thing riding on the same outstanding build.**
+`core/015`'s native Windows build now carries a ninth landed `embarch-core` change. This one is
+comment-only and nothing behavioural moved, but that is now three consecutive days of `core` units
+adding to a debt nobody has paid, and the pile includes `core/045`'s route-wiring test and the
+`suite/020`/`suite/035` wire-feature split. Everything else carried unchanged and untouched: the
+dev-bench probe is **still unplugged** — I checked Core live at this leg's top and `status` returned
+`"probes": []`, so `tasks/api/059` stays **open**, not blocked — plus `umbrella/037` check 13,
+`umbrella/033` check-17 arms, umbrella check 5's permission-denied probe, `embarch-ui`'s 18-record
+stale prefix, and the `embarch-outpost` / `embarch-dev-bench` toolchains. `fleet-hardware.py
+--refresh` still crashes (`tasks/doc/041`).
+
+**Budget:** PROCEED — weekly **61.0%** of a 90% cap at this unit's dispatch, resets in ~63h40m. No
+429, no HOLD. Wave 6 suggested; three workers ran concurrently for the first time this leg, which is
+what the refill bought.
+
+**Least sure about:** **whether deleting the drag-and-drop claim discarded a real fact rather than
+an unsupported one.** Three agents now agree no decision records it, and the reviewer checked the
+loss direction specifically — but "no decision records it" and "it was never true" are different
+statements, and the `/enroll` page was retired in August, so the one place the behaviour could have
+been observed is gone. If that UI did drag-and-drop, the suite has now forgotten it, and the only
+recoverable trace would be the retired page's own source in history.
+
 ## 2026-09-13 15:17 — study-designer/043 the Uuid wire form written down as prose, and the reviewer arguing for prose rather than against it
 
 **Decided:** **two, and the second is the one worth carrying forward.**
