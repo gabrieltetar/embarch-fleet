@@ -97,6 +97,97 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 12:55 — dev-bench/029 three units had agreed on a wrong convention without writing it down, so it is written down now
+
+**Decided:** the unit's whole point, and I approved it: **`embarch-dev-bench` decision 47, in a new
+topic file `decisions/conventions.md`.** Two things about it are worth the next leg's attention.
+
+**(a) What the decision says, and why a fix that looked like tidying was not.** `dev-bench/019`,
+`020` and `022` repointed ~200 citations away from the deleted `embarch-study-designer/design.md`
+and this repo's own `design.md`. Where a citation carried a decision **number**, it resolved
+cleanly. Where it carried **only** a section number, all three units independently stripped the
+dead filename and left a naked `§4.8` standing. `dev-bench/022`'s reviewer called that *"a
+different dangling reference, not an improvement — it drops the repo name too, so a reader can no
+longer even tell which repo's history to search"*, and that is right: the old form was wrong but
+self-describing. Decision 47 now says a bare section citation resolves to **a decision** where one
+owns the content, **a live document** where the material moved there instead (this repo's open
+questions are in `open.md`, not in any numbered decision), or **nothing at all** where neither
+applies — never a naked `§N`. Branch 3 is the load-bearing one: *"a missing citation costs a reader
+nothing they did not already not have; a wrong or repo-less one costs a false lead."*
+
+**(b) Three units had already established this by accident, which is the thing to notice.** None
+of them wrote a rule; each followed the previous one's precedent. A fourth would have made it
+folklore — a convention nobody chose, enforced by imitation, with no statement anywhere to
+disagree with. **That is a failure mode this fleet is structurally prone to**, because a worker's
+strongest signal about what is right is what the last worker did, and it produces consistency
+without correctness. The task's requirement to write the decision down is what converted it back
+into something reviewable.
+
+**On the new topic file.** The worker put decision 47 in a new `decisions/conventions.md` rather
+than the nearest existing file, and said so in its commit message, citing the `embarch-api`
+2026-09-05 incident where a decision went into the wrong topic file because the right one had 96
+bytes left and nothing failed. I had warned it about exactly that in the dispatch note. The
+reviewer read all nine existing mission files and agreed none covers citation conventions — it is
+genuinely orthogonal. **It also found the one thing I would have missed:** the file is 4.25 KB,
+inside the 12 KB topic cap, but decision 47's body is ~3.9 KB — under the 4 KB mechanical
+per-decision cap and **well over the softer 1,200 B guidance**. It named `ble.md` 33/34/37 and
+`scanning.md` 46 as pre-existing instances of the same tension, so this is not introduced here, but
+a rule-stating decision is exactly the kind that grows, and the next compaction pass on this
+sub-project should look at it.
+
+**Merged:** `agent/dev-bench/029-bare-section-numbers` — `embarch-dev-bench` `4816230`,
+`embarch-doc` `7210b5a`. The code half is nine C files, and I verified mechanically that **no
+non-comment line changed** before merging, by filtering the diff for lines that are not comment
+text. Nothing was compiled: there is no `west` and no Zephyr SDK in a worker's worktree, which is a
+standing debt and not this unit's.
+
+**Blocked:** nothing. `tasks/dev-bench/029` closed `done`.
+
+**Reviewer:** no findings. It read every decision header across all ten `decisions/*.md` files plus
+the index and confirmed **1-47 each appear exactly once, no gaps, no duplicates** — which matters
+because nothing mechanical checks decision-number uniqueness (`tasks/doc/033`) and two live
+collisions landed in this suite the same week. It confirmed decision 47 does not contradict
+`DOC-CONVENTIONS.md`'s citation form or the reversal decisions 9, 13 and 22; spot-checked eight
+`embarch-study-designer` decisions and two of this repo's own against their actual text, including
+the worker's `eap_interp.h` correction from 31/32 (GATT discovery) to 59/60 (the wire-types /
+executor split actually described); and confirmed no bare unnamed `§N` survives in this repo's C
+sources — the ones that remain carry the dead filename in nine out-of-scope files, plus
+`ble_bridge_real.c:380`'s genuine external Bluetooth-spec `§1.3`, correctly left alone.
+
+**The reviewer's report reached the listener session, not me.** It was relayed intact and the line
+above is its own words, so nothing was lost — but this is the **third** recorded instance of a
+finished agent's notification landing in the wrong session (`ui/026`, and leg 035's two workers
+before that). It is already filed as `tasks/doc/042`, `Owner: required`. Recording it again here
+because the count is the argument: it is not a flake, and the next leg should expect it rather than
+conclude an agent died.
+
+**Hardware debts:** none created, none possible — comment text in C files and one decisions file;
+no wire, no behaviour, no board. One **restated**: nothing in this unit was compiled, because the
+`embarch-outpost` / `embarch-dev-bench` Zephyr toolchains are absent from a worker's worktree, so
+"host-side checks green" here means the doc gate and the ownership checks, not a build. Standing
+debts unchanged: `core/015`'s native Windows build, the unplugged dev-bench probe (`tasks/api/059`
+**open**; re-checked live this leg, `GET /status` → `"probes": []`, and `fleet-hardware.py
+--refresh` still crashes per `tasks/doc/041`), `umbrella/037` check 13, `umbrella/033` check-17
+arms, umbrella check 5's permission-denied probe, `embarch-ui`'s 18-record stale prefix, and the
+bench queue parked by the owner's `d0cf9a0`.
+
+**Budget:** PROCEED throughout — weekly 53.3% of a 90% cap at leg start, resets in ~66h27m. Wave 6
+suggested and never needed: four workers dispatched at once and all four landed, which is the
+queue's whole worker-scoped depth. **This is unit 4 of 4 and the leg ends here.**
+
+**Least sure about:** **whether decision 47 is a `dev-bench` decision at all.** The rule it states
+is about how any repo in this suite cites a section of a document that no longer exists, and the
+identical situation exists in `embarch-study-designer`, `embarch-ui` and `embarch-core` — every one
+of which has had a citation sweep in the last two weeks. I let it land as a sub-project decision
+because that is what the task asked for and because a `dev-bench` worker may not write a
+suite-level doc. But `DOC-CONVENTIONS.md` is where a citation-form rule belongs, it is
+owner-reserved, and the likely end state is decision 47 being promoted there and left behind as a
+pointer. **If the next leg sees another sub-project reinventing this same rule, that is the signal
+to stop and file it for the owner rather than write a fifth local copy** — which is precisely the
+accidental-convention failure this unit exists to have caught once.
+
+---
+
 ## 2026-09-13 12:47 — topology/036 four dead citations in a shared crate's own comments, and one the sweep found
 
 **Decided:** one thing, and it is about **what a worker is allowed to leave unresolved.** The task
