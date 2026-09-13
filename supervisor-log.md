@@ -97,6 +97,82 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 16:15 — core/052 a readme that told the reader the exact security posture decision 6 had reversed
+
+**Decided:** **three, and the last one closes this leg.**
+
+**(a) A readme that asserts a reversed rationale is worse than a stale value, and this one pointed
+the reader away from the fix.** `embarch-core/README.md` said Core binds `0.0.0.0` *"deliberately
+not `127.0.0.1`, since the point of this service is to be reachable from WSL2"*. `DEFAULT_BIND` has
+been `127.0.0.1` since decision 6's amendment, and the reversal's stated reason is that `0.0.0.0`
+plus no TLS plus a static bearer token plus `/flash` reading an arbitrary local path, in a process
+that may run as `LocalSystem`, is a posture nobody had assessed whole. So a reader following the
+readme concluded **no `--bind` is needed for the one topology that needs it.** Now states the
+loopback default, decision 6's real reason, and the widening command
+(`embarch-core install --bind 0.0.0.0`, elevated) — with the caveat that plain `embarch setup` only
+widens correctly from the WSL2 guest, because run natively on Windows it infers `local` and
+reinstalls the narrow bind. **I put both wrong repairs in the task file before dispatch** — "change
+the code to match the doc" and "just say run `embarch setup`" — and the worker took neither.
+
+**(b) Two deletions rather than two rewrites, and the reviewer checked the loss direction.** A
+layout line for `src/dev_bench.rs` (a file that does not exist) and a "no multi-probe selection /
+`open_first_probe()`" known-gap bullet were **removed**, not replaced. The reviewer read
+`resolve_probe` in `src/hardware.rs` and `/flash`/`/reset`'s threading of `probe_serial` and
+confirmed the gap is **genuinely closed rather than merely different**, and that the dev-bench
+detection fact survives elsewhere in the same file correctly attributed to
+`embarch_topology::hardware`. Deleting a claim and losing a fact are different things and only a
+read tells them apart.
+
+**(c) `check-task-state.py`'s title scan is a bare substring match, and it took the whole doc gate
+red on `main` mid-leg — caused by my own task file.** A title containing `embarch-core/README.md`
+matches the tracked root `README.md` and reports that a `core` worker may not write it. The file is
+in the **code** repo, which a `core` worker owns entirely. I fixed it by rewording my title and
+saying so in the body (`5dcfc88`), **not** by touching the script — reserved. The worker hit the
+same wall independently and filed
+`inbox/doc-check-task-state-title-substring-false-positive.md`; **that drop is the fix and it is
+the owner's.** Worth knowing for the next leg: **a red `check-docs.py` on `main` may be a task file
+you just wrote**, and `check-task-state.py` is the sub-check that says so.
+
+**Merged:** `agent/core/052-readme-bind-and-stale-claims` — code
+`49bc726a656bc7b7ce25ce76b369e8b4ec2c8a72` in `embarch-core` (parent
+`f852fa8d29088a29be0655456ce6ecf70713bb60`), doc `c77fcc2015f1b907269bf4e25a53338440c8a745` in
+`embarch-doc` (the worker's `dda7d6c` **cherry-picked** — and the cherry-pick is what preserved my
+title fix, since it applies the worker's diff rather than its file). Gate re-run by me on the merge
+result: `cargo build` / `test` (**197 passed, 2 ignored**, plus 1) / `clippy --all-targets -- -D
+warnings` green, `check-client-names.py --repo embarch-core` clean against 7 denylist entries,
+`check-docs.py` 11/11, ownership green on both halves.
+`changelog.d/core-readme-bind-default.fixed.md` consumed into `history/core.md` with `--only`; 29 of
+the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/core/052` closed `done` by the worker.
+
+**Reviewer:** no findings. It verified all four bind-paragraph claims against their own sources
+(including tracing the "2026-08-15" date through history to `9500811` rather than accepting it),
+counted the 22 `.route(` registrations itself, confirmed the readme's five-route table really is a
+subset of `interfaces.md` rather than disagreeing with it, and read `resolve_probe` to check the
+deleted gap bullet was closed rather than relabelled.
+
+**Hardware debts:** **one, carried not created — `core/015`'s native Windows build now carries a
+tenth landed `embarch-core` change.** This one is readme prose with no platform-conditional code
+touched, but that is now **four consecutive days** of `core` units adding to a debt nobody has paid,
+and the pile still includes `core/045`'s route-wiring test and the `suite/020`/`suite/035`
+wire-feature split. Everything else carried unchanged: the **dev-bench probe is still unplugged** —
+`status` returned `"probes": []` live at this leg's top, so `tasks/api/059` stays **open**, not
+blocked, for the fourth consecutive leg — plus `umbrella/037` check 13, `umbrella/033`'s check-17
+arms, umbrella check 5's permission-denied probe, `embarch-ui`'s 18-record stale prefix, and the
+`embarch-outpost`/`embarch-dev-bench` toolchains. `fleet-hardware.py --refresh` still crashes
+(`tasks/doc/041`) and its buffer is six days stale.
+
+**Budget:** PROCEED throughout — weekly **62.0%** of a 90% cap at leg start, **~63%** at this fold,
+resets in ~63h. No 429, no HOLD, wave 6 suggested at every check and never the limit.
+
+**Least sure about:** **that this leg fed itself.** Two of four units came from hunters I spawned
+rather than from the queue, the other two from `inbox/` drops the previous leg left, and the
+sweep of eight `open.md` files produced **nothing dispatchable at all** — every live open question
+is hardware-gated or a deliberate park. That is a queue whose only remaining source is the fleet's
+own reading of its own code, and I cannot tell from one leg whether that is a healthy steady state
+or the beginning of the fleet grading its own homework.
+
 ## 2026-09-13 16:09 — ui/047 a decision number lifted from the wrong decision's title, three times in one field
 
 **Decided:** **two.**
