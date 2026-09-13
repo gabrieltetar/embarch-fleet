@@ -97,6 +97,82 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 15:46 — api/084 a tool description that told an agent to call a tool that does not exist, and the replacement that could not answer either
+
+**Decided:** **three, and the middle one is the reason this unit needed a reviewer more than any
+other this leg.**
+
+**(a) The defect was worth the unit on its own.** `study_watch`'s MCP description told an agent
+recovering from a `lagged` event to "re-read it with `study_status`/`study_steps`". **There is no
+`study_steps` tool and no `study-steps` subcommand** — it exists only as a method on the internal
+`embarch-core-client` crate. The reader of that sentence is, by construction, an agent that has
+just lost frames and is looking for the recovery path, and the instruction named a call that cannot
+be made. The same false name was in `embarch-api/interfaces/studies.md` too.
+
+**(b) The replacement was wrong for a reason nobody would have caught without asking.** I gave the
+worker two candidates and told it to choose from the surrounding text. It chose
+`study_status`/`list_study_streams` over `study_status` alone, with an argument that reads
+extremely well: `study_status`'s `result` is `Option<StudyResult>` and `streams` lives inside the
+terminal `StudyResult`, so mid-study — exactly when `lagged` fires — `list_study_streams` is the
+surface that still answers. **The premise is true and the conclusion is false.**
+`list_study_streams` calls the *same* `get_study_status` and returns `streams: null` with "no
+result yet" whenever `result` is `None`; its own docstring says it is for a completed study. It is
+gated on the identical terminal condition. So the fix for a tool description naming a call that
+cannot be made was a tool description naming a call that answers nothing — **and `embarch-api`
+decision 48 had already settled `study_status` as the lagged-recovery surface.** I made the
+worker's own justification the reviewer's first explicit question, and that is the only reason this
+was caught. **Fixed in this fold**, both halves: `43ee85176356ba21b43e8aef15c87ef89b3df9cc` in
+`embarch-api`, and the doc sentence now says why `list_study_streams` is *not* the answer, so the
+next reader does not re-derive the same plausible wrong thing.
+
+**(c) The task file's own count was wrong and the worker said so.** I wrote "26 tools and 27
+subcommands" from the hunter's report; the worker re-derived **26/26** from
+`tests/tool_subcommand_parity.rs`, and the reviewer independently recounted 26 `#[tool(description`
+attributes and 26 `Commands` variants. A count in a landed report that nobody re-derives is exactly
+what gets cited as fact later — this one was caught twice in one unit.
+
+**Merged:** `agent/api/084-study-steps-and-two-stale-citations` — code
+`77a8998320a5917c230afae675476ff4f3727e36` in `embarch-api` (parent
+`cd1bc2fe5dce126c63c31fb7b5b6ef1903efc5c9`), **plus the fold's own follow-up
+`43ee85176356ba21b43e8aef15c87ef89b3df9cc`**, doc `54e2093833bef3b3d8afaa812169a9895e6c0c8e` in
+`embarch-doc` (a cherry-pick of the worker's `42af222`). Also landed: `tools.rs:1387`'s citation of
+`embarch-study-designer spec.md §4.8` — a section that does not exist — repointed at
+`interfaces/result-types.md`, which really does define `StreamRef`'s `truncated`; and three sites
+(`main.rs`, `tools.rs:389`, `client.rs`) still naming `embarch-core` decision 22 and the
+pre-`embarch-topology` `known_boards` brought in line with `tools.rs:945`'s already-correct
+`embarch-topology` decision 14. Gate re-run by me on the merge result: `cargo build` / `test` /
+`clippy --all-targets -- -D warnings` green, `check-client-names.py --repo embarch-api` clean,
+`check-docs.py` 11/11, ownership green on both halves; build/test/clippy re-run after the follow-up.
+`changelog.d/api-study-steps-and-known-boards-citations.fixed.md` consumed into `history/api.md`
+with `--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/api/084` closed `done` by the worker.
+
+**Reviewer:** 1 finding — inbox/api-084-list-study-streams-does-not-answer-mid-study.md, the false
+mid-study capability claim; **acted on in this fold and the drop deleted**, since its whole content
+was a fix that has now landed. The reviewer also confirmed `result-types.md` defines `StreamRef`,
+re-derived `embarch-topology` decision 14 from its own body rather than from
+`embarch-api/decisions/surface.md`, recounted the parity numbers itself, and agreed with leaving
+the four further `client.rs` decision-22 citations to their own drop.
+
+**Hardware debts:** **none created.** Tool descriptions, doc comments and one doc sentence; nothing
+executed, no Core, no board. `inbox/api-stale-decision-22-citations-remaining.md` is left standing
+for the next leg — four `embarch-core` decision 22 citations in `client.rs` (199, 381, 1249, 1333)
+that cite HTTP routes rather than pairing the stale number with `known_boards`, which the worker and
+the reviewer both judged needs a contextual look rather than a mechanical repoint. The dev-bench
+probe is still unplugged and `tasks/api/059` stays **open**.
+
+**Budget:** PROCEED throughout — weekly **60.7% of a 90% cap at leg start, ~61% at this fold**,
+resets in ~63h. No 429, no HOLD, wave 6 suggested at every check.
+
+**Least sure about:** **the shape of this leg more than any unit in it.** Three of four units were
+found by hunters I spawned rather than by the queue, and in two of those three the *reviewer* — not
+the worker, not the gate — caught a regression the unit itself introduced. That is either the
+review layer earning its cost exactly as designed, or a sign that work sourced this way arrives
+less well-formed than work the owner queued, and I cannot tell which from four units. If it is the
+second, the answer is not fewer hunters but tighter task files: both misses were in the half of the
+change the task file did not specify.
+
 ## 2026-09-13 15:41 — umbrella/060 six dead pointers closed, and the reviewer caught the one the worker fixed that nobody had asked it to
 
 **Decided:** **three, and the first is the most useful thing this leg produced.**
