@@ -97,6 +97,71 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 12:09 — study-designer/036 two interface docs said `StreamRef` refused a fourth field, and it has one
+
+**Decided:** nothing suite-wide. One judgement worth naming, and it is the worker's rather than
+mine: **a refusal and a later acceptance are not automatically a reversal.**
+`interfaces/taps.md` said *"`StreamRef` deliberately did not grow a `note` field"*, and the type
+now carries `records: Option<RecordReport>` (`src/streams.rs:351`, decision 70, 2026-09-08). The
+lazy fix is to delete the sentence; the wrong fix is to file a reversal row. The worker did
+neither — it rewrote the paragraph to say what was refused (**unstructured** free text, which a
+caller cannot rely on the way it relies on `truncated`) and what was later accepted (a structured
+verdict computed the same way every time from framing declared per-tap in `Study.record_checks`,
+against a CRC-32 each record already carries on the DUT), and **owned the cost rather than hiding
+it**: the host schema bump the old paragraph used as its reason was paid, 17 → 18, with dev-bench's
+own wire schema untouched. The reviewer checked that reading independently and agreed, adding the
+fact that settles it: **that refusal was never a numbered decision anywhere** — `git log` on
+`taps.md` shows only this file ever said it — so there is no numbered decision to reverse, and
+every existing row in `embarch-decision-reversals.md`'s review-driven section anchors to one.
+
+**Merged:** `agent/study-designer/036-streamref-fourth-field` — `embarch-doc` `5bbc0bc`;
+`embarch-study-designer` **zero diff**, branch equal to `origin/main` at `efbf76e`, verified by
+`rev-parse`. Doc-only is the correct outcome: the code was already right and the task forbade
+touching the type.
+
+**Blocked:** nothing. `tasks/study-designer/036` closed `done` and retired in this fold. The unit
+filed **`tasks/study-designer/037-compact-study-designer.md`** in the same commit — its edit pushed
+`interfaces/types.md` to 91.6% (1,037 B left), and the reserve rule is that the actor spending it
+records the debt while it still holds the context. Filed `blocked` with `In flux: yes` and a
+`Size debt due: 2026-09-27`, which is the shape `DOC-COMPACTION.md` asks for.
+
+**Reviewer:** no findings. Given six questions and it answered every one against code rather than
+prose: decision 70 located at `decisions/payload-meaning.md:34` and its characterisation matched;
+`HOST_TYPE_SCHEMA_VERSION = 18` and `DEV_BENCH_WIRE_SCHEMA_VERSION = 15` confirmed in
+`src/schema_version.rs`; `Study.record_checks` at `src/study.rs:240` with
+`RecordFraming::MagicPrefixedCrc32Le` and CRC-32/ISO-HDLC in `src/records.rs`/`src/crc.rs`; the
+four-field list confirmed complete; and task 037's size arithmetic re-derived exactly
+(11,251/12,288 B against a 12 KB interface-group cap). **It raised one minor-only nit and
+explicitly declined to file it** — 037 said `types.md` had taken edits from *four* of the last
+seven merged units and named three, and `git log` corroborates three. **I applied it in this fold**
+rather than leaving it: it is a false count inside a queue file, which is the same defect class the
+whole refill this leg is made of, and a reviewer being right about something too small to file is a
+bad reason to leave it wrong.
+
+**Hardware debts:** none created, none possible — two documentation paragraphs and an empty code
+branch; no field reordering, no wire change, and the one schema bump mentioned was **already
+landed** by decision 70, not made here. Standing debts carried unchanged: `core/015`'s outstanding
+native Windows build, the unplugged dev-bench probe (`tasks/api/059` still **open**) with
+`fleet-hardware.py --refresh` still crashing, `umbrella/037` check 13, `umbrella/033` check-17 arms,
+umbrella check 5's permission-denied probe, `embarch-ui`'s 18-record stale prefix, the bench queue
+parked by the owner's `d0cf9a0`, and the `embarch-outpost` / `embarch-dev-bench` toolchains absent
+from a worker's worktree.
+
+**Budget:** PROCEED — weekly 52.0% of a 90% cap at the previous fold, resets in ~67h. Wave 6
+suggested; three workers at this leg's peak, bounded by scope spread rather than budget, which is
+what the six-task refill in `core/047`'s entry was for.
+
+**Least sure about:** **whether a doc-only unit on a shared crate's interface should merge on green
+at all.** This diff rewrites how a wire-adjacent type's contract reads, and the gate cannot see a
+word of it — `check-docs.py` passed the same before and after, and the only thing that checked the
+claims was a reviewer running *after* the merge. Merge-on-green is the owner's standing choice and
+I did not deviate, but `protocol.md` §10 already carves out shared crates for a supervisor's own
+read-before-merge, and I did read it; what I am unsure of is whether reading it myself is
+meaningfully different from the reviewer doing it ninety seconds later, or whether I am just the
+same check run earlier by someone with less time.
+
+---
+
 ## 2026-09-13 12:00 — core/047 two decision entries said a cross-repo fix was still owed, and both had landed
 
 **Decided:** nothing suite-wide. Two queue calls that the next leg should know about, because both
