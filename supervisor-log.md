@@ -140,6 +140,21 @@ warnings` all clean. Doc gate on the merge result: `check-docs.py` 11/11.
 with `--only`; **29 of the owner's own fragments were left pending and untouched**, which is what
 `--only` is for.
 
+**This fold landed in two commits rather than one, and the next leg should know why.**
+`fold-commit.py` wrote and pushed this entry (`embarch-fleet` `e4e6079`) and then **failed** on its
+own `git rm` of the completed task file — `error: the following file has local modifications` —
+because I had edited that file's `State:` line to `done` in the same breath. Re-running it then
+refused correctly, with *"supervisor-log.md has no uncommitted change, so this unit's entry is
+either already committed or was never written"*. So the doc half is a hand-made commit,
+`embarch-doc` `734c527`, staged by the same three explicit paths and never `git add -A`.
+**This is `tasks/doc/050` — "fold-commit cannot retire a task file the fold itself corrected" —
+hit live**, and the specific trigger is worth adding to it: the correcting edit does not have to
+come from the worker. A supervisor closing a `claimed` task to satisfy `fold-commit`'s *own*
+precondition makes the file dirty, which then fails `fold-commit`'s *own* `git rm`. The two checks
+are in direct conflict, and the only clean order is **`git rm` the file yourself before folding**
+rather than editing its state — `.claude/leg.md` already says a `git rm`'d task file "needs no
+special handling", and that turns out to be the *required* move, not merely a permitted one.
+
 **Blocked:** nothing. `tasks/study-designer/041` closed `done` — **by me, not by the worker**, which
 left it `claimed`. `check-task-state.py` passes `claimed` (it only validates the vocabulary), so
 nothing would have caught it; worth watching whether this recurs, because a task left `claimed` by a
