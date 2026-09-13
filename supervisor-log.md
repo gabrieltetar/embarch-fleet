@@ -97,7 +97,63 @@ unit under **Merged** and **Blocked**:
 
 ---
 
-## 2026-09-13 14:00 — study-designer/038 a reviewer reported a lost finding that was not lost, because I had already drained it
+## 2026-09-13 14:14 — study-designer/039 six doc-comment citations repointed, and the split-citation class is now closed inside this crate
+
+**Decided:** nothing suite-wide. One dispatch-note decision worth recording: I wrote the scope
+correction from `038`'s own log entry **into this task file**, telling the worker in as many words
+that "not in scope: any change to this sub-project's source" had been the previous supervisor's
+wording error and that doc comments in its own repo are its to fix. That is the cheapest possible
+place to spend a predecessor's finding — the worker read it, fixed all six, and did not file a third
+task. **A correction that lives only in `supervisor-log.md` reaches the next leg; a correction
+written into the task file reaches the actor.**
+
+**This unit.** Six citations in `embarch-study-designer`'s own source (`README.md:23`,
+`src/result.rs:1,23,35,89`, `src/limits.rs:50`) named `interfaces/types.md` for `Provenance` /
+`StudyResult` / `StepResult` / `Outcome` / `overrides` content that `038` moved verbatim into
+`interfaces/result-types.md` yesterday. All six repointed. The worker re-grepped at claim time rather
+than trusting `038`'s list blind — it still matched exactly — and then read each *remaining*
+`interfaces/types.md` mention's surrounding doc comment (`README.md:15,22`, `src/lib.rs:11`,
+`src/study.rs` ×7, `src/ffi.rs` ×3, `src/gatt.rs:22`, `src/study_builder.rs:645`) to confirm each is
+about `Study`/`Step`/`Action`/`Requirements`/GATT content that stayed. That is the check that makes
+a citation sweep mean something, and it is not one a grep can do.
+
+**Merged:** `agent/study-designer/039-repoint-source-doc-comments` — code `419e196` in
+`embarch-study-designer` (parent `efbf76e`), doc `21909b6` in `embarch-doc` (parent `d6e703e`). Both
+fast-forwards, no merge commit. Gate re-run by me on the merge result, not on the branch:
+`cargo build` / `test` (116 + 9) / `clippy --all-targets -- -D warnings` green,
+`check-client-names.py --repo embarch-study-designer` clean against 7 denylist entries,
+`check-docs.py` 11/11 green, `check-ownership.py --scope study-designer` green on both branches
+(bases `efbf76e80a19` and `d6e703e0bfe2`).
+
+**Blocked:** nothing. `tasks/study-designer/039` closed `done`.
+
+**Reviewer:** no findings. It independently re-derived that all six repointed sites name content
+`038` moved, and — the half that mattered — that `src/study.rs:249`'s decision-40 citation
+**correctly stayed** pointed at `types.md`, because `Requirements` is a `Study` authoring field that
+did not move. So it checked both directions: nothing mis-repointed, nothing left behind.
+
+**Hardware debts:** none created, none possible — six doc-comment lines and a `changelog.d`
+fragment. Standing debts unchanged and none of them touched: `core/015`'s native Windows build, the
+unplugged dev-bench probe (`tasks/api/059` **open**, not blocked), `umbrella/037` check 13,
+`umbrella/033` check-17 arms, umbrella check 5's permission-denied probe, `embarch-ui`'s 18-record
+stale prefix, and the `embarch-outpost` / `embarch-dev-bench` toolchains absent from a worker's
+worktree. The bench queue is still parked by the owner's `d0cf9a0` and `fleet-hardware.py --refresh`
+still crashes (`tasks/doc/041`), so I did not re-check the probe live and its "attached: yes" is now
+six days old and means nothing.
+
+**Budget:** PROCEED at leg start — weekly 58.3% of a 90% cap, resets in ~65h — and **58.9% at this
+fold**. Wave 6 suggested; two workers dispatched, because the queue holds only three
+worker-dispatchable tasks across three scopes and the wave is bounded by scope spread, not by
+budget.
+
+**Least sure about:** **whether a refill sweep that hunts for a defect *class* is refill or
+invention.** With `open.md` and the roadmap exhausted for host-side work, I swept the two other
+verbatim splits that landed yesterday (`api/081`, `umbrella/059`) for the same stale-citation class
+this unit fixes. That found real defects, so it is reconciliation rather than invented work — but
+the sweep's shape came from my own reading of what would be productive, not from a source doc
+saying so, and that is a step further than "read `open.md` and write down what it says".
+
+
 
 **Decided:** three things, and the first is a mistake of mine that the next leg can avoid for free.
 
