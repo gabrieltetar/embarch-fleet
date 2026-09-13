@@ -97,6 +97,58 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 16:37 — ui/048 a citation with no referent, dropped rather than repointed at the nearest plausible decision
+
+**Decided:** **two.**
+
+**(a) When no referent exists, the honest repair is to delete the citation, not to find the closest
+decision and point at it.** `embarch-ui/src/trace.rs` said an unnamed lane *"is the defect decision
+35 exists to prevent"*. `embarch-ui`'s own numbering tops out at **26**, and all six sibling repos
+that do have a 35 were read **in body, not by index line** — dev-bench (step decoding), core
+(`HelloAck` carries the hardware ID), api (`validate`/`alerts` relay), umbrella (check 11's host
+number), study-designer (custom-action registry). None is about naming or identity. **The trap this
+unit avoided is `embarch-ui` decision 10**, which covers almost exactly this ground (*"unnamed is a
+first-class state… drawn italic and dotted"*) and is already `trace.rs`'s module-level umbrella
+citation — repointing 35 at 10 would have produced a citation that *reads* right and asserts a
+renumbering `DOC-CONVENTIONS.md` forbids. The worker ruled that out on the convention, not on taste.
+
+**(b) A claim that loses its citation has to stand on its own, so it was re-grounded in the
+rendering code.** The comment now says an unnamed lane is rendered muted and italic in both the lane
+chart and the load table — verified in `assets/app.js` at both sites by the worker and then
+independently by the reviewer, which is the check worth having: a sentence true of one rendering and
+not the other would have been a new false claim replacing an unresolvable one.
+
+**Merged:** `agent/ui/048-trace-rs-decision-35-no-referent` — code
+`c31d3cd49dd27d3b2b0a346b205c6589555a5a8d` in `embarch-ui` (parent
+`609bdaa6a0fc56db28545e76b1724d5c0e2e4c2e`), doc in this fold commit (the worker's `39e4951`
+**cherry-picked** as `fccdda8`, because this leg's `main` had already advanced past the branch
+point). Gate re-run by me on the merge result: `cargo build` / `test` (**101 passed, 4 ignored**,
+plus 2) / `clippy --all-targets -- -D warnings` green, `check-client-names.py --repo embarch-ui`
+clean against 7 denylist entries, `check-docs.py` 11/11, ownership green on the doc half.
+`changelog.d/ui-trace-rs-dead-decision-35-citation.fixed.md` consumed into `history/ui.md` with
+`--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/ui/048` closed `done` by the worker, with its outcome and its
+derivation written into the file.
+
+**Reviewer:** no findings. It verified the new sentence at **both** `app.js` sites independently
+(`nameCell` ~3692 and the SVG lane label ~4269) rather than taking the worker's word, read decision
+10's body and called the new wording a compatible narrowing — it drops *"dotted"*, which only the
+chart's dashed leader line actually has — and confirmed the nine `decision 40` sites `ui/047` left
+standing are **byte-identical** between parent and merge.
+
+**Hardware debts:** **none created.** Two comment lines in a Rust source file; nothing executed, no
+board, no Core, no UI launched. Standing debts carried unchanged, including `embarch-ui`'s 18-record
+stale prefix, which still has never met a real stale prefix.
+
+**Budget:** PROCEED — weekly **63.2%** of a 90% cap at leg start, resets in ~62h. No 429, no HOLD.
+
+**Least sure about:** **that dropping the citation was better than filing for a new decision.** The
+behaviour is real, deliberate and rendered two ways, which is the shape of something a decision
+would normally cover — and decision 10 already covers it, which is exactly why I did not ask for a
+new one. If the suite later wants `unnamed`'s rendering pinned in its own right, this comment is now
+the only place it is written down as a fact rather than as a decision.
+
 ## 2026-09-13 16:33 — suite/038 the half of a two-repo retirement that an unattended leg is allowed to do
 
 **Decided:** **four.**
