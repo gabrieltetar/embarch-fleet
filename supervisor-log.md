@@ -97,6 +97,81 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 16:02 — umbrella/061 four dead cross-repo links closed, two of them printed to an operator
+
+**Decided:** **three, and the first is a fact about this leg's own shape rather than about the
+diff.**
+
+**(a) The queue was empty of worker-dispatchable work and the two standing `inbox/` drops were the
+whole of the refill.** `queue-status.py` reported 3 dispatchable, **all three `suite` scope** — which
+no worker may take (`protocol.md` §8) — so the real worker-dispatchable count was **zero**, and
+`--refill-owed --wave 6` fired on both halves of its gate. Draining `inbox/` produced exactly two
+tasks (`tasks/api/085`, `tasks/umbrella/061`, filed at `d32a400`), which is two scopes against a
+wave of six. `tasks/doc/043` already covers the counting defect — `queue-status.py` counts `suite`
+tasks in a number that sizes a *worker* wave — and this leg is the clearest instance of it yet: the
+number said 3 and the answer was 0. **The next leg should not read a non-zero `dispatchable` as
+meaning a worker can be sent.** Owner-only file; not mine to fix.
+
+**(b) The form chosen is `../../`, and the reason it is not `embarch-core`'s form is that three of
+these four sites are real links.** `embarch-core`'s comments use a bare suite-root-relative
+`embarch-doc/...` with no `../` at all. That reads fine as prose and resolves as nothing, and
+`doctor.rs:569`/`2753` are `[text](path)` rustdoc links that have to actually resolve from `src/`.
+The worker made that argument itself and I agree with it. **`DOC-CONVENTIONS.md` still says nothing
+about cross-repo link depth** and neither the worker nor I amended it — reserved.
+
+**(c) The reviewer was asked the question the worker could not have asked itself.** The worker
+verified the *path* at line 569 and never the *number*; I made re-deriving decision 43 from its own
+body the reviewer's third explicit question, and it came back matching the `one_line()` comment
+almost verbatim. This is the same move `umbrella/060` needed and did not get — naming to the
+reviewer the half of a change that had only one pair of eyes on it.
+
+**Merged:** `agent/umbrella/061-doctor-cross-repo-links` — code
+`f4bf2cdc46b2ebeb5c1a2b10618f0567c1bc550b` in `embarch-umbrella` (parent, and `umbrella/060`'s own
+follow-up, `319f035795f15adb396e38e69fa29d243c431e19`), doc
+`34cf627f048df476f2f0d0ad23efd337ca97bb08` in `embarch-doc` (the worker's `9fd1684`
+**cherry-picked**, not fast-forwarded — the doc branch was cut before this leg's three later claim
+commits, so `--ff-only` refused). Gate re-run by me on the merge result: `cargo build` / `test`
+(**229 passed**) / `clippy --all-targets -- -D warnings` green, `check-client-names.py --repo
+embarch-umbrella` clean against 7 denylist entries, `check-docs.py` 11/11, ownership green on both
+halves (code half needs `--code-repo`).
+`changelog.d/umbrella-doctor-cross-repo-links.fixed.md` consumed into `history/umbrella.md` with
+`--only`; 29 of the owner's own fragments left pending.
+
+**Note for the next leg — `check-docs.py` went red on `main` mid-leg, and it was my own task file.**
+`check-task-state.py` matches tracked `embarch-doc` paths as **substrings** of a task title, so
+`tasks/core/052`'s title containing `embarch-core/README.md` hit the tracked root `README.md` entry
+and reported that a `core` worker may not write it. The file the task is about is in the **code**
+repo, which a `core` worker owns in full. Fixed by rewording the title and saying so in the body
+(`5dcfc88`); **not** by touching the script, which is reserved. Filed as a drop for the owner.
+
+**Blocked:** nothing. `tasks/umbrella/061` closed `done` by the worker.
+
+**Reviewer:** no findings. It re-derived decision 43 from `message-rendering.md`'s own body rather
+than from the comment citing it, confirmed `../../embarch-doc/...` resolves by `realpath` against
+the real checkouts rather than by trusting any precedent in the file, and checked both `fix` strings
+still read as instructions to an operator rather than as bare citations.
+
+**Hardware debts:** **none created.** Four relative paths inside `doctor.rs`'s own comments and two
+of its `fix` strings; `doctor` itself was not executed and nothing here runs. Standing debts carried
+unchanged: `core/015`'s native Windows build (nine landed `embarch-core` changes and counting),
+`umbrella/037` check 13, `umbrella/033`'s check-17 arms, umbrella check 5's permission-denied probe,
+`embarch-ui`'s 18-record stale prefix, and the `embarch-outpost`/`embarch-dev-bench` toolchains.
+**The dev-bench probe is still unplugged** — I read Core live at this leg's top and `status`
+returned `"probes": []`, so `tasks/api/059` stays **open**, not blocked, for the fourth consecutive
+leg. `fleet-hardware.py`'s buffer is **8521 minutes stale** and `--refresh` still crashes
+(`tasks/doc/041`), so the buffer's "attached: yes" is six days old and was not believed.
+
+**Budget:** PROCEED — weekly **62.0%** of a 90% cap at leg start, resets in ~63h. No 429, no HOLD.
+Wave 6 suggested; the queue, not the budget, is what limited this leg to four workers.
+
+**Least sure about:** **whether spending a unit's worth of this leg on two hunter agents was the
+right call with the queue at zero.** The alternative was to dream three proposals and end the leg,
+which is what `ops.md` §7 prescribes for an empty queue — and I did not, because the queue was not
+empty after the `inbox/` drain, only thin. Both hunters returned well-evidenced defects that became
+`core/052` and `ui/047`, so it worked; but leg 107's own closing note warned that hunter-sourced
+work arrives less well-formed than queued work, and I have now doubled down on it rather than tested
+it.
+
 ## 2026-09-13 15:46 — api/084 a tool description that told an agent to call a tool that does not exist, and the replacement that could not answer either
 
 **Decided:** **three, and the middle one is the reason this unit needed a reviewer more than any
