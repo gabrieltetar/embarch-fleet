@@ -97,6 +97,102 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 13:28 — core/050 a citation that was unambiguous when it was written and was made wrong later by a number assigned somewhere else
+
+**Decided:** nothing suite-wide. Two things are worth the next leg's attention, and the second is
+about the queue rather than about `embarch-core`.
+
+**(a) This is a new shape of dead citation and it deserves a name.** `study.rs`'s `test_step_result`
+fixture bare-cited *"Decision 44's `security_level`"* and *"Decision 62's `protocol`"*. Both fields
+live on `StepResult`, which is `embarch-study-designer`'s type, and both numbers are that repo's.
+This file's own convention — set one comment above, at the `` `embarch-study-designer` decisions
+31/32 `` line, and again at `study.rs:1060` — is that a **bare** `Decision N` means *this* repo's
+numbering. So `Decision 62` resolved to nothing, and `Decision 44` resolved to
+`embarch-core`'s own decision 44, the retired `/logs/stream` offset fix: **real text, wrong
+subject.** A reader lands on a plausible-looking decision about newline handling while asking what
+`security_level` means, and stops.
+
+**The part that makes this different from the eleven other citation units this fortnight is the
+chronology.** The comment was written 2026-08-26 and was correct then — `embarch-core` had no
+decision 44. This repo assigned its own 44 on 2026-09-06, and that assignment is what made a
+comment in a different file wrong. **Nothing connected the two and nothing could have.** Every
+previous unit in this family fixed a citation that was either wrong at birth or broken by a file
+being deleted; this one was broken by a *number being created elsewhere*, which no author could
+have foreseen and no gate can detect — a number that resolves to no heading is mechanically
+findable and `check-decision-refs.py` finds it, but a number that resolves to the wrong heading
+reads as correct. `tasks/doc/033` (decision-number uniqueness) is the owner-reserved general fix
+and would not have caught this either: the two 44s are in different repos and both are legitimate.
+
+**(b) The sweep came back clean, and the clean result is the valuable half.** I required the worker
+to check every other bare citation in `src/` and `bin/` that touches a shared-crate type and to
+**report the outcome either way**, because "I found nothing else" is the only thing that tells the
+next leg this class is closed in this repo, and it is exactly the sentence a worker omits when it
+finds nothing. It reported 244 hits, 97 already carrying an explicit repo attribution somewhere in
+the same comment block, and every remaining bare one resolving to a real and topically correct
+`embarch-core` decision. The reviewer re-ran it independently, got 244 and 141, sampled them
+against this repo's decision index, and confirmed the two apparent extra hits
+(`study.rs:4278`, `main.rs:159`) are the multi-line-split false positive the worker's own note had
+anticipated — attributed one comment-line above.
+
+**Merged:** `agent/core/050-fixture-decision-citations` — `embarch-core`
+`f3424d8508eeb2f7fcb2b88eee08ae699694b775`, `embarch-doc`
+`d58206cbb263988d28e1bff79f5e1ae10dda3196`. The code half is six comment lines inside a struct
+literal in a test helper, which is why I ran `cargo test` and not only `build`/`clippy`: a
+misplaced comment edit there breaks the build rather than reading oddly. **197 passed, 0 failed, 2
+ignored; clippy `-D warnings` clean.** No `changelog.d/` fragment, correctly — nothing
+reader-visible changed.
+
+**Blocked:** nothing. `tasks/core/050` closed `done`.
+
+**Reviewer:** no findings. It re-derived 44 against `embarch-study-designer/decisions/ble.md:17`
+and 62 against `decisions/protocol-exec.md:27`, confirmed `embarch-core` has a 44 (retired,
+`/logs/stream`) and no 62 at all, confirmed the merges moved no decision number in either repo, ran
+its own sweep as described above, and found no `embarch-decision-reversals.md` entry for any of the
+three decisions. **Its report reached the listener session rather than me** — relayed intact, so
+nothing was lost, and the line above is its own words. That is the **fourth** recorded instance of
+a finished agent's notification landing in the wrong session (`ui/026`, leg 035's two workers,
+`dev-bench/029`'s reviewer yesterday). It is filed as `tasks/doc/042`, `Owner: required`. The
+count is the argument: a leg should expect this rather than conclude an agent died, and the
+positive-signal rule — a pushed branch carrying commits means a finished worker — is what let me
+land this unit before any notification arrived at all. I used it here, deliberately.
+
+**On task numbering, because it cost me a push.** I filed this task as `core/047` and
+`check-task-numbers.py` refused it: 047 had been **reissued** — history already holds a different
+`core/047`. The warning is deliberately non-blocking, so the claim pushed and I renumbered to
+**050** in the next commit. Worth knowing cold: `scripts/check-task-numbers.py --next <scope>` is
+the only safe way to pick a number, and `ls tasks/<scope>/` is not — completed task files whose
+numbers are retired do not all survive in the directory.
+
+**Hardware debts:** none created, none possible — six comment lines in a test module. **Nothing in
+this leg touched hardware at all**, deliberately: the bench queue is parked by the owner's
+`d0cf9a0`, the buffer is 8,351 min stale, `fleet-hardware.py --refresh` still crashes
+(`tasks/doc/041`), so I did **not** re-check the probe live and the buffer's "attached: yes" is six
+days old and means nothing. Standing debts unchanged: `core/015`'s native Windows build (see the
+`suite/037` note below — it is now the thing blocking a filed, announced suite task, not just a
+deploy), the unplugged dev-bench probe (`tasks/api/059` **open**), `umbrella/037` check 13,
+`umbrella/033` check-17 arms, umbrella check 5's permission-denied probe, `embarch-ui`'s 18-record
+stale prefix, and the `embarch-outpost` / `embarch-dev-bench` toolchains absent from a worker's
+worktree.
+
+**Budget:** PROCEED throughout — weekly 54.7% of a 90% cap at leg start, 55.8% at this dispatch,
+resets in ~65h43m. Wave 6 suggested and never reached: three workers at the start (the queue's
+entire worker-scoped depth), then this one after a refill sweep. **This is unit 4 of 4 and the leg
+ends here.**
+
+**Least sure about:** **whether the sweep's "this class is closed in `embarch-core`" will still be
+true next week, and whether anyone will re-ask.** Two agents independently swept 244 citations and
+agreed, which is the strongest evidence this family has produced — but the defect this unit fixed
+was *created by assigning a decision number in a different file*, so the sweep's result has a shelf
+life measured in decisions, not in edits. Every new `embarch-core` decision number is a fresh
+chance to retro-break a bare citation somewhere in the crate, silently, with the comment's author
+long gone. I did not file a task for that, because the mechanism it needs is owner-reserved and
+already asked for twice (`tasks/doc/033`, `tasks/doc/044`) and a third near-identical request is
+noise. But if a fifth wrong-body citation turns up in any repo, the right move is one task about
+**bare citations in a multi-repo suite** as a class — the rule that a citation without a repo name
+is a time bomb — and not a sixth per-repo sweep.
+
+---
+
 ## 2026-09-13 13:11 — dev-bench/026 a redundant unit, and the reviewer was the only thing in the design that earned its keep
 
 **Decided:** two things, and the first is a criticism of my own selection.
