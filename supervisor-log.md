@@ -97,6 +97,115 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 14:00 — study-designer/038 a reviewer reported a lost finding that was not lost, because I had already drained it
+
+**Decided:** three things, and the first is a mistake of mine that the next leg can avoid for free.
+
+**(a) I drained an `inbox/` drop before its unit's reviewer ran, and the reviewer correctly reported
+it missing.** The worker's sweep found a cross-repo citation in `embarch-ui` — not its to fix — and
+dropped `inbox/ui-repoint-streamref-citation-to-result-types-md.md`. I read it, filed it as
+`tasks/ui/044`, and deleted the drop, all before spawning the reviewer. The reviewer then looked for
+the drop the worker's own report claimed it had written, found nothing in `inbox/`, nothing in the
+merge, nothing untracked, **and nothing in git history — because drops are gitignored, so a drained
+drop leaves no trace anywhere.** It escalated it in capitals as a LOST FINDING and recommended I
+re-file it. It was exactly right on the evidence available to it and exactly wrong about the world.
+
+**The finding was never at risk**; `tasks/ui/044` carries it verbatim, including the line number and
+the deliberately-separated note that the `§4.8` in the same citation is an older, unrelated defect.
+**But the alarm cost a review cycle's attention on a non-problem, and it could have cost more:** the
+recommended remedy was to re-file, which — had I taken it without checking — would have produced a
+duplicate task for the same defect. The cheap fix is ordering, and it costs nothing: **drain a drop
+in the fold, not at the merge.** The reviewer is spawned at the merge and the fold comes after it, so
+draining in the fold means the drop is still on disk for the whole of the reviewer's life. I drained
+early because it felt tidy.
+
+**(b) My task file told the worker not to touch its own repo's source, and I was wrong.** I wrote
+*"Not in scope: any change to `embarch-study-designer`'s source"*, meaning *do not write code*. The
+worker's sweep then found **six** genuinely stale citations in that repo's own doc comments —
+`README.md:23`, `src/result.rs:1,23,35,89`, `src/limits.rs:50` — obeyed my instruction, and filed
+`tasks/study-designer/039` instead of fixing them. It read me correctly; the instruction was wrong.
+Doc comments in a worker's own repo are squarely its to fix, and the split's whole point was to sweep
+citations. Cost: one extra queued task and a second worker to do what this one was already holding
+the context for. **The reviewer independently swept for the same citations, found exactly the same
+six, and confirmed `039` covers all of them**, so nothing is lost — but `039` should not have needed
+to exist. When writing a split task, "not in scope" should say **no logic change**, not "no source
+change".
+
+**(c) The worker pushed back on an instruction I copied from a sibling task, and was right to.** I
+told it to add a `Current truth:` header line "matching its siblings' convention". `types.md`'s actual
+siblings — `taps.md`, `decoders.md`, `gatt-types.md`, `eap.md` — carry no such line; I had taken the
+convention from `embarch-umbrella`, where it is real, and asserted it about a directory I had not
+checked. The worker used the `**Status:** … Split out of X` shape that `embarch-core` / `embarch-api`
+/ `embarch-umbrella` split files actually use, **said so explicitly in the task file for me to
+check**, and the reviewer confirmed the precedent. That is the behaviour the dispatch note asks for,
+and it is worth recording that it happened — a worker quietly obeying a wrong instruction is the
+failure mode this one avoided.
+
+**This unit.** `interfaces/types.md` was 11,251 / 12,288 B. The `Results` section — what comes back
+off the wire — moved verbatim to `interfaces/result-types.md`, cutting along the `Study` → `Step` →
+`Action` nesting rather than through it. `types.md` is now **8,999 B**, out of reserve.
+
+**Merged:** `agent/study-designer/038-split-result-types` — `embarch-doc` merge commit **`8b4b574`**,
+merging worker commit `5a5fb52`, parent `a90abb995e92cf8808f833fcf061cb0407565e52`. **No code SHA**:
+zero commits, correct for a documentation split. Gate re-run on the merge result: `check-docs.py`
+11/11 green, `check-ownership.py --scope study-designer` green on both branches,
+`check-client-names.py` clean.
+
+**Blocked:** nothing. `tasks/study-designer/038` closed `done`; `tasks/study-designer/037` left
+`blocked` and untouched, its `Size debt due: 2026-09-27` discharged rather than paid. Two follow-ups
+filed and one drained: `study-designer/039` (the six own-repo citations, see (b)), `ui/044` (the
+cross-repo one, drained from `inbox/`), and **`study-designer/040`**, below.
+
+**Reviewer:** 1 finding — the LOST FINDING escalation described in (a), which I checked and found to
+be a false alarm of my own making; no `inbox/` drop was filed for it and none was needed, because
+`tasks/ui/044` already carried it. **Everything else it reported came back clean and independently
+re-derived**: the verbatim `diff` exit 0 against the parent, decision 70's `StreamRef` four-field list
+and its `records`-vs-`truncated` gloss intact, the header precedent confirmed, and its own sweep
+finding exactly the six sites `039` names. **Its report reached the coordinator's session rather than
+mine** — relayed intact, so nothing was lost, and the account above is its own words. That is the
+**fifth** recorded instance (`ui/026`, leg 035's two workers, `dev-bench/029`'s reviewer, `core/050`'s
+reviewer, now this), filed as `tasks/doc/042`, `Owner: required`. Five is no longer an anomaly; a leg
+should expect it.
+
+**It also left an out-of-scope aside that turned out to be the most valuable thing in the review, and
+I filed it as `tasks/study-designer/040` after verifying it myself.** `src/study.rs:377-378` says
+*"Content validation is handled entirely post-hoc by Core (decision 19)"*. Decision 19 is in
+`decisions/removed.md`, **retired 2026-08-25 by decision 48**, which removed post-hoc validation
+outright — and whose own account is that Core *"never evaluated a validation in its life"*. The
+reviewer called it a stale citation. **It is worse than that: the sentence states the retired
+mechanism as a live fact**, so a reader asking how `Action` content is validated is told something
+false, and checking the reference *confirms* it rather than exposing it, because decision 19 exists
+and is about exactly that subject. Same shape as `core/050`'s "real text, wrong subject", reached
+from the other direction. `check-decision-refs.py` cannot see it — the number resolves.
+
+**Hardware debts:** none created, none possible — a documentation split with an empty code branch, and
+no field reordering, wire change or schema bump, so nothing here needs a board. Nothing in this leg
+touched hardware at all: the bench queue is parked by the owner's `d0cf9a0`, `fleet-hardware.py
+--refresh` still crashes (`tasks/doc/041`), the buffer is over 8,400 min stale, and I did not re-check
+the probe live — its "attached: yes" is six days old and means nothing. Standing debts unchanged:
+`core/015`'s native Windows build, the unplugged dev-bench probe (`tasks/api/059` **open**),
+`umbrella/037` check 13, `umbrella/033` check-17 arms, umbrella check 5's permission-denied probe,
+`embarch-ui`'s 18-record stale prefix, and the `embarch-outpost` / `embarch-dev-bench` toolchains
+absent from a worker's worktree.
+
+**Budget:** PROCEED — weekly 56.4% of a 90% cap at leg start, **57.8% at this fold**, resets in
+~65h05m. Wave 6 suggested and never reached: four workers dispatched at once, bounded by scope spread
+rather than the cap. **This is unit 4 of 4 and the leg ends here.**
+
+**Least sure about:** **whether running three splits in one leg was concentration or over-commitment.**
+The argument for them is strong and I still believe it — fourteen debts had no payable route, and a
+verbatim split is demonstrably safe. But I made the same call three times on one reading of the
+mechanism, in one leg, with nothing between units to check it. The leg's two real surprises both came
+out of that decision rather than out of the tasks: the size pin a split silently drops
+(`umbrella/059`, now `tasks/doc/052`), and the citation class a split creates that no gate can see
+(`tasks/doc/044`, hit three times here). Neither was fatal and both are now written down. Had I run
+one split and three ordinary units, I would have learned the same things at a third of the exposure
+and the next leg could have decided whether to continue. **If the split move is going to keep being
+used — and it should be — someone other than the leg proposing it should look at `tasks/doc/052`
+first.**
+
+---
+
 ## 2026-09-13 13:52 — umbrella/059 the split that pays a size debt also silently drops the decision's size pin, and the actor doing it cannot fix that
 
 **Decided:** one thing, and it is a defect in the size mechanism that this leg created three chances
