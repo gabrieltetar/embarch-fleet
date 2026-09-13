@@ -97,6 +97,71 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 12:44 — ui/042 a marker count that was true when written, and three citations off by one
+
+**Decided:** one thing, and it is a precedent rather than a correction. `tasks/ui/030` treated
+"a number in a decisions file disagrees with the code" as a defect to overwrite; the task file said
+so and said explicitly that the precedent was not the answer. **The worker went to the history
+instead of the grep and came back with the opposite call, and I accepted it.** `git show` at each
+of the three commits of `embarch-ui/tests/fixtures/outpost-native-sim.trace.csv` gives marker
+counts 132 (`fcf5c1e`), 163 (`d6877bd`), 155 (`dc5de2b`, current, matching both committed fixtures
+and `trace.rs:2874`). `trace-view.md`'s *"132 across 760 ms swamped every span"* is past tense and
+was **true of the fixture as first committed**. So the fix names which capture the 132 was measured
+on rather than substituting 155 — and `trace.rs`'s assertion, both fixtures, and `style.css` were
+left untouched, which is what the task's "Do not" existed to protect.
+
+**The reviewer did the archaeology the worker could not.** `git log --follow` stops at `1190b72`,
+a 12-way split of `embarch-ui/design.md` that git does not detect as a rename, so the worker's
+trace ended there. The reviewer went past it: the "132" text first appears in `design.md` at
+`4cfd0db0` (embarch-doc, 2026-08-26 01:46), **twelve minutes after** `fcf5c1e` (embarch-ui,
+01:34), and then survives unedited through two doc revisions that land in the same day as the
+regenerations to 163 and 155. So the number was true for about fourteen hours and stale for two
+weeks. That is a stronger statement than "true when written" and it is now the one in the doc.
+
+**Merged:** `agent/ui/042-stale-pointers-in-decision-docs` — `embarch-doc` `13a528c`;
+`embarch-ui` **zero diff**, branch equal to `origin/main` at `e4d10ac`, verified by `rev-parse`.
+Doc-only by design: the task is four numbers in two decisions files and no rendered pixel changes.
+
+**Blocked:** nothing. `tasks/ui/042` closed `done`.
+
+**Reviewer:** no findings. It re-derived all three fixture counts independently, traced the
+sentence's origin past the split commit the worker's `--follow` could not cross, re-ran
+`grep -n -- '--brand' embarch-ui/assets/style.css` (43 / 72 / 123, matching the corrected
+123/43/72 exactly), confirmed `index.html:34` genuinely carries the header glyph's second
+`<path fill="var(--brand)">` and was right to be left alone, and confirmed the sweep claim — one
+citation of that shape exists in the whole sub-project's docs.
+
+**On the reserve this unit spent.** The added clause pushed `embarch-ui/decisions/trace-view.md`
+to 90.3% of its cap, the reserve floor. The worker filed `tasks/ui/043-compact-ui.md` in the same
+commit, `In flux: no`, proposing a split of decision 10's three sub-arguments from 19/21 — which
+is `DOC-BUDGET.md`'s split-first rule applied correctly, and it is `open` rather than `blocked`,
+so it is dispatchable work rather than a park. **This is the reserve rule working as designed:**
+`ui` had nothing in reserve at dispatch, the unit put one file there, and the debt was recorded by
+the actor holding the context instead of discovered later by an unrelated worker meeting a wall.
+
+**Hardware debts:** none created, none possible — two decisions files, and the code branch was
+empty. Standing debts unchanged and none of them touched: `core/015`'s native Windows build, the
+unplugged dev-bench probe (`tasks/api/059` **open**; I re-checked live this leg — `GET /status`
+returned `"probes": []`, so it is still unplugged and `fleet-hardware.py --refresh` still crashes
+on `tasks/doc/041`'s `AttributeError`), `umbrella/037` check 13, `umbrella/033` check-17 arms,
+umbrella check 5's permission-denied probe, `embarch-ui`'s 18-record stale prefix (untouched and
+unrelated to this unit), the bench queue parked by the owner's `d0cf9a0`, and the
+`embarch-outpost` / `embarch-dev-bench` toolchains absent from a worker's worktree.
+
+**Budget:** PROCEED throughout — weekly 53.3% of a 90% cap at leg start, resets in ~66h27m.
+Wave 6 suggested; four workers dispatched at once, which is the queue's scope spread, not the cap.
+
+**Least sure about:** **whether "the number was true when written" is now going to be the default
+answer, which would be worse than the defect it replaced.** Two units in a row have reached it —
+`umbrella/058` yesterday and this one — and both were right, but both were also the cases where
+the history happened to be legible. The cheap failure is a worker that cannot find the history,
+concludes "probably true once", and writes a historical claim it did not verify. Note the shape
+here: the worker's own trace stopped at a split commit and it was the **reviewer** that got past
+it. A worker with no reviewer would have shipped a weaker version of the same sentence, and
+nothing would have said so.
+
+---
+
 ## 2026-09-13 12:29 — umbrella/058 a decision said `saved.host` is sticky for every class, and the code clears it
 
 **Decided:** nothing suite-wide, and the one judgement worth naming is **what the worker did not
