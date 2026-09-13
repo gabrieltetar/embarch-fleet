@@ -97,6 +97,94 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 13:11 — dev-bench/026 a redundant unit, and the reviewer was the only thing in the design that earned its keep
+
+**Decided:** two things, and the first is a criticism of my own selection.
+
+**(a) I dispatched a task that the previous leg had already completed, and nothing stopped me.**
+`tasks/dev-bench/026` asked for six dangling `§` citations in the EAP trio to be resolved.
+`dev-bench/029` — **the last unit of the previous leg, landed thirteen minutes before I claimed
+this one** — had already swept `eap.h`, `eap_interp.h`, `eap_interp.c` and `ble_bridge_real.c`,
+resolving 46 bare `§N` citations including all six of these. The worker verified that
+independently, found nothing left to do, and closed the task. Its code branch carried **zero
+commits**.
+
+`.claude/leg.md` says in as many words: *"Reconcile first: a task whose source doc no longer says
+the thing gets closed, not dispatched."* I read the handoff entry for `dev-bench/029` before
+selecting, and it describes a sweep of exactly these files. **The reconciliation step is written
+for `open.md` sources and I applied it only there** — I did not ask the narrower question, which is
+whether the *previous leg's own landed work* had overtaken a task still sitting `open`. That is a
+gap with a name now: a task filed against a defect class that a later, broader unit then swept is
+invisible to `queue-status.py`, because nothing connects `026`'s text to `029`'s diff. **The cheap
+fix is a habit, not a script: before claiming, `git log --oneline -15` the task's own repo and read
+what the last leg actually touched.** I am recording it here rather than filing a task because it
+costs one command and no mechanism.
+
+**(b) The reviewer found a real defect in work two units had already called correct, and that is
+the first time this log records that.** This is the answer to the open question the
+`**Reviewer:**` tally exists to settle, and it is worth stating plainly. `eap.h:84` used to read
+*"Both worked protocols in that doc's §4.9 use one arm per state"*. `dev-bench/029` **deleted** the
+`in that doc's §4.9` clause rather than repointing it; `dev-bench/026` re-checked that call and
+confirmed it, on the grounds that no `embarch-study-designer` decision states the one-arm rule.
+That check was true and **scoped to the wrong repo.** The sentence is about the event-arm cap —
+`EAP_MAX_EVENT_ARMS_PER_STATE`, defined six lines below it — which is a dev-bench-local sizing
+question owned by **`embarch-dev-bench`'s own `decisions/protocols.md` decision 41**, stating the
+identical claim word for word: *"both worked protocols use one arm per state. Refused by name at
+decode, never truncated."*
+
+So under decision 47 — the citation convention landed **yesterday**, by `dev-bench/029` itself —
+this was branch 1, resolve to the owning decision, and it was executed as branch 3, resolve to
+nothing. **Two agents searched the cross-repo half of branch 1 and neither searched the own-repo
+half**, which is the more obvious of the two. That is what a one-day-old rule being applied by
+imitation looks like, and it is the same accidental-convention failure `dev-bench/029`'s own entry
+warned the next leg to watch for — arriving one unit later, inside the fix for it.
+
+**Merged:** `agent/dev-bench/026-eap-section-refs-doc` — `embarch-doc`
+`c133703573648f1c4d959f04ccd509d5ba8c400f`, one commit closing the task as superseded. **There is
+no code SHA**: the `embarch-dev-bench` branch was identical to `origin/main` and was abandoned.
+Before merging I confirmed the supersession myself rather than taking the worker's word:
+`git grep '§'` across the three files at `origin/main` returns nothing, and `eap_interp.h:14`
+already carried the 59/60 correction.
+
+**Reviewer:** 1 finding — `tasks/dev-bench/030-eap-h-84s-dropped-section-was-resolvable-to-decision-41.md`
+(filed from the drop it left at `inbox/dev-bench-eap-h-84-decision-41-miscited-as-unresolvable.md`,
+which I drained and numbered in this fold). It re-derived all six citations at the merge SHA,
+confirmed the 31/32 → 59/60 correction against `decisions/gatt.md` (31/32 are `GattDiscover` /
+`GattMonitorAll`, no wire-type content) and `protocols.md` / `protocol-exec.md` (59 is the
+decode-primitive split, 60 puts `RunProtocol` on the bench), and found decision 41 by searching the
+repo the comment lives in — which is the step both prior units skipped. I added a third `Done when`
+item asking whether **other** deletions from `029`'s 46 have the same shape; that generalisation is
+mine and is explicitly marked in the task as unmeasured.
+
+**Blocked:** nothing. `tasks/dev-bench/026` closed `done`, correctly — its central claim holds. The
+narrower defect is `tasks/dev-bench/030`, `open`.
+
+**Hardware debts:** none created, none possible — the landed diff is one task file. One
+**restated**: nothing in this unit or its predecessor was compiled, because the `embarch-outpost` /
+`embarch-dev-bench` Zephyr toolchains are absent from a worker's worktree, so "green" here means
+the doc gate and the ownership checks and not a build — which matters more than usual for
+`tasks/dev-bench/030`, since its fix is a C comment nobody will compile either. Standing debts
+unchanged: `core/015`'s native Windows build, the unplugged dev-bench probe (`tasks/api/059`
+**open**; **not re-checked live this leg** — the bench buffer is 8,351 min stale,
+`fleet-hardware.py --refresh` still crashes per `tasks/doc/041`, and the bench queue is parked by
+the owner's `d0cf9a0`, so its "attached: yes" is six days old and means nothing), `umbrella/037`
+check 13, `umbrella/033` check-17 arms, umbrella check 5's permission-denied probe, and
+`embarch-ui`'s 18-record stale prefix.
+
+**Budget:** PROCEED — weekly 54.7% of a 90% cap at leg start, resets in ~66h. Wave 6 suggested;
+three workers dispatched, bounded by the queue's worker-scoped depth of 3, not by the cap.
+
+**Least sure about:** **whether this unit should count as a unit at all, and what it cost.** It
+landed one task-file commit and consumed a worker, a reviewer and a fold — and it is the only unit
+of the three that produced a finding, because the reviewer went looking at a diff that had already
+been declared clean twice. If I had reconciled properly at selection, `026` would have been closed
+by hand in thirty seconds, decision 41 would still be uncited at `eap.h:84`, and nobody would ever
+have looked. I do not know how to weigh that. It is an argument that redundant verification has
+real value, and it is equally an argument that my selection wasted most of a slot and got lucky;
+both readings fit the evidence and I cannot separate them from inside one leg.
+
+---
+
 ## 2026-09-13 13:09 — ui/043 a compaction task paid its debt by splitting, and the split cost nothing
 
 **Decided:** one thing, and it is about **how a compaction unit should be judged**, not about
