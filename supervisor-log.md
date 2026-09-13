@@ -97,6 +97,74 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 15:41 — umbrella/060 six dead pointers closed, and the reviewer caught the one the worker fixed that nobody had asked it to
+
+**Decided:** **three, and the first is the most useful thing this leg produced.**
+
+**(a) Ask the reviewer specifically about the change the task file did not name.** `060`'s worker
+fixed the six sites it was sent for, and then fixed a seventh thing it found on its own —
+`doctor.rs:1269`'s markdown link depth, changed from `../../embarch-doc/…` to `../embarch-doc/…`
+because two other sites in the same file already used the shallower form. I made that the
+reviewer's fourth explicit question **because nothing else had checked it**: it was outside the
+task's `Done when`, so the worker was both the only proposer and the only verifier. **It was
+backwards.** `embarch-doc` is a *sibling* of `embarch-umbrella`, so from `src/doctor.rs` the
+working depth is `../../`; the two sites the worker copied are themselves dead links. A working
+link was broken by matching a broken precedent. **Fixed in this fold** —
+`319f035795f15adb396e38e69fa29d243c431e19` — and the general rule is the carry-forward: *a
+self-found fix that the task file never named has had exactly one pair of eyes on it, and naming it
+to the reviewer costs one line.*
+
+**(b) A worker that rejects a candidate and says why is doing the job.** The task named six sites;
+the worker's own grep found a seventh candidate, `doctor.rs:1`, and **rejected it** — that line
+cites `spec.md`'s surviving prose description of the chain, and only the *table* moved to
+`interfaces/doctor-chain.md`. The reviewer checked that judgement independently and agreed. A
+rejected candidate stated out loud is worth as much as a fixed one; it is the half that stops the
+next sweep re-examining the same line.
+
+**(c) The four pre-existing dead links are a drop, not this unit's scope.** `doctor.rs:569`, `721`,
+`750` and `2753` all carry the same dead `../embarch-doc/…` form, and **two of them are `fix`
+strings `doctor` prints to a human being told where to go read.** Filed as
+`inbox/umbrella-doctor-rs-cross-repo-link-depth.md`, which also records that `embarch-core` uses a
+third form again (suite-root-relative, no `../`) and that `DOC-CONVENTIONS.md` governs decision
+citation form but says nothing about cross-repo link depth. I replaced the reviewer's own drop with
+this one rather than leaving both, because its first `Done when` item was the line I had just fixed
+— a drop whose first instruction is already done is how a thing gets fixed twice.
+
+**Merged:** `agent/umbrella/060-doctor-dead-pointers` — code
+`b9452abd164cbf57fc54c45bcd49942a0fb1b0fe` in `embarch-umbrella` (parent
+`eacfb361c0cfde570116222688844a5ed45fb54e`), **plus the fold's own follow-up commit
+`319f035795f15adb396e38e69fa29d243c431e19` on the same repo**, doc
+`ce3a917b0adb7918a6429680c61b26aa2bcc7151` in `embarch-doc` (a cherry-pick of the worker's
+`ebefeca`, for the same reason as `core/051`: the doc branch predates this leg's later claim
+commits). Gate re-run by me on the merge result: `cargo build` / `test` (**229 passed**) / `clippy
+--all-targets -- -D warnings` green, `check-client-names.py --repo embarch-umbrella` clean,
+`check-docs.py` 11/11, ownership green on both halves; `cargo build` and `clippy` re-run after the
+follow-up commit. `changelog.d/umbrella-doctor-stale-citations.fixed.md` consumed into
+`history/umbrella.md` with `--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/umbrella/060` closed `done` by the worker.
+
+**Reviewer:** 1 finding — inbox/umbrella-doctor-rs-cross-repo-link-depth.md, the `doctor.rs:1269`
+link-depth regression; its 1269 half fixed in this fold, its four pre-existing sites left in the
+drop and the drop rewritten to say so. The reviewer also confirmed `embarch-core` decision 36 and
+57's homes from the decision bodies and agreed with the worker's rejection of `doctor.rs:1`.
+
+**Hardware debts:** **none created.** Nothing here runs: the unit is citations and one relative
+path inside `doctor.rs`'s own comments and strings, and `doctor` itself was not executed. Standing
+debts carried unchanged — and note `umbrella/037` check 13, `umbrella/033`'s check-17 arms and
+check 5's permission-denied probe all still need a real machine, which this leg cannot give them.
+The dev-bench probe is still unplugged (`status` returned `"probes": []` live at the top of this
+leg), so `tasks/api/059` stays **open**.
+
+**Budget:** PROCEED — weekly **61.0%** of a 90% cap, resets in ~63h. No 429, no HOLD.
+
+**Least sure about:** **whether fixing line 1269 inside the fold was the right call rather than
+leaving the whole thing to the drop.** It is a one-character revert of a regression this leg's own
+unit introduced, verified three ways, so leaving it on `main` overnight to be fixed by a future task
+seemed worse. But it is the supervisor editing a code repo outside a `suite` task, and the honest
+version is that the line between "trivial and in scope" and "doing the worker's job" is mine to
+draw and I drew it generously.
+
 ## 2026-09-13 15:33 — core/051 a comment deleted rather than repointed, because no decision anywhere supported what it claimed
 
 **Decided:** **three.**
