@@ -97,6 +97,77 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 10:51 — study-designer/035 decision 45 moved out of declares.md verbatim, and the split-first rule paid for itself
+
+**Decided:** nothing suite-wide, and the compaction convention being applied was already settled.
+One judgement is mine and it is in the dispatch note rather than the task: `tasks/study-designer/035`
+argued for a verbatim split *and* left squeezing decision 40 on the table as an alternative, and I
+told the worker to **prefer the split and not re-litigate it** — because `DOC-BUDGET.md`'s
+split-first rule already decides that, and because decision 40 is this crate's largest decision,
+over the per-decision cap and pinned. A worker re-opening a rule the repo has already settled is
+cost with no upside. It split cleanly on the seam the task named, which the index row had been
+announcing for days: *"firmware versions **and** the GATT table"*.
+
+`decisions/declares.md` 11,309 → 8,676 B (92.0% → 70.6% of cap), out of reserve and off the size
+ledger. Decision 45 now lives in a new `embarch-study-designer/decisions/declared-gatt.md` (3,267 B).
+Decisions 40 and 74 untouched byte-for-byte — 74 landed **yesterday** in `suite/010`, so this is
+the first thing to touch that file since, and leaving it verbatim is what makes that safe.
+
+**`DOC-COMPACTION-PASS.md`'s human question, answered by the worker in its own words and not by a
+script:** yes — `embarch-study-designer/spec.md` alone still answers what someone needs to work on
+this crate today, and this unit did not have to touch it to keep that true. Decision 45 was never
+*in* `spec.md`, because it is designed-never-built and `spec.md` is what is true now; moving it
+between two decisions files changes nothing about a reader following `spec.md`'s own pointer into
+`decisions.md`. I record that as a genuine pass rather than a formality: the four-file model
+working as designed is the answer the question is looking for.
+
+**Merged:** `agent/study-designer/035-split-declares` — `embarch-doc` `01d1642`. **Code side:
+no commits at all** — `embarch-study-designer` was not changed, and the branch exists on its remote
+only because the worker pushed it to establish it. There is no code SHA for this unit and a revert
+needs only the doc one.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings. Given four specific questions rather than an open read, because a
+verbatim claim is exactly the kind a reviewer can settle mechanically and a supervisor cannot
+settle by reading a summary. It diffed the removed block against the added one byte-for-byte;
+confirmed all four of the task's `Must not delete` paragraphs survived unaltered (decision 40's
+verification-asymmetry paragraph and its four `VersionSource` variants, decision 40's "a
+consequence this decision did not anticipate" paragraph, decision 45's "what building it would
+take" paragraph and its deferral trigger, decision 74's reversal condition and its `tasks/suite/036`
+pointer); walked all 19 index rows in `decisions.md` and found no number dropped and none
+duplicated; and swept the whole worktree for any other live citation of `declares.md` for decision
+45, finding only closed task files and a changelog entry, which are history rather than citations.
+
+**Hardware debts:** none — the unit is a documentation split and no board, no build and no wire is
+involved. Standing debts unchanged and carried: `core/015`'s outstanding native Windows build of
+`embarch-core`, the unplugged dev-bench probe (confirmed again this leg — `GET /status` returned
+`"probes": []`, so `tasks/api/059` stays **open**, not blocked) with `fleet-hardware.py --refresh`
+still crashing, `umbrella/037` check 13, `umbrella/033` check-17 arms, umbrella check 5's
+permission-denied probe, `embarch-ui`'s 18-record stale prefix, the bench queue parked by the
+owner's `d0cf9a0`, and the `embarch-outpost` / `embarch-dev-bench` toolchains absent from a
+worker's worktree.
+
+**Budget:** PROCEED at the start and at this fold — weekly 48.5% of a 90% cap, resets in ~68h21m,
+suggested wave 6. Two workers in flight when this landed, so the wave was never the constraint;
+**the queue's scope spread was**, which is the next paragraph.
+
+**Least sure about:** **whether filing two new tasks off a scouted sweep is a supervisor writing
+its own work.** `queue-status.py --refill-owed` fired on the *second* half of its gate — 10
+dispatchable tasks but only three distinct scopes (`dev-bench`, `study-designer`, `suite`), and
+`suite` is my own hands, so a wave of 6 had **two** worker slots it could fill. I swept, and filed
+`tasks/outpost/019` and `tasks/core/047`, both stale-claim corrections verified against the code
+before filing. That is squarely what refill is for. What I am less sure about is the *mechanism*: I
+delegated the reading to a read-only scout agent to save my own context, and a scout optimises for
+finding candidates, which is a pressure toward manufacturing work in a queue that is thin rather
+than empty. I re-verified both findings myself against the actual files before writing either task
+— which is the guard — and I dropped its third candidate (`embarch-api`'s Windows smoke-harness
+tier) precisely because I could not confirm from here that it is closable without a native Windows
+run. Worth someone deciding whether a scouted refill is a normal move or a reported exception; it
+is not written down either way.
+
+---
+
 ## 2026-09-13 10:34 — suite/010 one field name, two boards' builds, and the message that blamed the wrong one
 
 **Decided:** `embarch-study-designer` **decision 74**, plus one deliberate non-decision.
