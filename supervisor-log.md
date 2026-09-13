@@ -97,6 +97,102 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 11:32 — suite/036 the argument against renaming a served field was arithmetically wrong, and the field is still not renamed
+
+**Decided:** one design call and one deliberate non-call, both mine, and the second is the one to
+read.
+
+**(a) `GET /dev-bench/hello` keeps `firmware_version` for now, and every reader of it is now told
+whose build that is.** `embarch-core/interfaces/studies.md` already said so (landed with
+`suite/010`); the two `embarch-api` surfaces did not. Both now say the value is the **bench's** and
+that the `Study` field it corresponds to is `requires.dev_bench_version`, not the identically named
+`requires.firmware_version`, which is the DUT's. Nothing served, no output key, no rendered string
+and no behaviour changed.
+
+**(b) The reason this task gave for *not* renaming is wrong, and I corrected it rather than
+inheriting it.** `tasks/suite/036` argued the rename would leave the suite with **three** spellings
+for the bench's build instead of two. It would not — `dev_bench_version` is one spelling used on
+two surfaces, so the count is **two either way**:
+
+| | wire (`HelloAck`) | HTTP (`/dev-bench/hello`) | study (`Requirements`) |
+|---|---|---|---|
+| today | `firmware_version` | `firmware_version` | `dev_bench_version` |
+| renamed | `firmware_version` | `dev_bench_version` | `dev_bench_version` |
+
+What the rename moves is **where the crossing happens**, and that argues *for* it. Today the
+crossing is in the caller's hands, at the exact point where the HTTP name collides with a field on
+the same struct holding a **different board's** version — so a caller matching name to name does
+the wrong thing and it looks right. After a rename the crossing is inside Core, where Core composes
+the response and no caller crosses anything. That is `embarch-core` decision 47's shape exactly.
+
+**So I removed the bad argument and did not take the rename, and those are two separate
+judgements.** The rename is not mine to take this leg because it needs work the task did not name:
+`firmware_version` is a plain `String` on `embarch-core-client` and `embarch-api`'s reflash gate
+compares it, so a renamed Core needs the same `Option` tolerance `embarch-api` decision 60 gave the
+identity fields after decision 47 — and **the Core actually running on this machine is already
+behind `main`** (`core/015`), so "old Core" here is the bench, not a hypothetical. A silent empty
+string would turn a real version check into a vacuous one. The task now states that as the open
+cost, and says the rename needs its own announcement window; mine covered documenting the field.
+
+**`embarch-study-designer` decision 74 was not amended and does not need to be.** The previous
+leg's handoff flagged that 74 "reads as settling the question". It does not — it says in its own
+words that this surface *"is a genuinely open question and this decision does not close it"*. That
+doubt is answerable by reading the decision, and the reviewer independently agreed the reading is
+fair rather than convenient. **Consider that handoff item closed.**
+
+**Announcement:** posted 2026-09-13 10:40, `ts 1789317643.030479`, no `--action`; window closed
+11:11 with no reply and no human message in `#embarch-fleet` for the whole leg. Ran unobjected.
+
+**Merged:** `embarch-api` `72e8b12` plus follow-up `265c8ff`; `embarch-doc` `6f369d3`, doc fold in
+this commit. No agent branch on `embarch-doc` — a `suite` unit is my own hands.
+
+**Blocked:** nothing. `tasks/suite/036` is **`done`** for the documentation half and the rename is
+split out as **`tasks/suite/037`**, which carries the corrected argument, the old-Core tolerance
+work, the three repos' consumer list, and a `Done when` that requires its own announcement window.
+The split was forced by a good refusal: `fold-commit.py` will not fold a unit whose task is still
+`open`, which is right — a half-done task left `open` is indistinguishable from one nobody started.
+
+**Reviewer:** 1 finding — `inbox/suite-036-decision-58-misattribution.md`, acted on and consumed in
+this fold rather than left in the queue. I had written that `embarch-api` decision 58 "exists
+because of" decision 47's rename. It does not: 58 is the crate-wide rule that parsing an older Core
+is not a per-field judgement (it came from `api/045`'s `validated_at_utc_ms`), and **decision 60**
+is the one decision 47 produced. Fixed in the task file and in the rustdoc (`265c8ff`). **I
+disagree with one line of the finding**: it called the `client.rs` comment's phrasing correct, and
+it carried the same misattribution, so I corrected that too rather than only the task file. The
+reviewer's other four answers all came back clean and each was checked against code, not prose — it
+re-derived the spelling count from `protocol.rs:67`, `study.rs:621`, `study.rs:280-281` and
+`result.rs:44,49` and confirmed `Provenance` adds no third spelling; confirmed the plain `String`
+and `reflash.rs:259-270`; confirmed decision 74's clause verbatim; and confirmed `embarch-ui`
+already spells the value `dev_bench` at both cited lines with no doc or guide mentioning the field
+anywhere. **This is this leg's only non-zero finding, and it landed on the `suite` unit — the class
+with no worker and no other outside read.** That is an argument for keeping per-unit review at
+least for `suite` units.
+
+**Hardware debts:** none created. One **not** deepened, deliberately: this unit changes
+`embarch-api` only, so unlike yesterday's `suite/010` it adds nothing to `core/015`'s outstanding
+native Windows build — and part of why the rename was deferred is that it *would*. Standing debts
+unchanged: `core/015`, the unplugged dev-bench probe (`GET /status` returned `"probes": []` at this
+leg's step 0, so `tasks/api/059` stays **open**) with `fleet-hardware.py --refresh` still crashing,
+`umbrella/037` check 13, `umbrella/033` check-17 arms, umbrella check 5's permission-denied probe,
+`embarch-ui`'s 18-record stale prefix, the bench queue parked by the owner's `d0cf9a0`, and the
+`embarch-outpost` / `embarch-dev-bench` toolchains absent from a worker's worktree.
+
+**Budget:** PROCEED throughout — weekly 48.5% of a 90% cap at leg start, 49.8% at this fold, resets
+in ~67h46m. Wave 6 suggested and never reached: the leg held two workers at its peak, bounded by
+queue scope spread, not by budget.
+
+**Least sure about:** **whether "correct the argument, decline the change" is a real outcome or a
+way of looking decisive while deferring.** I ended this unit with the rename still unmade, the task
+still open, and its central argument now pointing the *other* way from the conclusion I reached.
+That is honest — the cost I substituted is real and I verified it in the code — but it means the
+next reader of `tasks/suite/036` finds a task whose analysis favours acting and whose supervisor
+did not act, and the only things separating those are the announcement's scope and the old-Core
+work. If that reader concludes I simply lacked the nerve, they may be right, and the remedy is
+cheap: the rename is perhaps two hours with the `Option` tolerance done properly, announced on its
+own.
+
+---
+
 ## 2026-09-13 11:06 — outpost/019 a rejection kept and its three premises retired, plus five citations of the wrong decision
 
 **Decided:** nothing suite-wide. The judgement worth naming is the one in the task file rather than
