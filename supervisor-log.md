@@ -97,6 +97,78 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 17:58 — umbrella/064 five citations checked, five held, and the useful finding was a same-number collision nobody was looking for
+
+**Decided:** **three.**
+
+**(a) A one-parenthesis task is not a unit, so I widened it at claim time and said so in the claim
+commit.** `api/086` filed this yesterday evening as a single repoint — `mirrors.md` names
+`` `embarch-api/decisions/shape.md` `` beside decision 64, and decision 64 left that file this
+afternoon. That is thirty seconds of work against a twenty-minute worker spawn. I added a second
+half on the same file: verify **all five** of `mirrors.md`'s own cross-repo citations. Same class of
+work, same file already open, naturally bounded — and `mirrors.md` is the suite's cross-repo mirror
+doc, the one place where citations point *out* of their own repo by construction, so a wrong one is
+both likelier and dearer than elsewhere. **The widening is where this unit's only real finding came
+from**; the repoint itself was exactly as mechanical as it looked.
+
+**(b) The result is a negative one and I am recording it as a result rather than as an absence.**
+**Five checked, five numbers held, and no false sentence.** That breaks a four-day streak — every
+citation sweep since 2026-09-10 has found the real yield in prose a decision made false rather than
+in a wrong number, and this leg's own task files say so in as many words. One file where the
+sentences all hold is worth writing down precisely because the prior says they usually do not, and
+because a worker that reports "five held" under that prior is resisting an incentive to manufacture
+findings. I told it explicitly not to, and it did not.
+
+**(c) The one substantive edit was not the repoint.** `mirrors.md` said *"upstream decisions
+53/13"*; the worker made it `` `embarch-api` decisions 53/13 ``. That reads like a style fix and is
+not: **`embarch-umbrella` has its own decision 13**, in `decisions/projects.md`, so the bare form
+resolves against the reader's default index rather than the intended one. The reviewer confirmed
+the collision is real, *and* — unprompted — that `embarch-umbrella/src/config.rs` already uses the
+prefixed form for exactly this pair, so the reword matches an existing convention in this repo
+rather than inventing one. **That is the finding worth carrying**: the wrong-number defect class has
+a quieter sibling where the number is right and resolves in the wrong repo, and no gate sees it
+either, because `check-decision-refs.py` resolves a number without asking whose number it is.
+
+**Merged:** `agent/umbrella/064-mirrors-repoint` — doc
+`91e75f545e89ca0680386674291f21baecd31d2b` (parent `a840f96eb2401ec8b6ca6f8d201422d9b7faa7e1`).
+**No code SHA, and that is the right outcome, not a missing half**: `embarch-umbrella`'s code repo
+had nothing to change, so no code branch was pushed. I told the worker at dispatch that a doc-only
+unit is a correct outcome and to run `cargo build`/`test`/`clippy` anyway; it did (225 tests green
+on an unchanged crate). Gate re-run by me on the merge result: `check-docs.py` **11/11**, ownership
+green on all 3 changed paths. `changelog.d/umbrella-mirrors-decision-citations.fixed.md` consumed
+into `history/umbrella.md` with `--only`; **29 of the owner's own fragments left pending**, as on
+every fold this week.
+
+**Blocked:** nothing. `tasks/umbrella/064` completed; the worker checked every Done-when box and
+wrote its own `## Closed` section but **left `State:` at `claimed`**, so I closed and removed the
+file in this fold rather than leaving a claim standing over finished work.
+
+**Reviewer:** no findings — re-derived all five citations against the cited bodies directly rather
+than against the worker's reasoning, confirmed the decision-13 collision premise twice (the decision
+exists in `projects.md`, and `src/config.rs` already uses the prefixed form), independently re-ran
+the `shape.md` sweep, and checked `mirrors.md`'s two amendment paragraphs against decision 64's own
+2026-09-13 amendment text for mutual consistency.
+
+**Hardware debts:** **none created.** A doc-only citation edit; nothing built for a board, nothing
+executed. Standing debts carried unchanged — `core/015`'s native Windows build (twelve landed
+`embarch-core` changes), `umbrella/056`'s unrun clearing behaviour, `suite/038`'s re-scoped check 9,
+`umbrella/037` check 13, `umbrella/033`'s check-17 arms, umbrella check 5's permission-denied probe,
+`embarch-ui`'s 18-record stale prefix. **The dev-bench probe is still unplugged** — `status`
+returned `"probes": []` live at this leg's top, fifth consecutive leg, so `tasks/api/059` stays
+**open**, not blocked.
+
+**Budget:** PROCEED at both ends — weekly **66.0%** of a 90% cap at leg start, resets in ~61h. Wave
+6 suggested; 3 workers used, because 3 is every dispatchable scope the queue had after the refill
+and the leg cap is 4 units either way.
+
+**Least sure about:** **that this unit's reviewer report reached me through the coordinator rather
+than through its own notification** — the exact misrouting `tasks/doc/042` describes, where a
+reviewer finishes and has no legal way to be collected. It worked here only because someone relayed
+it. `.claude/leg.md` requires the `**Reviewer:**` line to be collected before the entry is written,
+and on this fold that requirement was met by luck rather than by mechanism. A leg that hit the same
+misrouting with nobody relaying would have to write `skipped (reviewer did not report)` for a
+review that actually ran clean, which is the worse of the two wrong answers.
+
 ## 2026-09-13 17:40 — api/086 a verbatim split paid the debt without writing a sentence, and the only thing it broke was in another repo
 
 **Decided:** **four, and this is my leg's last unit.**
