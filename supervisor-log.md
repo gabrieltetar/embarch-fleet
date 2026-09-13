@@ -97,6 +97,70 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 17:28 — core/054 fifty-five citations read against their bodies, three wrong, and all three of my own leads were false
+
+**Decided:** **three.**
+
+**(a) The sweep found more than the task predicted and fewer defects than the task implied.** The
+task estimated ~35 bare citations in `embarch-core/src/api.rs`; a grep found **55 across 53 comment
+sites**. **52 held.** Three did not, and each is a different failure:
+
+- `api.rs:825` — bare `decision 17` resolves by convention to `embarch-core`'s own decision 17 (CI
+  everywhere), but the sentence is `embarch-topology` decision 17's almost verbatim. **Prefixed,
+  number unchanged, and the reviewer re-derived 17 in `embarch-topology` rather than accepting the
+  prefix** — that is the `ui/040` failure mode and the only reason to trust this one.
+- `api.rs:970` — `(decisions 8, 22)` cited core's own decision 8, the SoC-to-chip table, beside
+  decision 22, the identity gate that genuinely runs mid-attach. Dropped 8; the sentence relies on
+  nothing it carried.
+- `api.rs:1424` — a test comment credited `` `embarch-dev-bench` decision 26 ``, that repo's
+  ESP32-C5 board story, for a claim that is `embarch-core`'s **own** decision 18, `Format::Bin` at
+  the merge address. Wrong repo *and* wrong number, and the only one of the three where a reader
+  following the citation would have landed in another repo entirely.
+
+**(b) I wrote three "known leads" into the task file and all three were wrong, which is the
+finding worth keeping.** `api.rs:970`, `1110` and `1126` all cite a bare `decision 28` beside an
+`embarch_topology` symbol, and I filed them as probable foreign citations on exactly that reasoning.
+**`embarch-core` has its own decision 28** — `POST /validate` and `GET /alerts`, reachable without
+touching hardware — which is precisely what all three sites describe; `embarch-topology` also has a
+decision 28, unrelated, and the collision is a coincidence. The worker checked instead of trusting,
+the reviewer checked the worker's negative claim independently, and both landed on "leave them".
+**A supervisor's lead is a hypothesis, and the instruction to grep rather than trust the list is
+what stopped mine from becoming three wrong edits.**
+
+**(c) Nothing behavioural, and no decision body was touched.** Three comment lines. Where a decision
+body is the thing that is wrong, that is a drop, not an edit — none came up here.
+
+**Merged:** `agent/core/054-api-rs-bare-decision-citations` — code
+`e4b5b728ddafeaf7833a1f515257ca50acba05dd` in `embarch-core` (parent
+`49bc726a656bc7b7ce25ce76b369e8b4ec2c8a72`), doc `7ecc0b8df8924aac4b2f06925e38d80e1d3fd636`
+(parent `45c16b2ad55e155ef82c77ac36dc7f0b97d5be7c`). Gate re-run by me on the merge result:
+`cargo build` / `test` / `clippy --all-targets -- -D warnings` green,
+`check-client-names.py --repo embarch-core` clean against 7 denylist entries, `check-docs.py`
+**11/11**, ownership green on both halves.
+`changelog.d/core-api-rs-decision-citations.fixed.md` consumed into `history/core.md` with
+`--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/core/054` closed `done` by the worker.
+
+**Reviewer:** no findings — read all three decision bodies at the merge SHA rather than the commit
+message, re-derived `embarch-topology` decision 17 independently, confirmed the bare-`decision 28`
+sites are correct as they stand, and checked all six cited numbers against
+`embarch-decision-reversals.md` for a re-introduced rejected alternative. None.
+
+**Hardware debts:** **one, carried not created.** `core/015`'s outstanding native Windows build now
+carries a **twelfth** landed `embarch-core` change; this one is three comment lines and nothing
+behavioural, so it adds to the count and not to the risk. Other standing debts unchanged — the
+dev-bench probe still unplugged, `umbrella/056`'s unrun clearing behaviour, `suite/038`'s re-scoped
+check 9.
+
+**Budget:** PROCEED — weekly **65.0%** of a 90% cap, resets in ~62h. No 429, no HOLD, wave 6.
+
+**Least sure about:** whether a sweep scoped to one file is the right unit at all. `api.rs` alone
+held 55 citations and yielded three defects; `embarch-core/src/` holds 231 and `embarch-umbrella`'s
+`doctor.rs` alone holds ~100 more. At this hit rate the remaining corpus is worth perhaps a dozen
+real defects and a dozen units, and I do not know whether that is a good trade or a treadmill the
+fleet has found because it is easy to file.
+
 ## 2026-09-13 17:23 — topology/037 a share became two copies on the day the gate changed crates, and only a doc comment ever knew
 
 **Decided:** **three.**
