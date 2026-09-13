@@ -97,6 +97,95 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 12:25 — dev-bench/022 122 dead citations across four C files, and two of them named the wrong repo outright
+
+**Decided:** nothing suite-wide. Two calls of mine, both recorded in `core/047`'s entry as queue
+decisions and both now settled by this unit's result.
+
+**(a) Collapsing `023`/`024`/`025` into `022` was right, and the evidence is specific.** One worker
+covered all four files and all 122 citations in one pass, and the thing that would have been lost
+by splitting it is exactly what the split could not have delivered: **`embarch-dev-bench`'s own
+decisions run 1-46 with no gaps and `embarch-study-designer`'s overlap them entirely**, so a bare
+`decision 39` is ambiguous until its paragraph is read. Eight hits of decision 39 resolved to
+dev-bench's own (`dev_bench_log_level`) and nine to study-designer's (stream-tap / schema v8-v9).
+A worker holding only one file has a smaller sample of that ambiguity and no reason to notice it is
+systematic. All three retired tasks are `done` in this fold.
+
+**(b) Two citations named the wrong repo outright, and the reviewer says both repoints are
+"strictly better", not judgement calls.** `app/tests/serial_protocol/src/main.c`'s GATT-transcript
+section header cited `embarch-dev-bench` decision 36 — which is chip-ID reporting — for a section
+about the GATT capture window and streamed transcript, which is `embarch-study-designer` decision
+36 verbatim. And `app/src/main.c`'s `RunProtocol` pre-flight comment cited `embarch-core` decision
+18 — flashing, `Format::Bin` at the merge address — for "Core validates a submitted `Study`
+structurally before touching the serial link", which is `embarch-study-designer` decision 18. The
+reviewer checked all three repos' 18 and 36 and confirmed the old citations were **wrong rather
+than ambiguous**. Neither was in the task; both were found by reading.
+
+**A defect I fixed myself before merging, and it was in the one line the unit had deliberately
+re-attributed.** `main.c`'s decision-18 comment came back reading `` §3 decision 18's rule `` — the
+repo prefix replaced by a dangling fragment of the deleted filename, while its sibling citation of
+the same decision in `serial_protocol.c` carried the full cross-repo form. Trivial and in scope, so
+I fixed it (`15c8796`) rather than blocking; the reviewer confirmed the meaning is unchanged.
+
+**Merged:** `agent/dev-bench/022-dead-design-md-citations` — `embarch-dev-bench` `15c8796`
+(fast-forwarded onto `main`; the worker's `38cadda` plus my follow-up), `embarch-doc` `eae8205`.
+
+**Blocked:** nothing. `tasks/dev-bench/022` closed `done`; `023`, `024` and `025` closed `done` as
+covered, each carrying the merge SHAs and what was re-attributed in its file. **One new task filed:
+`tasks/dev-bench/029`** — see below.
+
+**Reviewer:** no findings. It spot-checked 8 decision-39 hits, both re-attributions three ways
+across all three repos, my follow-up commit, and ~20 further numbers (dev-bench's own 7, 11, 16,
+21, 27, 29(a), 37; `embarch-core`'s 35, 37; `embarch-study-designer`'s 10, 12, 24, 31, 32, 43, 44,
+47, 50, 53, 55, 58, 60, 61, 62) — every one correctly attributed. It also checked
+`embarch-decision-reversals.md` for 18/36/39 unprompted and found nothing being re-proposed. **It
+caught two arithmetic slips that are not findings and are worth recording anyway**: the worker's
+own closing note said *six* decision-39 hits were dev-bench's own where there are eight, and it
+called the surviving bare-`§N` count 22 against the reviewer's 21. Both were in a task file that
+this fold retires, so neither would have survived to be corrected.
+
+**And I asked it one question the task did not contain, which is where the unit's one real
+follow-up came from.** The worker stripped the citations that carried only a *section* number and
+no decision number down to a bare `§4.8`, on `dev-bench/020`'s precedent. The reviewer's read:
+*"a different dangling reference, not an improvement — it drops the repo name too, so a reader can
+no longer even tell which repo's history to search; less traceable than the dead-but-named path it
+replaced."* That is right, and three units have now applied the treatment on each other's
+precedent, which is how a convention gets established by accident. Filed as
+**`tasks/dev-bench/029`**, which requires a numbered decision rather than a fourth silent
+repetition, and **tells whoever takes it to re-derive the count because the two that exist (22
+lines, 21 occurrences) disagree and neither was checked against the other** — in a task family that
+exists because of numbers nobody checked.
+
+**Hardware debts:** one, carried and not worsened. **Nothing in this unit was built or run on
+hardware and the host legs could not run either**: `embarch-dev-bench` has no `Cargo.toml`, so the
+cargo half of the gate selects nothing, and the worker's worktree has no `west` binary and no
+Zephyr SDK, so neither a `native_sim` build nor the `app/tests/serial_protocol` ztest suite could
+be built — the standing debt from `dev-bench/019` and `020`, restated rather than added to. What
+*was* verified mechanically: the grep gate is zero across all four files, comment-block balance is
+unchanged per file, no line crosses 100 columns, and `check-client-names.py` is clean on the code
+repo. **This is a comment-only change, so the untestable half is untestable in the least dangerous
+way there is** — but it is still 131 changed lines in firmware nothing compiled. Standing debts
+otherwise unchanged: `core/015`'s native Windows build, the unplugged dev-bench probe
+(`tasks/api/059` **open**) with `fleet-hardware.py --refresh` still crashing, `umbrella/037` check
+13, `umbrella/033` check-17 arms, umbrella check 5's permission-denied probe, `embarch-ui`'s
+18-record stale prefix, and the bench queue parked by the owner's `d0cf9a0`.
+
+**Budget:** PROCEED — weekly ~52% of a 90% cap, resets in ~67h. Wave 6 suggested, three workers at
+peak, bounded by scope spread.
+
+**Least sure about:** **this reviewer finished and its completion notification did not reach me** —
+the third instance this log records of finished work stranded by a misrouted notification, and the
+first where it happened to a *reviewer* rather than a worker. Its transcript froze for four
+minutes, so I resumed it with a `SendMessage` asking for its conclusions rather than reading its
+transcript, and it replied immediately. **That worked, and I am not sure it should be the answer.**
+It is a fourth ad-hoc recovery route for the same defect (`tasks/doc/042` is the filed one), it
+costs a model turn, and it relies on the agent still being resumable — a property nothing
+guarantees and nothing checks. What I am least sure of is whether I should have written
+`skipped (reviewer did not report)` and moved on, which is the honest answer under the rule as
+written, instead of inventing a way to get the true one.
+
+---
+
 ## 2026-09-13 12:09 — study-designer/036 two interface docs said `StreamRef` refused a fourth field, and it has one
 
 **Decided:** nothing suite-wide. One judgement worth naming, and it is the worker's rather than
