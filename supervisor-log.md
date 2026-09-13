@@ -97,6 +97,75 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 14:21 — ui/044 one citation repointed, and its reviewer found the class is two weeks older and forty times bigger than anyone had counted
+
+**Decided:** **a dead `§N` is repaired by deleting it, not by finding a new number**, and I wrote
+that into the dispatch note rather than leaving it to the worker's taste. `embarch-ui`'s citation
+carried both a stale file path *and* a `§4.8` that resolved to nothing; the task file explicitly left
+the second half to the worker's discretion. I told it that if it fixed the `§4.8`, the right form was
+to **drop** the section reference — because `result-types.md` is a split file with no numbered
+headings either, so any `§N` written there would be a fresh fabrication rather than a repair. It
+dropped it, said so, and kept the two defects separate in its report. **That is now this repo's
+precedent and both follow-up tasks below cite it as one.**
+
+**This unit.** `embarch-ui/src/study_designer.rs:780` cited
+`embarch-study-designer/interfaces/types.md §4.8` for `StreamRef`, which `study-designer/038` moved
+into `interfaces/result-types.md` yesterday. Repointed, `§4.8` dropped, and
+`study_designer.rs:1524`'s unrelated citation left alone as the task instructed.
+
+**Merged:** `agent/ui/044-repoint-streamref-citation` — code `364afe3` in `embarch-ui` (parent
+`e4d10ac`), doc `7885fdb` in `embarch-doc` (parent `c4dd375`). Both fast-forwards. **The doc branch
+needed a rebase first** and I did not anticipate it: it was cut from `d6e703e`, unit 1's fold then
+advanced `main` to `c4dd375`, and `merge --ff-only` refused. Rebased onto `origin/main`, re-ran
+ownership on the rebased branch (base `c4dd3750a4c7`), force-with-lease pushed, merged. **This will
+happen to every second and later unit of every leg** — the fold between them is what moves `main` —
+so it is routine, not an incident, and the leg doc already says to rebase the remaining branches
+after each merge. Gate re-run on the merge result: `cargo build` / `test` (101 + 2, 4 ignored) /
+`clippy --all-targets -- -D warnings` green, `check-client-names.py --repo embarch-ui` clean,
+`check-docs.py` 11/11, `check-ownership.py --scope ui` green on both branches. No `changelog.d`
+fragment — the worker judged a source doc-comment citation not reader-visible and said so.
+
+**Blocked:** nothing. `tasks/ui/044` closed `done`.
+
+**Reviewer:** no findings. **But its two flagged-not-found asides are the most valuable thing in this
+unit and I filed both**, after checking each myself: `tasks/study-designer/041` and `tasks/ui/045`.
+It confirmed `StreamRef` really is in `result-types.md` now rather than merely plausibly there,
+confirmed `§4.8` is dead in both the old and the new file, and grepped the whole of `embarch-ui` to
+establish that exactly **two** `embarch-study-designer/interfaces` citations exist in that repo — so
+`ui/045` finishes the sweep rather than sampling it.
+
+**What it found, and why it is bigger than the unit.** `grep -rno '§[0-9]'
+embarch-study-designer/` in `embarch-doc` returns **40 hits across 11 files** — 20 in
+`interfaces/limits.md` alone — and they are the section numbering of the **monolithic `design.md`
+this sub-project was split out of on 2026-09-02.** The interface files carry no numbered headings at
+all, so every `§4.x` naming interface content resolves to nothing. **The trap is that `spec.md` *does*
+have numbered sections and its `§4` is "What a study carries"**, genuinely adjacent to what most of
+these citations are about — so a reader following `§4.8` lands somewhere plausible with no eighth
+subsection and cannot tell stale from wrong from deleted. `limits.md:24` is the worked case: one
+citation, `StreamTap` in `types.md` and `StreamRef` in `result-types.md`, under a section number
+belonging to neither. **This is the oldest instance of `tasks/doc/044`'s class in the suite** — the
+2026-09-02 split predates the class being named, so those forty were never swept, and every sweep
+since has hunted *path* citations rather than *section* ones.
+
+**Hardware debts:** none created, none possible — one doc-comment line in one file. Standing debts
+unchanged and untouched: `core/015`'s native Windows build, the unplugged dev-bench probe
+(`tasks/api/059` **open**), `umbrella/037` check 13, `umbrella/033` check-17 arms, umbrella check 5's
+permission-denied probe, `embarch-ui`'s 18-record stale prefix, and the `embarch-outpost` /
+`embarch-dev-bench` toolchains absent from a worker's worktree. Note the `embarch-ui` stale-prefix
+debt is in this unit's own repo and is **unrelated** to it — it needs the owner's own session to run
+a study and read the Trace tab's axis note, and nothing here moves it.
+
+**Budget:** PROCEED — weekly 58.9% of a 90% cap at the previous fold, **59.3% at this one**, resets
+in ~64h38m. Wave 6 suggested, two workers in flight (`study-designer/040`, `api/082`), still bounded
+by scope spread rather than by budget.
+
+**Least sure about:** **whether filing two follow-up tasks off one reviewer's asides is the right
+ratio.** Both are verified and concrete — I re-ran the grep and read `limits.md` myself rather than
+taking the report's word — but a reviewer that reads one diff and produces two queue entries is a
+throughput question as much as a quality one, and this leg has now filed three tasks (`api/082`,
+`study-designer/041`, `ui/045`) against four landed. On a queue this thin that is a feature; on a
+full one it would not be.
+
 ## 2026-09-13 14:14 — study-designer/039 six doc-comment citations repointed, and the split-citation class is now closed inside this crate
 
 **Decided:** nothing suite-wide. One dispatch-note decision worth recording: I wrote the scope
