@@ -97,6 +97,74 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 11:06 — outpost/019 a rejection kept and its three premises retired, plus five citations of the wrong decision
+
+**Decided:** nothing suite-wide. The judgement worth naming is the one in the task file rather than
+in the fix: **a decision whose premises have gone false is not thereby a decision to reopen.**
+`embarch-outpost` decision 26 rejected "fail the cross-decoder leg when the sibling fixtures are
+missing", and closed by saying the real fix would be a CI workflow, which *this repo has never
+had*, and that whether to build one is a suite-scope call this repo cannot file. All three of
+those facts stopped being true on 2026-09-11: `host-tests.yml` exists, suite decision 2 made the
+call, and `open.md` and `embarch.md` were both updated — leaving this clause as the last place in
+the repo asserting the old world. **The rejection is still right**, because suite decision 2
+deliberately leaves the cross-decoder leg outside that workflow. So the task was written to require
+the premises replaced and the rejection kept, and to forbid the tempting adjacent change (adding
+the leg to `host-tests.yml`), which is a suite-scope call and not an outpost task's.
+
+**The worker found three more instances than the task named.** The task named two `run-all.sh`
+strings citing decision 22 for decision 26's skip-versus-failure rationale; it found a third in
+that file plus `tests/vocab_check.py`'s docstring and `README.md`'s test section — five in all —
+and **left `run-all.sh:37` alone**, which is a genuine decision-22 citation about leg ordering.
+That discrimination is the whole value of the unit: a `sed` over "decision 22" would have broken
+the one correct one.
+
+**Merged:** `agent/outpost/019-decision-26-ci-clause` — `embarch-outpost` `94db7d1`,
+`embarch-doc` `6dc5251`.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings. Given three questions: does the rewritten clause still *reject* rather
+than drift into a deferral; does its new claim about suite decision 2's scope match that decision's
+actual text and `host-tests.yml` itself; and is the five-changed/one-left split right. All three
+held — it quoted suite decision 2's own stronger reason for excluding the cross-decoder ("it would
+SKIP on every run… a permanent skip is worse than an absence"), confirmed `host-tests.yml` carries
+only the two host jobs, and read `run-all.sh:37` line by line to confirm it really is about leg
+ordering. It also checked `embarch-decision-reversals.md` for outpost CI history unprompted and
+found nothing being re-proposed. **One process note: this reviewer's code worktree had already been
+removed when it ran**, so it read the code with `git show 94db7d1:<path>` against the owner's
+checkout instead. That is safe — a SHA is a SHA — but it is luck rather than design, and the next
+leg should delete a unit's worktrees *after* its reviewer reports, not after its merge.
+
+**A defect in my own task file, twice, and the second one is the interesting one.**
+`check-decision-refs.py` resolves a suite decision only through `suite/decisions.md`; naming the
+topic file that holds the text followed by the number does not resolve. My first draft did that and
+turned the gate red. I fixed it and added a dispatch note warning the worker — **and the warning
+quoted the failing form, so the checker parsed the quote and the gate went red again, this time on
+`main`, from my own claim commit** (fixed in `d830771` before anything else landed on top). The
+rule this leg learned: a warning about an unparseable citation cannot contain the citation.
+
+**Hardware debts:** none new — a decisions file, three shell/Python strings and a README. The
+worker ran all three host legs green (`decoder_unit.py` 31/31, `vocab_check.py`, `cross_decoder.py`
+skipping loudly as designed) and `run-all.sh` itself with `WEST`/`ZEPHYR_BASE` unset, which exits 1
+at the guard by design. **Not run**: the three Zephyr legs and a `WEST`-present `run-all.sh`, for
+the standing reason — no `west`/Zephyr SDK in a worker's worktree. `embarch-outpost` has no
+`Cargo.toml`, so the cargo half of the gate selects nothing there. Standing debts otherwise
+unchanged.
+
+**Budget:** PROCEED — weekly 49.5% of a 90% cap at this fold, resets in ~68h. Wave 6 suggested;
+the leg never exceeded two workers in flight, and the reason was scope spread rather than budget.
+
+**Least sure about:** **whether a task I filed this leg and dispatched this leg got enough
+adversarial reading.** `outpost/019` went from sweep to filed to claimed to dispatched inside about
+twenty minutes, written by me from a scout's evidence that I re-verified but did not sit on. It was
+right — the worker confirmed both halves and found three more instances — but the failure mode of
+same-leg filing is that the task's framing and the supervisor's framing are the same framing, and
+nothing between them disagrees. The reviewer is the only independent read, and it reviews the
+*fix*, not the *task*. A task filed one leg and run the next gets a cold reader at step 0; this one
+never did.
+
+---
+
 ## 2026-09-13 11:00 — dev-bench/021 thirty-nine dead citations repointed, and the two decision numbers that mean different things in two repos
 
 **Decided:** nothing suite-wide. One judgement is the worker's and it is the reason this unit was
