@@ -97,6 +97,78 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 12:46 — api/080 the tool index advertised three tools that do not exist, and two counts that were wrong at birth
+
+**Decided:** nothing suite-wide. The judgement worth naming is **the opposite of the one the
+previous unit reached, on the same question, in the same leg** — and that is why both are worth
+reading together. `ui/042` found a stale number that had been true when written and preserved it
+with its provenance. This unit found two numbers that were **wrong in the code at the moment they
+were written**, and the worker proved it at the introducing commits rather than asserting it:
+`57d27f7` (where `decisions/dev-bench.md` decision 68 says *"Nine sites reuse `status_timeout`"*)
+already had 13 sites, and `3041549` (where `crates/embarch-core-client/src/lib.rs:81` names
+`study_streams` as a `study_timeout_secs` consumer) already had `study_streams` calling
+`self.status_timeout`. The reviewer re-derived both at those same two commits and agreed.
+**"Was never right" and "was right and the source moved" are different defects with different
+fixes, they look identical to a grep, and only the history separates them.** Two units this leg
+landed on opposite sides of that line and both did the work to get there.
+
+**The headline half is smaller and more consequential.** `embarch-api/interfaces/tools.md:15`
+listed the Studies tools as ending in *"the three data aliases"*. `suite/015` retired
+`study_power_data`, `study_waveform_data` and `study_gatt_data` on 2026-09-11, the sibling file
+`interfaces/studies.md:15` already said *"the three **retired** fixed-channel aliases"*, and the
+wrong one was the index a reader meets first. That is not a sentence that reads oddly; it is an
+agent choosing a tool name that 404s. The fix says what happened and names the forwarding address
+(`study_stream_data`), because a reader arriving from an older transcript needs one.
+
+**The census that makes the fix trustworthy.** The task asked for every count in `tools.md` to be
+re-derived from the `#[tool(...)]` attributes rather than from the file. **26 annotated functions
+in `src/tools.rs`, and the five section lists sum to 3+6+5+6+6 = 26** once the stale phrase is
+gone. The reviewer repeated the census independently and diffed the doc's tool-shaped identifiers
+against the real function list; everything left over is prose. Nothing mechanical checks a prose
+enumeration against the attributes, so this is the only kind of evidence available for that file.
+
+**Merged:** `agent/api/080-tools-md-retired-data-aliases` — `embarch-api` `cd1bc2f`,
+`embarch-doc` `76e75af`. The code half is one doc comment in `lib.rs`; the client's historical
+alias comment in `client.rs` (drifted from `:1548` to `:1562`, text unchanged) was checked and
+left alone because it is honestly past-tense, which the reviewer confirmed by reading it rather
+than inferring it.
+
+**Blocked:** nothing. `tasks/api/080` closed `done`.
+
+**Reviewer:** no findings. Beyond the two commit-level re-derivations above it confirmed
+`study_timeout` has exactly three call sites (`post_study`, `get_study_status`, `get_study_csv`),
+that no other file still says "Nine sites", that `tools.md`'s new citation to
+`decisions/study-reads.md` decision 39 lands on the block carrying the retirement note, and that
+`embarch-decision-reversals.md` has no entry touching timeouts, study-reads or `tools.md`. It also
+stated explicitly that it read both spawn-supplied worktrees by absolute path and made no bare
+relative read — which is the `pre-existing`-mislabel failure mode, and it is the first entry in
+this log where a reviewer says so unprompted.
+
+**Hardware debts:** none created, none possible — a doc line, a decision's count, and one source
+comment. Standing debts unchanged: `core/015`'s native Windows build, the unplugged dev-bench
+probe (`tasks/api/059` **open**, re-checked live this leg: `GET /status` → `"probes": []`, and
+`fleet-hardware.py --refresh` still crashes per `tasks/doc/041`), `umbrella/037` check 13,
+`umbrella/033` check-17 arms, umbrella check 5's permission-denied probe, `embarch-ui`'s 18-record
+stale prefix, the bench queue parked by the owner's `d0cf9a0`, and the `embarch-outpost` /
+`embarch-dev-bench` toolchains absent from a worker's worktree.
+
+**Budget:** PROCEED — weekly 53.3% of a 90% cap at leg start, resets in ~66h27m. Wave 6 suggested,
+four workers dispatched, bounded by queue scope spread rather than by the cap.
+
+**Least sure about:** **whether `tools.md`'s 26 is still 26 a week from now, and whether anything
+will notice when it is not.** The census is correct today and it was produced by two agents
+counting the same attributes; nothing in the gate can repeat it. `interfaces/tools.md` disagreed
+with its own sibling `interfaces/studies.md` for two days after `suite/015`, in the same directory,
+and no check saw it. The general fix is owner-reserved (`tasks/doc/033`, `tasks/doc/044`), but a
+narrower one is not: a check that counts `#[tool(...)]` attributes in `embarch-api/src` and
+compares the total against the tool index would be cheap and would have caught this exact defect
+the day it landed. A new `scripts/` check is the owner's to write, so I filed it rather than only
+naming it here: **`tasks/doc/051-nothing-counts-the-tool-attributes-against-the-tool-index.md`**,
+`Owner: required`, landed in this fold. A log entry folds daily and rolls into `log-archive/`;
+nothing dispatches from one. The task file is the durable half.
+
+---
+
 ## 2026-09-13 12:44 — ui/042 a marker count that was true when written, and three citations off by one
 
 **Decided:** one thing, and it is a precedent rather than a correction. `tasks/ui/030` treated
