@@ -97,6 +97,60 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 16:09 — ui/047 a decision number lifted from the wrong decision's title, three times in one field
+
+**Decided:** **two.**
+
+**(a) The three `delay_before_ms` comments in `assets/app.js` cite decision 42, and the nine other
+`decision 40` citations in the repo are correct and were left alone.** That second half is the
+whole judgement in this unit. `embarch-study-designer` decision 40 is firmware-version declaration
+and provenance; decision 42 is `Step.delay_before_ms`, and the three comments paraphrase 42's body
+closely enough that one lifts its title phrase *"the 'when'"* verbatim. The obvious repair —
+grep `decision 40`, change them all — would have **broken nine correct citations to fix three**,
+since every other site in the repo really is about `Declared`-vs-verified provenance, `requires`
+and `REQUIREMENT_ANY`. I named that trap in the task file, the worker read each of the nine in
+context, and the reviewer independently spot-checked all nine. Three agents, same answer.
+
+**(b) The second item was conditional and turned out to hold.** `app.js:163-164` cited
+`embarch-core` decision 57 with the pointer `decisions/surfaces.md`; the number and the substance
+were right and only the filename was dead — 57 lives in `decisions/enrollment.md`, and
+`surfaces.md` holds 12, 13, 55 and 59. The worker checked the index before touching it, which is
+what the task asked, and the reviewer read decision 57's body and confirmed it supports what the
+comment says about `confirmed_at_utc_ms` and `POST /validate`.
+
+**Merged:** `agent/ui/047-delay-before-ms-decision-42` — code
+`609bdaa6a0fc56db28545e76b1724d5c0e2e4c2e` in `embarch-ui` (parent
+`29147b533b3b322a7283a53b86575e3224437a91`), doc `cf49004a6e988055b9283032ead2efbffa614562` in
+`embarch-doc` (the worker's `252752f` and `29bc092` **cherry-picked**, same reason as this leg's
+other two units). Gate re-run by me on the merge result: `cargo build` / `test` (**101 passed, 4
+ignored**, plus 2) / `clippy --all-targets -- -D warnings` green, `check-client-names.py --repo
+embarch-ui` clean, `check-docs.py` 11/11, ownership green on both halves.
+`changelog.d/ui-delay-before-ms-decision-42.fixed.md` consumed into `history/ui.md` with `--only`;
+29 of the owner's own fragments left pending. **I settled the task's `State:` field myself** — the
+worker wrote a full closing report and left the field at `claimed`, which the gate accepts and the
+queue would have read as live work.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings. It re-derived decisions 40 and 42 from their own bodies, confirmed line
+1198's "replaced a second monitor step" claim is decision 42's own content rather than borrowed,
+spot-checked all nine untouched `decision 40` sites, and read decision 57's body rather than the
+index. It also noted, unprompted and **not** as a finding against this unit, that
+`embarch-ui/decisions/study-designer.md`'s decision 11 links decision 40 to `decisions/versioning.md`,
+which holds 12/30/47/72 — a pre-existing dead pointer in a file this diff never touched. **Not
+filed as a drop by either of us; it is recorded here so the next refill can pick it up.**
+
+**Hardware debts:** **none created.** Four comment lines in a shipped JS asset; nothing executed, no
+board, no Core, no UI launched. Standing debts carried unchanged, including `embarch-ui`'s
+18-record stale prefix, which still has never met a real stale prefix.
+
+**Budget:** PROCEED — weekly **62.9%** of a 90% cap, resets in ~63h. No 429, no HOLD.
+
+**Least sure about:** **the `State:` field the worker left at `claimed`.** I settled it because the
+report is complete and every box is ticked, and `fold-commit.py` retires the file anyway — but I
+settled someone else's bookkeeping from the outside, and if the worker meant something by leaving
+it (an unfinished half it did not say), that intent is now gone. Nothing in the report suggests so.
+
 ## 2026-09-13 16:08 — api/085 the citation was repointed at the right crate and the wrong thing, and the reviewer question I wrote before merging is the only reason it was caught
 
 **Decided:** **three, and the first is the unit.**
