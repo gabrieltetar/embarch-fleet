@@ -97,6 +97,77 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 16:33 — suite/038 the half of a two-repo retirement that an unattended leg is allowed to do
+
+**Decided:** **four.**
+
+**(a) The split, as announced, and the refusal is the point.** `artifact_path_for_core` is retired
+upstream (`embarch-api` decision 15 — a WSL2-hosted Core is handed the bytes over `/flash` now
+rather than a path it opens itself), and `embarch-umbrella` was the last writer of it. `init` no
+longer emits it, `ProjectConfig` no longer declares it, `doctor` check 9 no longer reads it.
+**`embarch-api` still tolerates the key by name at load, deliberately.** Decision 64's "Ends when"
+has two clauses; the first — *umbrella stops scaffolding* — has now fired, and the second — *no
+config in the field still carries it* — is a fact about the owner's real machines that no agent can
+check. Refusing a key by name turns a stale field into a **startup error**, which is the loudest
+possible failure for the cheapest possible defect. Both decision bodies now say this: 64 carries an
+amendment naming the one grep that closes it, and `embarch-api/open.md`'s bullet is rewritten from
+*"umbrella still scaffolds it"* (now false) to *"one grep of the real configs"* (the actual handle).
+
+**(b) Check 9 keeps its number and loses its second half.** It was `artifact_path` **and** the
+UNC comparison against `artifact_path_for_core`; it is now `artifact_path resolvable` alone.
+Retiring the number and renumbering 10..n would invalidate every citation in
+`interfaces/doctor-chain.md` and in operator-facing text to save nothing, so the number is kept and
+the check re-scoped — recorded in the code, in decision 16, and in the chain table's row 9.
+
+**(c) The 30-minute window was completed, not restarted.** The previous leg announced this at
+`ts 1789336383.873349` and died before the window closed, leaving the `ts` in the task file exactly
+as `ops.md` §4 asks. I read the thread at **31 minutes**: no reply, no objection, and the announced
+scope was the split version — so I ran the split version and nothing wider. **Sequencing mattered
+too**: a `suite` task must not edit a repo a worker holds, so this ran with no `embarch-umbrella` or
+`embarch-api` worker in flight, and `umbrella/062` was deliberately held back until after it.
+
+**(d) My own amendment spent `embarch-api/decisions/shape.md`'s reserve, so I filed the debt.**
+The file went to 97.3%; I trimmed the amendment to 95.5% and filed `tasks/api/086-compact-api.md`
+with `In flux: no` and a split-first note, because that file is many independent decisions rather
+than one sprawling one. **`In flux` is `no` on a decisions file whose only moving entry has just
+been parked on a condition only the owner can check** — that is the honest answer, and it keeps the
+task dispatchable instead of parking it.
+
+**Merged:** no worker branch — **supervisor's own hands**, `suite` scope. Code
+`a8026d17cf7d2e6a759bbe584e0f3b45881eaf82` in `embarch-umbrella` (parent
+`f4bf2cdc46b2ebeb5c1a2b10618f0567c1bc550b`), doc in this fold commit. Gate run by me
+on the merge result: `cargo build` / `test` (**225 passed, 0 failed**) / `clippy --all-targets -- -D
+warnings` green, `check-client-names.py --repo` clean against 7 denylist entries, `check-docs.py`
+11/11. `changelog.d/umbrella-artifact-path-for-core-no-longer-scaffolded.changed.md` consumed into
+`history/umbrella.md` with `--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/suite/038` closed `done`.
+
+**Reviewer:** no findings. It was given four specific questions rather than an open read, and
+answered all four: confirmed by grep of the code worktree that the first clause genuinely fired and
+that **no refusal-by-name landed**; confirmed decision 20's amendments no longer assert the field in
+present tense; swept the whole leg worktree for the old check-9 title and found no stray citation;
+and **verified directly that `ProjectConfig` carries no `deny_unknown_fields`**, so removing the
+field really is permissive rather than a de-facto refusal — which is what the diff's own comment
+claims and what a reader will rely on.
+
+**Hardware debts:** **none created, and one worth naming as *not* created.** This changes what
+`embarch init` writes into a config and what `doctor` check 9 reports — both host-side, neither
+needing a board. But **nothing here has been run on a real machine**: the owner's own `embarch init`
+and `doctor` on a WSL2 split are where a re-scoped check 9 would first be seen, and that is the same
+unpaid class as `umbrella/056`'s clearing behaviour. Standing debts carried unchanged, including
+`core/015`'s native Windows build (ten landed `embarch-core` changes) and the **dev-bench probe
+still unplugged**.
+
+**Budget:** PROCEED — weekly **63.2%** of a 90% cap at leg start, resets in ~62h. No 429, no HOLD,
+wave 6 suggested and 2 workers used against it for want of dispatchable scopes.
+
+**Least sure about:** **keeping check 9's number rather than retiring it.** Renumbering is clearly
+wrong, but "retire 9 in place and leave a hole" was the other honest option, and I picked re-scoping
+because the surviving half was already the half doing the work. If someone later wants
+`artifact_path resolvable` to be a *new* check with its own number, this makes that harder, not
+easier.
+
 ## 2026-09-13 16:15 — core/052 a readme that told the reader the exact security posture decision 6 had reversed
 
 **Decided:** **three, and the last one closes this leg.**
