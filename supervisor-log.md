@@ -97,7 +97,97 @@ unit under **Merged** and **Blocked**:
 
 ---
 
-## 2026-09-13 13:28 — core/050 a citation that was unambiguous when it was written and was made wrong later by a number assigned somewhere else
+## 2026-09-13 13:47 — api/081 fourteen size debts had no payable route, and a verbatim split is the one that flux cannot forbid
+
+**Decided:** one thing, and it is about the queue's mechanics rather than about `embarch-api`. **It is
+the reason this leg exists in the shape it does, so read it before selecting anything.**
+
+**The size-debt ledger had fourteen entries parked behind a rule that could never release them.** A
+file in its last 10% of cap needs a filed compaction task. That task carries an `In flux:` answer,
+and `check-task-state.py` **mechanically** forces `In flux: yes` to `**State:** blocked` — rule 3,
+enforced since 2026-09-09, with `Owner: required` the only exemption. `.claude/leg.md` then forbids
+dispatching a compaction task whose flux answer is yes. Both halves are right. Together they mean a
+file that is *both* in reserve *and* actively being edited — which is the overwhelmingly common case,
+because being edited is what put it in reserve — has **no path to being paid at all** until the churn
+stops, and nothing makes the churn stop.
+
+**A verbatim split is the way out, and it was already written down in three places before I used it.**
+`DOC-COMPACTION.md` §2 names a mission split as the cheaper move where one fits. `DOC-BUDGET.md` line
+47 says outright that *"a parked compaction task is a deferral, not a wall — `In flux: yes` correctly
+refuses a separate compaction pass, but it does nothing about the reserve, so the next unit to write
+there hits the cap mid-flight anyway"*, and records the worst case: on 2026-09-05 a cap with 96 bytes
+left **moved a decision into the wrong topic file**, the first time in this suite a byte cap misfiled
+rather than shortened. And `tasks/ui/043` demonstrated the whole argument yesterday — 2,295 B paid by
+splitting, not one sentence of live reasoning deleted anywhere in the suite — whose own entry told the
+next leg to *"read the park for a seam before it reads it for permission to squeeze."* This is that
+leg doing that.
+
+**The argument in one line: a verbatim split restates nothing, so flux cannot forbid one.** The flux
+field exists to stop a pass from writing a clean summary of something about to be wrong. A split
+writes no summary — every byte arrives byte-identical — so the hazard it guards is absent by
+construction.
+
+**What I did NOT do, and would not have been allowed to.** I did not touch a single parked task's
+`In flux:` field, did not flip one to `open`, and did not dispatch a compaction task whose answer is
+yes. The three parks (`api/071`, `study-designer/037`, `umbrella/048`) are untouched and still
+`blocked`. I filed **new, separate split tasks** carrying no `Compacts:` field at all, because they
+are not compaction tasks. When a split lands, its file leaves reserve and the parked debt is
+**discharged rather than paid** — which is exactly what `ui/043` did to its own ledger entry 30 days
+early. That distinction is the whole reason this is a legal move rather than a supervisor routing
+around its own constraint, and I want the next leg to be able to check my work on it.
+
+**This unit.** `embarch-api/interfaces/config.md` was 11,198 / 12,288 B (91.1%). Its four top-level
+sections split cleanly; the `[dev_bench]` one (2,349 B) moved verbatim into a new
+`embarch-api/interfaces/dev-bench-config.md`, already covered by `DOC-BUDGET.md` line 25's
+`<sub-project>/interfaces/<topic>.md` glob, so no owner-reserved budget entry was needed.
+`config.md` is now **8,978 B**, out of reserve with ~2,220 B of headroom.
+
+**Merged:** `agent/api/081-split-dev-bench-config` — `embarch-doc`
+`59ea8484f57034f6fc45f8de5a23b7e826fd05ca` (merging worker commit `c1bbff0`, parent
+`43d18f51fef41d0bc00159a695d7bf717210d09f`). **No code SHA**: the `embarch-api` branch carried zero
+commits, correct for a pure documentation split. Gate re-run on the merge result, not the branch —
+`check-docs.py` 11/11 green, `check-ownership.py --scope api` green on both branches,
+`check-client-names.py` clean; `cargo build`/`test` (43 passed)/`clippy --all-targets -- -D warnings`
+clean in the code repo, verified rather than assumed even though the branch was empty.
+
+**Blocked:** nothing. `tasks/api/081` closed `done`. `tasks/api/071` deliberately left `blocked` and
+byte-for-byte untouched, its `Size debt due: 2026-09-25` now discharged by this unit rather than paid
+by it.
+
+**Reviewer:** no findings. It ran the one check that separates a real split from a compaction wearing
+a split's exemption — extracted `[dev_bench]` from the new file at the merge and from `config.md` at
+the **parent** commit and `diff`ed them, **exit 0, 18 lines each**. It then re-derived the worker's
+clean-sweep claim independently across the whole doc tree and `embarch-api`'s `src/` rather than
+accepting it, confirmed decisions 53/13's retirement notices for `[[projects.targets]]` and
+`soc_chip_overrides` survived verbatim, and confirmed the `env` additive-semantics note that
+`tasks/api/070` had just brought into agreement is still present **in both files and still agreeing**
+— which was the specific re-divergence risk the split created and the reason I named it in the spawn
+prompt. It flagged one honest gap in its own coverage: it had no worktree path for `embarch-umbrella`
+or `embarch-study-designer`, so it could not read the two hits in their sources directly, and said so
+instead of glossing it.
+
+**Hardware debts:** none created, none possible — the unit moves 2,349 B of documentation between two
+files in the same directory and its code branch is empty. **Nothing in this leg has touched hardware
+and nothing will**: the bench queue is parked by the owner's `d0cf9a0`, `fleet-hardware.py --refresh`
+still crashes (`tasks/doc/041`), and the buffer is now over 8,400 min stale, so I did **not** re-check
+the probe live and its "attached: yes" means nothing. Standing debts unchanged: `core/015`'s native
+Windows build of `embarch-core`, the unplugged dev-bench probe (`tasks/api/059` **open**),
+`umbrella/037` check 13, `umbrella/033` check-17 arms, umbrella check 5's permission-denied probe,
+`embarch-ui`'s 18-record stale prefix, and the `embarch-outpost` / `embarch-dev-bench` toolchains
+absent from a worker's worktree.
+
+**Budget:** PROCEED — weekly 56.4% of a 90% cap at leg start, 57.0% at this fold, resets in ~65h11m.
+Wave 6 suggested; four workers dispatched at once, bounded by scope spread rather than by the cap.
+
+**Least sure about:** **whether filing a new task beside a parked one is the right shape, or whether
+the parked task should have been amended.** The mechanism forced my hand — `In flux: yes` implies
+`blocked` with no supervisor override — so a new task was the only legal route, and I think the split
+itself is plainly correct. What I cannot settle from inside one leg is whether the queue now carries a
+confusing pair: a `blocked` compaction task whose debt no longer exists, sitting beside a `done` split
+task that discharged it. I left each park untouched rather than closing it, on the grounds that
+editing someone else's park to say "never mind" is a bigger claim than filing my own task. If the next
+leg finds three stale parks cluttering `queue-status.py`, that is my doing and closing them is the
+cheap fix.
 
 **Decided:** nothing suite-wide. Two things are worth the next leg's attention, and the second is
 about the queue rather than about `embarch-core`.
