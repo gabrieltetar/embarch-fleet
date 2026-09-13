@@ -97,6 +97,65 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 17:34 — umbrella/063 two of the four fixes were not citations at all, they were sentences a decision had made false the same day
+
+**Decided:** **three.**
+
+**(a) The interesting half of this sweep was not the numbers.** 37 bare citations across
+`locate.rs`, `init.rs` and `config.rs`; **33 held**, `init.rs` was perfect at 10 of 10. Of the four
+fixes, only two are wrong *numbers* — and **the other two are prose that went false when decision 38
+landed on 2026-09-13** and nobody updated the comments around it. `locate_core`'s precedence-order
+doc listed the chain without the Windows service registration read that now runs in the WSL2 branch
+ahead of both guesses, and `windows_core_service_binary_path`'s doc still said `locate_core`
+*"deliberately guesses"* — true before decision 38, false since. **This is the fourth consecutive
+day a citation sweep's real yield has been a false sentence rather than a wrong number**, and it is
+the reason these units keep being worth running.
+
+**(b) The two wrong numbers were both cross-repo, and both had a verbatim corroborator.**
+`config.rs`'s module doc cited bare `decisions 51/53` for the two config keys retired by refusal
+upstream: 51 is `embarch-api`'s unrelated param-selection refusal, and the real pair is
+**`embarch-api` decisions 53 (`[[projects.targets]]`) and 13 (`soc_chip_overrides`)** — which
+`embarch-umbrella/decisions/mirrors.md` decision 16 already spells out as *"upstream decisions
+53/13"* in those words. And `ProjectConfig`'s *"minus the fields nothing here reads (decision 20)"*
+is decision **16**'s own phrase verbatim; 20 is the CI-diff-versus-extract-a-crate question and
+never uses it. **The reviewer re-derived all four against the bodies** rather than against the
+worker's reasoning, including confirming `mirrors.md` really says 53/13 rather than being read into.
+
+**(c) `doctor.rs` stays out, deliberately.** It carries roughly another hundred bare citations in
+one file — not a twenty-minute pass, and splitting it off is what kept this unit honest rather than
+half-finished. **Nothing is filed for it yet**, which is a gap the next refill should close.
+
+**Merged:** `agent/umbrella/063-bare-decision-citations-locate-init-config` — code
+`551e33c4f9716f3725c927c926d5a7e32a76afa5` in `embarch-umbrella` (parent
+`f4bf2cdc46b2ebeb5c1a2b10618f0567c1bc550b`), doc `6b5fd27ed98e3375e5e2aeeb76faa405101bbe6e`
+(parent `25c1750de3e042be971ae502cd41138a192c7712`). Gate re-run by me on the merge result:
+`cargo build` / `test` (**225 passed**) / `clippy --all-targets -- -D warnings` green,
+`check-client-names.py --repo embarch-umbrella` clean against 7 denylist entries, `check-docs.py`
+**11/11**, ownership green on both halves. Citation *form* was explicitly out of scope and did not
+change; that call is `tasks/doc/055`, owner-reserved.
+`changelog.d/umbrella-063-bare-decision-citation-sweep.fixed.md` consumed into
+`history/umbrella.md` with `--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/umbrella/063` closed `done` by the worker.
+
+**Reviewer:** no findings — read `locate_core`'s body at the merge SHA to confirm the registration
+read really sits after `PATH` and ahead of both guesses, resolved `embarch-api` decisions 53 and 13
+in their own files, and confirmed `mirrors.md` decision 16 states the 53/13 pair verbatim rather
+than being read into.
+
+**Hardware debts:** **none created**, and one **not** discharged: `umbrella/056`'s clearing
+behaviour has still never run on a real machine, and this unit touched only comments so it moves
+that not at all. Other standing debts unchanged — `core/015`'s native Windows build (twelve landed
+`embarch-core` changes), the dev-bench probe unplugged, `suite/038`'s re-scoped check 9.
+
+**Budget:** PROCEED — weekly **65.0%** of a 90% cap, resets in ~62h. No 429, no HOLD, wave 6.
+
+**Least sure about:** that I scoped this unit by *file* and the yield says I should have scoped it
+by *recency*. Both real fixes here trace to one decision that landed hours earlier; the 33 citations
+that held were mostly old and stable. A sweep of "every comment near a decision that changed in the
+last week" would probably have found both in a fraction of the reading, and nothing in the queue is
+shaped that way.
+
 ## 2026-09-13 17:28 — core/054 fifty-five citations read against their bodies, three wrong, and all three of my own leads were false
 
 **Decided:** **three.**
