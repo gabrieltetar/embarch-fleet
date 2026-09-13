@@ -97,6 +97,81 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 14:57 — study-designer/041 the oldest split in the suite finally swept, and a worked example that was wrong in the task file
+
+**Decided:** **two, and the second is a correction to my own leg's previous entry.**
+
+**(a) The classification is the deliverable, not the repair.** This task's first `Done when` asked
+for all forty citations sorted into **(a) resolves / (b) dead / (c) ambiguous** *and the sorting
+written into the task file*. The worker did it: **6 / 29 / 5**, every one named with its file, line
+and section number. That list is now the thing that closes the class — a future leg reading it does
+not have to re-derive whether `decisions.md:7`'s `§3` is a live pointer (it is narration of the
+historical move, the same idiom `embarch-core` and `embarch-dev-bench` use at the same line of their
+own `decisions.md`) or whether `interfaces/limits.md:64`'s `§7` was the trap (it was: `spec.md §7` is
+real and is *"Constants"*, and the citation was about a stack-safety risk). **None of the forty
+belonged in a numbered `spec.md` section** — its 1–7 have no subsections at all, so every decimal
+citation failed cleanly and every bare one was the trap.
+
+**(b) The task file's own worked example was factually wrong, the worker caught it, and the entry
+below this one repeats the error.** `tasks/study-designer/041` — written by leg 109 and quoted
+approvingly in my `ui/045` entry — asserted *"`StreamTap` is in `interfaces/types.md`"*. It is not,
+and has not been since the 2026-09-02 split: `git log --follow` puts it in `interfaces/taps.md`,
+which defines `StreamTap`/`StreamSource`/`StreamEncoding`/`StreamScope` outright, while
+`interfaces/types.md` carries only `Study.streams: Vec<StreamTap>` as a field reference. So
+`limits.md:24` now cites `taps.md`. **This is worth more than the line it fixed**: a task file that
+states a locatable fact is trusted by the worker executing it, and the supervisor who wrote it had
+already "confirmed both halves". The reviewer re-derived the correction independently and agrees.
+
+**This unit.** Forty `§N` references across eleven files in `embarch-doc/embarch-study-designer/`,
+pointing into the monolithic `design.md` this sub-project was split out of on 2026-09-02 — the
+oldest split in the suite, which is why it was never swept: every sweep since has been aimed at
+*path* citations, not *section* ones. Thirty-four repaired, by one of three rules: repoint to the
+owning decision (bare number own-repo, `<repo> decision N` cross-repo), name the live interface file
+the content actually moved to, or drop the pointer where neither applies. Six left alone.
+
+**Merged:** `agent/study-designer/041-dead-section-refs` — doc
+`4087964e742cde8db3d2f9c64e5101eb7b136c76` in `embarch-doc` (parent
+`6fd2218f6d5d7255487b9dbde903793c6f7d4ddb`, after a rebase onto `main`; ownership re-run on the
+rebased branch, 8 paths, green). **No code SHA: the `embarch-study-designer` branch carried zero
+commits**, correct for a doc-only unit — I ran the `cargo` gate against that repo's unchanged `main`
+(`2eaa7f5`) anyway so a green is on the record: `build` / `test` / `clippy --all-targets -- -D
+warnings` all clean. Doc gate on the merge result: `check-docs.py` 11/11.
+`changelog.d/study-designer-dead-section-refs.fixed.md` consumed into `history/study-designer.md`
+with `--only`; **29 of the owner's own fragments were left pending and untouched**, which is what
+`--only` is for.
+
+**Blocked:** nothing. `tasks/study-designer/041` closed `done` — **by me, not by the worker**, which
+left it `claimed`. `check-task-state.py` passes `claimed` (it only validates the vocabulary), so
+nothing would have caught it; worth watching whether this recurs, because a task left `claimed` by a
+worker that has died is exactly what the next leg's recovery reclaims to `open` and re-dispatches.
+
+**Reviewer:** no findings — and it did the expensive half rather than the cheap one. It re-derived
+**all five** cross-repo decision citations the repairs introduced (`embarch-dev-bench` 7, 18, 27,
+`embarch-core` 35, `embarch-api` 1) against each decision *body*, not against the task file's account
+of them, and confirmed each matches its citation context. It independently confirmed the `StreamTap`
+correction in (b), and checked the `interfaces/limits.md` trim — the worker briefly pushed that file
+into reserve mid-edit (11,049 → 11,306 B) and trimmed back to 11,025 B, net byte-negative, so no
+compaction debt was created; the reviewer verified **nothing of substance was dropped to save
+bytes**, which is the failure that trim shape invites.
+
+**Hardware debts:** none created, none possible — prose citations in six doc files, no logic, no
+wire, no schema. Standing debts carried unchanged: `core/015`'s native Windows build, the unplugged
+dev-bench probe (`tasks/api/059` **open**, re-checked live this leg), `umbrella/037` check 13,
+`umbrella/033` check-17 arms, umbrella check 5's permission-denied probe, `embarch-ui`'s 18-record
+stale prefix, and the `embarch-outpost` / `embarch-dev-bench` toolchains absent from a worker's
+worktree.
+
+**Budget:** PROCEED — weekly 59.6% of a 90% cap at leg start, resets in ~64h. No 429. Wave 6
+suggested; this unit ran alongside `ui/045` and then `ui/046`, never above two workers.
+
+**Least sure about:** **whether "resolves correctly today" is a stable answer or a snapshot.** Four of
+the six (a)s cite `embarch-fleet/protocol.md §10`, `DOC-PROTOCOL.md §2`, `DOC-COMPACTION.md §3` and
+`embarch-dev-workflow.md §4a` — all **owner-reserved files**, none of which this fleet may edit, and
+all of which are exactly the kind of doc that gets renumbered by a compaction the owner runs. This
+unit's own premise is that a split silently invalidates every section number pointing into it. So
+those six are correct now and are the ones no agent can keep correct, and `tasks/doc/044` — the
+general form of the class, owner-only — is where that belongs rather than in another sweep task.
+
 ## 2026-09-13 14:52 — ui/045 a citation verified against the document that no longer exists, and a sweep that came back clean and said so
 
 **Decided:** **three, and the first is a negative result I went looking for on purpose.**
