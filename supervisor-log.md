@@ -97,6 +97,68 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 11:00 — dev-bench/021 thirty-nine dead citations repointed, and the two decision numbers that mean different things in two repos
+
+**Decided:** nothing suite-wide. One judgement is the worker's and it is the reason this unit was
+worth a reviewer: **decisions 15 and 32 exist in both `embarch-dev-bench` and
+`embarch-study-designer` with entirely unrelated content**, and `ble_bridge_real.c` cites both
+repos' versions of both numbers. A mechanical repoint — the obvious way to fix 39 identical dead
+filenames — would have attributed several of them to the wrong repo, and **no gate in this suite
+can see it**: `check-decision-refs.py` reads `*.md` under a repo root and these are C comments.
+The worker resolved each citation by reading the surrounding code against both repos' decision
+prose. 31 became the cross-repo form, 8 stayed bare as `embarch-dev-bench`'s own, and **no decision
+number changed.**
+
+**Three of the 39 were not decision citations at all** — `design.md §4.3` / `§4.3a`, bare section
+pointers into a file that no longer exists, with no number to carry. They were stripped to bare
+`§4.3` / `§4.3a` and flagged rather than given an invented attribution, which is the same treatment
+`dev-bench/019` gave `eap.h`'s `§4.9`. **That is the defect `tasks/dev-bench/026` already
+describes** — a section reference that was wrong-but-attributed becoming wrong-and-unattributed —
+and this unit has now added two more instances to that task's class without extending the task.
+Whoever takes `026` should sweep `ble_bridge_real.c` too; it is filed nowhere else and I have not
+edited `026` to say so, which is a gap the next leg could close in a minute.
+
+**Merged:** `agent/dev-bench/021-ble-bridge-real-citations` — `embarch-dev-bench` `68821a7`,
+`embarch-doc` `768f98e`.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings. Pointed at the shared-number attribution specifically, because that is
+the one thing about this unit a supervisor cannot settle by reading a worker's summary. It
+re-derived both collisions from the decision text itself — dev-bench 15 is one-DUT-connection
+(`ble.md:14`), study-designer 15 is fixed-capacity heapless collections (`limits.md:9`); dev-bench
+32 is the advertised-name scan filter (`scanning.md:22`), study-designer 32 is `GattMonitorAll`
+overflow (`gatt.md:15`) — and confirmed all four sites split correctly. It also found the
+attribution was **necessary rather than optional** in at least one place: the "a Hello is a hard
+reset" comment cites study-designer decisions 12/16, and dev-bench's own decision 12 is
+debug-chip vendor-ID detection, so a bare citation there would have been wrong. Confirmed
+`embarch-study-designer/spec.md` has no numbered subsections, so the three bare `§` pointers hide
+no successor section.
+
+**Hardware debts:** none new. Two **unchanged limits** are worth restating because this unit ran
+inside them: `embarch-dev-bench` has no `Cargo.toml` at all (its own `decisions/platform.md`
+decision 9), so `cargo build`/`test`/`clippy` select nothing there and a green report means the doc
+gate and nothing else; and no `west`/Zephyr toolchain exists in a worker's worktree, so no
+`native_sim` build was attempted. **This is a C file that was edited and never compiled**, which is
+acceptable for comment-only changes and would not be for anything else. Standing debts otherwise
+unchanged, including the unplugged dev-bench probe.
+
+**Budget:** PROCEED — weekly 48.5% at leg start, 49.5% at this fold, cap 90%, resets in ~68h.
+Suggested wave 6; two workers in flight at the peak, which is what the queue's scope spread
+allowed rather than what the budget allowed.
+
+**Least sure about:** **whether "comment-only, so no build" is a judgement I should be making
+per-unit or a rule this suite should write down.** I merged 39 edits to a C file that nothing
+compiled, on the reasoning that they are all inside `/* */` and `//`. That reasoning is sound
+exactly until one edit is not — an unterminated comment, a stray `*/`, a line continuation — and
+the failure would reach a board rather than a gate. The cheap guard exists (`gcc -fsyntax-only`
+over the one file, or a `native_sim` build if the toolchain were there) and I did not ask for
+either. It has been the accepted practice for every `dev-bench` citation unit this queue has run,
+which is either a settled convention or a habit nobody has examined; I could not tell which from
+the record.
+
+---
+
 ## 2026-09-13 10:51 — study-designer/035 decision 45 moved out of declares.md verbatim, and the split-first rule paid for itself
 
 **Decided:** nothing suite-wide, and the compaction convention being applied was already settled.
