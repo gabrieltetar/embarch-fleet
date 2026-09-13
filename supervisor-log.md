@@ -97,6 +97,78 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 14:26 — study-designer/040 a doc comment that stated a removed mechanism as fact, and a worker that declined to guess the one it could not settle
+
+**Decided:** **I wrote "report either way" into the dispatch note as the item I cared most about, and
+that is the instruction that produced this unit's value.** The task's sweep item asked the worker to
+grep for a class and say what it found *even if it found nothing*, on the argument that a clean
+result stated explicitly is the only thing that tells the next leg a class is closed — and it is
+exactly the sentence a worker omits when it finds nothing. It found two more instances, fixed both,
+enumerated what it checked and found clean (`src/schema_version.rs`'s `# History` narration, all
+correctly past-tensed), and gave a total count. **That count is what decides whether the general
+cross-repo citation task `core/050` asked for is owed**: three is well inside "a handful", so it is
+not, and now that is written down rather than left to the next leg's judgement.
+
+**This unit.** `src/study.rs:377` told a reader that *"content validation is handled entirely
+post-hoc by Core (decision 19)"*. Decision 48 removed post-hoc validation outright on 2026-08-25,
+and by its own account Core *"never evaluated a validation in its life"* — so the sentence was a
+positive false claim about how the system works, made worse by a citation that **resolves**:
+decision 19 exists, has real text, and is about exactly this subject, so checking the reference
+confirms the false claim rather than exposing it. The worker's sweep found the same defect in
+`Outcome`'s own doc comment (`src/result.rs:260`) and two `limits.rs` constants still naming removed
+types (`ExpectedValue`, `ContentValidity`) as current consumers — confirmed by grep to have zero
+non-comment hits anywhere in the crate. All three rewritten to name decision 48 for the removal and
+decision 19's *surviving* real-time `Outcome` half for what is actually left.
+
+**And it declined to guess one.** `src/ffi.rs:215` cites *"decision 19's existing check"* on the
+`steps_crc` seal check. The worker judged this a **different shape** — a possibly-wrong decision
+number rather than a retired mechanism asserted as live — said it could not settle the intended
+number within its task's scope, and wrote that down instead of fixing it. **The reviewer settled it
+in one pass: the number is 17.** Decision 17 (`decisions/seals.md`) describes that exact code path
+verbatim — *"the FFI decode surface still checks the first seal only… left as-is with the reason
+written at the call site"* — while decision 18 is Core's structural pre-flight, a different call
+site. Filed as `tasks/study-designer/042`. **A worker declining to guess a decision number is the
+outcome the citation rules want**, and the price is one queued task.
+
+**Merged:** `agent/study-designer/040-action-doc-comment-post-hoc-validation` — code `2eaa7f5` in
+`embarch-study-designer` (parent `419e196`), doc `834decc` in `embarch-doc` (parent `be9efce`, after
+a rebase onto `main`; ownership re-run on the rebased branch, base `be9efcee6f5c`). Gate re-run on
+the merge result: `cargo build` / `test` / `clippy --all-targets -- -D warnings` green,
+`check-client-names.py` clean against 7 denylist entries, `check-docs.py` 11/11,
+`check-ownership.py --scope study-designer` green on both branches.
+`changelog.d/study-designer-action-doc-comment-post-hoc.fixed.md` — the worker judged it
+reader-visible because it corrected a factually wrong claim rather than polishing prose, and I agree.
+
+**Blocked:** nothing. `tasks/study-designer/040` closed `done`; `tasks/study-designer/042` filed.
+
+**Reviewer:** no findings. It verified the *replacement* text rather than only the removal — quoting
+decision 48's own *"decision 19's real-time `Outcome` half is untouched and is what every study has
+always actually used"* against the new comments — which is the check that matters, because a unit
+like this is worthless if the new sentence is merely less false. It also caught something honest
+about the `limits.rs` trim: `GattTranscriptEntry.payload` (`gatt.rs:170`) is a real
+`MAX_PAYLOAD_LEN` consumer that the comment **never named, before or after**, so the trim did not
+worsen it and it is not this unit's defect. Not filed — an incomplete-but-true list is a different
+and much smaller problem than the false one just fixed, and filing it would dilute a queue this leg
+has already added three entries to.
+
+**Hardware debts:** none created, none possible — doc comments in three source files, no field
+reordering, no wire or schema change. Standing debts unchanged and untouched: `core/015`'s native
+Windows build, the unplugged dev-bench probe (`tasks/api/059` **open**), `umbrella/037` check 13,
+`umbrella/033` check-17 arms, umbrella check 5's permission-denied probe, `embarch-ui`'s 18-record
+stale prefix, and the `embarch-outpost` / `embarch-dev-bench` toolchains absent from a worker's
+worktree.
+
+**Budget:** PROCEED — weekly 59.3% of a 90% cap at the previous fold, **59.5% at this one**, resets
+in ~64h33m. Wave 6 suggested; one worker left in flight (`api/082`, which has since reported).
+
+**Least sure about:** **whether I should have filed `042` at all rather than fixing a one-word
+citation myself.** The reviewer settled the number with evidence I could read in a line, and the fix
+is `19` → `17` in one comment. I filed it because a decision number is the kind of thing this suite
+treats as permanent and because `042`'s second `Done when` item — whether the surrounding "supersedes
+neither X nor Y" sentence still parses once the referent changes — is a real reading task rather than
+a substitution. But that is three tasks filed against one unit's findings, and a supervisor who fixes
+nothing himself is a supervisor turning every observation into queue depth.
+
 ## 2026-09-13 14:21 — ui/044 one citation repointed, and its reviewer found the class is two weeks older and forty times bigger than anyone had counted
 
 **Decided:** **a dead `§N` is repaired by deleting it, not by finding a new number**, and I wrote
