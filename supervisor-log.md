@@ -97,6 +97,86 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-14 00:54 — core/062 a comment that claimed another repo's text was unchanged, and the one beside it that correctly said nothing
+
+**Decided:** **nothing numbered.** A one-line comment correction is not a decision and does not want
+to be one. This is leg 115's first unit. Three things, and one of them is about this leg rather than
+this unit.
+
+**(a) The clause was false and is now true, and the worker checked which half of it was false.**
+`embarch-core/src/logs.rs`'s module doc ended *"`embarch-ui`'s own text is unchanged"* — written by
+`core/058` to be accurate at its landing, and falsified hours later when `ui/052` added a dated
+blockquote correction under `embarch-ui` decision 7's stale size-capped-logfile sentence. **The
+sentence itself was not rewritten** — `ui/052` deliberately left it standing as the record of an
+abandoned proposal — so "unchanged" was wrong about the *file* and right about the *sentence*, and
+the new clause says exactly that: the sentence stands, and now carries a dated correction. The
+reviewer compared the new clause against `ui/052`'s actual blockquote at `ui/052`'s own fold commit
+`e9018e9` and found it a near word-for-word match in substance.
+
+**(b) The interesting half is what the worker did *not* change, and it did not take my word for it.**
+The task named two comments. `src/main.rs`'s `build_log_file_writer` comment (lines ~375-379) makes
+no claim about `embarch-ui`'s text at all — it only cites what decision 7 *says*, which is still
+literally true of that sentence — so it was left alone. **Changing nothing was named in the task file
+as a legitimate outcome and half the unit took it.** The reviewer read that comment independently at
+the merge SHA rather than accepting the worker's account, which is the check that makes the
+half-outcome trustworthy.
+
+**(c) I filed `tasks/doc/061` from something I found in this leg's own step 0, not from this unit.**
+Three `agent/*` branches were still on `embarch-doc`'s remote; `git cherry origin/main <branch>`
+reports two of them (`api/096-...-doc`, `core/052-...`) as **unmerged, and always will**, because
+their content landed by a cherry-pick that *conflicted* and a conflict resolution is a different
+patch id by construction. `fold-commit.py` retires a branch only on `git cherry`'s `-`, so those two
+are permanently stranded — `core/052` since 2026-09-13. Not data loss (I verified both branches'
+content is on `main` by diffing each against `origin/main`), but **step 0's scan treats a pushed
+branch carrying commits as proof a worker finished**, so a stranded branch is a false positive for
+finished work against a rule whose whole strength is that presence never lies. Owner-required;
+`scripts/` is reserved.
+
+**Merged:** `agent/core/062-core-comments-vs-ui-052` — code `1073bf7` in `embarch-core`
+(fast-forwarded, parent `e1b796e`), doc `7e851c1` in `embarch-doc` (fast-forwarded, parent
+`04020d8`; `--ff-only` was accepted because this was the leg's first fold and nothing had moved
+`main` under it). Gate re-run by me on the merge result: `cargo build` / `test` (**209 passed**, 2
+ignored, plus 1) / `clippy --all-targets -- -D warnings` green; `check-client-names.py --repo
+embarch-core` clean against 7 denylist entries; `check-docs.py` **11/11**; `check-ownership.py
+--scope core` OK on the doc half and `--code-repo` OK on the code half, both run **before** the
+merge. `changelog.d/core-logs-unchanged-clause-vs-ui-052.fixed.md` consumed into `history/core.md`
+with `--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/core/062` closed and removed. `tasks/core/060` (compact
+`decisions/streams.md`, due 2026-09-27) is untouched and still `open`, deliberately not dispatched
+beside this unit — one task per sub-project per slot.
+
+**Reviewer:** no findings — it checked all three things I asked and gave evidence for each: it read
+the corrected `debug-tab.md` at `ui/052`'s own fold SHA rather than at this unit's (and said so,
+correcting my spawn prompt, which had given it this unit's doc SHA for a file `ui/052` changed
+earlier), read `src/main.rs`'s comment itself to confirm leaving it alone was right, and read
+`embarch-core` decision 16's body plus all four reversal row files to confirm nothing contradicts.
+
+**Hardware debts:** **one, carried not created — and I counted it, which retires a carry-forward and
+contradicts every recent entry.** 2026-09-13's day fold asked the next leg to *"count the commits, do
+not trust the ordinal — including mine"*, so: `core/015` landed as `1c1224e` (*"core: fix --version
+leaking a log warning onto stdout"*), and **`git log --oneline 1c1224e..HEAD` in `embarch-core` is
+40 commits**, this unit's included. The entries of the last five days called the same debt the
+ninth, tenth, eleventh, twelfth and thirteenth landed change. **None of those is the number, and the
+basis for any of them is unrecoverable** — each was copied from the entry before it and incremented.
+Use **40 since `1c1224e`** and re-derive it the same way rather than incrementing this. The pile
+includes `core/061`'s `source_deferred` field, which *does* change what the service serves,
+`core/045`'s route-wiring test, and the `suite/020`/`suite/035` wire-feature split; this unit itself
+is a single comment line and nothing behavioural moved. Standing debts otherwise
+unchanged — **the dev-bench probe is still unplugged**, checked live at this leg's top
+(`status` returned `"probes": []`), so `tasks/api/059` stays **open**, not `blocked`, for the fifth
+consecutive leg; `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`).
+
+**Budget:** PROCEED — weekly **85.0% → 85.7%** of a 90% cap across this unit, resets in ~54h, wave 3
+suggested and 3 used.
+
+**Least sure about:** **giving the reviewer this unit's doc SHA for a file another unit changed.**
+It caught the error itself and read `ui/052`'s fold commit instead, which is the right answer — but
+it caught it because the file was *obviously* not this unit's. A reviewer handed the wrong SHA for a
+file the unit *did* touch has no such tell, and nothing in the spawn shape would surface it.
+
+---
+
 ## 2026-09-14 00:31 — outpost/022 a clean sweep, and its reviewer found the same scope overstatement one layer down
 
 **Decided:** **nothing numbered** — 0 wrong citations means nothing to decide. This is the leg's
