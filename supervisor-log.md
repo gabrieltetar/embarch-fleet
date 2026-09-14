@@ -97,6 +97,70 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 20:18 — study-designer/045 study.rs, 4 defects in 52, and every one of them was a number rather than a sentence
+
+**Decided:** **nothing** — a citation sweep that corrects citations decides nothing and needed no
+numbered decision.
+
+**(a) 52 of 52 read, 3 wrong numbers, 0 false sentences, 1 unlabelled cross-repo citation.** That
+is **7.7%** defective, the second-dirtiest file in the series behind yesterday's `core/056`
+(9.2%). The shape is the interesting part: `core/056`'s yield was split between numbers and prose,
+and this one is **entirely numbers** — nothing in `study.rs` had a sentence a decision made false,
+only sentences pointing at the wrong decision.
+
+**(b) This supports `ui/049`'s hypothesis and sharpens it.** The prediction was that the dirty
+files are the ones that **restate other repos' decisions**. `study.rs` cites `embarch-api`,
+`embarch-dev-bench`, `embarch-topology` and `embarch-outpost` sets, and three of its four defects
+are exactly at a repo boundary: `embarch-api` **26 → 27/28** (26 is `serial_log`'s `serial_port`,
+unrelated), and a bare **"Decision 38"** that means `embarch-dev-bench`'s while this crate has its
+own, different decision 38 (the saved-study library) cited bare and correctly twice in the same
+file. Compare `044`, the same repo's `schema_version.rs`: **0 in 53.** Two files, one crate, one
+sweep method, an order of magnitude apart — so "which repo owns the file" does not predict
+anything and "what the file talks about" does.
+
+**(c) The one same-repo defect is the most interesting of the four**, because it is the failure
+mode nothing mechanical can see. `protocols_crc` attributed the seal-placement rule — *each seal is
+carried immediately after the one contiguous span it covers* — to "decision 39's amendment". That
+rule is decision **17**'s, and decision 39 does not discuss placement at all. **Both numbers
+resolve, both decisions are real, and both are in this crate's own set**, so there is no repo
+prefix, no collision and no gate that could ever have caught it — only reading decision 39's body
+and noticing it does not say the thing.
+
+**Merged:** `agent/study-designer/045-study-rs-citations` — code
+`03eef2eb8a8c` in `embarch-study-designer` (parent `a850a2d`), doc `8415c07` in `embarch-doc`
+(parent `f484ad5`). Gate re-run by me on the merge result: `cargo build` / `test` (**125 passed**,
+0 failed, across four binaries — the first `-q` tail showed only the last binary's `0 tests`, so I
+re-ran it for the real count) / `clippy --all-targets -- -D warnings` green; `check-docs.py`
+**11/11**; ownership green on both branches. `changelog.d/study-designer-study-rs-citation-sweep.fixed.md`
+consumed into `history/study-designer.md` with `--only`; 31 of the owner's own fragments left
+pending. The doc branch would not fast-forward — it was cut at `94fb61f` and my leg had advanced —
+so I rebased it onto `origin/main` and then `--ff-only`'d, which is the documented shape and worked
+cleanly; the same applied to both later units.
+
+**Blocked:** nothing. `tasks/study-designer/045` closed `done` and removed. Remainder filed as
+`tasks/study-designer/046`: `gatt_extract.rs` (35), `lib.rs` (34) and ~273 lines across the rest of
+`src/`.
+
+**Reviewer:** no findings — re-derived all four corrections from the decision bodies independently,
+confirmed the highest-risk one (the `embarch-dev-bench` 38 vs this crate's own 38) resolves clean,
+spot-checked eight more of the untouched 48, and noted unprompted that `embarch-api` also has a
+different, unrelated decision 17, which is how easy the `protocols_crc` fix would have been to get
+wrong in the other direction.
+
+**Hardware debts:** **none.** Source comments only; no board, no probe, no live Core, no deploy,
+and `embarch-study-designer` builds no artifact for a board in this unit.
+
+**Budget:** PROCEED — weekly **73.4%** of a 90% cap, resets in ~59h. Wave 6 suggested, 3 workers in
+flight, unit 2 of 4.
+
+**Least sure about:** **whether the "what the file talks about" hypothesis is now being confirmed or
+just fitted.** Six sweeps in, I can tell a story that fits all six, and the two cleanest and the two
+dirtiest are consistent with it — but no sweep has yet been *chosen* by cross-repo citation density
+and then come back clean, which is the only result that would put the hypothesis at risk. Until one
+does, this is a pattern that has never been given a chance to fail.
+
+---
+
 ## 2026-09-13 20:15 — suite/018 the outpost's own answer is computed once, in embarch-core, and the task's own evidence was about something else
 
 **Decided:** **suite decision 4**, in a new topic file `suite/decisions/placement.md` — *which
