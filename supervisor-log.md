@@ -97,6 +97,96 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 22:55 — core/058 seven defects in 92 citations, and two source comments that asserted a correction nobody ever made
+
+**Decided:** **nothing numbered** — citation corrections decide nothing, and the worker correctly
+filed none. **This is the highest-yield sweep the series has produced after `core/056`, and (c) is a
+defect shape the series had not seen.**
+
+**(a) 92 citations across all 12 remainder files — 3 wrong numbers, 4 false sentences. The task's
+own count was exact, so there is no remainder task and `embarch-core/src` is now fully swept**
+(`api.rs` in `core/054`, `study.rs` in `core/056`, these 12 here). The series now reads:
+`core/054` 3/54 · `umbrella/065` 2/~129 · `study-designer/044` 0/~53 · `ui/049` 0/74 ·
+`umbrella/066` 1/114 · `study-designer/046` 5/36 · `study-designer/047` 2/41 · **`core/056` 10/109**
+· **`core/058` 7/92**. Both `embarch-core` files sit at the dirty end, which is the hypothesis'
+prediction: **the dirty files restate other repos' decisions, the clean ones explain their own code.**
+`src/stream_store.rs` — the file the task singled out in advance as the test — produced two of the
+four false sentences. **The prediction held.**
+
+**(b) The three wrong numbers, all verified by the reviewer against the decision bodies.**
+`src/main.rs` cited `embarch-study-designer` decision **63** twice for the Windows release-build
+stack-overflow story; 63 is a later, unrelated `cargo test` harness SIGABRT, and the real source is
+decisions **46/49** (46 fixed `Study.steps` and explicitly did *not* address the result path; 49 is
+the release-service crash). `src/hardware.rs` cited `embarch-dev-bench` decision **26** — the
+ESP32-C5 board-substitution story — for an ESP-IDF app-descriptor note that is `embarch-core`'s own
+decision **18**, and the replacement is correctly **bare**, same-repo convention. `src/elevate.rs`
+attributed a no-GUI/no-TTY fallback to "decision 3's original behavior" when `embarch-core` decision
+3 *rejected* printing the command outright; the stance is `embarch-umbrella` decision **7**, whose
+text the comment was paraphrasing. **A wrong number in the wrong repo, a rule credited to the
+decision that used it, and a rejected alternative cited as if adopted** — three of the four shapes
+this series has catalogued, in one file each.
+
+**(c) The new shape: two comments asserted that a decision in ANOTHER repo had been corrected, and
+no correction existed.** `src/main.rs` and `src/logs.rs` both said `embarch-ui` decision 7 was
+*"corrected in place"* to match Core's daily-rolling logfile — `src/logs.rs` stated it outright.
+**`embarch-ui/decisions/debug-tab.md` decision 7 still reads "a size-capped rotating logfile rather
+than a time-based policy", uncorrected**, while `embarch-core` decision 16 and the live
+`build_log_file_writer` build a daily-rolling file with `max_log_files(7)`. The reviewer re-grepped
+`debug-tab.md`, `decisions.md`, `spec.md` and the reversals index at the merge SHA and confirmed no
+correcting note exists anywhere. **This is not a citation that resolves to the wrong decision; it is
+a citation that is right about the number and wrong about whether the decision was ever amended**,
+and nothing in the suite can detect it — `check-decision-refs.py` resolves numbers only inside
+`*.md`, and this number resolves. The worker fixed the two `embarch-core` comments, which is the half
+it owned, and **dropped the other half in `inbox/` because `embarch-ui` is not its scope. That was
+the right call and I filed it as `tasks/ui/052`**, which says explicitly not to silently rewrite
+decision 7 as though it always said daily-rolling — a dated parenthetical or a reversals row, chosen
+deliberately.
+
+**(d) One bookkeeping discrepancy, settled rather than left ambiguous in git history.** The code
+commit's **title** says *"2 false sentences"*; its own **body** is headed *"False sentences (4):"*
+and lists four, and the doc commit says four. The reviewer counted the edited sites in the diff:
+`stream_store.rs` ×2, `main.rs` ×1, `logs.rs` ×1 — **four. The doc tally is right and the code
+commit's title is stale.** A sweep's tally is its product, so recording it two ways in one unit is
+worth one sentence here rather than a future leg re-deriving it.
+
+**Merged:** `agent/core/058-src-citation-sweep-remainder` — code `3cbe697` in `embarch-core` (parent
+`a131f6334df1dba3218b3858a834b84e8b482128`), doc `4edd897` in `embarch-doc` (parent
+`f7cff4d0a91879f37f2e64f904f6397a2978f85b`). Gate re-run by me on the merge result: `cargo build` /
+`test` (**205 passed**, 2 ignored) / `clippy --all-targets -- -D warnings` green;
+`check-client-names.py --repo embarch-core` clean against 7 denylist entries; `check-docs.py`
+**11/11**; `check-ownership.py --scope core` OK on the doc half (2 paths) and `--code-repo` OK on the
+code half (5 paths). `changelog.d/core-src-citation-sweep-remainder.fixed.md` consumed into
+`history/core.md` with `--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/core/058` closed and removed, with **no remainder task** —
+`embarch-core/src` is swept end to end. **`tasks/ui/052` filed** by me from the worker's `inbox/`
+drop, per (c).
+
+**Reviewer:** no findings — asked four specific questions rather than an open read, and answered all
+four: each of the three renumberings re-derived from the decision bodies (including checking
+`reversals/rows-1-50.md` row 34 says what it was cited as saying, and that the `hardware.rs`
+replacement is correctly bare rather than prefixed); all four false-sentence rewrites confirmed to
+state something *true* rather than merely less wrong; `ui/052`'s load-bearing claim re-grepped
+independently at the merge SHA rather than taken from the worker; and the tally discrepancy in (d)
+resolved.
+
+**Hardware debts:** **one, added to an existing pile rather than created.** `core/015`'s outstanding
+native Windows build now carries a **ninth** landed `embarch-core` change. Comment-only, nothing
+behavioural — but this is the third consecutive day a `core` unit has added to it, and the pile also
+carries `core/045`'s route-wiring test and the `suite/020`/`suite/035` wire-feature split. The worker
+correctly did not attempt a Windows build; that is the owner's.
+
+**Budget:** PROCEED — weekly ~**79.2%** of a 90% cap, resets in ~56h, wave 6. **Unit 3 of 4.**
+
+**Least sure about:** **whether (c) deserves a gate and I am under-reacting by filing one `ui` task.**
+"A citation whose number resolves but whose target was never amended the way the citing comment
+claims" is undetectable by construction, it appeared twice in one file pair here, and the only reason
+it was caught is that a human-shaped sweep happened to read both ends. I did not file a `tasks/doc/`
+item for the general case because I could not describe a check that would catch it without reading
+every decision body — which is what the sweeps already do, expensively.
+
+---
+
 ## 2026-09-13 22:46 — study-designer/047 two wrong decision numbers in wire-byte test comments, and the first sweep a reviewer has independently re-counted
 
 **Decided:** **nothing numbered** — a citation sweep that corrects citations decides nothing, and the
