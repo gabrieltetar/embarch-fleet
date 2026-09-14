@@ -97,6 +97,97 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 19:13 — ui/049 a clean sweep, a link nothing can check, and my own local checkout was a commit behind
+
+**Decided:** **four, and this closes my leg at its 4-unit cap.**
+
+**(a) 74 citations, zero wrong numbers, zero false sentences — the third clean sweep in two days,
+and I now think the prior has actually moved.** `umbrella/065` found 2 wrong numbers in ~129 and
+called its clean result surprising; `study-designer/044` found 0 in ~53; this found 0 in 74. The
+two bare foreign citations it *did* fix were a **form** problem, not a correctness one — both named
+`embarch-study-designer` decision 40 with no repo prefix, the exact residue `ui/040` left because it
+never looked inside this file, and **the number was right both times.** I had the reviewer
+re-derive both independently rather than accept them, because `ui/040`'s own reviewer previously
+caught two citations that were *prefixed without being re-derived* — this repo has produced that
+failure once already. Both held: `embarch-ui` has no decision 40 of its own, and each surrounding
+sentence paraphrases decision 40's actual closing line.
+
+**(b) The unit's real find is a link shape nothing in the suite can check, and I filed it as
+`tasks/doc/056`.** `embarch-ui/decisions/study-designer.md`'s decision 11 linked
+`embarch-study-designer` decision 40 at `decisions/versioning.md`; it lives in `declares.md`, and
+`versioning.md` has no decision 40 at all. **Both of `check-decision-refs.py`'s resolvers miss it,
+for independent reasons**: the topic-link check wants the *link text* to name a decision
+(`[decision 40]`) and here the text is the repo name, so there is no number to resolve; and the
+main resolver only asks whether that repo defines 40 *anywhere*, which it does. The reviewer
+confirmed the mechanism independently. **This is the third distinct hole in decision-reference
+checking recorded this week** — `tasks/doc/044` (a verbatim split moves a decision out from under a
+link), the standing "`*.md` only, so a source comment fails nothing", and now this — and it is the
+one a mission split breaks in *bulk*: `embarch-api` split its decisions twice today, and every
+inbound link of this shape into a moved decision is now wrong and green. `doc/056` is
+`Owner: required`; `scripts/` is not an agent's.
+
+**(c) The reviewer surfaced a soft mismatch and correctly declined to file it, and I am recording it
+rather than losing it.** A comment groups `embarch-study-designer` decisions 34/36/53/54 as "the
+exact failure each was opened by". 34, 36 and 54 are the silent-empty-capture family; **53 is not** —
+its own text says it was raised by monitor-everything flooding the link and *burying* the two
+characteristics that mattered, which is signal-drowned-in-noise, a different failure. It is a
+rhetorical grouping in a comment that predates this unit and is not in its diff, so reverting either
+SHA would not touch it. Not worth a task on its own; worth being written down once, because the next
+sweep of this file will meet it again and re-derive it from scratch.
+
+**(d) `embarch-ui`'s main checkout was one commit behind its own remote, and my landing script did
+not notice.** My gate script fetches and then merges into whatever the local `main` is. Here local
+was `609bdaa` and `origin/main` was `c31d3cd` (`ui/048`, landed earlier today from a worktree and
+never pulled into the owner's checkout). The merge fast-forwarded *through* `c31d3cd`, so the gate
+ran on the correct tree and the push was a clean fast-forward — **nothing was wrong with the result,
+and I only caught it because the push output named a different range than the script's recorded
+parent.** The parent recorded below is the true one, `c31d3cd`, not the script's `609bdaa`. **Had
+the remote diverged non-fast-forwardably this would have been a failed push after a green gate**,
+and the script would have reported a parent SHA that no revert could use. `.claude/leg.md` is not
+mine to fix; this is the finding.
+
+**Merged:** `agent/ui/049-study-designer-rs-citations` — code
+`37061a59bf065567ae27283f207b591fe7449730` in `embarch-ui` (**true parent
+`c31d3cd49dd27d3b2b0a346b205c6589555a5a8d`** — see (d)), doc
+`16e1ae0c6552f38717d8f9472a378f4ccd836b11` in `embarch-doc` (parent
+`c20f2b740f9a9930eb746289bdb1280eb3bb394e`). Gate re-run by me on the merge result: `cargo build` /
+`test` / `clippy --all-targets -- -D warnings` green, `check-client-names.py --repo embarch-ui`
+clean, `check-docs.py` **11/11**, ownership green on both branches.
+`changelog.d/ui-study-designer-rs-citations.fixed.md` consumed into `history/ui.md` with `--only`;
+29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/ui/049` closed `done` and removed. **No remainder task and none owed** —
+`study_designer.rs` is swept end to end, all 2,973 lines. `tasks/doc/056` filed per (b).
+
+**Reviewer:** no findings — re-derived both decision-40 prefixes from the decision bodies rather than
+trusting the worker, confirmed `versioning.md` defines no decision 40 and `declares.md` does,
+independently re-checked every citation site for the user-visible-string class (none reach the
+browser; `app.js` is a separate unlinted surface), reproduced the `check-decision-refs.py` blind spot
+by reading both resolvers, and surfaced the 53-vs-34/36/54 grouping in (c) for this entry rather than
+filing it.
+
+**Hardware debts:** **none created and none touched.** Source comments and one doc link; no board,
+no probe, no live Core, no deploy. Standing debts carried unchanged — `core/015`'s native Windows
+build at **thirteen** landed `embarch-core` changes (this leg added one, `core/055`), `umbrella/056`'s
+unrun clearing behaviour, `suite/038`'s re-scoped check 9, `umbrella/037` check 13, `umbrella/033`'s
+check-17 arms, umbrella check 5's permission-denied probe, `embarch-ui`'s 18-record stale prefix, and
+the `embarch-outpost`/`embarch-dev-bench` toolchains. The **dev-bench probe is still unplugged** —
+sixth consecutive leg — so `tasks/api/059` stays **open**, not blocked.
+
+**Budget:** PROCEED throughout — weekly **68.1%** of a 90% cap at leg start, **69.4%** at this fold,
+resets in ~59h50m. No HOLD, no 429. Wave 6 suggested the whole leg; **4 workers dispatched at once
+and 4 units run**, because 4 is the cap, not because the wave was short.
+
+**Least sure about:** **whether three consecutive clean sweeps mean the citation corpus is actually
+healthy, or that the sweeps have converged on the files that were always going to be clean.** Every
+unit this week picked its file by *size* — the biggest unswept surface — and size is not the same as
+risk. The dirtiest citations this suite has found were in `mirrors.md` and `doctor.rs`, both files
+that *restate* other repos' decisions; `study_designer.rs`, `schema_version.rs` and `doctor.rs`'s
+comments mostly explain their own code. If that is the real variable, the remaining ~380 lines in
+`embarch-study-designer` and the ~104 in `embarch-umbrella` will also come back clean and the four
+sweeps I queued tonight are worth less than they look. Nobody is tracking hit rate per sweep; they
+should start.
+
 ## 2026-09-13 19:02 — api/088 the bound was never a reachability poll, and the fix put an unverified classification back where decision 50 took one out
 
 **Decided:** **five, and this is the unit of my leg worth reading.**
