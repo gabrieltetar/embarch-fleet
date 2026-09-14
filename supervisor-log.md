@@ -97,6 +97,85 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 18:39 — core/055 the fork decision 22 opened is closed on both sides, and the verb is threaded rather than flattened
+
+**Decided:** **three.**
+
+**(a) The `action` verb is threaded per caller, and that was the whole judgement in this unit.**
+`embarch_topology::hardware::select_probe(probes, probe_serial, action)` takes a present-tense verb
+that lands inside the multi-probe refusal. `enroll` passes `"enroll"`; `resolve_probe` has two
+callers, `flash` and `reset`, so the choice was thread a verb from each call site or pick one honest
+word for both. The worker threaded, and I agree: *"flash requires exactly one debug probe attached …
+plug in only the board you mean to flash"* is a materially better message than any generic one, and
+the parameter exists precisely so no caller has to keep its own copy of the function. Flattening it
+to one word would have been the cheap answer that made a second copy attractive again later. New
+`embarch-core` decision **61** in `decisions/probes.md` argues it, mirroring `embarch-topology`
+decision 33's same choice for `enroll`.
+
+**(b) The fork `embarch-core` decision 22 opened in 2026-08 is now closed on both sides, and it is
+worth naming what closed it.** Decision 22 moved the board-identity gate (`board_gate.rs`) wholesale
+into `embarch-topology`; `pub(crate)` cannot cross the crate boundary that move created, so the move
+**silently forked one selection rule into two** and neither side knew. By the time `topology/038`
+looked, three behavioural divergences existed on `main`: the zero-probe usbipd hint (present one
+side, absent the other), `len() > 1` versus `len() != 1`, and every error string. That is
+`embarch-core` decision 9's own drift class, one repo over, and **nothing failed, because nothing
+tested either copy.** `resolve_probe` now enumerates and delegates; the inline copy is gone. The
+whole reconciliation cost two units in two legs — one per repo, because a `core` worker cannot write
+`embarch-topology` and vice versa.
+
+**(c) I did not take the worker's word on the hint, and neither did it.** The task file asserted that
+`select_probe` keeps the zero-probe usbipd message verbatim and checks zero probes first and
+unconditionally, and told the worker to verify that against the landed source before deleting
+anything rather than trusting the paragraph. It did, and the reviewer then checked all three branches
+independently: the hint is verbatim and additionally echoes the wanted serial; the serial-lookup
+error text **changed** (`"no attached probe has serial_number '{serial}'"` →
+`"no attached probe with serial '{wanted}' — is it still plugged in?"`), which is
+`embarch-topology` decision 33's argued reconciliation rather than a new unreviewed edit; and
+`len() > 1` → `len() != 1` is the same predicate once zero is handled first. **Nothing was silently
+dropped** — the one thing I would have expected a delegation like this to lose.
+
+**Merged:** `agent/core/055-resolve-probe-delegates-to-select-probe` — code
+`86345c01a451b0696af36f42c28bf6676478124c` in `embarch-core` (parent
+`e4b5b728ddafeaf7833a1f515257ca50acba05dd`), doc `16e7515a3663fb72c763e5f94e537605556dbfeb` in
+`embarch-doc` (parent `701013accc494f4d277759d6dfa28b2bb427324e`). Gate re-run by me on the merge
+result: `cargo build` / `test` (197 passed, **4 s** on a machine with three other workers running —
+see `api/087`'s false-red entry, this one did not reproduce) / `clippy --all-targets -- -D warnings`
+green, `check-client-names.py --repo embarch-core` clean against 7 denylist entries,
+`check-docs.py` **11/11**, ownership green on both branches.
+`changelog.d/core-resolve-probe-delegates.changed.md` consumed into `history/core.md` with `--only`;
+29 of the owner's own fragments left pending. **The worker left the task file `claimed` rather than
+`done`** despite ticking every box in it — `fold-commit.py` retires a task by matching `done` at
+token zero, so I set it myself in this fold; a leg that did not look would have left a completed task
+in the queue.
+
+**Blocked:** nothing. `tasks/core/055` closed `done` and removed. **`tasks/topology/041` filed** from
+the worker's own `inbox/` drop: `embarch-topology` decision 32's amendment and `open.md`'s matching
+bullet both say `resolve_probe` *"still keeps its own copy"* and name this task as the blocker, and
+both went false the moment this landed. Correctly flagged rather than fixed — a `core` worker may not
+write `embarch-topology`.
+
+**Reviewer:** no findings — read `select_probe` itself rather than the task file's description of it,
+checked all three behavioural branches against `embarch-topology` decision 33, grepped every call
+site to confirm `"flash"`/`"reset"` are threaded correctly including the `flash_backend` branch,
+confirmed decision 61 is a free number and `probes.md` the right topic file on its merits, and ruled
+that the rewritten `open_probe`/`resolved_serial` comments were corrected rather than repointed.
+
+**Hardware debts:** **none created, one added to.** No board, no probe, no live Core — this is a code
+structure change and nothing was executed. It does land on `core/015`'s outstanding native Windows
+build, which now carries **thirteen** landed `embarch-core` changes. All other standing debts carried
+unchanged, including the dev-bench probe still unplugged (`tasks/api/059` stays **open**) and
+`fleet-hardware.py --refresh` still crashing (`tasks/doc/041`).
+
+**Budget:** PROCEED — weekly **68.1%** of a 90% cap at leg start, resets in ~60h30m. Wave 6
+suggested; **4 workers dispatched at once**, which is the unit cap rather than the wave.
+
+**Least sure about:** **whether threading `action` is a pattern or a one-off.** It is right here
+because `flash` and `reset` are genuinely different verbs a user reads at the moment a board is
+misplugged. But `select_probe` now has three callers across two repos each passing a string literal,
+and nothing checks that a fourth caller passes a sensible verb rather than, say, a noun or a
+sentence. A `&'static str` parameter is the cheapest possible version of this and I took it; the
+version with a small enum was not argued and probably should have been considered out loud.
+
 ## 2026-09-13 18:21 — umbrella/065 129 citations, one defect in two places, and the four-day streak of false sentences ended
 
 **Decided:** **four, and this closes my leg at its 4-unit cap.**
