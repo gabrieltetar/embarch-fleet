@@ -97,6 +97,78 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 19:26 — topology/041 a close that was owed, and a compaction task that had been parked on a condition already met
+
+**Decided:** **three.**
+
+**(a) The unit itself was the cheap half and it is correct.** Decision 32's 2026-09-13 amendment and
+`embarch-topology/open.md`'s matching bullet both still said `embarch-core::resolve_probe` "still
+keeps its own copy"; `core/055` landed hours earlier and it does not. The worker read
+`embarch-core/src/hardware.rs` at the landed SHA rather than taking the task file's word, appended a
+**closing note** to decision 32 (keeping the superseded amendment above it — amend, not rewrite) and
+**deleted** the `open.md` bullet outright rather than rewording it, which is right because `open.md`
+is unresolved-only. Doc-only: the code branch carries **zero commits**.
+
+**(b) The find worth carrying: `tasks/topology/039` had been `blocked` on a condition that was
+already true when this leg started, and nothing noticed.** Its state line read *"blocked — unparks
+when `tasks/core/055` lands"*. `core/055` landed at 18:40 today, in the previous leg. So `039` sat
+`blocked` — invisible to `queue-status.py`'s dispatchable count — while holding **the soonest size
+debt on the whole ledger, 2026-09-20**. I unparked it to `open` and rewrote `In flux:` from `yes` to
+`no`, quoting the file's own Must-not-delete list, which had named the unpark condition explicitly:
+*"until `core/055` lands and either decision can be written as settled rather than as an in-progress
+handoff."* **The condition was written down, was satisfied, and no actor is responsible for
+re-reading it.** This is `tasks/doc/032` ("a blocked task can name an unpark condition that can never
+happen") from the opposite direction — not an impossible condition, a *met* one — and `doc/032` is
+owner-only, so this is a finding rather than a fix. A leg reclaims stale *claims* at step 0; nothing
+re-tests a stale *block*.
+
+**(c) I also rewrote `039`'s Must-not-delete list, because closing decision 32 changed what must
+survive its compaction.** It previously protected "decision 32's amendment note (the pointer to
+`tasks/core/055` as the remaining half of the close)" — that pointer is now spent provenance and may
+go. What must survive is the *close*: that both copies are gone and `resolve_probe` delegates,
+threading the caller `action`. Left unedited, the next compactor would have preserved the
+superseded sentence and been free to drop the current one.
+
+**Merged:** `agent/topology/041-close-decision-32` — doc
+`f93139fbd7e256d1ac7f640bade19f3e03e1313a` in `embarch-doc` (parent
+`3b655c3d8012edbad0fd63d89a4ebbdf3bf7320d`), code **none — the `embarch-topology` branch carries
+zero commits**, so there is no code SHA for a revert to use and none is needed. Gate re-run by me on
+the merge result: `check-docs.py` **11/11**, `check-ownership.py --scope topology` OK on 4 paths.
+`cargo build`/`test`/`clippy` were run by the worker and **not re-run by me** — zero code paths
+changed, so the code repo's gate result is `main`'s, unchanged.
+`changelog.d/topology-decision-32-closed.decided.md` consumed into `history/topology.md` with
+`--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/topology/041` closed and removed — the worker left it `claimed` with its
+checkboxes ticked and did not set `done`, so I closed it. `tasks/topology/039` moved **blocked →
+open** per (b).
+
+**Reviewer:** no findings — independently re-derived all three clauses of the closing note against
+`embarch-core/src/hardware.rs` at the pinned SHA (including the `action` threading at five call
+sites and that `embarch-core` decision 61 says what is attributed to it), confirmed the byte count in
+the commit message matches the merged file exactly, and checked the deleted `open.md` bullet held no
+fact that lived only there — the three divergences are in decision 33, the direction in 32 and 61.
+
+**Hardware debts:** **none created and none touched.** A doc close and a task-state correction; no
+board, no probe, no live Core. Standing debts carried unchanged from `ui/049`'s entry, including
+`core/015`'s native Windows build at thirteen landed `embarch-core` changes. **The dev-bench probe is
+still unplugged** — I checked live at 19:19, Core reachable and `"probes": []` — so `tasks/api/059`
+stays **open**, not blocked, for the **seventh** consecutive leg.
+
+**Budget:** PROCEED — weekly **69.6%** of a 90% cap at leg start, resets in ~59h43m. No HOLD, no 429.
+Wave 6 suggested; **4 workers dispatched at once**, because 4 is the unit cap, not because the wave
+was short.
+
+**Least sure about:** **whether unparking `039` was mine to do or whether I have just moved a debt
+from invisible to merely unpaid.** The state correction is defensible — `blocked` has to mean
+"nothing here can be done" and that stopped being true — but the same unit pushed
+`decisions/crate.md` from 95.0% to **98.3%, 213 bytes left**, so I unparked a task and then made its
+file harder to compact in the same fold. If the next leg does not spend a unit on `039` it is worse
+off than before: previously the debt was parked with a reason, now it is open with seven days on the
+clock and 213 bytes of headroom. I think the honest reading is that the ledger is working exactly as
+designed and the next leg should take it first; I am recording the alternative reading because
+nobody else will.
+
 ## 2026-09-13 19:13 — ui/049 a clean sweep, a link nothing can check, and my own local checkout was a commit behind
 
 **Decided:** **four, and this closes my leg at its 4-unit cap.**
