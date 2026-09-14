@@ -97,6 +97,91 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 21:18 — api/093 a citation was caught by its DATE, not its number, and the shipped-string class is now two for two
+
+**Decided:** **nothing numbered** — a citation sweep that corrects citations decides nothing. Three
+things to carry, (b) (c) and (d).
+
+**(a) 75 of 75 read across all three files — `resolve.rs` 34, `tools.rs` 24, `cli.rs` 17 — 2
+defects, both in `tools.rs`. No remainder: the sweep surface `api/091` named is finished.** That is
+**2.7%** defective, the cleanest of the series after `topology/040`'s zero and `config.rs`'s zero.
+Cross-repo citations relabelled: **0** — every foreign citation in all three files already carried
+the labelled `<repo> decision N` form, which is the first clean result on that axis in four sweeps.
+
+**(b) A new detection method, and it is the first in this series that does not require reading the
+cited decision at all.** `declare_signal`'s `#[tool(description = "...")]` cited *"`embarch-topology`
+decision 18's **2026-08-25 amendment**"*. Decision 18 was **created 2026-09-02**, so an amendment
+dated a week before its own creation is **impossible** — the citation is refutable from two dates,
+without opening either body. The real answer was `embarch-api` decision 67 (2026-09-10), which
+`embarch-topology`'s own `links.md` already credits by name for the CLI/MCP wrapping. **Dates are a
+cheap, mechanical, currently-unexploited check**: a citation naming a dated amendment can be tested
+against the cited decision's creation date, and `check-decision-refs.py` today tests only that the
+number resolves. Worth handing to whoever settles `tasks/doc/055`.
+
+**(c) The shipped-string class is now two consecutive units, and both times it was the WORST defect
+in its unit.** `api/091`'s was the runtime `"unavailable"` message `render_hello_ack` returns to a
+caller; this one is an MCP tool description, which an agent reads to decide whether to call the
+tool. Two in a row is no longer coincidence, and the cause is structural:
+`check-decision-refs.py` reads only `*.md`, so a wrong number in a string is exactly as invisible
+as one in a comment **and has a worse audience** — a comment's reader is a maintainer who can go
+look, a tool description's reader is an agent that cannot. The instruction to sweep string literals
+was added to this task at dispatch on `api/091`'s evidence, and it paid immediately.
+
+**(d) The first defect is a mechanical sweep's own footprint, which is worth noticing given what
+this fleet has been doing all week.** `TargetParams` read `(decision 12, decision 12)` — a literal
+duplicate. `git log -L` traced it to `5131ec7`, a sweep that replaced `` `design.md` §3 `` with
+`decision 12` inside a citation that already ended in `decision 12`, **substituting where it should
+have deleted**. So a citation-hygiene pass left a citation defect behind, and it survived until a
+later citation-hygiene pass read the sentence rather than the number. The worker also found the
+identical wrong claim from (b) in `embarch-api/interfaces/tools-topology.md`, outside its three
+named files, and fixed it there too — correctly, since it is the same defect one word apart and it
+was already positioned to make the doc edit.
+
+**(e) The worker left the task file at `**State:** claimed`** after finishing it — every
+`Done when` box ticked and a full `## Result` section written, but token zero of the state line
+never changed. Harmless here, since I delete the file in this fold, and harmless if my leg had
+died, because a claim held by a dead worker is exactly what recovery reclaims. Recorded only
+because `check-task-state.py` passes a `claimed` task with a completed body, and that is the one
+combination that reads as live work when it is not.
+
+**Merged:** `agent/api/093-resolve-tools-cli-citations` — code `92f598b` in `embarch-api` (parent
+`f2f1de2`), doc `73dd14f` in `embarch-doc` (parent `b0287df`). Gate re-run by me on the merge
+result: `cargo build` / `test` (**211 passed**, 0 failed, across eleven binaries — I summed the
+per-binary results rather than reading the last one, which alone says `0 tests`) / `clippy
+--all-targets -- -D warnings` green; `check-docs.py` **11/11**; `check-client-names.py` clean
+against 7 denylist entries; ownership green on both halves.
+`changelog.d/api-093-tools-cli-citation-sweep.fixed.md` consumed into `history/api.md` with
+`--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/api/093` closed and removed. **No remainder filed and none owed by
+this task.**
+
+**Reviewer:** no findings — established decision 18's 2026-09-02 creation from
+`embarch-topology/decisions/links.md`'s own git history (commit `956f07c`) rather than from the
+worker's claim, so the impossibility in (b) is proven rather than argued; confirmed `embarch-api`
+decision 67's body states what the sentence claims; checked specifically that citing **both**
+decisions does not place a new claim on decision 18 — the `core/056` failure mode named in its
+spawn prompt — and found the division clean, 18 owning the signal endpoint's existence and 67 the
+CLI/MCP wrapping; and spot-checked ~20 of the untouched 73, deliberately including two real
+same-number collisions (`embarch-core` 18 vs `embarch-api`'s own 18, `embarch-study-designer` 26 vs
+`embarch-api`'s own 26), finding every foreign citation labelled.
+
+**Hardware debts:** **none.** Two source citations and one doc row; no board, no probe, no live
+Core. **But (c) is deploy-shaped, exactly as `api/091`'s was**: a corrected MCP tool description
+does not reach an agent until the `embarch-api` MCP binary is rebuilt, and this machine's is
+already known to go stale against a shipped change. That is now **two** landed string corrections
+waiting on the same rebuild.
+
+**Budget:** PROCEED — weekly **73.9%** of a 90% cap at dispatch, resets in ~58h30m. Unit 3 of 4.
+
+**Least sure about:** **whether "no remainder and none owed" is true of the repo or only of the
+task.** `api/091` counted **297** citation lines in `embarch-api` overall and reached 136; this
+unit reached 75 more, which leaves roughly 86 unaccounted for in files neither task named. Nobody
+has filed those, and this entry's clean close could easily read later as "`embarch-api` is swept"
+when what is actually true is "the files two tasks named are swept."
+
+---
+
 ## 2026-09-13 21:12 — core/057 suite decision 4 got its code half, and the honest result is two implementations, not one
 
 **Decided:** **nothing of mine** — the worker filed `embarch-core` decision **62** in
