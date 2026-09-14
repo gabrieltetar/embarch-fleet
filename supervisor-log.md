@@ -97,6 +97,102 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 23:04 — ui/051 520 lines of duplicate arithmetic deleted, and the reviewer caught the half that did not move
+
+**Decided:** **nothing numbered** — the worker correctly filed none; wiring an existing consumer to an
+existing route decides nothing. **But I made one judgement on the owner's behalf that the next leg
+should know about, in (b).** Four things to carry.
+
+**(a) What shipped.** `embarch-ui`'s Trace tab no longer computes the load repartition. `decode_trace`
+calls `CoreClient::get_study_load` (the tool `api/094` added four units ago) and passes Core's
+`LoadSummary` straight into `trace::parse`, which stores it on `TraceView::summary`. **Deleted:
+`LoadSubject`, `LoadSummary`, `summarize` and `merged_gap_extent` — 520 lines out of
+`src/trace.rs`.** The worker reused `embarch_core_client`'s types rather than mirroring them a third
+time, which is what the previous leg's entry asked for in so many words. Every protected chart-geometry
+symbol survives (`bin_window`, `BinRun`, `BinnedLane`, `BinnedWindow`, `StepStamp`, `StepBand`,
+`StepRow`, `TraceView`), so `embarch-ui` decision 18's server-side-binning shape is preserved, not
+reopened. Core's refusals propagate as a 502 carrying Core's message rather than collapsing into an
+empty summary.
+
+**(b) The reviewer's finding, which I accepted and fixed in this fold — and it is the second
+consecutive leg where the same shape was caught.** The code commit claims *"`embarch-core` decision 62
+and suite decision 4 can both be read as fully true now."* **They cannot.** Only the *aggregation*
+moved. `embarch-ui/src/trace.rs` still derives its own `Lane`/`Span`/`Gap` and still applies the same
+four exclusion flags (`open_start`, `open_end`, `crosses_gap`, `below_resolution`) that
+`outpost_load.rs` computes independently — because Core's route answers with the rollup only, no
+per-span data, which is a correct engineering reason for keeping it and **not** a reason to call the
+decision closed. `outpost_load.rs`'s own module doc, unchanged since `core/057`, names *this exact
+follow-up* as the thing that was supposed to retire that duplication, and says the cost in as many
+words: *"a change to `RecordKind`, a gap record's semantics, or the five-lies rules has to be made in
+both this file and `embarch-ui/src/trace.rs`."* **And the unit deleted `embarch-ui/open.md`'s bullet
+recording the move as queued** — the only place that tracked the unfinished half. I restored it,
+narrowed to what is actually true: which half moved, which did not, that the flags are derived in both
+files, and that closing it needs either per-span data from Core or a recorded decision that it stays
+split. **This is the `api/094` shape exactly — a record reading a decision as closed when one half of
+it closed — two legs running.** The reviewer also checked the changelog fragment and ruled it
+*correct as written*: "load repartition" is `embarch-ui` decision 10's own term for the aggregated
+shares, and that genuinely did move. I left it alone on that advice rather than qualifying it
+reflexively.
+
+**(c) Restoring the bullet put `embarch-ui/open.md` back in reserve, four units after `ui/050` had
+compacted it out, and I filed rather than squeezed.** My first draft of the bullet cost 686 B and
+took the file to 4,527 B; I cut it twice, to 4,033 B, and stopped — 113 B over the 3,920 B line, with
+the next cut coming out of the three facts the bullet exists to carry. **So `tasks/ui/053` is filed**,
+and it says the uncomfortable thing plainly: `ui/050` landed this file at **78 B of headroom**, and a
+78-byte margin cannot absorb a new open question. It asks the next compactor to re-ask the
+split-vs-squeeze question — `ui/050` judged there was no seam, correctly, for seven questions of one
+shape, and the trace/outpost questions may now be one the file did not have this morning.
+
+**(d) Three behaviours lost their only test, and it is filed as `tasks/core/059`.** The deleted
+`load_summary_tests` module pinned `overlapping_gap_bands_are_counted_as_a_union`,
+`idle_is_not_counted_twice` and `subjects_are_sorted_by_measured_time`; `outpost_load.rs`'s eight tests
+cover none of the three. The logic was ported verbatim so this is a coverage gap rather than a bug —
+**but the idle double-count is documented in `trace-view.md` as "reported twice by construction — found
+by building it, claimed by no other doc", and a counter-intuitive behaviour that was found the
+expensive way and is now untested is the one most likely to be re-broken by someone tidying the sum.**
+The task warns explicitly against re-deriving expectations from the implementation, and points at the
+deleted module in git history as the better source.
+
+**Merged:** `agent/ui/051-retire-timeline-arithmetic` — code `87d01b4` in `embarch-ui` (parent
+`37061a59bf065567ae27283f207b591fe7449730`), doc `ffeaebf` in `embarch-doc` (parent
+`fd90452b5ac283d27d44fbfc43ea5fc1493aa093`). **I read the code diff before merging**, per §10's
+shared-crate rule — it consumes `embarch-core-client`. Gate re-run by me on the merge result:
+`cargo build` / `test` (**91 passed**, 4 ignored) / `clippy --all-targets -- -D warnings` green;
+`check-client-names.py --repo embarch-ui` clean against 7 denylist entries; `check-docs.py` **11/11**,
+re-run after my `open.md` correction and both filed tasks; `check-ownership.py --scope ui` OK on the
+doc half (5 paths) and `--code-repo` OK on the code half (2 paths).
+`changelog.d/ui-retire-load-repartition-duplicate.changed.md` consumed into `history/ui.md` with
+`--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/ui/051` closed and removed. **`tasks/ui/053`** (compact `open.md`, per (c))
+and **`tasks/core/059`** (the three lost tests, per (d)) filed.
+
+**Reviewer:** 1 finding — `inbox/doc-ui051-timeline-duplication-not-retired.md`, **accepted and fixed in
+this fold**; drop deleted after the corrected `open.md` bullet landed. It settled four things I would
+otherwise have had to guess, including one I was wrong about: I expected the changelog line to need a
+qualifier and it does not. It also re-read `outpost_load.rs`'s module doc at the merge SHA rather than
+taking the commit message's framing, which is how the overclaim was caught at all.
+
+**Hardware debts:** **none created, and one worth stating precisely.** This unit is host-side Rust and
+one doc file. **But it makes the Trace tab depend on a Core route at runtime for the first time**, and
+that path has never run against a live Core — `api/094` created the same debt for the agent side
+yesterday and this is the human side of it. Needs no board of its own beyond whatever capture a study
+produces; exercising it is the owner's, through the UI. Unchanged: `core/015`'s native Windows build
+still carries nine landed `embarch-core` changes, and `tasks/api/059` stayed `open` for a third
+consecutive leg on `"probes": []`.
+
+**Budget:** PROCEED throughout — weekly **78.2% → 80.4%** of a 90% cap across the leg, resets in ~56h,
+wave 6 suggested and 4 used. **Unit 4 of 4; the leg ends at its cap.**
+
+**Least sure about:** **whether restoring that `open.md` bullet with my own hands was right, or whether
+I should have filed it as a `ui` task and left the record missing until someone claimed it.** I fixed
+it in-fold because a deleted open question is invisible — nothing dispatches from its absence, and the
+next leg would have read `suite decision 4` as closed — but it means a supervisor wrote a sub-project's
+open.md, and the byte cost of doing so immediately created a second task. The precedent I followed is
+`api/094`'s in-fold changelog correction, one leg old.
+
+---
+
 ## 2026-09-13 22:55 — core/058 seven defects in 92 citations, and two source comments that asserted a correction nobody ever made
 
 **Decided:** **nothing numbered** — citation corrections decide nothing, and the worker correctly
