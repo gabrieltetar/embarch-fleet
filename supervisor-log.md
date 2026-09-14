@@ -97,6 +97,76 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-14 00:15 — ui/052 a retention sentence that was a proposal, marked as one rather than rewritten
+
+**Decided:** **nothing numbered**, and the worker correctly filed none — but one judgement call was
+made and is worth carrying. Three things.
+
+**(a) The drop was true, and the worker checked it rather than trusting it.** `embarch-ui` decision 7
+said retention is *"a size-capped rotating logfile rather than a time-based policy"*. `embarch-core`
+builds no such thing: `src/main.rs`'s `build_log_file_writer` is `Rotation::DAILY` with
+`.max_log_files(7)`, and `embarch-core/decisions/logging.md` decision 16 says so in prose — including
+the line that `embarch-ui` *"had proposed a second size-capped logfile without knowing this one
+existed."* So decision 7's sentence was the abandoned proposal, left standing unqualified.
+
+**(b) The judgement: mark it as an earlier design, do not rewrite it as daily-rolling.** Both were
+open. Rewriting would make decision 7 *read* correct and destroy the record of what was proposed;
+`embarch-ui` has no retention policy of its own to state anyway, because decision 7's own text says
+the UI never reads Core's logfile directly. So a dated blockquote correction sits under the sentence,
+in the shape `embarch-outpost/decisions/clocks.md` decision 17 already uses. **Not a reversal** —
+nothing decided changed, only a stale factual clause about another repo's mechanism.
+
+**(c) The reviewer found the one thing that is genuinely missing, and it is not this unit's to fix.**
+`DOC-CONVENTIONS.md` codifies the one-line retirement tombstone and **not** this blockquote-correction
+shape, whose only textual precedent is `clocks.md` itself. The unit's commit message attributes the
+style to `clocks.md` rather than to the conventions doc, so nothing here is misattributed — but the
+suite now has two correction shapes and one of them is documented. `DOC-CONVENTIONS.md` is
+owner-reserved; recorded here rather than filed, because it is a gap in a reserved doc, not a defect
+in a sub-project.
+
+**Merged:** `agent/ui/052-decision-7-retention-line-doc` — doc `e9018e9` in `embarch-doc`
+(fast-forwarded, parent `e3e5569`). **Code: none.** `agent/ui/052-decision-7-retention-line` carries
+zero commits by design — the worker grepped `embarch-ui`'s whole source for the stale claim and found
+it nowhere, which is the outcome the task allowed for. Gate re-run by me on the merge result:
+`check-docs.py` **11/11**, `check-ownership.py --scope ui` OK on 3 paths.
+`changelog.d/ui-debug-tab-retention-line.fixed.md` consumed into `history/ui.md` with `--only`;
+29 of the owner's own fragments left pending.
+
+**A gate correction that matters more than the unit.** This worker — and, later, two of the other
+three — reported `check-links.py` RED and called it *"pre-existing baseline noise"* from
+`embarch-fleet` being an empty stub in a worktree. **It was not pre-existing: it was mine.** The two
+task files I wrote at the top of this leg (`tasks/api/096`, and my edit to `tasks/core/061`) cited
+`../../embarch-fleet/protocol.md` **as a markdown link**, and two `../` from `tasks/<scope>/` lands on
+`embarch-doc`'s own tracked `embarch-fleet/` sub-project directory, not the sibling repo. Three
+workers in a row diagnosed a red gate as environmental and were wrong, and only re-running the gate
+myself on the merge result caught it. Fixed in this fold; `api/096`'s worker independently fixed its
+own half on its branch with three `../`, which is the better form and is what landed.
+
+**Blocked:** nothing. `tasks/ui/052` closed and removed. Two `inbox/` drops drained in this same fold:
+**`tasks/core/062`** (the worker's own finding — `embarch-core`'s `src/logs.rs` comment says
+*"`embarch-ui`'s own text is unchanged"*, which this unit made false) and **`tasks/doc/059`**,
+owner-required, the worktree-nesting defect described in my final report. A third drop
+(`core-061-task-file-fleet-link-depth.md`) was deleted rather than filed: it named the link bug above,
+which was already fixed on `main` by the time I read it.
+
+**Reviewer:** no findings — it re-derived Core's rotation from `main.rs` at the real SHA, confirmed
+decision 7's *decision* is untouched by the diff, re-ran the `size.cap` grep across both `embarch-ui`
+tips and the whole `embarch-doc` tree itself rather than trusting the worker's, and traced the
+"missing" inbox drop to `tasks/core/062` rather than reporting a lost finding.
+
+**Hardware debts:** **none.** Doc prose in one decision file; no board, no probe, no live Core, no
+deploy, nothing built.
+
+**Budget:** PROCEED — weekly **82.4%** of a 90% cap at the leg's start, resets in ~55h, wave 5
+suggested and 4 used.
+
+**Least sure about:** **that leaving decision 7's sentence standing is kinder to a future reader than
+rewriting it.** The correction is directly underneath and dated, so nobody reading the file top to
+bottom is misled — but somebody grepping for `size-capped` still lands on a false sentence first, and
+that is exactly how this defect reached `embarch-core`'s source comments in the first place.
+
+---
+
 ## 2026-09-13 23:37 — outpost/021 the firmware repo's first citation sweep, and the one defect points at a fact no decision owns
 
 **Decided:** **nothing numbered** — the worker correctly filed none. This is the leg's fourth and last
