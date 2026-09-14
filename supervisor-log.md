@@ -97,6 +97,114 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 18:16 — api/087 the split was verbatim, the gate's red was false, and the residue was two sentences nobody had to lose
+
+**Decided:** **six, and this is the most consequential unit of my leg.**
+
+**(a) The worker took option 1 and I agree with it.** A `409`/`503` body with **no `kind` field** now
+converts to `kind: "unknown"` rather than defaulting to `"mismatch"`, and **drops `fix_it_url`**
+(new decision **73**). The hazard this closes is not cosmetic: `.claude/leg.md` keys two *opposite*
+supervisor behaviours on that distinction — a not-attached board leaves the task `open` and the leg
+carries on, a genuine mismatch **stops the leg, forbids re-enrolment, and alerts the owner**. Against
+a Core older than the field, **every unplugged bench role rendered as the stop-and-alert case, with
+a `fix_it_url` inviting the exact destructive action enrolment exists to prevent.** I hit this
+myself at this leg's top running the bench pre-check, and read past it only because the `reason`
+prose says *"is not currently attached"* — which is the reverse of what `client.rs`'s own test
+asserts is the right thing to read.
+
+**(b) The judgement call was whether decision 73 smuggles back what decision 71 forbids, and it does
+not.** Decision 71's closing paragraph refuses client-side re-derivation of the condition from
+`live_hardware_id.is_none()`, because that drifts from Core's rule the moment Core's criteria move.
+Decision 73 branches on the **presence or absence of the `kind` field** — a fact about *which Core
+answered*, not about *which condition holds*. I put that distinction in the task file as the test
+any answer had to survive, and explicitly forbade the `live_hardware_id` route. **The reviewer
+confirmed the conversion arm never reads `live_hardware_id`.** Getting this wrong would have been
+the expensive outcome, because it would have looked correct.
+
+**(c) The split was verified verbatim, by byte diff, not accepted as a claim.** 57 and 67
+byte-identical; **71 byte-identical plus one appended dated amendment**, which is what decision 73
+required and what `api/068` exists to protect. All three of `tasks/api/069`'s Must-not-delete items
+survive: decision 50's Core-status-code-is-coarser argument stayed in `surface.md` where it belongs,
+decision 67's headroom note travelled with it, 71's three facts intact with the changed one amended
+rather than rewritten. `decision-size-baseline.json` carried **no** pin for 57/67/71, so
+`tasks/doc/052`'s silent-pin-drop hazard did not fire — the worker checked rather than assumed.
+
+**(d) The gate went red twice and only the second red was real. This is the finding I most want the
+next leg to have.** `cargo test`'s `smoke_sequence_against_a_throwaway_core_and_a_fixture_repo`
+**failed at 30.53 s** on the first merge attempt. It passes on `main` in **0.29 s** and on the
+branch in an isolated worktree in **0.35 s**. The difference was that an unrelated worker was
+running its own `cargo test` concurrently — **a hundredfold wall-time jump with no other change is a
+startup timeout, not a logic failure.** A supervisor keeps a wave in flight by design, so a gate
+sensitive to concurrent load is sensitive to the fleet's *normal* condition. I proved it a false red
+before re-landing rather than parking a correct unit, and filed **`tasks/api/088`** to make the
+harness tolerate a loaded machine or at least *say* it timed out and after how long. **The rule
+worked exactly as written** — reset both repos, diagnose, do not wave it through — and it cost about
+ten minutes.
+
+**(e) The second red was real, and no worker could have fixed it.** Moving decision 67 out of
+`surface.md` broke three `[decision 67]` links in **other sub-projects** —
+`embarch-ui/decisions/topology-tab.md:16`, `embarch-topology/decisions/links.md:37`, and
+`suite/studies-guide.md:123`. An `api` worker may write none of them, so **a verbatim mission split
+is structurally un-landable by the scope that owns the file being split.** I repaired all three
+myself, repointing at `embarch-api/decisions.md` — the index, per `DOC-CONVENTIONS.md`'s
+link-the-index rule, which survives a move precisely because the splitter maintains it. The reviewer
+confirmed all three. **`tasks/doc/044` already names this class; this is a live instance of it, and
+it will recur on every future split.**
+
+**(f) The reviewer found one stale sentence; reading it turned up a second in the same paragraph.**
+Decision 67's placement argument appealed to *"this file's mission"* and then quoted **`surface.md`'s**
+title — stale the moment it moved. My own read found the other half: it also justified the placement
+on `tool-wrapping.md` having *"66 bytes of headroom left"*, and that file is now 6,105/12,288 B,
+about half empty. **The placement is still correct** — `failure-reporting.md`'s own header names the
+parity rule as part of its mission — so I repaired the two reasons with a dated amendment rather
+than moving the decision or quietly rewriting the prose. Fixing it now rather than filing it is
+deliberate: this leg has spent four units on citations whose numbers resolved while the sentences
+around them had gone false, and leaving two freshly-created instances on `main` to be found later
+would be the same defect, authored on purpose.
+
+**Merged:** `agent/api/087-missing-kind-renders-as-mismatch` — code
+`54f0c3e3483f0c1c33f19861cd462bc00ddca6f1` in `embarch-api` (parent
+`24ddc597770239ee2b75d89818a715884f72d414`), doc `d5f3895` in `embarch-doc` (parent
+`739ff618995cd93cb1ee333a65a6fa671cb58025`), **plus my own link repair and residue amendment in this
+fold commit** — those five paths are mine, not the worker's, and are attributed here so the next
+reader does not credit them to it. Gate re-run by me on the merge result: `cargo build` / `test` /
+`clippy --all-targets -- -D warnings` green **on the second attempt** (see (d)),
+`check-client-names.py --repo embarch-api` clean against 7 denylist entries, `check-docs.py`
+**11/11**, ownership green on all 8 of the worker's paths.
+`changelog.d/api-validate-missing-kind.fixed.md` consumed into `history/api.md` with `--only`; 29 of
+the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/api/087` closed `done` and removed. **`tasks/api/088` filed** for the
+smoke-harness false red.
+
+**Reviewer:** no findings — byte-diffed all three moved decisions against the parent SHA, checked
+each of `api/069`'s three Must-not-delete items individually, confirmed `decision-size-baseline.json`
+held no pin to drop, ruled directly on whether decision 73 smuggles back decision 71's forbidden
+inference (it does not), verified the absent-field test isolates absent from explicit-`"mismatch"`
+rather than conflating them under serde's default, and checked my own three-link repair. It flagged
+the stale self-reference in (f) as a follow-up rather than a drop; I fixed it in this fold instead.
+
+**Hardware debts:** **none created, and one *reduced in principle*.** Decision 73 is the fix for a
+hazard that only appears against an out-of-date deployed Core, so **the observed instance closes
+when the owner redeploys** — that deploy is his alone and is not this task's. `core/015`'s native
+Windows build still carries twelve landed `embarch-core` changes and **that pile is what produced
+this bug's visible form**, which is the most concrete argument yet for paying it. The dev-bench probe
+is still unplugged (`"probes": []` live at this leg's top, fifth consecutive leg), so `tasks/api/059`
+stays **open**. All other standing debts carried unchanged.
+
+**Budget:** PROCEED — weekly **67.3%** of a 90% cap mid-leg, up from 66.0% at start, resets in ~61h.
+Wave 6 suggested; 3 workers held in flight, leg capped at 4 units.
+
+**Least sure about:** **that `embarch-api` now has twelve decision files and this split added the
+twelfth routing boundary** — which is the *same* worry the previous leg recorded about `api/086`'s
+split one hour earlier, now with one more file behind it. Two splits of the same sub-project's
+decisions in two consecutive hours is a trend nobody is counting, and `embarch-api` has already
+filed a decision in the wrong topic file once (2026-09-05, 96 B left in `zephyr.md`). Splitting was
+right both times; the thing I cannot judge from inside one leg is whether the *rate* is. Also, for
+the **third** unit running, this reviewer's report reached me through the coordinator rather than
+its own notification — `tasks/doc/042`, three for three, and I no longer think of it as
+intermittent.
+
 ## 2026-09-13 18:05 — topology/038 the two copies had already drifted, so the extraction had to choose rather than copy
 
 **Decided:** **four.**
