@@ -97,6 +97,96 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 21:12 — core/057 suite decision 4 got its code half, and the honest result is two implementations, not one
+
+**Decided:** **nothing of mine** — the worker filed `embarch-core` decision **62** in
+`decisions/streams.md` (beside 30, 38, 39; **not** `auth.md`, which is at 92.4% and blocked). Four
+things to carry, (b) through (e).
+
+**(a) What landed.** `GET /study/{id}/stream/{name}/load` returns an outpost capture's per-subject
+load shares and coverage line, computed in a new `embarch-core/src/outpost_load.rs` (862 lines)
+from the rendered `*.trace.csv` that `src/outpost_manifest.rs` already writes. Wired through
+`study.rs`/`api.rs`; `AUTH_CASES` row added and `DOCUMENTED_ROUTE_COUNT` moved 22→23, both caught
+by `api.rs`'s own self-checking tests. Verified against the same real firmware fixture
+`outpost_manifest.rs`'s decoder test pins against.
+
+**(b) The property suite decision 4 asserts is still HALF TRUE after this unit, and that is the
+most important fact in this entry.** The decision says an agent can obtain that answer *and* that
+exactly one implementation of the timeline exists in the suite. The computation was **ported, not
+shared** — `embarch-ui/src/trace.rs` still has its own copy, and a worker owning one sub-project
+could not have deleted it. So the suite now has **two** implementations where it had one, which is
+the literal shape reversals row 86 warns about: one wire change once produced two independent host
+failures because there were two independent hosts. **This is a deliberate, recorded, temporary
+state, not an oversight** — but it is a state in which decision 4 must not be read as satisfied,
+and the next leg should not have to re-derive that.
+
+**(c) The worker anticipated exactly that and wrote the supervisor an instruction, which is the
+best piece of worker judgement in this log.** `tasks/core/057` carried a "Sequencing — read this
+before filing anything downstream" section naming two follow-ups, ranking them, and saying
+**neither may be filed until this lands**, because a worker handed one earlier would build against
+a route that did not exist. I filed both in this fold as instructed: `tasks/api/094` (the MCP tool
+— the half that actually closes decision 4's property, since the human path already worked and the
+agent path did not exist at all) and `tasks/ui/051` (retire the UI's copy — ranked last on the
+worker's own reasoning that the UI is correct today).
+
+**(d) The hard constraint held.** "Do not write a second decoder" — `load_answer` operates purely
+on the CSV string and never touches raw frames or the manifest logic. `embarch-ui` decision 10
+(trace)'s column-list-against-shared-crate-header check came across and still **refuses** (422,
+"refusing to guess") rather than guessing which column moved. A second *decoder* and a second
+*implementation of arithmetic over an already-decoded rendering* are different things, and only
+the second one happened.
+
+**(e) A mid-merge hazard that is mine, not the worker's, and `.claude/leg.md` does not warn about
+it.** `.claude/leg.md` says "rebase the remaining branches after each merge" and does not say
+*where*. I ran `git rebase origin/main origin/agent/core/057-...-doc` in the obvious place — the
+suite checkout at `/home/gabriel/Github/embarch/embarch-doc` — and because `git rebase` with a
+remote-tracking ref as its second argument **checks that ref out**, it left **the owner's working
+checkout on a detached HEAD.** I noticed immediately, restored it with `git checkout main` (back at
+`7937e45`, clean, exactly where it was at my step 0), and did the rebase as a `cherry-pick` inside
+my own leg worktree instead. Nothing was lost and the owner's tree is untouched. **But the entire
+point of the detached leg worktree is that the owner's checkout never moves, and one obvious
+command defeats it.** Not my file to fix; dropped in `inbox/` for the owner.
+
+**Merged:** `agent/core/057-serve-outposts-own-answer` — code `a131f63` in `embarch-core` (parent
+`4de0e41`), doc `886a0bc` in `embarch-doc` (parent `b8249c4`). Gate re-run by me on the merge
+result: `cargo build` / `test` (**205 passed**, 0 failed, 2 ignored — both pre-existing and
+hardware-gated) / `clippy --all-targets -- -D warnings` green; `check-docs.py` **11/11**;
+`check-client-names.py` clean against 7 denylist entries; ownership green on the doc half (7
+paths). `changelog.d/core-outpost-load-route.added.md` consumed into `history/core.md` with
+`--only` and `features.d/core-220-outpost-load-repartition-route.md` assembled into
+`suite/features.md`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/core/057` closed `done` and removed. Filed in this fold:
+`tasks/api/094`, `tasks/ui/051`.
+
+**Reviewer:** no findings — answered all five questions explicitly rather than reading broadly;
+grepped the full diff for every one of the eight geometry symbols suite decision 4 forbids moving
+and confirmed every hit is prose describing what stayed behind; established that the single
+`outpost_manifest::render` call is a test fixture rather than a second production decode path; and
+independently checked that `interfaces/studies.md`'s phrase "computed once here" means
+once-per-request within Core rather than a suite-wide sole-implementation claim, which is the one
+sentence in this diff that could have made (b) read as already solved.
+
+**Hardware debts:** **one, carried and deepened rather than created.** No board, no probe, no live
+Core, no deploy in this unit — but `core/015`'s outstanding **native Windows build** now carries a
+**ninth** landed `embarch-core` change, and this is the first of those that is a genuinely new
+**HTTP route and module** rather than a comment or a test. The worker did not attempt the Windows
+build and said why (Windows `cargo.exe` cannot resolve the worktree's symlinked path-dep siblings
+over UNC) and correctly noted it adds no `cfg(windows)` surface, so the debt's *shape* is
+unchanged. Its *size* is not: the Windows service build does not serve this route until that build
+lands.
+
+**Budget:** PROCEED — weekly **73.9%** of a 90% cap at dispatch, resets in ~58h30m. Unit 2 of 4.
+
+**Least sure about:** **whether (b) deserved an alert rather than a log line.** The suite is in a
+two-implementations state that a decision says it should not be in — deliberately, with both
+remedies filed — but it got there through a landed change rather than a found defect, and
+`ops.md` §3's alert set has no slot for "the fleet has knowingly opened a gap it has also filed the
+closure for." The previous leg was unsure about almost exactly this shape one unit earlier, which
+suggests the gap is in the alert set rather than in either leg's judgement.
+
+---
+
 ## 2026-09-13 21:05 — topology/039 the split paid the suite's tightest debt, and answering the compaction question honestly cost a new task
 
 **Decided:** **nothing numbered.** Two things to carry, (c) and (d).
