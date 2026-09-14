@@ -97,6 +97,83 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-14 01:04 — ui/053 the split that was the right answer and had nowhere to land
+
+**Decided:** **nothing numbered, and the unit's real product is a refusal.** `embarch-ui/open.md`
+went **4,033 B → 3,879 B**, out of reserve with 154 B clear — but the task asked it to re-open the
+split-vs-squeeze question, and the answer it came back with is the part worth keeping. Four things.
+
+**(a) The seam is real and the tooling cannot hold it.** `ui/050` squeezed this file out of reserve,
+`ui/051` refilled it four units later with a bullet a reviewer had required, and the task filed
+against that argued the 5,120 B cap is simply tight for the number of live questions `embarch-ui`
+carries — so **look for a seam before squeezing a third time.** The worker found one (the trace,
+second-stream-placement and row-cap bullets share a reader) and then found it could not use it:
+**`check-doc-size.py`'s `CAPS` defines a mission-split role for `decisions.md` and `interfaces.md`
+and none for `open.md`**, so a split file matches no named role and falls through to `legacy` — 25 KB,
+unratcheted, and described by the script's own comment as debt to migrate *out of*. Splitting today
+would move four questions' worth of content out from under the size discipline the rest of the corpus
+gets, which is moving the debt rather than paying it. So it squeezed and said exactly why, in the
+commit message, as the task required.
+
+**(b) `scripts/` is reserved, so it dropped the gap instead of closing it — and that is the rule
+working.** I drained that drop in this same fold as **`tasks/doc/062`**, re-checking its
+`Hardware:` claim myself (a regex and a `DOC-BUDGET.md` §3 paragraph — `none` is right) and keeping
+the worker's own text. It is `Owner: required`, so nothing dispatches it; it is in the queue so the
+owner sees it. **Its own "why now" is the line to read**: `DOC-BUDGET.md`'s rule is that a split is
+the default and a squeeze the exception, and **the exception is currently forced on every `open.md`
+in the suite by a tooling gap rather than by the absence of a seam.** If this file hits reserve a
+third time, squeezing stops being defensible and there will still be nowhere for the split to go.
+
+**(c) The five cuts were quoted and the reviewer counted them, including the one that was not a
+deletion.** Two clauses redundant with a decision citation two words away, one provenance clause
+`embarch-ui` decision 11 already carries in more detail, one filler word, and one clause **reworded
+rather than removed** — the reviewer diffed at word level, confirmed exactly five deleted spans
+against exactly five quotes with no sixth, and specifically checked the reworded one, finding
+`"real HTTP"` surviving verbatim inside the sentence that absorbed it.
+
+**(d) The `Must not delete:` list held, and it is the one that has already failed once.** Its first
+item exists because a reviewer caught its predecessor being deleted in `ui/051`; all three of the
+trace-analysis bullet's load-bearing facts are present verbatim and outside the diff, and all seven
+open questions still carry their own trigger and citation. The reviewer also read
+`embarch-umbrella` decision 14 and `embarch-ui` decision 11's bodies to check the "already said
+elsewhere" justification rather than accepting it — which is the reasoning that, when wrong, deletes
+the only statement of a fact.
+
+**Merged:** `agent/ui/053-compact-ui` — **code: none.** Zero commits beyond `origin/main`, confirmed
+by commit count before landing. Doc `c70aae5` in `embarch-doc` (**cherry-picked**, from branch commit
+`1a3319e`; `--ff-only` refused because `topology/044`'s fold had already moved `main`). Gate re-run
+by me on the merge result: `cargo build` / `test` / `clippy --all-targets -- -D warnings` green in
+`embarch-ui`; `check-client-names.py --repo embarch-ui` clean against 7 denylist entries;
+`check-docs.py` **11/11**; `check-ownership.py --scope ui` OK on the doc half (3 paths), run before
+the merge. `changelog.d/ui-open-out-of-reserve-again.changed.md` consumed into `history/ui.md` with
+`--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/ui/053` closed and removed, which leaves the `ui` scope with no
+dispatchable task. **The size-debt ledger is down from 15 dated entries to 13 across this leg's two
+compaction units, 0 overdue**, and both `embarch-topology/` and `embarch-ui/` now have nothing in
+reserve.
+
+**Reviewer:** no findings — see (c) and (d); it did the word-level hunk count
+`DOC-COMPACTION-PASS.md` assigns to the reviewer rather than reading the commit message's summary of
+itself, and it read both cited decision bodies independently.
+
+**Hardware debts:** **none created.** Five clause-level edits in a markdown file; nothing built,
+nothing executed, no board, no probe, no live Core, no UI launched. Standing debts carried
+unchanged, including `embarch-ui`'s 18-record stale prefix, which still has never met a real stale
+prefix. The dev-bench probe is still unplugged — checked live at this leg's top, `status` returned
+`"probes": []` — so `tasks/api/059` stays **open** for the fifth consecutive leg.
+
+**Budget:** PROCEED — weekly **85.7%** of a 90% cap, resets in ~54h. The leg ends on the owner's
+`fleet stop`, not on the budget or the unit cap.
+
+**Least sure about:** **that the drop and the squeeze together let a bad outcome look like a good
+one.** The unit ends with the file out of reserve and a well-argued task filed, which reads as
+success — but the substance is that this file has now been squeezed twice in four units for the same
+reason, and `tasks/doc/062` is owner-required, so nothing in the fleet can act on it. If nobody
+reads it, the third squeeze will arrive and the same argument will be made a third time.
+
+---
+
 ## 2026-09-14 00:57 — topology/044 seventy bytes, two sentences, and a reserve line that is not ten percent of anything
 
 **Decided:** **nothing numbered** — a 70-byte trim decides nothing. **But a `fleet stop` arrived
