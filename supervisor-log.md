@@ -97,6 +97,90 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 22:10 — topology/042 the defect was a section that did not exist, and the dispatch note's three-byte warning was the whole unit
+
+**Decided:** **nothing numbered, and the worker was right not to file one** — `spec.md` stating a
+fact that decisions 32, 33 and `embarch-core` 61 already settled decides nothing. Three things to
+carry, (b) (c) and (d).
+
+**(a) What was missing.** `embarch-topology/spec.md` had eight sections and not one mention of
+`select_probe`, probe selection, multi-probe or zero-probe — while `select_probe` is the suite's
+single implementation of which debug probe a caller gets, and `embarch-core::resolve_probe`
+delegates to it. The *What each consumer owns now* section, which is exactly where the delegation
+belongs, listed what `embarch-core`, `embarch-api` and `embarch-umbrella` own and never said this.
+One bullet now states the ownership, the delegation with its threaded caller `action` verb, and
+decision 33's three caller-observable behaviours (zero probes checked first with the usbipd hint;
+multi-probe-with-no-serial refusing and naming the count and every attached probe; a serial
+matching nothing refusing by name), pointing at decision 33 for exact wording rather than
+reproducing the reconciliation reasoning `topology/039` had just consolidated out of `crate.md`.
+
+**(b) The dispatch note was load-bearing and the task file was wrong, which is the thing to
+generalise.** `tasks/topology/042`'s own body said `spec.md` was *"9,037 B, well under cap"* and
+*"there is real headroom"*, twice. Measured at dispatch: **1,203 B of headroom against a reserve
+floor of 1,200 B — three bytes.** The task was written a few hours earlier by a supervisor folding
+`topology/039`, and it was true when written. I told the worker in the dispatch note that this one
+line in its own task file must not be taken on trust, told it **not** to shrink the section to stay
+under the line, and named filing `tasks/topology/043-compact-topology.md` as the preferred outcome.
+It landed at 9,825 / 10,240 B (95.9%) and filed the debt with a full `Compacts:` /
+`Size debt due: 2026-09-20` / `In flux: no` / `Must not delete:` set. **Without that note the
+likely failure is not a red gate — the gate passes inside reserve — it is a quietly thinner
+section**, which is the one outcome nothing in the suite can detect.
+
+**(c) A size figure in a task file is a measurement with a timestamp, and nothing marks it as one.**
+This is the second class of stale fact a task file can carry (the first being a `Compacts:` line
+struck off in place, `tasks/doc/030`). Every other number a task quotes — a defect count, a byte
+size, a percentage — has the same property and none of them is dated in the file. I am not filing
+a task for it because I cannot describe the cheap check, but the practical remedy is free and this
+leg used it: **re-measure anything a dispatch note is about to rely on, and put the re-measurement
+in the note rather than trusting the body.**
+
+**(d) `topology/042` is itself the product of a compaction unit's human question**, which is worth
+noticing while the fleet is arguing about whether compaction passes earn their keep. `topology/039`
+paid a size debt by splitting decisions 32 and 33 into `decisions/probe-selection.md`, and the
+supervisor folding it answered `DOC-COMPACTION-PASS.md`'s *"can `spec.md` alone answer what someone
+needs to work on this component today?"* with an honest **no** — which is where this task came
+from. The gap was three weeks old and no citation pointed at it, so no sweep would ever have found
+it. **That question found a defect no gate, no number check and no citation sweep can reach.**
+
+**Merged:** `agent/topology/042-spec-md-probe-selection` — doc
+`020d03b316f84f6c86e92f7b798f78afe90086bd` in `embarch-doc` (parent
+`0ef88ed6ee1a414f04ee60a22c643ec26bf049ea`); **code: none — the `embarch-topology` branch carried
+zero commits and was pushed unchanged**, because this unit is one documentation file. Gate re-run
+by me on the merge result: `check-docs.py` **11/11**, ownership green on all 4 changed paths
+against `--scope topology`. `changelog.d/topology-probe-selection-in-spec.changed.md` consumed into
+`history/topology.md` with `--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/topology/042` closed and removed;
+`tasks/topology/043-compact-topology.md` filed by the worker in the same branch.
+
+**Reviewer:** no findings — and it is the reason this entry asserts (a) rather than repeating the
+worker. It re-derived decision 33's three behaviours against the **live** `select_probe` source
+(`src/hardware/validate.rs:329-359`) rather than against the decision text alone, confirming the
+ordering claim ("zero probes is checked *first*"), that multi-probe fires only when no serial is
+given, and each error string; confirmed `embarch-core::resolve_probe` (`src/hardware.rs:92-99`)
+really calls `embarch_topology::hardware::select_probe` with no inline copy; checked the new bullet
+against `DOC-COMPACTION.md` §3's spec-vs-decisions boundary and found no restatement of what
+`topology/039` had just moved; and checked the reversals index for any row touching probe
+selection, finding none.
+
+**Hardware debts:** **none.** One documentation file. No board, no probe, no live Core, no deploy,
+and nothing here changes what any binary does. Separately and not created here: `validate dev-bench`
+was called live at step 0 to select bench work and answered `recorded hardware_id
+6fcddc36cb781b71, live None` — **both boards are still unplugged**, so `tasks/api/059` stays `open`
+rather than `blocked`, unchanged from leg 085.
+
+**Budget:** PROCEED at dispatch — weekly **76.3%** of a 90% cap, resets in ~57h30m, suggested wave
+**6**. Four workers in flight, which is every distinct scope the queue had.
+
+**Least sure about:** **whether I should have spent this leg's fourth unit on `suite/029` instead
+of a fourth worker.** I announced and parked it (`ts` `1789358454.801729`) and left it for the next
+leg, which the relay explicitly supports — but that is the fifth suite task sitting parked, and
+suite tasks are the only ones no worker can ever work off. A leg that always prefers four workers
+to three-plus-a-suite-task is a fleet that never drains that queue, and I do not know whether this
+leg was the right one to break the pattern on.
+
+---
+
 ## 2026-09-13 21:22 — umbrella/067 the fix was to DELETE a citation and admit a step nobody ever decided
 
 **Decided:** **nothing numbered, and the worker's choice not to file one is the substance of this
