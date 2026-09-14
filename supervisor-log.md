@@ -97,6 +97,101 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 19:37 — api/092 a classification put back that decision 50 took out, and a split that broke four links no gate can see
+
+**Decided:** **five.**
+
+**(a) The fix is right and the argument for it was made rather than assumed.** `dispatch` wrapped
+**every** `send()` failure that had a configured timeout with `(request timeout Ns)` — so a
+connection-refused, a DNS failure and a TLS error all read as a timeout, in a string that reaches
+`--json`'s `"error"` field, the one machine-readable surface a scripted caller sees. Now gated on
+`reqwest::Error::is_timeout()`. Two tests, both halves: a real timeout still names its bound, and a
+refused connection must not contain the string at all.
+
+**(b) The task's item 3 — does naming a real bound reopen decision 50? — is answered in writing in
+decision 74's amendment, and the reviewer re-derived it against decision 50's body rather than
+accepting it.** Both land on: no. Decision 50 refused *inventing a kind* from a signal coarser than
+Core's own enum; `is_timeout()` is `reqwest`'s own confirmed determination, not a client-side
+inference, and it adds no field to the JSON surface. That is the same distinction decisions 71 and
+73 draw. **`api/088` made this change three hours earlier without mentioning 16 or 50 anywhere** —
+the fix is one conditional, and the reason the unit was worth a whole slot is that the argument was
+missing, not the code.
+
+**(c) `tasks/api/090`'s split was paid in the same unit and it is a real split, not a squeeze.** The
+reviewer diffed decisions 30 and 74's old bodies against the new `decisions/smoke-harness.md`
+byte-for-byte — identical, with 74's amendment **appended** rather than blended in — so nothing was
+deleted and nothing was owed a quoted cut list. `decisions/tests.md` 12,201 → **9,941 B** (out of
+reserve, 81% of cap), `smoke-harness.md` 3,936 B, and `decisions.md`'s index routes all five numbers
+to the file that now holds each. **The `DOC-COMPACTION-PASS.md` question, answered: yes** — the two
+files are each one coherent mission (the live-run methodology and its bound; the mocked tiers and
+what the gate reaches), and neither needs the other to be actionable.
+
+**(d) The find worth carrying: this split broke FOUR inbound links and every gate stayed green.** A
+decision number's home moves; a link names a file. `check-decision-refs.py` cannot see this —
+its topic-link resolver needs the *link text* to name a decision, and its main resolver only asks
+whether the repo defines the number *somewhere*, which it still does. Found and fixed here:
+`history/api.md:48` (decision 74) and `:96` (decision 64, from an **earlier** leg's split today),
+`embarch-api/tests/smoke_harness.rs:3` (decision 30 — a **source comment**, which no resolver reads
+at all), and `embarch-api/decisions/shape.md:5` (decision 30, in a live decision file's own
+provenance line — the reviewer found this one, I had missed it). **Three of the four were created
+today**, two by this very unit. `ui/049` predicted exactly this six hours ago and filed
+`tasks/doc/056`; this is the bulk instance it warned about. I fixed each by pointing at
+`decisions.md`, the **router**, rather than at the new file — repointing to a topic file just breaks
+again at the next split, and `DOC-CONVENTIONS.md` already says to prefer the bare number for this
+reason. `scripts/` is the owner's, so the gate stays blind; `tasks/doc/044` and `tasks/doc/056` are
+where the fix lives.
+
+**(e) The reviewer finished and its notification went to the listener, not to me** —
+`tasks/doc/042` exactly, and the second time today that a completion has been misrouted. It reached
+me only because the coordinator relayed it by hand. Its `inbox/` drop
+(`api-tests-md-split-stale-inbound-links.md`) named the two links I had not yet fixed; both are
+fixed in this fold, so I **consumed and deleted the drop** rather than leaving a filed finding that
+is already closed.
+
+**Merged:** `agent/api/092-timeout-classification` — code
+`2900a27fcde659d52548fea759e89f615ae46e0f` in `embarch-api` (parent
+`be04f9e8a6410bf9aedd36fad3a7a541566c4540`), doc `74fec6e5ae5d65b3ef8ac2f32c361a4843e3cc66` in
+`embarch-doc` (parent `642a277a2db46d8f30374b43703a0803e02c8471`). **Plus a follow-up commit of my
+own in `embarch-api`, `100189939825b966088d33bfbb8d1b3af6283f2a`**, fixing the `smoke_harness.rs`
+citation this unit's own split broke — one line, in this unit's scope, verified with `clippy
+--all-targets -- -D warnings`. Gate re-run by me on the merge result: `cargo build` / `test` /
+`clippy --all-targets -- -D warnings` green, `check-client-names.py --repo embarch-api` clean against
+7 denylist entries, `check-docs.py` **11/11**, ownership green on both branches.
+`changelog.d/api-dispatch-timeout-classification.fixed.md` and `api-tests-md-split.changed.md`
+consumed into `history/api.md` with `--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. **Two** task files closed and removed, `tasks/api/090` and `tasks/api/092` —
+one worker, one branch, one repo, but two claimed tasks, because `092`'s own body said its
+amendment could not land until `090` paid the headroom (87 bytes left) and told whoever took it to
+expect to pay both. I dispatched it that way with an explicit fallback (land the split, return `092`
+to `open`) and it did not need it.
+
+**Reviewer:** 1 finding — `inbox/api-tests-md-split-stale-inbound-links.md`, two further stale
+inbound links from the split; **accepted, fixed in this fold, and the drop deleted.** It also
+independently re-derived the decision-50 argument against decision 50's body, diffed both moved
+decision bodies byte-for-byte to confirm the split was verbatim, checked both index byte-counts, and
+confirmed the connection-refused test is not vacuous (port 1 refuses immediately rather than timing
+out, so the assertion really does exercise the `is_timeout() == false` branch).
+
+**Hardware debts:** **none created and none touched.** An error-string change, two tests, a doc
+split and four link repairs; no board, no probe, no live Core, no deploy. Standing debts carried
+unchanged, including `core/015`'s native Windows build — **this unit adds nothing to it**, since the
+change is in `embarch-api`, not `embarch-core`. The dev-bench probe is still unplugged (checked live
+19:19, `"probes": []`), so `tasks/api/059` stays **open** for the seventh consecutive leg.
+
+**Budget:** PROCEED — weekly **69.6%** at leg start, resets in ~59h43m. No HOLD, no 429. Wave 6
+suggested, 4 dispatched, 4 is the cap.
+
+**Least sure about:** **whether fixing those four links myself was right, or whether I should have
+filed them and left `main` carrying them.** Two I created, so repairing them is plainly mine; the
+other two I did not, and one of them meant a commit into `embarch-api`'s source from the supervisor
+rather than from a worker. It was one line inside the unit I had just landed and I verified it under
+clippy, but "trivial and in scope" is a judgement I made about my own hands with nobody watching,
+and the rule it leans on (`.claude/leg.md`: do not fix a red gate yourself unless trivial and in
+scope) is written about **red gates**, not about green ones hiding a defect. The conservative reading
+is that a green gate hiding a defect is precisely when a supervisor should file rather than fix,
+because nothing forced the decision.
+
 ## 2026-09-13 19:26 — topology/041 a close that was owed, and a compaction task that had been parked on a condition already met
 
 **Decided:** **three.**
