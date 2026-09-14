@@ -97,6 +97,76 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 22:46 — study-designer/047 two wrong decision numbers in wire-byte test comments, and the first sweep a reviewer has independently re-counted
+
+**Decided:** **nothing numbered** — a citation sweep that corrects citations decides nothing, and the
+worker correctly filed none. Three things to carry, and **(c) is new evidence about the series
+itself.**
+
+**(a) 41 citing lines in `embarch-study-designer/src/lib.rs`, 2 wrong numbers, 0 false sentences, 0
+unlabelled cross-repo citations.** Both defects are in **wire-byte test comments for the schema-v12
+pair** — `Action::BleSecurity` (decision 44) and `Action::BleUnbond` (decision 50). One credited
+**decision 50** for `StepResult.security_level`, a field decision 44 establishes; the other read
+**"decisions 50/51"** where 51 is `Study.dev_bench_log_level` and has nothing to do with discriminant
+pinning. Fixed to 44 and to "44/50". **Both are the third shape this series has catalogued** — a
+structural rule attributed to a neighbouring decision rather than the one that established it — not
+typos, and neither would have failed any gate: `check-decision-refs.py` resolves numbers only inside
+`*.md`, and both of these resolved to real decisions.
+
+**(b) Zero cross-repo citations in this file at all, which is itself the interesting half.**
+`044` found one bare cross-repo citation and `045` a second, structurally identical one; `046` found
+the file's single cross-repo hop already correctly labelled. `lib.rs` cites no other repo's decisions
+whatsoever. For a **shared crate** that `embarch-api`, `embarch-core`, `embarch-ui` and
+`embarch-umbrella` all depend on — the repo where a bare `decision N` is most genuinely ambiguous —
+that is a better result than a clean cross-repo sweep would have been.
+
+**(c) The reviewer re-counted the whole claim independently, and this is the first sweep in the
+series where a zero-or-low tally has been verified rather than trusted.** Brief was three specific
+questions, not an open read. It (i) re-derived both replacements from the decision bodies — decision
+44 explicitly says *"the result gains a level field, populated on every step, not only a security
+step"*, decision 50 says only that the field is absent for its own step, so the swap is right;
+(ii) **sampled ~18 of the 39 citations reported as holding**, weighted toward anything that could be
+cross-repo, and found no case of the worker resolving its own ambiguity toward a clean number — the
+failure `umbrella/066` was caught committing; and (iii) **re-ran the worker's own counting
+methodology against the live code worktree**: all 21 file counts in `tasks/study-designer/048` match
+exactly, sum 301, and 21 remaining + 4 swept = 25, the full `src/` file count with no nested module
+missed. **So the honest tally is 39/2/0 as reported, and `048`'s remainder list is complete.** That
+last check matters more than it looks: a remainder task that silently drops a file is how a sweep
+series ends while believing it finished.
+
+**Merged:** `agent/study-designer/047-src-citation-sweep-remainder` — code `26fd908` in
+`embarch-study-designer` (parent `5a8bcb509f60ccd097ab1aa1842cc22ff98e4bfe`), doc `9c8270e` in
+`embarch-doc` (parent `a413965570cf2d85762c33ab8de15150ea97776b`). Gate re-run by me on the merge
+result: `cargo build` / `test` / `clippy --all-targets -- -D warnings` green in
+`embarch-study-designer`; `check-client-names.py --repo embarch-study-designer` clean against 7
+denylist entries; `check-docs.py` **11/11**; `check-ownership.py --scope study-designer` OK on the doc
+half (3 paths) and `--code-repo` OK on the code half.
+`changelog.d/study-designer-lib-rs-citation-sweep.fixed.md` consumed into `history/study-designer.md`
+with `--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/study-designer/047` closed and removed.
+**`tasks/study-designer/048` filed by the worker**, naming all 21 still-unswept `src/` files (~301
+citing lines, `src/study_builder.rs` largest at 38, down to `src/ids.rs` at 0).
+
+**Reviewer:** no findings — and it is the strongest reviewer result this log has recorded, because it
+was asked to re-derive rather than to read: both replacements verified against decision bodies, ~18
+of 39 held citations independently sampled, and `048`'s 21-file remainder list re-counted against the
+live worktree and confirmed complete.
+
+**Hardware debts:** **none created.** Two comment lines in a host-side Rust crate — no board, no
+probe, no live Core, no deploy, and nothing here changes what any binary does. Unchanged: `tasks/api/059`
+is `Hardware: bench` and stayed `open`, `embarch-core` having answered `"probes": []` at step 0.
+
+**Budget:** PROCEED — weekly ~**79%** of a 90% cap, resets in ~56h, wave 6. **Unit 2 of 4.**
+
+**Least sure about:** **whether spending a reviewer on a two-defect sweep is repeatable or whether I
+got lucky in the brief.** The three questions I asked were answerable; an open "review this diff"
+would have returned very little, because the diff is two comment lines. The general rule I cannot
+yet state is *when* a sweep's tally is worth an independent re-count — this one was cheap because the
+file list was mechanically checkable, and that will not always be true.
+
+---
+
 ## 2026-09-13 22:43 — topology/043 a clean compaction that still failed the gate, because the task's own target was computed from the wrong number
 
 **Decided:** **nothing numbered** — a compaction that cuts restatement decides nothing, and the
