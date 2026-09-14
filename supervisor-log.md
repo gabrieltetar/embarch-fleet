@@ -97,6 +97,108 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 23:37 — outpost/021 the firmware repo's first citation sweep, and the one defect points at a fact no decision owns
+
+**Decided:** **nothing numbered** — the worker correctly filed none. This is the leg's fourth and last
+unit. Three things to carry.
+
+**(a) 23 citations, 1 wrong number, 0 false sentences — across the repo's C sources, which is NOT
+what the task or the worker called it.** Both the task and the worker's report say *whole repo*. The
+sweep's grep scoped to `.c`/`.h`, and it covered eight files (`src/outpost_priv.h`, `src/outpost.c`,
+`src/outpost_hooks.c`, `include/embarch/outpost.h`, `tests/unit/src/main.c`, `src/outpost_time.h`,
+`src/outpost_ring.c`, `src/outpost_markers.c`), reading every decision body this repo owns — 1–9, 14,
+17–26 across twelve `decisions/*.md` files — against its citing sentence. **That work is sound. The
+word "whole" is not**, and I have corrected it here rather than letting the number stand as a
+repo-wide rate. See (d).
+
+**(b) The one defect is a shape worth naming: a citation pointing at a real decision, in the right
+repo, that simply has nothing to do with the line it annotates.** `src/outpost_priv.h`'s
+`cycles_per_sec` field comment explained that `CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC` is legitimately 0
+on targets that read their timer frequency at runtime, and cited **decision 4** — the *record-layout*
+decision (cycles stamp, ring slot size, the layout 2→3 history), which never mentions the Kconfig or a
+build-time-versus-runtime read at all. **The claim is true**; it is stated verbatim in
+`interfaces/wire.md`, **with no decision number attached to it anywhere.** So the worker repointed the
+citation at that file rather than deleting it, which keeps the reader's path to the source of truth
+intact.
+
+**(c) The trap this repo was most likely to have drifted on was checked and was clean.** All four
+citations touching the record-layout 2→3 version history describe **layout 3**'s behaviour; none
+describes layout 2's. The single cross-repo citation (`embarch-study-designer` decision 10, COBS
+framing) was verified against that repo's `decisions/wire.md` and is both correct and correctly
+labelled — and **no bare `decision N` in this repo turned out to mean another repo's decision**, which
+is the defect every other first-pass sweep in this series has found at least one of. That holds for
+the C sources; (d) is why it is not yet a statement about the repo.
+
+**(d) The reviewer found the identical defect in a file the sweep never looked at, and I fixed it in
+this fold.** `scripts/gen_outpost_manifest.py:613` carried the **same wrong citation word for word** —
+the same `(decision 4)` on the same runtime-versus-Kconfig clock-rate claim that `021` had just
+corrected in `src/outpost_priv.h` — uncounted, and still live on `main` after the sweep closed. I
+verified it myself, repointed it to `interfaces/wire.md` to match the accepted fix, re-ran the
+host-side tests, and pushed it as `embarch-outpost` **`8f6e667`**. **Then I went looking for the rest
+of the scope, and the miss is much larger than the one line the reviewer happened to catch: ~19
+further citations across 9 files** — `Kconfig`, `scripts/gen_outpost_manifest.py` (three more),
+`scripts/decode_outpost.py`, `tests/vocab_check.py`, `tests/decoder_unit.py`, `tests/run-all.sh`
+(five), `tests/native_sim_stream/assert_stream.py`, `CMakeLists.txt`, and a GitHub Actions workflow.
+**Roughly half this repo's citation surface is in five languages the grep never saw**, which is what
+"whole repo" meant here. Filed as **`tasks/outpost/022`** with the file-and-line list, so the next
+sweeper re-runs the scope rather than rediscovering it. **The missed file is also the one that matters
+most** — `gen_outpost_manifest.py` generates the manifest whose `record_layout_version` and
+`cycles_per_sec_config` the entire decode path depends on. The method lesson generalises past this
+repo: every sweep in this series has scoped its grep to the language it expected comments in, and this
+is the first repo where that assumption was badly wrong.
+
+**Merged:** `agent/outpost/021-src-citation-sweep-whole-repo` — code `7cb71d5` in `embarch-outpost`
+(parent `94db7d1`), doc `1450c08` in `embarch-doc` (cherry-picked). **A note for whoever reads the
+SHAs:** the merge's own diffstat says *4 files changed* because the local `embarch-outpost` checkout
+was one commit **behind `origin/main`** when I started — `94db7d1` was already pushed by an earlier
+leg and the fast-forward caught the checkout up. **This unit's real diff is one line in one file**;
+I checked `git branch -r --contains` before believing either number. Gate re-run by me on the merge
+result: `embarch-outpost` is pure C/Zephyr with **no `Cargo.toml`**, so the cargo gate does not apply
+and the host-side surface is the whole gate — `tests/decoder_unit.py` (**31 tests**) and
+`tests/vocab_check.py` (**11 kinds, 8 flag bits agree** across `outpost_priv.h`, `decode_outpost.py`
+and `outpost.rs`) both green; `check-client-names.py --repo embarch-outpost` clean against 7 denylist
+entries; `check-docs.py` **11/11**; `check-ownership.py --scope outpost` OK on the doc half (2 paths)
+and `--code-repo` OK on the code half. **Nothing was built for a board and no DUT was attached.**
+`changelog.d/outpost-citation-sweep-021.fixed.md` consumed into `history/outpost.md` with `--only`;
+29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/outpost/021` closed and removed. **`tasks/outpost/022`** filed per (d) —
+so the `outpost` scope has one dispatchable task again, where it would otherwise have had none
+(`tasks/outpost/002` is `blocked`, `tasks/outpost/018` is `Hardware: required`).
+
+**Reviewer:** 1 finding — `inbox/outpost-gen-manifest-decision-4-miscite.md`, **accepted, verified by
+me against the file, and fixed in this fold** (`embarch-outpost` `8f6e667`); drop deleted once the fix
+and `tasks/outpost/022` had landed. It confirmed both halves of the unit's own fix independently
+(decision 4's body really does not make the clock-rate claim; `interfaces/wire.md` really does state
+it verbatim), reconciled the 23-citation count including plural `decisions N` forms, checked the other
+decision-4 citations and the cross-repo one, and **explicitly declined to treat the file-path citation
+form as a contradiction** — `tasks/doc/055` is a different open question and is not implicated. That
+last one answers the thing I said I was least sure about, in the opposite direction from my worry.
+**Its completion notification was misrouted to another session rather than to me** — `tasks/doc/042`
+exactly, the second time this leg (see the `core/059` entry) and not the first time this log has
+recorded it.
+
+**Hardware debts:** **none created, and none of this leg's four units touched hardware at all.** Worth
+stating for this unit in particular because it is the one firmware repo the leg entered: no board, no
+flash, no DUT, no Zephyr build — only the host-side Python test surface. `embarch-outpost`'s two
+hardware-gated tasks are untouched and still waiting on a board.
+
+**Budget:** PROCEED throughout — weekly **80.4% → ~81.6%** of a 90% cap across the leg, resets in
+~55h, wave 6 suggested at the start and 5 by the end, 3 workers used.
+
+**Least sure about:** **that I fixed `gen_outpost_manifest.py` with my own hands instead of leaving it
+to `outpost/022`.** It is a one-line citation repoint, identical in kind to one a reviewer had already
+accepted, in a file the closing unit claimed to have swept — so shipping the leg with a *known* live
+instance of the exact defect the unit reported fixing was the worse option. But it is a supervisor
+writing a code repo, which §3 gives to the worker, and it means `022` now opens on a repo that has
+been touched since its own file-and-line list was taken. **The form question I expected to be unsure
+about is settled**: the reviewer read `(interfaces/wire.md)` and ruled it not a contradiction, with
+`tasks/doc/055` explicitly not implicated — so a file-path citation for a fact no decision owns
+stands, and the open question is whether that fact deserves a number, not whether the citation is
+malformed.
+
+---
+
 ## 2026-09-13 23:31 — core/059 three behaviours that lost their only test get it back, and the worker proved each one catches its regression
 
 **Decided:** **nothing numbered** — recovering tests decides nothing, and the worker correctly filed
