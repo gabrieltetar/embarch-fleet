@@ -97,6 +97,82 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 21:22 — umbrella/067 the fix was to DELETE a citation and admit a step nobody ever decided
+
+**Decided:** **nothing numbered, and the worker's choice not to file one is the substance of this
+unit.** Three things to carry, (b) (c) and (d).
+
+**(a) What was wrong.** `locate_core`'s doc comment credited `embarch-umbrella` decisions **7 and
+28** with specifying a six-step precedence order for finding an installed Core. Decision 7 is
+entirely about **elevation policy** for controlling and starting the Core *service* and states no
+resolution order at all; `locate_core` starts nothing and elevates nothing — it is a read-only
+search for a binary. So the decision-7 citation was **deleted**, not corrected. Decisions 28 and
+38 genuinely cover **five** of the six steps (28: env override → saved state → `PATH` → the real
+canonical Windows location; 38: the Windows service's own registration, inserted after `PATH` and
+*ahead of both guesses*, "because a reading beats a guess"). **The sixth step — the older fixed
+conventional directories, tried last — is specified by no decision anywhere**, and the comment now
+says exactly that.
+
+**(b) This is a different defect class from every sweep this fleet has run, and it is the harder
+one.** Those sweeps find a citation pointing at the wrong number, or a sentence a decision made
+false. This one is a citation that **resolves, to a real decision, in the right repo, that simply
+has nothing to do with the code it annotates.** No gate can see it; neither can a date check;
+neither can a number check. The only detector is reading the cited decision's body and asking
+whether it is about this. `check-decision-refs.py` would pass this file forever.
+
+**(c) The remedy was to say less, and the worker refused two chances to say more.** It declined to
+re-cite decision 7 in a separate sentence for "why the WSL2 branch exists" — correctly, because
+that reasoning describes starting a service, not finding a binary, and would have been the same
+error moved one sentence over. And it declined to file a new numbered decision for the sixth step,
+on the grounds that a short already-reasoned implementation default nobody outside the function
+depends on is not suite-level policy. **Both refusals are the opposite of yesterday's `core/056`
+failure**, which replaced a false sentence with a differently false one. I agree with both, and
+note the second is also the burndown-era rule applied without being told: a decision is the most
+expensive thing here to reverse.
+
+**(d) Two of this leg's four workers left their task file at `**State:** claimed`** after finishing
+it — this one and `api/093` — with every `Done when` box ticked and a full closing section written.
+Harmless both times, since the supervisor deletes the file in the fold and a claim held by a dead
+worker is what recovery reclaims. But **two of four is a pattern, not a slip**, and it is the one
+state combination that reads as live work when it is not: `check-task-state.py` accepts a `claimed`
+task whose body says it is done.
+
+**Merged:** `agent/umbrella/067-locate-core-decision-7-citation` — code `3c6565b` in
+`embarch-umbrella` (parent `9eb450b`), doc `5ff18f1` in `embarch-doc` (parent `ebf7971`). Gate
+re-run by me on the merge result: `cargo build` / `test` (**225 passed**, 0 failed) / `clippy
+--all-targets -- -D warnings` green; `check-docs.py` **11/11**; `check-client-names.py` clean
+against 7 denylist entries; ownership green on both halves.
+`changelog.d/umbrella-locate-core-decision-7-citation.fixed.md` consumed into `history/umbrella.md`
+with `--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/umbrella/067` closed and removed.
+
+**Reviewer:** no findings — read decision 7's body directly to confirm it really is silent on
+resolution order, since a **deleted-but-correct** citation would be worse than the defect it
+replaced and nothing in the gate could see it; verified decision 28 states its four steps
+explicitly and that decision 38 says verbatim that it sits after `PATH` and ahead of both guesses;
+settled the which-repo's-38 question on `DOC-CONVENTIONS.md`'s bare-number-within-own-docs rule;
+and — the check I most wanted — tested the new **negative** claim by finding the only two decisions
+that mention the conventional directories at all (32 and 38), confirming both merely characterise
+the list as "a guess by design" rather than specifying it, so "not specified by any decision" holds.
+It also checked the reversals index for anything touching 7, 28 or 38 and found nothing.
+
+**Hardware debts:** **none.** One source doc comment; no board, no probe, no live Core, no deploy,
+and nothing here changes what any binary does.
+
+**Budget:** PROCEED — weekly **73.9%** of a 90% cap at dispatch, resets in ~58h30m. **Unit 4 of 4;
+the leg ends at its cap.**
+
+**Least sure about:** **whether (b) should have produced a task and I let it go.** A citation that
+resolves to a real, irrelevant decision is undetectable by every gate this suite has, and this leg
+found exactly one instance of it — which is either a rare accident or the visible corner of the
+same thing the last three legs kept almost naming (`topology/040`'s deleted subject,
+`topology/039`'s missing `spec.md` section, and now this). I did not file a task because I cannot
+describe the cheap version of the check, and filing one that says "read every citation's body"
+would just be re-filing the sweeps that are already running.
+
+---
+
 ## 2026-09-13 21:18 — api/093 a citation was caught by its DATE, not its number, and the shipped-string class is now two for two
 
 **Decided:** **nothing numbered** — a citation sweep that corrects citations decides nothing. Three
