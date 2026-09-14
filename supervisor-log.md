@@ -97,6 +97,83 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 22:22 — ui/050 a compaction that deleted dates and kept every claim, and the reviewer that reached me through the listener
+
+**Decided:** **nothing numbered** — a compaction pass that cuts prose length decides nothing, and
+the worker correctly filed none. Three things to carry, (b) (c) and (d).
+
+**(a) `embarch-ui/open.md` 4,341 → 3,841 B (84.8% → 75.0%), 78 B clear of the 3,920 B reserve
+floor — further out than the file was *before* `suite/018` pushed it in.** All seven open questions
+survive, unmerged, each keeping its own trigger and its own decision citation. Squeeze, not split,
+which is what the task itself called for: the file holds one kind of thing and has no seam, so
+`DOC-BUDGET.md`'s split-first rule genuinely did not apply here — the one case where that is true
+rather than convenient.
+
+**(b) The compaction-pass human question, answered by the worker in its own words, and I agree with
+it.** *Can `spec.md` alone answer what someone needs to work on this component today?* **Yes** —
+because `spec.md` and `decisions.md` already carry `embarch-ui`'s settled truth and its reasoning,
+and `open.md`'s only job is to name what is **not** yet answered. After this pass every bullet still
+names its own open half: an undecided call, an unmeasured number, or a debt against a board. That
+is the shape a `open.md` should have, and it is why this file was the right one to squeeze rather
+than split.
+
+**(c) What got deleted is the interesting half, and it is a category worth naming: provenance
+*dates*, not provenance *tags*.** The cuts were restatement, connective filler ("genuinely", a
+trailing "not this one"), a redundant "(no file, no board)"/"in-memory" pairing, and **one
+footnote's provenance dates**. The `[measured]`/`[assumed]` tags, every number, and every trigger
+survive. That distinction is the whole difference between a compaction and a data loss: a tag
+deleted turns an assumption into an unstated fact, while a date deleted costs the reader a `git
+blame`. `DOC-COMPACTION-PASS.md`'s hot/cold list already classes the date as cold and the worker
+cited it — worth repeating because the two look identical in a diff.
+
+**(d) This unit's reviewer report was delivered to the LISTENER session, not to me, and that is
+the second time this failure has been recorded.** It reached me only because the listener relayed
+it as a message. `tasks/doc/042` — *"a reviewer that finished and never notified has no legal way to
+be collected"* — is already filed, `Owner: required`, and this is a live instance of it rather than
+a new finding. **What saved the unit is that I was waiting on the reviewer rather than proceeding
+without it**, so the relay landed in a leg that still wanted it. Had I folded first and written
+`skipped`, the fold would have carried a false `**Reviewer:**` line and nothing would have said so.
+Leg 035's stranded workers were the same routing defect one level up.
+
+**Merged:** `agent/ui/050-compact-ui-open-md` — doc `69e3715` in `embarch-doc` (the worker's
+`1880d4f` **cherry-picked**, my leg HEAD having advanced past the branch point; run inside my leg
+worktree, never in the owner's checkout, per `tasks/doc/057`); **code: none — the `embarch-ui`
+branch carried zero commits and was pushed unchanged**, because this unit is one documentation file.
+Gate re-run by me on the merge result: `check-docs.py` **11/11**, `check-doc-size.py` clear with
+`embarch-ui/open.md` out of reserve, ownership green on all 3 changed paths against `--scope ui`.
+`changelog.d/ui-compact-open.changed.md` consumed into `history/ui.md` with `--only`; 29 of the
+owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/ui/050` closed and removed.
+
+**Reviewer:** no findings — it checked each of the three `Must not delete:` items against the new
+file rather than against the worker's summary (the archive bullet's two-part shape survives,
+reordered; the 250,000-row cap's measurement table and its "still unmeasured" sentence untouched;
+the stale-prefix hardware debt with its 18 records and `STALE_PREFIX_MAX_ROWS` = 512 intact), read
+**suite decision 4** directly and confirmed both premises it leans on the archive bullet for survive
+word for word in substance, verified no question lost its trigger and no number lost its provenance
+tag, diffed the squeeze hunk by hunk and found a few cuts the commit message had not itemised —
+all texture or pure restatement — and checked the surviving bullets against three `embarch-ui`
+decisions for a bullet squeezed into contradicting a decision it merely narrows. Delivered through
+the listener, per (d).
+
+**Hardware debts:** **one, carried not created, and this unit is the reason it is still legible.**
+`embarch-ui`'s stale-prefix debt — 18 records from a real capture, buffered inside the USB-UART
+bridge past `embarch-core`'s open-time purge, never replayed, with `STALE_PREFIX_MAX_ROWS` (512) an
+assumption about a FIFO nobody has measured — was one of the three things this compaction was
+forbidden to lose, and it survives. It needs the owner's own session: run a study, open its Trace
+tab, check the axis note reports a dropped prefix. No board was touched here.
+
+**Budget:** PROCEED — weekly **77.1%** of a 90% cap, resets in ~56h45m, wave 6. **Unit 3 of 4.**
+
+**Least sure about:** **whether "yes" was the honest answer to the compaction question for this
+particular component, or the easy one.** The worker's reasoning is sound for `open.md` — a file of
+unanswered questions genuinely does not have to be self-sufficient — but the question asks about
+`spec.md`, and neither of us re-read `embarch-ui/spec.md` end to end to check it. The answer is
+probably right and it is not *evidenced* the way `topology/039`'s honest "no" was.
+
+---
+
 ## 2026-09-13 22:17 — study-designer/046 a sweep that moved credit BACKWARDS across five sites, and the evidence that it was the right direction
 
 **Decided:** **nothing numbered** — a citation sweep that corrects citations decides nothing, and
