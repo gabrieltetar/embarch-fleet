@@ -97,6 +97,86 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 20:15 — suite/018 the outpost's own answer is computed once, in embarch-core, and the task's own evidence was about something else
+
+**Decided:** **suite decision 4**, in a new topic file `suite/decisions/placement.md` — *which
+sub-project holds a computation more than one path needs, when what the computation is about does
+not settle it.* Executed by my own hands under the window `suite/018` opened at 19:21
+(`ts 1789348880.412099`), which **the previous leg had already polled to a close, unanswered, at
+19:51.** I did not re-announce and did not restart the clock; `ops.md` §4 is explicit that a relay
+restarting a 30-minute window every twenty minutes means a `suite` task never runs.
+
+**(a) The property.** An agent can obtain an outpost capture's **per-subject load shares and its
+coverage line** without re-implementing the timeline, and exactly one implementation of that
+timeline exists in the suite. Today a human gets that answer and an agent gets a CSV that has run
+to 225,606 rows.
+
+**(b) The home is `embarch-core`, on an intersection of two constraints that already exist rather
+than on a preference.** Core is the only component **on both paths** — the agent reaches it through
+`embarch-api`, the human through `embarch-ui`'s existing Core client, neither needing a new
+dependency direction — **and in the release archive**. Core also already holds the decode half and
+already refuses a manifest whose `record_layout_version` differs from the shared crate's, so this
+adds analysis beside a pinned decode rather than standing up a second decoder.
+
+**(c) The task's central factual framing was wrong, and finding that out is what made the answer
+clear rather than a toss-up.** `tasks/suite/018` described `trace.rs` as pure computation that
+"simply lives in one consumer", and cited `embarch-ui/open.md`'s *"a direction the suite has
+nowhere"* as that repo recording its own unreachability. **Both are wrong.** That phrase is from
+the **reflash-selector** bullet (`embarch-ui` decision 11, about `run_study --reflash`
+orchestration) and says nothing about trace analysis. And **`embarch-ui` is already a server** —
+`src/main.rs` serves `GET /api/trace/{study}/{tap}/bins`, and its decision 18 already puts the
+aggregation server-side. The analysis was never consumer-local computation; it is behind an HTTP
+surface that the agent path does not reach and `assemble-suite.yml` does not ship. That is a much
+narrower gap than the task described, and it is the one Core closes. The task also gives
+`trace.rs` as 3,892 lines against an actual **4,126**, every cited line number 20–30 out.
+
+**(d) What I rejected, and on what.** Not `embarch-study-designer`: its §1 membership rule admits
+what consumers must agree on, and a load-share computation is a result one consumer produces, not
+an agreement. Not `embarch-ui` plus an agent route — the cheapest move — because it is not in the
+release archive, whether it belongs there is explicitly **not that repo's call**, and an
+agent-reachable capability that exists only where somebody separately built the UI restates the gap
+one layer up. A fourth host-side analysis crate is the genuine alternative and was rejected on cost;
+the decision says so, and names acquiring one as its real reversal condition.
+
+**(e) I fixed one of my own clauses on the reviewer's evidence.** I had also excluded the shared
+crate on its "never interprets a payload" invariant. The reviewer's read is that the invariant is
+about **raw wire bytes** while this analysis runs over already-decoded CSV columns, so the clause
+stretches it. It changed no outcome — §1 excludes the analysis on its own — but a decision carrying
+a loose supporting argument is exactly this week's defect class, so the decision now says plainly
+that the invariant is **not** offered as a reason and why.
+
+**Merged:** no branches — supervisor's own hands, doc-only. Work commit
+`f484ad5ef38cdcc959be91e68c626c0f1181a922` in `embarch-doc` (parent `94fb61f`), plus (e)'s
+correction inside this fold. Gate `check-docs.py` **11/11** green. Filed `tasks/core/057` (the code
+move, with the api and ui halves deliberately **unfiled** until it lands — both consume a route that
+does not exist) and `tasks/ui/050-compact-ui.md` (see debts).
+
+**Blocked:** nothing. `tasks/suite/018` closed `done`.
+
+**Reviewer:** no findings — verified all four citations against `embarch-ui/decisions.md`'s index
+(including that the repo carries three different decision 10s), confirmed the
+`record_layout_version` refusal in `embarch-core/src/outpost_manifest.rs` directly rather than from
+a doc, re-derived reversals row 86's figures, and raised the one over-reach in (e).
+
+**Hardware debts:** **none created.** No board, no probe, no live Core, no deploy — the decision
+moves no code and the unit read four repos without writing to any but `embarch-doc`. Note
+`tasks/core/057` will inherit `core/015`'s outstanding native Windows build, now fourteen changes
+deep and untouched by this leg.
+
+**Budget:** PROCEED throughout — weekly **71.8%** of a 90% cap at leg start, **73.4%** at this
+fold, resets in ~59h. Wave 6 suggested; 3 workers in flight plus this unit of my own hands is the
+4-unit cap.
+
+**Least sure about:** **whether "in the release archive" deserved to be half the argument, given
+that whether `embarch-ui` belongs in the archive is itself an open question in that repo's
+`open.md` — I leaned on an undecided thing to decide something else.** I mitigated it by naming
+exactly that as the reversal condition and by arguing that admitting the UI would dissolve only
+half the case (the agent path still would not reach a computation living there), but an honest
+reader could say I should have settled the archive question first, or picked a home that does not
+depend on it.
+
+---
+
 ## 2026-09-13 19:50 — core/056 the sweep that broke the streak, 10 defects in 109, and a rewrite that introduced the defect it was removing
 
 **Decided:** **five, and (b) is the one the next leg should act on.**
