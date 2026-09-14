@@ -97,6 +97,95 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-14 01:14 — api/095 a sweep stopped mid-file, closed rather than parked, with three bare citations that pointed at the wrong repo's real decision
+
+**Decided:** **one thing, and it is a task-state correction rather than a design call: `tasks/api/095`
+is `done`, not `blocked`.** The worker wrote `blocked` and I changed it. This is leg 115's fourth and
+last unit; the leg ends on the owner's `fleet stop`, which arrived two units earlier. Five things.
+
+**(a) The defect is the sharpest instance of the series' hypothesis yet, and it is invisible by
+construction.** Three bare `decision 59` citations in
+`embarch-api/crates/embarch-core-client/src/client.rs` — in `TopologyMismatchBody::fix_it_url`'s doc
+comment, in `is_unknown()`, and in the `From` impl. Under this suite's own *bare-is-same-repo*
+convention they resolve to **`embarch-api`'s decision 59** (`hardware-selection.md`,
+`dev_bench_hello`/`link_identity`), which is a **real decision in the right repo about the wrong
+thing**; what the comments describe is **`embarch-core`'s decision 59**, the `kind`/`fix_it_url`
+split. Nothing mechanical can see this: the number resolves, the repo is right, the decision exists.
+Only reading the body finds it. **And the file is a shared crate** — `embarch-core-client` is inside
+`embarch-api` and path-depended on by `embarch-ui` — so a bare number in it is read against more than
+one repo's default index, which is exactly why the task chose this file.
+
+**(b) The reviewer checked the direction of the relabel, not just its existence.** It read both
+decision 59 bodies at the merge SHAs, confirmed all three sites describe the `embarch-core` one, and
+found `embarch-api` decision 71 independently already citing it as `` `embarch-core` decision 59 ``
+in prose. It then counted the diff: 8 insertions, 8 deletions, three hunks of 4+4, 2+2 and 2+2 —
+**accounting for every changed line**, with nothing riding along unreported. A relabel that points at
+the *other* wrong-but-real decision is the same defect with a new number, and that is the failure
+this check exists for.
+
+**(c) The unit is an honest partial and says so in its own voice.** 39 of ~105 cited lines checked
+against a body, across six decision files. **3 wrong labels, 0 false sentences in the checked subset,
+1 explicitly unsettled** — L403's `(decisions 37, 38)` for a "must never link
+`probe-rs`/`serialport`" claim, whose language is decision 72's in `client-crate.md`'s *current*
+text, where 37/38's pre-compaction wording is unrecoverable from here. **The worker refused to
+resolve it either way**, which is the discipline `umbrella/066` failed at (114/0 reported, 113/1
+honest) and the task file warned about at length. The reviewer read 37, 38 and 72 and agrees it is
+genuinely unsettled. The task file's closing line is *"Report red, not green: this sweep is
+incomplete"*, and `tasks/api/097` enumerates every unread line.
+
+**(d) The state correction, and why it is not pedantry.** `blocked` means *nothing here can be done*
+and must name what unparks it; a `fleet stop` names nothing anyone can clear. Everything `095` could
+still account for is enumerated in `097`, which is `open`. So `blocked` would have parked a file with
+no reachable unpark — `tasks/doc/032`'s named defect — and worse, **the remainder would have been
+hiding inside a parked task instead of standing as a live one.** I set it `done`, removed the file,
+renamed its `## Blocked` section to `## Cut short` leaving every word of the tally intact, and wrote
+into `tasks/api/097` that `095`'s absence must not be read as the sweep having finished.
+
+**(e) I hit `tasks/doc/039` myself, in this leg, on a task I filed this leg.** I wrote
+`**Owner:** **required**` on `tasks/doc/061` and `queue-status.py` counted it as dispatchable — a
+bolded owner value is invisible to the parser, which is a defect already filed and which I had read
+the queue listing of an hour earlier. Caught it on the post-fold queue read and unbolded it.
+**Both of this leg's new `doc` tasks are `Owner: required` and neither is dispatchable now.**
+
+**Merged:** `agent/api/095-core-client-citation-sweep` — code `1de0c09` in `embarch-api`
+(fast-forwarded, parent `c26d930`), doc `f3b5b6a` in `embarch-doc` (**cherry-picked**, from branch
+commit `4a46589`; `--ff-only` refused because `ui/053`'s fold had already moved `main`). Gate re-run
+by me on the merge result: `cargo build` / `test` / `clippy --all-targets -- -D warnings` green
+**both at the workspace root and explicitly in `crates/embarch-core-client`**, which is not a
+workspace member and which a root-only gate does not reach; `check-client-names.py --repo
+embarch-api` clean against 7 denylist entries; `check-docs.py` **11/11**; `check-ownership.py
+--scope api` OK on the doc half (3 paths) and `--code-repo` OK on the code half, both before the
+merge. `changelog.d/api-core-client-citation-sweep-partial.fixed.md` consumed into `history/api.md`
+with `--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/api/095` closed and removed per (d); `tasks/api/097` filed by the worker
+and `open`. **Queue at exit: 3 dispatchable across 3 scopes** — `api/097`, `core/060`,
+`study-designer/049` — plus `tasks/api/059` (bench, board unplugged) and the owner-only `doc` pile,
+now including `061` and `062` from this leg.
+
+**Reviewer:** no findings — see (b); it verified the relabel's *direction* against both decision
+bodies, reconciled every one of the diff's 8+8 lines against the three claimed hunks, agreed the
+unsettled citation is genuinely unsettled after reading 37, 38 and 72, and cross-checked `097`'s
+"already verified" list against `095`'s own tally for under-description, finding them identical.
+
+**Hardware debts:** **none created.** Eight lines of doc-comment text in a Rust source file; nothing
+executed, no board, no probe, no live Core, no route called. `core/015`'s native Windows build is
+untouched by this unit — `embarch-api`, not `embarch-core` — and see the `core/062` entry below for
+the re-derived count (**40 commits since `1c1224e`**) that replaces the incrementing ordinal.
+The dev-bench probe is still unplugged; `tasks/api/059` stays **open**.
+
+**Budget:** PROCEED throughout — weekly **85.0% → 86.2%** of a 90% cap across the leg, resets in
+~54h. Wave 3 suggested and 3 used; the last reading suggests 2.
+
+**Least sure about:** **whether I should have let this worker run at all after the stop.** It was
+about five minutes into a twenty-minute run when `fleet stop` arrived; I told it to wrap up and it
+took another twelve, which is twelve minutes of work the owner had asked to stop. It produced three
+real defect fixes and a well-specified remainder, so the outcome argues for the choice — but the
+outcome is not the argument, and a leg that reasons from "it turned out to be worth it" will make the
+same call when it is not.
+
+---
+
 ## 2026-09-14 01:04 — ui/053 the split that was the right answer and had nowhere to land
 
 **Decided:** **nothing numbered, and the unit's real product is a refusal.** `embarch-ui/open.md`
