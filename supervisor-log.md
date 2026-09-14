@@ -97,6 +97,91 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 22:17 — study-designer/046 a sweep that moved credit BACKWARDS across five sites, and the evidence that it was the right direction
+
+**Decided:** **nothing numbered** — a citation sweep that corrects citations decides nothing, and
+the worker correctly filed none. Three things to carry, (b) (c) and (d).
+
+**(a) 36 citations read in `src/gatt_extract.rs` — 3 wrong numbers, 2 false sentences, 0 unlabelled
+cross-repo cites, all 5 fixed.** That is **13.9% defective**, the worst rate the series has
+produced, ahead of `core/056`'s 9.2%. The series now reads `core/054` (`api.rs`) 3/54 ·
+`umbrella/065` (`doctor.rs`) 2/129 · `study-designer/044` 0/53 · `ui/049` 0/74 · `umbrella/066`
+1/114 · `core/056` (`study.rs`) 10/109 · **`study-designer/046` (`gatt_extract.rs`) 5/36.**
+
+**(b) `core/056`'s dirty-file hypothesis survives this but only by re-reading what it predicts.**
+That hypothesis — first guessed by `ui/049` — was *the dirty files are the ones that restate other
+repos' decisions.* `gatt_extract.rs` has exactly **one** cross-repo citation (`embarch-ui decision
+17`) and it was already correct and correctly labelled. Every one of the 5 defects is **same-repo**,
+and all 3 wrong numbers are one defect repeated: a design fact belonging solely to decision **56**
+was additionally credited to decision **57** in three separate comments. So the predictor is not
+*foreign* decisions; it is **a file annotated against a pair of decisions that were amended in the
+same session**, where the boundary between them is the thing nobody can hold in their head. Same
+symptom, different cause, and it is worth someone re-reading `core/056`'s 10 with that in mind.
+
+**(c) The reattribution ran BACKWARDS from what the comments said, which is the most dangerous
+direction a sweep can push, and the worker found the one piece of evidence that settles it.** The
+original comments read *"decision 57 extends 56 one level up"*; the worker concluded the opposite —
+that 56 always covered the service's declaring identifier and 57 is entirely about repo-wide scan
+scope — and rewrote five sites in that direction. **A sweep that gets this backwards replaces five
+correct citations with five wrong ones and nothing in the suite notices.** What makes it safe is
+that the worker ran `git log --follow -p` on `decisions/gatt-extract.md` and found decision 56's
+own text already carried the parenthetical *"(amended the same session)"* at the split commit
+`d0b7608` — so 56 documents the fold-in at authoring time, and 57 never touched it. **I am
+recording the method, not just the result**: a boundary between two decisions is settled by the
+decision file's history, not by the comment that cites them.
+
+**(d) One of the two false sentences was a semantic claim, not a citation**, and I want it on the
+record that I checked whether the unit had exceeded its remit. `ExtractedGatt`'s doc said decision
+33 *"exists to provide"* **byte-for-byte** comparability between a static extraction and a live
+discovery. Decision 33's own body disclaims it — *"weaker than this decision claimed — see 57:
+services come back in a stable but non-handle order, so compare them as sets"* — and a sibling doc
+comment twenty lines below in the same file **already** used the corrected framing. So the file
+contradicted itself and the sweep aligned it with the decision rather than inventing semantics.
+That is inside the remit. A sweep that had *chosen* between two comparison semantics would not have
+been.
+
+**Merged:** `agent/study-designer/046-src-citation-sweep-gatt-extract` — code
+`5a8bcb5` in `embarch-study-designer` (parent `03eef2e82ff06d75126564661bf80c878f6ecabc`), doc
+`70f6f3c140676031f0b9626e0b8e65bd83f4f9aa` in `embarch-doc` (the worker's `7872076`
+**cherry-picked**, because my leg HEAD had already advanced past the branch point and `--ff-only`
+could not apply — see the note under `topology/042` and `tasks/doc/057`; the cherry-pick was run
+**inside my leg worktree**, never in the owner's checkout). Gate re-run by me on the merge result:
+`cargo build` / `test` (**9 + 9 passed**, 0 failed) / `clippy --all-targets -- -D warnings` green;
+`check-docs.py` **11/11**; `check-client-names.py` clean against 7 denylist entries; ownership green
+on both halves. I read the code diff before merging because `embarch-study-designer` is a shared
+crate — it is comment-only, five hunks. `changelog.d/study-designer-gatt-extract-rs-citation-sweep.fixed.md`
+consumed into `history/study-designer.md` with `--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/study-designer/046` closed and removed;
+`tasks/study-designer/047-src-citation-sweep-remainder.md` filed by the worker, naming `src/lib.rs`
+next plus the rest of `src/`.
+
+**Reviewer:** no findings — and this is the unit where I most wanted one, because the whole product
+is a five-site reattribution that could be confidently backwards. It re-derived the 56/57 boundary
+**independently from the decision file's own history**, reaching the split commit `d0b7608` and the
+*"(amended the same session)"* parenthetical by its own route; confirmed decision 57's body is
+entirely scan-scope with nothing about identifier naming; confirmed decision 33's own text points
+at 57 for the set-comparison semantics, so the unit did not invent them; checked the three-failure-mode
+arithmetic; checked the reversals index for any row touching 33, 56 or 57 and found none; and
+confirmed `tasks/study-designer/047` names the remaining files accurately. It also raised one
+**cosmetic nit outside its remit and was right to keep it out of `inbox/`**: `046`'s own new
+sentence says `NoSourceFilesFound` is *"above"* the module doc and it is below. I recorded it as a
+ride-along in `tasks/study-designer/047` rather than making an unreviewed code edit at fold time.
+
+**Hardware debts:** **none.** Source comments only, in a crate that builds for the host. No board,
+no probe, no live Core, no deploy, and nothing here changes what any binary does.
+
+**Budget:** PROCEED — weekly **77.1%** of a 90% cap at this merge, resets in ~56h45m, wave 6.
+**Unit 2 of 4.**
+
+**Least sure about:** **whether (b) is a real refinement of the dirty-file hypothesis or me
+over-reading a single 36-citation file.** Five defects is a small sample and three of them are one
+mistake repeated, so "amended in the same session" could be this file's accident rather than a
+predictor. It is cheap to test — `core/056`'s ten are written down — and I did not spend a unit
+testing it.
+
+---
+
 ## 2026-09-13 22:10 — topology/042 the defect was a section that did not exist, and the dispatch note's three-byte warning was the whole unit
 
 **Decided:** **nothing numbered, and the worker was right not to file one** — `spec.md` stating a
