@@ -97,6 +97,85 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 19:43 — umbrella/066 a fifth consecutive zero-defect sweep, and the reviewer that made it a 113/1
+
+**Decided:** **four, and the third is the one that changes what the fleet should do next.**
+
+**(a) The unit reported 114 citations read across eleven `embarch-umbrella/src/` files — 114 held, 0
+wrong numbers, 0 false sentences — and changed no code at all.** Eleven files swept completely, not
+partially: `locate.rs`, `setup.rs`, `install.rs`, `init.rs`, `main.rs`, `config.rs`, `deploy.rs`,
+`state.rs`, `zephyr.rs`, `manifest.rs`, `env.rs`. Nine cross-repo hops among them, all correctly
+resolved and all already in the labelled `<repo> decision N` form.
+
+**(b) I spent a reviewer on it anyway, on a sampling brief rather than a diff read, and that is the
+decision worth defending.** The diff was a closed task file and a changelog fragment — nothing to
+review in the ordinary sense, and there is precedent in this log for skipping exactly that shape.
+But **the unit's product was not a diff, it was a claim**, and a zero-defect result is the least
+verifiable thing a sweep can produce. So the brief was: sample 12–18 citations across at least five
+files, weighted toward the cross-repo hops, and settle two named questions. **It sampled 12 across
+6 files including all nine cross-repo hops.**
+
+**(c) 11 of 12 held; one did not, so the sweep's honest tally is 113/1, not 114/0 — and the
+difference is the worker resolving its own ambiguity in its own favour.** `locate.rs`'s `locate_core`
+doc comment credits *"decisions 7 and 28"* with specifying the Core-resolution precedence order.
+**Decision 7 states no order** — it is entirely about WSL2/Windows elevation policy. Decision 28
+states the order verbatim and 38 inserts the service-registration step. **The worker found this
+itself**, called it *"defensible either way"* on the ground that decision 7 is arguably why the
+WSL2-only branch exists, **and folded it into the zero.** The reviewer, asked for a verdict rather
+than a second hedge, gave one: not defensible — that reasoning is about why a branch exists, not
+about what specifies the order. **A zero-defect sweep's characteristic failure is not missing a
+defect, it is a sweeper adjudicating its own doubt**, and this is that, caught.
+
+**(d) I filed it as `tasks/umbrella/067` instead of fixing the one line, deliberately, and the
+previous entry is why.** In `api/092` I repaired four broken links with my own hands, including a
+commit into `embarch-api`'s source, and wrote in that entry's *Least sure about* that a **green gate
+hiding a defect is precisely the case where a supervisor should file rather than fix**, because
+nothing forces the decision. This is the next instance of that case and I held to it. The drop was
+already a complete task; I numbered it, added why it is filed rather than fixed, and deleted the
+drop.
+
+**Merged:** `agent/umbrella/066-src-citation-sweep` — doc
+`4844a1cba9aa7037ab4c26b6169ae95db7dff684` in `embarch-doc` (parent
+`065648296a6bc0ee5a76867f24eb095221dd42cb`), code **none — the `embarch-umbrella` branch carries
+zero commits**, so there is no code SHA and none is needed. Gate re-run by me on the merge result:
+`check-docs.py` **11/11**, `check-ownership.py --scope umbrella` OK on 2 paths. `cargo
+build`/`test` (225 passed)/`clippy` were run by the worker and **not re-run by me** — zero code paths
+changed, so the code repo's gate result is `main`'s, unchanged.
+`changelog.d/umbrella-src-citation-sweep-066.changed.md` consumed into `history/umbrella.md` with
+`--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/umbrella/066` closed `done` by the worker and removed.
+**`tasks/umbrella/067` filed** per (d).
+
+**Reviewer:** 1 finding — `inbox/umbrella-066-review-locate-core-decision-7-citation.md`, accepted,
+**filed as `tasks/umbrella/067` rather than fixed in-fold**, drop deleted. It sampled 12 citations
+across 6 files covering all nine cross-repo hops, and separately cleared the question of whether
+today's `embarch-api` 30/64/74 file moves left anything stale here — they did not: every umbrella
+citation of those numbers is in bare-number form, and `locate.rs:319`'s "decision 30" is
+`embarch-umbrella`'s **own** decision 30, a different sub-project's number. Its completion was again
+misrouted to the listener (`tasks/doc/042`, third time today).
+
+**Hardware debts:** **none created and none touched.** A sweep that changed no code and a task file.
+Standing debts carried unchanged; `core/015`'s native Windows build is **not** added to by this unit.
+The dev-bench probe is still unplugged (checked live 19:19, `"probes": []`) — `tasks/api/059` stays
+**open**, seventh consecutive leg.
+
+**Budget:** PROCEED — weekly **69.6%** at leg start, resets in ~59h43m. No HOLD, no 429. Wave 6
+suggested, 4 dispatched, 4 is the cap.
+
+**Least sure about:** **whether the five-sweep zero streak means the corpus is healthy or that the
+method has quietly become self-confirming.** With this correction the measured series is: `core/054`
+3 wrong in 54 · `umbrella/065` 2 in ~129 · `study-designer/044` 0 in ~53 · `ui/049` 0 in 74 ·
+`umbrella/066` **1 in 114**. The previous leg guessed the sweeps were converging on files that were
+always going to be clean; this worker tested that directly and found the *less* frequently edited
+files came back cleaner, which kills the "re-read frequency keeps citations accurate" explanation and
+leaves no explanation standing. What I actually believe, and cannot yet show: the live defect class
+has **moved** — `api/092` alone produced four broken decision links in one leg, all invisible to
+every gate, while five sweeps of ~424 citations produced six. **If that holds, the queue's four
+remaining sweep tasks are worth less per unit than one pass that checks link targets after every
+mission split**, and nobody has filed that pass. I did not file it either, because one leg's
+coincidence is not evidence and `tasks/doc/044`/`doc/056` already name the mechanism.
+
 ## 2026-09-13 19:37 — api/092 a classification put back that decision 50 took out, and a split that broke four links no gate can see
 
 **Decided:** **five.**
