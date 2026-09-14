@@ -97,6 +97,78 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 23:31 — core/059 three behaviours that lost their only test get it back, and the worker proved each one catches its regression
+
+**Decided:** **nothing numbered** — recovering tests decides nothing, and the worker correctly filed
+none. Three things to carry.
+
+**(a) What was lost and what came back.** `ui/051` (last leg) deleted `embarch-ui/src/trace.rs`'s
+`summarize` and the `load_summary_tests` module with it, because `core/057` had already ported that
+arithmetic verbatim into `embarch-core/src/outpost_load.rs`. **The arithmetic moved; three of its
+tests did not**, and `outpost_load.rs`'s existing eight covered none of the three. Now pinned there:
+`overlapping_gap_bands_are_counted_as_a_union`, `idle_is_not_counted_twice`,
+`subjects_are_sorted_by_measured_time`. 205 tests → **208**.
+
+**(b) The instruction that mattered was the one telling the worker where NOT to look, and it was
+obeyed.** The task forbade re-deriving the expectations from `outpost_load.rs`'s implementation —
+that is how a test pins a bug rather than a behaviour — and pointed at the deleted module in git
+history instead. The worker took them from `git show 87d01b4^:src/trace.rs` in `embarch-ui` and
+adapted them to this crate's CSV-driven idiom, because `outpost_load.rs` has no `stamped()`/`real()`
+fixture builder to port against.
+
+**(c) It verified the tests fail, which is the half of "a test was added" that usually goes
+unchecked.** Two deliberate mutations, both reverted before committing: reverting `merged_gap_extent`
+to a naive sum broke `overlapping_gap_bands_are_counted_as_a_union` (250 against an expected 200), and
+folding `idle` into `thread_extent` broke `idle_is_not_counted_twice` (200 against 100) — **but only
+after the assertion was strengthened to pin the exact split** rather than the weaker
+`thread_extent <= window_extent`, which passed under the mutation. That weaker form is precisely the
+vacuous test this unit existed to avoid, and it was caught by mutating rather than by reading.
+`idle_is_not_counted_twice` is the one that matters most: `embarch-ui/decisions/trace-view.md`
+documents the double-count as *"reported twice by construction — found by building it, claimed by no
+other doc"*, so it is a counter-intuitive behaviour discovered the expensive way and, until now,
+untested.
+
+**Merged:** `agent/core/059-lost-load-summary-tests` — code `2e9eeed` in `embarch-core` (parent
+`3cbe6977a08fa7964cd5553b842c8f707db793a0`), doc `42e0db0` in `embarch-doc` (cherry-picked; see the
+`study-designer/048` entry's *Least sure about*). Gate re-run by me on the merge result: `cargo build`
+/ `test` (**208 passed**, 2 ignored, plus 1) / `clippy --all-targets -- -D warnings` green;
+`check-client-names.py --repo embarch-core` clean against 7 denylist entries; `check-docs.py`
+**11/11**; `check-ownership.py --scope core` OK on the doc half (2 paths) and `--code-repo` OK on the
+code half. `changelog.d/core-load-summary-tests.added.md` consumed into `history/core.md` with
+`--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/core/059` closed and removed. No doc touched, so
+`embarch-core/decisions/auth.md`'s reserve status and `tasks/core/046` are untouched.
+
+**Reviewer:** no findings — and it answered the adaptation question directly rather than in general
+terms, which is what I spawned it for. It diffed all three new tests against
+`git show 87d01b4^:src/trace.rs`: `merged_gap_extent`'s ported near-verbatim (the 100/200/450 union
+arithmetic identical), `subjects_are_sorted_by_measured_time` keeps sortedness **and** adds a
+non-vacuous exact-value check the worker constructed itself, and `idle_is_not_counted_twice` keeps
+**every** original assertion (idle thread exists, idle-record lane exists, cpu-idle never leaks into a
+thread key) with the exact split added on top — so the adaptation strengthened rather than narrowed.
+It then re-traced the CSV's timeline arithmetic itself to confirm `thread_extent=100` /
+`idle_record_extent=100`-never-summed is **correct** rather than a bug pinned as a feature, matching
+`trace-view.md`'s *"the idle-record lane is a corroborating figure that is never added"*. No
+contradiction with `embarch-core` 62 or suite decision 4 — `ui/051` retiring `embarch-ui`'s copy is
+62's own queued follow-up, not a reversal.
+
+**Hardware debts:** **one, carried not created — `core/015`'s native Windows build now carries an
+eleventh landed `embarch-core` change.** This one is host-side test code with no behavioural change at
+all, which is the weakest possible addition to that pile, but it is the fifth consecutive day a `core`
+unit has added to it. The pile still includes `core/045`'s route-wiring test, the `suite/020`/`suite/035`
+wire-feature split, and now `core/058`'s comment sweep. No board, no probe, no live Core touched.
+
+**Budget:** PROCEED — weekly 81.5% of a 90% cap at this unit, resets in ~55h, wave 5 suggested.
+
+**Least sure about:** **whether "adapted to this crate's CSV-driven idiom" preserved the deleted
+tests' meaning or quietly narrowed it.** The worker's mutation testing is strong evidence each test
+catches *a* regression, and I asked the reviewer to compare the new assertions against the deleted
+module directly rather than take the adaptation on trust — but a CSV fixture and a `stamped()`/`real()`
+view are not the same instrument, and a test that pins a weaker claim still passes its mutation.
+
+---
+
 ## 2026-09-13 23:27 — study-designer/048 three wrong decision numbers in study_builder.rs, and one of them is the mirror image of the usual defect
 
 **Decided:** **nothing numbered** — the worker correctly filed none; correcting a citation decides
