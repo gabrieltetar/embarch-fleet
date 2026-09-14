@@ -97,6 +97,74 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 20:21 — topology/040 the first sweep whose entire yield was false sentences and not one wrong number
+
+**Decided:** **nothing numbered.** But one finding is worth carrying, below.
+
+**(a) 103 of 103 read across all eleven files. 0 wrong numbers, 3 false sentences, 1 mislabelled
+cross-repo citation.** This is the **mirror image** of `study-designer/045`, folded twenty minutes
+earlier in this same leg, which was 3 wrong numbers and 0 false sentences in 52. Two sweeps, same
+method, same hour, opposite shapes — which is the strongest evidence yet that "wrong number" and
+"false sentence" are **two different defects with different causes**, and that a sweep reporting
+only one of them has probably not looked for the other.
+
+**(b) All three false sentences were true when written, and two were made false the same day by
+this fleet's own landings.** `validate.rs` and `mod.rs` each carried a comment saying
+`embarch-topology` decision 32 was *"amended, not closed"* with `tasks/core/055` *"blocked on this
+landing"* — written by `topology/038` on 2026-09-13, and made false hours later when `topology/041`
+closed decision 32 and `core/055` landed (`86345c01`). **Neither of those two units touched the
+comment**, and nothing could have told them to: the number still resolved.
+
+**(c) The third is the one that should worry us, because it survived a fix.** A `validate.rs`
+comment written **2026-08-23** named Core's `GET /enroll` page as *"the first caller"* needing an
+optional `probe_serial`. That page was retired **2026-08-24** — false the day after it was
+written — and it then survived `topology/036`'s findings-driven pass **and** an edit on 2026-09-07
+that added decision 15's citation to the very same comment. **Somebody read that sentence, changed
+it, and did not notice the subject of it no longer existed**, because they were checking the number.
+Three weeks of a false claim, twice handled.
+
+**(d) The worker declined to assert what it could not verify, and that is the right call recorded
+so it stays the norm.** Rewriting (c) meant naming the *new* caller — `embarch-ui`'s Enroll
+surface — and it would have been natural to add that the new caller exercises the same
+disambiguation. It does not say so, because that is not checkable from this repo. Yesterday's
+`core/056` is the counter-example: a worker replaced a false sentence and its replacement asserted a
+new false thing about another repo's decision. The reviewer verified this one asserts nothing it
+cannot support.
+
+**Merged:** `agent/topology/040-src-citation-sweep` — code `8161092` in `embarch-topology`
+(parent `96e86c6`), doc `49a17ce` in `embarch-doc` (parent `8415c07`). Gate re-run by me on the
+merge result: `cargo build` / `test` (**15 passed**) / `clippy --all-targets -- -D warnings` green;
+`check-docs.py` **11/11**; ownership green on both branches.
+`changelog.d/topology-src-citation-sweep.fixed.md` consumed into `history/topology.md` with
+`--only`; 30 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/topology/040` closed `done` and removed. **No remainder and none
+owed** — all eleven files swept. `decisions/crate.md`'s 213 B reserve was **not** spent; its debt
+stays on the already-open `tasks/topology/039`, due **2026-09-20**, still the soonest date on the
+ledger and still unpaid. At dispatch I corrected that task file's own Reserve section, which said
+612 B / 95.0% and called `039` blocked — both were true when it was filed and neither was true by
+this morning.
+
+**Reviewer:** no findings — confirmed decision 32's close in `decisions/crate.md` **and** that
+`86345c01` is a real `embarch-core` commit whose message matches decision 61's body, rather than
+taking the worker's word; dated the `GET /enroll` retirement independently from `embarch-core`'s own
+`13493e2` (2026-08-24); spot-checked eight of the 59 unchanged citations across five files; and
+checked `embarch-decision-reversals.md` for any entry touching decisions 15, 25, 32, 33, 49 or 61,
+finding none, so nothing here re-introduces a rejected alternative.
+
+**Hardware debts:** **none.** Source comments only; no board, no probe, no live Core, no deploy.
+
+**Budget:** PROCEED — weekly **73.6%** of a 90% cap, resets in ~58h39m. Unit 3 of 4.
+
+**Least sure about:** **(c) is a gap in the sweep method itself and I am closing the unit without
+filing anything for it.** The defect that survived three weeks and two passes was a sentence whose
+*subject* had been deleted, not whose *number* was wrong — and every sweep task in this queue,
+including the three I wrote today, instructs the worker to start from the citation. A file with no
+citations at all could carry the same defect and no sweep would ever visit it. I do not know what
+the cheap version of that check is, which is why I have not filed a task pretending to.
+
+---
+
 ## 2026-09-13 20:18 — study-designer/045 study.rs, 4 defects in 52, and every one of them was a number rather than a sentence
 
 **Decided:** **nothing** — a citation sweep that corrects citations decides nothing and needed no
