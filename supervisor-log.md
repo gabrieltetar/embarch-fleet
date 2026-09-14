@@ -97,6 +97,80 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-14 00:18 — core/061 decision 63's Core half, and the split that made it a worker's job at all
+
+**Decided:** **one thing, and it is mine rather than the worker's: the field is named
+`source_deferred`, and I pinned it before dispatch.** Decision 63 deliberately left the name open
+("name it for the fact, not for power"), which is fine for one implementer and impossible for two
+running in parallel. The roadmap's own word for power sampling is *deferred, not cancelled*, so the
+name carries the general fact and a second deferred source later fits the same field. Four things.
+
+**(a) The split is the structural part of this unit.** `tasks/core/061` as filed spanned **two code
+repos** — `embarch-core` sets the flag, `embarch-api`'s client crate deserializes it and its
+`tools.rs` describes it — and §5 gives a worker one task in one repo on one branch. I narrowed `061`
+to `embarch-core` and filed the other half as **`tasks/api/096`**, claimed both, and ran them side by
+side against the pinned name. Neither half waits on the other: `#[serde(default)] Option<bool>` means
+either can land first. **The alternatives I rejected**: one worker with two code worktrees (breaks the
+one-repo rule and the land-both-branches-together shape), and re-scoping to `suite` so I would run it
+myself (a §4 announcement window for an implementation whose design decision was already announced and
+decided by leg 113).
+
+**(b) Set at declaration, not inferred from silence — which is the whole point of decision 63.**
+`StreamStore::create` sets `source_deferred` from the tap's declared `StreamSource` in the same loop
+that fills every other index field, before a byte exists, with `note` carrying the prose and a
+citation of `embarch-dev-bench` decision 24 at the site. Core *states* the fact; it does not measure
+it. Two structs carry it (`StreamIndexEntry`, `StreamIndexEntryResponse`), 209 tests pass, and the new
+test puts a `PowerFrontEnd` tap and a `GattTranscript` tap side by side at `bytes_written: 0` so the
+only difference is this field.
+
+**(c) `note` was left alone, and the reviewer checked that specifically.** The cheap version of this
+change was to set `note` and stop. `StudyStreamEntry`'s own history forbids it in writing — the
+`is_named` comment records the conjunction that *"stopped being correct when a trace gained a second
+way to be incomplete"* — and the diff branches on `note` nowhere.
+
+**(d) No doc prose in `decisions/streams.md`, by instruction and correctly obeyed.** The file is
+1,069 B inside its cap with `tasks/core/060` filed against it; decision 63's entry was already
+written by leg 113. The worker documented the field in `interfaces/studies.md` and
+`interfaces/result-layout.md` instead, which is where a reader of `GET /study/{id}/streams` looks.
+
+**Merged:** `agent/core/061-power-tap-says-so-in-stream-index` — code `e1b796e` in `embarch-core`
+(fast-forwarded, parent `2e9eeed`), doc `d95dc58` in `embarch-doc` (**cherry-picked**, from branch
+commit `f7d20a6`; `--ff-only` correctly refused because `ui/052`'s fold had already moved `main`).
+Gate re-run by me on the merge result: `cargo build` / `test` (**209 passed**, 2 ignored, plus 1) /
+`clippy --all-targets -- -D warnings` green; `check-client-names.py --repo embarch-core` clean against
+7 denylist entries; `check-docs.py` **11/11**; `check-ownership.py --scope core` OK on the doc half
+(4 paths) and `--code-repo` OK on the code half.
+`changelog.d/core-power-tap-source-deferred.added.md` consumed into `history/core.md` with `--only`;
+29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/core/061` closed and removed. `tasks/core/060` (compact `streams.md`) is
+untouched and still `open`.
+
+**Reviewer:** no findings — it checked the three things I asked and gave evidence for each: the flag is
+set from the declared `StreamSource` inside `StreamStore::create` rather than derived from
+`bytes_written`; nothing in the diff or the surrounding file branches on `note`; and the new test is
+non-vacuous **in both directions** (setting the flag unconditionally fails the `None` assertion,
+never setting it fails the `Some(true)` one). It also read `embarch-dev-bench` decision 24's body and
+confirmed the code comment's claim is a faithful restatement rather than a stretch.
+
+**Hardware debts:** **one, and it is the first behavioural addition to it in a while.** `core/015`'s
+outstanding **native Windows build** now carries a twelfth landed `embarch-core` change, and unlike
+the comment sweeps and test recoveries of the last five days this one changes what the service
+*serves*. Separately, decision 63's end state has never been seen on a real study: confirming that a
+`PowerFrontEnd` tap reports `source_deferred: true` through a live Core needs the **dev-bench board**,
+and `tasks/core/061` said so before it closed. No board, probe or live Core was touched here.
+
+**Budget:** PROCEED — weekly **82.4%** of a 90% cap at the leg's start, resets in ~55h, wave 5
+suggested and 4 used.
+
+**Least sure about:** **pinning the field name myself.** It unblocked two parallel halves and both
+landed spelling it identically, which is the outcome I wanted — but decision 63 left the name open on
+purpose, and a supervisor closing an open question in a task file is a decision that never gets a
+number and never gets reviewed as one. If `source_deferred` turns out to be the wrong name for the
+second deferred source, nothing in the decision record explains who chose it or why.
+
+---
+
 ## 2026-09-14 00:15 — ui/052 a retention sentence that was a proposal, marked as one rather than rewritten
 
 **Decided:** **nothing numbered**, and the worker correctly filed none — but one judgement call was
