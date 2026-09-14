@@ -97,6 +97,87 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 23:22 — suite/029 the power tap gets its own answer, and one of the two shapes on offer had already been deleted
+
+**Decided:** **one numbered decision — `embarch-core` 63 — and it is the deliverable leg 111 announced
+and parked for.** Four things to carry.
+
+**(a) The choice, and why it collapsed to one option rather than two.** A study may declare a
+`StreamSource::PowerFrontEnd` tap; `embarch-dev-bench` accepts it, parses it, and captures nothing,
+because its decision 24 defers the front end. The only evidence is `bytes_written: 0`, which
+`list_study_streams`' own description defines as *"a tap that was declared and produced nothing"* — an
+**authoring** outcome. So asking for hardware that does not exist looks exactly like mis-naming a
+signal. The parked announcement narrowed the choice to two shapes: a sentence in `embarch-api`'s
+`study_power_data` tool description, or the `list_study_streams` shape. **The first no longer exists.**
+That alias was retired with the other fixed-channel aliases on 2026-09-11 by `tasks/suite/015`, which
+has since left the queue — `embarch-api/src/tools.rs` has 27 `#[tool(description` attributes and none
+of them is `study_power_data`. The task was written against a site that had already been deleted, and
+nothing said so. So decision 63 takes the stream-index shape, and records the retirement as the reason
+the alternative is refused rather than merely weak.
+
+**(b) The part I spent the most care on: a fourth boolean, not a third meaning for `note`.**
+`StudyStreamEntry` already carries `note: Option<String>` documented as *"the one field this whole
+endpoint exists for"*, and the cheap move was to set it for a power tap and stop — no new field, no
+review, done in ten minutes. **The struct's own history forbids it, and says so in writing.**
+`is_named`'s doc comment records that the old conjunction *"was correct while `note` could only ever
+mean 'unnamed'. It stopped being correct when a trace gained a second way to be incomplete"* — and the
+field's own documentation says to branch on the booleans and never on that text. Overloading `note`
+with a third meaning would be that exact defect one generation on, in the same struct, against a
+comment that exists because someone already paid for it. So 63 specifies a fourth
+`#[serde(default)] Option<bool>` beside `named`/`timed`/`self_excluded`, with `note` keeping the prose.
+
+**(c) The reviewer resolved my one uncertainty with a standing decision rather than an opinion, and I
+folded that back into the task.** I filed `core/061` saying that an additive `#[serde(default)]`
+optional field is not a wire-schema bump and therefore owes no §4 announcement window — flagged in the
+task as my own judgement, overrulable. The reviewer found **`embarch-core` decision 50**, which says
+of `POST /validate` gaining `validated_at_utc_ms`: *"additive, not a wire-schema bump"*, and
+**`embarch-api` decision 58**, which is the crate-wide rule that every response field the client may
+not yet receive is `Option<T>` with `#[serde(default)]`. So this is the fourth application of an
+already-decided pattern, not a call I had to make. `core/061` now cites both and states plainly that
+no announcement is owed. **A supervisor guessing where a numbered decision already exists is the thing
+that finding prevented**, and it cost 83 seconds.
+
+**(d) I closed `suite/029` rather than leaving it open on its unticked boxes, and the reason is
+dispatchability.** Its `Done when` box 1 (choose a shape, record it as a numbered decision) is done;
+boxes 2–4 are implementation. Those are carried verbatim into **`tasks/core/061`** — box 2 is
+reproduced word for word as its first `Done when`, the `features.md` row is in its *Watch for*, the
+gate box is its last. Leaving 029 open would track the same work twice **and** keep it in `suite`
+scope, where only a supervisor can run it; as `core/061` a worker takes it. Nothing is lost and the
+remainder became dispatchable.
+
+**Merged:** nothing — supervisor's own hands, no worker branch and no merge SHA. The change is this
+fold commit alone, in `embarch-doc`: `embarch-core/decisions/streams.md` (decision 63),
+`embarch-core/decisions.md` (index row `30, 38, 39, 62, 63 | 11.0 KB`), `tasks/core/060`,
+`tasks/core/061`, the removal of `tasks/suite/029`, and
+`changelog.d/core-power-tap-says-so-in-stream-index.decided.md` consumed into `history/core.md` with
+`--only`; 29 of the owner's own fragments left pending. `check-docs.py` **11/11** green.
+
+**Blocked:** nothing. `tasks/suite/029` closed and removed. **`tasks/core/060`** (compact
+`streams.md`, per below) and **`tasks/core/061`** (implement 63) filed.
+
+**Reviewer:** no findings — and it did better than clear the diff: it independently re-derived that 63
+is a free number (sorting all 53 `embarch-core` decision numbers and correctly identifying the one
+duplicate, 54, as a documented tombstone), verified both of my load-bearing factual claims character
+for character, and answered the wire-bump question with decisions 50 and 58 instead of an opinion. See
+(c).
+
+**Hardware debts:** **none created.** This unit is doc prose and two task files; nothing was built,
+flashed or run. Worth stating that decision 63 *describes* behaviour nobody has implemented yet — the
+debt it creates is `core/061`, not a board. Confirming the end state against a real study will need
+the dev-bench board when `core/061` lands, and `core/061` says so. Unchanged: `core/015`'s native
+Windows build debt, and `tasks/api/059` still `open` on `"probes": []` for a fourth consecutive leg.
+
+**Budget:** PROCEED throughout — weekly **80.4%** of a 90% cap at the start, resets in ~56h, wave 6
+suggested and 3 workers + this unit used.
+
+**Least sure about:** **closing `suite/029` with three of its four boxes unticked.** I am confident the
+remainder is fully carried by `core/061` and that moving it out of `suite` scope is a real gain, but a
+closed task is invisible — if `core/061` is ever dropped, nothing remembers that a power tap and a
+typo still look identical, and the only trace is this entry. The alternative I rejected was keeping
+029 open as a supervisor-only stub, which would have cost a supervisor unit every leg to re-read.
+
+---
+
 ## 2026-09-13 23:04 — ui/051 520 lines of duplicate arithmetic deleted, and the reviewer caught the half that did not move
 
 **Decided:** **nothing numbered** — the worker correctly filed none; wiring an existing consumer to an
