@@ -97,6 +97,100 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 19:02 — api/088 the bound was never a reachability poll, and the fix put an unverified classification back where decision 50 took one out
+
+**Decided:** **five, and this is the unit of my leg worth reading.**
+
+**(a) The task's own hypothesis was wrong and the worker said so, which is the outcome the task
+asked for.** I filed `api/088` describing a smoke test that failed at 30.53 s under a concurrent
+worker's `cargo test` and passed at 0.29 s quiet, and told the worker to **locate** the bound rather
+than assume a timeout existed — *"if it turns out the failure was not a timeout at all, that is a
+more interesting finding than the fix."* There is **no reachability-poll loop**: `MockCore::start`
+binds its `TcpListener` synchronously before returning, so nothing ever waits for a server to come
+up. The real bound is `CoreConfig::status_timeout_secs`, the per-request HTTP budget on the
+sequence's one `status` call, defaulting to 10 s. New decision **74**; fixture raised to 60 s.
+
+**(b) The magnitude gap is disclosed rather than closed, and I am recording that I accept it as a
+gap.** The worker reproduced the *direction* — 0.30 s → 0.97 s → 2.52 s as it added competing
+processes — and then **hit the fleet's own workload-interference classifier** and stopped escalating,
+which is a real boundary it was right to respect. 2.52 s is well short of the 10 s bound, let alone
+30.53 s. Decision 74 claims scheduling delay rather than logic and does **not** claim to have
+explained the magnitude; the reviewer read that as honest scoping and so do I. **The 30.53 s is still
+unexplained**, and someone should not read this unit as having explained it.
+
+**(c) The reviewer found a real contradiction, I agree with it, and it is filed rather than fixed —
+here is why.** `dispatch` now stamps `"(request timeout {N}s)"` on **every** `send()` failure that
+had a configured timeout, without ever calling `reqwest::Error::is_timeout()`. A connection-refused,
+a DNS failure, a TLS error and an actual timeout all read the same — and `cli.rs`'s `error_result`
+puts the whole chain into the `--json` `"error"` field, so it lands in the one machine-readable
+surface **decision 50 deliberately left unstructured**, calling the cheap substitute *"a trap."*
+Worse than what 50 rejected: 50 refused a kind derived from an HTTP status Core actually sent, and
+this one is not derived from an observed fact at all. It is decisions 71/73's rule inverted — never
+assert a client-side classification you have not confirmed.
+
+**(d) I filed it as `tasks/api/092` instead of repairing it in this fold, and the reason is
+headroom, not caution.** The code fix is one conditional. But **decision 74's own closing sentence
+says the timeout is named "on every failure"**, so fixing the code makes the decision text false and
+the amendment has to land with it — into `decisions/tests.md`, which decision 74 pushed to
+**12,201/12,288 B, 87 bytes left.** There is no room. `api/092` says so explicitly and tells whoever
+takes it to pay `tasks/api/090` first or alongside, and **not** to dodge the amendment into a
+roomier decisions file — which is exactly what `embarch-api` did on 2026-09-05 with 96 B left in
+`zephyr.md`. The reviewer also established the hazard is **latent**: it grepped `embarch-api`,
+`embarch-ui` and `embarch-umbrella` and nothing keys on that string today. A live caller would have
+made this a revert.
+
+**(e) The task-number collision, because it will recur.** The worker filed its reserve task as
+`tasks/api/089-compact-api.md` from a branch cut **before** my refill commit landed, and my refill
+had already issued `tasks/api/089`. `check-task-numbers.py` reads every slug a number has held on
+HEAD's history, so once both existed the number was **burned for both** — awarding it to either
+still fails. So `089` is vacated: the worker's went to `090`, mine to `091`, both with the reason
+written into the file. **This is structural, not carelessness**: a leg that refills the queue and
+then lands a worker whose branch predates the refill has two allocators running against one
+counter, and `--next` is only correct at the moment it is asked. The first gate run cost a full
+merge-and-rollback to find it.
+
+**Merged:** `agent/api/088-smoke-harness-concurrent-load` — code
+`be04f9e8a6410bf9aedd36fad3a7a541566c4540` in `embarch-api` (parent
+`54f0c3e3483f0c1c33f19861cd462bc00ddca6f1`), doc `6ef2131809969c4606e4816ab2a3c01f6d5b0a05` in
+`embarch-doc` (parent `16322c3179f436bd78b3f0bd96f1b0813d89cff8`), **plus my own renumber commits on
+both sides**, which are mine and not the worker's. Gate re-run by me on the merge result: **red on
+the first attempt** (`check-task-numbers.py`, the collision in (e) — a real red, not the `api/087`
+false one), reset both repos, vacated `089`, re-landed **green**: `cargo build` / `test` / `clippy
+--all-targets -- -D warnings`, `check-client-names.py --repo embarch-api` clean against 7 denylist
+entries, `check-docs.py` **11/11**, ownership green on all 5 of the worker's doc paths.
+`changelog.d/api-smoke-harness-concurrent-load.fixed.md` consumed into `history/api.md` with
+`--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/api/088` closed `done` and removed. **Three tasks now sit against this
+one unit**: `tasks/api/090-compact-api.md` (the worker's, `decisions/tests.md` at 99.3%),
+`tasks/api/092` (the reviewer's finding, gated on `090`'s headroom), and `tasks/api/091` is my
+refill task at its new number.
+
+**Reviewer:** 1 finding — inbox/api-088-dispatch-timeout-context-review.md, accepted in full and
+filed as `tasks/api/092`; drop deleted after filing. It also verified decision 74's number against
+the **true parent commit** rather than the leg worktree, confirmed `MockCore::start` binds
+synchronously by reading it, grepped three repos for callers of the changed string, and ruled that
+`decisions/tests.md` is the right file for 74 on its merits.
+
+**Hardware debts:** **none created.** Host-side test and error-context change; no board, no live
+Core. **One pre-existing exposure named rather than fixed**: raising `status_timeout_secs` in the
+*fixture* leaves the production path on the same 10 s bound under the same contention, and decision
+74 scopes itself to the fixture without claiming otherwise. Standing debts carried unchanged —
+`core/015`'s native Windows build at thirteen landed `embarch-core` changes, the dev-bench probe
+still unplugged (`tasks/api/059` stays **open**), `fleet-hardware.py --refresh` still crashing
+(`tasks/doc/041`).
+
+**Budget:** PROCEED — weekly **68.1%** of a 90% cap at leg start, resets in ~60h. Wave 6 suggested,
+4 workers dispatched at the unit cap.
+
+**Least sure about:** **whether filing (c) instead of fixing it was the right trade.** The fix is one
+conditional and the string is newly false on `main` tonight; the `api/087` entry two legs ago argued
+that leaving a freshly-created false sentence to be found later is the same defect authored on
+purpose. What stopped me is that the *doc* half cannot land — 87 bytes — so fixing the code alone
+would have left decision 74 saying something the code no longer does, which is the identical defect
+in the other direction. I think headroom genuinely forced it, but I notice that is also a
+comfortable thing to believe.
+
 ## 2026-09-13 18:48 — study-designer/044 a two-line diff, and the two lines were a real same-number collision
 
 **Decided:** **three.**
