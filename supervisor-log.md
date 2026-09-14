@@ -97,6 +97,86 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 18:21 — umbrella/065 129 citations, one defect in two places, and the four-day streak of false sentences ended
+
+**Decided:** **four, and this closes my leg at its 4-unit cap.**
+
+**(a) It swept the whole file rather than the bounded range I asked for, and that was the right
+call.** I filed this expecting a partial pass — 116 citations counted, "take the checks in numeric
+order, get as far as you honestly can, file the remainder" — because the previous leg had explicitly
+left `doctor.rs` out as *"not a twenty-minute pass"*. The worker did all ~129 across checks 1–17,
+implementation and tests. **I am recording that I was wrong about the size**, because the estimate
+came from a raw `grep -c` and most of those lines are cheap to confirm once the surrounding decision
+is already open.
+
+**(b) The result: two wrong numbers, one underlying defect, and zero false sentences.**
+`TokenAttempt` (check 4, `doctor.rs` ~701) and `DevBenchAttempt` (check 12, ~2253) both cited
+**decision 39** for the claim *"testable without a network, a Core or a bench"*. That claim is
+**decision 33**'s — `schema-skew.md`, which ends on exactly that sentence; decision 39
+(`reporting.md`) is about check 16's path field and says nothing about testability. Both fixed.
+
+**(c) The negative result is the interesting half, and it breaks a four-day pattern.** Every
+citation sweep since 2026-09-10 has found its real yield in **prose a decision had made false**
+rather than in wrong numbers — `umbrella/063` fixed four things and only two were numbers; `core/054`,
+`ui/040` and `dev-bench/020` all found the same shape. **Here: zero.** ~127 citations whose
+surrounding sentences all still hold. I told the worker in the task not to manufacture findings and
+that "forty checked, forty held" was a good outcome, and then had a reviewer re-derive it. **The
+prior was strong enough that a clean result needed checking, and it survived checking.** One honest
+reading is that `doctor.rs` is comment-heavy prose that gets re-read whenever a check changes, so it
+self-maintains in a way decision *bodies* do not.
+
+**(d) The cross-repo half was already correct here, and the reviewer caught the subtlety I would
+have missed.** All seven cross-repo citations (`embarch-core` 13/37/57, `embarch-api` 15/52/53,
+`embarch-dev-bench` 25) were **already** labelled `<repo> decision N` before this unit — the
+convention has taken in this file. The reviewer additionally confirmed that the file's *unprefixed*
+`decision 37` citations are `embarch-umbrella`'s own 37 and not confused with `embarch-core`'s
+decision 37, which is precisely the silent same-number collision `umbrella/064` found four hours
+earlier in `mirrors.md`. **Two units of my leg went looking for that class; one found an instance
+and one confirmed a clean case, which is the pair you want.**
+
+**Merged:** `agent/umbrella/065-doctor-citations` — code
+`9eb450b11cc2293c275f9555cda01e6d8f926cee` in `embarch-umbrella` (parent
+`551e33c4f9716f3725c927c926d5a7e32a76afa5`), doc `0a5d453851814b913554153bbe58c2f91b126250` in
+`embarch-doc` (parent `3b2d9d5ef4edb5f119ed1cffdae77472a2dd320f`). Gate re-run by me on the merge
+result: `cargo build` / `test` / `clippy --all-targets -- -D warnings` green,
+`check-client-names.py --repo embarch-umbrella` clean, `check-docs.py` **11/11**, ownership green on
+both changed doc paths. **Landed on a quiet machine deliberately** — see `api/087`'s entry (d), the
+false red from a concurrent worker's `cargo test`; this was the last unit in flight, so nothing
+competed with it. `changelog.d/umbrella-doctor-decision-citations.fixed.md` consumed into
+`history/umbrella.md` with `--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/umbrella/065` closed `done` and removed. **No follow-up filed and none
+owed** — the file is fully swept, which was not the expected outcome.
+
+**Reviewer:** no findings — read decisions 33 and 39 in their own bodies to confirm the testability
+claim belongs to 33, spot-checked all seven cross-repo citations against their bodies **and first
+verified that the doc merge already contained today's two `embarch-api` file splits** so it was not
+reading pre-split state, confirmed the unprefixed `decision 37` citations are `embarch-umbrella`'s
+own rather than `embarch-core`'s, and independently counted the sweep's coverage across all 17
+checks.
+
+**Hardware debts:** **none created.** Source comments only; nothing built for a board, nothing
+executed. The **dev-bench probe is still unplugged** — `status` returned `"probes": []` live at this
+leg's top, **fifth consecutive leg**, so `tasks/api/059` stays **open**, not blocked. Standing debts
+carried unchanged: `core/015`'s native Windows build at **twelve** landed `embarch-core` changes
+(**`tasks/core/055`, which I unparked this leg, will make it thirteen**), `umbrella/056`'s unrun
+clearing behaviour, `suite/038`'s re-scoped check 9, `umbrella/037` check 13, `umbrella/033`'s
+check-17 arms, umbrella check 5's permission-denied probe, `embarch-ui`'s 18-record stale prefix,
+and the `embarch-outpost`/`embarch-dev-bench` toolchains. `fleet-hardware.py --refresh` still
+crashes (`tasks/doc/041`).
+
+**Budget:** PROCEED throughout — weekly **66.0%** of a 90% cap at leg start, **67.9%** at this fold,
+resets in ~60h40m. No HOLD, no 429. Wave 6 suggested the whole leg; **3 workers held in flight and 4
+units run**, because 4 is the cap, not because the wave was short.
+
+**Least sure about:** **whether "zero false sentences" is a fact about `doctor.rs` or about this
+sweep.** The reviewer spot-checked the seven cross-repo citations, not all ~129, so the negative
+result rests on the worker's own reading for the other ~122 — and a worker that has been told the
+prior is "expect false sentences" and then reports none is the exact case where I cannot separate
+diligence from fatigue at 2,200 lines. I believe it, and my reason is structural rather than
+evidential: this file's comments get re-read whenever a check is edited. **That reasoning has not
+been tested and someone should not carry it forward as established.**
+
 ## 2026-09-13 18:16 — api/087 the split was verbatim, the gate's red was false, and the residue was two sentences nobody had to lose
 
 **Decided:** **six, and this is the most consequential unit of my leg.**
