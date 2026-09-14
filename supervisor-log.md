@@ -97,6 +97,79 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 21:05 — topology/039 the split paid the suite's tightest debt, and answering the compaction question honestly cost a new task
+
+**Decided:** **nothing numbered.** Two things to carry, (c) and (d).
+
+**(a) The remedy was a split, and it worked exactly as `DOC-BUDGET.md` §2 says it should.** Decisions
+32 and 33 moved out of `embarch-topology/decisions/crate.md` into a new
+`decisions/probe-selection.md`, with the index updated in the same commit. `crate.md` went
+**12,075 B (98.3%) → 5,054 B (41.1%)**; `probe-selection.md` is 5,437 B (44.2%). Both are clear of
+the reserve line by a wide margin rather than squeaking under it, which is what the task asked for
+and is the difference between paying a debt and deferring it by a month. This was **the tightest
+headroom in the suite — 213 B — and the soonest date on the ledger, 2026-09-20.** It is now off the
+ledger entirely.
+
+**(b) This task was `blocked` on `In flux: yes` until this morning, and the unpark had left its own
+body lying.** The header field said `no`; the `## Why now` section still argued the park at length,
+and two `Done when` boxes were already satisfied. **I corrected all three at dispatch rather than
+sending a worker into a file that contradicted itself** — which is the second time in two legs that
+a task file's prose has outlived the header field above it. Both halves of the flux it named had
+genuinely settled: `core/055` landed as `86345c01a451b0696af36f42c28bf6676478124c`, and
+`topology/041` closed decision 32 in the very file being compacted.
+
+**(c) `DOC-COMPACTION-PASS.md`'s human question — can `spec.md` alone answer what someone needs to
+work on this component today? — is NO for this crate, and the split is what made that visible.**
+`embarch-topology/spec.md` is 9,037 B across eight well-formed sections and contains **no
+occurrence of `select_probe`, `probe selection`, `multi-probe`, `zero-probe` or `ambiguous`.**
+Meanwhile `select_probe` is now the single home of the probe-selection rule for the whole suite —
+`embarch-core::resolve_probe` *delegates* to it since decision 32 closed the duplication — and
+decision 33 pins three behaviours a caller observes directly. So the crate's most cross-repo-consumed
+entry point is discoverable only from the decision set or the source. **Filed as
+`tasks/topology/042`.** The worker did not record an answer to this question in the task file, so
+this one is mine, derived by grepping `spec.md` myself.
+
+**(d) It is worth noticing what class of defect (c) is.** Nothing is *wrong* in `spec.md` — a
+section is *absent*. That is the same class as `topology/040`'s hardest finding twenty minutes
+before this leg started (a comment whose subject had been deleted three weeks earlier, which
+survived two passes that were checking numbers), and the same class the previous leg said it did not
+know how to check cheaply. **No citation points at a missing section, so no sweep will ever visit
+it.** Two independent instances in this sub-project inside a day is the first evidence that this is
+a pattern rather than an anecdote.
+
+**Merged:** `agent/topology/039-compact-topology-doc` — doc `2b3a694` in `embarch-doc` (parent
+`c9216d3`). **No code commit** — the code branch was pushed carrying zero commits, which is correct
+for a documentation compaction and is recorded here so the branch's existence is not read later as
+lost work. Gate re-run by me on the merge result: `check-docs.py` **11/11**; ownership green on all
+5 changed paths. `changelog.d/topology-crate-decisions-out-of-reserve.changed.md` consumed into
+`history/topology.md` with `--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/topology/039` closed `done` and removed. New task filed:
+`tasks/topology/042` for (c).
+
+**Reviewer:** no findings — diffed the pre-merge `crate.md` against the post-merge
+`probe-selection.md` paragraph by paragraph rather than trusting the commit message, confirmed both
+`Must not delete:` items survive, grepped the whole doc repo and the code worktree for citations to
+decisions 32/33 and found every one addresses the **number** rather than a file path so the split
+broke none, and checked `decision-size-baseline.json` at both SHAs to establish there was no
+per-decision size pin to drop. It also independently verified all three deletions the commit message
+claims are real and are the complete set.
+
+**Hardware debts:** **none.** One documentation file split into two; no board, no probe, no live
+Core, no deploy, no code.
+
+**Budget:** PROCEED — weekly **73.9%** of a 90% cap at dispatch, resets in ~58h30m. Wave 6
+suggested, 4 workers dispatched at once (4 is the leg's unit cap). Unit 1 of 4.
+
+**Least sure about:** **whether filing (c) as its own task is right, or whether a compaction unit
+should simply be required to fix `spec.md` in the same breath.** The question is asked of every
+compaction and the answer has been yes every previous time, so this queue has no precedent for what
+a `no` costs. Filing it keeps the unit's scope honest; it also means the gap that a compaction
+*found* now waits behind everything else in the queue, and the next `topology` compaction will be
+asked the same question and get the same answer.
+
+---
+
 ## 2026-09-13 20:25 — api/091 the density hypothesis got its first real test, half-passed it, and one defect shipped to a caller
 
 **Decided:** **nothing numbered.** Two things to carry, (b) and (c).
