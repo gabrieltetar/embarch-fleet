@@ -97,6 +97,107 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 19:50 — core/056 the sweep that broke the streak, 10 defects in 109, and a rewrite that introduced the defect it was removing
+
+**Decided:** **five, and (b) is the one the next leg should act on.**
+
+**(a) `study.rs`: 109 citations read, 99 held, 6 wrong numbers, 4 false sentences.** A **9.2% defect
+rate**, against a five-sweep streak that had produced six defects in ~424 citations. The wrong
+numbers were not random: `embarch-study-designer` decision **63** was cited four times for two
+*different* claims, and the right answers were two *different* numbers — `embarch-core`'s own
+decision 24 (the `GET /study/{id}` clone-by-value stack overflow) and `embarch-study-designer` 49
+(the ~1.3 MB `StudyResult` measurement). Two of the four should have carried no repo prefix at all.
+Plus 30 → 72 (the clock-resync gap) and 35 → 39 (a `Raw` stream tap). The reviewer re-derived all
+six independently and confirmed each, separately for the two 63s.
+
+**(b) This kills the "the sweeps have converged on clean files" hypothesis, and the real variable
+looks like what a file is FOR.** `ui/049` guessed it six hours ago and had it right: the dirty files
+are the ones that **restate other repos' decisions**, and the clean ones mostly explain their own
+code. The series now reads — `core/054` (`api.rs`) 3/54 · `umbrella/065` (`doctor.rs`) 2/129 ·
+`study-designer/044` 0/53 · `ui/049` 0/74 · `umbrella/066` 1/114 · **`core/056` (`study.rs`)
+10/109**. `study.rs` is Core's study engine narrating `embarch-study-designer`,
+`embarch-topology` and `embarch-outpost` decisions at length, and it is the dirtiest surface found
+so far by a factor of four. **Every sweep to date picked its file by SIZE.** Picking by
+cross-repo citation *density* instead is free — it is a grep — and on this evidence it is where the
+yield is. `tasks/api/091` is next in the queue and is described as *"the one file that cites two
+repos' decisions"*, so the next leg gets a natural test of this.
+
+**(c) Four false sentences, and the three that mattered were the same claim in three places.**
+Lines 141, 567 and 2818 each described `embarch-topology` decision 12 as a
+"durable-log-plus-live-push shape" that Core's SSE route mirrors — but decision **19** retired that
+crate's live-push half when its only consumer, a standalone UI, was deleted. The fourth: lines
+1908–1910 claimed an outpost trace record "carries none of its own" clock, when `embarch-outpost`
+decision 17's entire point is that there are **two** clocks — the DUT's `cycles` stamp *measures*,
+Core's receipt time *places*. Both classes are citations that **resolve perfectly** and no gate
+reads them.
+
+**(d) One of the three rewrites introduced a new false claim about another repo's decision — the
+exact defect the unit existed to remove — and the reviewer caught it because I asked.** The
+`study_events_handler` rewrite asserted that decision 19's "reasoning turns on" whether a real,
+connected consumer exists, and that this route has one. **Decision 19 declined to restore push for
+`embarch-ui`, which is already a real, connected consumer via polling**; its actual condition is
+whether push's latency win is wanted for that signal. I had put this exact clause in the reviewer's
+brief as *"is that actually decision 19's stated condition, or is it the worker's inference?"* — it
+was the inference. **A worker rewriting a false sentence is writing new prose about a decision it has
+just read once, under time pressure, and that is a defect-generating act**, which nothing in the
+sweep method accounts for.
+
+**(e) I fixed (d) with my own hands and filed (c)-adjacent findings, and the rule I used is worth
+stating because I applied three different answers in one leg.** The line I settled on: **a defect
+the unit itself introduced is the unit's to fix before it is done; a defect the unit merely revealed
+is filed.** That explains all three of this leg's calls consistently — `api/092`'s two self-created
+broken links, fixed; `umbrella/066`'s pre-existing decision-7 mis-cite, filed as `tasks/umbrella/067`;
+this one, self-created, fixed. It also convicts me of over-reaching on the *other* two `api/092`
+links, which were pre-existing and which I fixed anyway. **And I replaced the bad clause by stating
+what decision 19 does say plus an explicit "do not read this as a precedent either way", rather than
+substituting a second inference of my own** — the failure was an agent reasoning confidently about
+another repo's decision, and answering it with more of that would have been the same move.
+
+**Merged:** `agent/core/056-study-rs-citations` — code
+`70109bd5753e60990c73368513a83a19fa8b00ef` in `embarch-core` (parent
+`86345c01a451b0696af36f42c28bf6676478124c`), doc `a66e38ea782f9584aa0f888697362c9f258ae17a` in
+`embarch-doc` (parent `0bec5df7fcbb4f13483fa6ed96c6bf8e4737c578`). **Plus a follow-up commit of my
+own in `embarch-core`, `4de0e415997fdc363eca470d1adac984b14cf8f4`**, for (d) — comment-only,
+verified under `clippy --all-targets -- -D warnings`. Gate re-run by me on the merge result: `cargo
+build` / `test` (**197 passed, 2 ignored**) / `clippy --all-targets -- -D warnings` green,
+`check-client-names.py --repo embarch-core` clean against 7 denylist entries, `check-docs.py`
+**11/11**, ownership green on both branches.
+`changelog.d/core-study-rs-citation-sweep.fixed.md` consumed into `history/core.md` with `--only`;
+29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/core/056` closed `done` by the worker and removed. **No remainder task
+and none owed** — `study.rs` was swept top to bottom, all 109 citations (the task header's "107"
+undercounted by two, and the worker said so rather than quietly matching it).
+
+**Reviewer:** 1 finding — `inbox/core-056-review-topology-decision-19-misattribution.md`, accepted,
+**fixed in this fold and the drop deleted.** It also re-derived all six renumberings independently
+(including the two different corrections of the same wrong decision 63), confirmed the outpost
+`cycles`/receipt-time rewrite against `embarch-outpost` decisions 4 and 17, confirmed the other two
+topology 12/19 rewrites, and **verified directly that `core/055` touched only `src/hardware.rs` and
+never `src/study.rs`** rather than accepting the worker's claim. Its completion was misrouted to the
+listener like every other reviewer this leg (`tasks/doc/042`, **four for four**).
+
+**Hardware debts:** **one, carried and added to.** `core/015`'s outstanding native Windows build now
+carries a **fourteenth** landed `embarch-core` change — comment-only, nothing behavioral, but this is
+the third consecutive day a `core` unit has added to it and nobody has run it. No board, no probe, no
+live Core, no deploy touched by this leg at all. The **dev-bench probe is still unplugged** — checked
+live at 19:19, Core reachable and `"probes": []` — so `tasks/api/059` stays **open**, not blocked, for
+the **seventh** consecutive leg.
+
+**Budget:** PROCEED throughout — weekly **69.6%** of a 90% cap at leg start, **71.7%** at this fold,
+resets in ~59h13m. No HOLD, no 429. Wave 6 suggested the whole leg; **4 workers dispatched at once
+and 4 units run**, because 4 is the cap, not because the wave was short. **2.1 points for four
+units.**
+
+**Least sure about:** **whether I should have fixed (d) at all, given that fixing it required me to
+reason about `embarch-topology` decision 19 — which is precisely the act that produced the defect.**
+I mitigated it by deleting the claim rather than replacing it and by refusing to state a new
+condition, and the reviewer had already read both decision bodies. But the honest description of what
+happened is that a supervisor with four units of context, at the end of its life, hand-edited another
+repo's semantics into `embarch-core`'s source at 19:49, and the only review of that edit is this
+sentence. If it is wrong, it is wrong in the same invisible way everything else in this leg was
+wrong: the number resolves, the gate is green, and nothing will say so.
+
 ## 2026-09-13 19:43 — umbrella/066 a fifth consecutive zero-defect sweep, and the reviewer that made it a 113/1
 
 **Decided:** **four, and the third is the one that changes what the fleet should do next.**
