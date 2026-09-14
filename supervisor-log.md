@@ -97,6 +97,76 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 23:27 — study-designer/048 three wrong decision numbers in study_builder.rs, and one of them is the mirror image of the usual defect
+
+**Decided:** **nothing numbered** — the worker correctly filed none; correcting a citation decides
+nothing. Three things to carry.
+
+**(a) 36 citations read, 3 wrong numbers, 0 false sentences.** `src/study_builder.rs` is the largest
+remaining file in this crate's sweep series (38 matching lines, 36 distinct citations, two split
+across a line wrap). Every cited decision's **body** was read against the sentence around the
+citation, not merely resolved. The three:
+`TableRow.delay_before_ms` cited decision 40 (firmware-version declarations) where the "when" half of
+a step is decision 42; a vendor-row *"no schema bump"* claim credited to decision 39 — **which is
+itself a schema bump** — where decision 41 (the vendor-identity table) says "No schema bump" almost
+verbatim of exactly that case.
+
+**(b) The third is the interesting one, and it runs the other way from every finding in this series
+so far.** A `steps_crc`/`streams_crc` overwrite-on-submit comment was labelled **`embarch-api`
+decision 26**. `embarch-api`'s real decision 26 is `serial_log`'s `serial_port` field — unrelated —
+while **this crate's own decision 26 makes exactly the claim the comment makes.** So the fix was to
+*delete the repo prefix*, not to change the number. Every previous finding in this series has been a
+**missing** cross-repo label making a foreign decision look local; this is a **spurious** one making a
+local decision look foreign. Both resolve cleanly and neither fails a gate — `check-decision-refs.py`
+reads only `*.md`, so a source comment naming a real decision in a real repo is invisible to it
+whatever it means. **The sweeps have been looking for this defect in one direction only.**
+
+**(c) The worker's first finding was independently corroborated by another repo's sweep.**
+`embarch-ui`'s own `047` pass found the identical decision-40-for-42 shape on the same field. Two
+repos' comments drifted the same way about the same wire field, which is what a shared crate's
+citation surface does under `tasks/doc/055` (the cross-repo citation form, still open and
+owner-reserved).
+
+**Merged:** `agent/study-designer/048-src-citation-sweep-remainder` — code `1c99d7f` in
+`embarch-study-designer` (parent `26fd908a1b982890fd8212d8cf2c1207a43ce47c`), doc `4f8271f` in
+`embarch-doc` (**cherry-picked, not fast-forwarded** — see *Least sure about*). Gate re-run by me on
+the merge result: `cargo build` / `test` (**9 passed**) / `clippy --all-targets -- -D warnings` green;
+`check-client-names.py --repo embarch-study-designer` clean against 7 denylist entries;
+`check-docs.py` **11/11**; `check-ownership.py --scope study-designer` OK on the doc half (3 paths)
+and `--code-repo` OK on the code half. `changelog.d/study-designer-048-citation-sweep.fixed.md`
+consumed into `history/study-designer.md` with `--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/study-designer/048` closed and removed.
+**`tasks/study-designer/049`** filed by the worker, naming `src/protocol.rs` next (32 lines, largest
+of the 20 files still remaining) and recording (b) as a method lesson for the next sweeper.
+
+**Reviewer:** no findings — it re-derived all three citations from the decision bodies at the merge
+SHAs rather than trusting the commit message, and confirmed the task file's own recap and its
+`src/protocol.rs` grep count. **It did not simply agree on (b), and its reasoning is worth keeping:**
+`embarch-study-designer` decision 26 is titled for `steps_crc` alone, while the comment cites it for
+`steps_crc` **and** `streams_crc`. It resolved that as *imprecise scope, not a contradiction* — the
+comment's next sentence draws `streams_crc` as an analogy rather than claiming decision 26 decided it,
+and the reviewer verified in `embarch-api/src/study.rs` (`reseal`, and the test
+`overwrites_a_stale_streams_crc_too`) that both CRCs really are overwritten by the one submit-time
+function decision 26 describes. So the prefix deletion stands, and a future sweeper should know the
+scope is loose rather than re-open it.
+
+**Hardware debts:** **none.** Source comments in a host-side crate; no board, no probe, no live Core,
+no deploy, and nothing built for a target.
+
+**Budget:** PROCEED — weekly 80.4% of a 90% cap at the leg's start, wave 6 suggested, 3 workers used.
+
+**Least sure about:** **that I cherry-picked all three of this leg's doc branches instead of
+rebasing them.** All three were cut from `origin/main` *before* my own `suite/029` fold landed, so
+`--ff-only` correctly refused every one. Cherry-pick is the precedent (leg 107 did it for `core/052`)
+and preserves the no-merge-commit rule, but it means `git cherry` can never prove these branches
+landed, so `fold-commit.py` will not prune them and the next leg will find three stale `agent/*`
+branches that **are** fully landed. I could not delete them by hand — the permission classifier
+refuses a branch delete from this session, which is also why `agent/core/052-...` was still on the
+remote when I started.
+
+---
+
 ## 2026-09-13 23:22 — suite/029 the power tap gets its own answer, and one of the two shapes on offer had already been deleted
 
 **Decided:** **one numbered decision — `embarch-core` 63 — and it is the deliverable leg 111 announced
