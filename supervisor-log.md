@@ -97,6 +97,98 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 22:28 — api/094 an agent can finally ask for the outpost's own answer, and the reviewer caught the one sentence that said so too loudly
+
+**Decided:** **nothing numbered, and the worker was right not to file one** — wiring an existing
+Core route to an existing tool pattern decides nothing, which is what `tasks/api/094`'s own
+`Done when` box told it. Four things to carry, (b) (c) (d) and (e).
+
+**(a) What shipped.** `study_stream_load` (CLI `study-stream-load`), wrapping `embarch-core`'s
+`GET /study/{id}/stream/{name}/load` (`embarch-core` decision 62), so an **agent** can obtain an
+outpost capture's per-subject load shares and coverage line. Until now only the human path existed
+— `embarch-ui`'s Trace tab renders it — and `core/057` built the computation and the route with no
+caller. The client computes nothing: it deserializes and relays.
+
+**(b) The reviewer's finding, which I acted on before folding, and the shape of it is the lesson.**
+`changelog.d/api-outpost-load-tool.added.md` said *"suite decision 4 closes"* with no qualifier.
+Suite decision 4's property has **two** halves — an agent can get the answer **and** exactly one
+implementation of the timeline exists in the suite — and the second is **not** true yet, because
+`tasks/ui/051` (retiring `embarch-ui`'s own copy of the arithmetic) is open. **The same worker got
+it right in `features.d/api-260`**, which says "agent-side half" explicitly, and right in
+`interfaces/tools.md` and `interfaces/studies.md`. One sentence out of four overclaimed. I rewrote
+it — in `history/api.md`, since `build_changelog.py --only` had already consumed the fragment by
+the time the finding arrived — to *"closes suite decision 4's agent-side half only — the
+one-implementation half waits on `tasks/ui/051`"*, re-ran the gate green, and deleted the drop.
+**A changelog line is the one surface nothing re-reads**: `history/` is append-only and no gate
+checks a shipped claim against the decision it cites, so an overclaim there would have outlived
+every doc that got it right.
+
+**(c) The reviewer checked the hand-mirror field by field and it is faithful — record that, because
+nobody else has.** The unit added three public structs to the shared `embarch-core-client` crate —
+`LoadAnswer`, `LoadSummary`, `LoadSubject` — that mirror Core's `outpost_load` types field for
+field, because Core's are `#[derive(Serialize)]` only and `embarch-api` does not link `embarch-core`
+at all. **This is the defect class the suite has paid for repeatedly** (`dev-bench/010`'s
+thirty-three mirrored constants; `suite/035` retired seven mirrors on 2026-09-12). The reviewer
+compared all three against `embarch-core/src/outpost_load.rs`: **every field matches by name, order
+and JSON-compatible type.** The worker's own mitigation is one deserialization test over a
+realistic body, with a doc comment saying plainly why no shared type pins it.
+
+**(d) So the mirror is correct today and pinned by one test, and that is a standing debt nobody has
+filed.** I am naming it here rather than filing a task, because the obvious remedies are all
+wrong-shaped: `embarch-api` cannot depend on `embarch-core` (they talk over HTTP, by design), and
+neither `embarch-study-designer` nor `embarch-topology` is the right home for a route's response
+body. The cheap half is already done — a test that fails on a renamed field rather than defaulting
+it away. **The next leg should not "fix" this by inventing a shared crate.** It becomes real work
+the moment a *third* consumer mirrors the same types, which `tasks/ui/051` may well be.
+
+**(e) This reviewer's report also reached me through the listener, not directly — the second
+instance in one leg** and the third this log has recorded. `tasks/doc/042` covers it, owner-only.
+**Here it mattered**, unlike under `ui/050`: this reviewer had an actual finding, and had I folded
+on its absence the fold would have carried both a false `**Reviewer:**` line and the overclaim it
+caught. Two for two in one leg is not a flake.
+
+**Merged:** `agent/api/094-mcp-tool-for-outpost-load-shares` — code `3e0e4ba` in `embarch-api`
+(parent `92f598bd5f405b234e2585c5355a1a961131476d`), doc `5b04745` in `embarch-doc` (the worker's
+`ea38325` **cherry-picked** inside my leg worktree). Gate re-run by me on the merge result:
+`cargo build` / `test` (**212 passed** across 13 suites, 0 failed) / `clippy --all-targets --
+-D warnings` green; `check-client-names.py --repo embarch-api` clean against 7 denylist entries;
+`check-docs.py` **11/11**, re-run after my wording fix; ownership green on both halves. I read the
+code diff before merging because `embarch-core-client` is a shared crate.
+`changelog.d/api-outpost-load-tool.added.md` consumed into `history/api.md` with `--only` and then
+corrected per (b); `features.d/api-260-study-stream-load-outpost-load-shares.md` assembled into
+`suite/features.md` (134 rows); 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/api/094` closed and removed.
+
+**Reviewer:** 1 finding — `inbox/doc-api-094-changelog-overclaims-decision-4-closure.md`, **accepted
+and fixed in this fold**; drop deleted after the corrected wording landed. It also settled two
+things this entry asserts and I would otherwise have had to guess: the three-struct mirror is
+faithful field for field against `embarch-core/src/outpost_load.rs`, and all three refusals
+(`400` wrong tap encoding, `404` no-such-or-not-rendered, `422` column-mismatch — `embarch-ui`
+decision 10 (trace)'s pin carried across by `core/057`, reversals row 86) reach the caller intact
+through `format_study_error`, with both the MCP tool and the CLI propagating them untouched rather
+than smoothing a refusal into an empty result. It confirmed no collision with `tasks/suite/029`'s
+open `bytes_written: 0` ambiguity.
+
+**Hardware debts:** **one, created here and small.** `study_stream_load` has never run against a
+live `embarch-core` or a real outpost capture — it is unit-tested against a realistic body only,
+and `features.d/api-260` says so in its own test column ("hw only for a real capture"). Needs no
+board of its own beyond whatever capture a study produces. **Also unchanged and not created here:**
+the MCP binary on this machine goes stale against a schema bump and the running server keeps the
+old one, so verifying this tool is the owner's, through the CLI.
+
+**Budget:** PROCEED — weekly **77.7%** of a 90% cap, resets in ~56h35m, wave 6. **Unit 4 of 4; the
+leg ends at its cap.**
+
+**Least sure about:** **(d) — whether naming the mirror in this log instead of filing a task is me
+making the right call or quietly dropping it.** A log entry is not dispatchable, and this log folds
+daily. I chose it because every remedy I can describe is worse than the mirror, and filing a task
+that says "do something about this" is how a queue fills with items nobody can execute — but if
+`ui/051` does mirror these types again, the third instance will be found by someone re-deriving all
+of this from scratch.
+
+---
+
 ## 2026-09-13 22:22 — ui/050 a compaction that deleted dates and kept every claim, and the reviewer that reached me through the listener
 
 **Decided:** **nothing numbered** — a compaction pass that cuts prose length decides nothing, and
