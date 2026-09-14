@@ -97,6 +97,68 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-14 00:19 — api/096 the client half of decision 63, and a tool description that disclaims a field instead of promising it
+
+**Decided:** **nothing numbered.** This is the `embarch-api` half of the split described in the
+`core/061` entry above; the one judgement it contains is the worker's, in (b). Three things.
+
+**(a) The two halves agree on the wire, and that was checked rather than assumed.** Both were written
+in parallel against a field name I pinned before dispatch, neither read the other's branch, and the
+reviewer verified against the landed `embarch-core` merge (`e1b796e`) that both spell it
+`source_deferred`. `StudyStreamEntry` in `crates/embarch-core-client/src/client.rs` now carries it as
+the fourth `#[serde(default)] Option<bool>`, documented on the three points its neighbours document:
+what `Some(true)` means, what `Some(false)` means, and that `None` is a Core predating the field.
+
+**(b) The worker refused a box in its own task file, and was right to.** I wrote *"check whether
+`streams_json` needs to surface the flag — if it renders the other three booleans, it renders this
+one."* It does not: `streams_json` iterates `StreamRef` from `embarch-study-designer`, which carries
+`name`/`bytes_written`/`truncated`/`records` and has never carried `named`/`timed`/`self_excluded`
+either. So the conditional I wrote was false, no code change was owed there, and **the new sentence in
+`list_study_streams`' description says the listing does not carry the flag rather than implying it
+does** — "…which this listing does not carry, so do not read a 0 here as ruling it out". A tool
+description promising a field the tool does not return is exactly the failure this unit could have
+shipped; the reviewer read `StreamRef`'s definition itself to confirm both halves.
+
+**(c) The worker also fixed my link-depth bug on its own file** — the `../../embarch-fleet/protocol.md`
+citations described in the `ui/052` entry — using three `../` as a real markdown link, which is the
+better form and is what landed. Its `inbox/` drop naming the same bug in `tasks/core/061` I deleted
+rather than filed: I had already fixed that half on `main` before reading it.
+
+**Merged:** `agent/api/096-deferred-source-flag-client-half` — code `c26d930` in `embarch-api`
+(fast-forwarded, parent `3e0e4ba`), doc `99a166c` in `embarch-doc` (**cherry-picked**, from branch
+commit `caee440`; `--ff-only` refused because two folds had already moved `main`, and the cherry-pick
+**conflicted** on the task file — resolved to the worker's version, which is the one the fold then
+removed). Gate re-run by me on the merge result: `cargo build` / `test` / `clippy --all-targets --
+-D warnings` green; `check-client-names.py --repo embarch-api` clean against 7 denylist entries;
+`check-docs.py` **11/11**; `check-ownership.py --scope api` OK on the doc half (2 paths) and
+`--code-repo` OK on the code half. `changelog.d/api-source-deferred-flag.added.md` consumed into
+`history/api.md` with `--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/api/096` closed and removed — filed, claimed, run and closed inside one
+leg. `tasks/api/095` (the 103-citation sweep of this same `client.rs`) was deliberately **not**
+dispatched beside it and is still `open`; it is now the `api` scope's only dispatchable task, and it
+opens on a file this unit has changed.
+
+**Reviewer:** no findings — it answered all four questions with evidence rather than agreement: read
+the three neighbouring doc comments and compared them clause by clause, read `StreamRef`'s definition
+to confirm (b) independently, showed the serde test fails both without `#[serde(default)]` and when
+the field is never populated, and checked the field's spelling against `embarch-core`'s actual merge
+rather than against the task file that pinned it.
+
+**Hardware debts:** **none.** A deserialized struct field and a tool description string; no board, no
+probe, no live Core, no deploy. The end-to-end confirmation this half participates in is recorded
+against `core/061`, not here.
+
+**Budget:** PROCEED — weekly **82.4%** of a 90% cap at the leg's start, resets in ~55h, wave 5
+suggested and 4 used.
+
+**Least sure about:** **that `list_study_streams`' description now carries a sentence about a field
+that endpoint does not return.** It is honest and it is the only place a reader of that tool would
+look — but it points at `GET /study/{id}/streams` for the real answer, and a description that
+explains a neighbouring endpoint's field is a shape nothing in this suite has decided is right.
+
+---
+
 ## 2026-09-14 00:18 — core/061 decision 63's Core half, and the split that made it a worker's job at all
 
 **Decided:** **one thing, and it is mine rather than the worker's: the field is named
