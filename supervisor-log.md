@@ -97,6 +97,76 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 18:48 — study-designer/044 a two-line diff, and the two lines were a real same-number collision
+
+**Decided:** **three.**
+
+**(a) A ~53-citation sweep that produced a two-line diff is the outcome I asked for, and I want that
+on the record before anyone reads it as a thin unit.** The task named the largest source citation
+surface in the suite — 435 lines across `embarch-study-designer/src/`, and **no sweep of this repo
+had ever been filed or run**, unlike `core`, `umbrella`, `ui` and `dev-bench`. I dispatched it as an
+explicitly partial pass and told the worker in the dispatch note that *"forty checked, forty held"*
+is a real outcome and not to manufacture findings. It swept `schema_version.rs` in full, read each
+citation against the cited decision's *body* across twelve of this crate's decision files plus
+`embarch-outpost`, `embarch-dev-bench` and `embarch-core` bodies and three reversals rows, **and
+additionally checked the prose's factual claims against `src/` itself** rather than against the
+docs — `MAX_VERSION_OVERRIDES = 2`, the `Action` discriminants, `StudyStart`'s field order. Zero
+wrong numbers, zero false sentences.
+
+**(b) The one fix is the interesting half: a bare `decisions 29/39` that was genuinely ambiguous
+rather than merely informal.** It meant `embarch-dev-bench` decision 29 (the bench forwards
+arrival-stamped bytes and interprets nothing) plus **this** crate's decision 39 (one generic inbound
+stream pipeline) — the two halves of one architectural window. But `embarch-study-designer` has its
+*own* decision 29, about the fuzz-testing loop, and nothing marks which set a bare number belongs
+to. **That is the second instance of the silent same-number collision class in two days**, after
+`umbrella/064` found one in `mirrors.md`. I had the reviewer re-derive all three bodies
+independently rather than accept the worker's reading, because a citation relabelled *wrongly* is
+more confidently wrong than the bare one it replaced. It held.
+
+**(c) Zero false sentences here means something different from zero in `doctor.rs`, and this is the
+first evidence on that question.** `umbrella/065` recorded a theory it explicitly asked not to be
+carried forward as established: that `doctor.rs` self-maintains because its comments get re-read
+whenever a check is edited. `schema_version.rs` is a *wire-history* file — an append-only ledger of
+what each schema version changed — and the reviewer's read is that its comments "stay true rather
+than rot" for a structural reason of its own: a v11 entry describes what v11 did, and that does not
+become false when v12 lands. **So two clean results, two different reasons, and neither is yet
+evidence about source comments in general.** `tasks/umbrella/066`, filed this leg, is the test that
+would separate them.
+
+**Merged:** `agent/study-designer/044-src-citation-sweep` — code
+`a850a2d62483b7fc2446958972db45b65522e4a8` in `embarch-study-designer` (parent
+`7cfef952f3b826298d2609ea20c049ac1e88765f`), doc `b79d0577e3c78fd94124f38058b8e3e72081991a` in
+`embarch-doc` (parent `a1b4a59a98cb3a4c51b5eca264b6e4df94e14e1f`). Gate re-run by me on the merge
+result: `cargo build` / `test` (**1 s**) / `clippy --all-targets -- -D warnings` green,
+`check-client-names.py --repo embarch-study-designer` clean, `check-docs.py` **11/11**, ownership
+green on both branches. `changelog.d/study-designer-schema-version-citation-sweep.fixed.md` consumed
+into `history/study-designer.md` with `--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/study-designer/044` closed `done` and removed.
+**`tasks/study-designer/045` filed by the worker** for the remainder — `study.rs` (52),
+`gatt_extract.rs` (35), `lib.rs` (34) and ~273 more lines — with the boundary checked by the
+reviewer against its own recount rather than taken on trust.
+
+**Reviewer:** no findings — re-derived all three decision bodies independently and confirmed the
+same-number collision is real and the relabelling correct, spot-checked three of the prose claims
+against `src/` rather than against the docs, recounted the remainder task's per-file citation
+figures with two different regexes and found no file miscategorised, and checked
+`embarch-decision-reversals.md` for any row touching these numbers (none).
+
+**Hardware debts:** **none created and none touched.** Source comments in a host-side crate; nothing
+built for a board, nothing executed. Standing debts carried unchanged.
+
+**Budget:** PROCEED — weekly **68.1%** of a 90% cap at leg start, resets in ~60h. Wave 6 suggested,
+4 workers dispatched at the unit cap.
+
+**Least sure about:** **whether a repo whose first-ever sweep yields two lines should be swept
+further at all.** `tasks/study-designer/045` now claims ~380 more citations in this repo, and the
+honest read of this unit is that its cleanest file was also the one the task told the worker to take
+first, for good reasons — so the remainder is not a random sample of the same population and may be
+dirtier. But I cannot rule out the opposite: that this crate's comments are simply well-maintained
+and the next 380 also come back clean, at four legs' cost. Somebody should compare `045`'s hit rate
+against this one before filing a third.
+
 ## 2026-09-13 18:39 — core/055 the fork decision 22 opened is closed on both sides, and the verb is threaded rather than flattened
 
 **Decided:** **three.**
