@@ -97,6 +97,87 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-14 00:57 — topology/044 seventy bytes, two sentences, and a reserve line that is not ten percent of anything
+
+**Decided:** **nothing numbered** — a 70-byte trim decides nothing. **But a `fleet stop` arrived
+from the owner at 00:55:44 while this unit was landing, and that is the most important fact in this
+entry.** What I did about it is (d).
+
+**(a) The pass is clean and the human question answers yes.** `embarch-topology/spec.md` went
+**9,110 B → 9,001 B** (87.9%), out of reserve, confirmed by `check-doc-size.py --pressure` rather
+than by arithmetic — the whole point of this task, since `topology/043` hit a target it computed
+itself from 10% of the cap and the gate still went red. The ledger is **15 dated entries → 14**, and
+`embarch-topology` now has nothing in reserve at all. My own answer to
+`DOC-COMPACTION-PASS.md`'s question, having read the diff: **yes.** What went was the clause
+*"previously ad hoc across env vars, config files and doctor checks"* — a *used-to-be* lead-in whose
+subject is fully stated by the two bullets immediately after it — and the parenthetical *"(one
+flash, one reset, one study attempt)"*, three examples of an operation, where the rule they
+illustrate is untouched and still cites decision 29 by number. Neither is a constraint, an
+invariant, a rejected alternative or a failure signature.
+
+**(b) The squeeze quoted its cuts, and it did so because it was told mid-run.** I sent both
+compaction workers a course correction after dispatch pointing at `DOC-COMPACTION-PASS.md`'s rule
+that a squeeze's commit message lists every deleted hunk as the first dozen words of the deleted
+text, verbatim and file-qualified, with a category summary permitted only *after* those lines. This
+worker replied that it had verified the rule against the file itself before acting rather than
+taking my word for it, and the commit message does exactly what the rule asks. **I should not have
+needed to send it** — the rule is in a file the worker is expected to read for any compaction, and
+the dispatch prompt named the human question but not this. That is a gap in my prompt, not in the
+worker.
+
+**(c) The reviewer did the count, which is the half of that rule that is explicitly its job.** Two
+hunks in the diff, two quoted in the message, no third deletion anywhere in the commit; it located
+both hunks by line (6-9 and ~107) and showed they fall outside the protected probe-selection bullet
+(90-96) and the Shape consumer-call table (23+); it read `ad3f642`'s message and confirmed none of
+`043`'s seven cuts was restored; and it read decision 29's body in `decisions/scope.md` to confirm
+the deleted parenthetical was illustration and not the only statement of the rule.
+
+**(d) The stop, and what "finish landing what is in flight" cost.** I polled `#embarch-fleet` at this
+unit boundary — the poll `.claude/leg.md` calls the *primary* route, not a backstop — and found
+`fleet stop`, posted 00:55:44, about a minute old. **I deleted `/home/gabriel/Github/embarch/.fleet/pump` immediately**, which
+is the supervisor's own stop-direction act and the thing that prevents a successor, and posted in
+that message's thread without reacting to it, so the listener can still claim and confirm it. Then I
+kept landing: `ui/053`'s worker had already finished and pushed, and `api/095`'s was mid-run. **I
+did not kill the running worker.** I sent it a wrap-up instruction instead — verify only what it has
+already read, report the honest count, say the sweep was cut short rather than completed, and file a
+remainder task — which bounds the extra time without throwing the work away or leaving a claimed
+task behind. Dispatching anything further would have been the actual violation, and I dispatched
+nothing.
+
+**Merged:** `agent/topology/044-compact-topology` — **code: none.** The code branch carries zero
+commits, and I confirmed that by commit count against `origin/main` before landing rather than
+assuming it from the task's shape. Doc `32caf10` in `embarch-doc` (**cherry-picked**, from branch
+commit `3ca94a8`; `--ff-only` refused because `core/062`'s fold had already moved `main`). Gate
+re-run by me on the merge result: `cargo build` / `test` / `clippy --all-targets -- -D warnings`
+green in `embarch-topology`; `check-client-names.py --repo embarch-topology` clean against 7
+denylist entries; `check-docs.py` **11/11**; `check-ownership.py --scope topology` OK on the doc
+half (3 paths), run before the merge.
+`changelog.d/topology-spec-out-of-reserve.changed.md` consumed into `history/topology.md` with
+`--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/topology/044` closed and removed, which leaves the `topology` scope with
+no dispatchable task at all.
+
+**Reviewer:** no findings — see (c); it performed the hunk count `DOC-COMPACTION-PASS.md` assigns to
+the reviewer specifically, rather than agreeing with the commit message's own summary of itself.
+
+**Hardware debts:** **none created.** Two sentence fragments deleted from a markdown file; nothing
+built, nothing executed, no board, no probe, no live Core. Standing debts carried unchanged — see
+the `core/062` entry below for the `core/015` Windows-build count, which I re-derived there (**40
+commits since `1c1224e`**, not the ordinal the last five days have been incrementing). The dev-bench
+probe is still unplugged and `tasks/api/059` stays **open**.
+
+**Budget:** PROCEED — weekly **85.7%** of a 90% cap, resets in ~54h, wave 3 suggested and 3 used.
+The leg ends on the stop, not on the budget.
+
+**Least sure about:** **letting `api/095`'s worker keep running after a stop.** `.claude/leg.md` says
+honouring a stop means finishing what is in flight, and a dispatched worker is in flight — but it
+also warns about "a full leg of unwanted work after the owner asked you to stop", and a worker five
+minutes into a twenty-minute run is the case the rule does not name. I chose the reading that wastes
+no work and leaves no stranded claim; the other reading is defensible and would have stopped sooner.
+
+---
+
 ## 2026-09-14 00:54 — core/062 a comment that claimed another repo's text was unchanged, and the one beside it that correctly said nothing
 
 **Decided:** **nothing numbered.** A one-line comment correction is not a decision and does not want
