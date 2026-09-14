@@ -97,6 +97,78 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 22:43 — topology/043 a clean compaction that still failed the gate, because the task's own target was computed from the wrong number
+
+**Decided:** **nothing numbered** — a compaction that cuts restatement decides nothing, and the
+worker correctly filed none. Three things to carry, and **(b) is the one the next leg needs.**
+
+**(a) `embarch-topology/spec.md` 9,825 → 9,110 B, seven restatements cut, every protected thing
+intact.** The worker quoted all seven deleted hunks verbatim in its commit message and separately
+disclosed one non-deletion reword, so nothing is uncounted. Each cut was `spec.md` restating a
+decision file's own *why* — decision 20's by-role-lookup failure story and its handshake-timeout
+signature, 27's re-enrolment-carries-the-fact-back reasoning, 29's rejected-invalidation-signal note,
+12's "a refusal, not a log line beside one", 31's no-hand-mirrored-copy rationale. **The reviewer
+traced all seven back to their decision files and found every fact carried in full there**, which is
+the check the byte count cannot make. Its answer to `DOC-COMPACTION-PASS.md`'s question was yes, and
+it defended it: every declared fact, every table, the probe-selection three-behaviour list and the
+Shape section's consumer-call diagram are byte-for-byte unchanged.
+
+**(b) It met its task's stated target exactly and the gate went red anyway — the target was wrong,
+and the same arithmetic is in most compaction tasks in this queue.** `tasks/topology/043`'s
+`Done when` said *"under roughly 9,216 B, i.e. 90% of 10,240"*. `check-doc-size.py` does not use
+that number: reserve is `max(RESERVE_FLOOR, (100 - RESERVE_PCT)% of limit)` with
+**`RESERVE_FLOOR = 1200`**, and 10% of 10,240 is 1,024 — *below* the floor, so the floor wins and the
+real line is **9,040 B**. The file landed at 9,110 B, **70 bytes inside reserve**, and
+`check-docs.py` failed on `check-doc-size.py` mid-fold. **The floor dominates every cap below
+12,000 B**, which is the 10,240 B `spec.md` tier and the 5,120 B `open.md` tier — most of this
+corpus. Only the 12,288 B decision groups and the 25,600 B guides are percentage-governed. So a
+`Done when` box stating a percentage-derived byte target is **usually** wrong, and wrong in the
+direction that stops a worker early.
+
+**(c) What I did about it, and why filing rather than shaving.** I filed **`tasks/topology/044`** for
+the remaining 70 bytes, written as a worked example of the fix — its `Done when` says *run
+`check-doc-size.py` and believe it*, with no arithmetic of its own — and **`tasks/doc/058`**
+(owner-required, `scripts/` and `tasks/README.md` are reserved) for the general defect, with three
+options and an explicit *do not change `RESERVE_FLOOR`*: the floor's own comment argues that a
+percentage of a small cap is not runway and that filing debts earlier is the point, and that argument
+is right. I did not shave the 70 bytes myself. **`044` carries `043`'s full `Must not delete:` list
+plus a new clause — do not undo `043`'s seven cuts** — because the cheapest wrong outcome here is a
+second worker re-walking ground a reviewer already cleared.
+
+**Merged:** `agent/topology/043-compact-topology` — doc `ad3f642` in `embarch-doc` (parent
+`10c157baf6fa1823b04c6db041a4b340bd84c751`), **code none — the `embarch-topology` branch carries zero
+commits**, because `spec.md` lives in `embarch-doc` and this unit changed no Rust. Gate re-run by me
+on the merge result: `check-docs.py` **11/11** after `tasks/topology/044` filed the debt (10/11 with
+`check-doc-size.py` red before it); `check-ownership.py --scope topology` OK on 3 paths.
+`cargo build`/`test`/`clippy` not re-run by me — zero code paths changed, so the code repo's gate
+result is `main`'s, unchanged. `changelog.d/topology-spec-compacted.changed.md` consumed into
+`history/topology.md` with `--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/topology/043` closed and removed. `tasks/topology/044` and
+`tasks/doc/058` filed.
+
+**Reviewer:** no findings — checked the must-not-delete list at `ad3f642^` rather than trusting the
+fold, confirmed both protected items sit outside every diff hunk, and traced all seven cut claims to
+their decision files. It flagged one sub-item honestly as *not* a finding: decisions 4/8 name the
+gate, its storage and the port heuristic as the sole implementation but do not re-itemise "identity
+reads", which decision 21 documents in detail instead — a coarser pointer, not an orphaned claim.
+
+**Hardware debts:** **none created.** Doc prose only — no board, no probe, no live Core, no deploy.
+Unchanged and not created here: `tasks/api/059` is `Hardware: bench` and stayed `open` for a third
+consecutive leg, because `embarch-core` answered `"probes": []` at step 0 — both boards unplugged.
+
+**Budget:** PROCEED at both ends — weekly **78.2% → 79.0%** of a 90% cap, resets in ~56h, wave 6
+suggested. Four workers dispatched against it, limited by dispatchable scopes and not by the wave.
+**Unit 1 of 4.**
+
+**Least sure about:** **whether `tasks/doc/058` is shaped as a fix or as a complaint.** I gave it
+three options and recommended two of them, but the honest position is that I do not know whether the
+right answer is a rule in `tasks/README.md`, a byte count printed by `--pressure`, or something that
+makes the whole target unstatable — and it is owner-reserved, so my read is the only argument in the
+file and nothing tested it.
+
+---
+
 ## 2026-09-13 22:28 — api/094 an agent can finally ask for the outpost's own answer, and the reviewer caught the one sentence that said so too loudly
 
 **Decided:** **nothing numbered, and the worker was right not to file one** — wiring an existing
