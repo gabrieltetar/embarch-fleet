@@ -97,6 +97,93 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 18:05 — topology/038 the two copies had already drifted, so the extraction had to choose rather than copy
+
+**Decided:** **four.**
+
+**(a) The drop said "duplicated"; the two copies had already disagreed, and finding that before
+dispatch is what made this a real unit.** `inbox/core-resolve-probe-duplicates-topology-enroll-selection.md`
+arrived describing `embarch-core::resolve_probe` and `embarch_topology::hardware::validate::enroll`'s
+inline block as two maintained copies of one rule. I read both before filing and found **three
+concrete behavioural differences on `main`**: `resolve_probe` special-cases `probes.is_empty()`
+*before* the serial lookup with a usbipd hint and `enroll` has no empty case at all; `resolve_probe`
+tests `len() > 1` where `enroll` tests `len() != 1`; and every error string differs. I put all three
+in the task file and told the worker an extraction that silently picks one copy's behaviour is the
+failure here, not the success. **That is `embarch-core` decision 9's own drift class, one repo over,
+and it had already fired** — nothing failed, because nothing tested either copy.
+
+**(b) The reconciliation is better than either input, and the `action` parameter is why.** The
+landed `select_probe(probes, probe_serial, action)` checks zero probes **first and
+unconditionally** — `resolve_probe`'s ordering — keeps the usbipd hint verbatim, and *additionally*
+echoes the serial back when one was given, which neither copy did. The multi-probe refusal takes a
+present-tense verb (`"enroll"`, `"flash"`, …) so a caller keeps its own flavour of the message
+without keeping its own copy of the function. **That parameter is the design decision**: the
+alternative was one fixed wording, which would have cost `enroll` *"plug in only the board you mean
+to enroll"* and given `embarch-core` a reason to keep its copy. It also took the list-taking
+signature over listing internally, which is what makes the five new unit tests possible at all —
+neither copy was testable before.
+
+**(c) I unparked `tasks/core/055` myself, after checking the feature gate rather than assuming it.**
+I filed `core/055` `blocked` on this landing an hour earlier, because the drop's own Done-when names
+a `topology` prerequisite a `core` worker cannot write. The blocker is gone, so it is `open` — but
+the thing that could have made that wrong is that `hardware::select_probe` is behind
+`#[cfg(feature = "hardware")]`. `embarch-core/Cargo.toml:42` already declares
+`features = ["hardware"]`, so the call is reachable with no manifest change. **I wrote the check and
+its evidence into the task file**, so the next worker does not re-derive it, and rewrote that task's
+"be careful about the usbipd hint" section, which this landing made obsolete — the hint survived,
+and what actually needs deciding now is what verb `flash` and `reset` pass for `action`.
+
+**(d) The worker filed its own size debt without being asked, and that is worth recording as
+working.** Decision 33 plus the decision 32 amendment pushed `embarch-topology/decisions/crate.md`
+to **11,676/12,288 B — 95.0%**, from a file that was not in reserve when I dispatched (I told it so
+in the dispatch note). It filed `tasks/topology/039-compact-topology.md` in the same commit, with a
+**`Size debt due: 2026-09-20`** — the soonest date on the whole ledger, so it becomes a leg's
+first-unit obligation a week from now rather than an ambush on unrelated work. That is exactly the
+behaviour `.claude/leg.md`'s reserve rule is for, produced by a one-line dispatch note.
+
+**Merged:** `agent/topology/038-expose-probe-selection` — code
+`96e86c68cc3383a7dd491ff3dfb5394f5a93f547` in `embarch-topology` (parent
+`9dc44dd5abea801915ee9079b9a30ded1d96d373`), doc `b98b53b7fb214d8e9f6a6aec3b18817b330f42de` in
+`embarch-doc` (parent `d7f3b6e76a8952f08478adbb2be2dec94ceca277`). Gate re-run by me on the merge
+result: `cargo build` / `test` (**15 passed**, plus doc-tests) / `clippy --all-targets -- -D
+warnings` green, `check-client-names.py --repo embarch-topology` clean against 7 denylist entries,
+`check-docs.py` **11/11**, ownership green on all 6 changed paths. **I read the code diff before
+pushing** — `embarch-topology` is a shared crate four repos depend on, so §10's read-the-diff
+condition applies. `changelog.d/topology-select-probe.decided.md` consumed into `history/topology.md`
+with `--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/topology/038` closed `done` by the worker and removed in this fold.
+`tasks/topology/039` filed `blocked` by the worker, correctly — it unparks when `core/055` lands.
+
+**Reviewer:** no findings — grepped all four consumer repos for the changed error strings and
+confirmed nothing outside `embarch-topology` matches on them, traced the zero-probe branch through
+`enroll_probe`'s MCP tool and `POST /probes/enroll` to confirm a message-only change with no status
+code moved, independently confirmed the `hardware` feature reachability and decision 33's number,
+and checked the test helper's `JLinkFactory` coercion is ordinary safe Rust.
+
+**Hardware debts:** **none created, and this one deserves a caveat.** Every behaviour here is
+message text and control flow over an already-enumerated probe list; `select_probe` never opens a
+probe, so nothing in it needs a board. **But no attached probe has exercised the reconciled
+function** — the five new tests cover zero/one/two probes and serial hit/miss with synthetic
+`DebugProbeInfo` values, which is a real gain over the zero tests either copy had, and is not the
+same as an enrolment against silicon. The dev-bench probe is still unplugged (`"probes": []` live at
+this leg's top, fifth consecutive leg), so that could not have been checked this leg regardless.
+Standing debts carried unchanged, including `core/015`'s native Windows build at twelve landed
+`embarch-core` changes — **`core/055` will add a thirteenth**, since it edits `embarch-core`.
+
+**Budget:** PROCEED — weekly **66.0%** of a 90% cap at leg start, resets in ~61h. Wave 6 suggested,
+3 workers held in flight.
+
+**Least sure about:** **the `action` parameter's blast radius, which nobody has had to feel yet.**
+`enroll` is its only caller today and passes a literal. When `core/055` lands, `flash` and `reset`
+both reach `resolve_probe`, which has no single verb — so either the verb threads up through two
+call sites or `embarch-core` picks one word and the message gets vaguer than it was. I wrote both
+options into `core/055` rather than choosing, and I think threading is right, but it is a
+public-API ergonomics call I am making on behalf of a repo whose worker has not looked at it yet.
+**Also, for the second unit running, this reviewer's report reached me through the coordinator
+rather than its own notification** — `tasks/doc/042` exactly. Two for two is a pattern, not an
+incident.
+
 ## 2026-09-13 17:58 — umbrella/064 five citations checked, five held, and the useful finding was a same-number collision nobody was looking for
 
 **Decided:** **three.**
