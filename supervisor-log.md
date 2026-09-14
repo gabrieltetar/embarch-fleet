@@ -97,6 +97,82 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-13 20:25 — api/091 the density hypothesis got its first real test, half-passed it, and one defect shipped to a caller
+
+**Decided:** **nothing numbered.** Two things to carry, (b) and (c).
+
+**(a) 136 read: `client.rs` 99/99 (6 fixed) and `config.rs` 37/37 (0 fixed), both end to end.** The
+worker had budget left after the named file and took a second one rather than stopping, which is
+the right call and is why this unit is the most informative of the leg.
+
+**(b) The hypothesis was that cross-repo citation *density* predicts defects, and this is the
+first file chosen on that basis rather than on size. It half-held, and the half that failed is the
+interesting one.** `client.rs` — `embarch-api`'s client *for* `embarch-core`, the one crate that
+legitimately cites two sets — came back **6.1% defective**. `config.rs`, in the same repo and the
+same sweep, came back **0 in 37**. So density predicted `client.rs` correctly; but `config.rs` is
+the first file picked inside a high-density *repo* that came back clean. **The unit of prediction is
+the file, not the repo** — obvious in hindsight, and not what the last two entries implied.
+
+**(c) Four of the six were one defect repeated, and the fourth instance is a live runtime string,
+not a comment.** `embarch-api` decision **59** was cited for content that is decision **60**'s — the
+"two rendering states" language, the "never computes a verdict of its own" sentence, and the reason
+`dev_bench_hello` renders `"unavailable"`. Three sites are doc comments. **The fourth is the
+`"unavailable"` message `render_hello_ack` builds at runtime and returns to a caller**, which told
+whoever hit it to go read the wrong decision. **Every sweep in this series has been framed as
+comment hygiene, and this one shipped.** `check-decision-refs.py` reads only `*.md`, so a wrong
+number in a string that reaches a user is exactly as invisible as one in a comment — and worse,
+because a comment has a maintainer for an audience and this had an operator.
+
+**(d) The other two are the same-number collision this task was filed to look for, and both were
+*bare numbers sitting next to labelled siblings*.** `EnrollProbeRequest::probe_serial` read
+"`embarch-core` decision 22's, whose mechanism decision 14 moved" — that bare 14 is
+`embarch-topology`'s, and `embarch-core` has a real, unrelated decision 14. `StudyRunOptions` read
+"(`embarch-core` decision 31's amendment, decision 40)" — the 40 is `embarch-study-designer`'s, and
+`embarch-core` decision 40 is also real and unrelated. **In both, the labelled sibling in the same
+sentence is what makes the bare one dangerous**: it reads as "same repo as the one just named."
+That is a writing pattern rather than a one-off, and it is worth handing to whoever settles
+`tasks/doc/055`.
+
+**(e) The worker left several bare citations alone on purpose and said so, including two genuine
+same-number-different-repo collisions.** The reviewer checked every occurrence of both and agreed
+each is unambiguous in its own paragraph. Recorded because "found 6" and "judged 4 more and left
+them" are different facts and only the first usually survives.
+
+**Merged:** `agent/api/091-client-rs-citations` — code `f2f1de2` in `embarch-api` (parent
+`1001899`), doc `1fe5b8b` in `embarch-doc` (parent `49a17ce`). Gate re-run by me on the merge
+result: `cargo build` / `test` (**143 passed** across six binaries, including those covering
+`render_hello_ack`) / `clippy --all-targets -- -D warnings` green; `check-docs.py` **11/11**;
+ownership green on both branches. `changelog.d/api-client-rs-citation-sweep.fixed.md` consumed into
+`history/api.md` with `--only`; 29 of the owner's own fragments left pending.
+
+**Blocked:** nothing. `tasks/api/091` closed `done` and removed. Remainder filed as
+`tasks/api/093`: `resolve.rs` (~32), `tools.rs` (~24), `cli.rs` (~17). `embarch-api` carries **297**
+citation lines in total and this unit reached 136 of them.
+
+**Reviewer:** no findings — re-derived the 59-vs-60 split from
+`embarch-api/decisions/hardware-selection.md` directly, confirmed both foreign labels from *both*
+candidate repos' bodies rather than only the chosen one, spot-checked six untouched citations
+including four in `config.rs`, agreed with (e)'s deliberate non-changes after checking every
+occurrence of each, and confirmed `embarch-decision-reversals.md` holds nothing touching decisions
+14, 15, 40, 59 or 60 in either repo.
+
+**Hardware debts:** **none created.** Source comments plus one runtime string; no board, no probe,
+no live Core, no deploy. **But (c) is deploy-shaped rather than doc-shaped**: the corrected
+`"unavailable"` message does not reach an operator until an `embarch-api` MCP binary is rebuilt, and
+this machine's is already known to go stale against a shipped change.
+
+**Budget:** PROCEED — weekly **73.6%** of a 90% cap at this fold, resets in ~58h39m. Unit 4 of 4;
+the leg ends at its cap.
+
+**Least sure about:** **whether (c) should have been an alert rather than a log line.** A wrong
+decision number in a message an operator reads is the first user-visible defect this sweep series
+has produced, and `ops.md` §3's alert set has no slot for "a landed fix the owner may want to
+deploy". I judged it below the bar — a citation in an error string, not wrong behaviour — but that
+reasoning also describes every defect this series exists to find, and the distinction I am leaning
+on is who reads the text rather than how wrong it is.
+
+---
+
 ## 2026-09-13 20:21 — topology/040 the first sweep whose entire yield was false sentences and not one wrong number
 
 **Decided:** **nothing numbered.** But one finding is worth carrying, below.
