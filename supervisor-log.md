@@ -97,6 +97,88 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 12:48 — api/099 the third client.rs citation unit in three days, and the task I filed off it and then withdrew
+
+**Decided:** **two things, and the second one is me being wrong in public because that is what this
+log is for.**
+
+**(a) The unit closed its own loop and then some.** `api/097` fixed a wrong decision number at
+`client.rs` L430 and landed the fix **bare**, pointing at a foreign repo — reintroducing, eight
+words from one of `api/091`'s own fixes, the exact shape `091` had closed. `099` labelled it
+`` `embarch-topology` decision 17 ``, and then **found a second instance nobody had enumerated**:
+L205's `probe_serial` field doc said the field *"existed on Core's side since decision 15"*, bare,
+four lines after a labelled `` `embarch-topology` decision 15 ``, while `embarch-api` has its own
+real, unrelated decision 15. That was the worker's own call with no task backing it, and the
+reviewer confirmed it independently against both decision bodies. It also settled L1774: the
+`` decision 18's 2026-08-25 amendment `` framing is gone, because `e46164b` **created** decision 18
+that day. **The reviewer measured all three new labels against `check-decision-refs.py`'s real
+`ATTRIB_WINDOW = 44` — 18, 27 and 18 characters back, all on the same physical source line as their
+reference**, which is the specific way `api/097` failed and the only check that proves this fix is
+not the previous fix again.
+
+**(b) I filed `tasks/api/101` off my own merge review, and then deleted it, because the reviewer
+showed I had misread the source.** Checking the worker's claim that the file's other `decision 15`
+instances were clean, I read L1183 and L1269 as citing *"decision 15's 2026-08-18 **amendment**"* —
+the same false-amendment shape `099` had just fixed at L1774 — and confirmed that `2026-08-18`
+appears nowhere in `embarch-api/decisions/`. I wrote the task, with the evidence, and filed it. The
+reviewer then reported the same two lines as citing a *"2026-08-18 **finding**"*, so I went back and
+read the continuation lines I had not read: **the word is `finding`, on the following line, both
+times.** A finding is a much weaker claim than an amendment, and decision 15's body genuinely
+narrates that finding (*"That premise was false for WSL2 specifically, when Core runs as the
+installed Windows service"*). **The defect I filed does not exist.** What is left is an undated date
+in a shipped comment, which is not worth a worker.
+
+So I deleted `tasks/api/101` before the fold rather than letting it go out. **I am recording it
+because the near-miss is the interesting part**: I built a task on two lines of a grep output
+without reading the third, and the thing that caught it was a reviewer I had told to spot-check a
+*different* claim. One fold earlier in this same leg I wrote that my defence for filing four tasks
+off one census was that *"these were found by a command the task itself told me to run, not by going
+looking for work"* — and this one was me going looking for work, and it was wrong. **A supervisor
+filing tasks off its own merge review should hold itself to the same standard it sets for a
+worker: read the whole hunk, not the grep line.**
+
+**Merged:** `agent/api/099-client-rs-l430-label` — code `e3b0dc1` in `embarch-api`,
+**fast-forwarded** onto `main`. Doc `6409c28` in `embarch-doc`, **cherry-picked** from branch commit
+`56d179e` (`--ff-only` refused; `main` had moved three times under it this leg). Gate re-run by me
+on the merge result, at the branch tip in `embarch-api`: `cargo build` / `cargo clippy --all-targets
+-- -D warnings` rc=0, `cargo test` **130 tests across five binaries, 0 failed** (I re-ran it
+unquieted after a `-q` run printed only the last binary's `0 tests` summary — worth knowing, that
+output reads like a repo with no tests). `check-docs.py` **11/11**, `check-client-names.py --repo
+<code worktree>` clean against 7 denylist entries, `check-ownership.py --scope api` OK on 2 paths
+run in the worker's own worktree. `changelog.d/api-client-rs-decision-labels.fixed.md` consumed into
+`history/api.md` with `--only`; **29 of the owner's own fragments left pending.**
+
+**Blocked:** nothing. `tasks/api/099` closed and removed.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none created.** Three doc-comment lines in a Rust source file; nothing
+executed, no board, no probe, no live Core, no route called. `core/015`'s native Windows build is
+untouched — `embarch-api`, not `embarch-core` — and the figure to carry forward stays the
+re-derived **40 commits since `1c1224e`**; I did not re-derive it this leg and the previous handoff
+warns against propagating an incremented ordinal. **I did not read Core live at any point this
+leg**, so the dev-bench probe's state is carried on leg 116's reading, not mine: `tasks/api/059`
+stays `open`, and the owner's `d0cf9a0` parks the whole bench queue regardless, so no bench unit was
+eligible. `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`); its buffer was neither
+believed nor used.
+
+**Budget:** PROCEED throughout — weekly **4.3% → 5.2%** of a 90% cap, resets in ~162 h. Wave **6**
+suggested; **3** dispatched, then 1 in the freed `api` slot. The unit cap bound this leg, and at the
+start so did the queue's scope spread — three distinct scopes for a wave of six. Treat the
+percentage as loose at this magnitude; a reading this low pins the allowance to roughly ±50%.
+
+**Least sure about:** **whether `client.rs` should get one full sweep instead of a sixth one-off.**
+This file has now produced five citation tasks in three days — `091`, `097`, `099`, `100` (filed
+this leg off the `api/098` reviewer) — plus my withdrawn `101`, and every one was found by somebody
+looking at something else. It is ~1,800 lines of comment-dense shared-crate code that `embarch-ui`
+also path-depends on, and **no sweep has ever read every citation's *sentence* in it**; `095`/`097`
+swept it for numbers. `check-decision-refs.py` never walks Rust source at all, so nothing mechanical
+will ever bound this. My instinct is that one dedicated sweep would cost less than the next three
+one-offs, but I did not file it, because I have just been shown what happens when I file a task off
+an instinct at merge review.
+
+---
+
 ## 2026-09-16 12:42 — core/063 decision 30 compacted, and the census its own framing implied found four more nobody is watching
 
 **Decided:** **three things, and the third is the one that matters beyond this unit.**
