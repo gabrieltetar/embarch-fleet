@@ -97,6 +97,117 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 12:42 — core/063 decision 30 compacted, and the census its own framing implied found four more nobody is watching
+
+**Decided:** **three things, and the third is the one that matters beyond this unit.**
+
+**(a) I endorsed compact-over-split, and the reviewer re-derived it rather than agreeing with me.**
+Decision 30 was 4,248 B against a 4,096 B per-decision cap — 152 B over. The worker read it, found
+every paragraph carrying one distinct claim rather than several accreted arguments, grepped every
+inbound `decision 30` citation in the suite, and compacted: 4,248 → 3,550 B, 546 B of margin. The
+reviewer re-ran that grep independently and confirmed **not one inbound citation lands on the cut
+passage** — they all land on `raw before decode`, `EMBARCH_STREAM_MAX_BYTES`/`truncated`, the
+`rx_utc_ms` epoch clock, or the stale-prefix-on-open defense, all retained. **A new decision number
+is the most expensive thing in this suite to reverse, and this entry did not need one.**
+
+**(b) `DOC-COMPACTION-PASS.md`'s human question, answered — I am quoting the reviewer because it
+read both versions and I read only the diff.** *"Yes — decision 30 alone still tells someone what
+they need to work on Core's stream handling today. Every paragraph that survived is a live
+constraint (port/locking, `streams/` path layout and raw-before-decode, manifest binding and refusal
+behavior, Core-as-clock and frame indexing, retention and the stale-prefix defense), and the one
+thing the cut touches — the alias retirement — still states its operative conclusion without the
+reader needing the pre-cut version's bug example or single-machine measurement to act on it."* My
+own view, formed before I saw that: the cut I was least comfortable with is the `alias_for` →
+`"power"` observation, that the alias mapped to a capture which cannot exist. The reviewer judged it
+an incident detail about already-dead code rather than a rejected alternative, and listed six other
+places the underlying fact (power profiling deferred, no front end ordered) is documented. **I
+accept that, and I am recording my discomfort anyway** — it is the one judgement in this fold that
+a later reader might reverse.
+
+**(c) THE FINDING, and it is bigger than this task. `core/063`'s own framing was "nothing is
+watching it, and that is the actual finding." I ran the census that implied. It is true five
+times.** Five decisions across the suite are over the 4,096 B per-decision cap **and carry no pin in
+`scripts/decision-size-baseline.json`**, so nothing reports them and no ledger gives them a clock:
+
+```
+7,818 B  embarch-topology/decisions/validation-classifier.md#25   191% of cap
+6,962 B  embarch-umbrella/decisions/probe-vendors.md#49           170%
+5,157 B  embarch-umbrella/decisions/locate-api.md#42              126%
+4,559 B  embarch-outpost/decisions/clocks.md#17                   111%
+4,352 B  embarch-core/decisions/logging.md#44                     106%
+```
+
+Decision 30 was the *sixth* and is now under. **`check-doc-size.py --decisions` prints only its top
+20 by size**, which is exactly why decision 30 sat over cap until a `core/060` reviewer happened to
+open the baseline file — and why `embarch-topology` decision 25, at nearly **double** the cap and
+the largest decision entry in the suite, has been invisible the whole time. The worker filed
+`tasks/core/064` for `#44` off its own run. **I filed the other three:** `tasks/topology/047`,
+`tasks/umbrella/068` (both umbrella entries in one task, with instructions to file a remainder if
+only one fits) and `tasks/outpost/023`. Every one carries `In flux: no` with the reasoning spelled
+out per file, because three of the four live violations on 2026-09-09 were flux answers that had
+stopped covering their own file.
+
+**Whether the per-decision cap should get a ledger and a clock the way the file cap has is the
+owner's call** — it lives in `scripts/`, and `tasks/doc/052` already records the adjacent defect
+(a verbatim split silently drops the pin of every decision it moves). **I did not touch `scripts/`
+and I did not pin anything.** Pinning an over-cap decision is the papering-over move, and every one
+of these four tasks says so to its worker in as many words.
+
+**Merged:** `agent/core/063-decision-30-over-cap` — doc `b3d9c72` in `embarch-doc`,
+**cherry-picked** from branch commit `76cf566` (`--ff-only` refused; `main` had moved twice under it
+this leg). **Code: no commit** — the `embarch-core` branch tip equals `main`; this is a doc-prose
+unit and there is one revert handle, not two. Gate re-run by me on the merge result:
+`check-docs.py` **11/11**, `check-client-names.py --repo <code worktree>` clean against 7 denylist
+entries, `check-ownership.py --scope core` OK on 5 paths run in the worker's own worktree.
+`embarch-core/decisions.md`'s size column for `streams.md` corrected 6.2 → 5.5 KB, and the reviewer
+measured that independently (5,678 B = 5.545 KB at `KB = 1024`, rounds to 5.5). `changelog.d/
+core-decision-30-per-decision-cap.changed.md` consumed into `history/core.md` with `--only`; **29 of
+the owner's own fragments left pending.**
+
+**One pattern note the reviewer caught and I am recording rather than acting on**, because it is the
+shape that bit `ui/011`: the task file quotes four cut hunks verbatim, and **three of the four are
+exact.** A connector clause between hunks 2 and 3 — ``And `serve_alias`'s **pre-`streams/` on-disk
+fallback was dead code**:`` — was deleted but not quoted, an unmarked ellipsis in an otherwise
+accurate list. No claim was lost (`serve_alias` is named in the *retained* opening sentence and the
+dead-code conclusion survives in the kept text), so this is not revert-grade. **But "every cut hunk
+quoted verbatim" is a rule about auditability, not about whether the claim survived**, and a
+compaction whose quote list has a silent gap is one nobody can check by diffing the task file. Worth
+watching for across the four over-cap tasks I just filed, all of which carry the same requirement.
+
+**Blocked:** nothing. `tasks/core/063` closed and removed. The worker also **struck
+`embarch-core/decisions/streams.md` off its own `Compacts:` line** — deleted, not
+`~~strikethrough~~`, which is the form that broke the size gate for leg 057 — and said in the body
+why: the file left reserve via `core/060`'s split, not via this per-decision unit. I asked for that
+explicitly at dispatch because `--pressure` was reporting the file PAID and pointing at this task,
+which would have read as an unpaid file-cap debt forever.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none created.** Doc prose only; nothing executed, no board, no probe, no live
+Core, no deploy. `core/015`'s native Windows build is **untouched by this unit** — no
+`embarch-core` *code* commit exists for it, which is worth stating plainly because four consecutive
+days of `core` units have been adding to that debt and this one does not. The figure to carry
+forward remains the re-derived **40 commits since `1c1224e`**; I did not re-derive it and the
+previous handoff explicitly warns against propagating an incremented ordinal. I have not read Core
+live this leg, so I am **not** restating the dev-bench probe's state on my own evidence —
+`tasks/api/059` stays `open` on the previous leg's live reading, and the owner's `d0cf9a0` parks the
+bench queue regardless. `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`).
+
+**Budget:** PROCEED — weekly **4.3% → 5.1%** of a 90% cap across the leg, resets in ~162 h. Wave 6
+suggested, 3 dispatched then 1 in the freed slot: the unit cap and the queue's scope spread bound
+this leg, not the budget.
+
+**Least sure about:** **whether filing four tasks off one census is refill or scope creep.** The
+census took one command and the finding is real — a decision at 191% of cap that nothing reports is
+exactly the failure `core/063` was written about — but I turned one unit's sibling finding into four
+queue entries in a single fold, and `.claude/leg.md` is explicit that refill sweeps the sources *no
+more eagerly* than any leg does. My defence is that these were found by a command the task itself
+told me to run, not by going looking for work; the counter-argument is that a supervisor who finds
+four tasks every time it runs one is manufacturing its own queue. **The next leg should judge the
+four on whether they were worth dispatching, not on whether the census was clever.**
+
+---
+
 ## 2026-09-16 12:36 — study-designer/050 a one-word fix, and the first spot-check this log has of a zero-defect sweep
 
 **Decided:** **nothing suite-wide, and one thing about how I brief reviewers that I want the next
