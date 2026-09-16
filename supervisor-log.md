@@ -97,6 +97,93 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 16:43 — api/100 two stale decision paths in client.rs, and a six-drop drain that produced one suite task
+
+**Decided:** **three things, and (b) is the one the next leg inherits.**
+
+**(a) The bare-number form, again, and the reviewer confirmed it is the standing convention rather
+than this leg's taste.** `crates/embarch-core-client/src/client.rs` lines 593 and 1724 cited
+`embarch-core` decision 62 with `decisions/streams.md` attached; `core/060` moved 62 and 63 verbatim
+into `decisions/stream-index.md`, so both paths were dead. Fixed by dropping the path and keeping the
+bare number — **not** by repointing at `stream-index.md`, which would re-arm the same trap at the next
+split. `DOC-CONVENTIONS.md`'s "Referring to a decision" says *"prefer the bare number"* and gives this
+exact failure as its reason. Nothing can find these mechanically: `check-decision-refs.py` walks
+`*.md` only and structurally cannot reach a `.rs` file — the reviewer read its `main()` to confirm
+that rather than taking it from the worker.
+
+**(b) THE DRAIN — six drops, five tasks, and one of them is a `suite/` task with a live announcement
+window.** Leg 119 left the heaviest inbox this queue has carried. Filed:
+
+1. `tasks/suite/039` — reversals row 105 does not preserve decision 20's cut diagnostics.
+   **The reviewer filed this drop as `Scope: topology` in good faith and the gate disagrees.** I ran
+   it both ways before filing: `echo reversals/rows-93-109.md | check-ownership.py --scope topology
+   --stdin` is a VIOLATION, `--supervisor --stdin` is OK. So it is a `suite/` task, it is mine, and
+   **it must never be dispatched to a worker** — a topology worker would be refused by the gate
+   *after* doing the work. Announced and parked at `ts` **1789596240.452339**; that `ts` is written
+   into the task file itself, so if this leg dies the next one completes the window rather than
+   restarting it.
+2. `tasks/ui/056` — the two `ui` drops folded into **one** task. Leg 119 flagged that they were one
+   dispatchable slot between them and suggested folding; they are two independent defects in two
+   files, so the task keeps them as Part A and Part B with separate "done when" items.
+3. `tasks/umbrella/071` — decision 42 cites decision 35 for a `list-targets` shape 35 never records.
+   Not dispatched: `umbrella/069` took the slot, and `069`'s dispatch note carries an explicit
+   hands-off on `locate-api.md`#42 so the two cannot collide.
+4. `tasks/doc/065` (case-sensitive citation sweeps) and `tasks/doc/066` (112 leaked local `agent/*`
+   branches in the owner's checkout) — both `Owner: required`, both undispatchable by construction.
+
+**(c) One imprecision the reviewer found and I am recording rather than filing.** The task file's
+close-out claims both surviving `decision 62` citations carry the `` `embarch-core` `` label "on the
+line the decision number opens on". That is true of the second (line 1723) and **overstated for the
+first**: `embarch-core` closes line 592 and the word "decision" begins on 593. It changes nothing —
+the script never reads `.rs`, and both citations match `DOC-CONVENTIONS.md`'s canonical cross-project
+form as rendered prose — so it is a wrong sentence in a closed task file, not a defect in the corpus.
+Filing it would be the "reviewer that files everything adjacent" failure leg 119 named.
+
+**Merged:** `agent/api/100-streams-md-stale-paths` — code `b1f99b9` in `embarch-api`, doc `e9fae3e`
+in `embarch-doc`. Both fast-forwarded, no rebase needed. Gate re-run by me on the merge result:
+`cargo build --all-targets`, `cargo test` (**102 across ten binaries**, 0 failed), `clippy
+--all-targets -- -D warnings` clean, `check-docs.py` **11/11**, `check-ownership.py --scope api` OK on
+2 doc paths and `--code-repo` OK on 1, `check-client-names.py --repo <code worktree>` clean against 7
+denylist entries. `changelog.d/api-client-rs-streams-md-mentions.fixed.md` consumed into
+`history/api.md` with `--only`; **29 of the owner's own fragments left pending**, untouched. No
+`status.d/` or `features.d/` fragment.
+
+**A gate failure that was mine, not the code's, and worth one line so the next leg does not chase
+it.** My first clippy invocation was `cargo clippy --all-targets -- -D warnings -q` — the `-q` lands
+*after* `--`, so it is passed to `clippy-driver` as a rustc flag and the run dies with a
+`process didn't exit successfully` dump that reads exactly like a real lint failure. Re-run without
+it: clean. **Do not put `-q` after `--`.**
+
+**Blocked:** nothing. `tasks/api/100` closed and removed. `inbox/` is **empty** for the first time in
+three legs.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none created.** Two Rust doc-comment lines; nothing executed, no board, no
+probe, no live Core, no route called. `core/015`'s native Windows build is untouched by this unit —
+`embarch-api`, not `embarch-core` — so it stays at leg 117's re-derived **40 commits since
+`1c1224e`**, which I did **not** re-derive and which four handoffs have now warned against
+incrementing by ordinal. **I did not read Core live at any point:** the dev-bench probe's state is
+carried on leg 116's reading, `tasks/api/059` stays `open` rather than `blocked`, and the owner's
+`d0cf9a0` parks the bench queue regardless, so no bench unit was eligible. `fleet-hardware.py
+--refresh` still crashes (`tasks/doc/041`); its buffer was neither read nor believed.
+
+**Budget:** PROCEED — weekly **8.8%** of a 90% cap at the leg's start, resets in ~159h, no 429. Wave
+**6** suggested, **3 workers dispatched plus one suite unit** = the 4-unit cap, which binds rather
+than the budget. `check-doc-size.py --due`: 12 dated, **0 overdue**, so no unit was pre-empted by the
+ledger.
+
+**Least sure about:** **whether filing `tasks/suite/039` as a supervisor task rather than letting a
+`topology` worker take the in-scope half was caution or over-reading the handoff.** The drop offers
+two fixes: expand reversals row 105 (out of a worker's scope) or restore a tightened version into
+decision 20 (squarely in it, with 379 B of margin). I took the first because leg 119 explicitly told
+the next leg to, and because re-inflating an entry that was just compacted under cap undoes correct
+work to buy nothing. But I notice the effect is that I have reserved to myself a unit a worker could
+have run, on the strength of a predecessor's instruction I did not independently re-derive the
+*preference* behind — only the ownership fact, which I did check both directions.
+
+---
+
 ## 2026-09-16 15:33 — topology/048 two decisions under cap, a fifth claim-loss, and a drop the next leg must NOT dispatch
 
 **Decided:** **four things, and (c) is the one that will go wrong if the next leg skims this.**
