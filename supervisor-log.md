@@ -97,6 +97,108 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 12:21 — api/097 two more wrong labels, and the fix for one of them reintroduced a defect a previous unit had already closed
+
+**Decided:** **one thing, and it is a process call I want argued with rather than inherited: I did
+not hand-fix a one-word defect I had already found and confirmed.** Five things.
+
+**(a) The unit did its job.** `api/095` was cut short by a `fleet stop` mid-file; `097` finished the
+remainder and found **2 more wrong labels, 0 false sentences**, taking the whole-file running total
+to **5 wrong labels, 0 false sentences**. L430 credited `link_port_serial` to **decision 27** —
+about it in no repo — and L667 credited "no server-side structuring/filtering" to **`embarch-ui`
+decision 7**, which the worker verified across that decision's entire git history never discusses
+formatting at all. It also **closed both of `095`'s flagged unsettled items as not-defects** with
+reasons (L403 via commits `d048f67`/`2b9c258`; L561, where the task's own suspicion was wrong and
+the index table's description, not the citation, was misleading).
+
+**(b) I read the diff before merging because the file is a shared crate, and that is what caught
+the problem.** `embarch-core-client` sits inside `embarch-api` and `embarch-ui` path-depends on it,
+so a bare number in it is read against more than one repo's index. L430's fix landed as a **bare**
+`decision 17`. The right referent is **`embarch-topology` decision 17** (`links-port.md`, the link's
+own USB serial as a second declared fact) — but `embarch-api` has its **own real decision 17**
+(`core-link.md`, checking Core's contract version), so under the bare-is-same-repo convention the
+corrected citation resolves to a real decision, in the right repo, about the wrong thing. **That is
+verbatim the defect class `api/095` was written to find, reintroduced by the fix for another
+instance of it.**
+
+**(c) The reviewer made this much worse than I had it, in the way that matters.** I had "an
+ambiguity a careful reader probably survives." It came back with three things I did not have:
+**`api/091` (`f2f1de2`, 2026-09-13) already found and fixed this exact shape in this exact file —
+and one of the two instances it fixed was the `embarch-topology` decision 14 citation eight words
+earlier in the very same sentence.** So `097` reintroduced, in the neighbouring clause, the pattern
+`091` closed. Second: `check-decision-refs.py`'s `ATTRIB_WINDOW` is **44 characters** and the text
+between the two citations is ~48, so **the mechanical rule the convention defines also resolves it
+wrong** — this is not merely a human-attention problem. Third: the script only walks `*.md` and
+never reaches Rust source anyway, which is why this class exists only as manual-sweep territory.
+`097`'s own `Done when` ticks "cross-repo citations carry the labelled form"; the landed fix does
+not meet it.
+
+**(d) Why I filed `tasks/api/099` instead of typing the word.** It is one qualifier and I had
+already confirmed the referent myself. The 2026-09-12 handoff records the supervisor hand-fixing
+cross-repo defects a worker's scope could not reach in **four** units (`core/056`, `api/092`,
+`api/085`, `umbrella/060`) and names as an unresolved doubt that *"nobody has looked at the four
+together."* A fifth silent instance would have buried that question one deeper; a task makes the
+choice legible and costs one queue entry. **I also discarded my own draft of that task in favour of
+the reviewer's inbox drop**, which was the better document — it carries the `api/091` recurrence and
+the `ATTRIB_WINDOW` arithmetic I did not have. Promoted from `inbox/` to `tasks/api/099` with its
+text kept, and **note this makes `099` a task authored by a reviewer, which is a first in this log.**
+
+**(e) I promoted the reviewer's "unsettled" side note into a required item.** `097` left L1774 —
+`embarch-topology` decision 18's claimed *"2026-08-25 amendment"* — honestly unsettled. The reviewer
+settled it: decision 18 was **created** that day (`e46164b`) and the cited text is its founding
+content, so there is no amendment and the framing conflates creation with amendment. **An
+`unsettled` that somebody has since resolved and nobody wrote down is worse than the original wrong
+label**, because the next sweep pays for it again — so it is `099`'s third checkbox rather than a
+note.
+
+**Merged:** `agent/api/097-core-client-src-citation-sweep-remainder` — code `8f7fc5c` in
+`embarch-api`, **fast-forwarded** onto `main` (0 commits on `main` not on the branch, checked before
+pushing). Doc `aa65f1e` in `embarch-doc`, **cherry-picked** from branch commit `5ebcceb` (`--ff-only`
+refused because `study-designer/049`'s merge had already moved `main`). Gate re-run by me on the
+merge result, in the worker's own code worktree at the branch tip: `cargo build` / `cargo clippy
+--all-targets -- -D warnings` / `cargo test` all rc=0 — and note **`embarch-core-client` is now a
+workspace member**, so the root run reaches it, which was not true when `api/095` had to gate it
+separately. `check-client-names.py --repo embarch-api` clean against 7 denylist entries;
+`check-docs.py` **11/11**; `check-ownership.py --scope api` OK on the doc half (2 paths) before the
+merge. `changelog.d/api-core-client-citation-sweep-remainder.fixed.md` consumed into `history/api.md`
+with `--only`; **29 of the owner's own fragments left pending.**
+
+**Blocked:** nothing. `tasks/api/097` closed and removed. **Two tasks filed across this fold and the
+previous one that a single `api` worker should take together: `098`** (stale
+`decisions/streams.md` mention left by `core/060`'s split) **and `099`** (this unit's bare citation
+plus L1774). Both are one-line fixes in the same repo.
+
+**Reviewer:** 1 finding — inbox/api-097-client-rs-l430-unlabelled-citation.md (drained in this same
+fold into `tasks/api/099`; see (c) and (d)). It also independently confirmed L667's relabel by
+reading `embarch-core` decision 16's body verbatim and walking all four revisions of `embarch-ui`
+decision 7, and confirmed the diff is comment-only.
+
+**Hardware debts:** **none created.** Two doc-comment lines in a Rust source file; nothing executed,
+no board, no probe, no live Core, no route called. `core/015`'s native Windows build is untouched by
+this unit — `embarch-api`, not `embarch-core` — and the figure to carry forward is the re-derived
+**40 commits since `1c1224e`**, not an incremented ordinal. **The dev-bench probe is still
+unplugged**: I read Core live at this leg's top and `status` returned `"probes": []`, so
+`tasks/api/059` stays **open**, not blocked, for the **seventh** consecutive leg — and the owner's
+`d0cf9a0` parks the whole bench queue regardless, so no bench unit was eligible this leg.
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`); its buffer was not believed or used.
+
+**Budget:** PROCEED throughout — weekly **0.7% → ~1.6%** of a 90% cap across the leg, resets in
+~164 h. Wave **6** suggested, **4** used: the unit cap bound this leg, not the budget, and not the
+queue. Treat the percentage as loose at this magnitude — a reading this low pins the allowance to
+roughly ±50%.
+
+**Least sure about:** **that three of this leg's four reviewers produced something the worker's own
+gate could not, and I have no idea whether that generalises or is an artefact of how I briefed
+them.** I gave each reviewer a numbered list of specific claims to re-derive rather than the usual
+"read the diff against the decisions", and three came back with material findings — the `api/091`
+recurrence, `core`'s over-cap decision 30, the settled L1774. That is a much higher yield than this
+log's accumulated `**Reviewer:**` tally suggests is normal, and the honest reading is either that
+directed review is worth much more than open-ended review, or that I wrote prompts leading enough to
+manufacture agreement. **Nobody should conclude the first from four data points**, but it is worth
+one deliberate comparison by a later leg.
+
+---
+
 ## 2026-09-16 12:10 — study-designer/049 one wrong number in a wire type's comment, and a near-miss that was pure number coincidence
 
 **Decided:** **nothing numbered.** A one-line citation correction in a comment. Three things.
