@@ -97,6 +97,96 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 15:22 — umbrella/070 the list-targets shape has a home, and the sentence that made cutting it look right is still standing
+
+**Decided:** **three things.**
+
+**(a) The claim went to `projects.md`#17, not back into decision 42, and the dispatch note is why.** I
+told the worker before it started that `umbrella/068` had left decision 42 at **4,019/4,096 B — 77 B of
+margin**, the thinnest entry that leg produced, and that the paragraph it was restoring is several
+hundred bytes. It priced decision 42 first anyway, confirmed the 77 B, and placed the paragraph in
+`projects.md`#17 immediately after check 8's own pass/fail rule — the check that actually consumes this
+shape. Decision 17: 3,291 → **3,681 B**, 415 B of margin. `projects.md` as a file: 10,491 → 10,881 B
+against a 12,288 B cap, still 1,407 B clear of the reserve line, so no debt filed. **Decision 42 was not
+touched at all.** This is the first unit in three legs where the reserve note in the task file changed
+where work landed rather than just warning about it.
+
+**(b) The provenance survived the move, which is the part I would have expected to go wrong.** The
+original sentence said these shapes were *observed directly against both binaries on this bench
+[2026-09-06]*. A claim moving between decisions is exactly where a measured fact turns into an asserted
+one, and this suite has paid for that distinction before. The reviewer checked it specifically: same
+framing, same date, no measured-to-asserted drift.
+
+**(c) THE FINDING, and it is mine rather than the reviewer's — which is the point.** Decision 42's last
+sentence still reads:
+
+> The CLI shapes **both checks** assume were observed directly against both binaries on this bench
+> [2026-09-06], matching [decision 35](schema-skew.md)'s own record.
+
+**Check 8 runs `list-targets`; check 11 runs `versions`; decision 35 is entirely about `versions`.** I
+verified it rather than reasoning about it:
+
+```
+$ grep -nic 'list-targets\|list_targets' embarch-umbrella/decisions/schema-skew.md   ->  0
+$ grep -o '2026-09-0[0-9]' embarch-umbrella/decisions/schema-skew.md | sort -u       ->  2026-09-04
+                                                                                         2026-09-05
+```
+
+Zero mentions, and no 09-06 record at all. **That sentence is what made `umbrella/068`'s cut look
+justified**, and the restoration does not touch it — so the next person reasoning from decision 42
+reaches the same wrong conclusion from the same sentence.
+
+**Both the worker and the reviewer flagged it, and both correctly declined to file it.** The worker
+because editing decision 42 further would spend its 77 B; the reviewer because the sentence predates the
+diff it was gating and `pre-existing` is a real label, not an evasion. Each was right about its own
+scope, which is precisely why it needed a third actor. Leg 118 closed by saying a supervisor filing work
+off its own merge review should hold itself to a worker's standard of evidence; a grep count of zero and
+a date set that does not contain the date claimed is that standard, and it is why I filed this one and
+did not file the "is the sentence *really* misleading" version of it.
+
+**Merged:** `agent/umbrella/070-list-targets-output-shape-home` — doc `d56c7a0` in `embarch-doc`,
+**rebased onto `main` twice in the worker's own doc worktree** (`main` moved for `core/065`'s fold and
+again for `ui/055`'s) and then fast-forwarded. **Code: no commit** — the `embarch-umbrella` branch tip
+equals `main`; one revert handle, not two. The worker ran `cargo build`/`test` (225 pass)/`clippy
+--all-targets -- -D warnings` clean anyway as a baseline. Gate re-run by me on the merge result:
+`check-docs.py` **11/11**, `check-ownership.py --scope umbrella` OK on 3 paths, `check-client-names.py
+--repo <code worktree>` clean against 7 denylist entries.
+`changelog.d/umbrella-list-targets-shape.added.md` consumed into `history/umbrella.md` with `--only`;
+**29 of the owner's own fragments left pending**, untouched. No `status.d/` or `features.d/` fragment.
+
+**Blocked:** nothing. `tasks/umbrella/070` closed and removed. **Four `inbox/` drops now standing for the
+next leg's drain**, none of them fixed by me: `ui-debug-tab-diff-new-lines-fallback.md` (from
+`core/065`), `ui-decision-25-history-citation-dangles.md` (the `ui/055` reviewer's),
+`doc-citation-sweeps-are-case-sensitive.md` (mine, `Owner: required`), and
+`umbrella-decision-42-cites-decision-35-for-a-shape-35-never-records.md` (mine, this unit). That is a
+heavy drain for the next leg and it should expect it.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none created.** Doc prose only — one added paragraph; nothing executed, no board,
+no probe, no live Core, no `doctor` run, no `embarch-api` invoked anywhere this leg. **The claim this
+unit restored is still an unpaid hardware debt in its own right** and stays that way: decision 42's
+*"neither check 8 nor check 11 has run inside a live `doctor` yet"* survives verbatim, and I named it in
+the inbox drop above so a future edit of that sentence cannot quietly promote it. `core/015`'s native
+Windows build is untouched by this unit and by all three landed so far — no `embarch-core` commit landed
+this leg — so it stays at leg 117's re-derived **40 commits since `1c1224e`**, which I did not
+re-derive. Dev-bench probe state carried on leg 116's reading; `tasks/api/059` stays `open`; the owner's
+`d0cf9a0` parks the bench queue. `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`).
+
+**Budget:** PROCEED — weekly **7.4%** of a 90% cap at the leg's start, resets in ~160h, no 429. Wave
+**6** suggested, **4** dispatched; the unit cap binds.
+
+**Least sure about:** **whether filing (c) myself was right, or whether I should have trusted the
+reviewer's judgement that it was out of scope and let it stay unfiled.** The reviewer's reasoning is
+sound and I would defend it: reverting this unit would not fix that sentence, and a reviewer that files
+everything adjacent stops being a signal. But the effect of everyone being correctly in scope was that a
+sentence two agents independently read as wrong was going to survive the leg with no record anywhere
+except two agent reports that vanish. I do not think the fix is a wider reviewer charter; I think it is
+that the supervisor is the only actor who sees both reports, and this is what that seat is for. That is
+a claim about the design, made from one instance.
+
+---
+
 ## 2026-09-16 15:12 — ui/055 decision 25 under cap, and the claim-loss defect turns out to be one missing grep flag
 
 **Decided:** **two things, and the second is the one to carry forward.**
