@@ -97,6 +97,68 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 12:31 — api/098 the stale path core/060 left in another repo, and the two the reviewer found next
+
+**Decided:** **nothing suite-wide.** One scoped call worth recording: the task offered two shapes —
+repoint the mention at the new filename, or drop it — and the worker took the drop, which is what
+`DOC-CONVENTIONS.md` actually prefers and not merely the cheaper edit. The reviewer read me the
+sentence it rests on, verbatim: *"Across: `embarch-study-designer decision 39`, or a link plus
+`decision 39` — but **prefer the bare number**"*, with the section's own stated reason being this
+exact failure — a topic-file mention that goes on resolving after the decision moves, which neither
+gate can see. **Repointing would have re-armed the same trap for the next split**, so the drop is
+the correct move rather than the lazy one, and I want that on the record because the next stale-path
+fix will face the same fork.
+
+**Also worth recording: the queue asked twice for `098` and `099` to be run as one unit** — my
+predecessor's handoff said *"a single `api` worker should take them together"* and `099`'s own task
+file says *"Two one-line fixes in one repo should not cost two dispatches."* **I declined both
+times.** `.claude/leg.md` is unambiguous that a worker gets one task, and `fold-commit.py`'s
+`--unit <scope>/<NNN>` accounting has room for exactly one unit id per fold, so combining them would
+have cost a malformed fold or an unlogged task to save one spawn. Two dispatches is the right price.
+If that is wrong it is a rule change and it is the owner's, not mine.
+
+**Merged:** `agent/api/098-streams-md-mention` — doc `f78fe64` in `embarch-doc`, **fast-forwarded**
+onto `main`. **Code: no commit at all** — the `embarch-api` branch tip equals `main`, because the
+whole unit is one line in a doc file plus a changelog fragment plus the task file. Recording that
+explicitly rather than leaving the code SHA blank: a revert of this unit has one handle, not two.
+`embarch-api/interfaces/studies.md` line 16 went from
+`` (`embarch-core` decision 62, `decisions/streams.md`; suite decision 4) `` to
+`` (`embarch-core` decision 62; suite decision 4) ``. Gate re-run by me on the merge result:
+`check-docs.py` **11/11**, `check-client-names.py --repo <code worktree>` clean against 7 denylist
+entries, `check-ownership.py --scope api` OK pre-merge. No `cargo` run — the code repo has a zero
+diff, so there is nothing there to build. `changelog.d/api-streams-md-mention.fixed.md` consumed
+into `history/api.md` with `--only`; **29 of the owner's own fragments left pending**, unchanged
+from the previous leg.
+
+**Blocked:** nothing. `tasks/api/098` closed and removed.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none created.** One citation inside a markdown doc; nothing executed, no
+board, no probe, no live Core, no route called. `core/015`'s native Windows build is untouched by
+this unit — `embarch-api`, not `embarch-core` — and the figure to carry forward stays the re-derived
+**40 commits since `1c1224e`**, not an incremented ordinal. I did **not** re-derive it this leg.
+The bench queue is still parked by the owner's `d0cf9a0`, so no bench unit was eligible; I did not
+read Core live this leg and so I am **not** restating the dev-bench probe as unplugged on my own
+evidence — `tasks/api/059` stays `open` on the previous leg's live reading, not on a fresh one.
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`); its buffer was neither believed nor
+used.
+
+**Budget:** PROCEED at the leg's top — weekly **4.3%** of a 90% cap, resets in ~162 h. Wave **6**
+suggested; **3** dispatched, because three is every distinct scope the queue had. The binding
+constraint this leg is the queue's scope spread, not the budget and not the unit cap.
+
+**Least sure about:** **that filing `tasks/api/100` for the reviewer's out-of-scope find was better
+than handing it to the `api/099` worker already inside that file.** `099`'s worker is editing
+`client.rs` right now, and lines 593 and 1724 are two more stale `decisions/streams.md` paths in the
+same file — it could have fixed them for free. I filed instead, because changing a live worker's
+mandate mid-run is how a unit's diff stops matching its task file, and because the 2026-09-12
+handoff already flags supervisor hand-fixes as an unexamined pattern. But the honest cost is one
+extra dispatch on a file a worker is standing in, and this is now the **third** `client.rs` citation
+task in two days.
+
+---
+
 ## 2026-09-16 12:21 — api/097 two more wrong labels, and the fix for one of them reintroduced a defect a previous unit had already closed
 
 **Decided:** **one thing, and it is a process call I want argued with rather than inherited: I did
