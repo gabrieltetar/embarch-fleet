@@ -97,6 +97,112 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 14:11 — umbrella/068 two more decisions under cap, the same claim-loss twice in one leg, and the census that could never have been right
+
+**Decided:** **four things. The first is the unit; the rest are why this leg matters more than four
+compactions.**
+
+**(a) Both compacted, neither split.** `probe-vendors.md`#49 (vendor-ID routing) 6,962 → **3,956 B**,
+140 B margin; `locate-api.md`#42 (the three-source ranking for locating `embarch-api`) 5,157 →
+**4,019 B**, **77 B margin** — the thinnest of the leg. The worker answered the fork separately for
+the two, which the task told it to, and the reviewer confirmed both live claims I had named as
+must-survive: decision 49 still says **whether the nine vendor IDs are the right nine is
+unmeasured**, and decision 42 still says **neither check 8 nor check 11 has run inside a live
+`doctor` yet** — with `suite/features.md:149`'s citation of that still resolving.
+
+**(b) THE FINDING, and it is the second instance of the same defect in four units.** The reviewer
+opened `schema-skew.md`#35 — the decision the worker cited to justify cutting a paragraph from
+decision 42 as duplicated — and read it **sentence by sentence rather than by topic.** Decision 35
+confirms the `--json`-before-subcommand/clap-exit-2 claim and the `host_type_schema_version` **17**
+claim exactly. **It says nothing about `list-targets` at all**, because decision 35 is about
+`versions`, which feeds check 11, while `list-targets` feeds check 8. So the cut paragraph's last
+clause — that `list-targets` answers `{success: true, targets: [...]}` on exit 0 and
+`{success: false, error}` on exit 1, **both on stdout**, with its own log line on stderr — went
+nowhere. `projects.md`#17 states check 8's pass/fail rule and never the wire shape; nothing else in
+the suite records it. **That is the claim that lets anything shelling out to `list-targets` tell "no
+targets" from "the process talked to the wrong stream."**
+
+**This is `core/064`'s failure with a different excuse.** Unit one cut a live-route claim justified as
+*retired-route provenance*; unit four cut a live wire-shape claim justified as *duplicated in
+decision 35*. Both justifications were true of the surrounding text and false of one clause. **The
+rule I would put in front of the next worker is not "quote your cuts" — I gave every worker that this
+leg and it did not catch either — it is: if you justify a cut by pointing at another decision, open
+that decision and confirm it covers the whole hunk sentence by sentence, not the topic.** I have
+written that into all three compaction tasks I filed this leg. Whether `DOC-COMPACTION-PASS.md` needs
+it is the owner's call; that file is reserved and I did not touch it.
+
+**(c) THE CENSUS WAS NEVER CAPABLE OF BEING RIGHT, and this is the part to carry forward.** The
+`umbrella/068` worker found a sixth unpinned over-cap decision (`mirrors.md`#16, over cap since
+before 2026-09-13) and filed it rather than reaching past its task. I re-ran the census to find out
+how leg 117 missed it, and the answer is in one line of `check-doc-size.py`:
+
+```python
+for key, rel, head, size, limit, pin in sorted(drows, key=lambda r: -r[3])[:20]:
+```
+
+**The `[:20]` is taken over all 379 decisions by raw size, not over the over-cap ones**, and **27
+decisions are pinned above the cap** — so the twenty slots are filled almost entirely by pinned
+entries, and an unpinned breach only prints if it is one of the twenty largest decisions in the
+suite. Called through `decision_state()` directly, **five** unpinned breaches remain after this
+leg's four landings; the printer showed **three**. It is self-concealing in the worst direction:
+fixing the big ones reveals the small ones one at a time, so two entries invisible this morning are
+visible now, and a census repeated tomorrow disagrees with today's with no defect to point at. Leg
+117 reported "five" in good faith off a view that could not have shown more.
+
+**(d) I filed six tasks and I am saying so explicitly**, because leg 117's closing lesson was that a
+supervisor filing work off its own merge review should hold itself to a worker's standard. Three came
+from `inbox/` drops and are ordinary drain (`core/065`, `umbrella/070`, and `mirrors.md`#16 folded
+into `umbrella/069`). Three came from my own census: `umbrella/069`'s second entry
+(`sticky-host.md`#48), `ui/055` (`shell.md`#25) and `topology/048` (`validation.md`#21,
+`link-declares.md`#20) — **every one a line of unambiguous tool output, not a reading of prose**,
+which is the distinction leg 117's withdrawn `api/101` failed. `tasks/doc/064` records the truncation
+itself and is `Owner: required`, because the fix is in `scripts/`. **I did not pin anything**, and all
+five remaining breaches say so to their worker in as many words.
+
+**Merged:** `agent/umbrella/068-two-decisions-over-cap` — doc `ad8d535` in `embarch-doc`, **rebased
+onto `main` in the worker's own doc worktree and then fast-forwarded** (`main` had moved under it
+three times this leg). **Code: no commit** — the `embarch-umbrella` branch tip equals `main`; one
+revert handle, not two. Gate re-run by me on the merge result: `check-docs.py` **11/11**,
+`check-ownership.py --scope umbrella` OK on 4 paths, `check-client-names.py --repo <code worktree>`
+clean against 7 denylist entries, `check-task-state.py` OK across **128** task files after the drain.
+`embarch-umbrella/decisions.md` needed no edit — no size column, no renumbering.
+`changelog.d/umbrella-decisions-49-42-under-cap.changed.md` consumed into `history/umbrella.md` with
+`--only`; **29 of the owner's own fragments left pending.** The reviewer also confirmed a revert of
+`ad8d535` would be clean — no later commit this leg touched `locate-api.md`, `probe-vendors.md` or
+`schema-skew.md`.
+
+**Blocked:** nothing. `tasks/umbrella/068` closed and removed. `inbox/` drained to empty: three drops
+filed as `tasks/core/065`, `tasks/umbrella/069` and `tasks/umbrella/070`.
+
+**Reviewer:** 1 finding — inbox/umbrella-locate-api-list-targets-shape-orphaned.md
+
+**Hardware debts:** **none created, and two carried that this unit was checked against.** Decision
+42's *"neither check 8 nor check 11 has run inside a live `doctor` yet"* survives, and
+`embarch-umbrella/open.md` line 15's debt against decision 51 — confirm the `saved.host` clearing on
+a real machine, a real `--host`, a real `local` re-run, a real `doctor` — is untouched and is named
+in `tasks/umbrella/069` so a compaction of decision 48 cannot quietly promote it. Nothing executed,
+no board, no probe, no live Core, no `doctor` run anywhere this leg. `core/015`'s native Windows
+build is **untouched by all four units** — not one landed a commit in `embarch-core` — so it stays at
+leg 117's re-derived **40 commits since `1c1224e`**, which I did not re-derive and which the handoff
+before that warned against incrementing by ordinal. **I did not read Core live at any point**: the
+dev-bench probe's state is carried on leg 116's reading, `tasks/api/059` stays `open`, and the
+owner's `d0cf9a0` parks the bench queue regardless, so no bench unit was eligible.
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`); its buffer was neither believed nor
+used.
+
+**Budget:** PROCEED start to finish — weekly **5.4%** of a 90% cap at the leg's start, resets in
+~162 h, no 429 anywhere. Wave **6** suggested, **4** dispatched: the unit cap bound the leg, not the
+budget and not the scope spread (8 dispatchable across 7 scopes at the start).
+
+**Least sure about:** **whether filing three tasks off my own census was the right call, or whether I
+should have filed one task and let a worker run the census.** Every line of evidence is tool output
+I can point at, and the queue now has good scope spread for the next leg — but `tasks/doc/064` says
+the census disagrees with itself between runs, which means the three tasks I filed name a snapshot,
+not a set. A worker running the census *inside* its unit would get a current answer. I chose the
+snapshot because the alternative is dispatching a task whose scope nobody knows until it starts.
+
+---
+
 ## 2026-09-16 13:57 — topology/047 the largest decision in the suite, halved, and the two losses the worker declared rather than hid
 
 **Decided:** **compact the biggest one too, and I want the reason on record because the surface
