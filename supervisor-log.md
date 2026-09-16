@@ -97,6 +97,96 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 12:02 — core/060 the split-first rule taken at its word, and a stale mention neither gate can see
+
+**Decided:** **one thing, and it is the one the task file asked to be decided rather than assumed:
+`embarch-core/decisions/streams.md` was split, not squeezed.** Four things.
+
+**(a) The seam was real, and checking that it was real is the whole decision.** The file was
+11,219/12,288 B, 160 B inside reserve, holding five decisions across two visibly different subjects.
+`DOC-BUDGET.md`'s rule is that a split is the default and a squeeze the exception, so the task
+required the worker to test the seam before reaching for the knife. It held: **30, 38, 39** (manifest
+binding, capture, rendering during a study) stayed in `streams.md`, now **6,376 B**; **62, 63** (what
+the stream index reports back to a caller about a tap afterwards) moved verbatim into a new
+`decisions/stream-index.md`, **5,672 B**. The reviewer read all five bodies and confirmed neither
+half cites or depends on an argument in the other.
+
+**A split is worth this much care because it pays the debt without spending anything**: a verbatim
+move restates nothing, so no argument had to be shortened and `DOC-COMPACTION-PASS.md`'s quote-every-
+cut discipline never engaged. Both files are now far clear of reserve — ~5.9 KB of headroom each —
+and **the size ledger is down from 13 dated entries to 12, still 0 overdue.**
+
+**(b) I checked "verbatim" mechanically rather than believing the commit message.** Of the 13
+non-blank lines removed from `streams.md`, **12 appear byte-identical in `stream-index.md`**. The
+13th is `streams.md`'s own scope sentence, correctly *narrowed* and given a forward pointer to the
+new file — which is what a split should do to the surviving file's description and the one line that
+legitimately may not be verbatim.
+
+**(c) The two gaps no gate covers were both checked by hand, which is why this unit is trustworthy.**
+`tasks/doc/044` records that a verbatim split is the one move `check-decision-refs.py` cannot see,
+and `tasks/doc/052` that it silently drops the per-decision size pin of every decision it moves. Both
+are owner-reserved and unfixed, so the only defence is somebody looking. The worker looked; the
+reviewer looked independently and read `scripts/decision-size-baseline.json` at **both** the pre-split
+parent (`0590ba2`) and the merge (`8794fe9`), finding **zero `embarch-core` entries in either** — so
+none of 30/38/39/62/63 was ever pinned and nothing was dropped. After the split all **2054**
+references, **35** topic-file links and **15** reversal-row citations resolve.
+
+**(d) The stale mention, and the one the reviewer found on top of it.** Splitting a decisions file
+strands anything that named the *old* filename. The worker found `embarch-api/interfaces/studies.md`
+line 16 naming `decisions/streams.md` for decision 62 — **plain inline code, not a markdown link, so
+`check-decision-refs.py` and `check-links.py` both pass it in either state** — and correctly refused
+to fix it, `api` not being its scope. I drained that drop this fold as **`tasks/api/098`**, re-checking
+its `Hardware:` claim myself (a one-line doc edit — `none` is right). The reviewer then grepped the
+whole doc repo for the same shape and found **no others**, which is the check that turns "the worker
+found one" into "there was one."
+
+**The reviewer also found something outside its own mandate and said so instead of filing against
+this unit**: **decision 30 is 4,247 B, over `DOC-BUDGET.md`'s 4 KB per-decision cap, and unpinned** —
+pre-existing, untouched by this diff, and tracked by nothing at all. That is the adjacent hole to
+`tasks/doc/052`: a decision that was *never* pinned is as invisible as one whose pin a split dropped,
+and no split is needed to get there. Filed as **`tasks/core/063`**, with the explicit warning not to
+pin it away. **This is the second consecutive unit this leg where the reviewer produced something the
+worker's own gate could not.**
+
+**Merged:** `agent/core/060-compact-core` — **code: none**, doc-only task by construction; I gave it
+no `embarch-core` code worktree and it neither needed nor created one. Doc `8794fe9` in `embarch-doc`,
+**cherry-picked** from branch commit `8edec6a` (`--ff-only` refused because `topology/045`'s fold had
+already moved `main`). Gate re-run by me on the merge result: `check-docs.py` **11/11**. No `cargo`
+run anywhere — no code repo was involved, so there was no code merge result to gate.
+`changelog.d/core-streams-decisions-split.changed.md` consumed into `history/core.md` with `--only`;
+**29 of the owner's own fragments left pending**, untouched.
+
+**Blocked:** nothing. `tasks/core/060` closed and removed; `tasks/api/098` filed from the inbox drop
+and `tasks/core/063` filed from the reviewer's side note, both `open`.
+
+**Reviewer:** no findings — see (c) and (d); it re-derived the pin question from the baseline file at
+both SHAs rather than accepting the commit message, grepped the suite independently for stale
+inbound references, verified decision 63's protected second paragraph and decision 62's `embarch-ui`
+decision 10 quote and reversals row 86 citation **word for word by text diff rather than by
+inspection**, and checked the index table's claimed sizes against real byte counts.
+
+**Hardware debts:** **none created.** Markdown only — nothing built, nothing executed, no board, no
+probe, no live Core, no deploy. Standing debts carried unchanged. `core/015`'s native Windows build
+is **not** advanced by this unit despite the `core` scope: it is documentation, with no
+platform-conditional code touched, and the count to carry forward remains the re-derived **40 commits
+since `1c1224e`** rather than an incremented ordinal. The **dev-bench probe is still unplugged**
+(`status` returned `"probes": []` live at this leg's top), so `tasks/api/059` stays **open** for the
+seventh consecutive leg, and the owner's `d0cf9a0` parks the bench queue regardless.
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`).
+
+**Budget:** PROCEED — weekly ~**1.6%** of a 90% cap, resets in ~164 h. Wave 6 suggested, 4 used
+(unit cap). Treat the percentage as loose at this magnitude.
+
+**Least sure about:** **that I gave this worker no code worktree, on my own judgement rather than by
+the book.** `.claude/leg.md` says to create a worktree in *both* the code repo and `embarch-doc`; I
+skipped `embarch-core` because the target file lives in `embarch-doc` and a Core checkout is large
+and dead weight for markdown. It cost nothing here and the worker confirmed it needed none — but the
+rule exists because "almost every task changes both", and a supervisor trimming setup on a prediction
+about what a task will touch is one wrong prediction away from a worker blocked on the supervisor's
+convenience rather than on its own task.
+
+---
+
 ## 2026-09-16 11:45 — topology/045 a zero-defect sweep whose zero survived an independent check, and a stale tree that nearly manufactured a defect
 
 **Decided:** **two things, neither a design call.** (a) Leg 116 is the first leg of the run the
