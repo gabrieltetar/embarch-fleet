@@ -97,6 +97,86 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 12:10 — study-designer/049 one wrong number in a wire type's comment, and a near-miss that was pure number coincidence
+
+**Decided:** **nothing numbered.** A one-line citation correction in a comment. Three things.
+
+**(a) The defect and why it was invisible.** `embarch-study-designer/src/protocol.rs` (~L183), inside
+the `DevBenchMessage` enum, credited a seal-ordering structural rule — *"each seal immediately
+follows the one contiguous span it covers"* — to **"decision 39's amendment set."** This repo's
+decision 39 is *"One generic inbound stream pipeline; the write direction explicitly not accepted"*,
+which has **no seal content whatsoever**. The rule belongs to **decision 17**, *"CRC-sealed integrity
+checks, verified independently at both hops."* I checked both bodies myself before merging because
+the file is a wire type; the reviewer then found decision 17's body states the rule nearly verbatim
+(*"carried on the wire immediately after the one contiguous span it covers"*) and that
+`decisions/protocols.md`'s decision 58 amendment paragraph **independently restates it and credits
+17 by name** — two corroborating files, not one.
+
+**(b) The near-miss is the transferable part, and it is the inverse of the trap.** The worker flagged
+`` `embarch-dev-bench` decision 39 `` (on `dev_bench_log_level`) as *looking* like the
+same-repo-mislabelled-as-foreign shape `048` had found — **purely because this crate's own decision
+39 is the unrelated streams retirement.** It then read `embarch-dev-bench/decisions/logging.md`
+decision 39 (*"A study says how loud the bench should be, filtered at runtime rather than compiled
+in"*) and found it exactly on topic, so left it alone and **wrote the caution into `050` against
+pattern-matching on number coincidence.** The reviewer confirmed the call. This series has spent
+several units fixing citations that pointed at a real-but-wrong decision; this is the first time a
+unit recorded resisting the reverse error, and a sweep that "fixes" a correct citation is worse than
+one that misses a wrong one.
+
+**(c) Zero unsettled, and I treated that as a flag rather than a result.** The worker reports **~38
+distinct citation instances across 32 grep-matching lines, 1 wrong number, 0 false sentences, 0 left
+unsettled.** A zero-unsettled sweep is the shape most likely to have rounded something — this log's
+own counter-example is `umbrella/066` reporting 114/0 where the honest answer was 113/1 — so the
+reviewer was asked to spot-check citations declared *clean*, not just the one changed. It checked
+`embarch-dev-bench` decisions 7 and 18 and `embarch-core` decision 35 against their bodies and line
+contexts; all correct. All four cross-repo citations in the file were already repo-qualified, which
+is the property `api/097` in this same leg shows is easy to lose.
+
+**Merged:** `agent/study-designer/049-src-citation-sweep-remainder` — code `a224f2f` in
+`embarch-study-designer`, **fast-forwarded** onto `main` (0 commits on `main` not on the branch,
+checked before pushing). Doc `751d06f` in `embarch-doc`, **cherry-picked** from branch commit
+`90d32de` (`--ff-only` refused because `core/060`'s fold had already moved `main`). Gate re-run by me
+on the merge result, in the worker's own code worktree at the branch tip: `cargo build` / `cargo
+test` / `cargo clippy --all-targets -- -D warnings` all rc=0; `check-client-names.py --repo
+embarch-study-designer` clean against 7 denylist entries; `check-docs.py` **11/11**;
+`check-ownership.py --scope study-designer` OK on the doc half (3 paths) before the merge.
+`changelog.d/study-designer-049-citation-sweep.fixed.md` consumed into `history/study-designer.md`
+with `--only`; **30 of the owner's own fragments left pending.**
+
+**Blocked:** nothing. `tasks/study-designer/049` closed and removed. **`tasks/study-designer/050`
+filed by the worker and `open`**, naming `src/streams.rs` next at 29 grep-matching lines plus the 18
+files after it in largest-first order, and listing `src/ids.rs` at 0 citations explicitly rather than
+omitting it — the reviewer read `050` specifically for under-description and found none.
+
+**Reviewer:** no findings — see (a), (b) and (c); it verified the relabel's *direction* against both
+decision bodies rather than its existence, found the second corroborating file, confirmed the diff is
+comment-only with no change to field order or the `protocols_crc`/`protocols` pairing, spot-checked
+three citations declared clean, and read `embarch-decision-reversals.md` for anything touching
+decisions 17/39/58 or seal ordering (no hits).
+
+**Hardware debts:** **none created.** One comment line in a Rust source file; nothing flashed,
+nothing executed, no board, no probe, no live Core. **The file is a wire type** — `DevBenchMessage`
+is postcard-encoded and `embarch-dev-bench` mirrors it — so this was read as a wire diff before
+merging and confirmed comment-only; **no wire-schema bump, therefore no announcement window owed and
+no reflash debt created.** Standing debts carried unchanged: `core/015`'s native Windows build
+(untouched — `embarch-study-designer`, not `embarch-core`; the figure to carry is the re-derived **40
+commits since `1c1224e`**), the **dev-bench probe still unplugged** (`status` returned `"probes": []`
+live at this leg's top, so `tasks/api/059` stays **open** for the seventh consecutive leg, with the
+bench queue parked by the owner's `d0cf9a0` regardless), and `fleet-hardware.py --refresh` still
+crashing (`tasks/doc/041`).
+
+**Budget:** PROCEED — weekly ~**1.6%** of a 90% cap, resets in ~164 h. Wave 6 suggested, 4 used
+(unit cap, not budget). Percentage is loose at this magnitude.
+
+**Least sure about:** **whether "0 unsettled" from this worker means the file was clean or means the
+bar for `unsettled` drifted.** The reviewer spot-checked three clean citations and they held, which
+is evidence but not proof over ~38 instances — and the same leg's `topology/045` worker, given an
+explicitly harder instruction about naming what it could not settle, came back with 4 unsettled out
+of 26 it attempted. Two workers, two very different unsettled rates, and nothing in the process
+distinguishes "this file was easier" from "this worker rounded."
+
+---
+
 ## 2026-09-16 12:02 — core/060 the split-first rule taken at its word, and a stale mention neither gate can see
 
 **Decided:** **one thing, and it is the one the task file asked to be decided rather than assumed:
