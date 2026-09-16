@@ -97,6 +97,136 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 15:33 — topology/048 two decisions under cap, a fifth claim-loss, and a drop the next leg must NOT dispatch
+
+**Decided:** **four things, and (c) is the one that will go wrong if the next leg skims this.**
+
+**(a) Both compacted, neither split.** `validation.md`#21 (the Nordic arm the self-reported-ID gate
+gained) 4,301 → **3,992 B**, 104 B margin; `link-declares.md`#20 (role uniqueness + link interface)
+4,176 → **3,717 B**, 379 B margin. The reviewer confirmed both safety claims survive **as mechanism
+rather than as summary**, which is the distinction that matters here: decision 21's *"a comparison that
+could not be made is not a comparison that succeeded"* and its untested-silicon list
+(`nRF54L10`/`nRF54L05`/`nRF54LM20A`) are intact, and so is decision 20's *"the guess was
+indistinguishable from an answer"*. Decision 25 (4,001 B, 95 B margin) was not touched from the side.
+
+**(b) The split-vs-compact call was answered with a grep, and the grep is why it went the right way.**
+Decision 20 opens *"Two independent gaps, one event"*, which is as split-shaped as an entry gets, and
+`embarch-topology/spec.md` cites its two halves separately (lines 69 and 75). What decided it was that
+the link-interface half is **bare-cited as `embarch-topology decision 20` from
+`embarch-api/decisions/client-crate.md:57`** — another sub-project's doc the worker cannot edit. A
+split would have stranded a cross-repo citation to buy 80 B. The reviewer verified that citation is
+live. **This is the second unit this leg where the answer came from running the check rather than from
+reading the entry**, and both times the entry's own prose pointed the other way.
+
+**(c) THE FINDING — fifth instance of the same class, sharpest so far, AND IT IS NOT A WORKER'S TO
+FIX.** The worker cut decision 20's investigation-log paragraph, justified as *"already preserved
+almost verbatim as `embarch-decision-reversals.md` row 105 — nothing lost from the corpus."* The
+reviewer opened row 105 and read it against the hunk sentence by sentence. Row 105 says:
+
+> Two well-evidenced wrong hypotheses came first, and what settled it was writing a real handshake
+> frame to each candidate by hand.
+
+That is a **topic-level paraphrase**. The cut hunk named the hypotheses and, more importantly, **how
+each was refuted** — the core-halted theory refuted by *reading the debug status register* (halt clear,
+sleep set), the overlay theory refuted *in the generated devicetree* — plus the handshake test's actual
+per-candidate result (one silent, one ack-plus-log). **Those are two reusable diagnostic techniques,
+not narrative.** I confirmed corpus-wide rather than taking it on report:
+
+```
+$ grep -rnic 'generated devicetree\|debug status register\|overlay not applied' --include='*.md' .
+tasks/topology/048-...md:2        <- and nothing else, anywhere in the doc repo
+```
+
+Two hits, both inside the task file's own audit-trail quote. **So the only copy in the corpus is in a
+file this fold deletes.** It is not lost — the reviewer's drop quotes the hunk verbatim, which I checked
+before folding — but that is luck rather than design, and it is worth noticing that a compaction's
+"quote every cut hunk verbatim in the task file" rule writes its safety net into the one file the fold
+is guaranteed to remove.
+
+**(c-ii) THE PART THAT WILL BITE: `reversals/` is supervisor-owned, so this drop must become a `suite/`
+task and must NOT be dispatched to a worker.** The reviewer's own recommended fix is to expand row 105
+rather than re-inflate decision 20, and row 105 lives in `reversals/rows-93-109.md`. I checked both
+directions:
+
+```
+$ echo reversals/rows-93-109.md | check-ownership.py --scope topology --stdin   -> VIOLATION
+     (allowed for 'topology': embarch-topology/**, tasks/topology/**, changelog.d/topology-*, ...)
+$ echo reversals/rows-93-109.md | check-ownership.py --supervisor --stdin       -> OK
+```
+
+**A `topology` worker sent at this task is refused by the gate after doing the work.** The next leg's
+drain must file it as `tasks/suite/<NNN>` and run it with its own hands (§8). This is exactly the
+`tasks/doc/004` shape that has caught legs before, arriving from a new direction — the drop *reads*
+like topology work, names a topology decision, and was filed by a reviewer scoped to topology.
+
+**(d) The post-leg decision census, with its own health warning.** The truncated printer now shows
+**one** `OVER` line (`embarch-umbrella/decisions/mirrors.md`#16, 4,347 B). **Do not read that as one
+breach remaining.** Leg 118 established by calling `decision_state()` directly that the printer's
+`[:20]` is taken over all 379 decisions by raw size and that 27 pinned over-cap entries fill the slots
+(`tasks/doc/064`, `Owner: required`). Five unpinned breaches stood at the start of today; three landed
+this leg (`shell.md`#25, `validation.md`#21, `link-declares.md`#20), so **two should remain —
+`mirrors.md`#16 and `sticky-host.md`#48, both already filed under `tasks/umbrella/069`.** I did **not**
+re-derive that through `decision_state()`; I am carrying leg 118's reading and subtracting what landed.
+Anyone who needs the real number must call it directly, and the printer will keep revealing smaller
+breaches one at a time as larger ones are paid.
+
+**Merged:** `agent/topology/048-two-decisions-over-cap` — doc `d3f2f81` in `embarch-doc`, **rebased onto
+`main` twice in the worker's own doc worktree** (`main` moved for `ui/055`'s fold and again for
+`umbrella/070`'s) and then fast-forwarded. **Code: no commit** — the `embarch-topology` branch tip
+equals `main` at `8161092`; one revert handle, not two. The worker ran `cargo build --all-targets`,
+`cargo test` (15 pass) and `clippy --all-targets -- -D warnings` clean as a baseline; there was no code
+merge result for me to re-gate. Gate re-run by me on the doc merge result: `check-docs.py` **11/11**,
+`check-ownership.py --scope topology` OK on 4 paths, `check-client-names.py --repo <code worktree>`
+clean against 7 denylist entries. `changelog.d/topology-decisions-20-21-compaction.changed.md` consumed
+into `history/topology.md` with `--only`; **29 of the owner's own fragments left pending**, untouched.
+No `status.d/` or `features.d/` fragment. **The verbatim cut hunks are recoverable from
+`tasks/topology/048-...md` at `d3f2f81`** if the drop is ever lost.
+
+**Blocked:** nothing. `tasks/topology/048` closed and removed. **Five `inbox/` drops now stand for the
+next leg's drain** — a heavy one, and it should expect it:
+
+1. `topology-decision-20-reversals-row-105-not-verbatim.md` — **`suite/`, supervisor's own hands, see
+   (c-ii). Do not dispatch this to a worker.**
+2. `umbrella-decision-42-cites-decision-35-for-a-shape-35-never-records.md` — mine, `umbrella`.
+3. `doc-citation-sweeps-are-case-sensitive.md` — mine, `doc`, `Owner: required` (`scripts/` and
+   `DOC-COMPACTION-PASS.md` are reserved).
+4. `ui-decision-25-history-citation-dangles.md` — the `ui/055` reviewer's, `ui`.
+5. `ui-debug-tab-diff-new-lines-fallback.md` — from `core/065`, `ui`. Note 4 and 5 are both `ui`, so
+   they are **one dispatchable slot between them**, not two; consider folding them into one task.
+
+**Reviewer:** 1 finding — inbox/topology-decision-20-reversals-row-105-not-verbatim.md
+
+**Hardware debts:** **none created, and one restated rather than added to.** Doc prose only; nothing
+executed, no board, no probe, no live Core, no deploy, no enrolment, and no hardware touched anywhere in
+this leg. Decision 21's standing hardware gap survives the compaction verbatim and is the reason this
+task was `In flux: no` despite it: **`nRF54L10`, `nRF54L05` and `nRF54LM20A` take the Nordic arm of the
+self-reported-ID gate with no such silicon ever on this bench.** A board would *add* a measurement, not
+rewrite the decision. **`core/015`'s native Windows build is untouched by all four units** — not one
+landed a commit in `embarch-core` — so it stays at leg 117's re-derived **40 commits since `1c1224e`**,
+a number I did not re-derive and which three handoffs have now warned against incrementing by ordinal.
+**I did not read Core live at any point this leg**: the dev-bench probe's state is carried on leg 116's
+reading, `tasks/api/059` stays `open` rather than `blocked`, and the owner's `d0cf9a0` parks the bench
+queue regardless, so no bench unit was eligible. `fleet-hardware.py --refresh` still crashes
+(`tasks/doc/041`); its buffer was neither read nor believed.
+
+**Budget:** PROCEED start to finish — weekly **7.4%** of a 90% cap at the leg's start, resets in ~160h,
+no 429 anywhere. Wave **6** suggested, **4** dispatched: the unit cap bound the leg, not the budget and
+not scope spread (9 dispatchable across 6 scopes at the start, low-water 4, so no refill sweep was
+owed, and `check-doc-size.py --due` had 12 dated entries and **0 overdue**, so no unit was pre-empted by
+the ledger).
+
+**Least sure about:** **whether five instances of "the justification was true of the hunk's topic and
+false of one clause" is one defect or three.** I have now filed it three different ways in one leg — as
+a `grep -i` mechanism, as a stale cross-reference in decision 42, and as a paraphrase-mistaken-for-
+verbatim in row 105 — and each drop argues its own cause is the real one. They may all be symptoms of a
+single thing nobody has named yet: **a compaction pass judges a hunk against a claim it holds in its
+head, and every check we have added tests the claim rather than re-deriving it from the target text.**
+If that is right, three narrow fixes will each work and the class will survive them. I did not write
+that theory into any of the drops, because it is a theory and they are evidence, and mixing the two is
+how a leg's speculation becomes the next leg's premise.
+
+---
+
 ## 2026-09-16 15:22 — umbrella/070 the list-targets shape has a home, and the sentence that made cutting it look right is still standing
 
 **Decided:** **three things.**
