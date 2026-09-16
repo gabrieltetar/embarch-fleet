@@ -97,6 +97,93 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 17:05 — suite/039 the cut diagnostics are back in the corpus, and a reviewer settled an open question by answering it
+
+**Decided:** **three things, and (c) closes a question two legs left dangling.**
+
+**(a) Row 105, not decision 20, and the announcement window closed silent.** `topology/048` cut
+decision 20's investigation-log tail justified as *"preserved almost verbatim as row 105"*; row 105
+was a topic-level paraphrase naming neither hypothesis, neither refutation method, nor the handshake
+test's per-candidate result, and a corpus grep found the only surviving copy was in the task file
+that fold deleted. Restored in compressed form into `reversals/rows-93-109.md`: **12,532 → 12,838 B**
+(+306 B; reversals row files carry no per-entry cap). `embarch-decision-reversals.md` **unchanged at
+9,309/10,240 B**, so its reserve item under `tasks/suite/004` neither moved nor grew.
+`link-declares.md`#20 **untouched at 3,717 B** — not re-inflated, which was the whole point of
+choosing the row. Announced at `ts` **1789596240.452339**; 55 minutes elapsed against a 30-minute
+window with no reply, no reaction, nothing in the channel.
+
+**(b) Why this was a `suite/` task and not a `topology` one, restated because the next drop of this
+shape will look the same.** The reviewer that filed it scoped it `topology` in good faith, and the
+drop's own preferred fix lands in `reversals/`, which `check-ownership.py --scope topology` refuses.
+I ran it both ways before filing rather than reasoning about it. **A `topology` worker sent at this
+would have been refused by the gate after doing the work** — the `tasks/doc/004` shape, arriving from
+a direction where the task reads entirely like sub-project work.
+
+**(c) THE REVIEWER SETTLED THE OPEN QUESTION, and it is a real contradiction — origin `d3f2f81`, not
+this unit.** Leg 119 flagged, explicitly as low-confidence and not asserted as a defect, that
+`topology/048` cut decision 21's reproduction timestamps from two times to one date and that
+`history/topology.md:61` separately says the identity gate's result is *"on record three times"*.
+Nobody had checked whether the count depended on the detail removed. I put it in the reviewer's spawn
+as a side question and it answered: the bracket went from
+`[measured 2026-08-31, reproduced 2026-09-06 22:07:51Z and 22:15:45Z from Core's own handshake log]`
+to `[measured 2026-08-31, reproduced 2026-09-06]` — **three timestamped observations collapsed into a
+form that reads as two**, and `history/topology.md:61`'s count is now unbacked by the decision it
+depends on. Filed as `inbox/topology-decision-21-three-times-count-now-two.md`; a revert of that
+one-line hunk is clean. **This is the second time this leg that the answer came from running the
+check rather than from reading the entry**, and both times the entry's prose pointed the other way.
+
+**Merged:** no branch and no merge — a `suite/` unit executed with my own hands (§8). Work commit
+`2f5da8f` in `embarch-doc`, fold commit below; `2f5da8f` is the revert handle. **No code repo was
+touched by this unit or by any unit this leg.** Gate run by me on the work commit: `check-docs.py`
+**11/11**. `check-ownership.py --supervisor` on the whole leg is recorded at the end of this entry.
+`changelog.d/suite-reversals-row-105-diagnostics.fixed.md` consumed into `history/suite.md` with
+`--only`; **29 of the owner's own fragments left pending**, untouched. No `status.d/` or `features.d/`
+fragment.
+
+**A verification I ran rather than asserted.** After the edit,
+`grep -rnic 'debug status register\|generated devicetree' --include='*.md' .` hits
+`reversals/rows-93-109.md` — so both methods survive this task file's own deletion in this fold,
+which is exactly the trap the original finding was about: a compaction's safety net written into the
+one file the fold is guaranteed to remove.
+
+**Blocked:** nothing. `tasks/suite/039` closed and removed. **Three `inbox/` drops stand for the next
+leg's drain**, and the first two are corrections to what this leg landed:
+`ui-debug-tab-13-by-construction-claim-wrong.md`, `ui-decision-25-restored-count-wrong-trace-mode.md`
+(both `ui` — one dispatchable slot between them, fold them into one task) and
+`topology-decision-21-three-times-count-now-two.md` (`topology`).
+
+**Reviewer:** 1 finding — inbox/topology-decision-21-three-times-count-now-two.md
+
+**Hardware debts:** **none created, and one restated precisely because this unit is about it.** The
+two restored refutation methods — a debug-status-register read and a generated-devicetree check —
+are **measurements taken on real hardware in September**, and the reviewer specifically confirmed the
+compressed text still presents them as measured rather than asserted. Nothing was executed here: no
+board, no probe, no live Core, no deploy, no enrolment, and **no hardware was touched anywhere in
+this leg.** `core/015`'s native Windows build is untouched by all four units — **not one landed a
+commit in any code repo** — so it stays at leg 117's re-derived **40 commits since `1c1224e`**, a
+number I did not re-derive and which five handoffs have now warned against incrementing by ordinal.
+**I did not read Core live at any point this leg**: the dev-bench probe's state is carried on leg
+116's reading, `tasks/api/059` stays `open` rather than `blocked`, and the owner's `d0cf9a0` parks
+the bench queue regardless, so no bench unit was eligible. `fleet-hardware.py --refresh` still
+crashes (`tasks/doc/041`); its buffer was neither read nor believed.
+
+**Budget:** PROCEED start to finish — weekly **8.8%** of a 90% cap at the leg's start, resets in
+~159h, no 429 anywhere. Wave **6** suggested, **4 units dispatched** (3 workers + this one): the unit
+cap bound the leg, not the budget and not scope spread — 5 dispatchable across 5 scopes at the start,
+low-water 4, so no refill sweep was owed, and `check-doc-size.py --due` had 12 dated entries and
+**0 overdue**, so no unit was pre-empted by the ledger.
+
+**Least sure about:** **whether putting a side question in the reviewer's spawn is a good habit or a
+way of getting free work out of an agent whose charter is narrower than that.** It worked here — the
+answer is (c), it is a real contradiction, and it cost about ninety seconds. But the reviewer exists
+to read *this unit's diff* for contradictions, and I sent it hunting in a commit from another leg. It
+did both and said clearly which finding belonged to which, so nothing was confused. I still notice
+that the same move, done by a supervisor with less time, is how a reviewer's answer about the wrong
+commit ends up labelled as being about this one — which is the exact failure the "pass your absolute
+worktree paths" rule exists to prevent, arriving from the opposite direction.
+
+---
+
 ## 2026-09-16 16:58 — ui/056 two residues fixed, two new ones created, and the first reviewer this leg that earned its spawn
 
 **Decided:** **four things, and (c) is the one that must not be skimmed: this unit landed a false
