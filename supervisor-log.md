@@ -97,6 +97,75 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 12:36 — study-designer/050 a one-word fix, and the first spot-check this log has of a zero-defect sweep
+
+**Decided:** **nothing suite-wide, and one thing about how I brief reviewers that I want the next
+leg to argue with.** The 2026-09-12 handoff left an open doubt I could not ignore here: *"whether
+three-plus consecutive zero-defect sweeps in a repo mean the corpus is actually clean, or that
+refill has converged on picking always-clean files by size."* This unit is the fifth sweep in a row
+in this crate reporting near-zero, so **I asked its reviewer to spot-check three or four of the
+strongest factual claims rather than accept the headline**, and told it plainly that a zero-defect
+sweep nobody spot-checked is the result this log has the least evidence for.
+
+It checked four and they held: `decisions 34 and 36` cited jointly for the silently-empty-capture
+failure mode (both decision bodies quoted back at me and both match), `embarch-core decision 30` for
+`study_lock`/`hw_lock` — which collides by *number* with this crate's own unrelated decision 30 and
+is correctly labelled foreign — and `embarch-topology decision 18` plus `embarch-outpost` 11 and 12
+for the `Signal` stream source. **That is the first independent evidence in this log that a
+zero-defect sweep here is a real result and not a selection artefact.** Four samples is four
+samples; it does not settle the handoff's question. It is one data point where there were none.
+
+**Merged:** `agent/study-designer/050-src-citation-sweep-remainder` — code `27a68f1` in
+`embarch-study-designer`, **fast-forwarded** onto `main`. Doc `b304728` in `embarch-doc`,
+**cherry-picked** from branch commit `64ffb87` (`--ff-only` refused because `api/098`'s fold had
+already moved `main` under it).
+
+**Note for the next leg, because it cost me a confused minute:** `embarch-study-designer`'s local
+`main` was **one commit behind `origin/main`** when I merged — `study-designer/049` had been pushed
+but the local branch never fast-forwarded — so `git merge --ff-only` reported *two* files changed
+for a one-file branch. Nothing was wrong; the ff simply carried the missing commit too. **Check
+`git log main..origin/main` before reading a merge's file count as the unit's diff**, and be aware
+the code-repo main checkouts can sit behind while `origin` is current.
+
+The whole code diff is one line in `src/streams.rs`: a bare `decision 9` that means
+`embarch-outpost` decision 9, sitting ~55 characters past the label that would have carried it —
+outside `check-decision-refs.py`'s 44-character window, and outside a human reader's carry-forward
+too. **Same shape as `api/097`'s defect, found by a different worker in a different repo on the same
+day**, which is worth noticing: this is not one worker's slip, it is a defect the convention itself
+invites whenever a sentence cites two foreign decisions. Gate re-run by me on the merge result:
+`cargo build` / `cargo test` / `cargo clippy --all-targets -- -D warnings` green in
+`embarch-study-designer`, `check-docs.py` **11/11**, `check-client-names.py --repo <code worktree>`
+clean against 7 denylist entries, `check-ownership.py --scope study-designer` OK on 3 paths run **in
+the worker's own worktree** rather than in my leg (in the leg it derives a base equal to HEAD and
+honestly reports 0 paths, which is vacuous — worth knowing).
+`changelog.d/study-designer-streams-citation-sweep.fixed.md` consumed into
+`history/study-designer.md` with `--only`; **29 of the owner's own fragments left pending.**
+
+**Blocked:** nothing. `tasks/study-designer/050` closed and removed; the worker filed
+`tasks/study-designer/051` for the 18 files still unswept under `src/`, and the reviewer verified
+that remainder list file-for-file against a fresh grep.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none created.** One word in a Rust doc-comment; nothing executed, no board, no
+probe, no live Core. `core/015`'s native Windows build is untouched — `embarch-study-designer`, not
+`embarch-core`. I have not read Core live this leg and am not restating the dev-bench probe's state
+on my own evidence; `tasks/api/059` stays `open` on the previous leg's reading, and the owner's
+`d0cf9a0` parks the bench queue regardless.
+
+**Budget:** PROCEED — weekly 4.3% of a 90% cap at the leg's top, resets in ~162 h. Wave 6 suggested,
+3 dispatched.
+
+**Least sure about:** **whether asking the reviewer to spot-check the worker's headline is review or
+supervision, and whether it scales.** It found nothing wrong, which is the outcome that makes the
+question hard: I cannot tell from one clean result whether directed spot-checking adds signal or
+just costs a minute per unit. The previous leg raised the mirror-image worry — that a leading prompt
+manufactures agreement — and a prompt that says "verify this specific claim" is exactly that shape.
+**Somebody should run one unit with an open-ended reviewer prompt and one with a directed one on
+comparable diffs**, rather than each leg deciding by taste.
+
+---
+
 ## 2026-09-16 12:31 — api/098 the stale path core/060 left in another repo, and the two the reviewer found next
 
 **Decided:** **nothing suite-wide.** One scoped call worth recording: the task offered two shapes —
