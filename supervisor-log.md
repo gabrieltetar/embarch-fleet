@@ -97,6 +97,78 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 13:50 — outpost/023 decision 17 squeezed to 26 bytes of margin, and the reviewer's read on what that costs
+
+**Decided:** **accept a distributed squeeze over a split, and record that the next growth event here
+forces the split instead.**
+
+**(a) Compaction, and unlike `core/064` this fork was close.** Decision 17 is the two-clocks split —
+`cycles` measures, `rx_utc_ms` places. 4,559 B → **4,070 B**, which is **26 B of margin** under the
+4,096 B per-decision cap. It got there with **12 content-removing hunks plus ~15 rewordings**, down
+to single-word intensifiers (`independent`, `total`, `either way`, `took`, `driver's`, `at all`) —
+not one cold block deleted, because there is no cold block: every claim, constraint, rejected
+alternative and failure signature in the entry is hot. **I asked the reviewer for an opinion on
+whether that shape was the right branch and it came back with mine, plus the part I had not
+articulated:** the entry is now down to connective tissue as its only remaining slack, and the *next*
+growth event is the one that forces a split rather than another squeeze pass. That is in the task
+file in the worker's own words and it is now in the log in the reviewer's.
+
+**(b) The `core/064` failure mode was checked for here on purpose and is not present.** One unit
+earlier this leg a compaction cut a live-route claim as if it were retired-route provenance. I gave
+this reviewer that finding as its first question, because a *distributed* squeeze is far more likely
+to lose a live claim quietly than a single blockquote deletion is. It walked all 12 quoted hunks with
+a word-level diff and cleared them: a correction blockquote's scope-qualifier, a mnemonic
+restatement, two rejected alternatives' lead-ins, and intensifiers. The one that looked like a fact —
+`milliseconds since that board booted, no epoch, no offset applied` — **survives verbatim in
+`suite/decisions/naming.md` decision 3**, which the surviving text already cites by name. So the
+claim has a home; that is the check `core/064` failed.
+
+**(c) A quote-list gap, flagged and deliberately not filed.** The reviewer found **three single words
+removed without substitute and not itemized** — `applied`, `two`, and `measure`. None carries a
+claim, and the two substantive-looking phrases they sat in are preserved elsewhere, so it fails the
+inbox bar. **But it is the same shape as leg 117's gap, one leg after I put "if you cut it, it
+appears in your list, in full" in every dispatch note** — which means the rule as stated is being read
+as "every cut *hunk*" and not "every cut *word*". I am not going to tighten it further: itemizing
+single-word deletions would bury the list that makes the substantive cuts checkable. What I would
+tell the next leg is that the rule catches paragraphs and clauses reliably and words unreliably, and
+the reviewer's word-level diff — not the quote list — is what actually caught these.
+
+**Merged:** `agent/outpost/023-decision-17-over-cap` — doc `c0763be` in `embarch-doc`, **rebased onto
+`main` in the worker's own doc worktree and then fast-forwarded** (`main` had moved under it by one
+fold). **Code: no commit** — `embarch-outpost` is a Zephyr/C module with no `Cargo.toml`, so the cargo
+half of the gate selects nothing and there was no code change to gate; one revert handle, not two.
+Gate re-run by me on the merge result: `check-docs.py` **11/11**, `check-ownership.py --scope
+outpost` OK on 3 paths, `check-client-names.py --repo <code worktree>` clean against 7 denylist
+entries. `embarch-outpost/decisions.md` needed no edit — that sub-project's index has no size column
+and no number changed. `changelog.d/outpost-decision-17-under-per-decision-cap.decided.md` consumed
+into `history/outpost.md` with `--only`; **29 of the owner's own fragments left pending.**
+
+**Blocked:** nothing. `tasks/outpost/023` closed and removed.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none created, and two carried that this unit was specifically checked against.**
+Decision 17's claims rest on two unpaid debts — nothing has compared a trace's placement against a
+second stream (`embarch-ui/open.md`), and no signal tap has read a byte
+(`embarch-topology/open.md`). Neither is referenced inside `clocks.md`, before or after, and the
+reviewer confirmed the post-merge entry reads no more settled than the pre-merge one; the adjacent
+`an alignment rather than a guess` line is a capability claim and was untouched. Nothing executed, no
+board, no probe, no live Core, no capture read. `core/015`'s native Windows build is untouched —
+different repo — and stays at leg 117's re-derived **40 commits since `1c1224e`**. The dev-bench probe
+is carried, not observed: `tasks/api/059` stays `open`, the owner's `d0cf9a0` parks the bench queue,
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`).
+
+**Budget:** PROCEED — weekly **5.4%** of a 90% cap at the leg's start, resets in ~162 h. Wave **6**
+suggested, **4** dispatched; the unit cap binds.
+
+**Least sure about:** **whether a 26-byte margin should have been allowed to count as paying the
+debt.** The gate says under cap and the task's `Done when` is satisfied, so there was no mechanical
+reason to refuse — but `check-doc-size.py` has no notion of "paid, barely", and this entry will
+re-breach on the first sentence anyone adds. The reviewer and I agree the next edit forces a split;
+nothing in the repo records that except this entry and the task file I just deleted.
+
+---
+
 ## 2026-09-16 13:40 — core/064 decision 44 compacted, and the reviewer caught a live claim cut as if it were provenance
 
 **Decided:** **compact rather than split, and then accept a reviewer finding against my own gate.**
