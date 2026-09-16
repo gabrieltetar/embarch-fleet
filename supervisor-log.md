@@ -97,6 +97,84 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 13:40 — core/064 decision 44 compacted, and the reviewer caught a live claim cut as if it were provenance
+
+**Decided:** **compact rather than split, and then accept a reviewer finding against my own gate.**
+
+**(a) Compaction, and the fork was not close.** Decision 44 is a *retired* entry — `GET /logs/stream`
+was retired by `tasks/core/021` — stated at full pre-retirement length with a retirement paragraph
+appended rather than the entry cut down. That is one decision with a long provenance tail, not
+several accreted arguments, so a new decision number was never in question. 4,352 B → **2,438 B**,
+1,658 B of margin under the 4,096 B per-decision cap. The worker grepped 26 `decision 44` hits across
+the doc repo and correctly discarded all but five as *other sub-projects' own* decision 44 — decision
+numbers are per-sub-project, which is the trap this suite has paid for repeatedly — leaving two live
+citations (`embarch-core/interfaces/logs.md:13`, `history/core.md:63`), both resolving to the kept
+hold-past-`\n` rule.
+
+**(b) The quote-list rule I added to all four dispatch notes this leg held here.** Leg 117 landed a
+compaction whose verbatim-cut list had an unmarked gap, so I told every worker this leg that if they
+cut it, it appears in their list in full. The reviewer diffed `74f3708` against the task file's
+`## Compaction taken` section and confirmed **exactly three removals, all three quoted verbatim and
+complete, no leg-117-style connector-clause gap.** One leg is not evidence, but it is the first time
+the rule has been stated up front rather than found afterwards.
+
+**(c) THE FINDING, and it is against a unit I had already gated green.** The reviewer accepted the
+UTF-8 torn-character paragraph as dead provenance, and accepted *most* of the anchor/self-correction
+paragraph as the same — but not its **last sentence**, which states that `read_recent`/`tail_lines`
+still return a trailing partial line, and that `embarch-ui`'s `diff_new_lines` has an accepted
+fallback for it. Those functions back **`/logs/recent`, which is live.** The commit's own
+justification — "both provenance for a route no live code can hit anymore" — is simply wrong for that
+one sentence. The reviewer then did the part that makes this a finding rather than an opinion: it
+confirmed the claim is still true of `src/logs.rs` (`tail_lines` uses `.lines()` over
+`read_to_string`), and confirmed it is **now undocumented anywhere else in the repo** —
+`interfaces/logs.md`, `spec.md:58` and `embarch-ui/decisions/debug-tab.md`#13 all omit it, and
+`diff_new_lines` appears nowhere else in the tree. So a compaction I passed deleted the only home of a
+live-route behavioural fact.
+
+**I did not fix it in this fold and I am saying why.** It is a `core` doc write with an `embarch-ui`
+consumer, the right home for it is a judgement between decision 16, decision 29 and
+`interfaces/logs.md`, and leg 117's own closing lesson was that a supervisor filing work off its own
+merge review should hold itself to a worker's standard of reading the whole hunk. The drop is in
+`inbox/` and the next leg files it as a task. **What I want the next leg to notice is the class:** this
+is not a citation going stale, it is a *live* claim mis-classified as provenance by a hot/cold test
+that only asked whether the *route* was retired. Three more per-decision compactions are landing this
+same leg under the same test.
+
+**Merged:** `agent/core/064-decision-44-over-cap` — doc `74f3708` in `embarch-doc`, **fast-forwarded**
+onto `main`. **Code: no commit** — the `embarch-core` branch tip equals its branch point, so there is
+one revert handle for this unit, not two, and the cargo half of the gate had nothing to gate (the
+worker ran it green on the unmodified tree: build, clippy `--all-targets -- -D warnings`, 209 tests
+passed / 0 failed / 2 ignored). Gate re-run by me on the merge result: `check-docs.py` **11/11**,
+`check-ownership.py --scope core` OK on 4 paths, `check-client-names.py --repo <code worktree>` clean
+against 7 denylist entries. `embarch-core/decisions.md`'s size column for `logging.md` corrected
+10.7 → 8.9 KB. `changelog.d/core-decision-44-logging-cap.changed.md` consumed into `history/core.md`
+with `--only`; **29 of the owner's own fragments left pending.**
+
+**Blocked:** nothing. `tasks/core/064` closed and removed.
+
+**Reviewer:** 1 finding — inbox/core-decision-44-residue-live-route-claim.md
+
+**Hardware debts:** **none created.** Doc prose only — no board, no probe, no live Core, no route
+called, nothing executed. `core/015`'s native Windows build is **not** advanced by this unit: no code
+commit landed in `embarch-core`, so the figure to carry forward stays leg 117's re-derived **40
+commits since `1c1224e`**, and I did not re-derive it either. I did not read Core live at any point,
+so the dev-bench probe's state is carried, not observed: `tasks/api/059` stays `open`, and the owner's
+`d0cf9a0` parks the whole bench queue regardless, so no bench unit was eligible this leg.
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`); its buffer was neither believed nor
+used.
+
+**Budget:** PROCEED — weekly **5.4%** of a 90% cap at the leg's start, resets in ~162 h. Wave **6**
+suggested, **4** dispatched: the unit cap bound, not the budget, and the queue had 8 dispatchable
+across 7 scopes so scope spread did not bind either.
+
+**Least sure about:** **whether `DOC-COMPACTION-PASS.md`'s hot/cold test is safe on a retired entry at
+all.** The test asks what a reader needs to work on this component today, and a retired decision reads
+as uniformly cold — which is exactly the reasoning that cut a live `/logs/recent` claim. Three more
+per-decision compactions land this leg under the same test, and I gave their reviewers the same
+question without knowing yet that this is the failure mode to ask about.
+
+---
+
 ## 2026-09-16 12:48 — api/099 the third client.rs citation unit in three days, and the task I filed off it and then withdrew
 
 **Decided:** **two things, and the second one is me being wrong in public because that is what this
