@@ -97,6 +97,68 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 15:00 — core/065 the cut /logs/recent claim restored, and the sentence-by-sentence rule finally caught something before it landed
+
+**Decided:** **one thing, and it is the rule leg 118 asked for being used rather than stated.** Leg 118
+closed by saying the fix for the twice-repeated claim-loss defect is not "quote your cuts" but: *if you
+justify a cut — or a decision not to restate something — by pointing at another decision, open that
+decision and confirm it covers the whole hunk sentence by sentence, not the topic.* I put that in the
+dispatch note of all four tasks this leg. **On this unit it changed the answer.** The task offered two
+homes for the restored claim and named `logging.md` decision 16/29 first, on the plausible ground that
+they own `/logs/recent`'s front end. The worker read 16 and 29 rather than assuming, found that
+between them they cover writer-setup fault tolerance, `init_tracing()` ordering, the one-file-vs-two
+question, plain-text-vs-JSON and a shipped-before-CLI drift — **and never mention tail behaviour,
+partial lines or `\n`-splitting at all** — and put the claim in `embarch-core/interfaces/logs.md`'s
+`/logs/recent` row instead. The reviewer re-read 16 and 29 independently and reached the same reading.
+Had the worker taken the task file's first suggestion, the fact would have been attached to a decision
+whose own text does not cover it, which is the identical defect one level up.
+
+**Second, a boundary the worker held that I want on the record.** The original cut sentence also
+asserted that `embarch-ui`'s `diff_new_lines` "already has a documented fallback". That is a claim
+about another repo's code, sourced from a *retired* decision's old quote. The worker did not restate it
+from `embarch-core`'s side; it filed
+`/home/gabriel/Github/embarch/embarch-doc/inbox/ui-debug-tab-diff-new-lines-fallback.md` for a `ui`
+worker to verify against the real implementation. The reviewer called that right rather than a gap, and
+I agree: restating a secondhand claim about someone else's code is how a doc corpus acquires facts
+nothing ever measured.
+
+**Merged:** `agent/core/065-logs-recent-partial-line-claim` — doc `f0bff89` in `embarch-doc`,
+fast-forward onto `main` (no rebase needed; `main` had not moved since the claim). **Code: no commit** —
+the `embarch-core` branch tip equals `main` at `1073bf7`, so there is one revert handle, not two. Gate
+re-run by me on the merge result: `check-docs.py` **11/11**, `check-ownership.py --scope core` OK on 3
+paths, `check-client-names.py --repo <code worktree>` clean against 7 denylist entries.
+`changelog.d/core-logs-recent-partial-line.fixed.md` consumed into `history/core.md` with `--only`;
+**29 of the owner's own fragments left pending**, untouched. No `status.d/` or `features.d/` fragment —
+nothing suite-level changed and no capability shipped or retired.
+
+**Blocked:** nothing. `tasks/core/065` closed and removed. One new `inbox/` drop created by this unit
+(the `ui` half above), left for the next leg's drain rather than filed by me — it is a genuine
+cross-repo finding and `ui` is not this unit's scope.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none created.** Doc prose only — one paragraph in `embarch-core/interfaces/logs.md`;
+nothing executed, no board, no probe, no live Core, no route called. **`core/015`'s native Windows build
+is untouched by this unit** — no `embarch-core` commit landed — so it stays where leg 117 re-derived it,
+**40 commits since `1c1224e`**, a number I did **not** re-derive and which two handoffs have now warned
+against incrementing by ordinal. I did not read Core live at any point this leg: the dev-bench probe's
+state is carried on leg 116's reading, `tasks/api/059` stays `open`, and the owner's `d0cf9a0` parks the
+bench queue regardless, so no bench unit was eligible. `fleet-hardware.py --refresh` still crashes
+(`tasks/doc/041`); its buffer was neither read nor believed.
+
+**Budget:** PROCEED at the leg's start — weekly **7.4%** of a 90% cap, resets in ~160h, no 429. Wave
+**6** suggested, **4** dispatched: the unit cap binds, not the budget and not scope spread (9
+dispatchable across 6 scopes at the start, low-water 4, so no refill sweep was owed).
+
+**Least sure about:** **whether the "open the decision and read it sentence by sentence" rule is
+actually what saved this unit, or whether the worker would have picked `interfaces/logs.md` anyway
+because the task file listed it second and described its audience more concretely.** I cannot separate
+the two from one unit, and the rule is now in three more task files this leg, so the next leg has a
+slightly better sample than I do — but nobody is counting, and an instruction that feels effective
+after one favourable outcome is exactly the kind of thing this log exists to be sceptical about.
+
+---
+
 ## 2026-09-16 14:11 — umbrella/068 two more decisions under cap, the same claim-loss twice in one leg, and the census that could never have been right
 
 **Decided:** **four things. The first is the unit; the rest are why this leg matters more than four
