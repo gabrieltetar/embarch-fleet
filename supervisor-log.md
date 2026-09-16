@@ -97,6 +97,91 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 17:25 — study-designer/051 the sweep chain finally hit something, and it was a wrong fact rather than a wrong number
+
+**Decided:** **three things, and (a) is the answer to a question two handoffs have been asking.**
+
+**(a) THE ZERO-DEFECT RUN IS OVER, AND WHAT IT FOUND IS THE EXPENSIVE KIND.** The 2026-09-12 handoff
+flagged — and `ui/049` and `umbrella/066` raised independently — that three-plus consecutive clean
+sweeps might mean refill had converged on always-clean files rather than that the corpus was clean.
+No per-sweep hit rate is tracked anywhere. This unit checked **57 citation instances across two files
+and found 2 wrong numbers and 1 false sentence**, which is a hit rate in the same range as
+`core/056`'s (109 read, 6 wrong numbers, 4 false sentences). So: **the corpus is not clean, and the
+recent clean runs were about which files were picked.** The one number worth carrying forward is the
+denominator — 57 instances, not 52 grep-matching lines; the worker reported both because the dispatch
+note asked for instances, and the two differ by about 10%.
+
+**(b) One of the two was not a citation defect at all — it was a wrong fact about real firmware
+behaviour, in a shared crate.** `limits.rs`'s `MAX_SOURCES_PER_PROTOCOL` comment sized the constant
+against *"the real BDS download's three (`ctrl`/`status`/`data`, decision 57)"*. Decision 57 is about
+GATT-extraction scanning and has nothing to do with it, **and the count was wrong**: this crate's own
+`interfaces/eap.md` records that the manifest deliberately does **not** name the bulk data
+characteristic as a source — it belongs on a selective monitor window, which is the `.eap` tapping
+hazard this suite has already paid for. So a reader of `embarch-study-designer`'s comments — and five
+repos read them — was being told the protocol taps three characteristics when it taps two. **That is
+the class a citation sweep exists to find and the class nothing else in this suite can find**: no
+gate reads source comments, and `check-decision-refs.py` walks `*.md` only.
+
+**(c) I accepted a fix that trades a decision anchor for a file reference, and I want the next leg to
+see me deciding it.** The replacement comment cites `interfaces/eap.md` rather than a decision number,
+because the worker found no numbered decision recording the two-source count. That is honest — citing
+a real file beats citing a decision that does not say the thing — but it means this constant's
+rationale is no longer anchored to anything numbered, and `check-decision-refs.py` could not see it
+either way. I put it to the reviewer as a specific question rather than settling it myself; the
+answer is in the `**Reviewer:**` line.
+
+**Merged:** `agent/study-designer/051-src-sweep-remainder` (code `a69f038`, doc `e74d78c`). **This is
+the leg's first unit with a real code commit** — two comment hunks, no behaviour. `a69f038` and
+`e74d78c` are the revert handles. **I read the code diff before merging** rather than merging on
+green, because `embarch-study-designer` is a shared crate (`embarch-api`, `embarch-core`,
+`embarch-dev-bench`, `embarch-ui`, `embarch-umbrella` all depend on it) — §10's named exception, and
+the only unit this leg that qualified for it. Gate re-run by me on the merge result: `cargo build`,
+`cargo test`, `cargo clippy --all-targets -- -D warnings` all green in `embarch-study-designer`;
+`check-docs.py` **11/11**; `check-ownership.py --scope study-designer` OK on 3 doc paths and the whole
+code tree; `check-client-names.py` clean against 7 denylist entries. Branch rebased onto `main` twice
+before the `--ff-only`. `changelog.d/study-designer-051-citation-sweep.fixed.md` consumed into
+`history/study-designer.md` with `--only`; **29 of the owner's own fragments left pending**,
+untouched. No `status.d/` and no `features.d/` fragment.
+
+**Blocked:** nothing. `tasks/study-designer/051` closed and removed in this fold; the worker filed
+**`tasks/study-designer/052-src-citation-sweep-remainder.md`** naming the **16 files still remaining**,
+`src/bounded.rs` largest and next. That chain is now nine units deep and, on this unit's evidence,
+still earning its keep.
+
+**Reviewer:** no findings, and it settled (c) rather than restating it. It searched all seven
+`embarch-study-designer/decisions/*.md` for any record of the `ctrl`/`status`/`data` source count and
+found none — decision 58, still cited unchanged in the same comment, covers `ProtocolDef.sources`
+generally but never enumerates BDS's count — so **citing `interfaces/eap.md` drops no anchor, because
+there was no decision anchor to drop.** It also verified the two-source fact against `eap.md` itself
+and read decisions 44 and 50 in full to confirm the repoint (44 states the every-step rule verbatim;
+50 covers only `BleUnbond`'s own case).
+
+**Hardware debts:** **none created, and one restated because this unit brushed it.** The corrected
+comment describes what the real BDS download taps — `ctrl`/`status`, not the bulk data
+characteristic — which is a **firmware behaviour fact**, not something this unit measured. It is
+sourced to `interfaces/eap.md`, which records it; nothing here was executed, no board, no probe, no
+live Core, no study. **Never infer a DUT fact from source** cuts both ways, and the safe reading of
+this unit is that it corrected a comment to agree with a written record, not that it established
+anything about hardware. `core/015`'s native Windows build is untouched — the code commit is in
+`embarch-study-designer`, not `embarch-core` — so it stays at leg 117's re-derived **40 commits since
+`1c1224e`**, not incremented by ordinal. `tasks/api/059` stays `open`; the owner's `d0cf9a0` parks the
+bench queue; `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`) and its buffer was neither
+read nor believed.
+
+**Budget:** PROCEED (weekly **11.1%** of a 90% cap, resets in ~158h), no 429. Wave **6** suggested;
+the **4-unit leg cap** binds.
+
+**Least sure about:** **whether "57 instances, 3 defects" is a hit rate or an anecdote.** I have now
+written the sentence "the corpus is not clean" on the strength of one sweep, after two handoffs wrote
+the opposite on the strength of three. Neither claim has a denominator anybody is keeping — nothing
+tracks per-sweep hit rate across the nine units of this chain, and the honest position is that we
+have nine data points sitting in nine log entries and no one has added them up. **That is a
+half-hour's work for some leg and it would settle a question that keeps being re-argued**; I did not
+do it because it is not a queued task and inventing one to fill my own slot is the move the ops doc
+forbids.
+
+---
+
 ## 2026-09-16 17:22 — umbrella/071 one citation split into two, and the chain that produced it finally closes
 
 **Decided:** **two things, and (a) is the end of a four-unit chain worth reading as one story.**
