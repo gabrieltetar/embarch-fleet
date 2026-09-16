@@ -97,6 +97,82 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 17:22 — umbrella/071 one citation split into two, and the chain that produced it finally closes
+
+**Decided:** **two things, and (a) is the end of a four-unit chain worth reading as one story.**
+
+**(a) Split the attribution rather than narrowing it to one check.** Decision 42 ended by citing
+decision 35 as corroboration for the CLI shapes *both* `doctor` check 8 (`list-targets`) and check 11
+(`versions`) assume. Decision 35 is entirely about `versions`: zero mentions of `list-targets`, and no
+2026-09-06 date at all. The task's stated preference was to narrow — attribute decision 35 for check
+11 only and point check 8 at `projects.md`#17. The worker did better than narrow: it split, so **each
+check names its own source** — `check 11's matches decision 35, check 8's matches decision 17` —
+which keeps the corroboration for both halves instead of dropping one. **4,019 → 4,062 B**, 34 B of
+margin left against the 4,096 B per-decision cap, down from 77 B. That is thinner than I would like
+and I said so in the dispatch note; the alternative that fit more comfortably was deleting the
+corroboration clause outright, which would have been true but would have thrown away a real record.
+
+**(b) THE CHAIN IS THE POINT, and this is the fourth unit of it.** `umbrella/068` cut decision 42's
+`list-targets` paragraph justified as *"duplicates decision 35"* — true of its `versions` sentences,
+false of its `list-targets` one. `umbrella/070` restored the cut claim into `projects.md`#17. What
+survived both was **the sentence that made the original cut look justified**, and until this unit it
+was the only place a reader was told to look in decision 35 for something that is not there. A
+compaction, a restoration, and then the residue of the compaction's own *rationale* — which nothing
+gates, because a justification is prose. Note also how this task existed at all: `umbrella/070`'s
+worker flagged it (no bytes to fix it) and its reviewer flagged it independently (pre-existing,
+correctly out of scope), and **the supervisor was the only actor that saw both reports.** That is the
+strongest argument in this log for spawning a reviewer per unit rather than per high-blast-radius
+diff.
+
+**Merged:** `agent/umbrella/071-decision-42-cites-35` (code `3c6565b`, doc `6f23924`). **The code SHA
+is `embarch-umbrella` main unchanged** — the branch was legitimately empty. `6f23924` is the revert
+handle. Gate re-run by me on the merge result, not on the branch: `check-docs.py` **11/11** green,
+`check-ownership.py --scope umbrella` OK on 3 paths, `check-client-names.py --repo <code worktree>`
+clean against 7 denylist entries; the worker separately reported `cargo build`/`test` (225 passed)/
+`clippy --all-targets -- -D warnings` green in the code repo. Branch rebased onto `main` twice —
+once after my own refill commit and again after `topology/049`'s fold — and force-with-leased before
+the `--ff-only`. `changelog.d/umbrella-decision-42-citation.fixed.md` consumed into
+`history/umbrella.md` with `--only`; **29 of the owner's own fragments left pending**, untouched. No
+`status.d/` and no `features.d/` fragment.
+
+**The worker reported a red it correctly refused to fix.** `check-docs.py` was 10/11 in its worktree
+because of *my* malformed `tasks/topology/049` title (see that unit's entry). It named the red, said
+it was another scope's and already tracked, and filed no `inbox/` drop for it. That is exactly right
+and it is worth recording as the good case: a worker that had "helpfully" fixed it would have put a
+`topology`-owned path in an `umbrella` diff and earned a real `check-ownership.py` red.
+
+**Blocked:** nothing. `tasks/umbrella/071` closed and removed in this fold.
+
+**Reviewer:** no findings. It answered the question the unit actually turns on — **is decision 17 a
+sound referent, or is this the `umbrella/068`→`070` failure repeating from the other end** — by
+quoting `projects.md`#17 directly: *"`list-targets`'s own wire shape, observed directly against both
+binaries on this bench [2026-09-06]"*, the shape and the date the new sentence needs. It re-derived
+the byte count in Python (4,019 → 4,062 B, digit-for-digit) and compared the hardware-debt sentence
+before and after by string equality (`identical: True`) rather than by eye.
+
+**Hardware debts:** **none created, and one deliberately preserved.** The sentence *"Neither check 8
+nor check 11 has run inside a live `doctor` yet — that needs a live Core and stays in `open.md`"* is a
+standing hardware debt that three legs have now explicitly checked survives each rewrite of the text
+around it; the worker confirmed it byte-for-byte and I asked the reviewer to confirm it independently.
+Nothing was executed here: no board, no probe, no live Core, **no `doctor` run**. `core/015`'s native
+Windows build is untouched — this unit landed no commit in any code repo, so it stays at leg 117's
+re-derived **40 commits since `1c1224e`**, not incremented by ordinal. `umbrella/037` check 13,
+`umbrella/033`'s check-17 arms and umbrella check 5's permission-denied probe all still need a real
+machine, which this leg cannot give them. Dev-bench probe state carried on leg 116's reading;
+`tasks/api/059` stays `open`, and the owner's `d0cf9a0` parks the bench queue regardless.
+
+**Budget:** PROCEED (weekly **11.1%** of a 90% cap, resets in ~158h), no 429. Wave **6** suggested;
+the **4-unit leg cap** binds.
+
+**Least sure about:** **34 bytes.** Decision 42 now sits 34 B under a cap that `umbrella/068` already
+compacted it to fit, and the next person who needs to add a clause there has almost nothing to spend.
+I approved a fix that made a thin entry thinner in exchange for a correct citation, and the honest
+alternative — split the entry, or move the corroboration sentence to `projects.md` where its subject
+now lives — was not offered to the worker because I did not think of it until the diff came back. If
+`locate-api.md`#42 turns up in a size-debt ledger soon, this unit is why.
+
+---
+
 ## 2026-09-16 17:20 — topology/049 decision 21 carries three observations again, and my own task file was red on `main` for twenty minutes
 
 **Decided:** **three things, and (b) is mine to own.**
