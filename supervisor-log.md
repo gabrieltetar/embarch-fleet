@@ -97,6 +97,105 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 16:58 — ui/056 two residues fixed, two new ones created, and the first reviewer this leg that earned its spawn
+
+**Decided:** **four things, and (c) is the one that must not be skimmed: this unit landed a false
+universal claim into a live decision and I chose not to fix it myself.**
+
+**(a) The task offered the worker a shape it was not allowed to take, and that was my error.** Part A
+said the cheaper fix was to rewrite `history/ui.md:38` so it stands alone. **A `ui` worker cannot
+write `history/ui.md`** — it is `build_changelog.py` output and outside §3's allowed paths; the
+worker edited it, got a real red from `check-ownership.py --scope ui`, reverted, and took the other
+shape instead. No harm done and it caught it inside its own gate, but **I wrote a dispatch note
+recommending a path the ownership map forbids**, and a less careful worker would have argued with the
+gate instead of obeying it. Reserve lines in dispatch notes are checked against
+`check-doc-size.py`; suggested *paths* are checked against nothing.
+
+**(b) Part B found the fallback is real.** `diff_new_lines` lives at `embarch-ui/src/logs.rs:126`;
+it anchors on the longest exact-match run between a suffix of the previous poll window and a prefix
+of the new one, and with no overlap replays the whole new window — duplicates over losses. The
+code's own doc comment at `src/logs.rs:107` names a different trigger (volume aging the window out)
+for that same branch, which is why the doc-of-record was missing.
+
+**(c) THE FINDING — the reviewer disproved the unit's central claim with a three-element
+counter-example, and it is now standing text in decision 13.** The worker wrote that a trailing
+partial line which grows between polls can never produce an exact-match overlap **"by
+construction"**, so it always lands in the replay-whole-window fallback. The reviewer read the
+function and showed the overlap check compares `previous`'s *old* trailing content against `new`'s
+*k*-th element and never against `new`'s grown last element for `k < n`. So a match needs only the
+pre-growth trailing line to equal some other line already in the window — and **this same decision,
+three bullets earlier, relies on "log lines repeat verbatim all the time" as real-world behaviour.**
+Its counter-example: `previous = ["A","B","A"]`, `new = ["A","B","A2"]` matches at `k=1` and returns
+`["B","A2"]` — through the overlap branch, republishing an already-sent line. **The fallback is the
+common case, not a guarantee, and the decision now says guarantee.**
+
+**(c-ii) I did not fix it, and the reason is the reason five claim-losses happened.** I could write
+`decisions/debug-tab.md`#13 myself — it is a sub-project doc, not a reserved path — and the fix
+looks like one word. It is not: the accurate statement is *when* the overlap branch can fire and
+what the consumer should expect then, which is code reading, and the entry has **16 B of margin**.
+Doing that quickly, at the end of a leg, inside 16 bytes, is precisely the shape that produced
+`core/064`, `umbrella/068` and `ui/055`. So it goes to the queue with the counter-example intact.
+**Part A is the same story from the other side:** the restored vertex count went into the
+*layers-mode standalone SVG* paragraph, and pre-`ui/055` (`f6418f5`) it belonged to the *union-mode
+inline header glyph* one — so "657 B inline" now describes a file fetched through a `<link>`, and
+decision 25 contradicts its own union-vs-layers distinction. Two drops, both `ui`, **left in
+`inbox/` for the next leg's drain rather than hand-filed by me at the cap** — that is the designed
+flow, and they should be folded into one task the way this one's two sources were.
+
+**(d) A new `doc` task nobody asked for: `tasks/doc/067`.** The reserve concept exists for *files*
+and not for *decisions*. `decision_state()` reports breaches and pinned failures and has no bucket
+for "under cap and nearly out of room", so no dispatch note can carry decision margin the way it
+carries file margin. This leg hit it twice: `tasks/umbrella/071`'s note had to state decision 42's
+77 B by hand, and this unit drafted Part B at **4,656 B — over cap**, found out when the gate
+refused, and trimmed to 4,080 B. Six unpinned decisions are now inside 80 B of the cap and five got
+there by a compaction aiming at the cap rather than at a target. `Owner: required` (`scripts/`).
+
+**Merged:** `agent/ui/056-two-compaction-residues` — doc `b67da91` in `embarch-doc`, **rebased onto
+`main` in the worker's own doc worktree** (`main` moved for `umbrella/069`'s fold) and then
+fast-forwarded. **Code: no commit** — the `embarch-ui` branch tip equals `main`; one revert handle,
+not two. The worker ran `cargo build --all-targets`, `cargo test` (93 pass) and `clippy
+--all-targets -- -D warnings` clean as a baseline; there was no code merge result for me to re-gate.
+Gate re-run by me on the doc merge result: `check-docs.py` **11/11**, `check-ownership.py --scope
+ui` OK on 5 paths, `check-client-names.py --repo /home/gabriel/Github/embarch/embarch-ui` clean
+against 7 denylist entries. Both `changelog.d/ui-*.fixed.md` fragments consumed into `history/ui.md`
+with `--only`; **29 of the owner's own fragments left pending**, untouched. Bytes: `shell.md`#25
+3,758 → **3,906 B** (190 B margin); `debug-tab.md`#13 3,826 → **4,080 B** (**16 B margin**, now the
+thinnest unpinned decision in the suite).
+
+**Blocked:** nothing. `tasks/ui/056` closed and removed. **Two `inbox/` drops stand for the next
+leg**, both `ui`, both corrections to what this unit landed:
+`ui-debug-tab-13-by-construction-claim-wrong.md` (the important one — a false universal in live
+decision text, with a worked counter-example) and
+`ui-decision-25-restored-count-wrong-trace-mode.md`. `tasks/ui/054` (the app.js citation sweep) is
+still `open` and untouched.
+
+**Reviewer:** 2 findings — inbox/ui-debug-tab-13-by-construction-claim-wrong.md, inbox/ui-decision-25-restored-count-wrong-trace-mode.md
+
+**Hardware debts:** **none created.** Doc prose only; nothing executed, no board, no probe, no live
+Core, no UI launched, no browser. The worker *read* `embarch-ui/src/logs.rs` and so did the
+reviewer; neither ran it, and **the counter-example in (c) is a reading of the function, not an
+observed behaviour** — it should be stated that way in whatever fixes decision 13, and confirming it
+against a running UI is a debt that fix may want to take. `core/015`'s native Windows build is
+untouched by all three units this leg — no `embarch-core` commit has landed — so it stays at leg
+117's re-derived **40 commits since `1c1224e`**, which I did not re-derive and which four handoffs
+have warned against incrementing by ordinal. I did not read Core live at any point; `tasks/api/059`
+stays `open`, and the owner's `d0cf9a0` parks the bench queue. `fleet-hardware.py --refresh` still
+crashes (`tasks/doc/041`).
+
+**Budget:** PROCEED — weekly **8.8%** of a 90% cap at the leg's start, resets in ~159h, no 429. Wave
+**6** suggested; 3 workers plus one suite unit, so the 4-unit cap binds.
+
+**Least sure about:** **whether "file it rather than fix it" was right for (c), or whether I hid
+behind procedure.** Three legs of evidence say a hurried fix at the cap is how claims get lost, and
+the drop preserves the counter-example verbatim, so nothing is at risk of being forgotten. But the
+honest description of what I did is: a unit I supervised put a provably false universal into a
+decision, I had the disproof in hand, and I pushed it to `main` and moved on to my next unit. If the
+next leg's drain deprioritises a `ui` drop behind something louder, that sentence stays wrong for
+days. **The three prior counter-arguments do not actually cover the case where the defect is one
+this leg created rather than one it found.**
+
+---
+
 ## 2026-09-16 16:49 — umbrella/069 the last two unpinned over-cap decisions, and the census is now clean
 
 **Decided:** **three things, and (b) is a number the next leg should not have to re-derive.**
