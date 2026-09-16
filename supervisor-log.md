@@ -97,307 +97,317 @@ unit under **Merged** and **Blocked**:
 
 ---
 
-## 2026-09-14 01:14 — api/095 a sweep stopped mid-file, closed rather than parked, with three bare citations that pointed at the wrong repo's real decision
+## 2026-09-16 11:45 — topology/045 a zero-defect sweep whose zero survived an independent check, and a stale tree that nearly manufactured a defect
 
-**Decided:** **one thing, and it is a task-state correction rather than a design call: `tasks/api/095`
-is `done`, not `blocked`.** The worker wrote `blocked` and I changed it. This is leg 115's fourth and
-last unit; the leg ends on the owner's `fleet stop`, which arrived two units earlier. Five things.
+**Decided:** **two things, neither a design call.** (a) Leg 116 is the first leg of the run the
+listener latched at 10:57 today, after leg 115 ended on the owner's `fleet stop` on 2026-09-14; the
+pump had been down ~58 h. (b) This unit's refill task was **filed by me this leg** rather than drawn
+from the queue, and the reasoning is the part worth keeping. Four things.
 
-**(a) The defect is the sharpest instance of the series' hypothesis yet, and it is invisible by
-construction.** Three bare `decision 59` citations in
-`embarch-api/crates/embarch-core-client/src/client.rs` — in `TopologyMismatchBody::fix_it_url`'s doc
-comment, in `is_unknown()`, and in the `From` impl. Under this suite's own *bare-is-same-repo*
-convention they resolve to **`embarch-api`'s decision 59** (`hardware-selection.md`,
-`dev_bench_hello`/`link_identity`), which is a **real decision in the right repo about the wrong
-thing**; what the comments describe is **`embarch-core`'s decision 59**, the `kind`/`fix_it_url`
-split. Nothing mechanical can see this: the number resolves, the repo is right, the decision exists.
-Only reading the body finds it. **And the file is a shared crate** — `embarch-core-client` is inside
-`embarch-api` and path-depended on by `embarch-ui` — so a bare number in it is read against more than
-one repo's default index, which is exactly why the task chose this file.
+**(a) The task exists because of a doubt two previous legs raised and neither could settle.**
+`ui/049` and `umbrella/066` both asked, independently, whether three-plus consecutive zero-defect
+citation sweeps mean the corpus is clean or mean **refill has converged on picking always-clean files
+by size**. Nothing tracks per-sweep hit rate, so the question cannot be answered by looking at the
+tally. So instead of filing a fifth citation sweep I filed a **different class**: the reversals page's
+own **shape 8 — "the comment names the right invariant; the code does not implement it"** (rows 100,
+101, 102, 104), which that page records as having produced **three findings in one pass** and which
+has never been run over `embarch-topology`. I bounded it to the enrolment trio
+(`hardware_id.rs`, `enrollment.rs`, `validate.rs`, ~1,640 of the crate's 4,612 lines) on the argument
+that reading a third properly beats skimming all of it.
 
-**(b) The reviewer checked the direction of the relabel, not just its existence.** It read both
-decision 59 bodies at the merge SHAs, confirmed all three sites describe the `embarch-core` one, and
-found `embarch-api` decision 71 independently already citing it as `` `embarch-core` decision 59 ``
-in prose. It then counted the diff: 8 insertions, 8 deletions, three hunks of 4+4, 2+2 and 2+2 —
-**accounting for every changed line**, with nothing riding along unreported. A relabel that points at
-the *other* wrong-but-real decision is the same defect with a new number, and that is the failure
-this check exists for.
+**It came back zero.** That is a real answer to the doubt rather than another instance of it: a
+different defect class, in a repo that has produced exactly this defect before (`topology/020`,
+*"crate.md decisions 4 and 8 claim a uniqueness the crate cannot enforce"*), still found nothing.
 
-**(c) The unit is an honest partial and says so in its own voice.** 39 of ~105 cited lines checked
-against a body, across six decision files. **3 wrong labels, 0 false sentences in the checked subset,
-1 explicitly unsettled** — L403's `(decisions 37, 38)` for a "must never link
-`probe-rs`/`serialport`" claim, whose language is decision 72's in `client-crate.md`'s *current*
-text, where 37/38's pre-compaction wording is unrecoverable from here. **The worker refused to
-resolve it either way**, which is the discipline `umbrella/066` failed at (114/0 reported, 113/1
-honest) and the task file warned about at length. The reviewer read 37, 38 and 72 and agrees it is
-genuinely unsettled. The task file's closing line is *"Report red, not green: this sweep is
-incomplete"*, and `tasks/api/097` enumerates every unread line.
+**(b) The worker reported three numbers, not one, and that is why the zero is worth anything.**
+**53 comments read that make a checkable claim; 22 traced into the code and confirmed; 4 left
+`unsettled` and named with line numbers; 27 excluded** as citation/rationale text already covered by
+`topology/036`'s closed sweep. 22 + 4 + 27 = 53. The task file required the traced count to be stated
+separately from the read count precisely because they are different numbers and only the second is
+evidence.
 
-**(d) The state correction, and why it is not pedantry.** `blocked` means *nothing here can be done*
-and must name what unparks it; a `fleet stop` names nothing anyone can clear. Everything `095` could
-still account for is enumerated in `097`, which is `open`. So `blocked` would have parked a file with
-no reachable unpark — `tasks/doc/032`'s named defect — and worse, **the remainder would have been
-hiding inside a parked task instead of standing as a live one.** I set it `done`, removed the file,
-renamed its `## Blocked` section to `## Cut short` leaving every word of the tally intact, and wrote
-into `tasks/api/097` that `095`'s absence must not be read as the sweep having finished.
+**(c) The reviewer did not take the zero on trust, and went past what the worker could reach.** It
+re-derived the arithmetic against the actual list in `git show f2cc6be` rather than the asserted
+total, spot-checked **4 of the 22** traced claims against real source (`classify_chip`'s ordering at
+`hardware_id.rs:93-114`; `upsert`'s `retain` at `enrollment.rs:207` evicting on serial-**or**-role by
+De Morgan; `validate.rs:145-152` logging via `alert::record` *before* constructing
+`TopologyMismatch`; and the cross-repo `resolve_probe`→`select_probe` delegation at `embarch-core`
+`src/hardware.rs:92-99`), and then **located Zephyr's `hwinfo_nrf.c`/`hwinfo_esp32.c` and ST's
+`stm32g0b1xx.h` on this machine** — in `embarch-dev-bench`'s west workspace — and matched the quoted
+pseudocode byte for byte, plus `UID_BASE (0x1FFF7590UL)`. So all four `unsettled` claims are in fact
+**true**. That does not make the worker wrong: it declined to assert what it could not reach from its
+own session, which is the `api/095` discipline and the opposite of `umbrella/066`'s 114/0-for-113/1.
 
-**(e) I hit `tasks/doc/039` myself, in this leg, on a task I filed this leg.** I wrote
-`**Owner:** **required**` on `tasks/doc/061` and `queue-status.py` counted it as dispatchable — a
-bolded owner value is invisible to the parser, which is a defect already filed and which I had read
-the queue listing of an hour earlier. Caught it on the post-fold queue read and unbolded it.
-**Both of this leg's new `doc` tasks are `Owner: required` and neither is dispatchable now.**
+**(d) The near-miss is the most reusable thing this unit produced, and it is not in the diff.**
+Verifying the `resolve_probe` claim, the worker first read
+`/mnt/c/Users/tmp12/source/repos/embarch-core` — **an rsync deploy target with no `.git`**, not a
+checkout — found the *pre*-decision-61 hand-rolled duplicate still sitting there, and was about to
+report a real shape-8 defect. It caught itself against
+`/home/gabriel/Github/embarch/embarch-core`. **A stale tree does not fail; it manufactures a finding
+of exactly the class the sweep is hunting** — the reversals page's shape 5, "a guess
+indistinguishable from an answer", turned on the fleet itself. The fix belongs in
+`embarch-dev-workflow.md` §4a or the worker agent definition, both owner-reserved, so I filed
+**`tasks/doc/063`** (`Owner: required`) with three options rather than picking one. **I removed the
+task file carrying the worker's full 22-claim trace list per convention; it survives in commit
+`f2cc6be` and nowhere else.**
 
-**Merged:** `agent/api/095-core-client-citation-sweep` — code `1de0c09` in `embarch-api`
-(fast-forwarded, parent `c26d930`), doc `f3b5b6a` in `embarch-doc` (**cherry-picked**, from branch
-commit `4a46589`; `--ff-only` refused because `ui/053`'s fold had already moved `main`). Gate re-run
-by me on the merge result: `cargo build` / `test` / `clippy --all-targets -- -D warnings` green
-**both at the workspace root and explicitly in `crates/embarch-core-client`**, which is not a
-workspace member and which a root-only gate does not reach; `check-client-names.py --repo
-embarch-api` clean against 7 denylist entries; `check-docs.py` **11/11**; `check-ownership.py
---scope api` OK on the doc half (3 paths) and `--code-repo` OK on the code half, both before the
-merge. `changelog.d/api-core-client-citation-sweep-partial.fixed.md` consumed into `history/api.md`
-with `--only`; 29 of the owner's own fragments left pending.
+**Merged:** `agent/topology/045-comments-vs-code-in-enrolment-trio` — **code: none.** The
+`embarch-topology` branch was pushed identical to `main` with **zero commits** (`rev-list --count
+origin/main..branch` = 0), because a zero-defect sweep changes nothing; the ref exists only so I
+could see the worker had finished. Doc `f2cc6be` in `embarch-doc`, fast-forwarded from `9cf8ff7`.
+Gate re-run by me on the merge result: `check-docs.py` **11/11**; `check-client-names.py --repo
+embarch-topology` clean against 7 denylist entries; `check-ownership.py --scope topology` OK on the
+doc branch (1 path) before the merge. **I did not re-run `cargo build`/`test`/`clippy`, and that is
+a deliberate gap worth naming**: with zero code commits the merge result in `embarch-topology` *is*
+`main`, so a cargo run would have gated an unchanged tree and said nothing about this unit. The
+worker reports it green (80+5 tests); I did not verify that and it does not matter here.
+**No `changelog.d/`, `status.d/` or `features.d/` fragment** — nothing changed, so there was nothing
+to consume, and `build_changelog.py --check`/`build_features.py --check` both confirm the assemblers
+were already in sync (29 of the owner's fragments pending, untouched).
 
-**Blocked:** nothing. `tasks/api/095` closed and removed per (d); `tasks/api/097` filed by the worker
-and `open`. **Queue at exit: 3 dispatchable across 3 scopes** — `api/097`, `core/060`,
-`study-designer/049` — plus `tasks/api/059` (bench, board unplugged) and the owner-only `doc` pile,
-now including `061` and `062` from this leg.
+**Blocked:** nothing. `tasks/topology/045` closed and removed; `tasks/doc/063` filed, `Owner:
+required`, so it is visible in the queue and dispatchable by nobody.
 
-**Reviewer:** no findings — see (b); it verified the relabel's *direction* against both decision
-bodies, reconciled every one of the diff's 8+8 lines against the three claimed hunks, agreed the
-unsettled citation is genuinely unsettled after reading 37, 38 and 72, and cross-checked `097`'s
-"already verified" list against `095`'s own tally for under-description, finding them identical.
+**Reviewer:** no findings — see (c); it reconciled the count against the real list rather than the
+asserted total, independently verified 4 of the 22 traced claims and the cross-repo one, cross-read
+`topology` decisions 4, 8, 21, 23, 25 and `core` decision 61, and settled all 4 `unsettled` claims
+against vendor SDK source the worker could not reach.
 
-**Hardware debts:** **none created.** Eight lines of doc-comment text in a Rust source file; nothing
-executed, no board, no probe, no live Core, no route called. `core/015`'s native Windows build is
-untouched by this unit — `embarch-api`, not `embarch-core` — and see the `core/062` entry below for
-the re-derived count (**40 commits since `1c1224e`**) that replaces the incrementing ordinal.
-The dev-bench probe is still unplugged; `tasks/api/059` stays **open**.
+**Hardware debts:** **none created.** Nothing in this unit executed: no board, no probe, no live
+Core, no `validate` call, no enrolment — the task file forbade all of it explicitly. **The dev-bench
+probe is still unplugged** — I read Core live at this leg's top and `status` returned `"probes": []`,
+so `tasks/api/059` stays **open**, not blocked, for the **seventh** consecutive leg. Note also that
+the owner parked every bench task in `d0cf9a0` ("the owner is taking the DUT questions himself"), so
+no bench unit was eligible regardless. `core/015`'s native Windows build is untouched by this unit
+(`embarch-topology`, not `embarch-core`); the re-derived count to carry forward is **40 commits since
+`1c1224e`**, not an incremented ordinal. `fleet-hardware.py --refresh` still crashes
+(`tasks/doc/041`) and I did not rely on its buffer.
 
-**Budget:** PROCEED throughout — weekly **85.0% → 86.2%** of a 90% cap across the leg, resets in
-~54h. Wave 3 suggested and 3 used; the last reading suggests 2.
+**Budget:** PROCEED throughout — weekly **0.7% → 1.6%** of a 90% cap, resets in ~164 h. Wave **6**
+suggested; I used **4**, bounded by the unit cap and not by the budget. **Treat that percentage as
+very loose**: a reading at 1.6% pins the allowance to roughly ±50%.
 
-**Least sure about:** **whether I should have let this worker run at all after the stop.** It was
-about five minutes into a twenty-minute run when `fleet stop` arrived; I told it to wrap up and it
-took another twelve, which is twelve minutes of work the owner had asked to stop. It produced three
-real defect fixes and a well-specified remainder, so the outcome argues for the choice — but the
-outcome is not the argument, and a leg that reasons from "it turned out to be worth it" will make the
-same call when it is not.
-
----
-
-## 2026-09-14 01:04 — ui/053 the split that was the right answer and had nowhere to land
-
-**Decided:** **nothing numbered, and the unit's real product is a refusal.** `embarch-ui/open.md`
-went **4,033 B → 3,879 B**, out of reserve with 154 B clear — but the task asked it to re-open the
-split-vs-squeeze question, and the answer it came back with is the part worth keeping. Four things.
-
-**(a) The seam is real and the tooling cannot hold it.** `ui/050` squeezed this file out of reserve,
-`ui/051` refilled it four units later with a bullet a reviewer had required, and the task filed
-against that argued the 5,120 B cap is simply tight for the number of live questions `embarch-ui`
-carries — so **look for a seam before squeezing a third time.** The worker found one (the trace,
-second-stream-placement and row-cap bullets share a reader) and then found it could not use it:
-**`check-doc-size.py`'s `CAPS` defines a mission-split role for `decisions.md` and `interfaces.md`
-and none for `open.md`**, so a split file matches no named role and falls through to `legacy` — 25 KB,
-unratcheted, and described by the script's own comment as debt to migrate *out of*. Splitting today
-would move four questions' worth of content out from under the size discipline the rest of the corpus
-gets, which is moving the debt rather than paying it. So it squeezed and said exactly why, in the
-commit message, as the task required.
-
-**(b) `scripts/` is reserved, so it dropped the gap instead of closing it — and that is the rule
-working.** I drained that drop in this same fold as **`tasks/doc/062`**, re-checking its
-`Hardware:` claim myself (a regex and a `DOC-BUDGET.md` §3 paragraph — `none` is right) and keeping
-the worker's own text. It is `Owner: required`, so nothing dispatches it; it is in the queue so the
-owner sees it. **Its own "why now" is the line to read**: `DOC-BUDGET.md`'s rule is that a split is
-the default and a squeeze the exception, and **the exception is currently forced on every `open.md`
-in the suite by a tooling gap rather than by the absence of a seam.** If this file hits reserve a
-third time, squeezing stops being defensible and there will still be nowhere for the split to go.
-
-**(c) The five cuts were quoted and the reviewer counted them, including the one that was not a
-deletion.** Two clauses redundant with a decision citation two words away, one provenance clause
-`embarch-ui` decision 11 already carries in more detail, one filler word, and one clause **reworded
-rather than removed** — the reviewer diffed at word level, confirmed exactly five deleted spans
-against exactly five quotes with no sixth, and specifically checked the reworded one, finding
-`"real HTTP"` surviving verbatim inside the sentence that absorbed it.
-
-**(d) The `Must not delete:` list held, and it is the one that has already failed once.** Its first
-item exists because a reviewer caught its predecessor being deleted in `ui/051`; all three of the
-trace-analysis bullet's load-bearing facts are present verbatim and outside the diff, and all seven
-open questions still carry their own trigger and citation. The reviewer also read
-`embarch-umbrella` decision 14 and `embarch-ui` decision 11's bodies to check the "already said
-elsewhere" justification rather than accepting it — which is the reasoning that, when wrong, deletes
-the only statement of a fact.
-
-**Merged:** `agent/ui/053-compact-ui` — **code: none.** Zero commits beyond `origin/main`, confirmed
-by commit count before landing. Doc `c70aae5` in `embarch-doc` (**cherry-picked**, from branch commit
-`1a3319e`; `--ff-only` refused because `topology/044`'s fold had already moved `main`). Gate re-run
-by me on the merge result: `cargo build` / `test` / `clippy --all-targets -- -D warnings` green in
-`embarch-ui`; `check-client-names.py --repo embarch-ui` clean against 7 denylist entries;
-`check-docs.py` **11/11**; `check-ownership.py --scope ui` OK on the doc half (3 paths), run before
-the merge. `changelog.d/ui-open-out-of-reserve-again.changed.md` consumed into `history/ui.md` with
-`--only`; 29 of the owner's own fragments left pending.
-
-**Blocked:** nothing. `tasks/ui/053` closed and removed, which leaves the `ui` scope with no
-dispatchable task. **The size-debt ledger is down from 15 dated entries to 13 across this leg's two
-compaction units, 0 overdue**, and both `embarch-topology/` and `embarch-ui/` now have nothing in
-reserve.
-
-**Reviewer:** no findings — see (c) and (d); it did the word-level hunk count
-`DOC-COMPACTION-PASS.md` assigns to the reviewer rather than reading the commit message's summary of
-itself, and it read both cited decision bodies independently.
-
-**Hardware debts:** **none created.** Five clause-level edits in a markdown file; nothing built,
-nothing executed, no board, no probe, no live Core, no UI launched. Standing debts carried
-unchanged, including `embarch-ui`'s 18-record stale prefix, which still has never met a real stale
-prefix. The dev-bench probe is still unplugged — checked live at this leg's top, `status` returned
-`"probes": []` — so `tasks/api/059` stays **open** for the fifth consecutive leg.
-
-**Budget:** PROCEED — weekly **85.7%** of a 90% cap, resets in ~54h. The leg ends on the owner's
-`fleet stop`, not on the budget or the unit cap.
-
-**Least sure about:** **that the drop and the squeeze together let a bad outcome look like a good
-one.** The unit ends with the file out of reserve and a well-argued task filed, which reads as
-success — but the substance is that this file has now been squeezed twice in four units for the same
-reason, and `tasks/doc/062` is owner-required, so nothing in the fleet can act on it. If nobody
-reads it, the third squeeze will arrive and the same argument will be made a third time.
+**Least sure about:** **that I filed this task's number by reading the directory** —
+`tasks/README.md` line 17 warns in bold not to, because completed tasks are `git rm`'d and the
+highest number on disk is not the highest ever issued. History carried `topology` to 044 and 037 was
+already spent. `check-task-numbers.py` caught it as a **push-time warning, not a refusal**, so it
+printed four times and `main` briefly carried a reissued number before I renumbered to 045. The
+mechanism worked, but it worked *after* the push, and a supervisor that had been less attentive to a
+warning it had already seen three times would have left it.
 
 ---
 
-## 2026-09-14 00:57 — topology/044 seventy bytes, two sentences, and a reserve line that is not ten percent of anything
+## 2026-09-14 — 8 units
 
-**Decided:** **nothing numbered** — a 70-byte trim decides nothing. **But a `fleet stop` arrived
-from the owner at 00:55:44 while this unit was landing, and that is the most important fact in this
-entry.** What I did about it is (d).
+*Folded by an `embarch-log-folder` subagent on 2026-09-16, dispatched by leg 116 on its
+first unit per protocol.md §11. Eight per-unit entries (legs 114 and 115) collapse here
+with every SHA, every `**Reviewer:**` line and every `**Hardware debts:**` line preserved
+verbatim. What is gone is the narrative reasoning behind each accepted judgement; git holds
+it in `embarch-doc` at the SHAs below and in `embarch-fleet` history before this commit.*
 
-**(a) The pass is clean and the human question answers yes.** `embarch-topology/spec.md` went
-**9,110 B → 9,001 B** (87.9%), out of reserve, confirmed by `check-doc-size.py --pressure` rather
-than by arithmetic — the whole point of this task, since `topology/043` hit a target it computed
-itself from 10% of the cap and the gate still went red. The ledger is **15 dated entries → 14**, and
-`embarch-topology` now has nothing in reserve at all. My own answer to
-`DOC-COMPACTION-PASS.md`'s question, having read the diff: **yes.** What went was the clause
-*"previously ad hoc across env vars, config files and doctor checks"* — a *used-to-be* lead-in whose
-subject is fully stated by the two bullets immediately after it — and the parenthetical *"(one
-flash, one reset, one study attempt)"*, three examples of an operation, where the rule they
-illustrate is untouched and still cites decision 29 by number. Neither is a constraint, an
-invariant, a rejected alternative or a failure signature.
+**Two legs ran this day.** Leg 114: `ui/052` (00:15), `core/061` (00:18), `api/096`
+(00:19), `outpost/022` (00:31, its fourth and last unit). Leg 115: `core/062` (00:54, its
+first unit), `topology/044` (00:57), `ui/053` (01:04), `api/095` (01:14, its fourth and
+last unit, run past a `fleet stop`).
 
-**(b) The squeeze quoted its cuts, and it did so because it was told mid-run.** I sent both
-compaction workers a course correction after dispatch pointing at `DOC-COMPACTION-PASS.md`'s rule
-that a squeeze's commit message lists every deleted hunk as the first dozen words of the deleted
-text, verbatim and file-qualified, with a category summary permitted only *after* those lines. This
-worker replied that it had verified the rule against the file itself before acting rather than
-taking my word for it, and the commit message does exactly what the rule asks. **I should not have
-needed to send it** — the rule is in a file the worker is expected to read for any compaction, and
-the dispatch prompt named the human question but not this. That is a gap in my prompt, not in the
-worker.
+### Decided
 
-**(c) The reviewer did the count, which is the half of that rule that is explicitly its job.** Two
-hunks in the diff, two quoted in the message, no third deletion anywhere in the commit; it located
-both hunks by line (6-9 and ~107) and showed they fall outside the protected probe-selection bullet
-(90-96) and the Shape consumer-call table (23+); it read `ad3f642`'s message and confirmed none of
-`043`'s seven cuts was restored; and it read decision 29's body in `decisions/scope.md` to confirm
-the deleted parenthetical was illustration and not the only statement of the rule.
+**The one numbered decision of the day is `core/061`'s field name.** Decision 63
+deliberately left the name open ("name it for the fact, not for power"), which is fine for
+one implementer and impossible for two running in parallel — `tasks/core/061` spanned two
+code repos (`embarch-core` sets the flag, `embarch-api`'s client crate deserializes it), and
+§5 gives a worker one repo. The supervisor split it into `core/061` (kept) and
+**`api/096`** (filed), pinned the name **`source_deferred`** before dispatch — the
+roadmap's own word for power sampling is *deferred, not cancelled*, so the name carries the
+general fact and a second deferred source later fits the same field — and ran both workers
+side by side with neither waiting on the other (`#[serde(default)] Option<bool>` lets either
+land first). Both landed spelling it identically, verified by the reviewer against the
+landed `embarch-core` merge rather than against the task file that pinned it. **Rejected
+alternatives, recorded because a supervisor closing an open question never gets a number or
+a review**: one worker with two worktrees (breaks the one-repo-one-branch rule), and
+re-scoping to `suite` to do it themselves (a §4 announcement window for a design decision
+leg 113 had already announced).
 
-**(d) The stop, and what "finish landing what is in flight" cost.** I polled `#embarch-fleet` at this
-unit boundary — the poll `.claude/leg.md` calls the *primary* route, not a backstop — and found
-`fleet stop`, posted 00:55:44, about a minute old. **I deleted `/home/gabriel/Github/embarch/.fleet/pump` immediately**, which
-is the supervisor's own stop-direction act and the thing that prevents a successor, and posted in
-that message's thread without reacting to it, so the listener can still claim and confirm it. Then I
-kept landing: `ui/053`'s worker had already finished and pushed, and `api/095`'s was mid-run. **I
-did not kill the running worker.** I sent it a wrap-up instruction instead — verify only what it has
-already read, report the honest count, say the sweep was cut short rather than completed, and file a
-remainder task — which bounds the extra time without throwing the work away or leaving a claimed
-task behind. Dispatching anything further would have been the actual violation, and I dispatched
-nothing.
+Everything else was "nothing numbered," and five things are worth carrying past the ledger:
 
-**Merged:** `agent/topology/044-compact-topology` — **code: none.** The code branch carries zero
-commits, and I confirmed that by commit count against `origin/main` before landing rather than
-assuming it from the task's shape. Doc `32caf10` in `embarch-doc` (**cherry-picked**, from branch
-commit `3ca94a8`; `--ff-only` refused because `core/062`'s fold had already moved `main`). Gate
-re-run by me on the merge result: `cargo build` / `test` / `clippy --all-targets -- -D warnings`
-green in `embarch-topology`; `check-client-names.py --repo embarch-topology` clean against 7
-denylist entries; `check-docs.py` **11/11**; `check-ownership.py --scope topology` OK on the doc
-half (3 paths), run before the merge.
-`changelog.d/topology-spec-out-of-reserve.changed.md` consumed into `history/topology.md` with
-`--only`; 29 of the owner's own fragments left pending.
+- **`ui/052` uncovered a supervisor-authored bug that cost three workers a wrong
+  diagnosis.** Two task files the leg-115 supervisor wrote (`tasks/api/096`, the edit to
+  `tasks/core/061`) cited `../../embarch-fleet/protocol.md` as a markdown link — two `../`
+  from `tasks/<scope>/` lands on `embarch-doc`'s own tracked `embarch-fleet/` sub-project
+  directory, not the sibling repo. `ui/052`'s worker, and later two more, hit a RED
+  `check-links.py` and called it "pre-existing baseline noise" from `embarch-fleet` being an
+  empty worktree stub. **It was not pre-existing.** Only re-running the gate on the merge
+  result caught it; fixed in the `ui/052` fold, and `api/096`'s worker independently fixed
+  its own half on-branch with three `../`, the form that landed.
+- **`core/062` found that presence-on-remote is not proof a worker finished.** Step 0
+  found two `agent/*` branches (`api/096-...-doc`, `core/052-...`) that `git cherry
+  origin/main <branch>` reports **unmerged, and always will**, because their content landed
+  via a cherry-pick that *conflicted*, and a conflict resolution is a different patch id by
+  construction. `fold-commit.py` retires a branch only on `git cherry`'s `-`, so both are
+  permanently stranded — `core/052` since 2026-09-13. Not data loss (both diffed
+  byte-identical against `origin/main`), but a false positive against a rule whose whole
+  strength is that presence never lies. Filed as `tasks/doc/061`, owner-required —
+  and the supervisor itself wrote that task's `**Owner:**` field as `**required**`
+  (bolded), which made it invisible to `queue-status.py`'s parser and had it reporting as
+  dispatchable; caught on the post-fold queue read and unbolded. Both of the leg's new
+  `doc` tasks are correctly `Owner: required` now.
+- **`outpost/022` closed the citation-sweep series clean, and this fold also carries
+  2026-09-13's own day fold and roll**, landed inside this unit: an `embarch-log-folder`
+  subagent folded 78 numbered units (80 landed sub-units) into one dated entry — 471,249 B
+  down to 69,325 B, ledger satisfied on 263/263 SHAs, 80/80 reviewer lines and 48/48
+  hardware-debt lines — then rolled 2026-09-12 into `log-archive/`. It was owed on leg
+  115's... no, leg 114's first unit and landed on its fourth, three units late, because the
+  471 KB day took 22 minutes; safe only because `fold-day.py` splices the day's own block
+  and never rewrites retained text. Its own two carry-forwards, both since resolved or
+  reduced: the `core/015` Windows-build tally was narrated with three different ordinals
+  through 2026-09-13 (fixed by `core/062`'s recount below), and reviewer completions
+  misrouted to the listener five times that day (`tasks/doc/042`, still open).
+  Separately, `outpost/022`'s own reviewer found `check-decision-refs.py`'s `DEF_HEAD`
+  regex matches only `###`/`####` headers while `suite/decisions/*.md` uses `##`, so all
+  four `suite` decision definitions are invisible to the resolver and the script reports
+  **877 of 1,995 references "ambiguous ... not an error"** — 44% of the corpus unchecked,
+  in the one scope every repo cites. Filed as `tasks/doc/060`, owner-required.
+- **`ui/053` re-opened the split-vs-squeeze question on `open.md` and found the tooling
+  cannot hold the seam it found.** A third squeeze of `embarch-ui/open.md` out of reserve
+  in four units; the worker found a real seam (trace, second-stream-placement and row-cap
+  bullets share a reader) but `check-doc-size.py`'s `CAPS` defines a mission-split role only
+  for `decisions.md` and `interfaces.md`, none for `open.md` — a split file falls through to
+  `legacy`, 25 KB, unratcheted, described by the script's own comment as debt to migrate
+  *out of*. Squeezing today is honest; splitting today would move debt rather than pay it.
+  Filed as `tasks/doc/062`, owner-required: if this file hits reserve a third time,
+  squeezing stops being defensible and there is still nowhere for the split to land.
+- **`api/095` found the sharpest instance of the bare-citation defect series yet, cut the
+  sweep short at a `fleet stop`, and filed the remainder.** Three bare `decision 59`
+  citations in `embarch-api/crates/embarch-core-client/src/client.rs` resolve, under this
+  suite's bare-is-same-repo convention, to `embarch-api`'s decision 59 — a real decision in
+  the right repo about the wrong thing. All three describe `embarch-core`'s decision 59
+  instead (the `kind`/`fix_it_url` split), invisible to anything mechanical since the number
+  resolves and the repo is right; found only by reading the body. 39 of ~105 cited lines
+  were checked across six decision files: 3 wrong labels fixed, 0 false sentences in the
+  checked subset, **1 explicitly left unsettled** (L403's `(decisions 37, 38)`, whose
+  language the worker judged belongs to decision 72 but could not confirm because 37/38's
+  pre-compaction wording is unrecoverable) — the worker refused to resolve it either way,
+  which `umbrella/066` failed at previously. Remainder enumerated in `tasks/api/097`, filed
+  `open`.
 
-**Blocked:** nothing. `tasks/topology/044` closed and removed, which leaves the `topology` scope with
-no dispatchable task at all.
+### Merged
 
-**Reviewer:** no findings — see (c); it performed the hunk count `DOC-COMPACTION-PASS.md` assigns to
-the reviewer specifically, rather than agreeing with the commit message's own summary of itself.
+| Unit | Code | Doc |
+|---|---|---|
+| `agent/ui/052-decision-7-retention-line-doc` | *none — branch carried zero commits by design* | `e9018e9` (fast-forwarded, parent `e3e5569`) |
+| `agent/core/061-power-tap-says-so-in-stream-index` | `e1b796e` (fast-forwarded, parent `2e9eeed`) | `d95dc58` (cherry-picked from branch commit `f7d20a6`; `--ff-only` refused, `ui/052`'s fold had already moved `main`) |
+| `agent/api/096-deferred-source-flag-client-half` | `c26d930` (fast-forwarded, parent `3e0e4ba`) | `99a166c` (cherry-picked from branch commit `caee440`; `--ff-only` refused by two intervening folds, and the cherry-pick **conflicted** on the task file — resolved to the worker's version, later removed by its own fold) |
+| `agent/outpost/022-citation-sweep-non-c-sources` | *none — a clean sweep edits nothing* | `e8364bc` (cherry-picked from branch commit `e4e9f3e`) |
+| `agent/core/062-core-comments-vs-ui-052` | `1073bf7` (fast-forwarded, parent `e1b796e`) | `7e851c1` (fast-forwarded, parent `04020d8`; `--ff-only` accepted — leg 115's first fold) |
+| `agent/topology/044-compact-topology` | *none, confirmed by commit count against `origin/main` before landing* | `32caf10` (cherry-picked from branch commit `3ca94a8`; `--ff-only` refused, `core/062`'s fold had already moved `main`) |
+| `agent/ui/053-compact-ui` | *none, confirmed by commit count before landing* | `c70aae5` (cherry-picked from branch commit `1a3319e`; `--ff-only` refused, `topology/044`'s fold had already moved `main`) |
+| `agent/api/095-core-client-citation-sweep` | `1de0c09` (fast-forwarded, parent `c26d930`) | `f3b5b6a` (cherry-picked from branch commit `4a46589`; `--ff-only` refused, `ui/053`'s fold had already moved `main`) |
 
-**Hardware debts:** **none created.** Two sentence fragments deleted from a markdown file; nothing
-built, nothing executed, no board, no probe, no live Core. Standing debts carried unchanged — see
-the `core/062` entry below for the `core/015` Windows-build count, which I re-derived there (**40
-commits since `1c1224e`**, not the ordinal the last five days have been incrementing). The dev-bench
-probe is still unplugged and `tasks/api/059` stays **open**.
+Every unit's gate was re-run by the supervisor **on the merge result, not on the branch**:
+`cargo build` / `cargo test` / `clippy --all-targets -- -D warnings` wherever Rust changed
+(209 tests passed on both `core/061` and `core/062`'s Core runs), `check-client-names.py`
+clean against 7 denylist entries wherever code changed, `check-docs.py` **11/11** on every
+unit, `check-ownership.py` OK on both halves before each merge. `outpost/022` has no
+`Cargo.toml`; its gate was `tests/decoder_unit.py` (31 tests) and `tests/vocab_check.py`,
+repo `main` unchanged at `8f6e667` (the commit taken as the sweep's scope baseline, landed
+by leg 113). `topology/044`'s reviewer additionally read commit `ad3f642`'s message to
+confirm none of a prior unit's seven cuts was restored. Every `changelog.d/` fragment
+consumed into its `history/<repo>.md` with `--only`; 29 of the owner's own fragments left
+pending throughout.
 
-**Budget:** PROCEED — weekly **85.7%** of a 90% cap, resets in ~54h, wave 3 suggested and 3 used.
-The leg ends on the stop, not on the budget.
+### Blocked
 
-**Least sure about:** **letting `api/095`'s worker keep running after a stop.** `.claude/leg.md` says
-honouring a stop means finishing what is in flight, and a dispatched worker is in flight — but it
-also warns about "a full leg of unwanted work after the owner asked you to stop", and a worker five
-minutes into a twenty-minute run is the case the rule does not name. I chose the reading that wastes
-no work and leaves no stranded claim; the other reading is defensible and would have stopped sooner.
+**Nothing, across all 8 units.** No task went to `blocked` and no gate went red on a merge
+result. Five tasks filed this day, all owner-required and none dispatchable:
+`tasks/doc/059` (worktree-nesting defect, `ui/052`), `tasks/doc/060` (`DEF_HEAD` regex gap,
+`outpost/022`), `tasks/doc/061` (stranded-branch false positive, `core/062`), `tasks/doc/062`
+(open.md split-role gap, `ui/053`), and `tasks/api/097` (citation-sweep remainder, `api/095`,
+**open** and dispatchable). `tasks/core/060` (compact `decisions/streams.md`) sat untouched
+and `open` all day, deliberately not dispatched beside `core/061`/`core/062` — one task per
+sub-project per slot.
 
----
+### Reviewer
 
-## 2026-09-14 00:54 — core/062 a comment that claimed another repo's text was unchanged, and the one beside it that correctly said nothing
+**Reviewer:** no findings — `ui/052`. Re-derived Core's log rotation from `main.rs` at the
+real SHA, confirmed decision 7's decision itself is untouched by the diff, re-ran the
+`size.cap` grep across both `embarch-ui` tips and the whole `embarch-doc` tree rather than
+trusting the worker's, and traced the "missing" inbox drop to `tasks/core/062` rather than
+reporting a lost finding.
 
-**Decided:** **nothing numbered.** A one-line comment correction is not a decision and does not want
-to be one. This is leg 115's first unit. Three things, and one of them is about this leg rather than
-this unit.
+**Reviewer:** no findings — `core/061`. Confirmed the flag is set from the declared
+`StreamSource` inside `StreamStore::create` rather than derived from `bytes_written`, that
+nothing in the diff or surrounding file branches on `note`, that the new test is non-vacuous
+in both directions, and read `embarch-dev-bench` decision 24's body to confirm the code
+comment is a faithful restatement rather than a stretch.
 
-**(a) The clause was false and is now true, and the worker checked which half of it was false.**
-`embarch-core/src/logs.rs`'s module doc ended *"`embarch-ui`'s own text is unchanged"* — written by
-`core/058` to be accurate at its landing, and falsified hours later when `ui/052` added a dated
-blockquote correction under `embarch-ui` decision 7's stale size-capped-logfile sentence. **The
-sentence itself was not rewritten** — `ui/052` deliberately left it standing as the record of an
-abandoned proposal — so "unchanged" was wrong about the *file* and right about the *sentence*, and
-the new clause says exactly that: the sentence stands, and now carries a dated correction. The
-reviewer compared the new clause against `ui/052`'s actual blockquote at `ui/052`'s own fold commit
-`e9018e9` and found it a near word-for-word match in substance.
+**Reviewer:** no findings — `api/096`. Read the three neighbouring doc comments clause by
+clause, read `StreamRef`'s definition to confirm independently that `streams_json` cannot
+surface the flag, showed the serde test fails both without `#[serde(default)]` and when the
+field is never populated, and checked the field's spelling against `embarch-core`'s actual
+merge SHA rather than the task file that pinned it.
 
-**(b) The interesting half is what the worker did *not* change, and it did not take my word for it.**
-The task named two comments. `src/main.rs`'s `build_log_file_writer` comment (lines ~375-379) makes
-no claim about `embarch-ui`'s text at all — it only cites what decision 7 *says*, which is still
-literally true of that sentence — so it was left alone. **Changing nothing was named in the task file
-as a legitimate outcome and half the unit took it.** The reviewer read that comment independently at
-the merge SHA rather than accepting the worker's account, which is the check that makes the
-half-outcome trustworthy.
+**Reviewer:** 1 finding — `outpost/022`, `inbox/outpost-citation-sweep-missed-file-classes.md`.
+A bare case-insensitive grep turned up 4 more citations in 3 file classes nobody's include
+list scoped (`README.md` ×2, `cmake/outpost_build_id.h.in`,
+`tests/native_sim_stream/app.overlay`); all four read against their decision bodies and are
+correct — no defect behind the overstatement, but the third consecutive time this repo's
+sweep scope claim outran its grep. **Accepted, verified by the supervisor, and acted on in
+this fold** by correcting `history/outpost.md`'s scope line rather than filing a follow-up
+sweep.
 
-**(c) I filed `tasks/doc/061` from something I found in this leg's own step 0, not from this unit.**
-Three `agent/*` branches were still on `embarch-doc`'s remote; `git cherry origin/main <branch>`
-reports two of them (`api/096-...-doc`, `core/052-...`) as **unmerged, and always will**, because
-their content landed by a cherry-pick that *conflicted* and a conflict resolution is a different
-patch id by construction. `fold-commit.py` retires a branch only on `git cherry`'s `-`, so those two
-are permanently stranded — `core/052` since 2026-09-13. Not data loss (I verified both branches'
-content is on `main` by diffing each against `origin/main`), but **step 0's scan treats a pushed
-branch carrying commits as proof a worker finished**, so a stranded branch is a false positive for
-finished work against a rule whose whole strength is that presence never lies. Owner-required;
-`scripts/` is reserved.
+**Reviewer:** no findings — `core/062`. Checked all three things asked and gave evidence for
+each: read the corrected `debug-tab.md` at `ui/052`'s own fold SHA rather than at this
+unit's (catching and correcting a wrong SHA in the supervisor's spawn prompt), read
+`src/main.rs`'s comment itself to confirm leaving it alone was the right call, and read
+`embarch-core` decision 16's body plus all four reversal row files to confirm nothing
+contradicts.
 
-**Merged:** `agent/core/062-core-comments-vs-ui-052` — code `1073bf7` in `embarch-core`
-(fast-forwarded, parent `e1b796e`), doc `7e851c1` in `embarch-doc` (fast-forwarded, parent
-`04020d8`; `--ff-only` was accepted because this was the leg's first fold and nothing had moved
-`main` under it). Gate re-run by me on the merge result: `cargo build` / `test` (**209 passed**, 2
-ignored, plus 1) / `clippy --all-targets -- -D warnings` green; `check-client-names.py --repo
-embarch-core` clean against 7 denylist entries; `check-docs.py` **11/11**; `check-ownership.py
---scope core` OK on the doc half and `--code-repo` OK on the code half, both run **before** the
-merge. `changelog.d/core-logs-unchanged-clause-vs-ui-052.fixed.md` consumed into `history/core.md`
-with `--only`; 29 of the owner's own fragments left pending.
+**Reviewer:** no findings — `topology/044`. Performed the hunk count
+`DOC-COMPACTION-PASS.md` assigns to the reviewer rather than agreeing with the commit
+message's own summary of itself: located both deleted hunks by line, showed both fall
+outside the protected probe-selection bullet and the Shape consumer-call table, read
+`ad3f642`'s message to confirm none of a prior unit's seven cuts was restored, and read
+decision 29's body in `decisions/scope.md` to confirm the deleted parenthetical was
+illustration, not the only statement of the rule.
 
-**Blocked:** nothing. `tasks/core/062` closed and removed. `tasks/core/060` (compact
-`decisions/streams.md`, due 2026-09-27) is untouched and still `open`, deliberately not dispatched
-beside this unit — one task per sub-project per slot.
+**Reviewer:** no findings — `ui/053`. Did the word-level hunk count `DOC-COMPACTION-PASS.md`
+assigns to the reviewer rather than reading the commit message's own summary: confirmed
+exactly five deleted spans against exactly five quotes with no sixth, specifically checked
+the one clause reworded rather than deleted, and read both cited decision bodies
+independently rather than accepting the "already said elsewhere" justification.
 
-**Reviewer:** no findings — it checked all three things I asked and gave evidence for each: it read
-the corrected `debug-tab.md` at `ui/052`'s own fold SHA rather than at this unit's (and said so,
-correcting my spawn prompt, which had given it this unit's doc SHA for a file `ui/052` changed
-earlier), read `src/main.rs`'s comment itself to confirm leaving it alone was right, and read
-`embarch-core` decision 16's body plus all four reversal row files to confirm nothing contradicts.
+**Reviewer:** no findings — `api/095`. Verified the relabel's *direction* against both
+decision-59 bodies at the merge SHAs, reconciled every one of the diff's 8+8 lines against
+the three claimed hunks with nothing riding along unreported, agreed the unsettled `(decisions
+37, 38)` citation is genuinely unsettled after reading 37, 38 and 72 itself, and cross-checked
+`097`'s "already verified" list against `095`'s own tally for under-description, finding them
+identical.
+
+### Hardware debts
+
+**None created by any of the 8 units** — the day touched no board, no probe, no DUT, no live
+Core route. The standing debts, carried in each unit's own words:
+
+**Hardware debts:** **none.** Doc prose in one decision file; no board, no probe, no live Core, no
+deploy, nothing built. — `ui/052`
+
+**Hardware debts:** **one, and it is the first behavioural addition to it in a while.** `core/015`'s
+outstanding **native Windows build** now carries a twelfth landed `embarch-core` change, and unlike
+the comment sweeps and test recoveries of the last five days this one changes what the service
+*serves*. Separately, decision 63's end state has never been seen on a real study: confirming that a
+`PowerFrontEnd` tap reports `source_deferred: true` through a live Core needs the **dev-bench board**,
+and `tasks/core/061` said so before it closed. No board, probe or live Core was touched here. —
+`core/061`
+
+**Hardware debts:** **none.** A deserialized struct field and a tool description string; no board, no
+probe, no live Core, no deploy. The end-to-end confirmation this half participates in is recorded
+against `core/061`, not here. — `api/096`
+
+**Hardware debts:** **none created, and none of this leg's four units touched hardware at all.** Worth
+stating for this unit in particular because it is the one firmware repo the leg entered: no board, no
+flash, no DUT, no Zephyr build — `tests/run-all.sh` stops at its `WEST` guard by design on this
+machine. `embarch-outpost`'s two hardware-gated tasks are untouched and still waiting on a board. —
+`outpost/022`
 
 **Hardware debts:** **one, carried not created — and I counted it, which retires a carry-forward and
 contradicts every recent entry.** 2026-09-13's day fold asked the next leg to *"count the commits, do
@@ -412,309 +422,62 @@ includes `core/061`'s `source_deferred` field, which *does* change what the serv
 is a single comment line and nothing behavioural moved. Standing debts otherwise
 unchanged — **the dev-bench probe is still unplugged**, checked live at this leg's top
 (`status` returned `"probes": []`), so `tasks/api/059` stays **open**, not `blocked`, for the fifth
-consecutive leg; `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`).
+consecutive leg; `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`). — `core/062`
+(**this is the number to carry forward: 40 commits since `1c1224e`, re-derived, not incremented**)
 
-**Budget:** PROCEED — weekly **85.0% → 85.7%** of a 90% cap across this unit, resets in ~54h, wave 3
-suggested and 3 used.
+**Hardware debts:** **none created.** Two sentence fragments deleted from a markdown file; nothing
+built, nothing executed, no board, no probe, no live Core. Standing debts carried unchanged — see
+the `core/062` entry above for the `core/015` Windows-build count, which was re-derived there (**40
+commits since `1c1224e`**, not the ordinal the last five days had been incrementing). The dev-bench
+probe is still unplugged and `tasks/api/059` stays **open**. — `topology/044`
 
-**Least sure about:** **giving the reviewer this unit's doc SHA for a file another unit changed.**
-It caught the error itself and read `ui/052`'s fold commit instead, which is the right answer — but
-it caught it because the file was *obviously* not this unit's. A reviewer handed the wrong SHA for a
-file the unit *did* touch has no such tell, and nothing in the spawn shape would surface it.
+**Hardware debts:** **none created.** Five clause-level edits in a markdown file; nothing built,
+nothing executed, no board, no probe, no live Core, no UI launched. Standing debts carried
+unchanged, including `embarch-ui`'s 18-record stale prefix, which still has never met a real stale
+prefix. The dev-bench probe is still unplugged — checked live at this leg's top, `status` returned
+`"probes": []` — so `tasks/api/059` stays **open** for the fifth consecutive leg. — `ui/053`
 
----
+**Hardware debts:** **none created.** Eight lines of doc-comment text in a Rust source file; nothing
+executed, no board, no probe, no live Core, no route called. `core/015`'s native Windows build is
+untouched by this unit — `embarch-api`, not `embarch-core` — and see the `core/062` entry above for
+the re-derived count (**40 commits since `1c1224e`**) that replaces the incrementing ordinal.
+The dev-bench probe is still unplugged; `tasks/api/059` stays **open**. — `api/095`
 
-## 2026-09-14 00:31 — outpost/022 a clean sweep, and its reviewer found the same scope overstatement one layer down
+**Carry forward: the dev-bench probe was unplugged for all 8 units across both legs**
+(`status` → `"probes": []` at both leg tops), so `tasks/api/059` stays `open`, not
+`blocked`, into its sixth consecutive leg. `fleet-hardware.py --refresh` still crashes
+(`tasks/doc/041`).
 
-**Decided:** **nothing numbered** — 0 wrong citations means nothing to decide. This is the leg's
-fourth and last unit. Four things to carry.
+### Budget
 
-**(a) The sweep is clean and that is the headline: 22 citations, 0 wrong numbers, 0 false sentences.**
-This is the other half of `outpost/021`, which called itself a whole-repo sweep and had in fact
-grepped only `.c`/`.h`. The worker re-derived the scope rather than trusting the task's file-and-line
-list — the list was taken before leg 113's own `8f6e667` landed — and found **three citations the task
-never listed** (`tests/run-all.sh:40`, `tests/native_sim_stream/assert_stream.py:85`,
-`.github/workflows/host-tests.yml:9`), all correct. It read every one against the decision's **body**,
-across `manifest.md`, `naming.md`, `clocks.md`, `layout.md`, `tracing.md`, `wire.md`, `testing.md` and
-`module.md`.
+Leg 114 (`ui/052` → `outpost/022`): PROCEED throughout, weekly **82.4% → 84.6%** of a 90%
+cap, resets in ~54–55h, wave 5 suggested and 4 used. Leg 115 (`core/062` → `api/095`):
+PROCEED throughout, weekly **85.0% → 86.2%** of a 90% cap, resets in ~54h, wave 3 suggested
+and 3 used.
 
-**(b) The reviewer found the recursion, and it is the finding worth keeping.** The commit message says
-*"every non-`.c`/`.h` file"*; the grep's include list was `Kconfig*`, `*.py`, `*.sh`, `CMakeLists.txt`,
-`*.yml`/`*.yaml`, `*.rst`, `*.cmake`. A bare case-insensitive grep turns up **4 more citations in 3
-file classes nobody scoped**: `README.md` (×2), `cmake/outpost_build_id.h.in`, and
-`tests/native_sim_stream/app.overlay`. **The reviewer read all four against their decision bodies and
-all four are correct**, so there is no defect behind the overstatement — but this is the *third*
-consecutive time in this repo that a sweep's scope claim outran its grep, which is the exact shape
-`022` existed to fix in `021`. I corrected `history/outpost.md`'s line to say what was actually
-covered, by whom, and deleted the drop rather than filing `outpost/023`: there is no unswept surface
-left, only a sentence that claimed more than it did.
+### Least sure about
 
-**(c) Two things the worker checked that a clean report usually hides.** All 6 pre-topic-split
-citations (`decisions.md decision N`) still resolve after the split, verified independently by the
-reviewer; and leg 113's own `gen_outpost_manifest.py:613` fix still reads `(interfaces/wire.md)` — the
-sweep did not revert or re-touch the one line it was told to leave alone.
-
-**(d) I filed `tasks/doc/060` from something this worker decided not to report.** It hit
-`check-decision-refs.py`'s `DEF_HEAD` regex matching `###`/`####` only, judged it a formatting quirk
-with no observed false negative, and folded it into its report instead of dropping it. I verified the
-mechanism and disagree about the size: **`suite/decisions/*.md` uses `##`**, so all four `suite`
-decision definitions are invisible to the resolver, and the script reports **877 of 1,995 references
-"ambiguous ... not an error"** — 44% of the corpus unchecked, in the one scope that is cited from
-every repo. Owner-required; `scripts/` is reserved.
-
-**Merged:** `agent/outpost/022-citation-sweep-non-c-sources` — **code: none.** The code branch carries
-zero commits by design; a sweep that finds nothing wrong edits nothing. Doc `e8364bc` in `embarch-doc`
-(**cherry-picked**, from branch commit `e4e9f3e`). Gate re-run by me on the merge result:
-`embarch-outpost` has no `Cargo.toml`, so the host-side surface is the whole gate —
-`tests/decoder_unit.py` (**31 tests**) and `tests/vocab_check.py` green in the worker's own run, repo
-`main` unchanged at `8f6e667`; `check-docs.py` **11/11**; `check-ownership.py --scope outpost` OK on
-the doc half (2 paths). **Nothing was built for a board and no DUT was attached.**
-`changelog.d/outpost-citation-sweep-non-c-sources.changed.md` consumed into `history/outpost.md` with
-`--only`; 29 of the owner's own fragments left pending.
-
-**This fold also carries the 2026-09-13 day fold and a roll.** An `embarch-log-folder` subagent folded
-**78 numbered units (80 landed sub-units)** into one dated entry — 471,249 B down to 69,325 B, with
-`--apply`'s ledger satisfied on 263/263 SHAs, 80/80 `**Reviewer:**` lines and 48/48 hardware-debt
-lines — then `--roll`ed 2026-09-12 into
-`log-archive/supervisor-log-2026-09-12-to-2026-09-12.md`. **It was owed on this leg's first unit and
-landed on its fourth**, because a 471 KB day took it 22 minutes and six chunk-readers; I folded three
-units past it rather than stall four landed units behind it, which is safe only because `fold-day.py`
-splices the day's own block and never rewrites the retained text. Its own two carry-forwards: the
-`core/015` Windows-build tally was narrated with three different ordinals through the day (count the
-commits, do not trust the ordinal — including mine), and reviewer completions misrouted to the
-listener **five** times that day (`tasks/doc/042`).
-
-**Blocked:** nothing. `tasks/outpost/022` closed and removed, so the `outpost` scope is back to no
-dispatchable task (`002` is `blocked`, `018` is `Hardware: required`). **`tasks/doc/060`** filed per
-(d).
-
-**Reviewer:** 1 finding — `inbox/outpost-citation-sweep-missed-file-classes.md`, **accepted, verified
-by me, and acted on in this fold** by correcting the `history/outpost.md` line rather than filing a
-follow-up sweep; drop deleted once the correction landed. See (b) for why the correction is the whole
-fix.
-
-**Hardware debts:** **none created, and none of this leg's four units touched hardware at all.** Worth
-stating for this unit in particular because it is the one firmware repo the leg entered: no board, no
-flash, no DUT, no Zephyr build — `tests/run-all.sh` stops at its `WEST` guard by design on this
-machine. `embarch-outpost`'s two hardware-gated tasks are untouched and still waiting on a board.
-
-**Budget:** PROCEED throughout — weekly **82.4% → 84.6%** of a 90% cap across the leg, resets in ~54h,
-wave 5 suggested and 4 used.
-
-**Least sure about:** **deleting the reviewer's drop instead of filing `outpost/023`.** Every citation
-it named checks out, so a sweep task would have nothing to sweep — but I am the third actor in a row
-to declare this repo's citation surface finished, and the previous two were wrong for the same reason
-each time. If a fourth file class exists that neither the worker's include list nor the reviewer's
-bare grep reached, nothing in the queue is now looking for it.
-
----
-
-## 2026-09-14 00:19 — api/096 the client half of decision 63, and a tool description that disclaims a field instead of promising it
-
-**Decided:** **nothing numbered.** This is the `embarch-api` half of the split described in the
-`core/061` entry above; the one judgement it contains is the worker's, in (b). Three things.
-
-**(a) The two halves agree on the wire, and that was checked rather than assumed.** Both were written
-in parallel against a field name I pinned before dispatch, neither read the other's branch, and the
-reviewer verified against the landed `embarch-core` merge (`e1b796e`) that both spell it
-`source_deferred`. `StudyStreamEntry` in `crates/embarch-core-client/src/client.rs` now carries it as
-the fourth `#[serde(default)] Option<bool>`, documented on the three points its neighbours document:
-what `Some(true)` means, what `Some(false)` means, and that `None` is a Core predating the field.
-
-**(b) The worker refused a box in its own task file, and was right to.** I wrote *"check whether
-`streams_json` needs to surface the flag — if it renders the other three booleans, it renders this
-one."* It does not: `streams_json` iterates `StreamRef` from `embarch-study-designer`, which carries
-`name`/`bytes_written`/`truncated`/`records` and has never carried `named`/`timed`/`self_excluded`
-either. So the conditional I wrote was false, no code change was owed there, and **the new sentence in
-`list_study_streams`' description says the listing does not carry the flag rather than implying it
-does** — "…which this listing does not carry, so do not read a 0 here as ruling it out". A tool
-description promising a field the tool does not return is exactly the failure this unit could have
-shipped; the reviewer read `StreamRef`'s definition itself to confirm both halves.
-
-**(c) The worker also fixed my link-depth bug on its own file** — the `../../embarch-fleet/protocol.md`
-citations described in the `ui/052` entry — using three `../` as a real markdown link, which is the
-better form and is what landed. Its `inbox/` drop naming the same bug in `tasks/core/061` I deleted
-rather than filed: I had already fixed that half on `main` before reading it.
-
-**Merged:** `agent/api/096-deferred-source-flag-client-half` — code `c26d930` in `embarch-api`
-(fast-forwarded, parent `3e0e4ba`), doc `99a166c` in `embarch-doc` (**cherry-picked**, from branch
-commit `caee440`; `--ff-only` refused because two folds had already moved `main`, and the cherry-pick
-**conflicted** on the task file — resolved to the worker's version, which is the one the fold then
-removed). Gate re-run by me on the merge result: `cargo build` / `test` / `clippy --all-targets --
--D warnings` green; `check-client-names.py --repo embarch-api` clean against 7 denylist entries;
-`check-docs.py` **11/11**; `check-ownership.py --scope api` OK on the doc half (2 paths) and
-`--code-repo` OK on the code half. `changelog.d/api-source-deferred-flag.added.md` consumed into
-`history/api.md` with `--only`; 29 of the owner's own fragments left pending.
-
-**Blocked:** nothing. `tasks/api/096` closed and removed — filed, claimed, run and closed inside one
-leg. `tasks/api/095` (the 103-citation sweep of this same `client.rs`) was deliberately **not**
-dispatched beside it and is still `open`; it is now the `api` scope's only dispatchable task, and it
-opens on a file this unit has changed.
-
-**Reviewer:** no findings — it answered all four questions with evidence rather than agreement: read
-the three neighbouring doc comments and compared them clause by clause, read `StreamRef`'s definition
-to confirm (b) independently, showed the serde test fails both without `#[serde(default)]` and when
-the field is never populated, and checked the field's spelling against `embarch-core`'s actual merge
-rather than against the task file that pinned it.
-
-**Hardware debts:** **none.** A deserialized struct field and a tool description string; no board, no
-probe, no live Core, no deploy. The end-to-end confirmation this half participates in is recorded
-against `core/061`, not here.
-
-**Budget:** PROCEED — weekly **82.4%** of a 90% cap at the leg's start, resets in ~55h, wave 5
-suggested and 4 used.
-
-**Least sure about:** **that `list_study_streams`' description now carries a sentence about a field
-that endpoint does not return.** It is honest and it is the only place a reader of that tool would
-look — but it points at `GET /study/{id}/streams` for the real answer, and a description that
-explains a neighbouring endpoint's field is a shape nothing in this suite has decided is right.
-
----
-
-## 2026-09-14 00:18 — core/061 decision 63's Core half, and the split that made it a worker's job at all
-
-**Decided:** **one thing, and it is mine rather than the worker's: the field is named
-`source_deferred`, and I pinned it before dispatch.** Decision 63 deliberately left the name open
-("name it for the fact, not for power"), which is fine for one implementer and impossible for two
-running in parallel. The roadmap's own word for power sampling is *deferred, not cancelled*, so the
-name carries the general fact and a second deferred source later fits the same field. Four things.
-
-**(a) The split is the structural part of this unit.** `tasks/core/061` as filed spanned **two code
-repos** — `embarch-core` sets the flag, `embarch-api`'s client crate deserializes it and its
-`tools.rs` describes it — and §5 gives a worker one task in one repo on one branch. I narrowed `061`
-to `embarch-core` and filed the other half as **`tasks/api/096`**, claimed both, and ran them side by
-side against the pinned name. Neither half waits on the other: `#[serde(default)] Option<bool>` means
-either can land first. **The alternatives I rejected**: one worker with two code worktrees (breaks the
-one-repo rule and the land-both-branches-together shape), and re-scoping to `suite` so I would run it
-myself (a §4 announcement window for an implementation whose design decision was already announced and
-decided by leg 113).
-
-**(b) Set at declaration, not inferred from silence — which is the whole point of decision 63.**
-`StreamStore::create` sets `source_deferred` from the tap's declared `StreamSource` in the same loop
-that fills every other index field, before a byte exists, with `note` carrying the prose and a
-citation of `embarch-dev-bench` decision 24 at the site. Core *states* the fact; it does not measure
-it. Two structs carry it (`StreamIndexEntry`, `StreamIndexEntryResponse`), 209 tests pass, and the new
-test puts a `PowerFrontEnd` tap and a `GattTranscript` tap side by side at `bytes_written: 0` so the
-only difference is this field.
-
-**(c) `note` was left alone, and the reviewer checked that specifically.** The cheap version of this
-change was to set `note` and stop. `StudyStreamEntry`'s own history forbids it in writing — the
-`is_named` comment records the conjunction that *"stopped being correct when a trace gained a second
-way to be incomplete"* — and the diff branches on `note` nowhere.
-
-**(d) No doc prose in `decisions/streams.md`, by instruction and correctly obeyed.** The file is
-1,069 B inside its cap with `tasks/core/060` filed against it; decision 63's entry was already
-written by leg 113. The worker documented the field in `interfaces/studies.md` and
-`interfaces/result-layout.md` instead, which is where a reader of `GET /study/{id}/streams` looks.
-
-**Merged:** `agent/core/061-power-tap-says-so-in-stream-index` — code `e1b796e` in `embarch-core`
-(fast-forwarded, parent `2e9eeed`), doc `d95dc58` in `embarch-doc` (**cherry-picked**, from branch
-commit `f7d20a6`; `--ff-only` correctly refused because `ui/052`'s fold had already moved `main`).
-Gate re-run by me on the merge result: `cargo build` / `test` (**209 passed**, 2 ignored, plus 1) /
-`clippy --all-targets -- -D warnings` green; `check-client-names.py --repo embarch-core` clean against
-7 denylist entries; `check-docs.py` **11/11**; `check-ownership.py --scope core` OK on the doc half
-(4 paths) and `--code-repo` OK on the code half.
-`changelog.d/core-power-tap-source-deferred.added.md` consumed into `history/core.md` with `--only`;
-29 of the owner's own fragments left pending.
-
-**Blocked:** nothing. `tasks/core/061` closed and removed. `tasks/core/060` (compact `streams.md`) is
-untouched and still `open`.
-
-**Reviewer:** no findings — it checked the three things I asked and gave evidence for each: the flag is
-set from the declared `StreamSource` inside `StreamStore::create` rather than derived from
-`bytes_written`; nothing in the diff or the surrounding file branches on `note`; and the new test is
-non-vacuous **in both directions** (setting the flag unconditionally fails the `None` assertion,
-never setting it fails the `Some(true)` one). It also read `embarch-dev-bench` decision 24's body and
-confirmed the code comment's claim is a faithful restatement rather than a stretch.
-
-**Hardware debts:** **one, and it is the first behavioural addition to it in a while.** `core/015`'s
-outstanding **native Windows build** now carries a twelfth landed `embarch-core` change, and unlike
-the comment sweeps and test recoveries of the last five days this one changes what the service
-*serves*. Separately, decision 63's end state has never been seen on a real study: confirming that a
-`PowerFrontEnd` tap reports `source_deferred: true` through a live Core needs the **dev-bench board**,
-and `tasks/core/061` said so before it closed. No board, probe or live Core was touched here.
-
-**Budget:** PROCEED — weekly **82.4%** of a 90% cap at the leg's start, resets in ~55h, wave 5
-suggested and 4 used.
-
-**Least sure about:** **pinning the field name myself.** It unblocked two parallel halves and both
-landed spelling it identically, which is the outcome I wanted — but decision 63 left the name open on
-purpose, and a supervisor closing an open question in a task file is a decision that never gets a
-number and never gets reviewed as one. If `source_deferred` turns out to be the wrong name for the
-second deferred source, nothing in the decision record explains who chose it or why.
-
----
-
-## 2026-09-14 00:15 — ui/052 a retention sentence that was a proposal, marked as one rather than rewritten
-
-**Decided:** **nothing numbered**, and the worker correctly filed none — but one judgement call was
-made and is worth carrying. Three things.
-
-**(a) The drop was true, and the worker checked it rather than trusting it.** `embarch-ui` decision 7
-said retention is *"a size-capped rotating logfile rather than a time-based policy"*. `embarch-core`
-builds no such thing: `src/main.rs`'s `build_log_file_writer` is `Rotation::DAILY` with
-`.max_log_files(7)`, and `embarch-core/decisions/logging.md` decision 16 says so in prose — including
-the line that `embarch-ui` *"had proposed a second size-capped logfile without knowing this one
-existed."* So decision 7's sentence was the abandoned proposal, left standing unqualified.
-
-**(b) The judgement: mark it as an earlier design, do not rewrite it as daily-rolling.** Both were
-open. Rewriting would make decision 7 *read* correct and destroy the record of what was proposed;
-`embarch-ui` has no retention policy of its own to state anyway, because decision 7's own text says
-the UI never reads Core's logfile directly. So a dated blockquote correction sits under the sentence,
-in the shape `embarch-outpost/decisions/clocks.md` decision 17 already uses. **Not a reversal** —
-nothing decided changed, only a stale factual clause about another repo's mechanism.
-
-**(c) The reviewer found the one thing that is genuinely missing, and it is not this unit's to fix.**
-`DOC-CONVENTIONS.md` codifies the one-line retirement tombstone and **not** this blockquote-correction
-shape, whose only textual precedent is `clocks.md` itself. The unit's commit message attributes the
-style to `clocks.md` rather than to the conventions doc, so nothing here is misattributed — but the
-suite now has two correction shapes and one of them is documented. `DOC-CONVENTIONS.md` is
-owner-reserved; recorded here rather than filed, because it is a gap in a reserved doc, not a defect
-in a sub-project.
-
-**Merged:** `agent/ui/052-decision-7-retention-line-doc` — doc `e9018e9` in `embarch-doc`
-(fast-forwarded, parent `e3e5569`). **Code: none.** `agent/ui/052-decision-7-retention-line` carries
-zero commits by design — the worker grepped `embarch-ui`'s whole source for the stale claim and found
-it nowhere, which is the outcome the task allowed for. Gate re-run by me on the merge result:
-`check-docs.py` **11/11**, `check-ownership.py --scope ui` OK on 3 paths.
-`changelog.d/ui-debug-tab-retention-line.fixed.md` consumed into `history/ui.md` with `--only`;
-29 of the owner's own fragments left pending.
-
-**A gate correction that matters more than the unit.** This worker — and, later, two of the other
-three — reported `check-links.py` RED and called it *"pre-existing baseline noise"* from
-`embarch-fleet` being an empty stub in a worktree. **It was not pre-existing: it was mine.** The two
-task files I wrote at the top of this leg (`tasks/api/096`, and my edit to `tasks/core/061`) cited
-`../../embarch-fleet/protocol.md` **as a markdown link**, and two `../` from `tasks/<scope>/` lands on
-`embarch-doc`'s own tracked `embarch-fleet/` sub-project directory, not the sibling repo. Three
-workers in a row diagnosed a red gate as environmental and were wrong, and only re-running the gate
-myself on the merge result caught it. Fixed in this fold; `api/096`'s worker independently fixed its
-own half on its branch with three `../`, which is the better form and is what landed.
-
-**Blocked:** nothing. `tasks/ui/052` closed and removed. Two `inbox/` drops drained in this same fold:
-**`tasks/core/062`** (the worker's own finding — `embarch-core`'s `src/logs.rs` comment says
-*"`embarch-ui`'s own text is unchanged"*, which this unit made false) and **`tasks/doc/059`**,
-owner-required, the worktree-nesting defect described in my final report. A third drop
-(`core-061-task-file-fleet-link-depth.md`) was deleted rather than filed: it named the link bug above,
-which was already fixed on `main` by the time I read it.
-
-**Reviewer:** no findings — it re-derived Core's rotation from `main.rs` at the real SHA, confirmed
-decision 7's *decision* is untouched by the diff, re-ran the `size.cap` grep across both `embarch-ui`
-tips and the whole `embarch-doc` tree itself rather than trusting the worker's, and traced the
-"missing" inbox drop to `tasks/core/062` rather than reporting a lost finding.
-
-**Hardware debts:** **none.** Doc prose in one decision file; no board, no probe, no live Core, no
-deploy, nothing built.
-
-**Budget:** PROCEED — weekly **82.4%** of a 90% cap at the leg's start, resets in ~55h, wave 5
-suggested and 4 used.
-
-**Least sure about:** **that leaving decision 7's sentence standing is kinder to a future reader than
-rewriting it.** The correction is directly underneath and dated, so nobody reading the file top to
-bottom is misled — but somebody grepping for `size-capped` still lands on a false sentence first, and
-that is exactly how this defect reached `embarch-core`'s source comments in the first place.
-
----
-
+- **Letting `api/095`'s worker run ~12 more minutes after `fleet stop`.** The stop arrived
+  at 00:55:44 mid-`topology/044`; the leg 115 supervisor deleted `.fleet/pump` immediately
+  and did not dispatch anything further, but let the already-running `api/095` worker (five
+  minutes into a twenty-minute run) finish with a wrap-up instruction rather than killing it.
+  It produced three real fixes and a well-specified remainder, which argues for the choice —
+  but the outcome is not the argument.
+- **Pinning `source_deferred` unilaterally.** It unblocked two parallel halves that landed
+  spelling it identically, but decision 63 left the name open on purpose, and a supervisor
+  closing an open question in a task file is a decision that never gets a number or a
+  review.
+- **Deleting the reviewer's drop on `outpost/022` instead of filing a fourth sweep task.**
+  Every citation it named checks out, but this is the third actor in a row to declare this
+  repo's citation surface finished, and the previous two were wrong for the same reason each
+  time.
+- **The `open.md` squeeze-then-file cycle reading as success when it is really a repeating
+  pattern nobody can act on.** Squeezed twice in four units for the same reason;
+  `tasks/doc/062` is owner-required, so nothing in the fleet can act on it before a third
+  squeeze arrives.
+- **Handing the `core/062` reviewer the wrong doc SHA for a file another unit had changed.**
+  It caught the error itself only because the file was obviously not this unit's; a reviewer
+  handed a wrong SHA for a file the unit actually did touch has no such tell.
 ## 2026-09-13 — 78 units
 
 *Folded by leg 114 on 2026-09-14 at 00:16 MDT. Eighty landed sub-units — 78 numbered task
