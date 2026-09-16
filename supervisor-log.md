@@ -97,6 +97,83 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 13:57 — topology/047 the largest decision in the suite, halved, and the two losses the worker declared rather than hid
+
+**Decided:** **compact the biggest one too, and I want the reason on record because the surface
+evidence pointed the other way.**
+
+**(a) 7,818 B → 4,001 B. Nearly half the entry removed, and it stayed one decision.** Decision 25 was
+the single largest decision entry in the suite at **191% of the 4,096 B per-decision cap**, eleven
+paragraphs accreted over three dates, covering four chip families (nRF54L, nRF54H, ESP32-C5,
+STM32G0). That is the *shape* of several arguments under one head, and I told the worker in the
+dispatch note that this was the one of the five most likely to warrant a split. **It read the entry
+and argued me out of it**, on the test the task itself set: every paragraph is an instance of one
+rule — `classify_chip` resolves a chip name to a register pair only on positive evidence, narrowest
+verified prefix wins, refuse rather than guess — and **every inbound citation lands on that one
+claim.** The reviewer re-ran the grep from scratch rather than agreeing with it: six real inbound
+citations (`embarch-core/decisions/flash-backend.md:22,24`, `history/topology.md:21,23,43`,
+`embarch-topology/decisions/validation.md:23`), every other `decision 25` hit in the repo belonging to
+a *different* sub-project's own decision 25, and **none of the real ones citing the STM32 material
+separately.** No second claim anyone has ever needed to point at, so a split would have spent a new
+decision number — the most expensive thing in this suite to reverse — for nothing.
+
+**(b) The worker declared two losses instead of calling them redundancies, and that is the behaviour
+I want repeated.** It quoted, as genuine content taken for space rather than duplication: the "no
+shared return type without indirection" rationale, and an instruction telling a future reader who
+finds the duplication to read the paragraph rather than file it as a fresh finding a third time.
+Declaring a loss is harder than reclassifying it, and it is what let the reviewer check it. Its
+verdict: the *prohibition* the first one backed still stands in the compacted entry and is
+independently corroborated in `embarch-core/decisions/flash-backend.md`#49 (`They stay two
+independent matchers`); the second is a procedural nudge pointing at a paragraph that still exists,
+so its loss risks a duplicate finding, not a missing fact. Neither meets the bar. **But note what
+the second one was protecting against — someone re-filing a finding for the third time — and it is
+now gone.** If a `topology` duplicate-matcher finding shows up again, that is why.
+
+**(c) The `core/064` failure mode was checked for here too, on the largest cut of the leg, and is
+absent.** Three units in, this is now the standing question I hand every reviewer: *was anything cut
+as provenance that is actually a live claim?* The reviewer walked the removed text against all four
+chip families and found the live invariants — nRF54H refused first, `esp32c5` case-sensitivity,
+`stm32g0`-not-`stm32` narrowness, and the `requires_vendor_tool` abstention/refusal distinction — all
+surviving verbatim or in equivalent form, with only the first-draft nRF54H bug and its correction
+narrative cut. History of a fixed mistake, not current behaviour.
+
+**Merged:** `agent/topology/047-decision-25-over-cap` — doc `a68c4d4` in `embarch-doc`, **rebased onto
+`main` in the worker's own doc worktree and then fast-forwarded** (`main` had moved under it twice).
+**Code: no commit** — the `embarch-topology` branch tip equals `main`; one revert handle, not two.
+The worker ran the cargo half green on the unmodified tree (build, 15 tests, clippy `--all-targets --
+-D warnings`) as a sanity check. Gate re-run by me on the merge result: `check-docs.py` **11/11**,
+`check-ownership.py --scope topology` OK on 3 paths, `check-client-names.py --repo <code worktree>`
+clean against 7 denylist entries. `embarch-topology/decisions.md` needed no edit — no renumbering, and
+that sub-project's index has no size column. File total 8,402 → 4,585 B against a 12 KB
+`decision-group` cap, so no file-level reserve debt is owed.
+`changelog.d/topology-decision-25-compaction.changed.md` consumed into `history/topology.md` with
+`--only`; **29 of the owner's own fragments left pending.**
+
+**Blocked:** nothing. `tasks/topology/047` closed and removed.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none created, and one carried that this unit was checked against explicitly.**
+`nRF54L10`, `nRF54L05` and `nRF54LM20A` take the same classifier arm with **no such silicon ever on
+this bench** — the reviewer confirmed the diff never touches `embarch-topology/decisions/validation.md`
+and that decision 21 there still states the untested status plainly rather than implying it is
+tested. Nothing executed, no board, no probe, no live Core, no deploy. `core/015`'s native Windows
+build is untouched (different repo) and stays at leg 117's re-derived **40 commits since `1c1224e`**.
+Dev-bench probe carried, not observed: `tasks/api/059` stays `open`, the owner's `d0cf9a0` parks the
+bench queue, `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`).
+
+**Budget:** PROCEED — weekly **5.4%** of a 90% cap at the leg's start, resets in ~162 h. Wave **6**
+suggested, **4** dispatched; the unit cap binds.
+
+**Least sure about:** **the 95-byte margin, for the same reason as `outpost/023`'s 26.** Two of this
+leg's three landed compactions finish inside 100 bytes of the cap, and `check-doc-size.py` cannot
+tell "paid" from "paid, barely". The difference here is that decision 25 started at 191% and had real
+cold material, so the thin margin is a choice about how much to cut rather than the end of the
+available slack — but nothing in the repo records which of those two situations a given entry is in,
+and the next person to add a sentence to either file will not be told.
+
+---
+
 ## 2026-09-16 13:50 — outpost/023 decision 17 squeezed to 26 bytes of margin, and the reviewer's read on what that costs
 
 **Decided:** **accept a distributed squeeze over a split, and record that the next growth event here
