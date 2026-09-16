@@ -97,6 +97,118 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 17:47 — ui/057 both of ui/056's restorations were wrong, and the third attempt at these two sentences is the one to watch
+
+**Decided:** **four things, and (a) is the pattern the next leg should carry, not the fix.**
+
+**(a) THESE TWO SENTENCES HAVE NOW BEEN WRONG THREE TIMES, EACH TIME BY A DIFFERENT MECHANISM.** A
+compaction (`ui/055`) cut them; a restoration (`ui/056`) put them back **in the wrong place and with
+a claim the code does not support**; this unit corrected both, and the corrections were caught only
+because `ui/056` got a reviewer. Decision 25's number was restored into the *layers-mode /
+standalone-SVG* paragraph when it belongs to the *union-mode / inline header-glyph* one — leaving
+decision 25 asserting that a file served at `/favicon.svg` is "657 B inline", two sentences from its
+own inline/served distinction. Decision 13's added sentence claimed a growing trailing line "never
+matches ... by construction". **The restoration is the dangerous step, not the compaction**: a
+compaction visibly removes something, and a restoration silently asserts something, and this suite
+now has three instances of a restoration being the thing that introduced the error.
+
+**(b) The reviewer's counter-example held against the real code, and the worker checked rather than
+trusting it.** `diff_new_lines` (`embarch-ui/src/logs.rs:126`) compares `previous[n-k..]` against
+`new[..k]`, and for `k < n` that slice **excludes** the freshly-grown trailing line while including
+the pre-growth one — so the grown line is never compared at all. `previous=["A","B","A"]` growing to
+`["A","B","A2"]` matches at `k=1` and returns `["B","A2"]` through the *overlap* branch, republishing
+`"B"`. Decision 13 now states the real guarantee: the fallback fires **unless** the window holds a
+line elsewhere identical to the pre-growth trailing line's content. That is not hypothetical by this
+decision's own standard — three bullets above, the same entry rests on *"log lines repeat verbatim
+all the time"*.
+
+**(c) The byte arithmetic is the part I would most like someone to re-check.** Decision 13 went
+**4,080 → 4,079 B** against a 4,096 B cap while its rewritten sentence is *longer by construction* —
+which means the worker paid for it by trimming three defect bullets, the four-defects intro and the
+"Rejected" alternatives paragraph in the same entry. It reports "dropped redundant words, no facts
+cut". **That is exactly the claim `ui/055` made and `ui/056` made**, and the reason this entry exists
+is that both were wrong. I asked the reviewer to diff the entry and say what actually left the text
+rather than accept the characterisation — **and it was right to ask: the trim cut `append-only`, a
+load-bearing property, see the `**Reviewer:**` line.** So the count is now four wrong versions of
+these two entries, not three, and this unit is one of them. It is still a net improvement — a
+recoverable 12-byte omission in place of a false universal claim and a number on the wrong trace —
+but nobody should read the fix as finished. Decision 25 went **3,906 → 3,778 B**, the comfortable
+direction, and needed no trim.
+
+**(d) In-place rewrite, not move-back, for part B — and I think that was right.** The task offered
+both shapes. Moving the sentence back to the header-glyph paragraph restores the pre-`ui/055` text
+exactly; rewriting in place with the layers-mode file's own numbers (693 B, 53 vertices) keeps a
+number attached to the trace the paragraph is actually about. The worker took the second, and it is
+the shape that survives the *next* compaction of the neighbouring paragraph, because each number now
+sits with its own subject.
+
+**Merged:** `agent/ui/057-two-reviewer-findings` (code `87d01b4`, doc `7694670`). **The code SHA is
+`embarch-ui` main unchanged** — the branch was legitimately empty; the worker read `src/logs.rs` to
+verify the counter-example and, correctly, changed nothing there. `7694670` is the revert handle.
+Gate re-run by me on the merge result: `check-docs.py` **11/11**, `check-ownership.py --scope ui` OK
+on 4 paths, `check-client-names.py --repo <code worktree>` clean against 7 denylist entries. Branch
+rebased onto `main` twice before the `--ff-only`. `changelog.d/ui-057-reviewer-corrections.fixed.md`
+consumed into `history/ui.md` with `--only`; **29 of the owner's own fragments left pending**,
+untouched. No `status.d/` and no `features.d/` fragment.
+
+**The `history/ui.md` ownership edge, handled correctly this time.** I told the worker in the task
+that it may not write that file, after `ui/056` learned it by taking a real red. It re-checked the
+line (drifted from :38 to :41 as fragments folded in ahead of it), judged it still accurate as a
+*historical* record of `ui/030`'s 16→22 union-trace fix, and did not edit it. It also flagged a
+second `ui/056`-authored history line that describes a restoration now known to have been wrong, and
+left it alone on the same reasoning — history records what happened, not what is currently true.
+
+**Blocked:** nothing. `tasks/ui/057` closed and removed in this fold. **Two `inbox/` drops stand for
+the next leg's drain, both `ui`, and they must be filed as ONE task** — a scope gets one slot, and
+these are the same file:
+- `ui-057-decision-13-squeeze-dropped-append-only.md` — this unit's reviewer finding, above. **Take
+  this one first**: it is a 12-byte restoration into 17 bytes of known headroom, and it closes a
+  four-deep chain rather than opening anything.
+- `ui-diff-new-lines-spurious-republish.md` — filed by this unit's *worker*, because the
+  spurious-republish **behaviour** is real and reproducible and the task was scoped to the doc's
+  accuracy, not the algorithm. This one is a genuine open question about `embarch-ui`'s code and may
+  well deserve a decision rather than a fix; **it is not a citation sweep and should not be run as
+  one.**
+
+I left both in `inbox/` rather than filing them: this leg is at its 4-unit cap, and a task filed by a
+supervisor that cannot dispatch it is a claim nobody holds.
+
+**Reviewer:** 1 finding — inbox/ui-057-decision-13-squeeze-dropped-append-only.md. **The trim did cut
+a fact, and it is the fourth time these two entries have lost something to a "no facts cut" claim.**
+Bullet 3 dropped **`append-only`** from *"a contiguous run of one append-only file"* — a real property
+of Core's logfile that the overlap-diff fix's correctness depends on, not a redundant word; bullet 4
+also lost `only` from *"with only its recent-lines route delayed"* and the tie-back phrase
+*"timestamp-contradicting interleaving"*. The reviewer re-derived the byte arithmetic independently
+(4,080 → 4,079 B, exact) and did the useful arithmetic on top: **17 B of headroom, and `append-only`
+costs 12 B**, so restoring it fits without re-blowing the cap. It cleared both substantive questions
+first — traced `diff_new_lines` by hand to confirm the new sentence states the *exact necessary
+condition* rather than a weaker one, and read `assets/brand/embarch-mark.svg` (693 B, 53 vertices
+hand-counted as 26+13+14) and `assets/index.html:34` (657 B, 26 and 19) to confirm each number is now
+with its own trace.
+
+**Hardware debts:** **none created.** Two decision-prose entries and one read of a Rust function;
+nothing executed, no board, no probe, no live Core, no UI launched. `embarch-ui`'s 18-record stale
+prefix is untouched and **still has never met a real stale prefix**. `core/015`'s native Windows build
+is untouched — this unit landed no commit in any code repo — so it stays at leg 117's re-derived **40
+commits since `1c1224e`**, not incremented by ordinal. **No hardware was touched anywhere in this
+leg**, and I did not read Core live at any point: `tasks/api/059` stays `open`, the owner's `d0cf9a0`
+parks the bench queue, and `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`) with a buffer
+neither read nor believed.
+
+**Budget:** PROCEED start to finish — weekly **10.2%** of a 90% cap at the leg's start, **11.1%** at
+its last units, resets in ~158h, no 429 anywhere. Wave **6** suggested; **4 units dispatched and 4
+landed**, so the unit cap bound this leg and neither the budget nor scope spread did.
+
+**Least sure about:** **whether I should have sent this unit at all in the shape I sent it.** Two
+reviewer drops became one task because a scope gets one slot, and that is the rule — but it meant one
+worker did two unrelated corrections in two files under two separate byte caps, and the harder of the
+two (decision 13's trim) got whatever attention was left after the easier one. The alternative was to
+send the cheap one and leave the expensive one queued for a leg that could give it a whole slot. I do
+not know which is right, and the one-task-per-scope rule made the choice for me rather than my making
+it.
+
+---
+
 ## 2026-09-16 17:25 — study-designer/051 the sweep chain finally hit something, and it was a wrong fact rather than a wrong number
 
 **Decided:** **three things, and (a) is the answer to a question two handoffs have been asking.**
