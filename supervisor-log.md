@@ -97,6 +97,90 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 16:49 — umbrella/069 the last two unpinned over-cap decisions, and the census is now clean
+
+**Decided:** **three things, and (b) is a number the next leg should not have to re-derive.**
+
+**(a) Both compacted, neither split, and the "and so did" heading did not win.** `mirrors.md`#16
+4,347 → **3,803 B**, 293 B margin; `sticky-host.md`#48 4,193 → **3,910 B**, 186 B margin. The task
+file flagged decision 16's heading — *"`doctor`'s token check needed the same treatment, **and so did
+its config reading**"* — as the shape that is sometimes really two decisions. The worker read it and
+said no: both halves share the one argument the entry exists for (*a `doctor` resolving something
+differently from the `embarch-api` it is diagnosing is worse than no check*), applied to two fields
+of the same mirror rather than to two reasons, so a split would have duplicated that sentence rather
+than separated anything. Decision 48 likewise: decision 51 **is** the separate decision its accreted
+question already produced. `decisions.md`'s index needed no edit either way.
+
+**(b) THE NUMBER: zero unpinned decisions are over cap, across all 379 in the suite.** Leg 119 left
+a standing warning that `check-doc-size.py --decisions` prints only the twenty largest by raw size
+and that 27 pinned over-cap entries fill every slot, so the printed `OVER` list is not the breach
+count — and it predicted two unpinned breaches would remain after its own leg, `mirrors.md`#16 and
+`sticky-host.md`#48. This unit paid exactly those two. I did **not** take that by subtraction; I
+called `decision_state()` directly, the way leg 119 said anyone who needs the real number must:
+
+```
+fails (pinned, above own baseline): 0
+over_unpinned:                      0
+rows:                             379
+pins:                              27
+```
+
+**So the per-decision cap is clean for the first time**, and the 27 pinned entries
+(`tasks/doc/064`, `Owner: required`) are the whole remaining debt. The printer now shows no `OVER`
+line at all, which is the correct output and also indistinguishable from the truncation artefact —
+**do not read a quiet printer as a clean corpus; call `decision_state()`.**
+
+**(c) The reviewer found no contradiction and one false completeness claim, and I am recording it
+rather than filing it.** The closure says *"every other `decision 48` hit in the repo is
+`embarch-study-designer`'s own decision 48"* — the cross-repo number collision the task warned about.
+That is wrong: `history/umbrella.md:83` is a second real `embarch-umbrella` decision-48 citation, and
+the sweep missed it. **Nothing broke** — that line states precisely the claim the compaction left
+intact — so there is nothing to revert and no drop to file. What it is, is the second time in two
+units that a task closure's *"I verified X"* sentence was looser than the verification behind it
+(`api/100`'s line-number claim was the first). **Two instances is a pattern worth watching and not
+yet worth a task**; a third should get one.
+
+**Merged:** `agent/umbrella/069-two-decisions-over-cap` — doc `0b4816c` in `embarch-doc`, **rebased
+onto `main` in the worker's own doc worktree** (`main` moved for `api/100`'s fold) and then
+fast-forwarded. **Code: no commit** — the `embarch-umbrella` branch tip equals `main`; one revert
+handle, not two, and `embarch-umbrella`'s decisions live only in the doc repo. Gate re-run by me on
+the merge result: `check-docs.py` **11/11**, `check-ownership.py --scope umbrella` OK on 4 paths,
+`check-client-names.py --repo /home/gabriel/Github/embarch/embarch-umbrella` clean against 7 denylist
+entries. `changelog.d/umbrella-mirrors-sticky-host-decision-cap.fixed.md` consumed into
+`history/umbrella.md` with `--only`; **29 of the owner's own fragments left pending**, untouched. No
+`status.d/` or `features.d/` fragment. Both cut hunks are quoted verbatim in
+`tasks/umbrella/069-...md` at `0b4816c` if either is ever wanted back.
+
+**Blocked:** nothing. `tasks/umbrella/069` closed and removed. `tasks/umbrella/071` (decision 42's
+attribution to decision 35) is still `open` and was deliberately kept out of this unit's hands — the
+dispatch note forbade touching `locate-api.md`#42 so the two could not collide, and the worker
+obeyed it.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none created.** Doc prose only; nothing executed, no board, no probe, no live
+Core, no `doctor` run. **One standing debt was explicitly checked to survive and did:**
+`embarch-umbrella/open.md:15` still reads *"Hardware debt: confirm on a real machine"* for decision
+51's clearing behaviour — the reviewer verified it was not flipped to confirmed by a doc-only unit.
+`core/015`'s native Windows build is untouched by both units so far this leg — no `embarch-core`
+commit has landed — so it stays at leg 117's re-derived **40 commits since `1c1224e`**, which I did
+not re-derive and which four handoffs have warned against incrementing by ordinal. I did not read
+Core live at any point; `tasks/api/059` stays `open`, and the owner's `d0cf9a0` parks the bench
+queue. `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`).
+
+**Budget:** PROCEED — weekly **8.8%** of a 90% cap at the leg's start, resets in ~159h, no 429. Wave
+**6** suggested, 3 workers plus one suite unit dispatched; the 4-unit cap binds, not the budget.
+
+**Least sure about:** **whether "the per-decision census is clean" is a fact about the corpus or a
+fact about what the census can see.** `decision_state()` is honest about the 379 entries it parses,
+but it finds a decision by heading shape, and a decision that does not present as one — a long entry
+under a different heading level, or text inside a decision file that the parser attributes to the
+wrong entry — is not over cap in this reading because it is not in the reading at all. Nobody has
+checked that 379 is the real population. I am recording the clean census as *what the gate now says*
+rather than as *the corpus is within cap*, and those are not the same sentence.
+
+---
+
 ## 2026-09-16 16:43 — api/100 two stale decision paths in client.rs, and a six-drop drain that produced one suite task
 
 **Decided:** **three things, and (b) is the one the next leg inherits.**
