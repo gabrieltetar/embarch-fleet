@@ -97,6 +97,91 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 17:20 — topology/049 decision 21 carries three observations again, and my own task file was red on `main` for twenty minutes
+
+**Decided:** **three things, and (b) is mine to own.**
+
+**(a) Restore, not renumber.** Leg 119 flagged as low-confidence that `topology/048` (`d3f2f81`) cut
+decision 21's reproduction timestamps; leg 120's reviewer confirmed it was a real contradiction and
+filed the drop. The cut took `[measured 2026-08-31, reproduced 2026-09-06 22:07:51Z and 22:15:45Z
+from Core's own handshake log]` to `[measured 2026-08-31, reproduced 2026-09-06]` — **three recorded
+observations collapsing into a form that reads as two**, while `history/topology.md` goes on saying
+the identity gate's refusal is *"on record three times"*. The task offered two shapes and made the
+choice mechanical: restore if it fits under the 4,096 B per-decision cap, otherwise name the mismatch
+as unfixable from this scope. It fits — **3,992 → 4,046 B, 50 B of margin** — so it was restored
+verbatim against `git show d3f2f81`, and `history/topology.md` needed no change at all. That is the
+cheaper end of the fork and also the honest one: these are measured hardware readings, and a count is
+cheaper to keep than to re-derive.
+
+**(b) I FILED THIS TASK WITH A TITLE THE GATE REFUSES, AND IT SAT RED ON `main`.** My H1 was
+*"…`history/topology.md` still counts"* — a literal path a `topology` worker may not write, which
+`check-task-state.py` rule 6 refuses. It went red the moment I pushed the claim commit (`19174e6`)
+and stayed red through three more of my own pushes, because **I ran `check-task-numbers.py` and
+`check-task-state.py` on the task before the claim and read only the tail of the output.** The worker
+hit it inside its own gate, reworded its own task file's title in its own scope, and moved on. Two
+sister units saw it too: `umbrella/071`'s worker reported it explicitly as a pre-existing red in
+another scope and correctly declined to touch it. **The rule I broke is the one I wrote into the task
+body two paragraphs later** — I told the worker it could not write `history/topology.md`, then named
+that path in the title. `check-docs.py`, run whole rather than tailed, is the thing that catches this.
+
+**(c) Rebase-before-merge is now load-bearing every unit this leg, because I moved `main` myself.**
+The refill task (`core/066`, `f349c49`) advanced `main` after all four branches were cut, so every
+worker branch this leg is behind and `--ff-only` refuses it. That is working as designed — I rebase
+each branch onto `main` and force-with-lease before merging — but it is a shape the next leg should
+expect from me, not a fault to diagnose.
+
+**Merged:** `agent/topology/049-decision-21-three-times` (code `8161092`, doc `edbc55b`). **The code
+SHA is `embarch-topology` main unchanged** — the branch was legitimately empty, which the task
+predicted, and the worker pushed it empty rather than inventing a source change. `edbc55b` is the
+revert handle. Gate re-run by me on the merge result, not on the branch: `check-docs.py` **11/11**
+green (the same wrapper that was 10/11 before the merge — this merge is what fixed it),
+`check-ownership.py --scope topology` OK on 3 paths, `check-client-names.py --repo <code worktree>`
+clean against 7 denylist entries. Branch was rebased onto `main` and force-with-leased before the
+`--ff-only`. `changelog.d/topology-decision-21-three-times.fixed.md` consumed into
+`history/topology.md` with `--only`; **29 of the owner's own fragments left pending**, untouched. No
+`status.d/` and no `features.d/` fragment.
+
+**A verification I ran rather than accepted.** The worker reported "no other doc cites three times
+for this fact" from a corpus-wide grep, and listed six other hits it judged to be different facts —
+including `embarch-topology/spec.md`'s *"two DUTs alternated on one probe three times"*, which is
+decision 12's mismatch-trip count and genuinely unrelated. I confirmed the merge result's gate green
+rather than the search, which is the weaker of the two checks; see "Least sure about".
+
+**Blocked:** nothing. `tasks/topology/049` closed and removed in this fold.
+
+**Reviewer:** no findings. It re-derived both byte counts itself from `edbc55b~1` and `edbc55b`
+(3,992 → 4,046 B, 1 insertion / 1 deletion, nothing else in the entry moved), confirmed the restored
+bracket reads as measured with a concrete source rather than as an inference, and went further than
+asked: it checked `embarch-topology/decisions.md` (21 active, not retired) and
+`embarch-decision-reversals.md` (no entry for decision 21 — this fix does not re-propose a rejected
+alternative). It also confirmed `history/topology.md:62` now agrees.
+
+**Hardware debts:** **none created.** One restored bracket in a decision file; nothing executed, no
+board, no probe, no live Core, no deploy. The restored facts *are* measured — two reproductions off
+Core's own handshake log on real silicon — and the whole point of the unit was that they stay marked
+measured, with their dates, rather than being re-stated as assertions. `core/015`'s native Windows
+build is untouched: **this unit landed no commit in any code repo**, so it stays at leg 117's
+re-derived **40 commits since `1c1224e`**, a number I did not re-derive and which six handoffs have
+now warned against incrementing by ordinal. **I did not read Core live at any point** — the
+dev-bench probe's state is carried on leg 116's reading, `tasks/api/059` stays `open` rather than
+`blocked`, and the owner's `d0cf9a0` parks the bench queue regardless, so no bench unit was eligible.
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`); its buffer was neither read nor
+believed.
+
+**Budget:** PROCEED at the leg's start (weekly **10.2%** of a 90% cap, resets in ~158h) and PROCEED
+at this unit (**11.1%**), no 429. Wave **6** suggested; the **4-unit leg cap** is what bound this leg,
+not the budget and not scope spread.
+
+**Least sure about:** **whether "restore the cut" was right, or whether I have just re-inflated a
+decision somebody compacted on purpose.** `topology/048` squeezed decision 21 for a reason, and this
+unit put 54 of those bytes back on the strength of a count in a generated changelog file. The task
+made the choice mechanical — fits under cap, so restore — and mechanical is not the same as correct:
+the alternative reading is that `history/topology.md`'s "three times" was always the weaker of the
+two statements and should have been the one to move. I could not take that route from a `topology`
+worker's scope, which means the ownership map, not the merits, picked the direction of this fix.
+
+---
+
 ## 2026-09-16 17:05 — suite/039 the cut diagnostics are back in the corpus, and a reviewer settled an open question by answering it
 
 **Decided:** **three things, and (c) closes a question two legs left dangling.**
