@@ -97,6 +97,89 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 21:48 — outpost/024 a zero-defect sweep that found three things, and what that does to the standing doubt
+
+**Decided:** **one thing, and it is a reading of the sweep chain's own open question rather than a
+design call.** `embarch-outpost`'s eight plural-citation lines — the form every earlier `outpost`
+sweep censused with a grep that could not match it — came back **8 lines / 21 distinct decision
+instances / 0 wrong numbers / 0 false claims / nothing fixed in the code repo.** The branch in
+`embarch-outpost` carries no commit at all. The task's own estimate was "roughly 24" instances; the
+measured count is 21, and the worker said so rather than quietly adopting the estimate.
+
+**But it did not come back empty, and that is the entry.** It recorded three things that are not
+wrong numbers: (a) `Kconfig:93` sources its own "so when it left the ring has no bearing" sentence
+near-verbatim from decision **20** while citing 4 and 17, both of which are independently true;
+(b) `src/outpost_hooks.c` implements decision 25's GPIO-dispatch hooks, line for line, and never
+cites 25 anywhere in the file; (c) three headers write exactly one `../` before
+`embarch-doc/embarch-outpost/decisions.md` from two different depths, so at most one of the three
+resolves. **I filed all three as `tasks/outpost/025`** — the `topology/051` precedent, one day
+old: a finding that lives only in a worker's report is a finding nobody acts on. The worker was
+right to leave each of them; "not this task's mandate" is a reason to file, not a reason to drop.
+
+**On item (c) the task says explicitly not to fix it.** `tasks/doc/055` — settle the cross-repo
+citation form — is `Owner: required` and open, and these three paths are an instance of that
+question. Depth-correcting them to a form the suite later rejects is worse than leaving them
+inconsistent, because the wrong form then reads as deliberate.
+
+**So the standing doubt gets a third answer.** Two handoffs have now asked whether zero-defect
+sweeps mean a clean corpus or a blind census. This unit says **neither**: the file was clean *of
+wrong numbers* and carried three real gaps, because "does the number resolve" and "is the citation
+complete" are different questions and only the first has ever been swept for. `tasks/outpost/025`
+asks its worker to report back into that argument by name, since nothing else is measuring it.
+
+**Merged:** `agent/outpost/024-plural-citation-recheck` — **doc `b685a1e`; code: no SHA, because
+there is no code commit.** The branch in `embarch-outpost` points at the same commit as its base,
+`8f6e667`, which is `origin/main`. **That is the whole revert story: there is nothing to revert on
+the code side, and `b685a1e` is the only handle.** Gate re-run by me on the merge result: in
+`embarch-doc`, `check-docs.py` **11/11** via the wrapper; `check-ownership.py --scope outpost` OK on
+2 doc paths; `check-client-names.py --repo` clean against 7 denylist entries. **`embarch-outpost`
+has no `Cargo.toml`** — it is a Zephyr C module, so the cargo half of §10 selects nothing; what
+*does* apply ran green in the worker's tree, `tests/decoder_unit.py` **31 tests OK** and
+`tests/vocab_check.py` PASS with its sibling-repo half SKIPped. The doc branch needed a rebase onto
+`6c0384b` first, since `ui/062`'s fold had moved `main` under it.
+`changelog.d/outpost-plural-citation-recheck.changed.md` consumed into `history/outpost.md` with
+`--only`; **29 of the owner's own fragments left pending**, untouched. No `status.d/` and no
+`features.d/` fragment.
+
+**Blocked:** nothing. `tasks/outpost/024` closed and removed in this fold; `tasks/outpost/025` filed
+in the same commit.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written. **This review had an unusual job and it is worth naming:
+the diff was a verification report, not a change, so the only failure mode available was a false
+all-clear.** It re-derived three of the eight lines independently — `outpost_ring.c`'s CAS-on-head
+and `gap_dropped`/`note_drop` against decisions 3 and 5, `CMakeLists.txt:126`'s marker-ID,
+`_k_thread_obj_*` DWARF join and `_sw_isr_table[]` resolution against 6/7/8, and `Kconfig:93`
+against 4 and 17 — and agreed with both judgement calls, having grepped every `decision` mention in
+`outpost_hooks.c` (lines 10, 58, 126, 218; none is 25) rather than taking the worker's word for the
+absence. It also checked the commit message against the task file's Result section for residue and
+found none.
+
+**Hardware debts:** **none created, and one class restated rather than added to.** Nothing here was
+built, flashed, or run on a board — no probe, no live Core, no study, no DUT — and the code branch
+is empty, so there is not even a comment change to carry. **The `west`-gated half of
+`tests/run-all.sh` and the three Zephyr build legs did not run**, because there is no `west` and no
+Zephyr SDK in this sandbox; that is the standing `embarch-outpost`/`embarch-dev-bench` toolchain
+debt, restated, and this unit could not have added to it since it changed no firmware. The
+dev-bench probe is still unplugged — Core's `status` returned `"probes": []` live at this leg's top
+— so `tasks/api/059` stays `open` for the tenth consecutive leg, the owner's `d0cf9a0` still parks
+the rest of the bench queue, and `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`).
+`core/015`'s native Windows build is untouched by this unit.
+
+**Budget:** PROCEED — weekly **22.0%** of a 90% cap, resets in ~153h, no 429. Wave **6** suggested,
+**4** dispatched against a 4-unit leg cap.
+
+**Least sure about:** **whether `tasks/outpost/025` should exist at all, or whether I have just
+converted a good worker's honest margin notes into queue weight.** Each of the three is genuinely
+small, and item (3) is filed explicitly as "do not fix this yet". The argument for filing is one
+day old and came from `topology/051`, which was exactly this shape and turned out to close a
+sentence for good. The argument against is that a queue which absorbs every completeness gap a
+careful reader notices will eventually be all margin notes, and nobody is measuring that ratio
+either.
+
+---
+
 ## 2026-09-16 21:46 — ui/062 the same sentence, twice in one evening, and this time about the relationship
 
 **Decided:** **one thing, and it is what "fix" meant here.** `embarch-ui/src/study_designer.rs`
