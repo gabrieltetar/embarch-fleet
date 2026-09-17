@@ -97,6 +97,113 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 16:15 — api/110 the suite stops saying two things about one condition, and "plug it in" stops being advice for five causes it cannot fix
+
+**Decided:** **`embarch-api` decision 76 — match `embarch-core`'s wording rather than invent a second
+term — and I accept it.** This is the downstream half of `core/077`, which this morning collapsed six
+causes into one `kind: "not_attached"` and changed Core's own plain-text lead to *"probe
+unavailable"*. `embarch-api`'s `validate` tool and CLI command were still appending a fixed *"— plug
+it in; this is not a topology mismatch"* to every such result, which is **false for five of the six
+reachable causes** (probe held open by another process, permission denied, half-wedged probe,
+board unpowered, attach or core-select or hardware-ID-read failure) — and `mismatch.reason` already
+carried the correct instruction for each, two clauses away in the same message.
+
+**I gave this worker three defensible wordings and said I was not leaning, and this time it took the
+one the note listed first.** That is worth saying plainly, because the last two units went the other
+way and I recorded both: a dispatch note that does not lean is not a note that gets overruled, it is
+a note that leaves the choice where it belongs. Its reasoning for matching Core: keeping "not
+attached" would still be wrong for five causes even with the bad advice removed, and qualifying it
+would coin a second term for a condition Core has already named once. Decision 76 records both
+rejected alternatives.
+
+**It also fixed two things it was not asked to and was right to.** `src/tools.rs`'s
+`#[tool(description = …)]` and `src/main.rs`'s `Validate` CLI variant both still described the
+condition as *"ordinarily just unplugged"* — the same false claim as the message, at the two places
+an operator reads *before* hitting the error. Leaving those would have fixed the symptom and kept
+the cause. **`kind`'s wire value is untouched and stays `"not_attached"`**, which the reviewer
+confirmed independently.
+
+**One site deliberately not fixed, and now checked rather than taken on trust.**
+`TopologyMismatchError`'s own `Display` impl in `crates/embarch-core-client/src/client.rs` still
+reads *"probe not attached: {reason}"*. The worker declined it as out of the task's named scope and
+claimed no path reaches it. **I did not accept that claim and asked the reviewer to verify it**,
+because a `Display` impl is reachable by any `{}` or `.to_string()`, including inside `anyhow` chain
+formatting — not only by an explicit fallthrough. It held: `client.validate()` is the only
+constructor, it has exactly three callers, and both live ones `downcast_ref` with exhaustive arms
+that format individual fields. **With one nuance the reviewer found and I am keeping**: the crate's
+own unit test `not_attached_and_mismatch_render_distinct_leads` *does* call `.to_string()` on a
+`not_attached` instance, so "no code path reaches it" is true of production code and not of the
+crate. Inert — the assertions do not check exact wording — but the next person to read that test
+will see the old term and should know it is known.
+
+**Merged:** `agent/api/110-not-attached-advice` (code **`3b1d225`** in `embarch-api`, doc
+**`5cf0132`**). Full gate run by me on the merge result: `cargo build --all-targets` clean,
+`cargo test` **all suites green (64 across the crate, 46 in the largest)**, `cargo clippy
+--all-targets -- -D warnings` clean, `check-client-names.py --repo` clean against 7 denylist
+entries; `check-ownership.py --scope api --code-repo` OK (3 paths, whole-tree ownership),
+`--scope api` OK on the doc branch's 5 paths against derived base `3a08d7c`; `check-docs.py`
+**11/11** on the merge result. `changelog.d/api-not-attached-lead-wording.fixed.md` consumed into
+`history/api.md`; **29 of the owner's own fragments left pending**, untouched. No `status.d/` and no
+`features.d/` fragment. **`embarch-api/decisions/failure-reporting.md` crossed into reserve on
+decision 76 — 11,578/12,288 B (94.2%, 710 B left)** — and the worker filed the debt in the same
+commit as `tasks/api/111-compact-api.md`, `In flux: yes`, on the reasoning that the `validate`
+kind/reason thread has taken three amendments this month (71, 73, 76).
+
+**No test was added and the worker said so out loud.** It checked `tests/` and both files'
+`#[cfg(test)]` modules, found nothing asserting the literal wording of any of `validate`'s three
+error arms, and judged a mock-`503` harness disproportionate to a wording fix. The reviewer agreed
+and declined to file the absence. **I agree too, and I want the shape noted rather than the
+conclusion**: a worker that says "I did not add a test, here is what I checked and why" is giving
+the reviewer something to disagree with, which is the opposite of the silence this log usually has
+to reconstruct.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written. It answered all five directed checks by re-deriving rather
+than agreeing: it enumerated every construction and call site of `TopologyMismatchError` to settle
+the `Display` question, read decision 71 whole and quoted the sentence that remains true after 76,
+checked `surface.md` 16/50 and found them about the unrelated retired `error_kind`, and searched
+`embarch-decision-reversals.md` for anything 76 might be re-proposing. **One real limitation in my
+own spawn prompt, which is mine and not the reviewer's:** check 4 asked whether the *suite* is now
+consistent, and I gave it worktree paths for `embarch-api` and `embarch-doc` only — so it grepped
+`embarch-ui`'s and `embarch-umbrella`'s **docs** and said plainly that it could not grep their
+source. **It flagged that as unverified rather than calling it pre-existing, which is exactly
+right**, and it is the second consecutive leg where a reviewer's coverage was bounded by which
+absolute paths I handed it. A cross-repo consistency check needs cross-repo paths in the prompt.
+
+**Hardware debts:** **none created, and none could be.** Two format strings, two doc comments, one
+decision entry and two task files; nothing executed against a board, no probe, no live Core, no DUT.
+**One inherited debt this unit extends, and it is worth stating because it is now two units wide:**
+`topology/058`'s debt — that the five widened alerts have never been rendered by a live Core's
+`POST /validate` — already covered `core/077`'s `"probe unavailable"` lead, and now covers
+`embarch-api`'s matching lead as well. **So the operator-facing text for a stuck-but-attached probe
+has now been rewritten twice, in two repos, and no human has ever seen either version against real
+hardware.** Free the next time a probe is physically attached and stuck; needs no dedicated bench
+session. `core/015`'s native Windows build debt is unaffected — this unit does not touch
+`embarch-core`. Standing debts unchanged: `tasks/api/059` still `open` — **not `blocked`** — with
+both boards unplugged, a **twenty-first** consecutive leg; `fleet-hardware.py --refresh` still
+crashes (`tasks/doc/041`) and its buffer still claims both boards attached, so **do not plan a bench
+unit off it**; the bench queue is still parked by the owner's `d0cf9a0`; `api/108` remains
+dispatchable and uncloseable in this environment; `umbrella/037` check 13, `umbrella/033`'s check-17
+arms, umbrella check 5's permission-denied probe, `embarch-ui`'s 18-record stale prefix and the
+`embarch-outpost`/`embarch-dev-bench` toolchains all untouched.
+
+**Budget:** PROCEED — weekly **43.4%** of a 90% cap, resets in ~135h, no 429. Wave **6** suggested;
+the **4-unit leg cap** binds, and this is unit 2 of 4 by dispatch order though the third to fold.
+
+**Least sure about:** **that "probe unavailable" is better for the one case it is now vaguer
+about.** Five of six causes are better served; the sixth — a board that is simply unplugged, which
+is also the most common — used to be told "plug it in" and is now told the probe is unavailable and
+handed `reason`. That is more honest and less directive, and `core/077`'s entry raised the identical
+doubt about Core's half this morning. **Two repos have now made the same trade on the same argument
+and nobody has tested either on a person.** Second, smaller: the crate's own test still renders the
+old lead, which is inert today and is exactly the kind of thing that becomes a citation for "the
+suite says not attached" a month from now.
+
+---
+
 ## 2026-09-17 16:06 — core/080 decision 65 stops claiming a direction of error it never showed, and the number collision recurs on schedule
 
 **Decided:** **that a reviewer's precision finding against a landed decision goes through the queue, and that the worker's choice of the cheaper of two routes was right.** `core/076`'s reviewer
