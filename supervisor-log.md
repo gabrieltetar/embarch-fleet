@@ -97,6 +97,82 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 21:04 — api/105 the sentence `api/104` signed off as true, corrected
+
+**Decided:** **two things, and the second is a correction to my own reading rather than to the
+work.**
+
+**(a) THE ONE REAL DEFECT THIS SWEEP CHAIN HAS PRODUCED IS FIXED.** `api/104`'s reviewer found
+that `embarch-api`'s `crates/embarch-core-client/src/client.rs:407-413` asserted the round-trip
+wire-pinning tests were *retired with the types they pinned*, citing `embarch-api` decision 72 —
+which says in its own words that they were **kept and re-scoped**, "from 'our copy matches theirs'
+to 'the wire has not moved under a deployed Core'". I drained that drop as `tasks/api/105` at the
+top of this leg and dispatched it. The block now says what decision 72 says: the *comparison* the
+old tests performed is gone, because there is one type instead of two, but the tests themselves
+stay. The decision numbers in that block (37, 38, `embarch-topology` 31) were correct and were left
+alone; the true claim that `suite/035` retired the mirrored **types** was left alone. Decision 72
+itself was not touched — it was already right.
+
+**(b) I MISREAD A DIFF FROM A STALE BASE, AND THE REVIEWER IS WHAT CAUGHT IT.** After the merge I
+diffed `1b35704..b523953` in `embarch-api` and found a `src/main.rs` comment change the worker had
+not reported; I investigated it, judged it sourced, and flagged it to the reviewer as a
+worker-unreported edit. **It is not this unit's change at all.** `1b35704` was the *local*
+checkout's stale `main`; `origin/main` was already at `37cc081`, which is `api/103`'s landed
+`main.rs` commit, and the `--ff-only` merge simply brought both forward. My pre-merge ownership
+check used `origin/main...` and correctly reported **one** path. **The lesson for my successor is
+narrow and mechanical: after `git fetch`, diff a merge against `origin/main`, never against the
+local `main` of a checkout your leg has not advanced** — it is the same stale-base failure
+`leg.md` already documents for reviewers, arriving through the supervisor's own hands instead.
+
+**Merged:** `agent/api/105-pinning-tests-kept-not-retired` (code
+`b5239530db4f43d16ffdf117f454bea762413600`, doc `f89913e984f61efd4ed14002fc65b3c16e0cf2eb`). Both
+SHAs are the only revert handles. Gate re-run by me on the merge result: in `embarch-api`,
+`cargo build --all-targets`, `cargo clippy --all-targets -- -D warnings` green and
+`cargo test --workspace` green across **13 test binaries**; in `embarch-doc`, `check-docs.py`
+**11/11** via the wrapper; `check-ownership.py --scope api` OK on 2 doc paths and OK on the code
+branch; `check-client-names.py --repo` clean against 7 denylist entries.
+`changelog.d/api-client-rs-pinning-tests-comment.fixed.md` consumed into `history/api.md` with
+`--only`; **30 of the owner's own fragments left pending**, untouched. No `status.d/` and no
+`features.d/` fragment.
+
+**Blocked:** nothing. `tasks/api/105` closed and removed in this fold.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written, not predicted — which the two previous entries in this
+log both got wrong in the same leg and corrected afterwards. It independently re-traced the
+`main.rs` comment to `dc2b2d83`'s own commit message and to `embarch-api/spec.md:62`'s constants
+table ("[measured 2026-08-24] 64 MiB overflowed on a real GATT-heavy `StudyResult`"), confirming
+there is no invented rationale, and it is the reviewer — not me — that identified `37cc081` as
+`api/103`'s commit and so unpicked my stale-base misreading. It also checked
+`embarch-decision-reversals.md` and `reversals/rows-51-72.md` for anything re-proposing a rejected
+alternative around decision 72 and found nothing.
+
+**Hardware debts:** **none created, and the standing recount is still owed.** This unit is one
+comment block in a Rust source file; nothing executed, no board, no probe, no live Core, no route
+called. `core/015`'s native Windows build is **untouched by this unit** — `embarch-api`, not
+`embarch-core` — and the 2026-09-12 handoff's ask, to recount that tally from commits rather than
+propagate an ordinal from the previous unit's own claim, is **still unpaid for the second leg
+running**. No hardware was touched anywhere in this leg so far and Core has not been read live, so
+`tasks/api/059` stays `open`, not blocked, for the ninth consecutive leg; the owner's `d0cf9a0`
+still parks the bench queue and `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`).
+`umbrella/037` check 13, `umbrella/033`'s check-17 arms, umbrella check 5's permission-denied
+probe, `embarch-ui`'s 18-record stale prefix and the `embarch-outpost`/`embarch-dev-bench`
+toolchains all carried unchanged.
+
+**Budget:** PROCEED — weekly **19.9%** of a 90% cap at the leg's top, resets in ~154h, no 429. Wave
+**6** suggested, **3** workers dispatched.
+
+**Least sure about:** **whether filing this as an `api` task rather than fixing the sentence myself
+was worth a whole worker slot.** It was a seven-word rewording in one comment block, and I spent a
+dispatch on it. The argument for the worker is that the previous leg explicitly declined to drain
+this drop by hand on the grounds that it wanted "a worker and a scope", and that the last three
+supervisor-hand fixes are already on the standing list of things nobody has reviewed together. The
+argument against is that a wave of 6 with 7 dispatchable tasks was not short of slots, and this one
+bought a gate re-run of a comment. I went with the previous leg's stated intent over my own read.
+
+---
+
 ## 2026-09-16 20:50 — core/068 the census gap under the census gap: a citation that wraps is invisible to every sweep this suite has run
 
 **Decided:** **three things, and the first one is the most valuable output this sweep chain has
