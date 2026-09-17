@@ -97,6 +97,107 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 18:30 — topology/046 three real defects outside `src/`, and a citation that was wrong the day it landed
+
+**Decided:** **four things, and (c) is a mistake of mine the next leg should not repeat.**
+
+**(a) The "outside `src/`" sweeps are where the yield is, and this is now the second repo to show
+it.** `topology/040` swept `src/` — 103 citations, 3 false sentences, **zero wrong numbers**. This
+unit swept the three files that sweep's directory-shaped scope had excluded and found **21 instances,
+2 wrong numbers, 1 false sentence** in a fifth of the volume. `core/066`, same leg, same shape:
+9 instances outside `src/`, 3 defects. **A sweep scoped to a directory is a sweep that will miss a
+manifest**, and manifests are where the "why is this crate shaped like this" prose lives — which is
+exactly the prose a later decision falsifies.
+
+**(b) One of the two wrong numbers was wrong from the day it was written, and that is a new failure
+shape.** `bin/main.rs` cited `embarch-core/decisions/surfaces.md:17` for "races Core's lock with no
+queue and no message". That content moved to `embarch-core/decisions/enrollment.md:10` when the file
+split on 2026-09-11 — **two days before the citation was written** (`topology/036`, 2026-09-13,
+`e51f7ed`). The repo, the path and the relative depth were all correct; **the line number was the
+defect**, and a wrong line number lands the reader on a real sentence about something else rather
+than breaking a link visibly. Nothing in the suite can check this: `check-decision-refs.py` resolves
+decision *numbers*, walks `*.md` only, and never leaves the doc repo. I have written this up as a
+**fourth defect family in `tasks/doc/055`** — the open, owner-reserved question about cross-repo
+citation form — with the concrete question of whether a `:line` suffix should be permitted at all.
+
+**(c) I DELETED THE REVIEWER'S WORKTREE WHILE IT WAS STILL RUNNING.** I cleaned up
+`.worktrees/embarch-topology/046-citation-sweep-outside-src` as soon as the branches landed, which
+is what `.claude/leg.md` says to do — and the reviewer I had spawned at the merge, and had told to
+read that exact absolute path, went back for `bin/main.rs` context and found it gone. It recovered on
+its own with `git show <SHA>:bin/main.rs` and said so plainly, so no review was lost. **But the
+cleanup rule and the reviewer-paths rule are in tension and nothing says so**: a reviewer outlives
+its unit's merge by a minute or two, and the worktree is the thing I hand it. The safe order is
+**collect the reviewer, then delete the worktrees** — which is already the order the fold implies,
+because the `**Reviewer:**` line has to be collected before the entry is written. I did the cleanup
+early to overlap it with the wait, and that was the error.
+
+**(d) I read the code diff before merging even though `embarch-topology` is not why.** It *is* in
+§10's shared-crate list (`embarch-api`, `embarch-core`, `embarch-ui` and `embarch-umbrella` all link
+it), so the rule applied — but I would have read this one anyway, because two of its three fixes
+repoint into *another repo's* decisions and one rewrites a user-facing README's account of file
+permissions. I verified topology decision 27 is genuinely the clear-flags decision and that
+`decisions/storage.md` decision 23 states verbatim that "admin-owned" was *"the original wording's
+error, corrected 2026-09-07"*, then handed the reviewer only the parts I had **not** checked. That
+split is worth keeping: it stopped the reviewer re-deriving what I had already settled.
+
+**Merged:** `agent/topology/046-citation-sweep-outside-src` (code `9a8de54`, doc `b940389`). Both are
+the revert handles. Gate re-run by me on the merge result: `cargo build`, `cargo test`, `cargo clippy
+--all-targets -- -D warnings` green in `embarch-topology`; `check-docs.py` **11/11**;
+`check-ownership.py --scope topology` OK on 2 doc paths, `--code-repo` OK on 2; `check-client-names.py
+--repo /home/gabriel/Github/embarch/embarch-topology` clean against 7 denylist entries. Branch
+rebased onto `main` once before the `--ff-only`.
+`changelog.d/topology-citation-sweep-outside-src.fixed.md` consumed into `history/topology.md` with
+`--only`; **29 of the owner's own fragments left pending**, untouched. No `status.d/` and no
+`features.d/` fragment.
+
+**The three fixes:** bare `decision 20` → `decision 27` in `SetDevBenchLink`'s doc comment (the
+clear-flags content is 27's, near-verbatim; 20 covers only role uniqueness and the guessed-interface
+heuristic); `embarch-core/decisions/surfaces.md:17` → `enrollment.md:10` per (b); and `README.md`
+dropping *"admin-owned"* for the shared data directory, since only `embarch-core`'s token **file** is
+`icacls`-locked and the directory keeps `ProgramData`'s default ACL. The `Cargo.toml:97` dated claim
+(`bin/ui.rs` retired 2026-08-24, decision 5) was **confirmed against `git log` (`7d13781`)**, not
+assumed — which is the check `study-designer/049` and `api/097` both showed was worth making.
+
+**Blocked:** nothing. `tasks/topology/046` closed and removed in this fold. The mixed citation forms
+in `bin/main.rs` and its line-168 shipped user-facing string were left alone deliberately —
+`tasks/ui/038` and `tasks/doc/055` own that question and a sweep must not settle it in passing.
+
+**Reviewer:** no findings. It answered all three questions I put to it rather than restating the
+diff. **Line drift:** both surviving `file:line` citations resolve exactly today —
+`embarch-topology/decisions/enrollment.md:15` and `embarch-core/decisions/enrollment.md:10` each
+contain the sentence claimed, word for word. **The retired-decision anchor:** `enrollment.md:10` sits
+inside `embarch-core` decision 25, which is retired — but that decision's own prose opens *"Two
+lessons outlived it"* and the lock sentence is one of them, so the citation points at the paragraph
+that says the fact is still live rather than at a tombstone; it had no better anchor to propose and
+correctly called it a form question, not a contradiction. **README length:** three sentences
+replacing one is defensible because the old text asserted something both decision 23 and
+`embarch-core` decision 53 say is wrong, and a bare word swap would leave the reason unstated and
+invite the error back. Reversals index checked: nothing touching topology 20/23/27.
+
+**Hardware debts:** **none created.** Comments in one binary's source and two prose sentences in a
+README; nothing executed against a board, no probe, no live Core, no enrolment, no study. The unit
+*corrected* a statement about the nRF54L15DK's two-VCOM/interface-2 fact only by repointing to
+`embarch-dev-bench` decision 43, which already records it — **it measured nothing**, and the safe
+reading is that a comment was made to agree with a written record. `core/015`'s native Windows build
+is untouched: the code commit is in `embarch-topology`, not `embarch-core`, so it stays at leg 117's
+re-derived **40 commits since `1c1224e`**, not incremented by ordinal. **No hardware has been touched
+anywhere in this leg and I have not read Core live at any point.** `tasks/api/059` stays `open`, the
+owner's `d0cf9a0` parks the bench queue, `fleet-hardware.py --refresh` still crashes
+(`tasks/doc/041`) and its buffer was neither read nor believed.
+
+**Budget:** PROCEED — weekly **12.0%** of a 90% cap, resets in ~157h, no 429. Wave **6** suggested;
+the **4-unit leg cap** binds.
+
+**Least sure about:** **whether the expanded `Cargo.toml` and `README.md` comments are an improvement
+or just longer.** Both of this unit's prose fixes replaced a short wrong sentence with a longer right
+one, and `core/066` did the same thing in the same leg — a two-line comment became eleven. Each is
+individually justified, the reviewer defended the README one explicitly, and I agree with both. But
+four citation sweeps in two days have now all moved in the same direction, and nobody is watching the
+aggregate. A manifest whose comments outgrow its dependency list is a different problem from the one
+these sweeps were started to fix.
+
+---
+
 ## 2026-09-16 18:23 — study-designer/052 the first true zero in nine sweeps, and a reviewer that went and measured
 
 **Decided:** **three things, and (b) is the one I would point a successor at.**
