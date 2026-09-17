@@ -97,6 +97,105 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 22:55 — dev-bench/033 twelve labels that were right, one that was wrong, and the file the worker never opened
+
+**Decided:** **three things, and the third is the entry.**
+
+First, `app/src/` and `app/tests/` in `embarch-dev-bench` are **swept out.** 139 citation instances
+across the eight files `032` did not reach (grep `-o`, with `N/M` and `N-M` groups expanded):
+`main.c` 51, `ble_bridge.h` 34, `eap.h` 18, `study_ffi.h` 9, `dev_bench_log.c` 7,
+`dev_bench_log.h` 8, `README.md` 6, `dev_bench_log` test `main.c` 6. No follow-up sweep task filed
+and none owed.
+
+Second, **3 wrong numbers and 12 missing repo labels, 0 false sentences.** The wrong numbers were
+all the security cluster: `main.c:981` and `:1479` cited `embarch-study-designer` decision 50
+(`BleUnbond`) for `security_level`, which is decision 44 (`BleSecurity`) — the identical defect
+`032` found in `serial_protocol.c`, now confirmed at both predicted sites — and `:1377`'s section
+heading `decisions 50/51` became `44/50`, since 51 is `Study.dev_bench_log_level` and has nothing to
+do with a security section. **The most interesting correct call was a non-fix:** the worker
+relabelled two bare `decision 39` sites in `main.c` as `embarch-study-designer`'s while
+deliberately leaving other bare `decision 39` sites *in the same file* alone, because those resolve
+to this repo's own decision 39 about the runtime log level. Same number, same file, two different
+right answers, split by sentence. The reviewer verified both halves and they hold.
+
+Third, and this is why the unit needed a reviewer: **one of the twelve labels was wrong, and it was
+wrong in a way no amount of re-reading the label would catch.** `dev_bench_log.c:264`'s drop-counter
+comment — *"the same discipline the GATT transcript's own drop counter follows"* — was relabelled to
+`embarch-study-designer` decision 36. **Decision 36 contains no drop counter and no dropped-entry
+reporting at all** (I grepped its body for `drop` and `counter`: zero hits). The claim belongs to
+**`embarch-dev-bench`'s own decision 28**, which states it nearly verbatim: *"a dropped entry is
+counted and reported rather than leaving a transcript silently claiming to be exhaustive"* —
+same-repo, so it takes no label. **I fixed it in `4a1d67e`**, quoting decision 28's own sentence and
+saying explicitly why it carries no prefix.
+
+**What makes this worth recording rather than just fixing.** The worker's own report says it hunted
+for a better match and checked `capture.md` decisions 29, 40 and 42 and the `removed.md` tombstones
+before settling for *"plausible but not literal"*. **It never opened `dispatch.md`, which is where
+decision 28 lives.** So the failure was not judgement and not laziness — it was a search that
+stopped at the wrong set of files, and the hedge it produced reads exactly like the hedge a
+genuinely unmatchable citation produces. That is the second consecutive `dev-bench` unit where a
+reviewer overturned a *fix* rather than catching an unfixed defect.
+
+**One I deliberately left alone.** The sibling `TRUNC_MARK` comment in the same file got the same
+decision-36 relabel and the same hedge, and the reviewer declined to file it separately. I agree and
+went further than either: I read decision 36's body in full. It is about a capture window outliving
+its step and a streamed transcript, and the closest it comes is *"which is what lifts the cap"* —
+about the **number of entries**, not about a reader telling a truncated line's tail from content.
+So it is analogous and not literal, which is what both the worker and the reviewer said. **The
+original citation was worse** — a bare `design.md §3 decision 36`, which under the bare-form rule
+means *this* repo's decision 36, the hwinfo chip ID — so the relabel is an improvement over what was
+there even if it is not the right referent. Leaving a disclosed, improved-but-imperfect citation
+standing is the correct outcome; inventing a third guess to make it look settled is not.
+
+**Merged:** `agent/dev-bench/033-citation-sweep-eight` (code `fc74033`, doc `9221026`), **plus my
+own follow-up `4a1d67e`** — three SHAs, all three revert handles. The doc branch needed a rebase
+onto `0aaf493` first, since `study-designer/058`'s fold had moved `main`. Gate re-run by me on the
+merge result: in `embarch-doc`, `check-docs.py` **11/11** via the wrapper; `check-ownership.py
+--scope dev-bench` OK on 2 doc paths and OK on the code branch; `check-client-names.py --repo` clean
+against 7 denylist entries, re-run after my follow-up. Mechanical checks I ran myself rather than
+taking the worker's word for: no line over 100 columns in any of the three changed files (the one
+109-column line in `ble_bridge.h:360` is pre-existing and untouched), and `/*`/`*/` balanced per
+file, before and after my own edit. I read the whole code diff before merging.
+`changelog.d/dev-bench-citation-sweep-eight-files.fixed.md` consumed into `history/dev-bench.md`
+with `--only`; **29 of the owner's own fragments left pending**, untouched. No `status.d/` and no
+`features.d/` fragment.
+
+**Blocked:** nothing. `tasks/dev-bench/033` closed and removed in this fold.
+
+**Reviewer:** 1 finding — inbox/dev-bench-citation-decision28-mislabeled-as-36.md
+
+Collected before this entry was written, verified independently by me against decision 28's own text
+in `dispatch.md`, acted on in `4a1d67e`, and the drop deleted. Besides the finding it confirmed all
+12 repo labels by checking the *converse* for each — dev-bench's own 36 is the hwinfo chip ID, its
+own 39 is the runtime log level, and it has no decision 54 or 55 at all — and it re-derived the
+decision-39 split site by site.
+
+**Hardware debts:** **one, restated and not added to, and it is the largest untested surface this
+leg has touched.** `embarch-dev-bench` has no `Cargo.toml`, so the cargo half of §10 selects
+nothing, and this sandbox has no `west` and no Zephyr SDK — so neither a `native_sim` build nor the
+`app/tests/serial_protocol` ztest suite could be built. **28 changed lines of firmware compiled
+nowhere, plus my own 7-line follow-up.** Comment-only, which is the least dangerous way for that to
+be true, and still true. Standing `embarch-outpost`/`embarch-dev-bench` toolchain debt restated
+rather than added to. `core/015`'s native Windows build is untouched by this unit —
+`embarch-dev-bench`, not `embarch-core`. The dev-bench probe is still unplugged (`"probes": []`
+read live at this leg's top), `tasks/api/059` stays `open` for the twelfth consecutive leg,
+`d0cf9a0` still parks the bench queue, and `fleet-hardware.py --refresh` still crashes
+(`tasks/doc/041`).
+
+**Budget:** PROCEED — weekly **23.7%** of a 90% cap at the leg's top, resets in ~152h, no 429
+anywhere. Wave **6** suggested, **4** dispatched (the leg's unit cap).
+
+**Least sure about:** **whether "check the sibling files in the same decisions directory" is a real
+method fix or just this unit's postmortem.** The worker searched `capture.md` and `removed.md` and
+missed `dispatch.md`; a rule saying "grep the whole `decisions/` tree for the claim's own words
+before concluding no same-repo match exists" would have caught it in one command, and would
+probably also have caught `study-designer/058`'s find an hour earlier. I have not filed that as a
+task, because two instances in one leg is a pattern I noticed rather than one I measured, and the
+citation-sweep chain already carries five carried-forward method rules that nobody has audited for
+whether they are still earning their place.
+
+---
+
 ## 2026-09-16 22:46 — study-designer/058 a citation that resolved, was current, and was about something else entirely
 
 **Decided:** **one thing, and it is a new shape for this sweep chain.** `src/registry.rs`'s
