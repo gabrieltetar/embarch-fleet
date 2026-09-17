@@ -249,7 +249,11 @@ distinguish a correct fix from a wrong one whose tests were written from the sam
 extension, `new[k..]` on equality, distinguished rather than merged), and the three things the next
 worker owes: a plain-growth test, a steady-state non-republish test, and **decision 27 rewritten
 rather than patched**. **Both branches are pushed and left standing** — `embarch-ui` code `21a48de`,
-`embarch-doc` doc `dfe1d91` — because the diagnosis, the root-cause account and the repeat-case
+`embarch-doc` doc **`6ed4267`** (corrected after the fold: the worker reported `dfe1d91`, which is
+the same work before I rebased the branch onto `main`; `6ed4267` is what is on the remote) — and
+**that doc branch carries a stale copy of the task file**, rebased one commit before the fold that
+set it `blocked`, so merging it as-is would revert the whole specification. The task file says so
+too. Because the diagnosis, the root-cause account and the repeat-case
 tests are all correct and re-deriving them would cost a unit. The task says so in as many words.
 **The worktrees are removed but the branches are not**, so `fold-commit.py` will not prune them
 (they are not on `origin/main`) and the next leg must not read their presence as a live worker.
