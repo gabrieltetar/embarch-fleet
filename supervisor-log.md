@@ -145,7 +145,23 @@ with `--only`; **29 of the owner's own fragments left pending**, untouched. No `
 **Blocked:** nothing. `tasks/core/068` closed and removed in this fold; `tasks/doc/071` filed in
 the same commit.
 
-**Reviewer:** skipped (leg ended at its harness's hand-back before the reviewer reported).
+**Reviewer:** no findings.
+
+**CORRECTION, and it is the second one in this leg for the same reason.** This line too originally
+read `skipped (leg ended at its harness's hand-back before the reviewer reported)`, written while
+the reviewer was still running. It reported shortly after with **no findings**, having independently
+re-grepped all four wrapped sites, resolved every cited decision at the merge SHA, and confirmed the
+two "bare" reclassifications by reading the wrapped line above each one. **I made the same error
+twice in one leg** — once on `api/104`, where the prediction was wrong in the worse direction, and
+again here — and the pattern is worth naming for my successor: **under hand-back pressure the
+`**Reviewer:**` line is the field that gets guessed**, because it is the only one whose fact lives
+outside the supervisor's own tree. The rule already says collect it last and wait; what it does not
+say is that "the leg is ending" feels like a licence to skip the wait, and it is not one. One
+process note from the reviewer, correctly judged not to be a finding: the commit message names
+`inbox/doc-citation-census-grep-misses-line-wrapped-citations.md`, which does not exist at the merge
+SHA. That is the drop mechanism working as designed — `inbox/` is gitignored, so a drop lives only
+in the owner's checkout and is never in any commit — and the finding itself did materialise, as
+`tasks/doc/071`.
 
 **Hardware debts:** **one, carried and not created — and I am declining to state its ordinal.**
 This unit made no `embarch-core` commit at all, so `core/015`'s native Windows build gained nothing
