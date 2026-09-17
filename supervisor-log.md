@@ -97,6 +97,88 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 13:10 — umbrella/078 the user-level service is rejected, and the objection that killed it is weaker than the bullet said
+
+**Decided:** **`embarch-umbrella` decision 54, and it is a `no` that narrows rather than a `no` that
+restates.**
+
+The `open.md` bullet had stood as *"a user-level service needs no elevation on Linux or macOS but
+would not start before login, defeating decision 3. **Not weighed.**"* — the only host-side unweighed
+design question left in that file. The weighing, from decision 3's own text rather than a paraphrase:
+decision 3 requires *"if Core autostarts at boot **there is nothing for a human to start, ever**"*,
+stated unconditionally, so the requirement really is login-independent and the bullet's objection is
+the right shape.
+
+**What the unit added that the bullet did not have: who the before-login start is actually for —
+nobody currently documented.** Every consumer either spec describes (a human's own shell; an MCP
+client spawned inside that human's editor session) already presupposes a login. The case decision 3
+genuinely guards is a machine dedicated to Core where **nobody ever completes an interactive
+login** — and there a launch agent never starts at all, while a `systemd --user` unit needs
+`loginctl enable-linger`, which `setup` does not run. **The mixed answer dies on the same fact**:
+macOS has no lingering-session equivalent to switch to, so a Linux-only user-level mode would help
+only the platform that is not the problem. Reversal condition: a documented consumer needing Core
+running with zero logins since boot. **The system-level service stands, and the question is closed
+rather than re-deferred.**
+
+Two supporting calls I am content with. The `open.md` bullet was **deleted, not reworded** —
+`DOC-CONVENTIONS.md` treats every top-level `open.md` bullet as an open question with no "resolved"
+sub-state, so a bullet stating an answer would be a category error; the reasoning survives in
+decision 54, reachable through `decisions.md`'s routing table. And decision 54 went into
+`decisions/install.md`, where 3/4/5/14/21/25/28 already live, **not** into `decisions/bind.md`,
+which my dispatch note had put off-limits at 755 B.
+
+**Merged:** `agent/umbrella/078-weigh-user-level-service` (code **none** — `embarch-umbrella`'s
+branch carries **zero commits** over `origin/main`, verified by me with `git log
+origin/main..<branch>` and independently by the reviewer; this unit changed no source anywhere —
+doc `cb1875f`). Doc branch rebased onto `origin/main` and force-pushed; rebase and merge as separate
+calls. Pre-merge `check-ownership.py --scope umbrella --stdin` OK on 6 paths; post-merge
+`check-docs.py` **11/11**. `changelog.d/umbrella-user-level-service-weighed.decided.md` consumed into
+`history/umbrella.md`; **29 of the owner's own fragments left pending**, untouched. No `status.d/`
+fragment, and the worker justified that by grep rather than by omission — `embarch.md`, `suite/*.md`,
+`embarch-decision-reversals.md` and `embarch-glossary.md` mention none of "user-level service",
+"launch agent" or "before login", so nothing suite-level went false.
+
+**Blocked:** nothing. **`tasks/umbrella/079-compact-docs.md` filed by the worker in the same commit**,
+and it is owed: `embarch-umbrella/decisions/install.md` went **11,009 → 12,071 B of 12,288 (89.6% →
+98.2%, 217 B left)**, the deepest reserve in the suite now. There was no slack for a ~1,050 B
+decision entry anywhere in that file, and **filing the debt rather than squeezing the entry is the
+right trade** — a decision compressed to fit is how `embarch-api` filed one in the wrong topic file
+on 2026-09-05. `open.md` moved the other way, 4,127 → 3,954 B.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written, and again **only because I asked the agent for it
+directly** — see "least sure about". Directed on five checks and it re-derived all five at the merge
+SHA. It confirmed the decision-3 quote verbatim and confirmed there is no login qualifier anywhere
+in that entry, which is the whole hinge. On the central claim it went looking for the counterexample
+I most expected — **`wsl-host`** — and answered it correctly: that topology's Core is a Windows
+**system** service, i.e. decision 3's existing answer, not the user-level mode under debate. It
+**named its own scope limit** rather than overclaiming: it read `embarch-umbrella/spec.md` and
+`embarch-core/spec.md` and did not read `embarch-api`'s or `embarch-topology`'s, and said so. It
+also checked the `loginctl enable-linger` claim by grepping the code and reported it true
+**vacuously** — nothing user-level is implemented for `setup` to run it from — which is a sharper
+answer than the worker's and worth having on the record if this is ever revisited.
+
+**Hardware debts:** **none created, and none could be.** One decision entry, one deleted `open.md`
+bullet, one index row and a filed compaction task; no code anywhere, nothing built for a board, no
+service installed, no probe, no live Core, no flash, no study. The task forbade making this a
+hardware question and it was not made one. Standing debts unchanged from the entry below.
+
+**Budget:** PROCEED — weekly **37.4%** of a 90% cap at leg start, resets in ~138h, no 429. Wave
+**6** suggested; the **4-unit leg cap** binds.
+
+**Least sure about:** **that decision 54's central claim is true of the suite rather than true of the
+two specs anyone read.** Both the worker and the reviewer established "no documented consumer needs
+Core running with zero logins since boot" from `embarch-umbrella/spec.md` and `embarch-core/spec.md`;
+the reviewer explicitly did not read `embarch-api`'s or `embarch-topology`'s. The reversal condition
+is written to catch exactly that, so the decision fails safe — but a leg that wanted to be sure would
+have swept all four. Second, and now twice in one leg: **a reviewer's hand-back reached the listener
+session and not me, and what produced the line above was a `SendMessage` to the agent asking for its
+verdict.** That is `tasks/doc/042` again, the direct-ask route worked both times, and it is still not
+written down anywhere as a permitted collection route.
+
+---
+
 ## 2026-09-17 13:04 — suite/043 the reversals corpus records only the first of two decision-32 drifts
 
 **Decided:** **three things, and the first is the row itself.**
