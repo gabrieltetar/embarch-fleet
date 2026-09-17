@@ -97,6 +97,130 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 13:20 — topology/058 five silent failures in the board-identity gate start raising, and the residual gap is stated rather than papered over
+
+**Decided:** **`embarch-topology` decision 34 — route all five, not some of them — and unpark
+`tasks/topology/057`, which had been sitting on a condition that was already met.**
+
+`validate_known_timed` had **seven** failure points and only two called `raise` (which builds a
+`TopologyMismatch` and durably logs an `Alert`): probe absent from `Lister::list_all()`, and a
+hardware-ID compare that fails. The other five — `probe_info.open()`, `check_target_powered`,
+`.attach()`, `session.core(0)`, `hardware_id::read` — each returned a bare `anyhow::Error`: not
+downcastable, not logged to `alerts.jsonl`, and indistinguishable to `embarch-core`'s `POST
+/validate` from any other I/O failure in the suite. All seven raise now, each with a `reason` naming
+which step failed and why. **The case this was filed for — a probe that lists but will not open,
+because another process holds it or the OS denies permission or the J-Link is half-wedged — is the
+common one in practice and was the one with no structured answer at all.**
+
+**The count was wrong in the drop and the worker re-derived it**, as its dispatch note told it to:
+the original `inbox/` drop said "two of its five failure points" and then "the other three", in one
+paragraph, for a thing that is two of seven. Two and five and seven, confirmed independently by the
+worker and by the reviewer against `b96f758` and its parent.
+
+**The residual gap is the part I am most pleased with.** All five set `live_hardware_id: None` — the
+same value the pre-existing "probe not enumerated at all" branch sets — so `embarch-core`'s binary
+`kind` classifier (`"not_attached"` / `"mismatch"`, its decision 59) will read an attached-but-stuck
+probe as `"not_attached"`, which is a different operator action (close whatever holds the probe vs.
+check the cable). **The worker did not widen `live_hardware_id` or invent a field to carry the
+distinction**, on the reasoning that a shape change reaching every `TopologyMismatch` consumer
+belongs to the consumer that would use it. Decision 34 records the gap as known and out of scope,
+the module header says so, and the `TopologyMismatch::live_hardware_id` doc comment now says a
+caller wanting a structural answer to *"was the probe even there"* **cannot get one from that
+field**. That is the opposite of the failure `embarch-topology` decision 20 was written about.
+
+**`tasks/topology/057` unparked by me, and it is now the most urgent compaction debt on the board.**
+Its `**State:**` read *"unparks when `tasks/topology/056` lands, or is closed without touching
+`spec.md`"*; `056` landed this morning and `058` — the follow-up `056` deferred the behaviour
+decision to — has now landed too **without touching `spec.md` at all**, so both halves are
+satisfied. Its `**In flux:** yes` rested entirely on *"`056` is open against the same section"*,
+which is no longer true, so I set it to `no` with the reasoning written out. `spec.md` is at
+**9,826/10,240 B — 414 B left, the tightest reserve in the suite** — and it had been parked behind a
+condition nothing was watching. **The `058` worker spotted this and correctly declined to unpark a
+task its own dispatch note told it to leave alone; doing it is the supervisor's job.**
+
+**Merged:** `agent/topology/058-route-probe-open-failure-through-raise` (code `b96f758`, doc
+`c34532e`). **The leg's only unit with a real code diff, so the whole cargo gate was run by me on the
+merge result rather than taken on the worker's word, and run twice** — `embarch-topology` has a
+`hardware` feature and the changed function lives behind it: `cargo build --all-targets` clean both
+default and `--features hardware`; `cargo test` **15 passed** default and **80 passed** with
+`hardware`; `cargo clippy --all-targets -- -D warnings` clean both ways;
+`check-client-names.py --repo` clean against 7 denylist entries. `check-ownership.py --scope
+topology --code-repo` OK, `--stdin` OK on the doc branch's 4 paths. In `embarch-doc`,
+`check-docs.py` **11/11** on the merge result.
+`changelog.d/topology-probe-open-failure-raises.changed.md` consumed into `history/topology.md`;
+**29 of the owner's own fragments left pending**, untouched. No `status.d/` fragment.
+`decisions/alerts.md` went 6,067 → 9,151 B of 12,288, nowhere near reserve.
+
+**One ordering deviation worth flagging to the next leg:** I pushed the code merge to
+`embarch-topology`'s `main` **before** the doc branch merged, because the doc branch's first rebase
+had gone stale behind this leg's own `core/075` fold and `--ff-only` refused. The gap was about two
+minutes and the doc branch landed green; `.claude/leg.md` wants them landed together and the merge
+order it gives (shared crates, then consumers, then `embarch-doc`) makes this gap structural rather
+than accidental. **Rebase the doc branch immediately before the merge, not when the worker reports.**
+
+**Blocked:** nothing. **Two `inbox/` drops filed as tasks by me at the end of this unit**, so the
+queue carries them rather than the untracked directory: `tasks/core/077` (the paired `embarch-core`
+question decision 34 defers — whether `kind` needs a third value now that attached-but-stuck is
+reachable) and `tasks/ui/065` (retire `trace.rs`'s decode pipeline once `core/076` ships). **I filed
+`ui/065` as `blocked`, not `open` as the drop wrote it** — its own body says not to start before the
+route exists, and an `open` task with that body would enter `queue-status.py`'s dispatchable count
+and send a worker at a route that is not there. `inbox/` is empty again.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written; it answered both by hand-back and by the `SendMessage` I
+asked for in its prompt. It re-derived the 2/5/7 count at `b96f758` against its parent, read the
+whole function to confirm **no sixth silent path survives**, and checked for double-alerting — each
+new arm is a single `match` with no `.context()` chained after `raise`, and `raise` calls
+`alert::record()` exactly once. It confirmed decision 34 does not overclaim against decision 12, and
+that the five `reason` strings are distinguishable and honest — noting specifically that
+`check_target_powered`'s *"appears unpowered"* is hedged off an actual voltage reading rather than
+asserted.
+
+**On the missing test, which is the thing I most wanted challenged: it backed the worker, with a
+caveat I am recording.** The worker added **no unit test** for the five widened paths, arguing
+`raise` unconditionally calls `alert::record()`, which writes the real machine-wide
+`/var/lib/embarch/topology/alerts.jsonl` with **no test-time override** — the same reason
+`alert.rs`'s own `record_then_recent_round_trips` test gives. The reviewer verified that in
+`paths.rs` (hardcoded, no env override) and added the argument that settles it: **the two
+pre-existing `raise` arms have no direct unit test either, so this is the same untested surface
+widened, not new debt.** Its caveat, which I agree with: the *message-formatting* logic could have
+been tested in isolation from `alert::record`, and that is a nice-to-have rather than something to
+revert for.
+
+**Hardware debts:** **one, and it is genuinely new — the first this leg created.** `Hardware:
+verify-only` was the right call to *land* this, but the widened alert set has been exercised by
+nothing: confirming `embarch-core`'s `POST /validate` renders the five new alerts correctly needs a
+probe that is physically attached and genuinely stuck (held by another process, or permission-denied)
+against a live Core. **It is free the next time that happens and needs no dedicated bench session**,
+which is why it is a debt and not a blocker — but it is behaviour change on this crate's
+safety-critical gate with no automated coverage and no hardware confirmation, and `tasks/core/077`
+reads the same code without being able to close it either. Standing debts unchanged: `tasks/api/059`
+still `open` — **not `blocked`** — with the dev-bench probe unplugged, a **nineteenth** consecutive
+leg; `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`) and its buffer still claims both
+boards attached, so **do not plan a bench unit off it**; the bench queue is still parked by the
+owner's `d0cf9a0`; `core/015`'s native Windows build is measured unrunnable from WSL2 at all;
+`api/108` is dispatchable but cannot be closed by anything in this environment; `umbrella/037` check
+13, `umbrella/033`'s check-17 arms, umbrella check 5's permission-denied probe, `embarch-ui`'s
+18-record stale prefix and the `embarch-outpost`/`embarch-dev-bench` toolchains all untouched.
+
+**Budget:** PROCEED — weekly **37.4%** of a 90% cap at leg start, resets in ~138h, no 429. Wave
+**6** suggested throughout; the **4-unit leg cap** ends this leg, with **6 dispatchable across 6
+distinct scopes** left behind. Neither queue depth nor scope spread was ever the binding constraint.
+
+**Least sure about:** **that I unparked `tasks/topology/057` on my own reading rather than leaving
+it for a worker to argue.** The condition was met twice over and the reserve is the tightest in the
+suite, so the park was doing no work — but `In flux:` is supposed to be answered by the actor making
+the flux, and I am not that actor; I am the actor who noticed nobody was. If `spec.md` turns out to
+have another unit queued against it that I could not see, the honest state is `blocked` again and
+the next leg should not hesitate to put it back. Second, smaller: **the `--features hardware` half
+of this crate's gate is easy to skip and skipping it would have proved nothing** — the changed
+function is behind that feature, so the default `cargo test`'s 15 passing tests never touch it. That
+is not written down anywhere; a leg that ran only `cargo test` here would have landed a behaviour
+change on an untested-and-uncompiled path and reported green.
+
+---
+
 ## 2026-09-17 13:14 — core/075 `/load` will serve decoded per-lane spans, and the supervisor note that leaned the other way was wrong
 
 **Decided:** **`embarch-core` decision 64 — yes, serve them — and I am recording that this is the
