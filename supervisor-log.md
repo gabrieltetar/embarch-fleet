@@ -97,6 +97,85 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 17:29 — core/086 the two sentences 085's squeeze dropped are back, and one of them is deliberately not verbatim
+
+**Decided:** **that a restoration may correct tense and may not correct claim, and that the line
+between the two is re-derivable rather than a matter of taste.** `core/085` compacted
+`stream-index.md` in the same unit it added decision 66, and its commit message quoted **none** of
+its deleted hunks — which `DOC-COMPACTION-PASS.md` requires precisely so "carried in substance" can
+be checked rather than trusted. Two real claims went with it. Both are back. Residue 2 (the
+CSV-header pin's failure signature, *"and a host that inherited the arithmetic without the pin would
+be the same failure with a new address"*) is byte-for-byte. Residue 1 is not: the worker dropped the
+words **"until then"** from *"until then a change to `RecordKind`, a gap record's semantics, or the
+five-lies exclusion rules has to land in both files"*, on the ground that decision 66 has made the
+duplication permanent and a temporal bound under a heading saying there is no "then" would be a new
+falsehood rather than a restored truth.
+
+**I briefed the reviewer to re-derive exactly that two-word cut**, because it is the one place this
+unit could have quietly changed a claim while looking like a restoration. It did, independently,
+and came back agreeing: nothing in decisions 65/66 touches `RecordKind`, gap-record semantics or the
+five-lies exclusion rules, so the sync burden has no sunset and the cut removes a bound rather than
+a scope. **Keeping "until then" would have been the actual contradiction.** I am recording the
+directed-brief shape here because the last three handoffs have asked whether directed reviewer
+prompts buy anything over open-ended ones, and this is a clean data point in their favour: an
+open-ended reviewer had no particular reason to look at two words inside a sentence the diff shows
+as an addition.
+
+**What I did not do, and why it is the second time this leg's shape has come up.** The fix was two
+sentences and I could have made it myself at `core/085`'s fold. Leg 139 declined to, and said so in
+this file; I agree with leg 139. A supervisor rewriting a sub-project's decision prose at fold time
+is a habit whose cost is unbounded, and the routing cost is one leg.
+
+**One thing this unit could not close and correctly did not fake.** `DOC-COMPACTION-PASS.md`'s own
+tally of squeezes-that-quoted-nothing stands at three (`topology/017`, `study-designer/019`,
+`ui/011`); this is a **fourth** and the line is **owed, not written**. The worker trial-edited it,
+ran `scripts/check-ownership.py --scope core`, got `DOC-COMPACTION-PASS.md <- supervisor or owner
+only`, and reverted. That refusal is the ownership map working, and the debt is recorded in the task
+file's own Resolution section rather than only here — this file folds daily, and leg 138's handoff
+already recorded two owed items that survived in `supervisor-log.md` alone and were on a timer.
+**`DOC-COMPACTION-PASS.md` is not mine either** (`scripts/` and the locked procedures are the
+owner's), so I am not writing it, and the next actor who can should.
+
+**Merged:** `agent/core/086-restore-two-compaction-residues` (code `b6774e0` — **unchanged, the
+branch carries no code commits**, doc `e75618d0`). `embarch-core/decisions/stream-index.md`
+10,638 → 10,853 B (+215, cap 12,288, still clear of the 11,059 reserve line, so no new compaction
+task was owed). `changelog.d/core-stream-index-sync-residues.fixed.md` consumed into
+`history/core.md`; **29 of the owner's own fragments left pending**, untouched, via `--only`. Gate on
+the merge result: `check-docs.py` **11/11**, `check-ownership.py --scope core` clean on both
+branches (3 paths).
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**One thing the reviewer found that is not a finding and should not be lost:** decision **64** still
+quotes the *old* decision-62 language — "known to be temporary… until the queued follow-up" — which
+decision 66 has since made false in exactly the way this unit just fixed one file over. It predates
+this unit and contradicts nothing this unit did, which is why it was flagged as context rather than
+filed. **I filed it as `tasks/core/087`** rather than leave it in a reviewer transcript, because it
+is the same defect one paragraph away and a later reader of 64 gets the retired answer.
+
+**Hardware debts:** **none created, and none could be** — two sentences of decision prose in one
+markdown file; nothing built, nothing executed, no board, no probe, no live Core, no DUT. The
+`embarch-core` code repo is byte-identical to `main`. Carried unchanged and not added to:
+`core/015`'s native Windows build is **structurally unrunnable from this machine** (leg 139
+demonstrated it — `x86_64-pc-windows-gnu` is not an installed target and `-msvc` needs a Windows
+linker WSL2 cannot provide), `tasks/api/059` is still `open` on an unplugged dev-bench probe,
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`) and its buffer still falsely claims
+both boards attached — **do not plan a bench unit off it**.
+
+**Budget:** PROCEED at leg start — weekly **46.5%** of a 90% cap, resets in ~133h41m; **46.9%** at
+this unit's dispatch. Wave **6** suggested; the leg is running **4 workers at once**, one per
+dispatchable scope, which is the first time in several legs that the wave was not the binding
+constraint.
+
+**Least sure about:** **whether "no findings" from a reviewer I aimed at one specific sentence is
+worth what an open-ended read of the same diff would have been.** I traded breadth for depth
+deliberately and I would do it again on a diff this small, but the tally this log is accumulating
+cannot distinguish a directed clean read from an undirected one, and after this entry it now
+contains both without a marker. If that comparison is ever going to settle, the `**Reviewer:**` line
+is the wrong place to settle it and something has to record the brief as well as the verdict.
+
 ## 2026-09-17 17:14 — suite/044 the property suite decision 4 says it bought is now the one it actually bought
 
 **Decided:** **that suite decision 4 bought exactly one implementation of the outpost's *reduced
