@@ -97,6 +97,89 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 00:44 — topology/054 the third sibling of one wrong provenance clause, and the fourth left right
+
+**Decided:** **one thing, and it closes a three-unit shape in this crate.**
+
+`embarch-topology/src/hardware/hardware_id.rs:6`'s *"Formerly `embarch-core`'s own
+`hardware_id.rs`, moved here unchanged"* clause cited `(decisions 2, 4)` — topology's own, so both
+numbers read as this crate's — and neither records the migration. It now cites
+`` (`embarch-core` decision 22) ``, matching the shape `topology/052` gave `enrollment.rs` and
+`topology/053` gave `validate.rs`. **Decision 22's text is the same sentence as the file's own
+docstring**: *"the chip's own factory-burned ID read live over the debug port"*, then *"Moved
+wholesale into `embarch-topology`"*. That is the third and last instance of this shape here.
+
+**The fourth candidate was left alone, and that is the decision worth recording.**
+`src/hardware/port.rs` carries the *identical* `(decisions 2, 4)` citation for its own migration and
+is **correct as written**: decision 4 names *"the dev-bench port heuristic"* by that exact phrase,
+and no `embarch-core` decision documents that migration at all, so decision 4 is the only provenance
+record available for it. So the two neighbouring files now read differently from each other on
+purpose. The reviewer was asked specifically whether that asymmetry is right and independently
+confirmed both halves — decision 4's *"board-identity gate, its storage"* never says chip ID,
+factory-burned, readback or debug port, while it does say port heuristic verbatim. **The failure
+mode this chain guards against is a sweep that "fixes" the correct side**, and this unit is the
+clean case of not doing that.
+
+**Merged:** `agent/topology/054-hardware-id-citation` (code `2031278`, doc `de6b5bf`). No rebase
+needed — `main` had not moved since the claim. Gate re-run by me on the merge result, not on the
+branch: `cargo build --all-targets` clean, `cargo test --all-features` **85 passed** across three
+binaries, `cargo clippy --all-targets --all-features -- -D warnings` clean;
+`check-docs.py` **11/11** via the wrapper; `check-ownership.py --scope topology` OK on 2 doc paths
+and OK on the code repo; `check-client-names.py --repo` clean against 7 denylist entries. I read the
+full code diff — `embarch-topology` is a shared crate, which is one of the cases that requires it —
+and it is one comment line, no type, field, constant or wire touched.
+`changelog.d/topology-hardware-id-rs-migration-citation.fixed.md` consumed into
+`history/topology.md` with `--only`; **29 of the owner's own fragments left pending**, untouched. No
+`status.d/` and no `features.d/` fragment, so `suite/features.md` reassembled byte-identical.
+
+**One thing the next leg should know, because I cannot explain it.** My **first** `cargo clippy
+--all-targets -- -D warnings` in `/home/gabriel/Github/embarch/embarch-topology` printed
+*"error: could not compile `embarch-topology` (lib)"* with **no diagnostic at all** — I had run it
+under `-q`, which swallowed whatever it was, and I had chained it through `tail`, which masked the
+exit code so my own command printed `CLIPPY_OK` over a failure. It did **not** reproduce: two
+subsequent runs, one default-feature and one `--all-features`, both exited 0 with zero warnings, and
+the tests pass. I am recording it rather than dropping it because the near-miss is the interesting
+half — **`cargo ... 2>&1 | tail` reports the tail's exit status, so a red gate can print as green.**
+If a later leg sees an unexplained single-run clippy failure in this crate, this is a prior. **Do
+not pipe a gate command through `tail` and read `&&` as the verdict.**
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written, in about a minute. I scoped it to exactly the one changed
+line plus the `port.rs` question and told it not to re-audit the crate; it quoted `probes.md:18,20`
+and `consumer-boundary.md:9-11` against the two call sites, read `hardware_id.rs`'s actual
+FICR/UID/eFuse body to confirm the mechanism matches decision 22's words rather than inferring it,
+and grepped `embarch-decision-reversals.md` for this shape to check the fix is not a re-proposal of
+something already rejected. That last check was its own idea and is a good one.
+
+**Hardware debts:** **none created, and none could be** — one comment line in a Rust source file;
+nothing executed, no board, no probe, no live Core, no deploy. Standing debts unchanged and none of
+them touched: the dev-bench probe is still unplugged, so `tasks/api/059` stays `open` — **not
+`blocked`** — for a **fifteenth** consecutive leg; `fleet-hardware.py --refresh` still crashes
+(`tasks/doc/041`) and its buffer still claims both boards attached, so **do not plan a bench unit
+off it**; the whole bench queue is still parked by the owner's `d0cf9a0`; `core/015`'s native
+Windows build, `umbrella/037` check 13, `umbrella/033`'s check-17 arms, umbrella check 5's
+permission-denied probe, `embarch-ui`'s 18-record stale prefix and the
+`embarch-outpost`/`embarch-dev-bench` toolchains are all untouched by this unit.
+
+**Budget:** PROCEED throughout — weekly **28.0%** of a 90% cap at the leg's top, **28.4%** at this
+fold, resets in ~150h, no 429. Wave **6** suggested both times and **the queue, not the budget or
+the cap, is what bounds this leg**: 2 dispatchable tasks in 2 scopes against a wave of 6.
+
+**Least sure about:** **whether my own refill is the right answer to the previous leg's complaint or
+just a different groove.** Leg 131's handoff said plainly that four consecutive legs had spent their
+whole budget on prose about code, and that the queue looks the way it does because citation work is
+cheap to file rather than valuable. I agreed and filed `api/107` off a spec-versus-code read instead
+— a real §2 invariant (*"Timeout kills the process group"*) that is false on a shipped Windows
+target. But I found it by grepping one sub-project's docs for concrete claims, which is a method that
+will produce a steady supply of the same thing, and **nobody has compared what that class of unit
+is worth against the citation class it is replacing.** I also could not dispatch it this leg without
+first landing something, so the leg's shape was still set by what was already in the queue.
+
+---
+
 ## 2026-09-17 00:30 — dev-bench/034 the same number with two right answers in one repo, for the second time
 
 **Decided:** **two things, and the first closes the wrap-aware census in this repo.**
