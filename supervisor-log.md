@@ -97,6 +97,110 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 19:21 — umbrella/072 a release workflow that could never have built, found by reading a comment
+
+**Decided:** **four things, and (b) is a shipped-CI bug nobody was looking for.**
+
+**(a) 27 instances, 0 wrong numbers, 8 false sentences — the highest false-sentence count in this
+chain, and the first sweep where the two categories diverged completely.** Every decision number in
+this repo's five outside-`src/` files resolved and was on-topic. What was wrong was the **prose**,
+eight times. That inverts the pattern the chain has been running on: `study-designer`'s ten sweeps
+produced 15 wrong numbers against 3 false sentences. A repo whose numbers are all right and whose
+sentences are all stale is a different failure and probably wants a different sweep instruction —
+**worth saying to whoever writes the next batch of sweep tasks.**
+
+**(b) THE RELEASE WORKFLOW COULD NOT HAVE BUILT, AND A COMMENT IS WHAT GAVE IT AWAY.**
+`release.yml` carried *"unlike embarch-core/embarch-api, this crate has no embarch-study-designer
+dependency"* — flatly contradicted by `Cargo.toml` two directories away. **And the checkout list
+matched the false comment**: it checked out only `embarch-topology`, never `embarch-study-designer`
+and never `embarch-api` (needed for `crates/embarch-core-client`), so a real tagged release's
+`cargo build` would have died at path-dependency resolution. The worker added both checkout steps,
+mirroring the working `embarch-topology` step verbatim. **This is the strongest argument this log
+has for why comment sweeps are worth running at all**: nobody was auditing the CI, the comment was
+the only artefact a reader would notice, and fixing the sentence is what exposed the build.
+
+**It has never been run against a real tag push and cannot be** — releases are not the fleet's to
+do — so a careful read is the only check it will get before someone cuts a tag. I read it, and the
+reviewer independently verified the owner convention, the sibling `path:` depth against what
+`Cargo.toml`'s `../` expects, and the placement relative to `defaults.run.working-directory`
+(correct: that default binds `run:` steps only, not `uses:` checkouts).
+
+**(c) Three citations pointed at a file deleted in the four-file split, and the grep census could
+not see any of them.** `milestone-6.md §3.7`/`§3.8`, cited by file-and-section rather than by
+`decision N` — exactly the class `topology/046` flagged yesterday, now confirmed in a second repo.
+All three went to `embarch-umbrella` decision 14. **I asked the reviewer to check decision 14 covers
+each of the three claims separately**, because one decision cited for three different things is the
+shape that produces a resolving-but-false citation, and it verified each against 14's own text
+verbatim — the per-repo release workflow, the version-tested-set argument, and the
+`nullglob`/`pipefail` `ls`-pipeline bug, which decision 14 describes literally. Not a
+false-consolidation. (It also surfaced `tasks/umbrella/044`, a prior leg's note about decision 14
+being over-cited for an unrelated schema-skew claim — different case, already litigated, untouched
+here.)
+
+**(d) The README said the binary was unimplemented and it is ~12k lines of shipped code.**
+*"Status: bootstrap only. Every command reports itself unimplemented"* → *"Status: active."* I asked
+the reviewer to check the **new** claim as hard as the old one, because a README that overstates
+completeness is worse than one that understates it. It grepped for `unimplemented!`/`todo!` across
+`src/` (none), checked every `Command::*` arm dispatches to a real function, and matched the list
+against `src/main.rs`'s own module doc. It holds.
+
+**Merged:** `agent/umbrella/072-citation-sweep-outside-src` (code `c06897c`, doc `93ec72f`). Both are
+the revert handles. Gate re-run by me on the merge result: `cargo build`, `cargo test` (**225
+passing**, 0 failed), `cargo clippy --all-targets -- -D warnings` green in `embarch-umbrella`;
+`check-docs.py` **11/11**; `check-ownership.py --scope umbrella` OK on 2 doc paths, `--code-repo` OK;
+`check-client-names.py --repo /home/gabriel/Github/embarch/embarch-umbrella` clean against 7
+denylist entries. Doc branch rebased onto `main` once before the `--ff-only`. **I read the code diff
+in full before merging** — not because §10 required it (this is not a shared crate) but because the
+worker's report named a CI change, and a citation sweep that edits a release workflow is a sweep
+that has left its scope. I checked the two new checkout steps' repository owners against the real
+remotes (`gabrieltetar/...`, confirmed from `git remote -v` in both sibling repos) before accepting
+them. `changelog.d/umbrella-citation-sweep-outside-src.fixed.md` consumed into `history/umbrella.md`
+with `--only`; **29 of the owner's own fragments left pending**, untouched. No `status.d/` and no
+`features.d/` fragment.
+
+**Blocked:** nothing. `tasks/umbrella/072` closed and removed in this fold. Two things the worker
+deliberately left, both correctly: `CLAUDE.md`'s "Four files, not one" line omits `DOC-PROTOCOL.md`
+§6's optional `[Reference: interfaces.md]` clause even though this repo has one
+(`interfaces/doctor-chain.md`) — a **suite-wide template question across all eight repos**, not a
+single-repo sweep's call, and it is now written down here rather than only in that worker's head.
+And citation *form* was left to `tasks/doc/055`/`tasks/ui/038`.
+
+**Reviewer:** no findings. It answered all four questions by doing the work rather than restating
+the diff: read decision 14's body against each of the three repointed claims separately, grepped
+`src/` for unimplemented markers and matched the README's command list to `main.rs`'s module doc,
+verified the `Cargo.toml` path-dep claim and the two new checkout steps' shape independently of my
+own check, and grepped every `embarch_core_client::` use in `src/` to confirm the comment's claim
+that only `token_discovery` and `CoreConfig` are used — plus both of decision 20's amendment dates
+(2026-09-08 token half, 2026-09-10 `CoreConfig`) against `decisions/mirrors.md`. It called this the
+cleanest sweep in the chain.
+
+**Hardware debts:** **none created.** A manifest comment, a README, and two workflow files; nothing
+executed against a board, no probe, no live Core, no deploy, no study, and `doctor` was not run.
+`core/015`'s native Windows build untouched — this is `embarch-umbrella`, so it stands at leg 122's
+directly-counted **41 commits since `1c1224e`**. **No hardware has been touched anywhere in this leg
+and I have not read Core live at any point** — `tasks/api/059` stays `open`, not blocked, for the
+fifth consecutive leg; the owner's `d0cf9a0` parks the bench queue; `fleet-hardware.py --refresh`
+still crashes (`tasks/doc/041`) and its buffer was neither read nor believed. `umbrella/037` check
+13, `umbrella/033`'s check-17 arms, umbrella check 5's permission-denied probe, `embarch-ui`'s
+18-record stale prefix and the `embarch-outpost`/`embarch-dev-bench` toolchains all carried
+unchanged. **A new one, small and worth naming:** the `release.yml` fix above is unverifiable
+without cutting a real tag, which is the owner's action, not the fleet's.
+
+**Budget:** PROCEED — weekly **13.9%** of a 90% cap, resets in ~156h, no 429 anywhere in the leg.
+Wave **6** suggested; **4 dispatched, 3 landed, 1 refused**, so the unit cap bound the leg. Scope
+spread was the other binding constraint: 5 dispatchable tasks across 4 scopes against a wave of 6,
+which is why the refill gate fired at step 0.
+
+**Least sure about:** **whether "0 wrong numbers, 8 false sentences" means this repo's prose is
+unusually stale or that this worker counted differently from the other nine.** Nobody has defined
+the boundary between "a false sentence" and "a sentence I improved", and this unit's eight include a
+README status line, a user-guide link path and a dependency-comment expansion, which are three
+different kinds of thing. The reviewer verified each fix is *correct*; nothing verified they are
+*comparable* to the counts the other sweeps reported, and the chain has now been publishing a
+running tally for ten units as if they were.
+
+---
+
 ## 2026-09-16 19:14 — ui/059 I refused a green unit, because its fix traded a duplicate for a silent truncation
 
 **Decided:** **one thing, and it is the only unit in this log so far that was blocked on a
