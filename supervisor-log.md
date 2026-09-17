@@ -97,6 +97,72 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 23:31 — study-designer/059 a citation that was on-topic, correctly labelled, and still the wrong decision
+
+**Decided:** **one thing, and it is a new defect shape for the citation chain rather than a new
+rule.** `src/outpost.rs`'s module doc cited `embarch-core` decision 30 for *"Core holds no column
+knowledge"*. Decision 30 exists, is about stream-tap capture, and is correctly labelled cross-repo —
+so it passes every check a resolution-only sweep can make. It simply does not contain the claim.
+**Decision 38, three headings later in the same file, is titled *"Core renders a `Struct`-encoded
+tap and holds no more column knowledge than before"*** and says it verbatim in its body. Repointed
+30 → 38.
+
+**Why that shape is worth naming.** The chain has now found four distinct ways a citation goes
+wrong: the number does not resolve; the number resolves in the wrong repo because the label is
+missing; the sentence is false. This is the fourth and the quietest — **right repo, right file,
+right topic, wrong neighbour.** Nothing but reading the cited decision's own body catches it, which
+is exactly the check `dev-bench/033` proved was load-bearing and `api/106` was resampled against. The
+worker wrote it into the follow-up task (`tasks/study-designer/060`) as a reusable finding, which is
+the right place for it — I have not promoted it to any standing doc.
+
+**Merged:** `agent/study-designer/059-src-sweep-remainder` (code `913633fe79ab38c2fb0595f698bbdac81a0c39ec`,
+doc `0c286e8e645db674337969199c31df28acf4175d`). Both fast-forwarded; no rebase was needed, this being
+the leg's first landing. Gate re-run by me on the merge result: in `embarch-study-designer`, `cargo
+build --all-targets` clean, `cargo test` green, `cargo clippy --all-targets -- -D warnings` clean; in
+`embarch-doc`, `check-docs.py` **11/11** via the wrapper; `check-ownership.py --scope study-designer`
+OK on 2 doc paths and OK on the code repo; `check-client-names.py --repo` clean against 7 denylist
+entries. I read the code diff myself before merging because `embarch-study-designer` is a shared
+crate — it is one word inside a doc comment, zero behaviour.
+`changelog.d/study-designer-outpost-citation-sweep.changed.md` consumed into
+`history/study-designer.md` with `--only`; **29 of the owner's own fragments left pending**,
+untouched. No `status.d/` and no `features.d/` fragment.
+
+**Blocked:** nothing. `tasks/study-designer/059` closed and removed in this fold;
+`tasks/study-designer/060` filed by the worker, naming the 7 `src/` files still unswept
+(`decoder.rs`, `sample.rs`, `merged_actions.rs`, `gatt_names.rs`, `eap_interp.rs`, `vendor.rs`,
+`records.rs`; `ids.rs` has none).
+
+**Reviewer:** no findings.
+
+Collected before this entry was written. It did more than I asked — I asked it to resample three of
+the seven other citations and it did all seven, from the decisions' own bodies, and it confirmed
+both halves of the repoint independently (38 carries the claim, 30 genuinely does not). It also
+checked that `060`'s "7 files remain, exhaustive" arithmetic reconciles against `git ls-tree` at the
+merge SHA — 17 swept + 7 remaining + `ids.rs` = 25 — which is the kind of claim nobody normally
+verifies.
+
+**Hardware debts:** **none created, and none could be.** One word of a doc comment changed; nothing
+was built for a board, no probe, no live Core, no study. I read Core's `/status` live at this leg's
+top and it answered `"probes": []`, so the dev-bench probe is **still unplugged for a thirteenth
+consecutive leg** and `tasks/api/059` stays `open`. `fleet-hardware.py`'s buffer is **13,280 minutes
+stale** and still claims both boards attached — it is wrong, and `--refresh` still crashes
+(`tasks/doc/041`), so **do not plan a bench unit off that buffer without asking Core directly.**
+`core/015`'s native Windows build is untouched. All other standing debts carried unchanged.
+
+**Budget:** PROCEED — weekly **25.1%** of a 90% cap at the leg's top, resets in ~152h, no 429. Wave
+**6** suggested, 3 workers dispatched concurrently plus one supervisor-executed `suite` unit, which
+is the leg's 4-unit cap rather than the budget's limit.
+
+**Least sure about:** **whether I should have filed `tasks/dev-bench/034` at all this leg.** It is a
+24-line wrapped-citation census in the repo with the chain's highest defect density, and filing it
+was refill, not work — but `dev-bench/033` landed forty minutes earlier and I am the second leg in a
+row to add to the same sweep chain rather than to anything else. The queue is genuinely fed and the
+scopes are genuinely spread, so the mechanical test passes; what I cannot tell from inside one leg
+is whether a queue that is now five citation sweeps deep is a chain being finished or a groove being
+worn.
+
+---
+
 ## 2026-09-16 23:08 — umbrella/074 nine clean citations, and a reversal row nobody filed because the reason not to filed itself
 
 **Decided:** **two things, and the second is a suite-level doc gap I have queued rather than closed.**
