@@ -97,6 +97,130 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 13:59 — core/077 `not_attached` stays one value on purpose, and a lead that had started contradicting its own reason text is fixed
+
+**Decided:** **`embarch-core` decision 59's second amendment — no third `kind` value — and I accept
+it.** `embarch-topology` decision 34 routed five mid-attach failures through `raise()` this morning,
+all with `live_hardware_id: None`, so all five now land on `classify_topology_mismatch`'s existing
+`is_none()` arm: `kind: "not_attached"`, `503`, no `fix_it_url`, indistinguishable from a genuinely
+unplugged board. The worker weighed adding a third value and declined, on three grounds I checked:
+**every one of the six causes wants the same operator response class** (retry, non-destructive, none
+is an identity question because nothing was ever compared); **no consumer in the suite branches on
+`kind` in a way a finer split would serve** — the only consumer at all is `embarch-api`'s client
+crate, whose `is_not_attached()` is `self.kind == "not_attached"`; and **`reason` already carries the
+full distinguishing text** and every plain-text path relays it verbatim. A third value would be a
+wire change reaching `embarch-api`, `embarch-ui` and the user guide for a distinction nothing uses
+structurally.
+
+**This is the second time in two units that the cheaper answer was the right one and the dispatch
+note did not push for it.** I told this worker in as many words that both answers were legitimate
+and that I was not leaning either way, explicitly because `core/075`'s note leaned one way this
+morning and its worker was right to go the other. I would rather record that than let "the
+supervisor's note predicted the outcome" quietly become the norm.
+
+**One in-scope code fix, and it is the part of this unit that had actually broken.**
+`describe_topology_error` (`src/api.rs`) and `describe_gate_error` (`src/study.rs`) led every
+`is_none()` case with `"probe not attached for role …"` — which, for the five new causes, **directly
+contradicts the `reason` string printed two clauses later in the same message** (*"… is attached but
+could not be opened (permission denied) …"*). One message asserting both halves of a contradiction
+is worse than either half alone. Changed to `"probe unavailable for role …"` in both, neutral about
+attachment, letting `reason` carry the distinction as it always has; `"topology mismatch"` stays
+reserved for a live ID actually read and disagreed. **Two new regression tests**, one per call site,
+assert the lead does not contradict the reason. **`kind`'s wire value is untouched** — this is a
+plain-text lead, not a schema change, which is why it needed no announcement.
+
+**The gap it surfaced is filed, not fixed: `tasks/api/110`**, from the worker's `inbox/` drop.
+`embarch-api`'s `validate` tool and CLI build their own message and append *"— plug it in; this is
+not a topology mismatch"* to every `not_attached` result, which is now wrong advice for five of the
+six reachable causes. Correct cross-scope routing by the worker. **Note for whoever runs it: the
+suite currently says two different things about one condition** — Core's plain-text paths say
+"unavailable", `embarch-api` says "not attached" — and the reviewer confirmed that carries **no
+functional risk**, because nothing anywhere parses either lead as a string (`embarch-api` relays
+Core's body opaquely into `anyhow!("embarch-core returned {status}: {body}")`, and its own text is
+built from the JSON `kind`/`reason` fields). It is a wording inconsistency to settle, not a break.
+
+**A task-number collision I resolved by hand, and it will recur.** The worker filed its compaction
+debt as `tasks/core/078-compact-core.md`; my own refill sweep, running while it worked, had already
+taken `078` for `tasks/core/078-a-content-hash-on-status-…`. **Both are real tasks and neither is a
+duplicate** — the collision is two actors picking "next free number" against different views of
+`main` inside the same twenty minutes. I renamed the worker's to **`tasks/core/079-compact-core.md`**,
+fixed the one reference to it in `077`'s own body, and recorded the renumber in both files.
+`check-task-numbers.py` would have refused the merge, so this was a blocked fold rather than a silent
+corruption — but **the structural fact is that a supervisor refilling the queue mid-leg races its own
+workers for numbers**, and nothing warns either side. Worth a `tasks/doc/` entry if it happens again.
+
+**Merged:** `agent/core/077-validate-kind-stuck-mid-attach` (code **`6905c62`** in `embarch-core`,
+doc **`2c14f34`**). Full gate run by me on the merge result: `cargo build --all-targets` clean,
+`cargo test` **211 passed + 1** (including the two new ones), `cargo clippy --all-targets -- -D
+warnings` clean, `check-client-names.py --repo` clean against 7 denylist entries. `check-ownership.py
+--scope core --code-repo` OK, `--stdin` OK on the doc branch's 6 paths. `check-docs.py` **11/11** on
+the merge result. **The native Windows build `.claude/leg.md` asks for where `embarch-core` is
+involved was not run and could not be** — `core/015` has it measured as unrunnable from WSL2 at all;
+that debt is carried, not paid, and this unit's diff is two format strings and two tests, which is
+about as low-risk a Windows exposure as `embarch-core` changes get.
+`changelog.d/core-validate-stuck-mid-attach.decided.md` consumed into `history/core.md`; **29 of the
+owner's own fragments left pending**, untouched. No `status.d/` and no `features.d/` fragment.
+**`embarch-core/decisions/surfaces.md` went into reserve on this amendment — 11,253/12,288 B (91.6%,
+1,035 B left)** — and the worker filed the debt in the same commit, correctly, as
+`tasks/core/079-compact-core.md`, `In flux: yes`, `blocked`, **due 2026-09-24** on the reasoning that
+this is the file's second amendment inside a week.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written; hand-back **again misdelivered to the listener**, relayed
+by it — **all three of this leg's reviewers, three legs running.** It verified the refusal's
+load-bearing premise itself rather than accepting it, grepping `embarch-api` (including
+`crates/embarch-core-client`), `embarch-ui`, `embarch-umbrella` and `suite/` for `TopologyMismatch`,
+`not_attached` and `kind`, and confirmed the only consumer branches on the *field*, never on lead
+text. It traced the string change through `CoreClient::send`/`send_no_content` and confirmed nothing
+substring-matches the old lead. It read decision 59 whole after two same-day amendments and found
+them **sequential rather than conflicting** — `core/074`'s describes the pre-`topology/058` state and
+`core/077`'s narrates the transition — and found no sentence anywhere in `surfaces.md`,
+`interfaces.md` or `interfaces/topology.md` still asserting the old `500`/`502`-fallthrough as
+current. It also noticed, independently, that `embarch-topology` decision 34 had **already
+anticipated and deferred this exact question to decision 59**, which makes this unit the anticipated
+resolution of an open decision rather than a contradiction of a standing one.
+
+**One cosmetic thing it caught that is worth carrying:** `embarch-topology` decision 34's text names
+`tasks/core/076` as its paired follow-up, and the work actually landed as `core/077`. That is the
+same class of numbering drift as the `078`→`079` collision above — a decision citing a task number
+assigned before the queue settled. Nothing substantive disagrees, and I am **not** editing decision
+34 to fix it: it is another sub-project's decision file and a supervisor rewriting a landed decision
+for a cosmetic reason is exactly the move this log should not normalise.
+
+**Hardware debts:** **one, carried and not paid, plus one inherited that this unit widened
+slightly.** Carried: `core/015`'s native Windows build is still measured unrunnable from WSL2, so
+every `embarch-core` unit lands without it — this one's exposure is two format strings and two
+tests. Widened: `topology/058`'s own new debt — that the five widened alerts have never been rendered
+by a live Core's `POST /validate` — now also covers **this** unit's lead-text change, since the
+`"probe unavailable"` wording has likewise never been seen by an operator against a genuinely stuck
+probe. Both are free the next time a probe is physically attached and stuck and needs no dedicated
+bench session. Standing debts otherwise unchanged: `tasks/api/059` still `open` — **not `blocked`** —
+with both boards unplugged, a **twentieth** consecutive leg; `fleet-hardware.py --refresh` still
+crashes (`tasks/doc/041`) and its buffer still claims both boards attached, so **do not plan a bench
+unit off it**; the bench queue is still parked by the owner's `d0cf9a0`; `api/108` remains
+dispatchable and uncloseable in this environment; `umbrella/037` check 13, `umbrella/033`'s check-17
+arms, umbrella check 5's permission-denied probe, `embarch-ui`'s 18-record stale prefix and the
+`embarch-outpost`/`embarch-dev-bench` toolchains all untouched.
+
+**Budget:** PROCEED — weekly **40.9%** of a 90% cap at leg start, resets in ~137h, no 429. Wave
+**6** suggested; the **4-unit leg cap** binds.
+
+**Least sure about:** **that I accepted a user-visible string change on a safety-adjacent path with
+no hardware confirmation and no native Windows build.** The reviewer's evidence that nothing parses
+the lead is good and I believe it — but "nothing in *this suite* parses it" is a smaller claim than
+"nothing parses it", and the person who reads this message is an operator standing at a bench, not a
+program. `"probe unavailable"` is more honest than `"probe not attached"` and strictly less wrong;
+whether it is *clearer* to someone whose board is simply unplugged is a judgement nobody has tested
+on a human. Second, smaller: **I renumbered another actor's task file by hand mid-leg.** It was the
+only way to land the unit and I recorded it in both files, but it means a task file's number now
+differs from the number the worker that wrote it believed, and at least one decision in another repo
+already cites a task number that drifted the same way.
+
+---
+
 ## 2026-09-17 13:51 — study-designer/065 the citation-sweep chain ends clean, and for once the zero was independently re-derived rather than believed
 
 **Decided:** **that the nine-unit citation-sweep chain `study-designer/057`–`065` is finished and no
