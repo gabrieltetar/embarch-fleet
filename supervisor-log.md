@@ -97,6 +97,85 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 18:14 — ui/058 the four-deep chain closes, and the entry now sits exactly on its cap
+
+**Decided:** **three things, and (b) is mine to own.**
+
+**(a) I split ui/057's two inbox drops into two tasks rather than one, against that entry's explicit
+instruction.** `ui/057` said they *"must be filed as ONE task — a scope gets one slot"*, and then its
+own **Least sure about** doubted exactly that: one worker did two unrelated corrections under two
+byte caps and the harder got whatever attention was left. **One-task-per-sub-project is per *slot*,
+not per queue.** Filing two costs nothing, and it means `tasks/ui/059` — a real, reproducible
+`diff_new_lines` defect that may deserve a decision rather than a fix — gets an undivided slot
+instead of riding along behind a 12-byte restoration. `tasks/ui/058` and `tasks/ui/059` both landed
+in claim commit `d54f7e7`; only `058` ran this leg.
+
+**(b) MY OWN TASK FILE TURNED `main` RED, AND THREE WORKERS EACH REPORTED IT AS SOMEBODY ELSE'S.**
+`tasks/ui/058`'s Reserve section wrote *"per-decision 4,096 B cap"*, and `check-decision-refs.py`
+parsed that as a citation of **decision 4,096** — unresolvable, so the gate went red on `main` at my
+claim commit `019181c`. The `study-designer`, `core` and `topology` workers all correctly identified
+it as pre-existing and out of their scope and all three carried on, which is the right behaviour and
+also means **the red sat on `main` for the whole dispatch window with nobody able to clear it.** It
+cleared only because the `ui/058` worker reworded its own task file in passing. The script's regex
+requires no word boundary before `decision`, so `per-decision` followed by a comma-number trips it;
+that script is owner-reserved and I have filed `tasks/doc/068` rather than touching it. **The lesson
+for the next leg is about the claim, not the regex: I pushed a task file to `main` without running
+the doc gate on it.** A claim commit is a commit like any other.
+
+**(c) The reviewer's capacity flag, which is a real hazard for the next unit.** Decision 13 is now at
+**4,096 B of a 4,096 B cap — zero headroom** — and `tasks/ui/059` is queued to write into that same
+decision. `check-doc-size.py` fails only on `size > limit`, so exactly-at-cap passes and nothing will
+warn. `tasks/ui/059` already says a **new numbered decision** is the correct shape rather than a
+squeeze; that sentence is now load-bearing, because a squeeze is what went wrong three times running
+here.
+
+**Merged:** `agent/ui/058-restore-append-only` (code `87d01b4`, doc `649b1be`). **The code SHA is
+`embarch-ui` main unchanged** — the branch was legitimately empty, a doc-only unit. `649b1be` is the
+revert handle. Gate re-run by me on the merge result: `check-docs.py` **11/11** (including the
+`check-decision-refs.py` that was red before this merge), `check-ownership.py --scope ui` OK on 3
+paths, `--code-repo` OK on 0, `check-client-names.py --repo /home/gabriel/Github/embarch/embarch-ui`
+clean against 7 denylist entries. No rebase needed — the branch was the first of four off `019181c`.
+`changelog.d/ui-058-restore-append-only.fixed.md` consumed into `history/ui.md` with `--only`; **29 of
+the owner's own fragments left pending**, untouched. No `status.d/` and no `features.d/` fragment.
+
+**What actually moved:** `append-only ` (12 B) restored before *"file"* in bullet 3, `only ` (5 B)
+restored before *"its"* in bullet 4. 4,079 → 4,096 B. The third candidate phrase,
+*"timestamp-contradicting interleaving"*, does not fit and was left out; the property it named is
+still stated two paragraphs earlier in the same decision, so that is texture loss and not a fact.
+
+**Blocked:** nothing. `tasks/ui/058` closed and removed in this fold. `tasks/ui/059` stays `open`.
+
+**Reviewer:** no findings. It did the thing I asked and did not take the worker's word for it: diffed
+the `### 13` section at `649b1be~1` against `649b1be` and confirmed the two insertions are the *only*
+changes — **the first time in this four-deep chain that a "nothing left the text" claim has survived
+an independent diff.** It re-derived the byte arithmetic (4,079 + 12 + 5 = 4,096, exact), checked the
+restored words against `ui/057`'s corrected conditional guarantee and found them orthogonal
+(`append-only` states a structural invariant of the logfile, not a claim about line uniqueness), and
+searched `embarch-decision-reversals.md` for anything touching decision 13 — nothing. Its
+zero-headroom flag is (c) above; it correctly judged that a capacity hazard is not a decision
+contradiction and did not file it as a finding.
+
+**Hardware debts:** **none created.** Two words restored in a decision file; nothing executed, no
+board, no probe, no live Core, no UI launched. **No hardware was touched anywhere in this leg and I
+did not read Core live at any point.** `embarch-ui`'s 18-record stale prefix is untouched and still
+has never met a real stale prefix. `core/015`'s native Windows build is untouched by this unit — it
+landed no commit in any code repo — so it stays at leg 117's re-derived **40 commits since
+`1c1224e`**, not incremented by ordinal. `tasks/api/059` stays `open`, the owner's `d0cf9a0` parks the
+bench queue, and `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`) with a buffer neither
+read nor believed.
+
+**Budget:** PROCEED — weekly **12.0%** of a 90% cap, resets in ~157h, no 429. Wave **6** suggested,
+**4-unit leg cap binds**, and so does scope spread: only 4 distinct scopes were dispatchable, which
+is why the refill gate fired at step 0 rather than at zero.
+
+**Least sure about:** **whether landing a decision at exactly its cap should have blocked this merge.**
+The restoration is right and the reviewer verified it, but the unit spent the last 17 bytes of an
+entry that a queued task has to write into next. I took it because the alternative was to leave a
+real cut standing while arguing about bytes, and because `tasks/ui/059` can open a new decision. If
+that turns out to force an awkward split, this is the moment it was decided.
+
+---
+
 ## 2026-09-16 17:47 — ui/057 both of ui/056's restorations were wrong, and the third attempt at these two sentences is the one to watch
 
 **Decided:** **four things, and (a) is the pattern the next leg should carry, not the fix.**
