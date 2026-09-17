@@ -97,6 +97,86 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 19:14 — ui/059 I refused a green unit, because its fix traded a duplicate for a silent truncation
+
+**Decided:** **one thing, and it is the only unit in this log so far that was blocked on a
+supervisor's read of a diff rather than on a red gate.**
+
+**THE UNIT WAS GREEN AND I DID NOT MERGE IT.** The worker chose *fix* over *accept*, wrote two
+tests, **confirmed they failed before the change and passed after**, ran `cargo build`/`test`/`clippy
+--all-targets -- -D warnings` clean in `embarch-ui`, got `check-docs.py` 11/11 and both ownership
+checks green, shrank decision 13 to make room rather than squeezing it, and authored a new decision
+27 with the reasoning. By every mechanical measure this was a good unit. **It is also wrong, and the
+tests were written to assert the wrong behaviour rather than to catch it.**
+
+**What the change does.** `diff_new_lines` matches the overlap run's last line by
+`starts_with` instead of `==`, so a still-growing trailing line no longer breaks the longest-run
+match. That is the right instinct. But when the last line has grown, the match now succeeds at the
+**full** length `k` and the function returns `new[k..]`, which is **empty** — the grown line lives at
+`new[k-1]` and is never returned. `publish_new_lines` then does `*previous = latest`
+unconditionally, so no later poll ever sends it either. **The grown line's content is dropped
+permanently.**
+
+**I measured it rather than reasoning about it.** I compiled both versions side by side and ran six
+cases; the table is in the task file. **Four of six lose content.** The worst is
+`["A","B","A"] → ["A","B","A2","C"]`: before, `["B","A2","C"]` (one duplicate, nothing lost); after,
+**`["C"]`** — so the console ends up holding a truncated line with complete lines after it, which a
+reader cannot detect. A line that grows across two polls (`["X","Y"]→["X","Y2"]→["X","Y2Z"]`) is
+never delivered in full at any point in its life.
+
+**Why this is a refusal and not a nitpick.** `decisions/debug-tab.md` and `logs.rs` both carry
+decision 13's own sentence: *"a few duplicate lines in a debug viewer is a smaller problem than
+missing ones."* This inverts that ordering. **And decision 27 as drafted states the opposite of what
+the code does** — *"no line is dropped, only 'B' is sent twice"* describes the behaviour being
+replaced, not the replacement. Landing it would have put a decision on `main` asserting a property
+its own code does not have, which is the single most expensive thing this suite can do to itself.
+
+**The tests are the lesson.** Both new tests use a window containing a deliberate repeat, so both
+exercise only the half the fix got right. **There is no test for plain growth with no repeated
+line**, which is the common case and the one that silently regressed. A test suite that grew
+alongside a fix and agrees with it is not independent evidence, and "confirmed it fails before and
+passes after" — which I asked for explicitly, and which the worker did honestly — **does not
+distinguish a correct fix from a wrong one whose tests were written from the same misunderstanding.**
+
+**Merged:** nothing.
+
+**Blocked:** `agent/ui/059-diff-new-lines-republish` — merge refused on my diff read; task left
+**blocked** with the measured table, the exact one-index correction (`return new[k-1..]` on a strict
+extension, `new[k..]` on equality, distinguished rather than merged), and the three things the next
+worker owes: a plain-growth test, a steady-state non-republish test, and **decision 27 rewritten
+rather than patched**. **Both branches are pushed and left standing** — `embarch-ui` code `21a48de`,
+`embarch-doc` doc `dfe1d91` — because the diagnosis, the root-cause account and the repeat-case
+tests are all correct and re-deriving them would cost a unit. The task says so in as many words.
+**The worktrees are removed but the branches are not**, so `fold-commit.py` will not prune them
+(they are not on `origin/main`) and the next leg must not read their presence as a live worker.
+Decision 13 on `main` is **unchanged** — the 514 B → 309 B shrink is on the unmerged branch only, so
+re-measure before writing into it.
+
+**Reviewer:** skipped (nothing merged — the merge was refused on my own diff read, so there was no
+landed diff to review).
+
+**Hardware debts:** **none created, and none payable here.** Nothing ran against a board; the only
+things executed were `embarch-ui`'s host test suite and a six-case scratch binary I compiled in the
+scratchpad. `core/015`'s native Windows build untouched — this is `embarch-ui`. **No hardware has
+been touched anywhere in this leg and I have not read Core live at any point** — `tasks/api/059`
+stays `open`, the owner's `d0cf9a0` parks the bench queue, `fleet-hardware.py --refresh` still
+crashes (`tasks/doc/041`). `embarch-ui`'s 18-record stale prefix still has never met a real stale
+prefix, and nothing in this unit changed that.
+
+**Budget:** PROCEED — weekly **13.9%** of a 90% cap, resets in ~156h, no 429. Wave **6** suggested;
+the **4-unit leg cap** binds. A refused unit costs the same as a landed one.
+
+**Least sure about:** **whether I should have fixed it instead of blocking it.** The correction is
+one index and I had already measured the whole behaviour table, so I could have landed it in
+minutes. I did not, for two reasons I still half doubt: it also needs decision 27 rewritten, and
+**authoring a numbered decision is not a thing to do in the same breath as overruling the agent that
+authored it**; and I had already hand-fixed one defect this leg (`study-designer/053`), which makes
+this the sixth entry in a tally the 2026-09-12 handoff flagged as unexamined. The cost of my choice
+is real: a correct diagnosis sits blocked for at least a leg. If the next leg disagrees with me, the
+task is written so that disagreeing is cheap.
+
+---
+
 ## 2026-09-16 19:10 — api/101 a citation with no decision behind it, and the repo already had a house style for that
 
 **Decided:** **three things, and (b) is a fact `tasks/doc/055` should have before the owner settles
