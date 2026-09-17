@@ -138,6 +138,25 @@ than file a new debt. `changelog.d/ui-decision-27-split-closed-as-permanent.deci
 the merge result: `check-docs.py` **11/11**, `check-ownership.py --scope ui` clean on both branches.
 `tasks/ui/066` closed in the same commit.
 
+**This fold was hand-completed, and the next leg should know exactly how.** `fold-commit.py`
+committed the log entry in `embarch-fleet` (**`3f70bdd`**) and then **refused the instance half**: it
+retires a `done` task file with `git rm`, and `tasks/ui/066-compact-ui.md` carried *my own
+uncommitted close* — the state edit and the discharge prose I had just written into it. `git rm`
+refuses a file with local modifications, so the fold aborted **after** the log commit. That is the
+ordering `protocol.md` §11 deliberately chose — "an entry for a fold that did not happen", never "a
+fold nobody logged" — and it is the safe one, but it means a retry is impossible: the script
+correctly refuses a second run because the log entry is already committed. **I completed the
+instance half by hand** as `embarch-doc@3e7e15cf`, staging exactly the six paths the fold would
+have, `git rm`-ing both retired task files, and re-running `check-docs.py` (11/11) before
+committing. `fold-commit.py --check` now reports the two repos coherent.
+
+**The general lesson, which is not in `.claude/leg.md`:** a supervisor editing a task file that the
+same fold will retire creates this collision every time. Either close the task and let the fold
+retire it **without** writing prose into it first, or stage the edit before calling
+`fold-commit.py`. I chose to write the close into `066` because the reasoning seemed worth keeping
+in the file — and then the file was retired anyway, so the reasoning lives only in this entry, which
+is where I should have put it to begin with.
+
 **Blocked:** nothing.
 
 **Reviewer:** no findings.
