@@ -97,6 +97,87 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 01:15 — study-designer/062 two sentences in one file making the same claim, citing two different real decisions
+
+**Decided:** **one thing, and it is a new defect shape for a chain nineteen units deep.**
+
+`src/merged_actions.rs:73` cited **decision 39** for the claim that *"transcribing a UUID Zephyr
+itself publishes into a per-repo registry is exactly the busywork decision N removes."* Decision 39
+(`streams.md`) is *"One generic inbound stream pipeline"* — capture-pipeline unification, nothing to
+do with vendor GATT UUIDs. The right number is **41** (`gatt.md`, *"A built-in table of
+vendor-defined GATT service identities"*), whose own body says *"requiring every engineer to
+transcribe a 128-bit UUID to write to a service the stack itself defines is pure error surface"* —
+near-verbatim. Fixed `39`→`41`; the whole code diff is one character.
+
+**The shape is what is worth keeping.** The tell was that the *identical sentence* sits ~100 lines
+later in the same file (`:170`) already citing 41 correctly. **Two sentences in one file making the
+same claim and citing two different real decisions, only one right** — this chain has recorded
+wrong-number, cross-repo-mislabelled, near-duplicate-cross-repo and right-number-false-sentence
+before, but not this one. It is nastier than it sounds, because each citation resolves and each
+reads plausible in isolation; only reading both sites together exposes it.
+
+**Also settled: the one located-but-unchecked singular-wrap citation from `060`'s method fix is now
+closed**, and the fresh singular-inclusive continuation grep returned the same 9-file, 17-hit set as
+`060`/`061` — no new files, no new hits. The worker flagged a trap I want the next unit to see: a
+grep hit can *resurface* in a fresh run having already been counted by an earlier unit
+(`decoder.rs:1`, counted in `060`), so a careless unit would double-count it as new.
+
+**And one method note earned the hard way**, reported as a lesson rather than a defect: the
+cross-repo citation at `:48` (`embarch-ui` decision 17) looked wrong from its *section heading* and
+is correct — the reasoning it cites appears later in that section's body. **Read a cited section to
+its end, not just its heading and opening paragraph.**
+
+**Merged:** `agent/study-designer/062-src-citation-sweep-remainder` (code `1432ef6`, doc `b1459fb`).
+Both fast-forwards, no rebase needed. Gate re-run by me on the merge result, not on the worker's
+word: in `embarch-study-designer`, `cargo build --all-targets` clean, `cargo test` **125 passed**
+(116 + 9 across two binaries), `cargo clippy --all-targets -- -D warnings` clean; in `embarch-doc`,
+`check-docs.py` **11/11**, `check-ownership.py --scope study-designer` OK on 3 doc paths and OK on
+the code repo, `check-client-names.py --repo` clean against 7 denylist entries. `spec.md`
+(9,350/10,240 B) and `open.md` (4,659/5,120 B) were not touched and are still the only
+`study-designer` files in reserve, both parked; no new compaction debt.
+`changelog.d/study-designer-merged-actions-citation-sweep.changed.md` consumed into
+`history/study-designer.md` with `--only`; **29 of the owner's own fragments left pending**,
+untouched.
+
+**Blocked:** nothing. `tasks/study-designer/063` is filed and `open` — the last four `src/` files
+(`gatt_names.rs` 5, `eap_interp.rs` 5, `vendor.rs` 3, `records.rs` 2, grep-line counts), which close
+out `src/` entirely. Deliberately not dispatched in this unit's slot: one more task in a scope I
+already had a worker in buys no concurrency.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written. Four directed checks. The two worth recording: it read
+decision 41's body **cold** and confirmed the claim stands on 41 alone rather than on the `:170`
+sentence agreeing with it — which is the check that mattered, because a near-duplicate agreeing is
+corroboration and not proof — and it chased the cross-repo attribution one hop further than the
+worker did, opening `embarch-ui/decisions/gatt-capture.md` 17 directly and finding the quoted clause
+at line 47 rather than trusting `study-designer` decision 73's attribution of it. It also confirmed
+the running tally (500 instances / 18 wrong numbers / 7 false sentences across 20 files) is written
+as an accumulated sum and **not** dressed up as a verified census.
+
+**Hardware debts:** **none created, and none could be.** One character of a source comment; nothing
+executed, no board, no probe, no live Core, no deploy. Standing debts unchanged: `tasks/api/059`
+still `open` — **not `blocked`** — with the dev-bench probe unplugged, a **sixteenth** consecutive
+leg; `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`) and its buffer still claims both
+boards attached, so **do not plan a bench unit off it**; the bench queue is still parked by the
+owner's `d0cf9a0`; `core/015`'s native Windows build, `api/108`'s Windows process-tree kill,
+`umbrella/037` check 13, `umbrella/033`'s check-17 arms, umbrella check 5's permission-denied probe,
+`embarch-ui`'s 18-record stale prefix and the `embarch-outpost`/`embarch-dev-bench` toolchains are
+all untouched.
+
+**Budget:** PROCEED — weekly **29.2%** of a 90% cap at the leg's top, resets in ~150h, no 429. Wave
+**6** suggested; the queue bound me, not the budget: 3 dispatchable in 3 scopes at step 0, so refill
+was owed and I ran it concurrently with the first two units.
+
+**Least sure about:** **whether this chain's per-file "0 defects" results still mean anything now
+that a unit can find a defect only by reading two sites against each other.** Nineteen files were
+declared swept by a method that reads one citation at a time; this unit's find was invisible to that
+method and visible only because the same sentence appeared twice in one file. That is not a
+correction to a count — it is a class of defect the closed files were never checked for, and nobody
+has asked how many of them contain a second copy of a sentence they already cleared.
+
+---
+
 ## 2026-09-17 01:00 — umbrella/075 a setup step credited with a verification it never performs
 
 **Decided:** **two things, and the second is the more useful precedent.**
