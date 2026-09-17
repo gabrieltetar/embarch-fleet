@@ -97,6 +97,68 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 17:33 — api/115 the canonical `list_targets` row was stale in two fields, not one
+
+**Decided:** **that an interface row found stale in one field is re-read whole, and that the second
+find is the reason why.** The task was filed for one thing: `interfaces/tools-discovery.md`'s
+`list_targets` row never mentioned `build_dir_name`, which `api/109` shipped and decision 77
+settled. I put the task's own second `Done when` bullet in the dispatch note as a first-class
+instruction rather than a nicety, and it paid: **`default_target` was missing from that row
+entirely** — a real top-level sibling key the tool has returned since decision 20, never documented
+in the canonical reference at all. One filed defect, two found. Everything else in the row — the
+file-backing-validated tuple, `snippets_by_app`, `default_snippets`, `default_extra_args`, and the
+whole `static` arm with its decision 53 citation — was checked field by field against
+`src/resolve.rs` and is **clean**, which is a result and is recorded here so the next leg does not
+re-check it.
+
+**Decided, second:** **that the doc carries the limit in its own voice and does not become a second
+copy of the tool's runtime text.** `api/109` deliberately put `build_dir_name`'s real limit in
+`src/tools.rs`, where an MCP caller reads it. Copying that sentence into the interface doc would
+have produced two texts that can drift, which is `DOC-PROTOCOL.md`'s restate rule exactly. The doc
+now says the limit in its own words and cites decision 77.
+
+**I aimed the reviewer at the paraphrase, because that is the one thing this unit could get newly
+wrong.** An omission is inert; a paraphrase that drifts is a false statement where a reader will
+look. It re-derived the null condition from `resolve.rs` — `resolve_snippets(...)` failing when some
+snippet in `project.default_snippets` is absent from that app's `available` list — against the doc's
+"`null` when this project's configured default snippets aren't all available for that row's app",
+and against decision 77's own uninverted phrasing. Same condition. It did the same for
+`default_target` and confirmed it is a top-level sibling key, never a per-row field.
+
+**Merged:** `agent/api/115-tools-discovery-build-dir-name` (code `87f67df` — **unchanged, the branch
+carries no code commits**, doc `c904f3d4`). `embarch-api/interfaces/tools-discovery.md`
+1,469 → 1,784 B against a 12,288 B `interface-group` cap — ~14.5%, nowhere near reserve, no
+compaction task owed. **No `changelog.d/` fragment, deliberately**: `history/api.md` already carries
+`build_dir_name`'s reader-facing announcement from `api/109`'s own fold, and this unit only brings
+the reference into line with what shipped. Gate on the merge result: `check-docs.py` **11/11**,
+`check-ownership.py --scope api` clean on both branches.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none created, and none could be** — one table row in one markdown file;
+nothing built, nothing executed, no board, no probe, no live Core, no DUT. The `embarch-api` code
+repo is byte-identical to `main`. Standing debts carried unchanged: `tasks/api/059` still `open` on
+an unplugged dev-bench probe, `core/015`'s native Windows build still structurally unrunnable from
+this machine, `fleet-hardware.py --refresh` still crashing (`tasks/doc/041`) with a buffer that
+still falsely claims both boards attached.
+
+**Budget:** PROCEED, weekly **46.9%** of a 90% cap at this unit's dispatch, resets in ~133h.
+Wave **6** suggested, 4 workers run, leg cap binding.
+
+**Least sure about:** nothing about the verdict — what follows is a mistake I made, not a doubt.
+**I removed this unit's code worktree while its own reviewer was still reading.** I batched the worktree cleanup for `core/086`
+and `api/115` together, after spawning the `api/115` reviewer, and the reviewer then found the
+absolute path I had given it in its spawn prompt did not exist. It recovered correctly — it read the
+code at the pinned SHA with `git show 87f67df:<path>` from the main checkout, which is a pinned read
+and not a stale-checkout read, so **the verdict above is sound**. But it recovered by being careful,
+and the failure mode if it had not is precisely the one `.claude/leg.md` spends a paragraph on: a
+reviewer reading stale context reports a confident `pre-existing`. **The rule this leg learned the
+hard way, and the next leg should inherit: a unit's worktrees come down after its reviewer reports,
+not after its merge.** It cost nothing here because the branch had no code commits; on a unit that
+did, it would have cost the review.
+
 ## 2026-09-17 17:29 — core/086 the two sentences 085's squeeze dropped are back, and one of them is deliberately not verbatim
 
 **Decided:** **that a restoration may correct tense and may not correct claim, and that the line
