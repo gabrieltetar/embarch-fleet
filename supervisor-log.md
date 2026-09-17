@@ -97,6 +97,77 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 20:45 — umbrella/073 thirty plural-form citations nobody had ever read, and all thirty hold
+
+**Decided:** **nothing, and that is the finding.** This is the first of the `doc/069` plural-form
+re-checks to land — the lines every previous `embarch-umbrella` sweep was *structurally* blind to,
+because each of those sweeps censused with `grep -cE '[Dd]ecision [0-9]'`, which cannot match
+`decisions 17, 18` or `decisions 31/32`. So these 13 lines had never been in any sweep's input at
+all; this was a first read, not a re-read. **0 wrong numbers, 0 false sentences, across 30 distinct
+decision instances.** The worker's census matched the filed floor exactly — 13 lines, no
+fourteenth, none dropped — and the reviewer re-ran the grep independently and summed the per-line
+citation lists by hand to the same 30.
+
+**Two claims were worth not taking on trust, and I asked the reviewer for both.** (a)
+`release.yml:23` cites "decisions 27/29", which reads like two separate claims; it is not —
+`embarch-umbrella/decisions/release.md` carries a literal `### 27, 29` heading whose own body says
+*"These are one decision under two numbers... Recorded rather than renumbered again."* (b) Four
+sites (`main.rs:306`, `setup.rs:76`, `doctor.rs:141`, `env.rs:6`) assert `embarch-topology`
+decisions 2 and 3 as "live, in-process, every call". The reviewer confirmed both are unreversed —
+and caught a real trap in doing so: **decisions 2 and 3 each carry their own "Reversed from this
+session's own earlier decision" text**, which is a pivot recorded *into* the current decision, not a
+later retraction of it. The genuinely qualified pair in that repo is 4 and 8 (`Qualified
+2026-09-08`, `Qualified again 2026-09-12`), and no citation here names them. It also checked the
+four call sites actually call `resolve_software_topology` live per call.
+
+**A zero-defect unit still costs a fold, and I think that is right here.** Three consecutive
+zero-defect sweeps were flagged in the 2026-09-12 handoff as possibly meaning refill has converged
+on always-clean files rather than the corpus being clean. This one is evidence *against* that
+reading in the one way that matters: these lines were provably never examined before, so a clean
+result is a measurement rather than a re-measurement.
+
+**Merged:** `agent/umbrella/073-plural-citation-recheck` (code **no commit — the branch is
+identical to its branch point `c06897c70320284a9e2be1dfd6190e940c4717f9`, because zero defects
+means zero edits**; doc `f5962b3a8b74ae5c4bf4a8bd3e9cf6ee52ed917b`). The doc SHA is the only revert
+handle this unit has. Gate re-run by me on the merge result, not on the branch: in
+`embarch-umbrella`, `cargo build --all-targets`, `cargo test` (**225 passing**, 0 failed), `cargo
+clippy --all-targets -- -D warnings` all green; in `embarch-doc`, `check-docs.py` **11/11** via the
+wrapper; `check-ownership.py --scope umbrella` OK on 2 doc paths; `check-client-names.py --repo`
+clean against 7 denylist entries.
+`changelog.d/umbrella-plural-citation-recheck-073.changed.md` consumed into `history/umbrella.md`
+with `--only`; **29 of the owner's own fragments left pending**, untouched. No `status.d/` and no
+`features.d/` fragment.
+
+**Blocked:** nothing. `tasks/umbrella/073` closed and removed in this fold.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none created.** Nothing in this unit executes — it is comments, a
+`Cargo.toml` comment and a workflow comment, and in the end not even an edit. No board, no probe,
+no live Core, no deploy, no study. **I have touched no hardware anywhere in this leg and have not
+read Core live at any point**, so `tasks/api/059` stays `open`, not blocked, for the eighth
+consecutive leg; the owner's `d0cf9a0` still parks the whole bench queue, `fleet-hardware.py
+--refresh` still crashes (`tasks/doc/041`) and its buffer was neither read nor believed.
+`core/015`'s native Windows build is **untouched by this unit** — this is `embarch-umbrella`, and
+the recount-from-commits that the 2026-09-12 handoff asked for is still owed by whoever next lands
+a `core` unit. `umbrella/037` check 13, `umbrella/033`'s check-17 arms, umbrella check 5's
+permission-denied probe, `embarch-ui`'s 18-record stale prefix and the
+`embarch-outpost`/`embarch-dev-bench` toolchains all carried unchanged.
+
+**Budget:** PROCEED — weekly **19.1%** of a 90% cap at the leg's top, resets in ~154h, no 429. Wave
+**6** suggested; I dispatched **3** workers and reserved the fourth unit for `suite/040`, so the
+**unit cap** bound this leg, not the budget and not the queue (9 dispatchable across 9 scopes,
+refill not owed).
+
+**Least sure about:** **whether reserving a unit for `suite/040` was the right trade against a
+fourth worker.** `suite/040` is supervisor-only and needs a 30-minute announcement window, so it
+can only ever be taken by a leg willing to spend a slot waiting on a clock; legs keep ending without
+it for exactly that reason. I announced it (`ts` `1789612542.894959`, recorded in the task file) to
+make the window run concurrently with the workers rather than after them — but that means the cost
+was real and the benefit is only realised if a leg is still alive when the window closes.
+
+---
+
 ## 2026-09-16 20:30 — ui/060 a 46× post-mortem with the wrong denominator, and a reviewer that closed the question the worker left open
 
 **Decided:** **three things, and (c) is a second inbox drop drained mid-leg.**
