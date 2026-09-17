@@ -97,6 +97,108 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 17:02 — api/109 the task's premise was wrong, the worker said so, and then shipped the thing the premise should have asked for
+
+**Decided:** **that `list-targets` publishes `build_dir_name` for each `zephyr-west` row's default
+build, and that naming only the default combination is a stated limit rather than a partial
+delivery** — `embarch-api` decision 77. Additive, no Core wire change, computed locally by
+`zephyr::Target::build_dir_name` against the project's configured `default_snippets`/
+`default_extra_args`, and **`null`** when the app's available snippets do not cover that default.
+
+**The unit's real output is the premise correction, and I want that read as the success rather than
+as preamble to the code.** The task — written by leg 137's refill sweep off `embarch-umbrella`'s own
+standing bullet — said `embarch-api`'s **study listing** lacked `build_dir_name`. That is wrong
+twice over: decision 26 asks for it on **`list-targets`**, the target menu, and `embarch-api` has no
+listing of multiple studies at all. Every study-facing tool is per-study and `study_results/` is
+keyed by `study_id`. **A bullet in another repo's `open.md` misdescribed this crate's surface for
+eleven days and the queue faithfully turned it into a task.** My dispatch note told the worker that
+if box 1's re-derivation showed the bullet simply wrong, saying so in writing was the best possible
+outcome and it should not manufacture a change to avoid it. It said so, *and* the real gap
+underneath turned out to be genuine and closeable in one unit, so both halves landed.
+
+**`tasks/umbrella/082` is the other half and I loaded it with two warnings the drop could not
+carry.** First, that the umbrella bullet's *claim* needs correcting and not merely its status.
+Second — the one that matters — **"decision 26's stated prerequisite is closed" is not "`--prune` is
+now safely buildable."** What shipped names the default combination only; a directory built with a
+non-default combo still needs `target.json` (decision 69). I asked the reviewer directly whether the
+drop overstated this, because an overstatement there sends the next `umbrella` unit to build a
+delete on a foundation that does not carry it. **It does not overstate**: the drop's body caveats
+exactly that and names `target.json` as the other source.
+
+**Merged:** `agent/api/109-build-dir-name` (code **`87f67df`**, doc **`fffc419a`**). Gate run by me
+on the merge result: `cargo build --all-targets` clean, `cargo test` green across all six binaries'
+suites (**46 + 17 + 2 + 1 + 0 + 0 passed, 0 failed**), `clippy --all-targets -D warnings` clean;
+`check-docs.py` **11/11**; `check-ownership.py --scope api` OK on all 8 paths against derived base
+`c0025341`; `check-client-names.py --repo <code worktree>` clean.
+`changelog.d/api-list-targets-build-dir-name.added.md` consumed into `history/api.md`;
+`features.d/api-092-build-dir-name-on-list-targets.md` new, so `suite/features.md` reassembled
+(23,530 → 23,815 B, 135 → 136 rows). **29 of the owner's own fragments left pending**, untouched.
+
+**A task-number collision, the third in three legs, with a new vector — and I resolved it backwards
+before the hook corrected me.** The worker filed `tasks/api/112-compact-api.md` for the `open.md`
+reserve its own edit created. **`112` had been taken mid-leg by my own drain of `umbrella/080`'s
+inbox drop.** `tasks/doc/079` describes this as two actors picking "next free" against different
+views of `main`; **this instance is a worker racing the supervisor's own inbox drain**, which is a
+different vector for the same defect and worth adding to that task. I renumbered the *worker's* file
+112 → 113, which is **wrong by `check-task-numbers.py`'s own stated rule**: history records
+whichever slug landed first, that was `compact-api`, so **mine was the one that had to move.** The
+pre-push hook caught it, refused nothing, and printed the rule; I then moved mine to **`114`** and
+fixed `tasks/api/109`'s own reference to point at `113`. Net: `112` is retired unused, `113` is the
+compaction task, `114` is the serial-port referral. **All 180 task numbers unique across 10 scopes.**
+Recording the mistake because the hook's wording is what saved it and a leg that had merged before
+pushing would have shipped the wrong resolution.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written, on a four-claim directed brief, and it came back clean on
+all four — including the two I most expected to break. On the `null` case it read `resolve_snippets`
+end to end and showed `list_targets` calls the **identical function with an empty call-time
+selection**, the same path a real build takes when a caller passes no override, turning the `Err`
+into `null` via `.ok()` rather than validating more loosely. On decision 26 it quoted the decision's
+own text back — *"`list-targets`' JSON carries the tuple and not `build_dir_name`"* — which settles
+the premise question by citation rather than by argument, and it grepped `src/tools.rs` to confirm
+no `list_studies` exists. **This is the sixth consecutive directed brief to return real
+re-derivation, and the second this leg to correct my framing rather than agree with it.**
+
+**It also found something real and correctly declined to file it, which I have filed as
+`tasks/api/115`.** `embarch-api/interfaces/tools-discovery.md`'s `list_targets` row **does not
+mention `build_dir_name` at all** — the field's limit is documented in the tool's live description
+in `src/tools.rs`, which is what an MCP caller reads and what decision 44 requires, but not in the
+doc repo's canonical interface reference. The reviewer's reasoning for not filing it was that it
+contradicts no numbered decision and would not justify a revert; that is the right line for a
+*reviewer finding*, and it is still a `DOC-PROTOCOL.md` §4 trigger that goes unfired if nobody
+writes it down. **The irony is load-bearing and I put it in the task: `api/109` exists because
+another repo's doc described this crate's surface wrongly, and a stale interface row is exactly how
+the next such bullet gets written.**
+
+**Hardware debts:** **none created, and none could be** — no board, no probe, no live Core, no DUT,
+no flash, no study, no serial port opened. The task said in as many words that this was settled by
+reading the listing type and the `decisions/` tree, and it was. **Unchanged and unpaid:** `core/015`'s
+native Windows build is **structurally unrunnable from this machine**, measured this leg —
+`x86_64-pc-windows-gnu` is not an installed target and `msvc` needs a Windows linker WSL2 has no way
+to provide, so the six no-std compile failures are the absence of a toolchain and not a regression;
+`tasks/api/059` stays `open` for a 22nd leg on this leg's own live `validate` (`live None`);
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`) and its buffer still falsely claims
+both boards attached; the owner's `d0cf9a0` bench parking stands; `api/108` is dispatchable and
+uncloseable here; `umbrella/037` check 13, `umbrella/033`'s check-17 arms, umbrella check 5's
+permission-denied probe, and both toolchain-gated repos untouched.
+
+**Budget:** PROCEED — weekly **44.2%** of a 90% cap at leg start, resets in ~134h33m, no 429
+anywhere. Wave **6** suggested; **scope spread** bound this leg at 3 concurrent workers throughout.
+
+**Least sure about:** **that filing `tasks/api/115` off a reviewer's explicit decision not to file it
+is refill or scope creep.** The reviewer drew a defensible line — findings are for contradictions,
+not doc-currency — and I then created queue work from its aside anyway. That is the fourth time this
+log has recorded a supervisor filing off its own reading rather than off a worker's report, and the
+question has never been settled either way. My reasoning is that a reviewer's "not a finding, worth
+a follow-up" is a *referral*, and this leg has now twice demonstrated what an unactioned referral
+costs — `api/109` and `umbrella/080` are both units that existed only because a referral sat in an
+`open.md` with nobody to hear it. **If that reasoning is wrong, the correction is that reviewers
+should stop volunteering non-findings, and I think that would be a loss.** Second: I resolved a task
+number collision backwards and only a pre-push hook stopped it reaching `main`.
+
 ## 2026-09-17 16:55 — core/085 the split is permanent, and the compaction that paid for saying so lost two sentences
 
 **Decided:** **that `embarch-core` will never serve the outpost's axis-health diagnostics or point
