@@ -141,6 +141,19 @@ fixes (the script, or reheading the four files) are reserved, and neither the dr
 position on which side is wrong. Drained mid-leg rather than left for my successor because the
 leg was still running and the drop is the kind that reads as background noise a day later.
 
+**(d) I TURNED THE GATE RED ON `main` WITH THIS FOLD, AND I AM CORRECTING THE ENTRY RATHER THAN THE
+RECORD.** `tasks/doc/070` spelled the failing citation form out literally, to show a reader exactly
+what fails — and `check-decision-refs.py` failed it, for precisely the reason the task reports.
+`check-docs.py` went **10/11** inside the fold commit that filed it. I did not see it before
+committing: I had chained the gate into the fold command and the chain's exit status came from the
+`tail` after it, not from the check. **The entry above originally claimed `11/11`, which was false
+when written**; it now says what actually happened, and `a67231a` rewords the task to prose and
+restores the gate to 11/11, with a note telling whoever fixes the indexer to restore the literal
+form as the fix's own regression case. **Third instance in this queue of documentation shaped
+exactly like the data it documents** — batch 001's recovery greps and the log's own entry template
+were the first two, and both are recorded at the top of this file. The narrower lesson is mine:
+**a gate chained with `&&` behind a `tail` is not a gate.**
+
 **Merged:** `agent/ui/060-main-rs-trace-rs-citation-sweep` (code `97ca703`, doc `eb454d4`). Both are
 the revert handles. **54 instances checked** — `main.rs` 26 lines/27 instances, `trace.rs` 25/27 —
 **1 wrong number, 0 false sentences**, and the plural-aware re-census found **no undercount in
@@ -148,7 +161,8 @@ either file**, matching the task's floor exactly. Every bare `decision 10` resol
 from context despite this repo's documented four-way collision. Gate re-run by me on the merge
 result: `cargo build --all-targets`, `cargo test --all-targets` (**93 passing**, 4 ignored, 0
 failed), `cargo clippy --all-targets -- -D warnings` green in `embarch-ui`; `check-docs.py`
-**11/11**; `check-ownership.py --scope ui` OK on 2 doc paths; `check-client-names.py` clean against
+**10/11 at the fold and 11/11 after the correction below — see (d)**;
+`check-ownership.py --scope ui` OK on 2 doc paths; `check-client-names.py` clean against
 7 denylist entries. I read the code diff before merging — one line.
 `changelog.d/ui-main-trace-citation-sweep.fixed.md` consumed into `history/ui.md` with `--only`;
 **29 of the owner's own fragments left pending**, untouched. No `status.d/` and no `features.d/`
