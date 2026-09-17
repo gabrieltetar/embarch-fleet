@@ -97,6 +97,121 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 15:50 — core/076 the spans route, recovered from leg 137, and the size measurement its own reviewer took apart
+
+**Recovered, not run.** Leg 137 dispatched this unit at 14:01, landed both branches, unparked
+`tasks/ui/065`, started the fold — and **died mid-fold on an individual-account spend limit** at
+about 14:21, with the assemblers already run and nothing committed. This entry is leg 138's first
+act. **Nothing was re-dispatched and no worker was re-run**: the code branch was already on
+`embarch-core`'s `origin/main` and the doc branch was already ff-merged into leg 137's detached leg
+worktree, so the recovery is a fold, not a repeat. Same shape as leg 135's `core/072` recovery, and
+the second time in four legs that a killed leg left a landed unit unlogged. **I re-ran the whole
+gate myself rather than trusting leg 137's unrecorded verdict** — see **Merged**.
+
+**Decided:** **nothing new of my own.** The substance is `embarch-core` decision 65, authored by
+the `core/076` worker and landed by leg 137, and I am not re-opening a decision that is already on
+`main` in two repos. What I did decide is the **disposition of its reviewer's finding**: file it as
+`tasks/core/080` rather than fix it in this fold. The finding is that decision 65's "likely-low"
+language claims a *direction* for its extrapolation error while naming only the smaller cause
+(`rx_utc_ms` empty in the fixture) and not the larger, direction-unknown one (a 4-lane synthetic
+fixture standing in for a 26-lane real capture, with row widths spanning 22–67 B around a 51.4 B
+mean). That is a real precision defect in a decision's evidence, but it is **prose inside another
+sub-project's decision file**, and rewriting a landed decision by hand at fold time is the move this
+log keeps deciding not to normalise — `core/077`'s own entry declined exactly that two hours ago
+over `embarch-topology` decision 34's task-number drift. It goes through the queue like any other
+correction.
+
+**What landed.** `GET /study/{id}/stream/{name}/load/spans`, a sibling of decision 62's `/load`,
+serving `SpansAnswer` — `{unit, t_from, t_to, records_lost, rows, rows_dropped_by_cap, row_cap,
+rows_unparsed, gaps, lanes}` with `Lane`/`Span`/`Gap` promoted from private to `pub` + `Serialize`.
+`/load` itself is byte-for-byte unchanged and still serves exactly `LoadSummary`. The decode body is
+factored into a private `decode_with_cap` so `summarize` and the new `spans_answer` are two
+reductions of one `Decoded`, which is what makes this additive rather than a second implementation
+of the same timeline — suite decision 4's property, which decision 64 pointed out was only half-true
+while just the aggregate was shared.
+
+**The wire-schema announcement window was leg 137's and it closed cleanly.** Announced 13:29,
+`ts` `1789673384.645649`, polled at leg 137's unit boundaries, no objection, 30 minutes elapsed
+before dispatch. I did not restart it and there was nothing to restart.
+
+**`tasks/ui/065` was unparked by leg 137 at 14:20 and I kept that edit**, verbatim: it moves from
+`blocked` to `open` now that its stated condition ("unparks when `tasks/core/076` lands") is met, and
+it carries the settled payload shape plus the worker's own warning that `embarch-ui`'s `Lane` keeps
+its chart-side bookkeeping — so "retire the decode pipeline" is not "retire `Lane`". That edit is a
+supervisor write into another scope's task file and it is why `check-ownership.py --scope core` on
+the *working tree* names three paths; against the committed worker branch alone it is clean.
+
+**Merged:** `agent/core/076-load-spans-route` (code **`ef60321`** in `embarch-core`, doc
+**`e0d54e6`**). **Full gate re-run by me on the merge result, 2026-09-17 ~15:50**, not carried over
+from leg 137: `cargo build --all-targets` clean, `cargo test` **213 passed + 1** (2 ignored),
+`cargo clippy --all-targets -- -D warnings` clean, `check-client-names.py --repo` clean against 7
+denylist entries, `check-docs.py` **11/11**, and `check-ownership.py --scope core --stdin` **OK on
+all 7 paths** of the worker's committed doc diff against its own derived base **`13db6a8`**. **The
+native Windows build was not run and could not be** — `core/015` has it measured unrunnable from
+WSL2; this unit is a genuinely larger Windows exposure than the last few `embarch-core` units
+(a new route, a new serialized wire type, a refactor of the decode path), so I am naming that rather
+than waving it through. `changelog.d/core-load-spans-route.added.md` consumed into `history/core.md`;
+`features.d/core-230-load-spans-route.md` assembled into `suite/features.md`; **29 of the owner's own
+changelog fragments left pending**, untouched. No `status.d/` fragment.
+
+**One thing I deleted on purpose.** The `076` code worktree carried an uncommitted
+`src/outpost_load.rs` hunk — a scratch test the reviewer added, labelled in its own doc comment
+*"REVIEW-ONLY scratch … Not part of the landed diff; deleted after review."* It is the measurement
+behind `tasks/core/080` and it was never meant to land. Discarded with the worktree.
+
+**Blocked:** nothing.
+
+**Reviewer:** 1 finding — `inbox/core-decision-65-size-extrapolation.md` (drained in this same fold
+into `tasks/core/080`, drop deleted).
+
+The reviewer ran under leg 137 at 14:21 and its hand-back was **misdelivered to the listener again**
+— the fourth consecutive leg. Its verdict survived only because it wrote the drop to the absolute
+`inbox/` path as workers are told to; had it reported in prose alone, leg 137's death would have
+taken it. It did not restate the diff: it re-rendered the fixture itself through a scratch test,
+reproduced 43,573 B / 831 rows independently, caught a 52.367-vs-52.434 B/row denominator slip
+(immaterial, and it said so), confirmed `rx_utc_ms` empty in all 831 rows, and then went past the
+question it was asked to the one that mattered — whether a 4-lane 7-name synthetic fixture can stand
+in for a 26-lane capture at all. It also explicitly checked that the route, its tests and the
+`/load`-unchanged property were fine as landed, so the finding is scoped to documentation precision
+and implies no code change. **This is more evidence for the directed-prompt question two handoffs
+have raised**: leg 137 gave it a specific number to re-derive, and it re-derived the number *and*
+found the larger problem beside it.
+
+**Hardware debts:** **one carried and widened, and one inherited unchanged.** Carried: `core/015`'s
+native Windows build is still measured unrunnable from WSL2, and this unit widens the unbuilt
+surface more than the last several `embarch-core` units did — a new HTTP route, `Lane`/`Span`/`Gap`
+newly `Serialize` on the wire, and a refactor of `outpost_load.rs`'s decode path, none of it ever
+compiled by a Windows toolchain. Inherited unchanged: `topology/058`'s debt that the widened alerts
+and `core/077`'s `"probe unavailable"` lead have never been rendered by a live Core. **Nothing in
+this unit touched a board, a probe, a live Core or a DUT, and nothing could have** — the only thing
+executed was `cargo test` against a checked-in fixture. Standing debts otherwise unchanged:
+`tasks/api/059` still `open` — **not `blocked`** — with both boards unplugged, a **twenty-first**
+consecutive leg; `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`) and its buffer still
+claims both boards attached, so **do not plan a bench unit off it**; the bench queue is still parked
+by the owner's `d0cf9a0`; `api/108` remains dispatchable and uncloseable in this environment;
+`umbrella/037` check 13, `umbrella/033`'s check-17 arms, umbrella check 5's permission-denied probe,
+`embarch-ui`'s 18-record stale prefix and the `embarch-outpost`/`embarch-dev-bench` toolchains all
+untouched.
+
+**Budget:** PROCEED — weekly **42.9%** of a 90% cap at leg 138's start, resets in ~135h, no 429.
+Wave **6** suggested; the **4-unit leg cap** binds. Leg 137 died on an **individual-account spend
+limit**, which is a different ceiling from this gate's weekly allowance — `usage-budget.py` knew
+nothing about it and still says PROCEED. Its reset has passed.
+
+**Least sure about:** **that I let decision 65's overclaim stay on `main` for however long
+`tasks/core/080` waits.** Filing it is the right routing and I would make the same call again, but
+the sentence now sitting in `embarch-core/decisions/stream-index.md` asserts a direction of error
+its own measurement does not establish, and a decision file is precisely the artifact people read
+later as settled fact — `core/075`'s reviewer raised the unmeasured-CSV gap, `core/076` was written
+to close it, and it closed it with a number that is sound and a qualifier that is not. Second, and
+structural: **I recovered a unit whose gate verdict I had to reconstruct rather than read.** Leg 137
+left no record of whether it ran the gate before merging into `embarch-core`'s `main`; I re-ran
+everything and it is green, so nothing is wrong — but the code was on `origin/main` for 90 minutes
+on nobody's recorded authority, and a red result would have been mine to discover with the revert
+already published.
+
+---
+
 ## 2026-09-17 13:59 — core/077 `not_attached` stays one value on purpose, and a lead that had started contradicting its own reason text is fixed
 
 **Decided:** **`embarch-core` decision 59's second amendment — no third `kind` value — and I accept
