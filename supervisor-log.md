@@ -97,6 +97,106 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 22:23 — dev-bench/032 the most productive unit of the leg, and the one that introduced a false claim
+
+**Decided:** **two things, and the shape of this unit is the argument for everything the leg spent
+on reviewers.**
+
+First, the sweep. `app/src/ble_bridge_real.c` (56 instances) and `app/src/serial_protocol.c` (44)
+fully swept for existence, repo label and sentence truth: **100 instances, 5 wrong decision numbers,
+4 false or unsupported sentences, 9 fixes.** That is a **9% defect rate** against `core/069`'s 4%
+on the same day, and it is the highest yield any unit has reported in this chain. The five wrong
+numbers: `decision 29`→`30` (the FIFO ring buffer is 30's — the *same collision* `031` already fixed
+once in `main.c`, found again in a second file), `decision 43`→`32` (the scan filter's exact-match
+rule is dev-bench's own, not `embarch-study-designer`'s field-existence decision), a bare
+`decision 34`→`42` in a four-decision list whose other three were `embarch-study-designer`'s and
+unlabelled, and `decision 50`→`44` **twice** for `security_level` — 50 is `BleUnbond`, 44 is
+`BleSecurity { level }`, and `main.c` was already citing 44 correctly for the same field.
+
+Second, and this is the entry: **one of the four "false sentence" fixes replaced a wrong claim with
+a different wrong claim, and the reviewer caught it.** The original read *"~96% SRAM (decision 27's
+own finding)"*; the worker was right that no 96% figure exists anywhere in this repo's decisions,
+and rewrote it to cite *"25 KB once (decision 27) and a further 37 KB later (decision 40)"*.
+**Decision 40 is 37 KB of SRAM given back, not taken** — `capture.md` states it as 90.87% → 81.12%
+from deleting the inline activity buffer, explicitly *"reversing the growth decision 27
+introduced"*. The real second overflow is **decision 28**, 2,720 bytes at link time, and
+`dispatch.md`'s own header calls 27 and 28 *"the two SRAM overflows they cost"*. I verified all
+three decision bodies myself and **fixed it in `67c1ea3`**: both overflows cited correctly, and
+decision 40 kept as what it is — headroom this table does not depend on.
+
+**Why that matters more than the fix.** This unit changed 131 comment lines in firmware and
+**nothing compiled it** — no `Cargo.toml` in this repo, no `west`, no Zephyr SDK in the sandbox. The
+mechanical checks it could run (grep gate, comment-block balance, 100-column limit,
+`check-client-names.py`) cannot tell a true sentence from a false one. **For a comment-only firmware
+sweep, the reviewer is not a second opinion; it is the only substantive check the diff gets.** It
+confirmed four of the five claims I asked it to re-derive and overturned the fifth.
+
+**One completeness gap noticed and deliberately left.** The rewritten header sentence says
+`ble_bridge_real.c` builds under every hardware workspace rather than only `workspaces/nordic/`.
+That is true, and `decisions/boards.md` decision 26 independently establishes it — **and the new
+text does not cite 26 anywhere.** Accurate uncited prose is exactly the class `tasks/suite/041`
+(filed this leg, `Owner: required`) asks whether to sweep for. Left alone rather than fixed, so
+that question is decided once rather than pre-empted by a habit.
+
+**Merged:** `agent/dev-bench/032-citation-sweep-app-src` (code `3f93e65`, doc `9cf78c4`), **plus my
+own follow-up `67c1ea3`** — three SHAs, all three revert handles. The doc branch needed a rebase
+onto `2ba0fc4` first, since `core/069`'s fold had moved `main`. Gate re-run by me on the merge
+result: in `embarch-doc`, `check-docs.py` **11/11** via the wrapper; `check-ownership.py --scope
+dev-bench` OK on 3 doc paths and on the code branch; `check-client-names.py --repo` clean against 7
+denylist entries; on my follow-up, no line over 100 columns. **Nothing was compiled and I am not
+pretending otherwise** — see Hardware debts. I read the whole code diff before merging.
+`changelog.d/dev-bench-032-citation-sweep-app-src.fixed.md` consumed into `history/dev-bench.md`
+with `--only`; **29 of the owner's own fragments left pending**, untouched. No `status.d/` and no
+`features.d/` fragment.
+
+**A stale-local-checkout note, because a leg reading `git log` will trip on it.** My
+`embarch-dev-bench` checkout was one commit behind `origin/main`, so the fast-forward pulled in
+`3c9294b` (`dev-bench/031`) as well. `git log` will show `031`'s `main.c` and `serial_protocol.h`
+edits sitting next to this merge. **They are already landed and already logged; they are not this
+worker's change.** Same shape as the note `study-designer/056` and `ui/062` left, third instance.
+
+**Blocked:** nothing. `tasks/dev-bench/032` closed and removed in this fold;
+`tasks/dev-bench/033` filed by the worker, landed here, naming the eight smaller files that remain
+— with a confirmed head start, since the reviewer spot-checked its claim that the same
+decision-50/44 bug repeats at `app/tests/serial_protocol/src/main.c:981` and `:1479`, and it does.
+
+**Reviewer:** 1 finding — inbox/dev-bench-032-review-finding.md
+
+Collected before this entry was written, acted on in `67c1ea3`, and the drop deleted. Besides the
+decision-40 overturn it confirmed the four other re-derivations from the decision bodies —
+including that `embarch-study-designer` decision 54's own text (*"the 'nothing captured, no error'
+family of failure this suite has now been opened by from four directions"*) matches the code's
+"was each opened by" almost verbatim, which is what makes the 34→42 correction and the three added
+labels right — and it resolved the **dev-bench/study-designer decision-36 collision** toward
+`embarch-study-designer`, correctly. **Two reviewers on this leg found real defects in fixes**, one
+of them mine.
+
+**Hardware debts:** **one, restated and not added to, and it is the largest untested surface this
+leg touched.** `embarch-dev-bench` has no `Cargo.toml`, so the cargo half of §10 selects nothing,
+and this sandbox has no `west` and no Zephyr SDK, so neither a `native_sim` build nor the
+`app/tests/serial_protocol` ztest suite could be built. **131 changed lines of firmware compiled
+nowhere** — comment-only, which is the least dangerous way for that to be true, and still true.
+Standing `embarch-outpost`/`embarch-dev-bench` toolchain debt, restated. `core/015`'s native Windows
+build is untouched by this unit — `embarch-dev-bench`, not `embarch-core`. **The dev-bench probe is
+still unplugged — read live at this leg's top, `"probes": []`** — so `tasks/api/059` stays `open`
+for the eleventh consecutive leg, `d0cf9a0` still parks the rest of the bench queue, and
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`). `umbrella/037` check 13,
+`umbrella/033`'s check-17 arms, umbrella check 5's permission-denied probe and `embarch-ui`'s
+18-record stale prefix carried unchanged.
+
+**Budget:** PROCEED throughout — weekly **22.2%** of a 90% cap at the leg's top, resets in ~153h,
+no 429 anywhere. Wave **6** suggested, **4** dispatched because the leg's unit cap is 4.
+
+**Least sure about:** **whether a 9% defect rate in `embarch-dev-bench` means that repo is worse
+than the others or merely less swept.** `core/069` found 4% on lines no census had ever read;
+this unit found 9% on files a chain has been working through for several units. The obvious reading
+— firmware comments drift faster because nothing compiles them — is plausible and unmeasured, and
+it argues for exactly the `embarch-dev-bench` wrapped-citation sweep `core/069`'s worker recommended
+*against* filing. I have left both recommendations standing in the log without reconciling them,
+because the two units measured different things and neither knew about the other.
+
+---
+
 ## 2026-09-16 22:20 — core/069 a fix that was right for a reason its author got wrong, and so did I
 
 **Decided:** **three things, and the third is about me rather than the worker.**
