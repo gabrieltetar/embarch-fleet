@@ -97,6 +97,63 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 20:47 — api/104 twenty-nine more first-read citations, and a bare cross-repo citation that resolves against convention
+
+**Decided:** **nothing needed changing, and one convention question is worth the next leg's
+attention.** Second of the `doc/069` plural-form re-checks to land. Same shape as `umbrella/073`:
+13 lines, **29 distinct decision instances**, none of which any previous `embarch-api` sweep could
+match, because every one of those sweeps censused with the singular
+`grep -cE '[Dd]ecision [0-9]'`. The worker also ran a broader `decisions[^0-9]{0,3}[0-9]` sweep to
+catch non-standard forms and found no fourteenth line. **0 wrong numbers, 0 false sentences.**
+
+**The one thing here that is not just a clean tally.** `crates/embarch-core-client/Cargo.toml:13`
+cites a **bare** `decisions 2/8/14` — no `embarch-topology` prefix — and those three resolve to
+`embarch-topology`'s `crate.md`#2, `consumer-boundary.md`#8 and `enrollment.md`#14. The worker
+verified the sentence is accurate, and it is; but **a bare citation conventionally means the citing
+repo's own decisions**, which is the rule `core/068`'s task file states explicitly for its own three
+bare lines. So this line is true and is written in a form that says something else. I did not have
+the worker change it — a citation-form convention across repos is `tasks/doc/055`'s open question,
+not a sweep's to settle — and I am recording it here rather than filing it, because
+`inbox/api-stale-decision-22-citations-remaining.md` already stands unaddressed on adjacent ground.
+**Next leg: these two are the same question and should probably be one task.**
+
+**Merged:** `agent/api/104-plural-citation-recheck` (code **no commit — zero defects meant zero
+edits, branch identical to its branch point**; doc `d9056ee98fbb4e411fb86ab9bbe934fc8cc8a01c`). The
+doc SHA is the only revert handle. Gate re-run by me on the merge result: in `embarch-api`, `cargo
+build --all-targets`, `cargo clippy --all-targets -- -D warnings`, and `cargo test --workspace`
+green — **213 tests across 13 binaries, 0 failed** (I counted the per-binary lines rather than
+trusting a `tail`, because the last binary in that run reports `0 passed` and a tail of the output
+reads as if nothing ran). In `embarch-doc`: `check-docs.py` **11/11** via the wrapper;
+`check-ownership.py --scope api` OK on 2 doc paths; `check-client-names.py --repo` clean against 7
+denylist entries. `changelog.d/api-104-plural-citation-recheck.changed.md` consumed into
+`history/api.md` with `--only`; **29 of the owner's own fragments left pending**, untouched. No
+`status.d/` and no `features.d/` fragment.
+
+**Blocked:** nothing. `tasks/api/104` closed and removed in this fold.
+
+**Reviewer:** skipped (leg ended at its harness's hand-back before the reviewer reported).
+
+**Hardware debts:** **none created.** Doc comments, a `Cargo.toml` comment, a workflow comment and
+one shipped MCP tool description — and in the end not even an edit. Nothing executed, no board, no
+probe, no live Core, no route called. **No hardware was touched anywhere in this leg and Core was
+never read live**, so `tasks/api/059` stays `open`, not blocked, for the eighth consecutive leg; the
+owner's `d0cf9a0` still parks the bench queue and `fleet-hardware.py --refresh` still crashes
+(`tasks/doc/041`). `core/015`'s native Windows build is **untouched by this unit** —
+`embarch-api`, not `embarch-core` — and the recount-from-commits the 2026-09-12 handoff asked for
+is still owed.
+
+**Budget:** PROCEED — weekly **19.1%** of a 90% cap at the leg's top, resets in ~154h, no 429. Wave
+**6** suggested, **3** workers dispatched.
+
+**Least sure about:** **whether recording the bare-citation observation in this entry instead of
+filing it as a task is the right call.** My own reasoning in `(the paragraph above)` is that it
+duplicates ground `tasks/doc/055` and a standing `inbox/` drop already cover, and a third artifact
+saying the same thing is noise. But `.claude/leg.md` is explicit that a `supervisor-log.md` entry
+is on a timer — the file folds daily and rolls into `log-archive/` — and that an observation living
+only here is one nobody dispatches from. If the next leg thinks this matters, it should be a task.
+
+---
+
 ## 2026-09-16 20:45 — umbrella/073 thirty plural-form citations nobody had ever read, and all thirty hold
 
 **Decided:** **nothing, and that is the finding.** This is the first of the `doc/069` plural-form
