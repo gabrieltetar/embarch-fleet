@@ -97,6 +97,116 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 01:42 — core/071 a decision whose own corrections were deleted by a file migration, reverting it to a claim the code had already outgrown
+
+**Decided:** **three things, and the first is the most instructive failure in this log for a while
+because it is a *documentation system* failure, not a drift.**
+
+**1. `embarch-core` decision 32 recorded sector-erasing the declared NVM regions as *rejected* —
+*"another EmbArch-authored guess about what a Nordic part needs erased, the same class of guess that
+produced the brick"* — and it is what `src/hardware.rs` has shipped since `62ef241` (2026-08-25),
+added and never reverted. Amended: sector-erase is what ships, confined away from the RRAM families
+by decision 36.**
+
+**But the history is worse than "the doc went stale", and the worker found it because I told it to
+re-derive rather than trust the task.** The pre-migration `design.md` — `c767f8d`'s parent — carried
+the same wrong opening sentence **and then immediately corrected itself**: a same-day
+*"Correction 2026-08-25"* paragraph acknowledging the code actually shipped sector-erase, and a
+*"Superseded 2026-08-27 by decision 36"* paragraph explaining that 36 confines the RRAM risk
+instead. **The 2026-09-02 four-file migration dropped both correction paragraphs and left the bare
+"Rejected" claim standing.** So this decision was correct on 2026-08-27, wrong again on 2026-09-02,
+and nothing anywhere recorded the regression. A doc that had already healed itself was re-broken by
+a mechanical restructuring, and the class of defect the fleet spends most of its time on is
+*exactly* what that produces.
+
+**2. The confinement was verified, not assumed, and the task's own pointer was wrong.** I told the
+worker not to assert decision 36's confinement without checking, because an unverified confinement
+written as a safety property is worse than leaving 32 wrong. `SOC_TO_CHIP` is in `chip_resolve.rs`,
+not `flash_backend.rs` where the task said to look. All 16 entries read: nRF51/52/53/91 are NVMC
+flash (12 entries); nRF54L15 and nRF54LM20A are RRAM and both match `requires_vendor_tool`'s
+`starts_with("nrf54l")`, so they route to the vendor tool before this code runs; ESP32-C5 and
+STM32G0B1 are non-Nordic. **Every RRAM-shaped entry is caught.** The reviewer re-derived the same
+16-entry table independently and agrees. The property is contingent on future entries following
+decision 49's discipline, and nRF54H already carries an explicit refusal rather than a permissive
+default.
+
+**3. `hardware::flash`'s doc comment promised a "full chip erase" while its own body said
+*"Deliberately NOT `DownloadOptions::do_chip_erase`"* fifty lines down — and `api.rs`'s `/flash`
+`erase` field cited that stale sentence as its explanation.** All three sites corrected together, as
+the dispatch note required: `hardware.rs`'s comment now describes the real per-backend split,
+`api.rs` matches and still delegates, and `interfaces/hardware.md`'s citation moved from decision 32
+to 36 — because the sentence there was **already true and resting on a decision that does not make
+the claim**, 32 having rejected both arms of the original feature rather than concluding "sector, not
+chip".
+
+**Merged:** `agent/core/071-sector-erase-decision-32` (code `641fd15`, doc `4219867`). Doc branch
+rebased onto `64ba56c`, no conflict, rebase and push as separate calls. Gate re-run by me on the
+merge result: in `embarch-core`, `cargo build --all-targets` clean, `cargo test` **209 passed, 2
+ignored**, `cargo clippy --all-targets -- -D warnings` clean — and re-run **after** merging
+`topology/055`'s shared-crate change, so it confirms the pair; in `embarch-doc`, `check-docs.py`
+**11/11**, `check-ownership.py --scope core` OK on 4 doc paths and OK on the code repo,
+`check-client-names.py --repo` clean. **The native Windows build is attempted and reported under
+Hardware debts — it fails, and I measured it rather than carrying it.**
+`changelog.d/core-decision-32-sector-erase-correction.fixed.md` consumed into `history/core.md`;
+**29 of the owner's own fragments left pending**, untouched.
+
+**Blocked:** nothing. **Filed `tasks/core/073` off the reviewer's own non-finding** — see below.
+
+**Reviewer:** 1 finding — inbox/core-071-reversals-gap-decision-32-second-drift.md
+
+Collected before this entry was written. **This is the leg's only reviewer finding and it is the one
+I explicitly asked for**, because the worker had reported a gap it correctly refused to act on:
+`embarch-decision-reversals.md` records the **first** decision-32 drift (2026-08-25 to 08-27) as rows
+19/28/55 across `reversals/rows-1-50.md` and `rows-51-72.md`, and **nothing records the second** —
+the 2026-09-02 migration that deleted the corrections. The reviewer checked all four `rows-*.md`
+pages, confirmed `grep -n "core 32"` finds only those three, and filed it. `reversals/` is
+supervisor-owned, so the worker was right not to touch it, and it is too large a call to make at a
+leg's last unit.
+
+**The reviewer also answered a directed check with a "not a finding" worth keeping, and I filed it as
+`tasks/core/073`.** `interfaces/hardware.md`'s sentence *"`erase` never becomes a chip erase in any
+backend"* now cites decision 36 — better than 32 — but **36's body only settles backend *selection*
+and why probe-rs is refused for RRAM; it never states that the vendor arms refrain from a chip
+erase.** That half lives only in code and tests (`ERASE_RANGES_TOUCHED_BY_FIRMWARE` for `nrfutil`, a
+`jlink_script` test asserting `"erase\n"` and not `"erase_chip"`), and a grep of the whole
+`decisions/` and `interfaces/` tree finds no decision asserting it. **It is the same defect this unit
+just fixed, one hop over**, and it is invisible to every gate precisely because the number resolves
+and the sentence is true.
+
+**Hardware debts:** **none created, and `core/015`'s native Windows build is measured today rather
+than carried.** I ran `cargo build --target x86_64-pc-windows-msvc` in `embarch-core`: the target is
+installed, and the build dies in `cc-rs` compiling `hidapi`'s `etc/hidapi/windows/hid.c` — there is
+no toolchain here to build the C shim against Windows headers. **So the gate's own "plus a native
+Windows build where `embarch-core` is involved" clause cannot be satisfied from WSL2 at all**, and
+that is a standing rule nothing can follow, which someone should decide about. Otherwise nothing
+executed: no board, no probe, no live Core, no deploy, **and no flash** — which matters here because
+the unit is about what `--erase` does to silicon and it was settled entirely by reading `hardware.rs`
+and `chip_resolve.rs`. Standing debts unchanged: `tasks/api/059` still `open` — **not `blocked`** —
+with the dev-bench probe unplugged, a **sixteenth** consecutive leg; `fleet-hardware.py --refresh`
+still crashes (`tasks/doc/041`) and its buffer still claims both boards attached, so **do not plan a
+bench unit off it**; the bench queue is still parked by the owner's `d0cf9a0`; `api/108`'s Windows
+process-tree kill, `umbrella/037` check 13, `umbrella/033`'s check-17 arms, umbrella check 5's
+permission-denied probe, `embarch-ui`'s 18-record stale prefix and the
+`embarch-outpost`/`embarch-dev-bench` toolchains are all untouched.
+
+**Budget:** PROCEED — weekly **29.2%** of a 90% cap at the leg's top, resets in ~150h, no 429. Wave
+**6** suggested at every check; **the 4-unit cap ends this leg**, not the budget and not the queue —
+the queue finished deeper than it started (3 dispatchable in 3 scopes at step 0, 5 in 4 scopes now).
+
+**Least sure about:** **whether the fleet should be reading its own file migrations for deleted
+corrections, and whether anything would notice if it did not.** This unit found a decision that was
+right, then silently made wrong again by a restructuring that touched no code and broke no gate — and
+the only reason it surfaced is that I told one worker to re-derive a git history it had been handed
+second-hand. `c767f8d` was a four-file split done to obey `DOC-COMPACTION.md`; nothing in this suite
+diffs a split for *claims that vanished*, `tasks/doc/044` already records that a verbatim split is
+the one move `check-decision-refs.py` cannot see, and `tasks/doc/052` says a split silently drops the
+decision-size pin of every decision it moves. **That is now three known things a mission split can
+lose, and the corrections-dropped case is the one that turns a healed decision back into a live
+falsehood.** I do not know how many other decisions `c767f8d` and its siblings re-broke, and nothing
+in the queue would find out.
+
+---
+
 ## 2026-09-17 01:36 — topology/055 a safety property that was inaccurate the day it was written, and two more spec guarantees the crate never provided
 
 **Decided:** **three doc corrections, two of them amendments to numbered decisions in place, and one
