@@ -97,6 +97,93 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 20:30 — ui/060 a 46× post-mortem with the wrong denominator, and a reviewer that closed the question the worker left open
+
+**Decided:** **three things, and (c) is a second inbox drop drained mid-leg.**
+
+**(a) One wrong number in 54 instances, in the file that exists to explain a 46× error.**
+`src/trace.rs`'s "two clocks" module doc — the account of reversals row 86, where the outpost's own
+drain thread was charged the whole 4 ms frame interval and read as 78% of a capture it occupies
+1.6% of — said *"4286 of **9205** spans read as unmeasurable"*. Every other account says **4955**.
+I corroborated it against `embarch-outpost/spec.md`'s resolution table before merging, and the
+reviewer then found the same figures verbatim in `embarch-ui` decision 10 (trace),
+`embarch-outpost/decisions.md`'s cross-cutting lesson block, `reversals/rows-73-92.md` row 86 and
+`suite/decisions/placement.md`. **It also checked the sentence's other two numbers** — 78% and 1.6%
+— on my instruction, because a sweep that fixes one wrong number in a sentence carrying two is worse
+than one that leaves both; those were already right, so the fix is complete rather than partial.
+
+**(b) THE "9205" IT WAS TRANSPOSED FROM IS A REAL COUNT FOR A DIFFERENT BUG, AND THE REVIEWER
+PINNED THE DATE THE WORKER SAID COULD NOT BE PINNED.** The same file says *"~490 rows of a 9205-row
+capture"* two paragraphs later, and that is `embarch-core`'s header-pre-pass/manifest-latch bug —
+"488 of 9205 rows unnamed *and* untimed", which `reversals` row 86 explicitly separates from the UI
+clock-tier bug as "two independent hosts". So the fix removed the error rather than moving it.
+Separately, the worker **honestly left one thing unresolved**: `trace.rs:33-34` cites
+`embarch-outpost` decision 4's *2026-08-27* rework while `:67-68` implies layout 3 landed
+2026-08-26, and no decision doc pins the layout 2→3 date. The reviewer settled it from
+`embarch-doc`'s git history — `11e57ca` (2026-08-27 01:40) withdraws layout 2 for layout 3, and
+`35e0f14` (2026-08-27 04:00) says in its own message that the microsecond clock had been on the wire
+"since layout 3 landed **the day before**". **Both dates in the file are right.** That is the
+`api/102` pattern again — a claim true but unverifiable from the docs alone, verifiable from git —
+and it is now the third instance in two days.
+
+**(c) I DRAINED A SECOND INBOX DROP MID-LEG, AS `tasks/doc/070`.** `ui/060`'s worker hit a real
+`scripts/` defect while writing its own task file and dropped it rather than fixing a reserved path.
+`check-decision-refs.py`'s `build_index()` matches `###`/`####` headings; **all four
+`suite/decisions/*.md` files head their entries with `##`**, so `index['suite']` is always empty and
+**the suite's four decisions have no mechanical drift protection at all**. Worse, the two failure
+modes point opposite ways: a bare "suite decision 4" falls into the ambiguous-warning bucket and is
+never checked, while a citation naming the defining path — `` `suite/decisions/placement.md`
+decision 4 `` — **hard-fails as "not defined by suite"** although the decision exists and the
+sentence is true. The precise citation is the one form the checker rejects. Latent since
+`suite/decisions.md` was split into topic files (`tasks/suite/033`, 2026-09-12); nobody had written
+a path-form citation of a suite decision until now. **Filed `Owner: required`** — both candidate
+fixes (the script, or reheading the four files) are reserved, and neither the drop nor I take a
+position on which side is wrong. Drained mid-leg rather than left for my successor because the
+leg was still running and the drop is the kind that reads as background noise a day later.
+
+**Merged:** `agent/ui/060-main-rs-trace-rs-citation-sweep` (code `97ca703`, doc `eb454d4`). Both are
+the revert handles. **54 instances checked** — `main.rs` 26 lines/27 instances, `trace.rs` 25/27 —
+**1 wrong number, 0 false sentences**, and the plural-aware re-census found **no undercount in
+either file**, matching the task's floor exactly. Every bare `decision 10` resolved unambiguously
+from context despite this repo's documented four-way collision. Gate re-run by me on the merge
+result: `cargo build --all-targets`, `cargo test --all-targets` (**93 passing**, 4 ignored, 0
+failed), `cargo clippy --all-targets -- -D warnings` green in `embarch-ui`; `check-docs.py`
+**11/11**; `check-ownership.py --scope ui` OK on 2 doc paths; `check-client-names.py` clean against
+7 denylist entries. I read the code diff before merging — one line.
+`changelog.d/ui-main-trace-citation-sweep.fixed.md` consumed into `history/ui.md` with `--only`;
+**29 of the owner's own fragments left pending**, untouched. No `status.d/` and no `features.d/`
+fragment.
+
+**Blocked:** nothing. `tasks/ui/060` closed and removed in this fold; `tasks/doc/070` filed in the
+same commit. **This is the leg's fourth unit, so the leg ends here.**
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none created.** One number in a Rust module doc; nothing executed, no board,
+no probe, no live Core, no deploy, no study, and the UI was not launched. **No hardware has been
+touched anywhere in this leg and I have not read Core live at any point** — `tasks/api/059` stays
+`open`, not blocked, for the seventh consecutive leg; the owner's `d0cf9a0` parks the bench queue;
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`) and its buffer was neither read nor
+believed. `core/015`'s native Windows build is **untouched by this entire leg** — no `embarch-core`
+unit ran, so the tally the 2026-09-12 handoff asked someone to recount from commits rather than
+propagate is unchanged and still owed. `embarch-ui`'s 18-record stale prefix still has never met a
+real stale prefix; `umbrella/037` check 13, `umbrella/033`'s check-17 arms, umbrella check 5's
+permission-denied probe and the `embarch-outpost`/`embarch-dev-bench` toolchains all carried
+unchanged.
+
+**Budget:** PROCEED — weekly **17.1%** of a 90% cap at the leg's top, **~18%** at this fold, resets
+in ~155h, no 429 anywhere in the leg. Wave **6** suggested; **4 dispatched, 4 landed**, so the
+**unit cap** bound the leg, not the budget and not the queue.
+
+**Least sure about:** **whether draining an inbox drop mid-leg is right, or whether it quietly
+moves a step out of the one place the protocol puts it.** The drain is specified as the top of a
+leg, and doing it mid-leg means my successor's `inbox/` is empty and its step-0 drain is a no-op —
+which is fine here, and would not be fine if I had drained something that needed a decision I am
+not entitled to make. Both drops this leg were `Owner: required` and neither was dispatched, so
+nothing acted on them; what I cannot tell is whether that is the rule or just this leg's luck.
+
+---
+
 ## 2026-09-16 20:21 — dev-bench/031 the firmware's first citation-truth pass, and the reviewer found what it left
 
 **Decided:** **three things, and (c) is the one the next leg must not lose.**
