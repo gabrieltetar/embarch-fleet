@@ -97,6 +97,111 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 11:45 — core/072 a fold recovered from a killed leg, and a reviewer that falsified the sentence the unit had just written
+
+**Decided:** **three things, and the first is that this entry is a recovery rather than a unit I
+ran.**
+
+**1. Leg 134 landed `core/072` and was killed mid-fold; I completed its fold rather than re-running
+or reverting it.** The evidence on arrival: `76a48ed` on `origin/main` in both the local and remote
+doc repo, the task file already `done` with a full Resolution section, and my own leg worktree
+**dirty** — two `changelog.d/` fragments deleted and `history/core.md` carrying their two lines,
+uncommitted and unpushed. That is `build_changelog.py --only` having run and `fold-commit.py` never
+having been reached, so the unit was landed and unlogged: the exact window `.claude/leg.md` says one
+commit exists to make impossible, entered this time by a kill rather than by a mistake. I verified
+the consumed lines against the two deleted fragments before committing them, re-ran
+`build_features.py` (no change, `suite/features.md` already current at 134 rows) and re-ran the gate
+on the merge result. **No worker ran for this entry and no code repo was involved** —
+`agent/core/072-interfaces-error-invariants` sits at `main` (`641fd15`) in `embarch-core` with zero
+commits of its own; the unit is doc-only.
+
+**2. What the unit itself did, from its own Resolution and the diff.** `embarch-core/interfaces.md`
+and `spec.md` claimed *"errors are plain text, not JSON, on every non-2xx"* and that *"the status
+codes are the whole vocabulary a caller can branch on"*, while `src/api.rs`'s `validate_handler`
+ships `Json(ValidateMismatchResponse{ kind, … })` on a `409` and a `503` — the precise mis-routing
+decision 59 was written to stop, with `interfaces/topology.md` in the same directory instructing the
+opposite. All three sites were corrected, `interfaces/result-layout.md` dropped the `alias` field
+that `stream_store.rs` retired with the fixed-channel routes, and decision 12 gained one clause
+pointing forward to decision 59 (it had no forward pointer; 59 already pointed back).
+
+**3. The reviewer falsified the corrected sentence, and I folded its finding into a live task rather
+than filing a second one.** Detail under **Reviewer** below. The finding is now **item 2 of
+`tasks/core/074`**, claimed and dispatched in this leg, and I deleted
+`inbox/core-072-review-third-503-producer.md` when I folded it in. **My reasoning: it is a defect in
+two files that item 1 of `074` already opens, about the same status code, landed forty minutes
+earlier.** Two tasks would mean two workers writing the same `503` bullet on two branches, and the
+one thing `core/072`'s own task file insisted on — *"resolve it for all three doc sites or none, a
+half-corrected invariant is worse than either side"* — is exactly what that would break. `074` now
+carries an explicit **Done when** clause requiring one consistent account of `503` across
+`interfaces.md`, `spec.md` and `interfaces/topology.md`. The cost of this choice is that the drop no
+longer exists as a separate queue item, so **if `074` is abandoned the finding goes with it** —
+which is why it is written out in full in `074`'s body rather than cited.
+
+**Merged:** `agent/core/072-interfaces-error-invariants` (doc `76a48ed`, **code: none** — the code
+branch carries no commits; `embarch-core` `main` is `641fd15` and was not advanced by this unit).
+Merged and pushed by leg 134 before it died; I did not re-merge. Gate re-run by me on the merge
+result as it stands on `main`: `python3 scripts/check-docs.py` **11/11 green**. Leg 134's own
+Resolution records `cargo build --all-targets`, `cargo test` (209 passed, 2 ignored, 0 failed) and
+`cargo clippy --all-targets -- -D warnings` green in `embarch-core`, plus `check-ownership.py
+--scope core` and `check-client-names.py --repo` green — **I did not re-run the cargo half**, since
+the unit changed no Rust and `embarch-core`'s `main` has not moved since.
+`changelog.d/core-interfaces-error-invariants.fixed.md` and
+`changelog.d/core-result-layout-alias-retired.fixed.md` consumed into `history/core.md`; **28 of the
+owner's own fragments left pending**, untouched. No `status.d/` fragment.
+
+**Blocked:** nothing. **Filed `tasks/core/074`** from `topology/056`'s reviewer drop (`dbe3445`),
+and folded `core/072`'s reviewer finding into it as item 2.
+
+**Reviewer:** 1 finding — inbox/core-072-review-third-503-producer.md
+
+Spawned by me against the already-landed merge and collected before this entry was written; the drop
+has since been folded into `tasks/core/074` item 2 and deleted, so the file named on that line no
+longer exists on disk. **This is the strongest argument in this log so far for reviewing a unit even
+when its own gate was green, because the finding is that the correction is itself wrong.**
+`core/072` rewrote both files to say `503` *"carries two distinct meanings"* — `hw_lock` contention
+everywhere, `/validate`'s `not_attached` on one route. The reviewer re-derived a **third** producer
+from `src/api.rs`: `POST /flash` and `POST /reset` both call `describe_topology_error` (201–219),
+which returns a plain-text `503` *"probe not attached for role …"* **after `hw_lock` was already
+acquired** — neither contention nor `/validate`. It traced this to `tasks/core/041`'s own commit
+(`f1c18cc` in `embarch-core`, found with `git log -p -S describe_topology_error -- src/api.rs`),
+which built `/validate`'s `kind` field and `describe_topology_error`'s 503/409 split in one diff, and
+to the test `flash_reset_path_leads_differ_between_not_attached_and_mismatch` (`api.rs` ~2045) that
+pins it — so this is inside decision 59's stated scope, not outside it. A caller following the new
+text still misdiagnoses a detached probe on `/flash` as lock contention. The reviewer's other two
+directed checks came back clean and re-derived: `/validate` really is the only route returning JSON
+on a non-2xx (every `Json(...)` in `api.rs`/`study.rs` checked), and `StreamIndexEntry` really has no
+`alias` field and no other retired field on that doc line. It also judged decision 12's new forward
+clause accurate and restating no rationale.
+
+**Hardware debts:** **none created, and none could be** — a fold of a doc-only unit; nothing executed
+against a board, no probe, no live Core, no flash, no study, no cargo run of any kind by me. Standing
+debts unchanged: `tasks/api/059` still `open` — **not `blocked`** — with the dev-bench probe
+unplugged, an **eighteenth** consecutive leg; `fleet-hardware.py --refresh` still crashes
+(`tasks/doc/041`) and its buffer still claims both boards attached, so **do not plan a bench unit off
+it**; the bench queue is still parked by the owner's `d0cf9a0`; `core/015`'s native Windows build is
+measured unrunnable from WSL2 at all; `api/108` is `open` and dispatchable but **cannot be marked
+done by anything in this environment** — its own `Done when` needs a Windows machine to run the
+binary, so whoever takes it inherits a verification debt by construction; `umbrella/037` check 13,
+`umbrella/033`'s check-17 arms, umbrella check 5's permission-denied probe, `embarch-ui`'s 18-record
+stale prefix and the `embarch-outpost`/`embarch-dev-bench` toolchains all untouched. One debt
+sharpened rather than added: `topology/056`'s open-failure case still needs `/validate` exercised
+against a probe that lists but will not open, which is free to observe and cannot be manufactured.
+
+**Budget:** PROCEED — weekly **33.4%** of a 90% cap at the leg's top, resets in ~139h29m, no 429.
+Wave **6** suggested; **7 dispatchable across 7 distinct scopes**, so neither the queue nor scope
+spread binds — the **4-unit leg cap** is what will end this leg.
+
+**Least sure about:** **whether folding the reviewer's finding into `core/074` was the right call or
+a convenient one.** It is defensible on the merits — one bullet, one worker, one account of `503` —
+but it also made a fresh, independently-derived contradiction into a sub-item of a task that has its
+own agenda, and `074`'s worker could reasonably spend its effort on item 1 and treat item 2 as a
+footnote. The alternative I rejected was filing it as `core/075` and letting it wait a leg, which
+keeps it visible in the queue at the cost of a second worker rewriting the same sentence. **If
+`core/074` comes back having done item 1 well and item 2 thinly, the next leg should file item 2
+separately rather than accept it.**
+
+---
+
 ## 2026-09-17 02:10 — topology/056 a gate that fails closed in seven places and raises a structured mismatch in two, with two comments claiming otherwise
 
 **Decided:** **three things, and the third came from the reviewer and points at another repo.**
