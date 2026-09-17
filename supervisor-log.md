@@ -97,6 +97,86 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 22:46 — study-designer/058 a citation that resolved, was current, and was about something else entirely
+
+**Decided:** **one thing, and it is a new shape for this sweep chain.** `src/registry.rs`'s
+`RegisteredOperation` doc comment attributed the exclusion of `GattOperation::StreamCapture` to
+*"decision 35's own 'doesn't need it here' call"*. Decision 35 exists, is current, is same-repo, is
+correctly unlabelled under the bare-form convention — **and never says that, in any version.** It is
+entirely about the custom-action registry's no-inference/enumerated-values design. The worker
+repointed the sentence to **decision 39**, whose own table row in `decisions/streams.md:36` maps
+`GattOperation::StreamCapture (decision 21)` → `StreamSource::GattNotify` + `StreamEncoding::Samples`
+— which is exactly the claim the sentence was trying to make.
+
+**Why that is worth a paragraph.** This chain has been finding wrong numbers (`055`, `056`) and
+misattributed *locations* (`055`'s `crc32_ieee`). This is neither: the number resolves, the decision
+is real, the repo label is right, and the decision simply never discusses the thing. **No mechanical
+check in this suite can see that** — a resolver confirms the referent exists, not that it says
+anything. The worker filed it as the lead finding in `tasks/study-designer/059` so the next sweep
+looks for it, which is the right place for it.
+
+I verified the two anchor facts myself before merging, since this is a shared crate:
+`decisions/streams.md:36` carries the mapping, and `decisions/registry.md:9` is decision 35's own
+heading — *"A user-authored custom-action registry: names and enumerated parameter choices only,
+never a semantic description"* — with nothing about `StreamCapture` in it.
+
+**Merged:** `agent/study-designer/058-src-sweep-remainder` (code `b774fb3`, doc `68a4b97`). Both
+fast-forwarded with no rebase needed — this was the leg's first landing and both branches were cut
+from the same point. Gate re-run by me on the merge result, not the branch: in
+`embarch-study-designer`, `cargo build --all-targets` clean, `cargo test` **125/125** (116 lib + 9
+`firmware_test_vectors`, matching the dated baseline `053` established), `cargo clippy --all-targets
+-- -D warnings` clean; in `embarch-doc`, `check-docs.py` **11/11** via the wrapper;
+`check-ownership.py --scope study-designer` OK on 3 doc paths and OK on the code branch;
+`check-client-names.py --repo` clean against 7 denylist entries. I read the whole code diff before
+merging — it is 12 lines in one doc comment.
+`changelog.d/study-designer-registry-citation-sweep.fixed.md` consumed into
+`history/study-designer.md` with `--only`; **29 of the owner's own fragments left pending**,
+untouched. No `status.d/` and no `features.d/` fragment, so `suite/features.md` is unchanged.
+
+**A green-baseline note, because it is what makes the gate result above mean anything.** I ran the
+full `check-docs.py` on `main` *before* landing anything this leg and got 11/11. A red gate after a
+merge is therefore attributable to that merge rather than to something that was already broken.
+
+**Blocked:** nothing. `tasks/study-designer/058` closed and removed in this fold;
+`tasks/study-designer/059` filed by the worker and landed here, naming the eight files that remain
+(`outpost.rs` 8 lines down to `records.rs` 2, plus `ids.rs` at 0). Running tally through this unit:
+**455 distinct citation instances checked across 16 files, 16 wrong numbers, 6 false sentences.**
+
+**Reviewer:** no findings.
+
+Collected before this entry was written. It re-derived all three things I asked it to and added one
+I had not thought to check: `grep -rn "RegisteredOperation"` across the whole doc corpus returns
+**zero hits in any decisions file**, so no decision governs that type's relationship to
+`study::GattOperation` at all — which is the strongest form of the worker's claim, not just a
+reading of 35. It also read decision 35's pre-compaction 2026-08-24 original at commit `e41c469`
+(`embarch-study-designer/design.md`, before the 2026-09-06 split) and confirmed the text never
+supported the original citation there either, and it re-derived `059`'s carried-forward numbers
+independently against the code worktree rather than trusting the task's own prose — per-file grep
+counts, both reserve byte figures, the four-file continuation-grep list and the tally arithmetic all
+reproduced exactly.
+
+**Hardware debts:** **none created.** Twelve lines of one Rust doc comment; nothing executed, no
+board, no probe, no live Core. Standing debts carried unchanged — `core/015`'s native Windows build,
+`umbrella/037` check 13, `umbrella/033`'s check-17 arms, umbrella check 5's permission-denied probe,
+`embarch-ui`'s 18-record stale prefix, and the `embarch-outpost`/`embarch-dev-bench` toolchains.
+**The dev-bench probe is still unplugged — I read Core live at this leg's top and `status` returned
+`"probes": []`** — so `tasks/api/059` stays `open`, not `blocked`, for the **twelfth** consecutive
+leg, `d0cf9a0` still parks the rest of the bench queue, and `fleet-hardware.py --refresh` still
+crashes (`tasks/doc/041`).
+
+**Budget:** PROCEED at the leg's top — weekly **23.7%** of a 90% cap, resets in ~152h32m, no 429
+anywhere. Wave **6** suggested; **4** dispatched, which is the leg's unit cap.
+
+**Least sure about:** **whether the `tasks/study-designer/059` follow-up correctly generalises this
+find or over-fits it.** "A real, current, correctly-labelled decision that simply never says the
+thing" is a much larger search space than "a wrong number" — checking for it properly means reading
+every cited decision's body against every cited sentence, which is what the method already claims to
+do and plainly did not do here for sixteen files. If the next sweep finds several more of these, the
+honest reading is that the previous fifteen files were under-checked on exactly this axis, not that
+`registry.rs` was unlucky.
+
+---
+
 ## 2026-09-16 22:23 — dev-bench/032 the most productive unit of the leg, and the one that introduced a false claim
 
 **Decided:** **two things, and the shape of this unit is the argument for everything the leg spent
