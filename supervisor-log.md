@@ -97,6 +97,80 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 17:39 — ui/067 the split is permanent in `embarch-ui`'s own words now, and the compaction it was blocking is paid
+
+**Decided:** **that `embarch-ui`'s two decision-27 texts state the permanence themselves rather than
+deferring to `embarch-core`, and that a summary file may cite a list a decision record carries
+rather than repeating it.** Both docs still said the widening question was *"filed to `inbox/`, not
+decided here."* `embarch-core` decision 66 answered it — permanently, for two independent reasons —
+and `inbox/` no longer holds anything. `embarch-ui/open.md`'s bullet and
+`embarch-ui/decisions/trace-view.md` decision 27's closing sentence now both say the split stays,
+cite decision 66, and carry both reasons: `Gap` widened to full parity, **and** axis diagnostics and
+point events stay excluded, the latter built in the same row pass as `Lane`/`Span`/`Gap` so nothing
+short of everything is a retirement.
+
+**Decided, second — and this is the ordering call I made at dispatch, paying off:** **`tasks/ui/066`
+is done, paid as a ride-along by this unit, and `.claude/leg.md`'s reserve rule is what made it
+free.** `066` was `blocked` on `In flux: yes` because leg 138 judged the bullet would change again
+once `core/085` resolved. It resolved. I dispatched `067` **ahead** of `066` precisely because the
+last writer of the disputed bullet has to go first, and I told the worker in its dispatch note that
+if its edit left `embarch-ui/open.md` in reserve it was to compact that file as part of **this**
+unit, carrying `066`'s `Must not delete:` list. It did: **4,169 → 3,916 B (76.5%), out of reserve,
+`PAID`**. `066`'s own `Done when` had asked for exactly this shape — *"a link is shorter than a
+re-derivation"* — so the debt was paid by the correction rather than by squeezing prose. I closed
+`066` in this fold, discharging its `In flux` answer rather than overriding it, and kept the original
+answer verbatim in the file because it was right when written.
+
+**The one thing I checked hardest, because this unit compacted while it corrected.** The bullet
+dropped an enumerated list of twelve axis-health field names. That is the `core/086` failure shape —
+a squeeze taking named identifiers out of the corpus — and it happened in this same leg. I briefed
+the reviewer to verify both claimed homes for that list. Both carry it in full and identically:
+this crate's own decision 27, and `embarch-core` decision 66. **A summary file citing a decision
+record is not the same loss as a decision record dropping a name**, and that distinction is the
+whole reason this one is fine and `core/086`'s was not.
+
+**Merged:** `agent/ui/067-decision-27-split-permanent` (code `e405314` — **unchanged, the branch
+carries no code commits**, doc `8d10b62b`). `embarch-ui/open.md` 4,169 → 3,916 B;
+`embarch-ui/decisions/trace-view.md` 10,754 → 11,000 B (89.5%) — the worker's first draft of that
+sentence hit 11,177 B and pushed the file **into** reserve, and it trimmed back to stay clear rather
+than file a new debt. `changelog.d/ui-decision-27-split-closed-as-permanent.decided.md` consumed into
+`history/ui.md`; **29 of the owner's own fragments left pending**, untouched, via `--only`. Gate on
+the merge result: `check-docs.py` **11/11**, `check-ownership.py --scope ui` clean on both branches.
+`tasks/ui/066` closed in the same commit.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+**One thing the reviewer could not verify and said so instead of assuming**, which is the behaviour
+this log wants recorded: the pre-trim draft of `trace-view.md`'s sentence was never staged, so there
+is no object to diff the 177-byte trim against — it searched ~88 dangling objects and found none.
+It reported "pre-trim content unavailable" rather than calling the trim safe, then verified that
+nothing named in decision 66 or `suite/decisions/placement.md` §4 is missing from what did land.
+**That is the right answer to an unrecoverable path** and it is worth more than a confident clean
+read would have been.
+
+**Hardware debts:** **none created, and none could be** — two sentences of prose in two markdown
+files; nothing built, nothing executed, no board, no probe, no live Core, no DUT. `trace.rs` was not
+touched and the `embarch-ui` code repo is byte-identical to `main`. Standing `ui` debt carried
+unchanged and **not** paid by this unit: `tasks/ui/007` — the stale-prefix drop has still never met a
+real stale prefix, `STALE_PREFIX_MAX_ROWS` (512) is still an assumption about a bridge FIFO nobody
+has measured, and closing it needs the owner's own session to run a study and open its Trace tab.
+Also unchanged: nothing has compared a trace's placement against a second stream in the same study.
+
+**Budget:** PROCEED, weekly **46.9%** of a 90% cap, resets in ~133h. Wave **6** suggested; **the
+4-unit leg cap bound this leg, not the budget and not scope spread** — all four dispatchable scopes
+ran concurrently and all four landed.
+
+**Least sure about:** **whether closing `tasks/ui/066` myself was a judgement or a formality.** The
+byte count is mechanical — `--pressure` says `PAID` — but "is this file's compaction debt actually
+discharged" is the `DOC-COMPACTION-PASS.md` human question, and the honest answer to *can
+`embarch-ui/open.md` alone tell someone what they need to know about the trace-spans split today* is
+**yes, but only because it now points at a decision in another repo.** That is the correct design and
+it is also a new dependency: if `embarch-core` decision 66 is ever compacted the way decision 62 was
+compacted **in this same leg**, this bullet becomes a pointer to a name that is gone. I did not file
+a task for that because it is a hypothetical, and I am not certain that was the right call.
+
 ## 2026-09-17 17:37 — umbrella/081 a file two bytes from its cap, paid by a split — and the split's own verification missed one citation
 
 **Decided:** **that `projects.md`'s seam is decision 55, not decision 26, and that the reason the
