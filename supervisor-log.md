@@ -97,6 +97,88 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 00:25 — topology/053 the same wrong sentence a third time, and the one place it is right
+
+**Decided:** **two things, and the second is the useful one.**
+
+**1. `src/hardware/validate.rs:1-3`'s migration clause now cites `embarch-core` decision 22, and
+decision 8 stayed where it belongs.** The header cited a bare `decisions 2, 8` for *"formerly
+`embarch-core`'s own `board_gate.rs`"*. `embarch-topology` decision 2 (`decisions/crate.md`)
+describes the crate's shared-library architecture and says nothing about a migration; decision 8
+(`decisions/consumer-boundary.md`, *"One implementation, multiple call sites — not two independent
+layers"*) is correct, but for the *next* clause, and it is now attached to that clause explicitly.
+The provenance clause cites `` (`embarch-core` decision 22) ``, whose own body closes *"**Moved
+wholesale into `embarch-topology`**, because the stale-serial incident that motivated that crate *is*
+this mechanism's own override path going stale."* **The prose is byte-identical before and after** —
+only citation placement moved, which is exactly what `topology/052`'s rewording lesson asked for and
+what I told this worker to do.
+
+**2. The class now stands at six instances, three of them in `embarch-topology` alone, and one
+sentence of the same shape that is correctly cited — which is the part that makes it a real class
+rather than a pattern-match.** This leg has paid `embarch-core`'s three (`core/070`) and
+`embarch-topology`'s second (here); `enrollment.rs` was the first (`topology/052`, last leg). The
+worker found the third — `src/hardware/hardware_id.rs:1-6`, *"formerly `embarch-core`'s own
+`hardware_id.rs`, moved here unchanged (decisions 2, 4)"*, where decision 4 is a forward-looking
+scope decision that never names the file — and **filed it rather than fixing it**, which was right:
+its task's scope was one line and said so. Drained to `tasks/topology/054`, `open`.
+
+**And it checked the fourth sibling and correctly said no.** `port.rs` carries the identical
+sentence shape for `dev_bench.rs` with the identical `decisions 2, 4` citation, and it is **not** a
+defect: decision 4 names *"the dev-bench port heuristic"* by name, and no `embarch-core` decision
+records that particular migration, so decision 4 is the correct and only provenance available. **A
+worker that finds three instances of a shape and then declines the fourth on the evidence is the
+thing that distinguishes this class from a find-and-replace**, and it is worth recording as loudly
+as the fixes.
+
+**Merged:** `agent/topology/053-validate-rs-migration-citation` (code
+`c0c4f84`, doc `d655d1e`). The doc branch needed **two** rebases — first onto `b05efc1` after
+`core/070`'s fold, then onto `a8dbff2` after `study-designer/060`'s; the code branch fast-forwarded
+straight on. Gate re-run by me on the merge result: in `embarch-topology`, `cargo build
+--all-targets` clean, `cargo test` green (**80 + 5 with `--all-features`**, and I re-ran it after a
+`touch` because a first pass reported nothing recompiled), `cargo clippy --all-targets -- -D
+warnings` clean; in `embarch-doc`, `check-docs.py` **11/11** via the wrapper, re-run after I added
+`tasks/topology/054`; `check-ownership.py --scope topology` OK on 2 doc paths and OK on the code
+repo; `check-client-names.py --repo` clean against 7 denylist entries.
+`changelog.d/topology-validate-rs-migration-citation.fixed.md` consumed into `history/topology.md`
+with `--only`; **29 of the owner's own fragments left pending**, untouched. No `status.d/` and no
+`features.d/` fragment.
+
+**Blocked:** nothing. `tasks/topology/053` closed in the worker's own merge; `tasks/topology/054`
+drained from `inbox/` and landed here, with its `protocol.md` link depth corrected from `../../` to
+`../../../` — the drop was written from `inbox/`, where two levels is right, and one level deeper is
+where it ended up.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written, and it answered the one question the diff's shape actually
+risked: **splitting one citation into two can leave the surviving number attached to the wrong
+clause**, and it read decision 8's body against the final wording to confirm it did not. It also
+diffed the header line by line to establish the prose is byte-identical, and independently confirmed
+no `embarch-topology` decision records the `board_gate.rs` move closer than `embarch-core` 22. Three
+minutes, against the eight the previous reviewer took — I asked for tightness this time and got it
+without losing the substantive check.
+
+**Hardware debts:** **none created, and none could be** — one doc-comment hunk, nothing built for a
+board, no probe, no study. Standing debts carried unchanged: the dev-bench probe is **still
+unplugged** (`"probes": []` read live from Core at this leg's top), so `tasks/api/059` stays `open`
+for a fourteenth consecutive leg; `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`) and
+its buffer still claims both boards attached, so **do not plan a bench unit off it**. `core/015`'s
+native Windows build is untouched by this unit — `embarch-topology`, not `embarch-core`.
+`umbrella/037` check 13, `umbrella/033`'s check-17 arms and `embarch-ui`'s 18-record stale prefix
+are all untouched.
+
+**Budget:** PROCEED — weekly **27.4%** of a 90% cap, resets in ~150h, no 429. Wave **6** suggested;
+the 4-unit cap is what bounds this leg.
+
+**Least sure about:** **whether `topology/054` should have been this leg's fourth unit.** It is the
+third instance of a class this leg has now paid twice, the evidence is already attached, and it is a
+ten-minute fix — but `dev-bench/034` is already merged and waiting, and re-ordering to take `054`
+would leave a landed worker's branches unfolded while I dispatched a fresh one. The last leg asked
+almost exactly this question about this same task family and answered it the same way; **if `054`
+sits in the queue for four legs, both of us will have been wrong.**
+
+---
+
 ## 2026-09-17 00:21 — study-designer/060 nineteen units ran a grep that could only see half the citations it claimed
 
 **Decided:** **three things, and the first is the most consequential finding this leg produced.**
