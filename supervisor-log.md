@@ -97,6 +97,111 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 23:08 — umbrella/074 nine clean citations, and a reversal row nobody filed because the reason not to filed itself
+
+**Decided:** **two things, and the second is a suite-level doc gap I have queued rather than closed.**
+
+First, the sweep. All 9 singular-wrapped citation lines in `embarch-umbrella` — the form the plural
+wrap-grep returned **zero** hits for in this repo, so the whole class had been reported absent while
+nine sat in `src/` — resolve, resolve in the repo their own sentence names, and assert something
+true. **0 defects, 0 edits, zero-byte code diff.** The repo-prefix trap did not fire:
+`config.rs:56` and `:107` genuinely are `embarch-api`'s decisions 12 and 53, in a file whose whole
+job is mirroring `embarch-api`'s shape. I had the reviewer re-derive the three `doctor.rs`
+citations (17, 23, 8) from their own bodies rather than re-audit all nine, because that file is
+enormous and three of the nine live in it; all three hold, with no `study-designer/058`-shaped
+defect among them.
+
+Second — **`embarch-decision-reversals.md` is owed a row for `embarch-umbrella` decision 3 → 28, and
+the argument for not filing one was self-refuting.** `install.rs:5` claims decision 3 was reversed
+by decision 28; both numbers and both directions check out, which is the part the task asked for.
+The worker then checked the reversals doc, found no row citing 3 or 28, and concluded that was
+**correct** on the grounds that the reversal is *"already handled correctly in its own owning doc"*.
+**That phrase is the reversals doc's own header, said of every row it has** — *"Every entry is
+handled correctly in its own owning doc. This page does not restate a correction's mechanism…"* It
+describes what the page is. Read as an exclusion bar it would empty the page.
+
+**I verified the real bar myself rather than take the reviewer's word**, having had two agents
+overturned already this leg. The header's actual admission test is *"caught by a real build,
+install, capture, or by reading a real repo's actual files — **never by inspection alone**"*, and
+decision 28's own first sentence is *"prompted by a real `wsl-host` onboarding run reporting the
+wrong Core path"*. Decision 3's reversal paragraph names what reality showed: sibling lookup ties
+correct operation to wherever the archive was unpacked staying put forever, and the printed Core
+path reported the local Linux sibling instead of the Windows-side binary a `wsl-host` topology
+needs. `umb` rows are plentiful — 6, 8, 9, 58, 71, 77 — and 6 and 9 are the same install-assumption
+family. **The row is owed.**
+
+**I filed it rather than wrote it, and that is a deliberate call.** Row numbers are permanent and
+range files never re-split; the newest row is 109, `reversals/rows-93-109.md` is already 12,838 B,
+and the top-level index is **9,309/10,240 B with 931 B left** and parked behind a blocked
+`tasks/suite/004`. So filing row 110 requires choosing between renaming a range file every link
+points at and opening a new range file holding one row — **a structural call about a shared
+suite-level doc, made at the end of a leg, under a reserve.** That is exactly the shape of decision
+the announcement window exists for. Filed as **`tasks/suite/042`**, `Owner: no` but
+supervisor-executed, carrying both options, the byte costs of each, and the reasoning above so the
+next supervisor does not re-derive it. The reviewer's drop was drained and deleted.
+
+**Merged:** `agent/umbrella/074-singular-wrapped` (code — **no commits**, `embarch-umbrella`
+unchanged at `949801d`; doc `dbc8a8d`). The doc branch needed a rebase onto `32c2b23` first, since
+`api/106`'s fold had moved `main`. Gate re-run by me on the merge result: in `embarch-umbrella`,
+`cargo build --all-targets` clean, `cargo test` **225 passed / 0 failed**, `cargo clippy
+--all-targets -- -D warnings` clean; in `embarch-doc`, `check-docs.py` **11/11** via the wrapper,
+re-run again after I added the new task file; `check-ownership.py --scope umbrella` OK on 2 doc
+paths; `check-client-names.py --repo` clean against 7 denylist entries. The worker's `cargo build`
+resolved with no manual symlinking, which confirms the **`embarch-api` link I added beside the
+`embarch-umbrella` worktree** was the missing one — `.claude/leg.md`'s table omits it, filed as
+`tasks/doc/037`, and this leg is a live data point for it.
+`changelog.d/umbrella-singular-wrapped-citation-sweep.changed.md` consumed into
+`history/umbrella.md` with `--only`; **29 of the owner's own fragments left pending**, untouched. No
+`status.d/` and no `features.d/` fragment.
+
+**Blocked:** nothing. `tasks/umbrella/074` closed and removed in this fold; `tasks/suite/042` filed
+and landed here.
+
+**Reviewer:** 1 finding — inbox/doc-umbrella-074-reversal-row-owed.md
+
+Collected before this entry was written, verified independently by me against the reversals doc's
+header and both decision bodies, drained into `tasks/suite/042`, and the drop deleted. It also
+answered a counting question I asked in passing and the answer matters more than the question did —
+see below.
+
+**A counting-convention slip worth carrying forward.** The worker reported "9 lines / 9 distinct
+`(repo, number)` instances", reaching 9 by counting `install.rs:5`'s two numbers as two and
+collapsing the twice-cited decision 30 at `locate.rs:311`/`:349` into **one**. The reviewer checked
+the rest of the chain — `core/069` (15 lines / 25 instances), `api/106` (18 / 20), and same-repo
+`umbrella/073` (13 / 30, where one line's "27/29" is explicitly *one decision recorded under two
+numbers* and is **still counted as 2**) — and the chain's actual convention is **every cited
+occurrence, not deduplicated pairs.** By that convention this unit is **10**, not 9. I have not
+rewritten the landed number, because the task file is deleted in this fold and the changelog
+fragment says "9 lines/9 instances", which is true under the convention its author stated. **But a
+running tally that silently mixes the two conventions is wrong in a way nobody would ever notice**,
+and this is the only place that fact is written down.
+
+**Hardware debts:** **none created, and none could be.** Zero bytes of code changed anywhere, and
+`doctor` was not executed. `doctor`'s own live behaviour remains the standing unpaid debt it was —
+`umbrella/037` check 13, `umbrella/033`'s check-17 arms, check 5's permission-denied probe — and
+this unit checked citation numbers, not check behaviour, deliberately. `core/015`'s native Windows
+build is untouched: `embarch-umbrella`, not `embarch-core`. The dev-bench probe is still unplugged
+(`"probes": []` read live at this leg's top), so `tasks/api/059` stays `open` for the twelfth
+consecutive leg, `d0cf9a0` still parks the bench queue, and `fleet-hardware.py --refresh` still
+crashes (`tasks/doc/041`). `embarch-ui`'s 18-record stale prefix and the
+`embarch-outpost`/`embarch-dev-bench` toolchains carried unchanged.
+
+**Budget:** PROCEED throughout — weekly **23.7%** of a 90% cap at the leg's top, resets in ~152h,
+no 429 anywhere. Wave **6** suggested, **4** dispatched (the leg's unit cap), and the cap, not the
+budget, is what ended this leg.
+
+**Least sure about:** **whether I should have written the reversals row myself instead of filing
+it.** I am the only actor who may write that doc, so filing a task means the row waits for another
+supervisor to spend a unit and an announcement window on what is, in the end, one table row. The
+case for filing is real — a permanent-identity numbering scheme with no room left in its newest
+range file is a structural choice, and I would have been making it at the end of a leg against a
+931-byte reserve — but I notice that "this needs a proper decision" is also the most comfortable
+thing a delegate can say at the point where it would otherwise have to commit. If the next leg
+reads `tasks/suite/042` and finds the range-file question obvious, then I over-thought it and the
+row cost a leg boundary for nothing.
+
+---
+
 ## 2026-09-16 23:01 — api/106 a true zero, resampled rather than trusted, and one arithmetic slip inside it
 
 **Decided:** **nothing was wrong, and the interesting part is how I convinced myself of that.**
