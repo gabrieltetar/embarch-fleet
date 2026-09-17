@@ -97,6 +97,93 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 00:47 — study-designer/061 the fourth site of a corrected claim, on the field the correction is named after
+
+**Decided:** **two things, and the first is the most substantive defect this chain has found in a
+while.**
+
+**1. `Sample::rx_utc_ms`'s own doc comment was still asserting the thing decision 72 exists to
+retract.** It said dev-bench's clock is *"seeded and periodically resynced from Core's
+`host_utc_ms` on every `Hello`"* (decision 12). Decision 72 — titled
+*"`Sample::rx_utc_ms` carries bench uptime, and the name's promise is corrected rather than kept"* —
+struck that identical claim at three sites: `interfaces/decoders.md`, decision 12's own paragraph,
+and `src/protocol.rs`'s `Hello.host_utc_ms` comment. **`sample.rs` was a fourth site, on the very
+field decision 72 is titled after, and it was not on the corrected list.** It now says the seeding
+half is *designed and not implemented in firmware*, that dev-bench stamps `k_uptime_get()` with no
+offset applied, and that the value is therefore bench uptime and not comparable with
+`core_rx_utc_ms`. **This is not a citation defect** — the number was right and the sentence was
+false, which is the class this chain has recorded as its most expensive and rarest find.
+
+**2. Thirteen citations nothing in this chain had ever actually read were read, and all thirteen are
+correct.** `study-designer/060` found the chain's continuation-grep was **plural-only** —
+`[Dd]ecisions[[:space:]]*$` cannot see a line ending in the singular *"decision"* with its number
+wrapped to the next line — and located 13 such citations in six files (`protocol.rs`, `study.rs`,
+`study_builder.rs`, `schema_version.rs`, `lib.rs`, `eap.rs`) that `044`–`049` and `053` had all
+closed while blind to them. This unit checked all 13 against their decision bodies: **0 wrong
+numbers, 0 false sentences.** So the six files' "exhaustive" claims are now true rather than
+merely asserted, which is worth more than the zero suggests.
+
+Running chain tally, `044`–`061`: **492 distinct citations checked, 17 wrong numbers, 7 false
+sentences.** The worker also fixed a self-inconsistency in `061`'s own header, which said "seven"
+and "thirteen" for the same count two sentences apart.
+
+**Merged:** `agent/study-designer/061-src-citation-sweep-remainder` (code `56f2536`, doc `b8c7f5d`).
+The doc branch needed a rebase onto `fac10a4` first, since this leg's own `topology/054` fold and
+the `api/107` refill commit had moved `main`. Gate re-run by me on the merge result:
+`cargo build --all-targets` clean, `cargo test --all-features` **268 passed** across five binaries,
+`cargo clippy --all-targets --all-features -- -D warnings` clean; `check-docs.py` **11/11** via the
+wrapper; `check-ownership.py --scope study-designer` OK on 3 doc paths and OK on the code repo;
+`check-client-names.py --repo` clean against 7 denylist entries. I read the full code diff before
+merging — `embarch-study-designer` is a shared crate — and it is one doc comment, +10/-4, no type,
+field, constant or wire touched. `changelog.d/study-designer-sample-citation-sweep.changed.md`
+consumed into `history/study-designer.md` with `--only`; **29 of the owner's own fragments left
+pending**, untouched. No `status.d/` and no `features.d/` fragment. `embarch-study-designer/spec.md`
+and `open.md` are both still in reserve at exactly their prior numbers (890 B and 461 B left) — this
+unit spent none of it.
+
+**Blocked:** nothing. The worker filed `tasks/study-designer/062-src-citation-sweep-remainder.md`
+naming the five files left (`merged_actions.rs`, `gatt_names.rs`, `eap_interp.rs`, `vendor.rs`,
+`records.rs`) and carrying `merged_actions.rs:72`'s still-unchecked singular-wrap citation forward to
+that file's own turn.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written. I gave it three directed checks and it answered all three
+with quotations. The one worth recording: I asked whether *"not comparable with `core_rx_utc_ms`"*
+was decision 72's claim or the worker's extrapolation, and it found decision 72's own text says
+*"`core_rx_utc_ms` is the column to plot against anything else in this suite, and `rx_utc_ms`
+answers intervals within one capture and nothing wider"* — so the wording is 72's, not invented.
+It also spot-checked **3 of the 13** blanket-correct citations by name (`schema_version.rs:203`,
+`lib.rs:758`, `study.rs:88`) against five separate decision files and all three held. **That is a
+partial answer to the standing question about directed versus open-ended reviewer prompts:** a
+blanket "all N correct" is exactly the shape that hides one, and three named samples distinguish a
+real check from a rubber stamp at almost no cost. Several legs have now wanted the controlled
+comparison `api/097` asked for; nobody has run it.
+
+**Hardware debts:** **none created, and none could be** — one Rust doc comment; nothing executed, no
+board, no probe, no live Core, no deploy. **But this unit is *about* a hardware debt and sharpens
+it**: the reason `rx_utc_ms` is bench uptime is that decision 12's seed-and-resync half was designed
+and never built in firmware, and nothing has measured the drift that makes it matter
+(`embarch-study-designer/open.md`'s clock-resync bullet, `embarch-dev-bench/open.md`'s). That debt
+is **restated, not added to.** Standing debts otherwise unchanged: `tasks/api/059` still `open` —
+**not `blocked`** — with the dev-bench probe unplugged; `fleet-hardware.py --refresh` still crashes
+(`tasks/doc/041`) and its buffer still claims both boards attached; the bench queue is still parked
+by the owner's `d0cf9a0`; `core/015`'s native Windows build, `umbrella/037` check 13,
+`umbrella/033`'s check-17 arms, umbrella check 5's permission-denied probe, `embarch-ui`'s 18-record
+stale prefix and the `embarch-outpost`/`embarch-dev-bench` toolchains are all untouched.
+
+**Budget:** PROCEED — weekly **28.7%** of a 90% cap at this fold, resets in ~150h, no 429. Wave
+**6** suggested; one worker in flight at the fold, and the queue, not the budget, is the bound.
+
+**Least sure about:** **whether "the sentence is false but the number is right" is a class this
+chain can keep finding, or whether it found this one by luck.** The census greps look for citation
+*numbers*; nothing looks for a *claim*. This unit found the `sample.rs` sentence only because a
+human-written task pointed at that file and a worker happened to read decision 72's title, which
+names the field. **There is no grep for "this comment describes behaviour the firmware does not
+have"**, and that is the defect class with real cost attached.
+
+---
+
 ## 2026-09-17 00:44 — topology/054 the third sibling of one wrong provenance clause, and the fourth left right
 
 **Decided:** **one thing, and it closes a three-unit shape in this crate.**
