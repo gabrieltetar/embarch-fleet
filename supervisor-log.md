@@ -97,6 +97,82 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 21:43 — topology/051 the second site of one stale sentence, and the last
+
+**Decided:** **nothing new — this unit closes a finding rather than opening one.** `topology/050`
+fixed the "own CLI/UI" claim in `src/hardware/validate.rs` yesterday evening and correctly declined
+to widen to `Cargo.toml:48`, which cites no decision number and so sat outside a plural-citation
+sweep's mandate. I filed it at that fold; this unit paid it. `Cargo.toml:48` now says "this crate's
+own CLI binary" and carries a one-line pointer to decision 5 (`decisions/alerts.md`, the 2026-08-24
+retirement of `bin/ui.rs` and its `Ui` subcommand, commit `7d13781`).
+
+**What makes it worth an entry is the closing sweep, not the edit.** The worker grepped
+`CLI/?UI|CLI and UI|UI and CLI|UI binary|its own UI` case-insensitively across `.rs`, `.toml` and
+`.md` in the whole repo: **zero hits remain.** Two sites existed, both are fixed, and there is no
+third — so this sentence is finished rather than merely one instance less wrong. That is the
+question `topology/050`'s entry left open and it is now answered with a measurement.
+
+**Merged:** `agent/topology/051-cargo-toml-cli-ui-binary` (code
+`ab723416ef1e0ad6b5a3a1ba1e2a45fd0a1a1e01` — short `ab72341`, doc `cabf738`). Both SHAs are the
+only revert handles. The doc branch needed a rebase onto `bbccf8e` before it would fast-forward,
+since this leg's own queue commit had moved `main` under it; rebased in the worker's doc worktree
+and force-pushed, so `git cherry`'s patch-id still retires it. Gate re-run by me on the merge
+result: in `embarch-topology`, `cargo build --all-targets` green, `cargo test --features hardware`
+**80 passing** (matches `topology/050`'s baseline), `cargo clippy --all-targets -- -D warnings`
+green; in `embarch-doc`, `check-docs.py` **11/11** via the wrapper; `check-ownership.py --scope
+topology` OK on 2 doc paths and on the code branch; `check-client-names.py --repo` clean against 7
+denylist entries. `changelog.d/topology-cargo-toml-cli-ui-binary.fixed.md` consumed into
+`history/topology.md` with `--only`; **29 of the owner's own fragments left pending**, untouched. No
+`status.d/` and no `features.d/` fragment.
+
+**One gate oddity worth recording, because the next leg may see it.** My first
+`cargo clippy --all-targets -- -D warnings` in `embarch-topology`'s main checkout exited non-zero
+with `process didn't exit successfully` on `clippy-driver` and **no diagnostic at all** — no
+`error:` line, no `warning:` line. An immediate re-run was clean and stayed clean. Three other
+workers were building concurrently in their own worktrees with their own target directories, so a
+shared-lock explanation does not obviously fit. I merged on the second reading, which is the right
+call for a failure that produces no diagnostic and does not reproduce, but it is the first time this
+log records a clippy run failing with nothing to show for it.
+
+**Blocked:** nothing. `tasks/topology/051` closed and removed in this fold.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written. It went past the three checks I asked for: it confirmed
+from `git ls-tree` at the merge SHA that `bin/` contains only `main.rs`, so "CLI binary" is true of
+the tree rather than of `main.rs` read alone; it found that the `tokio` dependency's *own* adjacent
+comment already says the web-server half was retired, which is independent corroboration sitting
+four lines away; and it checked decisions 12 and 19 and found 19 **corroborates** decision 5 rather
+than colliding with it, noting a per-alert detail page "that only the deleted binary ever served".
+It also confirmed `embarch-decision-reversals.md` carries nothing re-proposing 5, 12 or 19.
+
+**Hardware debts:** **none created.** One comment line in a `Cargo.toml`; nothing executed, no
+board, no probe, no live Core, no deploy, no study. On the standing bench debt I have a live
+reading this time rather than an inherited one: **I called Core's `status` at this leg's top and it
+returned `"probes": []`**, so the dev-bench probe is still unplugged and `tasks/api/059` stays
+`open`, not `blocked`, for the **tenth** consecutive leg. The owner's `d0cf9a0` still parks the rest
+of the bench queue and `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`), so the
+buffer's attach state was not consulted. `core/015`'s native Windows build is untouched by this unit
+— `embarch-topology`, not `embarch-core` — and the recount the 2026-09-12 handoff asked for was
+answered by leg 127 with the finding that **it cannot be computed at all**: nothing records when the
+deployed Windows exe was last built, so the ordinal is unanchored and the owner has to record a
+deploy SHA at the next `embarch-dev-workflow.md` §4a sitting. I am not re-narrating an ordinal here.
+`umbrella/037` check 13, `umbrella/033`'s check-17 arms, umbrella check 5's permission-denied probe,
+`embarch-ui`'s 18-record stale prefix and the `embarch-outpost`/`embarch-dev-bench` toolchains all
+carried unchanged.
+
+**Budget:** PROCEED — weekly **21.1%** of a 90% cap at the leg's top, resets in ~153h, no 429. Wave
+**6** suggested, **4** dispatched, because the leg's unit cap is 4 and the queue held exactly 5
+dispatchable tasks in 5 distinct scopes.
+
+**Least sure about:** **the clippy failure above.** I have recorded it rather than explained it, and
+the honest position is that I do not know whether it was environmental noise or the first sighting
+of something that will waste a later leg's time. A gate that fails with no diagnostic is the one
+failure mode the merge-on-green rule has no answer for: "run it again" is what I did, and it is
+indistinguishable from waving a red gate through if the second reading had been a false green.
+
+---
+
 ## 2026-09-16 21:27 — suite/040 two repos' `CLAUDE.md` now name their interfaces doc, and `embarch-core`'s was right all along
 
 **Decided:** **two things, and the first is a judgement call I was asked to make and made against
