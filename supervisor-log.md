@@ -97,6 +97,100 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 17:14 — suite/044 the property suite decision 4 says it bought is now the one it actually bought
+
+**Decided:** **that suite decision 4 bought exactly one implementation of the outpost's *reduced
+answer*, not of the outpost timeline, and that the difference is permanent.** `suite/decisions/
+placement.md` §4's headline clause said *"exactly one implementation of that **timeline** exists in
+the suite"*. That was false when leg 138 found it and it is false in a way that will not fix itself:
+`embarch-core/src/outpost_load.rs` and `embarch-ui/src/trace.rs` both build `Lane`/`Span`/`Gap` from
+a CSV, and this leg's own `core/085` settled — as `embarch-core` decision 66 — that they always
+will. One word now says `reduced answer`, and a new paragraph states both properties separately so
+a reader knows which one they are holding.
+
+**I wrote the history into the decision, not just the correction, and that is the part I would
+defend hardest.** Decision 64 claimed serving spans closed this gap and said so in its own closing
+sentence — a tombstone for a gap still open, written before anyone had compared the two payloads
+field by field. `ui/065` compared them and found three shortfalls. **`check-decision-refs.py` cannot
+catch this class at all**: it verifies that a citation resolves, never that what it says is still
+true, so a suite-level property can be contradicted by two sub-projects' own decisions and keep
+reading as bought. A reader who meets §4 in six months needs that more than they need the diff.
+
+**Done under `ops.md` §4's announcement window, and the mechanism worked exactly as designed.**
+Announced at `ts 1789684951.085879` with **no `--action`** — silence-as-consent must not page him —
+with the repo, the file, the section and the intended narrowing in `--detail`. **Polled at every
+unit boundary of this leg**: three times, at `core/085`'s fold, at `api/109`'s fold, and immediately
+before executing. The thread carried no reply but my own detail post. Window opened 16:49, closed
+17:19, executed at **31 minutes**. Nothing else in the leg waited on it — I ran `core/085` and
+`api/109` to completion inside the window rather than holding, which is what §4 means by not
+starting the clock and not stopping for it.
+
+**Both halves of the drop's `Done when`, not either.** The drop offered a choice: narrow the stated
+property, *or* add a sentence naming the permanent exception. I did both. The one-word narrowing
+removes the falsehood but leaves a reader unable to tell which of two properties they are holding,
+and the reduced-answer-versus-full-timeline framing is precisely the thing that cost two units to
+establish and should never be re-derived.
+
+**What I deliberately did not touch.** §4's "honest limit" paragraph already says that *being Core*
+is not what makes an implementation correct — being **one** implementation, pinned to the vocabulary
+it decodes, is — written against reversals row 86. It reads **more** sharply now that the timeline
+is known to be permanently double-implemented, so the new paragraph points at it rather than
+restating it. The home argument, the `embarch-study-designer` exclusion, the `embarch-ui` exclusion
+and the reversal condition are all untouched. **This changed the scope of a stated property, not the
+decision** — which is also why I judged it inside a supervisor's delegation rather than something to
+end the leg over.
+
+**Merged:** nothing — a `suite` task is executed by the supervisor in its own leg worktree, so there
+is no branch and no worker. Landed directly in the fold commit below. `suite/decisions/placement.md`
+7,345 → 9,778 B (cap 12,288, comfortably clear).
+`changelog.d/suite-placement-decision-4-scoped-to-what-it-actually-bought.decided.md` consumed into
+`history/suite.md`. **29 of the owner's own fragments left pending**, untouched. Gate:
+`check-docs.py` **11/11**. **The fragment cost me two retries and both were my error** — first
+12 lines against a one-line limit, then 341 B against a 200 B cap. Neither is documented anywhere I
+had read; `build_changelog.py --check` names both plainly and the fix is seconds, but a supervisor
+writing its own fragment hits a constraint every worker already knows.
+
+**Blocked:** nothing.
+
+**Reviewer:** skipped (leg ending at its unit cap — a reviewer would outlive the leg that spawned it).
+
+That is the one reason `.claude/leg.md` permits, and I want the next leg to weigh it rather than
+inherit it: **this is the unit in the leg that most wanted a reviewer.** It is the only one with no
+worker, no branch, no second pair of eyes at any point, and it edits the suite's own decision text
+on three sub-projects' behalf. The three units before it all got directed briefs and two of those
+corrected my framing. **If a later leg wants to re-read this edit cold, it should**, and
+`tasks/suite/044`'s own body records exactly what was changed and what was left alone for that
+purpose.
+
+**Hardware debts:** **none created, and none could be** — five paragraphs of prose in one suite-level
+doc; nothing built, nothing executed, no board, no probe, no live Core, no DUT. **Leg-wide, the one
+thing measured rather than inherited:** `tasks/api/059` stays `open` for a **22nd** consecutive leg,
+on this leg's own live `validate dev-bench` — `recorded hardware_id 6fcddc36cb781b71, live None`,
+returned with `embarch-api` decision 73's unclassifiable-condition wording. **And one debt this leg
+promoted from assumed to demonstrated:** `core/015`'s native Windows build is **structurally
+unrunnable from this machine**, not merely skipped — `x86_64-pc-windows-gnu` is not an installed
+target and `x86_64-pc-windows-msvc` needs a Windows linker WSL2 cannot provide. Unchanged:
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`) and its buffer still falsely claims
+both boards attached, so **do not plan a bench unit off it**; the owner's `d0cf9a0` bench parking
+stands; `api/108` dispatchable and uncloseable here; `umbrella/037` check 13, `umbrella/033`'s
+check-17 arms, umbrella check 5's permission-denied probe, and both toolchain-gated repos untouched.
+
+**Budget:** PROCEED — weekly **44.2%** of a 90% cap at leg start, resets in ~134h33m, no 429 anywhere
+across four units. Wave **6** suggested throughout; **scope spread bound this leg, not the wave and
+not the unit cap** — only `api`, `core` and `umbrella` had dispatchable work, which is the first time
+in days the cap was not the binding constraint and is why this leg filed `tasks/doc/081`.
+
+**Least sure about:** **that I executed a suite-level edit on a 30-minute silence with nobody
+demonstrably awake.** The mechanism was followed exactly — no `--action`, three polls, 31 minutes,
+full detail in-thread — and `ops.md` §4 is explicit that silence is consent. But silence from a
+channel nobody has spoken in for over three hours is weaker evidence than the rule's wording
+implies, and this is a decision-text edit made on three sub-projects' behalf with no reviewer, which
+is the thinnest oversight any unit this leg got. I think the edit is right and I would make it
+again; what I am unsure about is whether "announced, unanswered" should carry the same weight at
+17:19 on a quiet channel as it would at midday. **If the owner disagrees with any single thing this
+leg did, I would expect it to be this**, and `suite/044` records precisely what changed and what was
+left alone so reversing it costs one read rather than an investigation.
+
 ## 2026-09-17 17:02 — api/109 the task's premise was wrong, the worker said so, and then shipped the thing the premise should have asked for
 
 **Decided:** **that `list-targets` publishes `build_dir_name` for each `zephyr-west` row's default
