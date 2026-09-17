@@ -97,6 +97,104 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 12:28 — core/074 a decision's completeness premise failed for a whole mid-attach class, not the one case it was filed for
+
+**Decided:** **three things, and the first is that the unit came back bigger than the task that
+asked for it.**
+
+**1. Decision 59's *"every distinguishing fact was already present at every call site — Core was
+the one collapsing it"* is false for the entire mid-attach path, not just the `.open()` case the
+drop named.** The worker read `embarch-topology/src/hardware/validate.rs` itself rather than
+inheriting `topology/056`'s paraphrase, and found that `validate_known_timed` constructs a
+`TopologyMismatch` — the only thing that carries `live_hardware_id` and logs an alert — at exactly
+two failure points: the probe absent from `Lister::list_all()`, and a hardware-ID compare that
+disagrees. **Every failure between the probe being found and the identity check passing** —
+`.open()`, `check_target_powered`, `attach`, `session.core(0)`, `hardware_id::read` — returns a
+bare, non-downcastable `anyhow::Error` with nothing logged. So there is no `live_hardware_id` for
+Core to have unpacked, and nothing for `kind` to have covered. It then traced all four Core call
+sites that run this check: `validate_handler` falls to `Err(internal_err(e))` → plain `500`
+(`api.rs` 1120), `describe_topology_error`'s `None` arm → plain `500` (`api.rs` 217, serving
+`/flash` and `/reset`), and `describe_gate_error`'s `None` arm → folded into `502` (`study.rs` 915).
+**Amended decision 59 in place and corrected `interfaces/topology.md`'s `/validate` row**, which
+repeated the same conflation. Recorded as an accepted gap; **no third `kind` arm built**, per the
+task's own constraint — that is a wire change with consumers.
+
+**2. Item 2 held and the `503` count went from two to three.** `describe_topology_error`'s
+`not_attached` arm (`api.rs` 203–209) is a real, tested third `503` producer — pinned by
+`flash_reset_path_leads_differ_between_not_attached_and_mismatch` (`api.rs` 2049) — reached on
+`/flash` and `/reset` **after `hw_lock` is already held**, sharing status *and* plain-text shape
+with lock contention and told apart only by the message's lead word. The bullet now names all
+three. The worker also added a sentence on `502`/`describe_gate_error` carrying the identical
+not-attached/mismatch distinction in its own lead, which nobody asked for and a caller needs.
+
+**3. It declined to move `embarch-core/spec.md` and argued why, against my task's instruction to
+keep all three sites in step.** Its reasoning: `spec.md` never asserted the two-meanings claim,
+it only points at `interfaces.md`, so it is still true. **I accepted that and had the reviewer
+check it specifically**, since `core/072`'s own task file is the source of the all-three-sites
+rule and `core/072` is the unit that broke it. The reviewer read `spec.md` before and after
+`76a48ed` and confirmed the `503` wording only ever lived in `interfaces.md` — the all-three-sites
+requirement was about the plain-text/JSON invariant, which `spec.md` did get.
+
+**Merged:** `agent/core/074-decision59-open-fail` (doc `83ad8cb`, **code: none** — the worker
+pushed the code branch at `main` (`641fd15`) as a marker with no commits, and changed no Rust
+anywhere). Doc branch rebased onto `origin/main` and force-pushed, then merged `--ff-only`; rebase
+and merge as separate calls. **I read the decision and interface diff before pushing the merge but
+after running it** — see *Least sure about*. Gate re-run by me on the merge result: `check-docs.py`
+**11/11**, pre-merge `check-ownership.py --scope core --stdin` OK on 6 paths, post-merge
+`--scope core` OK, `check-client-names.py --repo` clean against 7 denylist entries. The `cargo`
+half I did not re-run: no Rust changed and `embarch-core`'s `main` has not moved.
+`changelog.d/core-503-open-fail-gap.fixed.md` and `changelog.d/core-503-three-producers.fixed.md`
+consumed into `history/core.md`; **29 of the owner's own fragments left pending**, untouched. No
+`status.d/` fragment.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written. Directed on six checks — deliberately harder than usual,
+because this unit's own predecessor `core/072` passed a green gate with a wrong correction in it —
+and it re-derived all six. **`503` has exactly three producers** (every `SERVICE_UNAVAILABLE` in
+`api.rs`/`hardware.rs`/`study.rs` grepped: `acquire_hw_lock` at 123, `/validate` at 1048,
+`describe_topology_error` at 204; no fourth). The `502` folding, and all four fall-through call
+sites, verified separately. **On the failure-point count it sided with `topology/056`'s seven, not
+this commit's five**, and located the error precisely: the commit *message*'s opening line reads as
+if five were the total rather than the five non-raising steps beside the two raising ones, while
+**the landed documentation never states a wrong total** — it enumerates the five mid-attach steps
+as a subset, correctly. Nothing to file, and I am recording it here because a wrong number in a
+commit message is invisible to every gate in this suite. Decision 59 grew **2,565 B → 4,082 B
+against a 4,096 B per-decision cap — it passes by 14 bytes**, which is a debt in all but name.
+Cross-repo: `embarch-topology` decision 12 is untouched, because its guarantee is scoped to a
+*constructed* mismatch and these five paths never construct one.
+
+**Hardware debts:** **none created, and none could be** — three doc-repo markdown files; nothing
+executed against a board, no probe, no live Core, no flash, no study, no Rust changed. **One debt
+is now written down instead of merely true**: a probe that enumerates but fails partway through
+the identity check is undistinguishable from any other internal error on all four Core paths, and
+observing it needs a probe held by another process, a permission denial or a half-wedged J-Link —
+free to catch the next time it happens, impossible to manufacture here. Standing debts unchanged:
+`tasks/api/059` still `open` — **not `blocked`** — with the dev-bench probe unplugged, an
+**eighteenth** consecutive leg; `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`) and
+its buffer still claims both boards attached, so **do not plan a bench unit off it**; the bench
+queue is still parked by the owner's `d0cf9a0`; `core/015`'s native Windows build is measured
+unrunnable from WSL2 at all; `api/108` cannot be closed by anything in this environment;
+`umbrella/037` check 13, `umbrella/033`'s check-17 arms, umbrella check 5's permission-denied
+probe, `embarch-ui`'s 18-record stale prefix and the `embarch-outpost`/`embarch-dev-bench`
+toolchains all untouched.
+
+**Budget:** PROCEED — weekly **33.8%** of a 90% cap, resets in ~139h, no 429. Wave **6**
+suggested; the 4-unit leg cap is what ends this leg.
+
+**Least sure about:** **that decision 59 now passes the per-decision cap by fourteen bytes and
+nothing treats that as a debt.** `check-doc-size.py` tracks *files* into a reserve band with a
+ledger and a due date; a decision at 4,082/4,096 B has no band, no date and no task — the next
+worker to add one clarifying clause to decision 59 meets a hard refusal mid-flight, which is
+exactly the failure the file-level reserve was built to stop. `tasks/doc/067` already says there is
+no reserve concept at the decision level and it is `Owner: required`, so this is not mine to fix —
+but this is the closest that task has come to biting, and the next leg should know decision 59 is
+the one sitting on the line.
+
+---
+
 ## 2026-09-17 12:27 — ui/064 an open question closed by recording the split, with the duplication turning out wider than the bullet claimed
 
 **Decided:** **two things, and the first is the one a future leg will want.**
