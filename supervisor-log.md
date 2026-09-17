@@ -97,6 +97,143 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 16:55 — core/085 the split is permanent, and the compaction that paid for saying so lost two sentences
+
+**Decided:** **that `embarch-core` will never serve the outpost's axis-health diagnostics or point
+events, and that this is a permanent boundary rather than a deferral** — `embarch-core` decision 66.
+I approved the expensive half of this task going the way that closes a question rather than the way
+that ships a feature, and I told the worker at dispatch in as many words not to treat "widen the
+`Gap`" as the default just because it is the cheap one. It did both halves: the `Gap` **is** widened
+to full parity, and the boundary **is** called permanent, on two independent reasons — (a) all
+twelve diagnostic fields are already fields of `embarch-ui`'s own `TraceView`, which decision 62's
+existing exclusion named by shape, so this is not a new line; (b) `ui/065` established that serving
+them piecemeal retires **nothing**, because point events are built in `trace.rs`'s same row pass.
+
+**The second reason is an argument from today's `trace.rs` structure, and I want that on the record
+as the soft spot.** The reviewer surfaced it without filing it, correctly: a refactor separating
+that pass could in principle change the premise. Decision 66 is new and a sub-project may design
+freely within its own walls, so this contradicts nothing — but "permanent" is a strong word resting
+partly on a coupling that is real today rather than one that is necessary. **If this is ever
+revisited, that is the sentence to revisit.**
+
+**Decision 64's tombstone is corrected and the suite-level half is parked, not forgotten.** The
+worker fixed decision 64's closing sentence — which claimed serving spans closed suite decision 4's
+"exactly one implementation" property — and filed the `suite/decisions/placement.md` §4 half to
+`inbox/`, since a `core` worker cannot touch it. That is now **`tasks/suite/044`, announced and
+parked** (`ts` `1789684951.085879`, window opened 16:49). Leg 138's entry named this its single
+"least sure about", on the grounds that a `Done when` box inside an unclaimed task is a weaker
+guarantee than a sentence in a decision file. **One leg later the box did its job**: it is what made
+the worker correct 64 and file the suite half. I am recording that because the doubt was reasonable
+and the mechanism held, and the next leg should know the box works before it decides to distrust one.
+
+**The reviewer found a real compaction loss, and it is the kind that only a reviewer finds.**
+`stream-index.md` shrank 11,172 B → 10,638 B *while gaining a decision*, which is good work; but two
+claim-carrying sentences went with it and the fold message accounted for neither. The costly one is
+decision 62's sync-burden sentence — *"a change to `RecordKind`, a gap record's semantics, or the
+five-lies exclusion rules has to land in both files"* — which named exactly what a maintainer of
+`outpost_load.rs` or `trace.rs` must keep in step. **Decision 66 has just made that duplication
+permanent, so the warning is worth more after this unit than before it**, which is precisely why a
+squeeze reads it as stale boilerplate. The second is the CSV-header pin's rejected-alternative
+failure signature. The reviewer also checked a third candidate and found it **not** residue — it
+survives, relocated into `interfaces/studies.md` — which is what makes the two it did report
+credible.
+
+**Filed as `tasks/core/086` rather than fixed by me, and I want the reasoning challenged if it is
+wrong.** The fix is two sentences and the file has ~1,650 B of headroom, so nothing forced my hand
+either way. I declined because **a supervisor rewriting a sub-project's decision prose at fold time
+is the move this log keeps declining** — the third time this leg I have routed rather than edited
+(`embarch-topology` 34 and `embarch-core` 64 being leg 138's, and this leg's own `suite/044`). The
+cost of routing is one leg; the cost of the habit is unbounded. **`086` says explicitly not to revert
+`543ffe04`**, because that commit also carries decision 66 and the decision-64 correction.
+
+**A process note that is a fourth occurrence, deliberately not filed as its own task.** The
+compaction's commit message quotes **no** deleted hunk verbatim, which `DOC-COMPACTION-PASS.md`
+requires of a squeeze exactly so "carried in substance" is checkable rather than trusted. That file
+already tallies three prior occurrences (`topology/017`, `study-designer/019`, `ui/011`). The right
+home for a fourth is that tally, not a new queue entry, and `086` says so.
+
+**I broke ownership by instruction, and the check caught it.** `check-ownership.py --scope core`
+refused this unit's doc branch over `tasks/ui/067-…md`. **The worker wrote it because my dispatch
+note told it to** — *"any `embarch-ui` follow-up is a task file in `tasks/ui/`, filed by you"* —
+and `tasks/ui/**` is not in a `core` worker's row (§3). The worker was right to obey and the
+instruction was wrong. I lifted the file off the branch in a commit that says so, re-ran the check
+green, and **re-filed `tasks/ui/067` myself in this fold**, where filing another scope's task is
+legitimate. Two things for the next leg: this is the **second** distinct way a dispatch note has
+sent a worker outside its row (`tasks/doc/004` was the first, and `.claude/leg.md` already warns
+about it for compaction tasks specifically — the warning does not generalise to *follow-up* tasks
+and I did not generalise it either), and **the ownership check is now the only thing standing
+between a supervisor's instruction error and a bad branch**, which is an argument for reading a red
+one as real that leg 010's wording did not anticipate.
+
+**Merged:** `agent/core/085-widen-spans-gap` (code **`b6774e0`**, doc **`2e7195f0`**; content commit
+**`543ffe04`**, which is the handle `086` needs and which survived the rebase). Both branches rebased
+onto my leg HEAD and **force-pushed before merging**, per `tasks/doc/080` — both pruned cleanly, as
+`umbrella/080`'s did, which is now two-for-two for the force-push-first remedy against leg 138's
+two-for-three failure without it. Gate run by me on the merge result: `embarch-core` `cargo build`
+clean, `cargo test` **214 passed / 0 failed / 2 ignored** (up from 213), `clippy --all-targets -D
+warnings` clean; `check-docs.py` **11/11**; `check-ownership.py --scope core` OK on all 7 paths
+after the lift, and `--code-repo` OK; `check-client-names.py` clean.
+**I read the diff before merging because it changes a wire type**, per §10, and did not merely take
+the worker's word: I compared both branches of the gap-building block against `embarch-ui/src/trace.rs`
+lines ~1277-1330 line by line. It is a faithful port. I found one imprecision — `unbounded_start`'s
+new doc comment describes only the `ms` branch (`pos == 0`) and not the `us` branch's
+`span_us == 0 && r.b > 0` — and handed it to the reviewer rather than blocking on it; **the reviewer
+came back saying `trace.rs`'s own comment on that field has the same defect in the other direction,
+asserting the value is "always false" on the DUT clock when its own code sets it.** So the port
+inherited an already-inconsistent doc/code relationship rather than introducing one. Not filed;
+recorded here because it is a live inaccuracy in two repos that nobody has booked.
+`changelog.d/core-load-spans-gap-widened-diagnostics-permanently-out.decided.md` consumed into
+`history/core.md`; `features.d/core-230-load-spans-route.md` updated by the worker, so
+`suite/features.md` reassembled (23,395 → 23,530 B). **29 of the owner's own fragments left
+pending**, untouched. `tasks/core/082` marked done and removed by the worker, correctly — its
+`Compacts:` line named only `stream-index.md`.
+
+**Blocked:** nothing.
+
+**Reviewer:** 1 finding — inbox/core-compaction-085-sync-burden-residue.md
+
+Collected before this entry was written, and it ran **six minutes** against a four-claim directed
+brief — the longest reviewer this log has recorded, and the first to pay for itself in a way a
+shorter one could not have. It read deleted hunks out of git history to check a `Must not delete:`
+list belonging to a task the unit had just deleted, which is the one artifact nobody else could
+recover. It also **declined** three of my four claims: the `unbounded_start` comment (not a finding,
+with the reason above), the `records_lost` type (I flagged a `u32` field beside a `u64`
+accumulator; the reviewer showed `trace.rs` has the identical pair, so parity is exact), and the
+decision 27 conflict (27 was already updated by `ui/065` earlier in this same leg, so it was not
+"waiting on `embarch-core`" by the time 66 landed — **my brief was working from stale framing and it
+corrected me**). One finding out of four asked, three refusals with reasons, is the calibration this
+line exists to measure, and it is the **fifth** consecutive directed brief to return real
+re-derivation.
+
+**Hardware debts:** **one carried and not paid, and I attempted it rather than assuming it.**
+`core/015`'s native Windows build is part of §10's gate whenever `embarch-core` is involved, and I
+tried it: `rustup target list --installed` shows `x86_64-pc-windows-msvc` present but **not**
+`x86_64-pc-windows-gnu`, and a `--target x86_64-pc-windows-gnu` build fails at `typenum`,
+`smallvec`, `itoa`, `futures-core`, `scopeguard`, `pin-project-lite` — no std for an uninstalled
+target. `msvc` needs a Windows linker WSL2 cannot provide. **So that half of the gate is
+structurally unrunnable from here, not merely skipped**, and this unit's `embarch-core` change
+landed on Linux evidence alone. That is the same position every `core` unit has been in; I am
+stating the mechanism so the next leg does not spend a unit rediscovering it. **No hardware debt
+created:** nothing executed against a board, no probe, no live Core, no DUT, no flash, no study.
+`tasks/api/059` stays `open` for a 22nd leg on this leg's own live check (`live None`);
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`) and its buffer still falsely claims
+both boards attached; the owner's `d0cf9a0` bench parking stands; `api/108`, `umbrella/037` check
+13, `umbrella/033`'s check-17 arms, umbrella check 5's permission-denied probe, and the
+`embarch-outpost`/`embarch-dev-bench` toolchains all untouched.
+
+**Budget:** PROCEED — weekly **44.2%** of a 90% cap at leg start, resets in ~134h33m, no 429
+anywhere. Wave **6** suggested; **scope spread** bound this leg at 3 concurrent workers.
+
+**Least sure about:** **that `tasks/core/086` is the right shape for a defect this leg introduced
+and could have closed in the same fold.** Everything else in this entry I would defend; this one I
+am genuinely split on. The argument for routing is consistency and the ownership line. The argument
+against is that a unit which loses a live maintenance warning and then files a task about it has
+shipped the loss and hoped — and unlike the routing calls I made about *other* sub-projects'
+decisions, **this loss is mine to the extent that my own leg landed it.** If the next leg reads
+`086` and thinks "this should have been two sentences in the fold", it is probably right and should
+say so rather than politely filing another task. Second, smaller: I let a dispatch note send a
+worker outside its row, and the only thing that caught it was a check I could have waved through.
+
 ## 2026-09-17 16:44 — umbrella/080 a serial port is more volatile than a board, so `init` refuses it for the same reason it refuses the board
 
 **Decided:** **that `embarch init` stays out of `serial_port` permanently, and that this is the same
