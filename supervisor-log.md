@@ -97,6 +97,86 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 23:44 — topology/052 two sibling files, the same wrong sentence, and only one of them was in any sweep's scope
+
+**Decided:** **two things, and the second is the one that matters past this leg.**
+
+First, the sweep. 9 wrapped citation lines in `embarch-topology`, 12 instances, **2 wrong numbers and
+1 missing repo label**, 0 false sentences.
+
+- `src/hardware/validate.rs:401` cited decision **10** for a same-probe-type ambiguity. Decision 10
+  (`scope.md`) carries the chip-*family* risk; **decision 15 (`enrollment.md`) carries this one**,
+  near-verbatim — *"two boards sharing an identical probe type still cannot be told apart by serial
+  alone."* Fixed 10 → 15, **and the illustration was reworded** from "sharing a chip family" to
+  "sharing an identical probe type". I flagged that rewording to the reviewer as the one thing in
+  this leg's three diffs that could *introduce* a defect rather than remove one — a comment citing
+  the right decision while describing it slightly wrong is worse than a wrong number, because the
+  number no longer signals anything. It matches decision 15's own words exactly.
+- `src/hardware/enrollment.rs:3` cited a bare `(decisions 2, 3, 7)` for *"formerly `embarch-core`'s
+  own `known_boards.rs` / `known_boards.toml`"*. None of this crate's decisions 2, 3 or 7 mentions
+  that migration; **`embarch-core` decision 22 does, and says `"Moved wholesale into
+  `embarch-topology`"` in its own text.** Fixed to `` (`embarch-core` decision 22) `` — wrong numbers
+  and missing cross-repo label in one edit.
+
+Second, and this is the finding: **`src/hardware/validate.rs:1-3` carries the same defect, in the
+same crate, one file over, and no sweep in this suite can reach it.** It reads *"formerly
+`embarch-core`'s own `board_gate.rs` (decisions 2, 8)"* — decision 8 correctly supports the clause
+after the parenthetical, decision 2 says nothing about any migration, and the history is again
+`embarch-core` decision 22's. **Two sibling files, the same "formerly Core's own X" sentence, the same
+wrong attribution — and one was inside a sweep's scope only because it happened to wrap across a
+line.** That is `tasks/doc/071`'s blindness seen from the other side, and it is the best argument yet
+that the wrap-aware census is a patch rather than a method.
+
+**I filed it rather than fixed it in the fold.** It is a code edit in a repo whose worker is gone,
+and a supervisor hand-editing a crate's source outside a unit is how a fold stops being reviewable.
+`tasks/topology/053`, `open`, carrying the reviewer's evidence and my own re-verification of all
+three decision bodies. The drop was drained and deleted.
+
+**Merged:** `agent/topology/052-wrapped-citations` (code `7f9fe53afb85807b16f98060d0c64a63c954764d`,
+doc `b455fb8a7d113fc5a7832ca8af764442c29898b9`). The doc branch needed a rebase onto `89120cf` first,
+since `ui/063`'s fold had moved `main`. Gate re-run by me on the merge result: in
+`embarch-topology`, `cargo build --all-targets` clean, `cargo test` green, `cargo clippy
+--all-targets -- -D warnings` clean; in `embarch-doc`, `check-docs.py` **11/11** via the wrapper,
+re-run again after I added the new task file; `check-ownership.py --scope topology` OK on 2 doc paths
+and OK on the code repo; `check-client-names.py --repo` clean against 7 denylist entries.
+`changelog.d/topology-wrapped-citation-census.fixed.md` consumed into `history/topology.md` with
+`--only`; **29 of the owner's own fragments left pending**, untouched. No `status.d/` and no
+`features.d/` fragment.
+
+**Blocked:** nothing. `tasks/topology/052` closed and removed in this fold; `tasks/topology/053`
+filed and landed here.
+
+**Reviewer:** 1 finding — inbox/topology-validate-rs-1-2-citation.md
+
+Collected before this entry was written, verified independently by me against
+`embarch-core/decisions/probes.md` (the "Moved wholesale" sentence is there, line 20),
+`embarch-topology/decisions/crate.md` decision 2 and `consumer-boundary.md` decision 8, and against
+the real source line. This is the first reviewer finding of the leg and the first of three that was
+not "no findings" — and note it came from the one unit whose diff changed prose rather than only
+digits, which is the shape I asked it to look hardest at. It also resampled **six** of the seven
+lines the worker called correct rather than the four I asked for.
+
+**Hardware debts:** **none created, and none could be.** Four lines of doc comment changed; nothing
+built for a board, no probe, no study. The dev-bench probe is still unplugged (`"probes": []` read
+live from Core at this leg's top), so `tasks/api/059` stays `open` for a thirteenth leg.
+`fleet-hardware.py`'s buffer is **13,280 minutes stale and still claims both boards attached** —
+**do not plan a bench unit off it**; `--refresh` still crashes (`tasks/doc/041`). `core/015`'s
+native Windows build is untouched: `embarch-topology`, not `embarch-core`. All other standing debts
+carried unchanged.
+
+**Budget:** PROCEED — weekly **25.1%** of a 90% cap at the leg's top, resets in ~152h, no 429. Wave
+**6** suggested, 4 units is the leg cap.
+
+**Least sure about:** **whether `tasks/topology/053` should have been the fourth unit of this leg
+instead of `suite/042`.** It is a ten-minute fix with a reviewer's evidence already attached, and it
+closes a defect this leg proved is real; `suite/042` is a catalogue row whose announcement window I
+started at 23:16 specifically so it could be the last unit. I chose the `suite` task because its
+window would otherwise expire unused and the next leg would have to re-announce and re-wait — a real
+cost, paid once. But "I had already started its clock" is a sunk cost dressed as a reason, and if
+`053` sits in the queue for four legs I will have been wrong.
+
+---
+
 ## 2026-09-16 23:37 — ui/063 the three citations most likely to be wrong were all right, and the one defect was somewhere else
 
 **Decided:** **two things, and the second is a counting question I have left open on purpose.**
