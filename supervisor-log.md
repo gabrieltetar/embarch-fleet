@@ -97,6 +97,83 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 20:02 — api/103 a comment that was stale the day it was written
+
+**Decided:** **two things, and (b) is the one the next leg should act on.**
+
+**(a) The comment was the odd one out, not the constant — settled from history rather than assumed,
+which is what the task demanded.** `src/main.rs`'s stack-size comment claimed the fix used **64 MiB**
+while the code set `512 * 1024 * 1024` in both places. The worker ran `git log -S` rather than
+picking the cheap case, and found `dc2b2d83` — the very commit that introduced the thread/runtime
+spawn — whose message says verbatim *"512 MiB was empirically required (64 MiB, matching this repo's
+own RUST_MIN_STACK test precedent, still overflowed against this real GATT-heavy payload)"*. So the
+constant was deliberate from the first line it existed and **the comment landed beside it already
+describing the abandoned attempt**. That is case (1) of the three the task named; case (2), where the
+code would have been the slip, was the one the task said to stop on, and it did not arise. The
+reviewer checked `dc2b2d83` itself rather than trusting the quote, and confirmed
+`decisions/client-crate.md` decision 36 and `spec.md`:62 both already said 512 MiB with the same
+rationale — so this unit brought the one dissenting statement into line with two standing ones, and
+the pre-unit state was a comment contradicting a decision in its own repo.
+
+**(b) I FILED SIX PLURAL-CITATION RE-CHECK TASKS, AND FOUR OF THEM ARE IN REPOS THIS CHAIN HAS
+CALLED "COMPLETELY SWEPT".** The `inbox/` drop I drained at the top of this leg
+(now `tasks/doc/069`) reported that the chain's canonical census pattern `[Dd]ecision [0-9]` cannot
+match `decisions 17, 18` or `decisions 53/55`, and it asked for one bounded measurement before
+anyone decided whether to re-open the swept corpus. **Nobody had run it, so I did** — that is a
+measurement, not the decision, which stays the owner's in `tasks/doc/065`/`069`. Result, measured
+with `grep -rInE '[Dd]ecisions [0-9]'` on 2026-09-16: **core 11 lines, topology 12, umbrella 13,
+outpost 8, api 13, ui 8** (one of the `ui` lines already checked by `ui/054`), plus
+**study-designer 53 and dev-bench 52**. Each line cites two to four numbers, so roughly **160
+unchecked decision instances**, in files the chain's own reports call swept. Filed as
+`tasks/core/068`, `tasks/topology/050`, `tasks/umbrella/073`, `tasks/outpost/024`, `tasks/api/104`,
+`tasks/ui/061` in `dd08a47`. **`study-designer` and `dev-bench` are deliberately not filed** —
+both have a sweep unit in flight this leg and the overlap has to be read against what those land.
+Two lines are worth naming now: `embarch-umbrella/src/init.rs:3` reads `Decisions 10, 12, 13`,
+**invisible to the case-sensitivity defect and the plural defect at once**, and
+`embarch-ui/assets/style.css:739` reads `Decisions 10 and 11` in a shipped asset, where a bare
+`decision 10` cannot be resolved by number at all (`ui/054`'s four-way collision).
+
+**Merged:** `agent/api/103-stack-size-comment` (code `37cc081`, doc `5409a90`). Both are the revert
+handles. Gate re-run by me on the merge result: `cargo build --all-targets`, `cargo test
+--all-targets` (**213 passing across 11 suites**, 0 failed), `cargo clippy --all-targets -- -D
+warnings` green in `embarch-api`; `check-docs.py` **11/11**; `check-ownership.py --scope api` OK on
+2 doc paths; `check-client-names.py --repo /home/gabriel/Github/embarch/.worktrees/embarch-api/103-stack-size-comment`
+clean against 7 denylist entries. **I read the code diff before merging** — one comment hunk, four
+lines. `changelog.d/api-main-rs-stack-comment.fixed.md` consumed into `history/api.md` with
+`--only`; **29 of the owner's own fragments left pending**, untouched. No `status.d/` and no
+`features.d/` fragment.
+
+**Blocked:** nothing. `tasks/api/103` closed and removed in this fold. Three workers still in flight
+at the time this entry was written: `dev-bench/031`, `study-designer/055`, `ui/060`.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none created.** One comment in Rust source; nothing executed against a board,
+no probe, no live Core, no deploy, no study, no route called. `core/015`'s native Windows build
+untouched — this is `embarch-api`, not `embarch-core`. **No hardware has been touched anywhere in
+this leg and I have not read Core live at any point** — `tasks/api/059` stays `open`, not blocked,
+for the seventh consecutive leg; the owner's `d0cf9a0` parks the bench queue;
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`) and its buffer was neither read nor
+believed. `umbrella/037` check 13, `umbrella/033`'s check-17 arms, umbrella check 5's
+permission-denied probe, `embarch-ui`'s 18-record stale prefix and the
+`embarch-outpost`/`embarch-dev-bench` toolchains all carried unchanged.
+
+**Budget:** PROCEED — weekly **17.1%** of a 90% cap at the leg's top, **17.8%** at this fold,
+resets in ~155h, no 429. Wave **6** suggested; **4 dispatched**, so the **unit cap** binds, not the
+budget and not the queue.
+
+**Least sure about:** **whether filing six re-check tasks at once is refill or is re-opening a
+closed corpus on a measurement nobody has validated.** The grep is right that these lines exist and
+right that the census could not see them; what it cannot tell me is whether the sweeps' workers read
+them anyway while reading the surrounding file, in which case six tasks buy very little. `ui/054` is
+the one data point and it cuts the hopeful way — its worker found `decisions 53/55` *by* re-censusing,
+which implies it would not have seen the line otherwise. One data point is not a rate. The cheap
+correction is available to whoever runs the first of these: if `core/068` comes back with zero
+defects across ~28 instances, that is real evidence the lines were read, and the remaining five
+should be re-weighed rather than run on momentum.
+
+---
+
 ## 2026-09-16 19:49 — ui/054 the biggest unswept file in the suite came back clean, and the reviewer checked whether that was true
 
 **Decided:** **three things, and (c) is the one that changes how the next sweep should be filed.**
