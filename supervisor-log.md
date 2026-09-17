@@ -97,6 +97,135 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 01:36 — topology/055 a safety property that was inaccurate the day it was written, and two more spec guarantees the crate never provided
+
+**Decided:** **three doc corrections, two of them amendments to numbered decisions in place, and one
+own-hands fix of a malformed task file.**
+
+**1. `embarch-topology`'s identity gate never had the property `spec.md`, the function's own doc
+comment and decision 21 all claimed for it.** All three said two chip families have a declared
+relation and *"every other chip returns undeclared, never a pass."* But `compare_self_reported`
+checks **case-insensitive string equality first, for any chip**, and returns `Match` on a hit; the
+declared-relation arms are the fallback for when the strings differ. It is reachable, not
+theoretical: `classify_chip` has an `Stm32G0Uid` arm and decision 25 records a real board enrolled
+off it, so an STM32G0 that hex-encodes the same UID words in the same order comes back `Match` where
+the doc permits only `undeclared`.
+
+**The provenance is the finding, and the reviewer re-derived it independently.** The equality
+shortcut is in `compare_self_reported`'s **very first commit**, `98aec25` (2026-08-25 22:00), while
+decision 21's own originating commit is `155fc34` (2026-08-31 13:57) — six days later. **Decision 21
+was inaccurate the day it was written**, not a later regression, which is a different and worse thing
+than the drift this fleet usually finds. Corrected at all three sites, and the amendment **kept 21's
+safety sentence verbatim** — *"not a pass: a comparison that could not be made is not a comparison
+that succeeded"* — adding why the Nordic case slipped past the shortcut too (halves-swapped
+encoding, so exact match could not fire either). That mattered: replacing the false claim with a
+description of an equality shortcut could have left 21 recording no property at all, and the
+reviewer's first directed check was exactly that.
+
+**2. Role uniqueness is an `upsert_at`-time rule, not a store invariant, and the displaced-row
+guarantee covers only the first duplicate.** `spec.md` and decision 20 both stated it flat. The code
+disagrees with itself in cardinality — `find` returns one row, `retain` deletes **all** rows sharing
+the role — so with two rows on one role both are deleted, one is returned, and `validate.rs` logs
+exactly one `tracing::warn!`: **the second row vanishes with no record anywhere, in the one path
+decision 20 added the guarantee to make loud.** The worker checked for de-duplication properly —
+grepped the crate for `dedup`/`retain` and every `load_at` call site, all plain `toml::from_str` —
+and `find_by_role`'s own comment already concedes a soft *"first by file order"* contract. Fixed in
+`spec.md`, in decision 20, **and in `upsert`'s own doc comment**, the last beyond what the task
+named.
+
+**3. *"The only state that persists anywhere is a human's declared intent"* is now *"the only state
+anything in this crate reads back as an input."*** `alerts.jsonl` is persisted and append-only. The
+worker traced every reader — `alert::recent` via `hardware::recent_alerts`, one call site in
+`bin/main.rs`'s `Command::Alerts` arm, which `println!`s — and the reviewer re-grepped `src/` and
+`bin/` to confirm none feeds a resolution or validation decision. So the honest resolution was a
+qualifier rather than a rewrite, which is what I asked for, and it now cross-references `spec.md`'s
+own Shape block that already listed the alert log.
+
+**4. Mine: `tasks/topology/057-compact-topology.md` shipped with TWO `**State:**` lines** — `open` at
+line 3 and `blocked — unparks when tasks/topology/056 lands` at line 34, the latter inside a
+`## In flux: yes` section whose closing sentence was the *instruction* `Set **State:** blocked`. The
+worker did the reasoning, reached the right answer, and left the instruction in the file instead of
+applying it to the field. Resolved to the single `blocked` the body argues for, and added the
+`**In flux:**` and `**Must not delete:**` fields it lacked. **The gate was green with both lines
+present**, which is the part worth carrying forward.
+
+**That is now two of three workers in this leg filing an unreadable compaction task** — `umbrella/077`
+was `open` with a yes flux answer and no fields, this one had two states. **I dropped
+`inbox/workers-file-compaction-tasks-that-no-consumer-can-read.md`** with three candidate fixes
+ranked by cost; the shape is that a compaction task's *fields* decide dispatchability, they are
+written by a worker mid-unit that never opens `tasks/README.md`, and nothing checks the handoff.
+`.claude/leg.md`, `tasks/README.md` and `scripts/check-task-state.py` are all owner-reserved, so I
+filed rather than fixed.
+
+**Coordinate drift: mostly exact this time, which breaks the run.** `spec.md` 52/69/82,
+`hardware_id.rs` 195 / 199–212 / 203–207, `classify_chip` at 105, `enrollment.rs`'s `upsert_at`
+196–211 and `validate.rs`'s warn block 457–468 all matched exactly; only `load_at` (98–105, not
+98–107) and `alert.rs`'s `record` (87–103, not 87–104) drifted, by 1–2. **Three census-sourced units
+in a row have now measured this and the answer is converging: shapes exact, line numbers within
+about three.**
+
+**Merged:** `agent/topology/055-three-spec-guarantees` (code `2428bc2`, doc `1b1589e`). Doc branch
+rebased onto `071f263`, no conflict, rebase and push as separate calls. Gate re-run by me on the
+merge result: in `embarch-topology`, `cargo build --all-targets` clean, `cargo test` **15 passed**
+default and **80 passed** with `--features hardware`, `cargo clippy --all-targets -- -D warnings`
+clean on both default and `--features hardware`; in `embarch-doc`, `check-docs.py` **11/11** (re-run
+after my `057` fix), `check-ownership.py --scope topology` OK on 6 doc paths and OK on the code repo,
+`check-client-names.py --repo` clean. **`embarch-topology` is a shared crate, so I merged it before
+`core/071` and re-gated `embarch-core` against the new topology** — `cargo test` 209 passed there
+afterwards. `changelog.d/topology-spec-overclaims.fixed.md` consumed into `history/topology.md`;
+**29 of the owner's own fragments left pending**, untouched.
+
+**Blocked:** nothing. `tasks/topology/056` is `open` (the probe-open failure raising neither a
+`TopologyMismatch` nor an alert) and `tasks/topology/057` is `blocked` on it.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written. Five directed checks, aimed at the fact that amending two
+numbered decisions in place is the highest-blast-radius thing a doc unit can do. Two earned their
+cost: **it re-derived both commit SHAs and their six-day ordering**, so the "inaccurate the day it
+was written" framing is not resting on the worker's word; and it confirmed **decision 20 still
+records what was decided** rather than only what the code does, which was the failure mode I was
+most worried about for an in-place amendment.
+
+**Hardware debts:** **none created, and one re-measured rather than assumed.** No board, no probe, no
+live Core, no deploy, and deliberately **no `validate` run** — item 1 is about what the gate would
+conclude and `refuse_if_core_reachable` would refuse an unattended one anyway. **`core/015`'s native
+Windows build: I attempted it this leg and it still fails**, so this is measured today rather than
+carried on faith — `cargo build --target x86_64-pc-windows-msvc` in `embarch-core` dies in
+`cc-rs` building `hidapi`'s `etc/hidapi/windows/hid.c`, i.e. the Windows target is installed but
+there is no toolchain to compile the C shim against Windows headers. **That also means the gate's
+"native Windows build where `embarch-core` is involved" clause cannot be satisfied from WSL2 at all**,
+which is worth someone's attention as a rule that cannot be followed. Standing debts otherwise
+unchanged: `tasks/api/059` still `open` — **not `blocked`** — with the dev-bench probe unplugged, a
+**sixteenth** consecutive leg; `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`) and its
+buffer still claims both boards attached, so **do not plan a bench unit off it**; the bench queue is
+still parked by the owner's `d0cf9a0`; `api/108`'s Windows process-tree kill, `umbrella/037` check
+13, `umbrella/033`'s check-17 arms, umbrella check 5's permission-denied probe, `embarch-ui`'s
+18-record stale prefix and the `embarch-outpost`/`embarch-dev-bench` toolchains are all untouched.
+
+**One piece of debris the next leg should know about and which I deliberately did not touch:**
+`/home/gabriel/Github/embarch/embarch-core/.worktrees/embarch-core/` exists, untracked, dated
+2026-09-13/14, containing two dangling sibling symlinks and no files. It makes `git status` in
+`embarch-core` show `?? .worktrees/` on every leg. That is `tasks/doc/059`'s already-filed
+"worker worktrees were created inside their own repo trees", surviving as empty directories; it is
+older than my leg and inside a code repo, so I left it and named it here instead.
+
+**Budget:** PROCEED — weekly **29.2%** of a 90% cap at the leg's top, resets in ~150h, no 429. Wave
+**6** suggested; this is unit 3 of 4.
+
+**Least sure about:** **whether amending a numbered decision in place is the right move as often as
+this leg made it.** Three of my four units amended or reframed an existing decision rather than
+writing a new one, and the argument each time was the same and sounds right — a correction restating
+what the code always did records no choice, so there is no "why" for a future reader. But
+`embarch-decision-reversals.md` is the suite's index of *"assumptions reality has already
+overturned"*, and an amendment in place leaves no trace there. `core/071`'s worker found exactly this
+failure from the other end: decision 32's corrections were written in place in 2026-08, then
+**dropped by the 2026-09-02 four-file migration**, reverting the decision to its original wrong
+claim with nothing recording the loss. An amendment is only durable if something outside the file
+remembers it happened.
+
+---
+
 ## 2026-09-17 01:28 — umbrella/076 a check that scanned the wrong machine's USB bus, and eleven failures printed on the wrong stream
 
 **Decided:** **four things. The first is a real behaviour change on a real topology and the fourth is
