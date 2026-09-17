@@ -97,6 +97,94 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 17:37 — umbrella/081 a file two bytes from its cap, paid by a split — and the split's own verification missed one citation
+
+**Decided:** **that `projects.md`'s seam is decision 55, not decision 26, and that the reason the
+obvious seam keeps being wrong is now written down twice over.** The task's own body suggested
+decision 26 (`doctor --prune`, topically the odd one out among four `init`-scaffolding decisions).
+The worker re-checked and **rejected it again, for the same reason `umbrella/009` rejected it
+before**: `embarch-api/decisions/target-json.md` links `projects.md` by path **twice** for decision
+26, `embarch-decision-reversals.md` does so for 17, and `suite/user-guide.md` does so for 41 — every
+one of those far ends is in a doc a `umbrella` worker may not edit, so moving 17, 26 or 41 would
+leave three anchors pointing at a file that no longer holds what they name, with no way for that
+unit to repair them. **Decision 55 moved instead**, verbatim, into a new
+`embarch-umbrella/decisions/serial-port.md`. The reviewer independently verified all four inbound
+links exist and name those decisions; the rejection is correctly reasoned, not merely repeated.
+
+**Decided, second:** **that the ledger date pulled in by leg 139 was the right call and this is the
+evidence.** `projects.md` was at **12,286 of 12,288 B — two bytes.** `check-doc-size.py` listed it
+as the only `filed`-not-`PARKED` entry in the whole pressure list and due tomorrow. I spent the
+leg's first unit on it, per `.claude/leg.md`, and my dispatch note told the worker its first edit
+had to be a removal or a move or its very first write would fail the gate. It is now **10,950 B
+(89.1%), out of reserve** — about 1,336 B of headroom where there were two. Had leg 139 left the
+filing worker's default of 2026-10-17 in place, the next unrelated `umbrella` unit would have met a
+hard wall mid-flight, which is the exact ambush the dated ledger replaced.
+
+**Reviewer:** 1 finding — inbox/doc-umbrella081-stale-decision-55-source-anchor.md
+
+**And I drained and fixed it in this same fold rather than filing it, because it is queue text and
+queue text is mine.** The finding is real and the worker's verification genuinely missed it:
+`serial-port.md`'s own header claims *"No inbound link elsewhere in the suite names `projects.md`
+for decision 55"*, and `tasks/api/114`'s `**Source:**` line did exactly that. **It is invisible to
+`check-decision-refs.py` by construction** — that check's topic-file arm only inspects
+`[decision N](path)` markdown links, and this citation is inline code with a parenthetical, so the
+gate was green over a stale file pointer the whole time. That is a fresh, concrete instance of
+`tasks/doc/044`, *"a verbatim split is the one move `check-decision-refs.py` structurally cannot
+see"*, which is still open — and it is now a fixture that task can point at rather than an argument
+it has to make. I repointed `tasks/api/114`'s Source line at `serial-port.md` and said in the file
+why, then **re-ran the corpus grep myself rather than trusting either the worker's or the
+reviewer's**: `tasks/api/114:15` was the only stale one. `tasks/umbrella/080:9` names `projects.md`
+for decision **17**, which is still correct and must not be "fixed".
+
+**One more staleness my own grep found that neither agent was looking for, fixed in the same
+commit:** `tasks/umbrella/082` — `open`, queued, in the same scope — carried a **Reserve warning**
+telling its future worker that `projects.md` was at two bytes and to pay `081` first. `081` has now
+paid it. Left standing, that warning would have sent the next `umbrella` worker to do a compaction
+that no longer exists, and it names a byte count that is off by 1,336. Withdrawn, with the new
+numbers and the fact that decision 26 did **not** move, so `082` needs no re-pointing.
+
+**What I did not touch.** `embarch-umbrella/decisions/serial-port.md`'s header still carries the
+"no inbound link" claim, which was false when written and is true now that I have fixed the one
+citation. **That is decision-file prose in a sub-project, and it is not mine to rewrite** — the same
+line I held twice earlier in this leg. It is the weakest thing left standing here and a `umbrella`
+worker should correct the claim to say what was actually verified.
+
+**Merged:** `agent/umbrella/081-compact-projects` (code `2764e89` — **unchanged, the branch carries
+no code commits**, doc `63f7d4ea`). `embarch-umbrella/decisions/projects.md` 12,286 → 10,950 B;
+new `embarch-umbrella/decisions/serial-port.md` 2,277 B; `embarch-umbrella/decisions.md`
+3,175 → 3,296 B, its index row split into `projects.md` → `13, 17, 26, 41` and `serial-port.md` →
+`55`. Decision numbers unchanged — permanent per `DOC-CONVENTIONS.md`. The reviewer reconciled the
+arithmetic independently: 1,405 B of decision-55 section out, 70 B of cross-reference sentence back
+in, net −1,336, and `serial-port.md`'s extra ~870 B over decision 55's own text is the standard
+per-file header block, matched against `decisions/bind.md`, itself a prior verbatim split.
+`changelog.d/umbrella-split-serial-port.decided.md` consumed into `history/umbrella.md`; **29 of the
+owner's own fragments left pending**, untouched, via `--only`. Gate on the merge result:
+`check-docs.py` **11/11**, `check-ownership.py --scope umbrella` clean on both branches.
+
+**Blocked:** nothing.
+
+**Hardware debts:** **none created, and none could be** — one decision moved between two markdown
+files and two queue lines corrected; nothing built, nothing executed, no board, no probe, no live
+Core, no DUT. The `embarch-umbrella` code repo is byte-identical to `main`. Standing debts carried
+unchanged and not added to: `umbrella/037` check 13, `umbrella/033`'s check-17 arms and umbrella
+check 5's permission-denied probe all still need a live `doctor` run this fleet cannot give them;
+`tasks/api/059` still `open` on an unplugged dev-bench probe; `fleet-hardware.py --refresh` still
+crashes (`tasks/doc/041`) and its buffer still falsely claims both boards attached — **do not plan a
+bench unit off it**.
+
+**Budget:** PROCEED, weekly **46.9%** of a 90% cap, resets in ~133h. Wave **6** suggested, 4 workers
+run concurrently, leg cap binding.
+
+**Least sure about:** **whether fixing the finding myself was the right call or the fourth instance
+of a habit this log keeps flagging and keeps repeating.** Three consecutive handoffs have asked
+whether the supervisor's own-hand fixes are a healthy safety valve or a pattern nobody has looked at
+together. I drew the line at ownership — queue text is the supervisor's, a sub-project's decision
+prose is not — and I left `serial-port.md`'s false header claim alone precisely to honour that line
+even though it is the more wrong of the two sentences. **I think the line is right and I am not sure
+the outcome is**: the queue is now correct and the decision file still contains a claim I know to be
+the reason the finding existed, and a reader who meets that header first is told a verification
+happened that did not.
+
 ## 2026-09-17 17:33 — api/115 the canonical `list_targets` row was stale in two fields, not one
 
 **Decided:** **that an interface row found stale in one field is re-read whole, and that the second
