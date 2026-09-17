@@ -97,6 +97,115 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 18:37 — core/066 two thirds of a manifest's citations were wrong, and the Windows debt is now measured rather than assumed
+
+**Decided:** **four things. (b) is the leg's headline and (d) settles a number two handoffs have
+been guessing at.**
+
+**(a) Highest defect density anyone has recorded: 9 instances, 1 wrong number, 2 false sentences.**
+All three in `Cargo.toml`. `core/058` closed with *"embarch-core/src swept end to end"* — true, and
+its scope was a directory. **This leg ran that same "the sweep missed the manifest" shape in three
+repos and it yielded every time**: `core/066` 3 of 9, `topology/046` 3 of 21, against
+`topology/040`'s 103 `src/` citations which produced **zero wrong numbers**. I have filed
+`tasks/umbrella/072` and `tasks/api/101` to run it in the two repos where nobody has yet.
+
+**(b) The seed defect was a false sentence, not a wrong number, and the fix was to stop citing
+rather than to repoint.** `Cargo.toml:70` read *"known_boards.toml (`decision 22`) — same version
+embarch-api already pins"*. Decision 22 is real and correctly labelled — it is the probe/board
+identity gate — and **its own text says that whole mechanism moved wholesale into
+`embarch-topology`.** The worker searched every `embarch-core` decisions file and found **no decision
+anywhere recording a same-version-as-`embarch-api` pinning rule**, so it corrected the sentence
+rather than inventing a repoint. That is the right instinct and the reviewer verified the negative
+independently across every `decisions/*.md` in the suite.
+
+**This is directly reusable and I have written it into `tasks/api/101`:** `embarch-core` decision 22
+is **only** the probe/board identity gate — a live hardware-ID readback against a stale label, now
+`embarch-topology`'s `validate()`/enrollment mechanism. It has nothing to do with
+`known_boards.toml`'s format, a `toml` crate version, or any HTTP route. `inbox/`'s standing
+`api-stale-decision-22-citations-remaining` question — four `client.rs` citations pairing 22 with
+HTTP routes — **is therefore answered: those are citing the wrong fact.**
+
+**(c) A live dependency-hygiene finding the unit correctly declined to act on.** `grep -rn 'toml::'`
+returns nothing in `embarch-core/src/` (I checked this myself; the only `toml` hits are filenames
+inside doc comments), and `embarch-topology`'s `hardware` feature — which `embarch-core` enables —
+already pulls `toml` at the same `"1.1"`. The reviewer confirmed the version match from both
+manifests. So the direct `toml = "1.1"` looks vestigial from before the move. **The worker noted it
+in the comment and did not remove it, because removing a dependency is a build change and this was a
+citation sweep.** Correct call, and the closing scope-boundary sentence it wrote is what stops the
+next worker reading the comment as licence.
+
+**(d) THE NATIVE WINDOWS BUILD DEBT IS NOW A MEASURED NUMBER AND A MEASURED IMPOSSIBILITY.** The
+2026-09-12 handoff flagged that the `core/015` tally had been narrated inconsistently and told the
+next leg to **count commits directly rather than propagate the ordinal**. I did:
+`git rev-list --count 1c1224e..HEAD` in `embarch-core` is **41** with this unit landed. Leg 117's
+re-derived 40 plus this one — the ordinal and the count agree, so the tally is trustworthy again.
+
+And I tried to pay it: the `x86_64-pc-windows-msvc` target **is** installed, and
+`cargo check --target x86_64-pc-windows-msvc` **fails in `hidapi`'s build script**, which compiles
+`etc/hidapi/windows/hid.c` with the host `cc`. So a cross-check from WSL is not a partial payment of
+this debt, it is not a payment at all, **and no unattended leg can ever clear it** — it needs a real
+Windows toolchain. That is worth knowing: legs have been carrying this debt for five days without
+anyone establishing whether it was payable from here.
+
+**Merged:** `agent/core/066-citation-sweep-outside-src` (code `c284d84`, doc `7f9ef53`). Both are the
+revert handles. Gate re-run by me on the merge result: `cargo build`, `cargo test`, `cargo clippy
+--all-targets -- -D warnings` green in `embarch-core`; `check-docs.py` **11/11**;
+`check-ownership.py --scope core` OK on 2 doc paths, `--code-repo` OK on 1; `check-client-names.py
+--repo /home/gabriel/Github/embarch/embarch-core` clean against 7 denylist entries. **Native Windows
+build: not run, and per (d) not runnable from here.** Branch rebased onto `main` once before the
+`--ff-only`. I read the code diff before merging — comment-only, one file.
+`changelog.d/core-cargo-toml-citation-sweep.fixed.md` consumed into `history/core.md` with `--only`;
+**29 of the owner's own fragments left pending**, untouched. No `status.d/` and no `features.d/`
+fragment.
+
+**The third fix, and the one nuance the reviewer added:** `Cargo.toml:15` described `core-validation`
+as a live feature that *"costs nothing to turn on now"* — and contradicted itself four lines later
+with *"that feature is gone"*. Reworded to match `embarch-study-designer` decision 19. The reviewer
+notes the **formal retirement act is decision 48**, with 19's page documenting the fact; it judged
+citing 19 not a misattribution worth flagging, and I agree, but the next person to touch that comment
+should know 48 exists. It also traced `346ddf1` (2026-08-25) to confirm the five deleted lines were
+already-dead prose about a feature that no longer existed.
+
+**Blocked:** nothing. `tasks/core/066` closed and removed in this fold.
+
+**Reviewer:** no findings. It checked all four things I asked and checked them by doing the work:
+grepped `toml` across every `decisions/*.md` and `decisions.md` in the suite to confirm the asserted
+**negative**; read both manifests to confirm `embarch-core/Cargo.toml:39` enables
+`embarch-topology`'s `hardware` and that feature declares `toml = "1.1"`; traced the `core-validation`
+deletion back to the 2026-08-25 commit that had already killed it; and read the eleven-line comment
+clause by clause, concluding each sentence carries a distinct verifiable fact rather than filler. It
+also re-confirmed `embarch-dev-bench` decision 12 is the VID-match rule and checked the reversals
+index. **I asked it for a second read on length rather than agreement and it disagreed with my
+instinct** — see the note below.
+
+**Hardware debts:** **one, carried and now measured rather than assumed.** `core/015`'s native
+Windows build stands at **41 commits since `1c1224e`, counted directly**, and per (d) it is **not
+payable by any unattended leg** — the cross-check dies in `hidapi`'s C build. This unit is
+comment-only in a manifest with no platform-conditional code touched, so it adds volume and no risk.
+The pile still includes `core/045`'s route-wiring test and the `suite/020`/`suite/035` wire-feature
+split. **No hardware was touched anywhere in this leg and I did not read Core live at any point** —
+`tasks/api/059` stays `open`, not blocked, the owner's `d0cf9a0` parks the bench queue, and
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`) with a buffer neither read nor
+believed. `umbrella/037` check 13, `umbrella/033`'s check-17 arms, umbrella check 5's
+permission-denied probe, `embarch-ui`'s 18-record stale prefix and the `embarch-outpost` /
+`embarch-dev-bench` toolchains all carried unchanged.
+
+**Budget:** PROCEED start to finish — weekly **12.0%** of a 90% cap, resets in ~157h, no 429
+anywhere. Wave **6** suggested; **4 dispatched, 4 landed**, so the unit cap bound the leg. Scope
+spread was the *other* binding constraint: only 4 distinct scopes were dispatchable against a wave of
+6, which is why the refill gate fired at step 0.
+
+**Least sure about:** **that I was wrong about the length, and I still half think I was right.** I
+flagged the growing-comments pattern as my own doubt and asked the reviewer for a second read rather
+than agreement. It went clause by clause and concluded the eleven lines are content-dense, with the
+closing scope-boundary sentence doing real work. I accept that for this comment. What I still do not
+know is whether the *aggregate* is fine: four sweeps in two days have each replaced a short wrong
+sentence with a longer right one, no single one is wrong, and nobody is measuring the manifest's
+comment-to-dependency ratio. That is the shape of a problem that is invisible per unit, which is the
+one class this log exists to catch, and I have not caught it — I have only named it twice.
+
+---
+
 ## 2026-09-16 18:30 — topology/046 three real defects outside `src/`, and a citation that was wrong the day it landed
 
 **Decided:** **four things, and (c) is a mistake of mine the next leg should not repeat.**
