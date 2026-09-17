@@ -97,6 +97,94 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 00:12 — core/070 the wrong decision supplied by adjacent prose, not by a wrong number
+
+**Decided:** **two things, and the first is a new shape of citation defect this suite had not named.**
+
+**1. A migration claim with no number attached is invisible to every grep this fleet owns, and the
+number a reader *will* use is whichever one is nearest in the paragraph.** `embarch-core` moved its
+own `board_gate.rs` into `embarch-topology`; that move is recorded as `embarch-core` decision 22
+(*"Moved wholesale into `embarch-topology`"*, `decisions/probes.md`). Four doc comments in this
+crate describe the move. **One cited 22. Three cited nothing for the migration claim.** All three
+now carry `decision 22;` in the position `src/api.rs:681` already used, and **no sentence was
+reworded** — `topology/052` established last leg that a rewording made while repointing a number is
+the one move that can *introduce* a defect, and this unit took that seriously.
+
+**`src/hardware.rs:107` is the instance worth remembering.** Its doc comment already carried
+**decision 61**, twice, correctly, for a different fact — the selection rule no longer being this
+crate's own copy. A reader arriving at that paragraph takes 61 as the citation for the whole thing,
+including the `board_gate.rs` move, which 61 says nothing about anywhere in its body. That is
+`study-designer/059`'s and `ui/063`'s shape — on-topic, correctly labelled, wrong decision — **with
+the wrong decision supplied by adjacent prose rather than by a wrong number.** No citation census in
+this suite, wrap-aware or not, can see that: there is no number to check. The whole-class grep
+(`formerly|used to live|moved wholesale|migrated from` over `src/`) returns **4 hits before and
+after**, so the class is closed in `embarch-core` at four instances with no fifth.
+
+**2. Decision 22 covers all three migrated symbols, and I made the worker prove it rather than
+assume it.** The live question was `study.rs:873`'s role-keyed `validate_role` (formerly
+`board_gate::enforce_for_role`) — 22's *header* names enrollment, so covering a role-keyed variant
+could have been a stretch. It is not: 22's own body carries *"a role-keyed variant exists because a
+plain UART bridge has no JTAG capability, so it can never be an enrollment candidate"*, which is the
+identical UART-bridge-has-no-JTAG reasoning `study.rs:857-872` makes, near-verbatim. Worker and
+reviewer established that independently. `embarch-topology`'s own `decisions/probe-selection.md`
+also defers to `embarch-core` decision 22 for this claim rather than recording the move separately,
+so there is no nearer decision in either repo.
+
+**I left two ragged comment rewraps alone**, at `hardware.rs:107` ("attach, a separate" on a short
+line) and `study.rs:873` ("already-enrolled" likewise). They are cosmetic, they render as prose, and
+fixing them would be a supervisor hand-edit to a code repo outside a unit — which the last leg's own
+"least sure about" flagged as an unexamined habit across four units. Recording the choice rather
+than the edit.
+
+**Merged:** `agent/core/070-board-gate-migration-citations` (code
+`528fb997536db0fe86674c4f71374b347d415c57`, doc `b05efc189a360bce7fbf5d02b2508b8c535b2d4e`). Both
+fast-forwarded with no rebase — this was the leg's first landing. Gate re-run by me on the merge
+result: in `embarch-core`, `cargo build --all-targets` clean, `cargo test` green (209 unit + 1
+integration), `cargo clippy --all-targets -- -D warnings` clean; in `embarch-doc`, `check-docs.py`
+**11/11** via the wrapper; `check-ownership.py --scope core` OK on 2 doc paths and OK on the code
+repo; `check-client-names.py --repo` clean against 7 denylist entries.
+`changelog.d/core-board-gate-migration-citations.fixed.md` consumed into `history/core.md` with
+`--only`; **29 of the owner's own fragments left pending**, untouched. No `status.d/` and no
+`features.d/` fragment.
+
+**Blocked:** nothing. `tasks/core/070` closed in the worker's own merge, with a `## Resolution`
+section recording the full reasoning for anyone auditing this class later.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written. It read decision 22's and decision 61's bodies in full at
+the leg worktree's absolute path rather than its own stale checkout, quoted 22's role-keyed sentence
+back to settle the one question I flagged, independently found `embarch-topology`'s
+`probe-selection.md` deferring to 22, and checked `embarch-decision-reversals.md` for anything
+re-litigating 22 or 61 — nothing. Sixty seconds, eleven tool calls.
+
+**Hardware debts:** **one, carried not created — `core/015`'s native Windows build now carries a
+twelfth landed `embarch-core` change.** This one is doc-comment-only with no platform-conditional
+code touched. **And the last leg asked for this tally to be counted rather than propagated**, so:
+`git log --oneline` on `embarch-core` is the place to settle it, and I did **not** do that — I took
+the eleventh from the 2026-09-16 folded entry and added one. **The doubt stands, unresolved, and is
+now one leg older.** Standing debts otherwise carried unchanged: the dev-bench probe is **still
+unplugged** — I read Core live at this leg's top and `status` returned `"probes": []`, so
+`tasks/api/059` stays `open` for a **fourteenth** consecutive leg, not `blocked`;
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`) and its buffer still claims both
+boards attached, so **do not plan a bench unit off it**; `umbrella/037` check 13, `umbrella/033`'s
+check-17 arms, umbrella check 5's permission-denied probe and `embarch-ui`'s 18-record stale prefix
+are all untouched.
+
+**Budget:** PROCEED — weekly **26.4%** of a 90% cap at the leg's top, resets in ~151h, no 429. Wave
+**6** suggested; 4 workers dispatched concurrently, and the 4-unit cap is what bounds this leg.
+
+**Least sure about:** **whether filing `core/070` at all was refill or invention.** The queue had 3
+dispatchable tasks in 3 scopes against a wave of 6, so refill was owed and a fourth scope was the
+thing missing — but I *wrote* this task from a grep I ran myself, which is a thinner provenance than
+`topology/053` (a reviewer's finding) or `study-designer/060` (a chain's own follow-up). It turned
+out to be a real defect and a new shape, which is the best case; the same method also produced
+`outpost/021` twenty minutes earlier on a premise that was flatly false, and only
+`check-task-numbers.py` caught it. **A supervisor grepping for work it can then dispatch is one step
+from a supervisor manufacturing work**, and I do not have a rule that distinguishes them.
+
+---
+
 ## 2026-09-16 23:51 — suite/042 row 110, and the range-file question the last leg thought was hard
 
 **Decided:** **three things, and the first is the structural call `umbrella/074` filed this task to
