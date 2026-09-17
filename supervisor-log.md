@@ -97,6 +97,85 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 21:22 — ui/061 a citation where every number resolves and the sentence is still wrong
+
+**Decided:** **three things, and the third is a new shape of defect this chain had not seen.**
+
+**(a) A REAL WRONG NUMBER, FIXED AT TWO SITES.** `embarch-ui`'s `src/study_designer.rs` claimed, at
+line ~536 and again at ~2371, that `embarch-study-designer` decisions **34/36/53/54** were "each
+opened by" the failure *"a tap whose characteristic no step subscribes captures nothing, passes, and
+looks fine."* Decision **53** (`GattMonitorSelected`) was opened by link *flooding* — the opposite
+failure — and the real fourth member is **55**, whose closing paragraph is near-verbatim the source
+of that sentence. Both sites now read `34/36/54/55`. Tally: **9 lines, ~25 decision instances, 1
+wrong number at 2 sites, 1 false sentence, fixed.**
+
+**(b) `core/068`'s WRAP-CHECK FOUND A NINTH LINE HERE TOO, AND IT IS NOT A ONE-REPO PROBLEM.** The
+worker ran `grep -rlIE '[Dd]ecisions[[:space:]]*$'` over `embarch-ui` and found
+`assets/app.js:2706-2707` — an `embarch-study-designer` 52/55 citation split across a `//`
+continuation, invisible to the task file's own census and to every sweep before it. It checked
+clean. **That is now two repos in two hours where the wrap-check found citations no line-based
+census could see** (`embarch-core` four, `embarch-ui` one), which is the concrete evidence
+`tasks/doc/071` was filed on and is `Owner: required` to settle.
+
+**(c) A CITATION CAN HAVE EVERY NUMBER RESOLVE, READ FLUENTLY, AND STILL ASSERT A FALSE
+RELATIONSHIP — AND ONLY THE REVIEWER CAUGHT IT.** I asked the reviewer to test all four members,
+not just the one under repair. It found that **34, 36 and 54 are not "each opened by" this
+mechanism either**: 34 is about nothing being *written*, 36 is a timing/ordering gap, and 54 is a
+capped in-memory field that *names the family* the others belong to. So the sentence is still
+wrong about the relationship even with the right numbers in it. It also traced why: decision 54's
+original text explicitly enumerated *"decisions 34, 36, 53, and this one"* — the sub-project itself
+once locked in the wrong member — and a compaction at `7affd84` deleted that enumeration, leaving
+`embarch-ui` carrying a list nobody has re-derived since. **I filed `tasks/ui/062` for it.** The
+reviewer deliberately did not file, because its residue check is bounded to the diff under review;
+that is right for a reviewer and is not a reason for the queue to lose the finding.
+
+**Merged:** `agent/ui/061-plural-citation-recheck` (code
+`86f7c989ae818e327f61e757d0ff3ad2b1659086`, doc `435da71`). Both SHAs are the only revert handles.
+The doc branch needed a rebase onto `4c1d4e1` before it would fast-forward, since `api/105`'s fold
+had already moved `main` under it; rebased in the worker's own doc worktree and force-pushed, so
+`git cherry`'s patch-id still retires it. Gate re-run by me on the merge result: in `embarch-ui`,
+`cargo build --all-targets` and `cargo clippy --all-targets -- -D warnings` green, `cargo test`
+**93 passing**, 4 ignored; in `embarch-doc`, `check-docs.py` **11/11** via the wrapper;
+`check-ownership.py --scope ui` OK on 2 doc paths and on the code branch;
+`check-client-names.py --repo` clean against 7 denylist entries. I read the code diff before
+merging because it changes a cross-repo decision citation, and independently confirmed decision 53
+is about flooding and 55 carries the comment's own wording.
+`changelog.d/ui-plural-citation-recheck.fixed.md` consumed into `history/ui.md` with `--only`;
+**31 of the owner's own fragments left pending**, untouched. No `status.d/` and no `features.d/`
+fragment.
+
+**Blocked:** nothing. `tasks/ui/061` closed and removed in this fold; `tasks/ui/062` filed in the
+same commit.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written. It is the third leg-127 reviewer to return `no findings`
+and the second to return something more useful than its own verdict — the tally line says "no
+findings" because nothing in the diff contradicts a standing decision, and the `ui/062` task exists
+because of what it found while checking. **Worth naming for whoever reads this tally later: a
+`no findings` line is not the same as a reviewer that produced nothing.**
+
+**Hardware debts:** **none created.** Two comment lines in a Rust source file; nothing executed, no
+board, no probe, no live Core, no UI launched. Standing debts carried unchanged, including
+`embarch-ui`'s 18-record stale prefix, which still has never met a real stale prefix.
+`core/015`'s native Windows build is untouched by this unit — `embarch-ui`, not `embarch-core` —
+and the recount-from-commits the 2026-09-12 handoff asked for is still owed. No hardware was
+touched anywhere in this leg and Core was never read live, so `tasks/api/059` stays `open`, not
+blocked, for the ninth consecutive leg; the owner's `d0cf9a0` still parks the bench queue and
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`).
+
+**Budget:** PROCEED — weekly **19.9%** of a 90% cap at the leg's top, resets in ~154h, no 429. Wave
+**6** suggested, **3** workers dispatched.
+
+**Least sure about:** **whether filing `tasks/ui/062` was right, given the reviewer looked at the
+same facts and chose not to.** Its reason is sound and bounded; mine is that the sentence is
+*currently wrong on `main`* and a finding recorded only in a log entry is on a timer, since this
+file folds daily and rolls into `log-archive/`. The risk is that I am converting a reviewer's
+carefully-scoped "context, not a finding" into queue volume, which is exactly the failure mode that
+makes a queue look full of work nobody wanted.
+
+---
+
 ## 2026-09-16 21:04 — api/105 the sentence `api/104` signed off as true, corrected
 
 **Decided:** **two things, and the second is a correction to my own reading rather than to the
