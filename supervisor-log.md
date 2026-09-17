@@ -97,6 +97,91 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 19:10 — api/101 a citation with no decision behind it, and the repo already had a house style for that
+
+**Decided:** **three things, and (b) is a fact `tasks/doc/055` should have before the owner settles
+it.**
+
+**(a) The "sweep scoped itself to a directory" shape has now yielded in four repos out of four.**
+`core/066` (9 instances, 3 defects), `topology/046` (21, 3), `umbrella/072` (this leg, below), and
+now `api/101`: **46 instances, 3 wrong numbers, 0 false sentences.** Every prior `api` sweep —
+`091`, `093`, `095`, `097` — scoped its grep to `src/` and `crates/`, and the twelve files this unit
+read had never been looked at by anything. **`config.example.toml` came back clean on all 8**, which
+is the number I most wanted, because that file is copied into users' real configs.
+
+**(b) THE INTERESTING DEFECT IS A CITATION WITH NO DECISION BEHIND IT AT ALL.**
+`.github/workflows/release.yml` cited `` `embarch-core` decision 7 `` for the MSVC *"Desktop
+development with C++"* Build Tools requirement. Decision 7 is "Rust, probe-rs as a library, Axum,
+`spawn_blocking`, and CI everywhere" — unrelated. The worker searched every `decisions/*.md` and
+`decisions.md` in `embarch-core` and found **no decision documenting the MSVC fact anywhere**; it is
+stated in `embarch-core/spec.md:42` and nowhere else. **The reviewer re-derived that negative
+independently** (grepped `msvc|build tools|desktop development|link\.exe` across the whole
+`embarch-core` decision corpus, zero hits) and confirmed `spec.md:42` says verbatim what the new
+citation claims.
+
+So the worker repointed the citation at a **spec line rather than a decision**, which is a form
+nothing in `DOC-CONVENTIONS.md` covers — its "Referring to a decision" section describes bare
+numbers, repo+number and index links, and is silent on citing a spec fact that has no decision. **The
+reviewer found this is not novel**: `crates/embarch-core-client/src/client.rs` already does it at
+roughly eight sites (650, 665, 1471, 1502, 1947, …). The existing sites spell it `` `embarch-core`
+spec.md `` and the new one spells it `` `embarch-core/spec.md` ``. **That is a real, concrete datum
+for `tasks/doc/055`** — the owner-reserved question about cross-repo citation form — and it is
+stronger than the abstract version of that question, because it shows the gap is already being
+filled by convention-by-accident in at least two repos with two spellings. I did **not** settle it;
+`doc/055` and `tasks/ui/038` own it and both are reserved.
+
+**(c) The other two fixes are a plain renumber and I checked them rather than assuming.**
+`tests/build_capture.rs` cited `embarch-api` decision 19 twice for `target.json`. 19 is the
+build-dir prefix and FNV-1a hash; 69 is literally *"A `target.json` beside the output, recording the
+resolved selection"* — **and decision 19's own text cites 69 for it**, which is about as clean an
+internal confirmation as this corpus produces. The reviewer checked both changed sites, doc comment
+and section header, against both decision bodies.
+
+**Merged:** `agent/api/101-citation-sweep-non-rust-and-tests` (code `a4ab0e4`, doc `495d823`). Both
+are the revert handles. Gate re-run by me on the merge result: `cargo build`, `cargo test
+--all-targets` (7+103+1+19+12 passing, 0 failed, `embarch-core-client`'s own suite included),
+`cargo clippy --all-targets -- -D warnings` green in `embarch-api`; `check-docs.py` **11/11**;
+`check-ownership.py --scope api` OK on 3 doc paths, `--code-repo` OK; `check-client-names.py --repo
+/home/gabriel/Github/embarch/embarch-api` clean against 7 denylist entries. Doc branch rebased onto
+`main` once before the `--ff-only`. `changelog.d/api-citation-sweep-non-rust.fixed.md` consumed into
+`history/api.md` with `--only`; **29 of the owner's own fragments left pending**, untouched. No
+`status.d/` and no `features.d/` fragment. `tasks/api/102` filed for the ~70-line `src/`/`crates/`
+remainder.
+
+**Blocked:** nothing. `tasks/api/101` closed and removed in this fold.
+
+**Reviewer:** no findings. It verified the asserted negative across `embarch-core`'s whole decision
+corpus rather than taking it, read `spec.md:42` verbatim against the new citation, checked both
+`target.json` renumbers against both decision bodies, confirmed `crates/embarch-core-client` is
+untouched so `embarch-ui`/`embarch-umbrella`'s path-dependency is unaffected, checked
+`embarch-decision-reversals.md` for anything re-proposing a rejected alternative, and — **because I
+asked it to, after the previous unit** — re-read both replacement prose blocks specifically for the
+"correct numbers arranged to imply a wrong one" shape. Neither has it. The `client.rs` precedent in
+(b) is the reviewer's own find, not the worker's.
+
+**Hardware debts:** **none created.** A workflow comment and two test-file comments; nothing
+executed against a board, no probe, no live Core, no deploy, no study, and no route called.
+`core/015`'s native Windows build is untouched — this is `embarch-api`, not `embarch-core`, so it
+stands at leg 122's directly-counted **41 commits since `1c1224e`**. **No hardware has been touched
+anywhere in this leg and I have not read Core live at any point** — `tasks/api/059` stays `open`,
+not blocked, the owner's `d0cf9a0` parks the bench queue, and `fleet-hardware.py --refresh` still
+crashes (`tasks/doc/041`) with a buffer I neither read nor believed. All other standing debts
+carried unchanged.
+
+**Budget:** PROCEED — weekly **13.9%** of a 90% cap, resets in ~156h, no 429. Wave **6** suggested;
+the **4-unit leg cap** binds.
+
+**Least sure about:** **whether repointing a dead decision citation at a spec line is the right
+repair or a quiet vote in an open question.** It is the only *true* thing the line could say —
+inventing a decision number would be worse and deleting the citation would lose the provenance — but
+it is also the second spelling of an unsettled form, landed on `main` while `doc/055` is open. I
+judged that a wrong citation is a worse thing to leave standing than an unsettled-form right one,
+and I have written the precedent into this entry so `doc/055` inherits the evidence rather than
+rediscovering it. If the owner settles `doc/055` the other way, this site and the eight in
+`client.rs` are one sweep.
+
+---
+
 ## 2026-09-16 19:05 — study-designer/053 the reviewer caught a false sentence the unit itself wrote, and I fixed it rather than filing it
 
 **Decided:** **three things, and (b) is the one the next leg should take seriously.**
