@@ -97,6 +97,95 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 22:07 — outpost/025 the sweeps were never blind; they were never asked the other question
+
+**Decided:** **one thing, and it closes a doubt three handoffs have carried without resolving.**
+`outpost/024` returned zero wrong numbers and flagged three things outside its mandate; this unit
+went and checked all three, and **two were real defects that no gate in this suite can see.**
+
+1. `Kconfig`'s `EMBARCH_OUTPOST_FILL_WAIT_MS` help block restates `decisions/transport.md`
+   decision 20 near-verbatim — *"the trade is latency, and only latency"* — and cited only 4 and 17.
+   Both were true of the sentences they sat on; neither backed the trade itself. Decision 20 added
+   at that sentence, 4 and 17 **left where they were** rather than merged into one parenthetical,
+   so it stays visible which decision backs which clause.
+2. `src/outpost_hooks.c` implements decision 25's GPIO-dispatch hooks line for line — the
+   `GpioDispatch`/`GpioCallbackDone` split and the 8-bit pin-mask truncation — under a header
+   citing 2 and 7 and nothing else. Decision 25 named in the header and inline at the GPIO block.
+3. The three headers writing one `../` from two different depths were **left untouched**, as the
+   task required: `tasks/doc/055` is `Owner: required` and open, and this is an instance of exactly
+   that question. The worker added one measured fact worth keeping — on a plain sibling-checkout
+   layout **none of the three is right**: a depth-1 file needs two `../` and a depth-2 file needs
+   three, so all three are short, by different amounts. It is not "at most one resolves"; it is
+   none.
+
+**So the standing doubt gets its answer, and it is not the one either side expected.** The question
+was whether a run of zero-defect sweeps means a clean corpus or a blind census. The answer is
+**neither: the sweeps are sound for what they check and nobody has ever checked the other
+direction.** `check-decision-refs.py` confirms a *cited* number exists and is current. Nothing asks
+whether a file that implements a decision cites it. Two units in a row, on one small file set in
+one sub-project, each found a real gap on first look. **I filed that as `tasks/suite/041`,
+`Owner: required`** — a new recurring suite-wide pass is a commitment I may not make on the owner's
+behalf — rather than leaving it in `inbox/`, where nothing dispatches from. The task states the
+counter-risk plainly: the failure mode of a completeness sweep is *inventing* a citation for a
+sentence a decision does not actually back, which is `study-designer/056`'s defect created instead
+of found.
+
+**Merged:** `agent/outpost/025-three-headers-incomplete` (code `2968f0c`, doc `248949d`). Both SHAs
+are the only revert handles; there is no merge commit and no surviving branch name. Both branches
+fast-forwarded with no rebase — `main` had not moved since the claim. Gate re-run by me on the merge
+result, not the branch: in `embarch-outpost`, `tests/decoder_unit.py` **31 tests OK** and
+`tests/vocab_check.py` PASS (11 kinds and 8 flag bits agreeing across three languages); in
+`embarch-doc`, `check-docs.py` **11/11** via the wrapper; `check-ownership.py --scope outpost` OK on
+2 doc paths pre-merge and OK on the code branch; `check-client-names.py --repo` clean against 7
+denylist entries. **`embarch-outpost` has no `Cargo.toml`** — it is a Zephyr C module, so the cargo
+half of §10 selects nothing. I read the code diff before merging: it is 15 added and 10 removed
+lines, entirely inside a Kconfig help string and two C comment blocks, with no executable line
+touched. `changelog.d/outpost-fill-wait-and-gpio-hooks-citations.fixed.md` consumed into
+`history/outpost.md` with `--only`; **29 of the owner's own fragments left pending**, untouched. No
+`status.d/` and no `features.d/` fragment.
+
+**Blocked:** nothing. `tasks/outpost/025` closed and removed in this fold; `tasks/suite/041` filed
+in the same commit from the worker's `inbox/` drop, which is deleted.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written, and it did the check that matters for this particular
+shape of unit: **a unit that adds citations can create the very defect the chain exists to find**,
+so the reviewer read decision 20's and decision 25's own text and verified each added number backs
+the sentence it was attached to rather than merely existing. It quoted decision 20's line 37 back
+(*"The trade is latency, and only latency — bought back by the per-record clock"*) and confirmed
+decision 25's title and hook split at `decisions/tracing.md` line 45. It also confirmed from
+`git show 2968f0c --stat` that the three item-(3) files are **absent from the diff**, and that
+`tasks/doc/055` is still `open`/`Owner: required`, so no convention was invented. It read everything
+from my leg worktree or by `git show <SHA>:<path>`, not from its stale spawn directory.
+
+**Hardware debts:** **none created.** One Kconfig help string and two C comment blocks; nothing
+built, nothing flashed, no probe, no live Core, no study, no DUT. **The `west`-gated half of
+`tests/run-all.sh` and the Zephyr build legs did not run** — there is no `west` and no Zephyr SDK in
+this sandbox. That is the standing `embarch-outpost`/`embarch-dev-bench` toolchain debt, restated
+rather than added to, and a comment-only change is the least dangerous thing that can ride on it.
+**The dev-bench probe is still unplugged — I read Core live at this leg's top and `status` returned
+`"probes": []`**, so `tasks/api/059` stays `open`, not `blocked`, for the **eleventh** consecutive
+leg; the owner's `d0cf9a0` still parks the rest of the bench queue and `fleet-hardware.py --refresh`
+still crashes (`tasks/doc/041`), so the buffer was never consulted. `core/015`'s native Windows
+build is untouched by this unit — `embarch-outpost`, not `embarch-core` — and leg 128's
+unanchored-ordinal finding stands: nothing records when the deployed Windows exe was last built.
+`umbrella/037` check 13, `umbrella/033`'s check-17 arms, umbrella check 5's permission-denied probe
+and `embarch-ui`'s 18-record stale prefix all carried unchanged.
+
+**Budget:** PROCEED at the leg's top — weekly **22.2%** of a 90% cap, resets in ~153h, no 429
+anywhere, wave **6** suggested and **4** dispatched because the leg's unit cap is 4.
+
+**Least sure about:** **whether `tasks/suite/041` should have been filed at all on two data points.**
+Two completeness gaps in one small file set in one sub-project is the only evidence anyone has, and
+it is weak; the honest alternative was to record the observation and wait for a third. I filed it
+because `Owner: required` means it costs the fleet nothing until he reads it, and because the
+`topology/051` precedent — one day old — is that a finding living only in a worker's report is a
+finding nobody acts on. But a suite-wide recurring pass is expensive if commissioned on a
+false positive, and I have given him a task whose evidence section is thinner than its proposal.
+
+---
+
 ## 2026-09-16 21:52 — study-designer/056 a citation that was real, on-topic, correctly labelled, and still the wrong one
 
 **Decided:** **one thing, and it is a new failure shape for this fourteen-unit sweep chain.**
