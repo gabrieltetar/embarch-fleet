@@ -97,6 +97,76 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 21:46 — ui/062 the same sentence, twice in one evening, and this time about the relationship
+
+**Decided:** **one thing, and it is what "fix" meant here.** `embarch-ui/src/study_designer.rs`
+claimed at two sites that the no-subscriber-tap failure "is the exact failure
+`embarch-study-designer` decisions 34/36/54/55 were each opened by". `ui/061` corrected the
+*membership* of that list three hours ago (53 → 55); its reviewer then found the *relationship* was
+still false, because only 55 was opened by this mechanism. **The available fixes were narrow it to
+55, or reword it to claim family membership, and the worker took the second** after reading all four
+decisions itself rather than trusting the task file's characterisation of them. Both sites now read
+"one instance of the 'nothing captured, no error' family `embarch-study-designer` decisions
+34/36/54/55 were each opened by; decision 54 names the family, decision 55 describes this exact
+case."
+
+**That is the right call and the evidence for it is decision 54's own words.** 54 says the suite
+"has now been opened by [this family] from four directions" — so a four-member list is exactly what
+the sub-project itself asserts, and the error was never the members but the level at which the claim
+was pitched. Narrowing to 55 would have thrown away a true statement to avoid a false one.
+
+**Merged:** `agent/ui/062-four-member-opened-by-claim` (code `1ccea85`, doc `71777cb`). Both SHAs
+are the only revert handles. The doc branch needed a rebase onto `04b63ce` before it would
+fast-forward, since `topology/051`'s fold had already moved `main` under it; rebased in the worker's
+doc worktree and force-pushed, so `git cherry`'s patch-id still retires it. Gate re-run by me on the
+merge result: in `embarch-ui`, `cargo build --all-targets` and
+`cargo clippy --all-targets -- -D warnings` green, `cargo test` **93 passing** (91 + 2), 4 ignored;
+in `embarch-doc`, `check-docs.py` **11/11** via the wrapper; `check-ownership.py --scope ui` OK on 2
+doc paths and on the code branch; `check-client-names.py --repo` clean against 7 denylist entries.
+I read the code diff before merging because it is a cross-repo decision citation.
+`changelog.d/ui-four-member-opened-by-claim.fixed.md` consumed into `history/ui.md` with `--only`;
+**29 of the owner's own fragments left pending**, untouched. No `status.d/` and no `features.d/`
+fragment.
+
+**One thing the merge surfaced that is not this unit's doing.** The fast-forward pulled in
+`embarch-ui`'s `CLAUDE.md` as well, because my local `embarch-ui` checkout was a commit behind
+`origin/main` — `2983204`, leg 127's own `suite/040` edit, already pushed and already logged. The
+worker branched from `origin/main` correctly and the ownership check read the right base. **Nothing
+is wrong; I am recording it because a leg reading `git log` will see two commits in a
+single-commit unit's merge and should not go looking for a rogue worker.**
+
+**Blocked:** nothing. `tasks/ui/062` closed and removed in this fold.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written. It quoted decision 54's "from four directions" phrase back
+at me as the direct support for the new wording, confirmed decision 55 is a near-verbatim match for
+the failure description, and — the check I most wanted — confirmed the two sites read **word for
+word identically** on the reworded clause, their only difference being a pre-existing trailing
+sentence this unit never touched. It also did the residue check against `ui/061` and found nothing
+left over, and noted that the `34/36/54/55` rows appearing in `embarch-decision-reversals.md` are
+**reversal-index row numbers, not decision numbers** — a collision worth knowing about before
+someone greps that file for a decision number and believes what comes back.
+
+**Hardware debts:** **none created.** Two comment sites in a Rust source file; nothing executed, no
+board, no probe, no live Core, no UI launched. Standing debts carried unchanged, including
+`embarch-ui`'s 18-record stale prefix, which still has never met a real stale prefix. The dev-bench
+probe is still unplugged — Core's `status` returned `"probes": []` live at this leg's top — so
+`tasks/api/059` stays `open` for the tenth consecutive leg. `core/015`'s native Windows build is
+untouched by this unit.
+
+**Budget:** PROCEED — weekly **22.0%** of a 90% cap, resets in ~153h, no 429. Wave **6** suggested,
+**4** dispatched against a 4-unit leg cap.
+
+**Least sure about:** **whether this sentence is now finished or merely less wrong.** Two units in
+one evening have edited the same two comment sites, and each time the previous unit's reviewer
+supplied the finding that made the next one necessary. That is either the review loop working
+exactly as designed, or a sign that a citation asserting a *relationship* between four decisions is
+a shape that cannot be made stable in a code comment — in which case the third edit is already
+owed and nobody has filed it.
+
+---
+
 ## 2026-09-16 21:43 — topology/051 the second site of one stale sentence, and the last
 
 **Decided:** **nothing new — this unit closes a finding rather than opening one.** `topology/050`
