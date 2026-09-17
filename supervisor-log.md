@@ -97,6 +97,102 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 00:57 — api/107 a §2 invariant that holds on one of two shipped platforms
+
+**Decided:** **three things, and the first is a real defect in the section of `spec.md` a reader is
+told to trust absolutely.**
+
+**1. `embarch-api/spec.md` §2 asserted, with no platform qualifier, that "Timeout kills the process
+group, not just the immediate child".** On Windows `src/build.rs`'s `#[cfg(not(unix))]
+kill_process_tree` is a bare `child.start_kill()` — **exactly the "plain kill on just the immediate
+child" that the unix arm's own four-line comment names as the thing it exists to avoid.** So a
+timed-out build on Windows leaves the forked `west`/`cmake`/`ninja` tree running, still holding the
+build directory, after `embarch-api` has already reported the build killed. **Windows is a shipped
+release target** — `release.yml`'s matrix carries `x86_64-pc-windows-msvc`, which the worker
+verified rather than taking from the task — and that job *builds without testing*, which is the
+whole reason the gap is invisible. The §2 bullet now says what holds on each platform and cites the
+new decision; the `#[cfg(not(unix))]` arm now carries a comment saying plainly what it does not do.
+
+**2. New `api` decision 75 in `decisions/build.md`**, recording the asymmetry, its cost, and why it
+is deliberately left open. **The task forbade implementing the fix and that was the right call, for
+a reason worth keeping**: no test tier of this crate runs on Windows (`tests/smoke_harness.rs` and
+decision 46's four end-to-end tests are all `#![cfg(unix)]`), and `release.yml`'s Windows job only
+builds — so a `taskkill /T /F` added here would be an **unexercised kill path that reads as a closed
+invariant**, which is strictly worse than a documented gap in a repo that tags facts
+`[measured]`/`[assumed]`. The implementation is filed as `tasks/api/108`, and that task **refuses to
+be closed on a compile-only result**: it names what has to run — a real Windows build, timed out,
+with a *forked grandchild* confirmed gone via `tasklist`, not merely the immediate child that
+`start_kill()` already reaches.
+
+**3. The reserve was cleared, not spent.** `embarch-api/spec.md` went 9,102 → **9,089 B** of 10,240
+(1,151 B left) — the §2 rewrite is **net −13 bytes**, achieved by moving the
+*"`west`/`cmake`/`make` fork subprocesses a plain kill orphans"* rationale into decision 75's
+opening sentence, where it reads better anyway. `tasks/api/083`'s park is untouched and no new
+compaction debt was filed. This is the outcome the dispatch note asked for and the first time this
+leg a reserve instruction produced a net-negative edit.
+
+**Merged:** `agent/api/107-windows-process-group` (code `0e4ff1c`, doc `ea882f7`). Gate re-run by me
+on the merge result: `cargo build --all-targets` clean, `cargo test` **167 passed** across ten
+binaries, `cargo clippy --all-targets -- -D warnings` clean; `check-docs.py` **11/11**;
+`check-ownership.py --scope api` OK on 6 doc paths and OK on the code repo; `check-client-names.py
+--repo` clean. I read the code diff — it is a seven-line comment, no behaviour touched.
+`changelog.d/api-windows-process-group-fixed.fixed.md` consumed into `history/api.md` with `--only`;
+**29 of the owner's own fragments left pending**, untouched.
+
+**Two mistakes of mine in this unit, both recovered, and the next leg should know about the first.**
+
+**(a) I force-pushed a worker's doc branch back to `origin/main` and nearly lost its only commit.**
+I ran the rebase-then-push as one `set -e` chain. The rebase hit a conflict and stopped **with HEAD
+rewound to `origin/main`** — and the `git push --force-with-lease HEAD:<branch>` on the next line
+ran anyway, replacing the remote branch's tip with main's. `--force-with-lease` did not save me: the
+lease was valid, because I was the last writer. **Nothing was lost only because the worker's commit
+was still in that worktree's reflog** (`845147f`), so I resolved the conflict, finished the rebase,
+and re-pushed as `ea882f7`. **Do not chain a rebase and a force-push with `&&` or `set -e`** — a
+stopped rebase is not a failed command in the way the chain assumes, and the push after it is aimed
+at a branch whose content has been rewound. Push as a separate call after checking `git status` says
+the rebase finished.
+
+**(b) The conflict was my own doing.** I had corrected this leg's two live claim lines to
+`tasks/README.md`'s documented format (see `tasks/doc/076`) *after* dispatching, so `main` and the
+worker's branch both changed the `State:` line. **A claim line must be written in its final form
+before dispatch**; touching it mid-flight puts a conflict in the one file both actors write.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written. Four directed checks, all answered with quotations. The two
+worth recording: it confirmed decision 75 **never claims the Windows behaviour was observed** —
+`start_kill()`'s single-child semantics are tokio's documented API, which is reading a contract, not
+inferring a runtime fact — and it confirmed the net-negative §2 rewrite **kept the "reported
+distinctly from a nonzero exit" clause verbatim** and moved rather than deleted the rationale. That
+second check is the one I would not have trusted a worker's own word on, because "net −13 bytes" and
+"nothing lost" are exactly the pair that can both look true.
+
+**Hardware debts:** **none created, and one made explicit that was previously implicit.** Nothing
+here executed: no board, no probe, no live Core, no deploy, and — the point of the unit — **nothing
+on Windows.** What changed is that the Windows kill gap is now a numbered decision and a task with a
+stated verification requirement instead of an unqualified invariant, which converts a silent gap
+into a named one. **It is not paid.** Related and still unpaid: `core/015`'s native Windows build,
+untouched by this unit. Standing debts otherwise unchanged: `tasks/api/059` still `open` — **not
+`blocked`** — with the dev-bench probe unplugged; `fleet-hardware.py --refresh` still crashes
+(`tasks/doc/041`); the bench queue is still parked by the owner's `d0cf9a0`; `umbrella/037` check 13,
+`umbrella/033`'s check-17 arms, umbrella check 5's permission-denied probe, `embarch-ui`'s 18-record
+stale prefix and the `embarch-outpost`/`embarch-dev-bench` toolchains are all untouched.
+
+**Budget:** PROCEED — weekly **28.7%** of a 90% cap, resets in ~150h, no 429. Wave **6** suggested;
+this is unit 3 of 4 and the cap ends the leg.
+
+**Least sure about:** **whether `tasks/api/108` will ever be closable, and whether filing it was
+therefore honest or just tidy.** It requires a real Windows process tree, timed out, inspected — and
+this fleet cannot touch Windows, `release.yml`'s Windows job does not test, and the crate's whole
+end-to-end tier is `#![cfg(unix)]`. So `108` may sit open indefinitely, which is the shape
+`tasks/api/059` has held for fifteen legs. The alternative was leaving the gap in `open.md` prose
+with no task, which is worse. But **a task nothing in the fleet can ever advance is a queue entry
+that reads as work and is not**, and the queue now has at least three of those.
+
+---
+
 ## 2026-09-17 00:47 — study-designer/061 the fourth site of a corrected claim, on the field the correction is named after
 
 **Decided:** **two things, and the first is the most substantive defect this chain has found in a
