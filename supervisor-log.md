@@ -97,6 +97,94 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 22:13 — study-designer/057 a true zero, and the first time a reviewer caught the arithmetic in one
+
+**Decided:** **two things, and the second is the entry.**
+
+First, the small one: `src/gatt.rs` is the chain's **second true zero** after `bounded.rs` (`052`)
+— 11 grep-matching lines, **13** distinct citation instances, 0 wrong numbers, 0 false sentences,
+0 unlabelled cross-repo citations. The code branch carries **no commit at all**. `gatt.rs` has no
+cross-repo citations of any kind, so `056`'s "is a nearer same-repo decision the real source"
+check had **zero candidates**, which the worker reported as zero rather than skipping.
+
+Second: **the reviewer found a real defect in a verification-only unit, and I fixed it before it
+propagated.** The worker reported 14 distinct instances; the reviewer re-derived 13 and pointed out
+that the report's own arithmetic already contradicted its total. **I counted it myself rather than
+adjudicating between two agents**: of the 11 matching lines, only line 1 (`decisions 31/32/33`)
+carries more than one number, so it is 10×1 + 3 = **13**. The reviewer is right. The error had
+already propagated into `tasks/study-designer/058`'s running tally (447 where it should be 446),
+and its re-check of the nine forward-queue grep counts caught two more off by one —
+`src/decoder.rs` 8→7 and `src/merged_actions.rs` 7→6, both of which I re-ran and confirmed.
+
+**All four numbers corrected in `tasks/study-designer/058` in this fold, with a note saying who
+corrected them and why**, because a tally this chain carries forward unexamined from unit to unit
+is exactly the kind of number that becomes true by repetition. This is the supervisor hand-fixing
+a worker's output, which the last two handoffs have flagged as a habit worth watching; here it is
+four integers inside one task file in the scope that just landed, and leaving them meant the next
+unit re-deriving from a wrong base.
+
+**One finding the worker made that outlives this unit.** It re-ran the continuation-grep
+`grep -rlIE '[Dd]ecisions[[:space:]]*$'` over the whole repo and got **4 files, not the 3 that
+`056` reported** — `src/schema_version.rs:203` had never been named, despite the file being
+unchanged since `044`. The reviewer ran the grep independently and got the same 4. So **`056`'s
+census really was short by one**, and the continuation-grep file list is not to be treated as
+closed. The extra hit checks out correct (52/53/54 matching the three v14 changes named in the
+same paragraph, in order).
+
+**Merged:** `agent/study-designer/057-src-citation-sweep-remainder` — **doc `23a1e03`; code: no
+SHA, because there is no code commit.** The branch in `embarch-study-designer` points at
+`2ea7299`, which is `origin/main`. **That is the whole revert story: `23a1e03` is the only handle.**
+The doc branch needed a rebase onto `663bb57` first, since `outpost/025`'s fold had moved `main`
+under it. Gate re-run by me on the merge result: `cargo build --all-targets` and
+`cargo clippy --all-targets -- -D warnings` green, `cargo test --all-targets` **125 passing**
+(116 lib + 9 `firmware_test_vectors`), unchanged from the `053`–`056` baseline; `check-docs.py`
+**11/11** via the wrapper; `check-ownership.py --scope study-designer` OK on 3 doc paths and
+**0 changed paths** on the code branch; `check-client-names.py --repo` clean against 7 denylist
+entries. `changelog.d/study-designer-057-citation-sweep.changed.md` consumed into
+`history/study-designer.md` with `--only`; **29 of the owner's own fragments left pending**,
+untouched. No `status.d/` and no `features.d/` fragment.
+
+**Blocked:** nothing. `tasks/study-designer/057` closed and removed in this fold;
+`tasks/study-designer/058` filed by the worker, landed here, and corrected here. Nine files remain
+in the chain, `registry.rs` next.
+
+**Reviewer:** 1 finding — inbox/study-designer-057-citation-count-off-by-one.md
+
+Collected before this entry was written, acted on in this fold, and the drop deleted. **This is the
+first entry in this chain where per-unit review paid for itself on a diff that changed no code** —
+the unit's only available failure mode was a false all-clear, and the reviewer found one, in the
+arithmetic rather than in the citations. It also re-derived seven of the eleven citations against
+their decision bodies (31/32/33, 53, 54 including the tombstoned `MAX_GATT_ACTIVITY_RECORDS = 32`
+cap, 36, 10, 72, 30) and agreed the zero is real for what was checked, and it confirmed the
+`056`-census claim by running that grep itself rather than accepting it.
+
+**Hardware debts:** **none created, and this unit could not have created one** — it changed no code
+at all; the entire diff is a task file, a follow-on task file and a changelog fragment. No board,
+no probe, no live Core, no study, no DUT. `core/015`'s native Windows build is untouched —
+`embarch-study-designer`, not `embarch-core` — and leg 128's unanchored-ordinal finding still
+stands: nothing records when the deployed Windows exe was last built, so the ordinal is
+uncountable until the owner pins a deploy SHA at an `embarch-dev-workflow.md` §4a sitting. **The
+dev-bench probe is still unplugged — read live at this leg's top, `"probes": []`** — so
+`tasks/api/059` stays `open`, not `blocked`, for the eleventh consecutive leg; the owner's
+`d0cf9a0` still parks the rest of the bench queue and `fleet-hardware.py --refresh` still crashes
+(`tasks/doc/041`). `umbrella/037` check 13, `umbrella/033`'s check-17 arms, umbrella check 5's
+permission-denied probe, `embarch-ui`'s 18-record stale prefix and the
+`embarch-outpost`/`embarch-dev-bench` toolchains all carried unchanged.
+
+**Budget:** PROCEED — weekly **22.2%** of a 90% cap at the leg's top, resets in ~153h, no 429
+anywhere. Wave **6** suggested, **4** dispatched because the leg's unit cap is 4.
+
+**Least sure about:** **whether a 4-of-15-files "true zero" rate means this chain should start
+sampling rather than sweeping exhaustively.** Two of the last four study-designer files have come
+back with nothing to fix, and nine files remain, the largest of which has nine citation lines. The
+argument for finishing is that `055` and `056` both found real defects in files that looked
+unremarkable beforehand, so there is no reliable way to tell a clean file from a dirty one without
+reading it. The argument against is that nobody has measured the hit rate per file *size*, and if
+the defects cluster in the big files the remaining nine are mostly confirmation. I did not measure
+it and I am not confident either way.
+
+---
+
 ## 2026-09-16 22:07 — outpost/025 the sweeps were never blind; they were never asked the other question
 
 **Decided:** **one thing, and it closes a doubt three handoffs have carried without resolving.**
