@@ -97,6 +97,88 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 13:04 — suite/043 the reversals corpus records only the first of two decision-32 drifts
+
+**Decided:** **three things, and the first is the row itself.**
+
+**1. Reversals row 111, and the claim was re-derived rather than accepted.** The task was filed
+second-hand from a reviewer's finding, so I checked every coordinate against git before writing a
+word. All of it holds: `git show c767f8d^:embarch-core/design.md` carries decision 32's same-day
+*"Correction 2026-08-25"* paragraph (establishing that the sector-erase the decision records as
+**rejected** is what `hardware.rs` actually shipped) and its *"Superseded 2026-08-27 by decision
+36"* paragraph; `git show c767f8d:embarch-core/decisions.md` carries **neither**, and restores the
+flat *"Rejected … sector-erasing the declared NVM regions"* framing. `c767f8d` and `3854e13` (the
+seven-file mission split) are **both 2026-09-02**, not two weeks apart as I first wrote — I had to
+correct my own draft on that. `4219867` is 2026-09-17, so the wrong framing stood exactly **15
+days**. Rows 19, 28 and 55 record only the first occurrence, 2026-08-25 to 08-27.
+
+**2. The range file was extended, not split** — `reversals/rows-93-110.md` → `rows-93-111.md`,
+15,276 B against `DOC-BUDGET.md`'s 20 KB reversal-range cap, following `suite/042`'s precedent from
+last night exactly (it took `rows-93-109.md` → `rows-93-110.md`). Three sibling range files'
+cross-links repointed; the index range table updated.
+
+**3. Row 111 filed under recurring shape 1, with a clause naming a sub-mechanism shape 1 did not
+have.** Shape 1 is *"Documented as implemented, wasn't"* and already holds rows 19/28/55 — the
+first occurrence of this same core-32 drift — so the classification is by precedent. What is new
+and now written into shape 1's prose: **a compaction pass is the one edit that can un-correct a
+decision silently.** It re-asserts the original claim with the decision's own authority, breaks no
+gate, and its diff reads as a move rather than as a reversal. That mechanism is still live, which
+is the row's whole point.
+
+**Merged:** **no agent branch — this is a supervisor-run `suite` unit** (`protocol.md` §8), so there
+is no code repo and no worker. Landed in two commits on `embarch-doc`'s `main`, by design:
+`280fddd` carries the `reversals/` half (`fold-commit.py` refuses every `--path` under `reversals/`,
+`tasks/doc/073`), and this fold carries `embarch-decision-reversals.md`, `history/suite.md` and the
+task retirement. `tasks/doc/072`'s trap was planned for rather than discovered — the task file was
+`git add`ed before the fold, since a `suite/` task always carries an unstaged modification the
+supervisor made in its own working tree. `check-docs.py` **11/11** on the result.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written, and it did not arrive by itself — see "least sure about".
+Directed on five checks and it re-derived all five independently through `git show <sha>:<path>`,
+confirming both dropped paragraphs, the 15-day span, the same-day split, and `4219867` as
+`core/071`'s doc commit (it also noticed that commit retires `tasks/core/071`). On check 4 it made
+the distinction I wanted tested: row 111's *"records as rejected"* is a past-tense narration of the
+framing the 2026-08-25 Correction answered, **not** a present-tense claim about decision 32's
+current amended text, so it contradicts neither 32 nor 36. On check 5 it correctly reported the
+index as *broken at that commit* and correctly declined to call it a finding, since the commit
+message says the fold lands it. It independently reached the same classification judgement I had
+already made — shape 1 by precedent, with the compaction sub-mechanism worth a clause rather than
+a twelfth shape number.
+
+**Hardware debts:** **none created, and none could be.** One table row, one file rename, four link
+edits and two index lines — nothing built, nothing executed, no board, no probe, no live Core, no
+flash, no study. Standing debts unchanged: `tasks/api/059` still `open` — **not `blocked`** — with
+the dev-bench probe unplugged, a **nineteenth** consecutive leg; `fleet-hardware.py --refresh` still
+crashes (`tasks/doc/041`) and its buffer still claims both boards attached, so **do not plan a bench
+unit off it**; the bench queue is still parked by the owner's `d0cf9a0`; `core/015`'s native Windows
+build is measured unrunnable from WSL2 at all; `api/108` is dispatchable but cannot be closed by
+anything in this environment; `umbrella/037` check 13, `umbrella/033`'s check-17 arms, umbrella
+check 5's permission-denied probe, `embarch-ui`'s 18-record stale prefix and the
+`embarch-outpost`/`embarch-dev-bench` toolchains all untouched.
+
+**Budget:** PROCEED — weekly **37.4%** of a 90% cap at leg start, resets in ~138h, no 429. Wave
+**6** suggested; the **4-unit leg cap** binds, not the budget and not scope spread (7 dispatchable
+across 6 scopes at step 0, refill not owed). Size ledger: 14 dated entries, **0 overdue**, so no
+unit was pre-empted by it.
+
+**Least sure about:** **that I ran this unit at all rather than dispatching a fourth worker.** Its
+announcement window was opened by leg 134 at 01:49 and closed unobjected eleven hours ago, so the
+30 minutes were already paid for and re-parking it would have wasted them — but it cost a slot that
+`study-designer/065` or `core/073` could have had, and neither of those needs a supervisor's hands.
+Second: **the reviewer's hand-back did not reach me on its own.** I asked it directly, mid-run, for
+its verdict — a `SendMessage` to the agent — and that is what produced the line above; the ordinary
+notification arrived afterwards. `tasks/doc/042` says a reviewer that finishes and never notifies
+has no legal way to be collected, and leg 135 wrote three `skipped` lines' worth of near-misses for
+exactly this. **Asking the agent directly appears to work and is not written down anywhere as a
+permitted collection route** — the next leg should know it is available, and the owner should decide
+whether it belongs in `.claude/leg.md`.
+
+---
+
 ## 2026-09-17 12:43 — study-designer/064 the sweep left `src/` and immediately found four more file types nobody had counted
 
 **Decided:** **three things, and the second is the one that matters to the chain.**
