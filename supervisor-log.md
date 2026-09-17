@@ -97,6 +97,115 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 23:51 — suite/042 row 110, and the range-file question the last leg thought was hard
+
+**Decided:** **three things, and the first is the structural call `umbrella/074` filed this task to
+get made.**
+
+**1. Extend the newest range file; do not open a new one.** `reversals/rows-93-109.md` is now
+`reversals/rows-93-110.md`. The last leg framed this as a genuine choice between renaming a file
+every link follows and opening a one-row file, and **it is not close once you read
+`DOC-BUDGET.md`**: a reversal range file's cap is **20 KB** and this one was **12,838 B**, i.e. about
+7 KB and roughly eight more rows of headroom. Splitting there would open a one-row file at 63% of a
+cap the existing file has not reached, against a split pattern whose own precedent is files of
+**50, 22, 20 and 17 rows**. The rename cost four link edits — the index cell plus one "Other ranges"
+line in each of the three sibling files — and **five bytes** of the index's 931-byte reserve, which
+is now **926 B left, 9,314/10,240**. The moved file is byte-identical for rows 93-109; no number was
+reused, reordered or re-split, which is the property the page's own numbering rule protects.
+
+**So `umbrella/074` over-thought it**, and I am saying so plainly because that leg's own
+"least sure about" asked exactly this question and deserves an answer in the file it will be read
+from. **But filing it was still not wrong** — the thing that made the call easy is a number in
+`DOC-BUDGET.md`, and the cost of *checking* that number is a minute, while the cost of getting a
+permanent-identity numbering scheme wrong at the end of a leg is permanent. Cheap insurance that
+turned out not to be needed is not the same as a mistake.
+
+**2. The row is admitted, and it clears the page's own bar rather than a paraphrase of it.** Row 110,
+`umb 3, 28`. Decision 3 held that `setup` need not touch `PATH` because the archive puts all three
+binaries in one directory and umbrella can find Core beside itself; decision 28 reversed it after
+**a real `wsl-host` onboarding run printed the local Linux sibling as the Core path** for a topology
+whose Core is the Windows-side binary. The header's bar is *"caught by a real build, install,
+capture, or by reading a real repo's actual files — never by inspection alone"*, and decision 28's
+own opening sentence says a real run prompted it. **The reason `umbrella/074`'s worker declined to
+file — that the reversal is "already handled correctly in its own owning doc" — is the page's own
+description of every row it has**, and read as an exclusion bar it empties the page. That is recorded
+in the row's task and now here, because it is a reusable mistake.
+
+**3. Placed under shape 5, "a guess indistinguishable from an answer", and the placement is the part
+I am least confident in.** Sibling lookup is not literally a guess — it is a deterministic search
+that **found a real file** and reported it with full confidence, on a machine where the right file
+was somewhere else entirely. That is row 105's shape exactly (a resolution rule with no way to signal
+it had resolved into the wrong world), and it is why the row's own pivot sentence is *"the binary
+beside me is a real answer on the wrong machine."* No twelfth shape was added; the task forbade it
+and nothing here needed one.
+
+**Merged:** **nothing — a `suite` task has no branch and no worker**, so there is no merge SHA to
+record. It landed directly from the leg worktree in **two commits, and the split was forced**:
+`b7f96ca` carries `reversals/rows-93-110.md` (moved from `rows-93-109.md`), the three sibling range
+files and the retirement of `tasks/suite/042`; **this fold commit** carries
+`embarch-decision-reversals.md`, `history/suite.md` and this entry. **Both are the revert handle,
+and neither alone is** — reverting only the fold would leave the index pointing at a range file that
+still holds row 110.
+
+**Why two commits, which is a real finding and not a tidiness problem.**
+`scripts/fold-commit.py` **refuses to stage anything under `reversals/`**: its allowlist of what a
+unit's fold may touch does not know that directory exists, so all five range-file paths came back as
+*"outside what a unit's fold may stage"*. `reversals/` is a
+[DOC-COMPACTION.md](../embarch-doc/DOC-COMPACTION.md) split out of
+`embarch-decision-reversals.md` — **a doc that appeared from a split, carrying its old file's rules
+and none of its old file's classification**, which is the exact shape `.claude/leg.md` warns about
+for `check-ownership.py`'s lists and which turns out to bite `fold-commit.py` too. The script's own
+refusal text names the legal move (*"it is the owner's commit or a separate one — not this fold"*)
+and I took it. **I did not touch the script**: it is owner-reserved, and a supervisor that widens the
+allowlist guarding its own folds has no allowlist. Filed as
+`inbox/fold-commit-cannot-stage-the-reversals-split.md` rather than fixed — **it is `Owner:
+required`, so the next leg drains it into `tasks/doc/` and leaves it there; do not dispatch it.**
+**One consequence I did not intend:** `tasks/suite/042`'s removal was already staged from the `git
+rm` before the refusal, so it landed in `b7f96ca` rather than in the fold. Harmless — the task is
+retired either way — but it is why the fold commit is two files rather than three.
+Announced 23:16 (`ts 1789622198.825569`), thread re-read at 23:45 and 23:46:48 — **no reply of any
+kind in 30 minutes**, so it executed on silence, which is what `ops.md` §4's window means.
+`check-docs.py` **11/11** via the wrapper, run before and after the assembler; `grep -rn
+'rows-93-109'` over the repo returns **nothing**, so the rename left no dangling reference in prose
+that the link checker would not have caught.
+`changelog.d/suite-reversal-row-110-umbrella-path.added.md` consumed into `history/suite.md` with
+`--only`; **29 of the owner's own fragments left pending**, untouched.
+
+**Blocked:** nothing. `tasks/suite/042` closed and removed in this fold.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written, and this one is worth noting because **it reviewed the
+supervisor's own uncommitted work rather than a worker's merge** — no SHAs, no branch, just the leg
+worktree's `git diff HEAD`. It read both decision bodies in full and quoted decision 28's own
+"deleted outright, not merely deprioritized" and "**one** idempotent sourcing line" back at the row;
+it checked all eleven shapes rather than only the one I proposed, and independently agreed shape 5
+fits better than 1, 4, 6 or 9; and it diffed the moved file line-by-line to confirm rows 93-109 are
+byte-identical. I told it explicitly **not** to file an inbox drop, because the fold had not
+committed yet and anything it found I could still fix — which is the right default for reviewing a
+supervisor, and is not how the other three reviewers this leg were briefed.
+
+**Hardware debts:** **none created, and none could be** — five files of prose, nothing built, no
+board. Standing debts carried unchanged: the dev-bench probe is unplugged (`"probes": []` read live
+from Core at this leg's top), so `tasks/api/059` stays `open` for a thirteenth consecutive leg;
+`fleet-hardware.py`'s buffer is **13,280 minutes stale and still claims both boards attached**, so
+**do not plan a bench unit off it** — `--refresh` still crashes (`tasks/doc/041`). `core/015`'s
+native Windows build, `embarch-ui`'s 18-record stale prefix, `umbrella/037` check 13 and
+`umbrella/033`'s check-17 arms are all untouched.
+
+**Budget:** PROCEED throughout — weekly **25.1%** of a 90% cap at the leg's top, resets in ~152h, no
+429 anywhere. Wave **6** suggested; 3 workers dispatched concurrently plus this supervisor-executed
+unit, and **the 4-unit cap, not the budget, is what ended this leg.**
+
+**Least sure about:** **shape 5.** Three of this leg's four units turned on the difference between a
+citation that resolves and a citation that is true, and then I spent the fourth deciding which of
+eleven prose shapes a new row belongs to — with no check, no reviewer precedent and no test that
+could ever fail. If a later reader thinks row 110 is really shape 1 (*documented as implemented,
+wasn't* — the archive-stays-put assumption was documented as a working resolution mechanism and was
+only ever working by accident of topology), **they may well be right, and moving it costs one line.**
+
+---
+
 ## 2026-09-16 23:44 — topology/052 two sibling files, the same wrong sentence, and only one of them was in any sweep's scope
 
 **Decided:** **two things, and the second is the one that matters past this leg.**
