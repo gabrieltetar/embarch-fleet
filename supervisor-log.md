@@ -97,6 +97,88 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 12:27 — ui/064 an open question closed by recording the split, with the duplication turning out wider than the bullet claimed
+
+**Decided:** **two things, and the first is the one a future leg will want.**
+
+**1. `embarch-ui` decision 27: `trace.rs`'s decode-to-lanes pipeline stays duplicated with
+`embarch-core`'s `outpost_load.rs`, and the reversal condition is named precisely.** The worker's
+finding is that `embarch-ui/open.md`'s bullet **understated** what is duplicated: not just
+`Lane`/`Span`/`Gap` and the four exclusion flags (`open_start`, `open_end`, `crosses_gap`,
+`below_resolution`) but the whole decode pipeline — row parsing (`Row`/`split_row`/`kind_of`),
+`dut_clock_health`, `stale_prefix_end`, the axis-tier choice and the lane/gap state machine, with
+`outpost_load.rs`'s own comments calling several functions *"ported verbatim"* from `trace.rs`.
+`embarch-core` decision 62 (`ui/051`) moved only the **aggregate** off this crate; `/load` answers
+the rollup and no per-span data, so `trace.rs` needs its own decode to serve the windowed-bin chart
+(decision 18) regardless. Decision 27 records the split as accepted-for-now and says exactly what
+closes it: `embarch-core` serving decoded per-lane spans, not just their rollup.
+
+**2. The worker correctly refused to decide `embarch-core`'s half, and I filed that half as
+`tasks/core/075`.** It had every fact needed to argue for the endpoint and instead dropped it for
+the owning sub-project — which is the ownership map working rather than a worker being timid. I
+filed the drop verbatim with three supervisor notes: *"declines and records why" is a first-class
+outcome*; **deciding is in scope, shipping the route is not** (it is a wire surface with
+`embarch-api`, `embarch-ui` and the user guide as consumers, so the supervisor announces it
+before it lands); and **verify `embarch-ui` decision 18's scope from decision 18's own text**
+rather than inheriting `ui/064`'s reading of it. That third note is the one I would defend hardest:
+the whole task rests on decision 18 being about the *browser* payload and not the
+Core-to-`embarch-ui` call, and that reading was made from `embarch-ui`'s side of the boundary.
+
+**Merged:** `agent/ui/064-lane-span-gap-derived` (doc `b0fc860`, **code: none** — `embarch-ui`
+landed no commits; the worktree had zero diff and the worker ran the cargo gate against the
+unmodified tree for a baseline). **I did not re-run the cargo half** for the same reason.
+Doc branch rebased onto `origin/main` and force-pushed before the merge — **the first `--ff-only`
+attempt failed** because I had advanced the leg worktree past the branch's base with three claim
+commits and a fold, and the guard reset cleanly to the pre-merge SHA as designed; rebase then merge
+as separate calls. Gate re-run by me on the merge result: `check-docs.py` **11/11**,
+`check-ownership.py --scope ui` OK on 4 paths, `check-client-names.py --repo` clean against 7
+denylist entries. `changelog.d/ui-lane-span-gap-split.decided.md` consumed into `history/ui.md`;
+**29 of the owner's own fragments left pending**, untouched. No `status.d/` fragment — nothing
+suite-level was made false.
+
+**Blocked:** nothing. **Filed `tasks/core/075`** from the worker's drop.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written. Directed on four checks and it re-derived all four from
+source rather than from the diff: `/load`'s payload is rollup-only (`Lane`/`Span`/`Gap` are private
+and non-`Serialize` in `outpost_load.rs`), every item in the widened duplication list is genuinely
+present in both files, decision 18's own text (`embarch-ui/decisions/trace-transfer.md`) really is
+about the browser payload only — `embarch-ui`'s server-side `decode_trace` in `main.rs` is live
+today — and decision 27 is uniquely numbered at **1,006 B against the 1,200 B per-decision
+ceiling**. It also went a level deeper unprompted, on whether decision 27 softens `embarch-core`
+decision 62's *"known to be temporary"* language into a mere option; it concluded not, because
+decision 27's own *"until it lands, the split stays"* preserves the temporariness and the task
+forbade the `ui` worker from asserting Core's future behaviour at all. **That is a reviewer
+checking the thing I did not think to ask about**, which is the argument for open-ended prompting
+that this log's directed-prompt streak has been quietly making the case against.
+
+**Hardware debts:** **none created, and none could be.** One decision entry, one rewritten
+`open.md` bullet and a filed task; nothing executed against a board, no probe, no live Core, no
+flash, no study — the `cargo` runs were baseline checks on an unmodified tree. **One small size
+event worth recording:** the rewritten bullet first pushed `embarch-ui/open.md` into the reserve
+band at 4,028/5,120 B and the worker tightened it to 3,804 B rather than filing a compaction task,
+which is the reserve rule working the cheap way round. Standing debts unchanged: `tasks/api/059`
+still `open` — **not `blocked`** — with the dev-bench probe unplugged, an **eighteenth**
+consecutive leg; `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`) and its buffer still
+claims both boards attached, so **do not plan a bench unit off it**; the bench queue is still
+parked by the owner's `d0cf9a0`; `core/015`'s native Windows build is measured unrunnable from WSL2
+at all; `api/108` cannot be closed by anything in this environment; `umbrella/037` check 13,
+`umbrella/033`'s check-17 arms, umbrella check 5's permission-denied probe, `embarch-ui`'s
+18-record stale prefix and the `embarch-outpost`/`embarch-dev-bench` toolchains all untouched.
+
+**Budget:** PROCEED — weekly **33.8%** of a 90% cap, resets in ~139h, no 429. Wave **6** suggested;
+the 4-unit leg cap is what ends this leg.
+
+**Least sure about:** **whether decision 27 should have been a decision at all, or an `open.md`
+bullet saying "still split, here is why".** It records a real choice with a real alternative, so it
+passes the bar on paper — but what it actually decides is *to keep doing what we were already
+doing*, and the thing that would change it lives in another repo and is now a separate task.
+`embarch-ui`'s decision numbers are a scarce, permanent resource. If `core/075` says yes, decision
+27 is superseded within days and the suite has spent a number on an interval.
+
+---
+
 ## 2026-09-17 11:45 — core/072 a fold recovered from a killed leg, and a reviewer that falsified the sentence the unit had just written
 
 **Decided:** **three things, and the first is that this entry is a recovery rather than a unit I
