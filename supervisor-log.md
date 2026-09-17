@@ -97,6 +97,106 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 13:43 — topology/057 the tightest reserve in the suite is paid by a verbatim split, and it is the corpus's first `spec.md` split
+
+**Decided:** **nothing was approved on the owner's behalf — the judgement in this unit was which seam
+to cut, and it was the worker's.** What I decided as supervisor is upstream of it: I corrected this
+task's `## In flux` **prose** section in the claim commit. Leg 136 unparked the task by fixing the
+`**In flux:**` *field* to `no` and did not reach the paragraph below it, which still argued `yes` on
+the grounds that `tasks/topology/056` was open against the same section. `056` and `058` have both
+landed and neither touched `spec.md`, so the paragraph was not merely stale, it contradicted the
+field three lines above it. **`check-task-state.py` reads the field and cannot see the prose**, so
+this would have shipped a task whose own body told a worker not to do what its header said to do.
+
+**The split, and why that seam.** `spec.md`'s "Storage and roles" section (1,445 B) moved
+**verbatim** to a new file `embarch-topology/spec/storage-and-roles.md`, with a two-line pointer left
+behind naming decisions 20 and 27 so the citation stays reachable from `spec.md` itself. **9,826 →
+8,658 / 10,240 B**, from 96.0% to 84.6%, clear of the 9,040 B reserve line; `--pressure` now prints
+no `topology` line at all. The worker's reasoning for taking that seam rather than "Shape" or "What
+validation asserts" — all three cleared the ~787 B needed on their own — is that it is the
+narrowest-scope mission and the least central to a first read, while "Shape" is the architecture
+overview linked from the top of the file and "What validation asserts" is the safety guarantee
+`topology/058` touched this morning. **A split is not a squeeze: the diff deletes nothing**, and all
+three of `topology/055`'s corrections in the `Must not delete:` list survive unshortened, confirmed
+byte-for-byte by the reviewer.
+
+**The human question, answered in the worker's words** (`DOC-COMPACTION-PASS.md`, and no script
+answers it): *can `spec.md` alone answer what someone needs to work on `embarch-topology` today?*
+**Yes, and marginally better than before** — every section stating a guarantee, boundary or live
+invariant is untouched and still in one file; the only thing now one hop away is the storage and
+role-uniqueness *detail*, and the pointer still tells a reader that fact exists and names the
+backing decisions. It would have become "no" only if the caveat itself had been shortened, which is
+exactly what the split avoided.
+
+**This is the first `spec.md` mission split in the corpus, and it landed in a bucket nobody chose
+for it.** `scripts/check-doc-size.py`'s `CAPS` list has purpose-built entries for a `decisions.md`
+split (`decision-group`, 12 KB) and an `interfaces.md` split (`interface-group`, 12 KB) — both added
+the first time those shapes were needed — and none for `embarch-[a-z-]+/spec/[a-z-]+\.md`. The new
+file falls through to the catch-all `legacy` role at **25 KB**, four times what its sibling split
+shapes get, for no reason other than being the fallback. **It is capped and visible to the gate, not
+invisible** — the worker's first assumption was that a `CAPS` miss meant unguarded, and it traced
+`role_and_cap`/`docs()` to disprove its own guess, which is the right instinct and worth recording.
+`scripts/` and `DOC-BUDGET.md` are owner-reserved, so I filed it rather than fixing it:
+**`tasks/doc/078`**, `Owner: required`, from the worker's `inbox/doc-spec-split-legacy-cap.md` drop.
+
+**Merged:** `agent/topology/057-compact-topology` (code **none** — doc-only unit, no code worktree
+was created for it by design; doc `76115af`). The branch was based on `8aa0251` and `--ff-only`
+refused because this leg's own refill commit had moved `main` underneath it; rebased in the worker's
+own worktree and force-pushed, then merged. **That is leg 136's flagged ordering problem arriving
+from the other direction** — it warned to rebase a doc branch immediately before the merge rather
+than when the worker reports, and the same rule covers a supervisor whose own queue commits move
+`main` mid-leg. Post-merge `check-docs.py` **11/11**; pre-merge `check-ownership.py --scope topology
+--stdin` OK on 4 paths. `changelog.d/topology-spec-storage-roles-split.changed.md` consumed into
+`history/topology.md`; **29 of the owner's own fragments left pending**, untouched. No `status.d/`
+and no `features.d/` fragment, so `suite/features.md` is unchanged.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written; it answered both by hand-back and — after the hand-back was
+misdelivered to the listener, the third leg running to hit `tasks/doc/042` — by the listener relaying
+it to me. It diffed the five removed paragraphs against the five added ones at `76115af^` and
+confirmed the move is **byte-for-byte identical, citations included**, and located each of the three
+`055` corrections by name: the role-uniqueness clause moved intact into the new file, the
+identity-gate clause and the alert-log read-back qualifier were never touched. It re-derived the
+`topology/058` question rather than accepting the worker's answer and reached the same conclusion for
+a reason worth keeping: **decision 34 is additive to decision 12's durability guarantee** and makes
+no claim about which failures reach the log that `spec.md` could contradict, and `spec.md`'s "What
+validation asserts" bullet is positive-path only. It also checked the untouched *"a signal mismatch
+is not written to the alert log"* line and found it is about signal routes, not identity-gate attach
+failures, so decision 34 does not reach it either.
+
+**One loose end it raised that is not a finding and should not be lost:** the task file's own
+framing calls the identity-gate clause *"case-insensitive equality"*, while the actual text in
+`spec.md` and `decisions/validation.md` says *"exact match… byte for byte"*. That mismatch is
+pre-existing in the task file — my claim commit propagated it into the `Must not delete:` field
+without checking it — and the shipped docs are the correct ones. Nothing in the corpus is wrong; a
+task file that no longer exists was.
+
+**Hardware debts:** **none created, and none could be.** One doc section moved between two files and
+a pointer written in its place; nothing built, nothing executed, no board, no probe, no live Core,
+no route. Standing debts unchanged and none paid: `tasks/api/059` still `open` — **not `blocked`** —
+with both boards unplugged, a **twentieth** consecutive leg; `fleet-hardware.py --refresh` still
+crashes (`tasks/doc/041`) and its buffer still claims both boards attached, so **do not plan a bench
+unit off it**; the bench queue is still parked by the owner's `d0cf9a0`; `core/015`'s native Windows
+build is still measured unrunnable from WSL2; `topology/058`'s own new debt — that the five widened
+alerts have never been rendered by a live Core's `POST /validate` — is untouched by this unit and
+still free the next time a probe is genuinely stuck.
+
+**Budget:** PROCEED — weekly **40.9%** of a 90% cap at leg start, resets in ~137h, no 429. Wave
+**6** suggested; the **4-unit leg cap** binds, not the budget.
+
+**Least sure about:** **that I let a doc-only unit run with no code worktree at all.** It was
+deliberate — a compaction task should not be handed a checkout it can accidentally change, and the
+worker read `validate.rs` read-only from the main checkout and answered the decision-34 question
+correctly from it. But it means nothing in this unit ever compiled `embarch-topology`, and if the
+split had somehow broken a doc-comment reference in source, no gate here would have seen it. The
+risk is small for a verbatim move and I would do it again; it is worth saying out loud that
+"doc-only" is my judgement about the task, not something a script checked.
+
+---
+
 ## 2026-09-17 13:20 — topology/058 five silent failures in the board-identity gate start raising, and the residual gap is stated rather than papered over
 
 **Decided:** **`embarch-topology` decision 34 — route all five, not some of them — and unpark
