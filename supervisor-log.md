@@ -97,6 +97,63 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 17:56 — api/114 the `serial_port` referral is closed against umbrella decision 55
+
+**Decided:** **that a question another repo has settled leaves `open.md`'s "Known wrong /
+unfinished" section rather than leaving the file**, and that `embarch-api`'s "Settled-deferred"
+section is where it goes. The worker made that call and the reviewer checked it against the section's
+existing occupants — *"`serial_log` stays one-shot … not this crate's call"* already defers to Core
+from that same section, so this is the section being used as it already was, not a new departure.
+The alternative, deleting the bullet outright, would have removed the only place in `embarch-api`
+that names *why* `init` refuses to scaffold a serial port; the citation is cheaper than the
+re-derivation.
+
+**Decided, second, and it is a declined merge rather than a made one:** **`api/109`'s new
+`build_dir_name` bullet and this one stay two bullets.** The task file raised merging them as a
+possibility — both are about what `init` does and does not scaffold — and the worker rejected it:
+they sit in different sections, one is about host-OS port-assignment volatility and the other about
+`list-targets`' output shape, and they share no claim. I dispatched this unit with that question
+left explicitly open to the worker rather than pre-answered, and the reviewer re-derived the same
+answer independently. Recording it so the next leg does not re-open it.
+
+**Merged:** `agent/api/114-close-serial-port-referral` (code `87f67df` — **the code branch carries
+zero commits**; `embarch-api` was not touched at all, doc `ed59fb66`). `embarch-api/open.md`
+4,381 → 4,455 B (87.0%, still clear of the 90% reserve line, 665 B left).
+`changelog.d/api-serial-port-referral-closed.changed.md` consumed into `history/api.md`; **29 of the
+owner's own fragments left pending**, untouched, via `--only`. Gate on the merge result:
+`check-docs.py` **11/11**, `check-doc-size.py` clean, `check-ownership.py --scope api` clean on both
+branches, `check-client-names.py` clean on the code worktree.
+
+**I did not re-run `cargo` for this unit, and that is a deviation worth naming.** The code branch's
+tip *is* `embarch-api`'s `main` — zero commits, zero diff — so the "merge result" the gate is
+supposed to be re-run against is a commit that was already green on `main` before this leg started.
+Running a build against it would have measured `main`, not this unit. The worker did run the full
+`cargo` trio green in its worktree; I am relying on that only to the extent of "the tree it built was
+`main`", which is checkable without trusting it. **If a future leg sees a zero-commit code branch,
+this is the reasoning, and it does not extend one commit further.**
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** **none created, and none could be.** One bullet of markdown moved between two
+sections of one file, plus a one-line changelog fragment. No board, no probe, no live Core, no
+flash, nothing executed. The unit did not touch the standing `api` hardware debt either —
+`tasks/api/059`'s four unexercised SSE paths (`study-status --follow`, the drop/fallback path,
+`lagged`, reconnect) are unchanged and still need a bench.
+
+**Budget:** PROCEED at the leg's start — weekly **47.7%** of a 90% cap, resetting in ~133 h,
+suggested wave **6**. The wave was not the binding constraint and has not been all leg: only
+**3 distinct scopes** are dispatchable (`api` 2, `core` 6, `umbrella` 2), and one-task-per-sub-project
+is per slot, so concurrency is capped at 3 by scope spread.
+
+**Least sure about:** whether "Settled-deferred" is a section that will keep meaning something. It
+now holds at least two entries whose content is *"another repo decided this"*, which is a useful
+fact to record once and a bad thing for a file to accumulate — `embarch-api/open.md` is a file of
+live questions, and a growing list of dead ones is how it reaches its cap carrying nothing payable.
+`tasks/doc/034` names exactly that shape (*"a full `open.md` of live questions has no payable
+debt"*), and it is owner-reserved, so I am noting it rather than acting on it.
+
+---
+
 ## 2026-09-17 17:39 — ui/067 the split is permanent in `embarch-ui`'s own words now, and the compaction it was blocking is paid
 
 **Decided:** **that `embarch-ui`'s two decision-27 texts state the permanence themselves rather than
