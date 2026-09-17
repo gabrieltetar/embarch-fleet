@@ -97,6 +97,91 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 13:14 — core/075 `/load` will serve decoded per-lane spans, and the supervisor note that leaned the other way was wrong
+
+**Decided:** **`embarch-core` decision 64 — yes, serve them — and I am recording that this is the
+opposite of what my own predecessor's dispatch notes leaned toward.**
+
+`tasks/core/075` carried a supervisor note saying *"declines and records why is a first-class outcome
+here, not a consolation… it is the cheaper answer"*. The worker weighed it and said yes anyway, on
+three grounds I checked and accept:
+
+- **Not a new category of transfer.** `embarch-ui`'s server already pulls the full rendered CSV from
+  Core over HTTP on this same call to do its own decode. Serving decoded spans instead reshapes an
+  existing transfer rather than adding one. **See the caveat below — half of this argument is not
+  sourced.**
+- **Suite decision 4's own bought property is not true today.** It bought *"exactly one
+  implementation of that timeline exists in the suite"*; `LoadSummary` is one implementation, and the
+  timeline underneath it is still two — `outpost_load.rs`'s own comments call several of its
+  functions "ported verbatim" from `embarch-ui/src/trace.rs`.
+- **Decision 62 already named this as coming**, in its own words: the duplication is *"known to be
+  temporary… until the queued follow-up makes it read this answer instead."* Decision 64 is that
+  follow-up answering *whether*, not a reopening of 62.
+
+**Supervisor note 3 answered, and the premise held.** The task told the worker to read `embarch-ui`
+decision 18 itself rather than take `ui/064`'s reading of it, and to say so if it turned out wider.
+It is not wider: decision 18 governs where **binning** runs and what crosses to the **browser**
+(`GET /api/trace/{study}/{tap}/bins`), and never says which server holds the decoded capture being
+binned. Suite decision 4 had already read it the same way in its own text — *"What changes is which
+server holds the decoded view. The browser's contract is untouched."*
+
+**Nothing shipped, by design.** Supervisor note 2 allowed the decision and forbade the route; the
+worker filed `tasks/core/076` for the build and **flagged it as a wire-schema bump needing the
+supervisor's pre-land announcement** (`ops.md` §4). The matching `embarch-ui` retirement went to
+`inbox/` rather than `tasks/ui/`, which is the correct cross-scope route.
+
+**Merged:** `agent/core/075-load-per-lane-spans-decision` (code **none** — the `embarch-core` branch
+carries **zero commits** over `origin/main`, verified by me and by the reviewer; doc `5b65ea7`). Doc
+branch rebased onto `origin/main` and force-pushed; rebase and merge as separate calls. Pre-merge
+`check-ownership.py --scope core --stdin` OK on 6 paths; post-merge `check-docs.py` **11/11**.
+`changelog.d/core-load-per-lane-spans.decided.md` consumed into `history/core.md`; **29 of the
+owner's own fragments left pending**, untouched. No `status.d/` fragment. `decisions/stream-index.md`
+went to 9,333/12,288 B (76%), nowhere near reserve; `decisions/auth.md` untouched as instructed.
+
+**Blocked:** nothing. **Two follow-ups exist because of this unit** — `tasks/core/076` (the build)
+and the `inbox/` drop retiring `trace.rs`'s decode pipeline, which is explicitly blocked on `076`
+landing first.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written. This is the one reviewer of the leg that reached me by the
+route I asked for — I put an explicit instruction in its prompt to `SendMessage` me *as well as*
+handing back, and it did both. It re-derived all five checks through `git show 5b65ea7:<path>`,
+confirmed decision 18's scope independently, and confirmed the decision 4 and decision 62 quotes
+verbatim.
+
+**It also produced the most useful thing any reviewer said today, and it is not a finding.** On the
+size argument: the 12.6 MB figure is quoted correctly from decision 18 (225,627 rows / 112,804 spans
+/ 26 lanes, measured 2026-09-04), but it grepped `embarch-core`, `embarch-ui` and `suite/` at the
+merge SHA and **no document anywhere states the rendered CSV's byte size.** So *"the same order of
+magnitude as the CSV that already crosses this same call today"* is an assumption, not a comparison
+anyone has made — **the one number decision 64's whole cost argument rests on.** It contradicts
+nothing locked, so it is correctly not an inbox drop and I did not amend decision 64. **I wrote it
+into `tasks/core/076` instead**, as a required measurement before the implementation decision quotes
+the argument, with the consequence named: if the CSV is materially smaller than 12.6 MB, the response
+shape is worth revisiting before shipping rather than after.
+
+**Hardware debts:** **none created, and none could be.** One decision entry, one index row, one
+`open.md` pointer bullet, a filed task and an `inbox/` drop; no source changed anywhere, nothing
+built for a board, no probe, no live Core, no flash, no study. The worker's `cargo build`/`test`/
+`clippy` all ran green **on an empty diff**, which is worth stating plainly rather than reporting as
+if it proved something. Standing debts unchanged from the entries below.
+
+**Budget:** PROCEED — weekly **37.4%** of a 90% cap at leg start, resets in ~138h, no 429. Wave
+**6** suggested; the **4-unit leg cap** binds.
+
+**Least sure about:** **that a decision-only unit is the right shape for a `yes`.** A `no` would have
+closed the question in one entry; this `yes` closes nothing and creates two dependent tasks, one of
+them a wire-schema bump that needs an announcement window and touches `embarch-api`, `embarch-ui` and
+the user guide. The reasoning is sound and the worker was right not to take the cheaper answer just
+because a supervisor note leaned that way — but the suite now carries a decision that says "we will
+serve this" and no route, which is precisely the *"documented as implemented, wasn't"* shape
+`embarch-decision-reversals.md`'s recurring shape 1 lists seven rows of, and which this same leg
+added row 111 to. Decision 64's own text is careful to say it ships nothing; whether that care
+survives six weeks of nobody picking up `core/076` is the thing to watch.
+
+---
+
 ## 2026-09-17 13:10 — umbrella/078 the user-level service is rejected, and the objection that killed it is weaker than the bullet said
 
 **Decided:** **`embarch-umbrella` decision 54, and it is a `no` that narrows rather than a `no` that
