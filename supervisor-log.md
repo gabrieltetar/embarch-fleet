@@ -97,6 +97,88 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 21:27 — suite/040 two repos' `CLAUDE.md` now name their interfaces doc, and `embarch-core`'s was right all along
+
+**Decided:** **two things, and the first is a judgement call I was asked to make and made against
+the task file.**
+
+**(a) `embarch-core`'S CLAUSE IS CORRECT AND I CHANGED NOTHING THERE.** The task file pre-classified
+it as *"half right"* — the repo has both `interfaces.md` and an `interfaces/` directory, and its
+`CLAUDE.md` names only the file — and asked whoever ran this to *decide, not guess*. I read what
+each holds. **`interfaces.md` is an index over `interfaces/`**: it carries the conventions that
+govern every route (auth, plain-text errors, which routes take `hw_lock`, what a `404` means) and
+then a "Routes, split by mission" table linking **all six** files in the directory, `constants.md`
+included. That is the identical shape as `decisions.md`, which the very same `CLAUDE.md` sentence
+already calls "an index over `decisions/`". A reader pointed at the *directory* would meet six topic
+files and none of the conventions that govern all of them, which is strictly worse. So the clause
+hides nothing.
+
+**(b) THE TWO OMISSIONS ARE CLOSED, IN THE STYLE THE FIVE CORRECT REPOS ALREADY USE.**
+`embarch-ui/CLAUDE.md` now says `Reference: [interfaces.md](../embarch-doc/embarch-ui/interfaces.md).`
+(one file, no directory) and `embarch-umbrella/CLAUDE.md` says
+`Reference: [interfaces/](../embarch-doc/embarch-umbrella/interfaces/).` `embarch-umbrella`'s was
+the traceable one: `umbrella/046` split `interfaces/doctor-chain.md` out of `spec.md`, creating the
+repo's first interfaces doc, and nothing went back to the `CLAUDE.md` written before it existed.
+Census re-taken after the change: **all eight rows correct.** `DOC-PROTOCOL.md` was not touched —
+owner-reserved, and on this evidence also right.
+
+**The announcement window is the mechanism story here, and it worked.** Leg 126 announced this at
+**20:35** (`ts` `1789612542.894959`) and died before its own 30 minutes were up, leaving the `ts` in
+the task file exactly as `ops.md` §4 says to. I read that `ts`, did not restart the clock, polled
+the thread at four unit boundaries, and executed at **21:05** with no reply of any kind. That is the
+first time this log records a §4 window being *completed by a different leg than opened it*.
+
+**Merged:** no agent branch — this is a `suite/` task and the supervisor executes those itself
+(`protocol.md` §8). Direct commits to each repo's `main`: `embarch-ui` **`2983204`**,
+`embarch-umbrella` **`949801d`**. Those two SHAs are the only revert handles. Gate run by me in both
+repos before pushing: `cargo build --all-targets` and `cargo clippy --all-targets -- -D warnings`
+green in each, `cargo test` **93 passing / 4 ignored** in `embarch-ui` and **225 passing** in
+`embarch-umbrella`; `check-docs.py` **11/11** in `embarch-doc`.
+`changelog.d/suite-040-claude-md-interfaces-reference.fixed.md` consumed into `history/suite.md`
+with `--only`; **29 of the owner's own fragments left pending**, untouched. No `status.d/` and no
+`features.d/` fragment.
+
+**Blocked:** nothing. `tasks/suite/040` closed and removed in this fold.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written, and **it corrected a premise in my own question.** I asked
+whether naming a *directory* was right for `embarch-umbrella` given it holds one file, on the
+assumption that the three repos naming directories all hold several. They do not: `embarch-api`,
+`embarch-outpost` and `embarch-study-designer` each point straight at a bare `interfaces/` with no
+index file at all, so directory-naming is the suite's default and `embarch-core` — not
+`embarch-umbrella` — is the sole outlier, in the other direction, which is exactly why it alone
+should name the file. It also verified the six-of-six link check in `embarch-core/interfaces.md`
+independently, and confirmed nothing in either sub-project's `decisions.md` or in
+`embarch-decision-reversals.md` locks an interfaces-naming convention this could contradict.
+
+**Hardware debts:** **none created, and I partly paid the standing recount — by finding it cannot
+be paid as asked.** Two one-line `CLAUDE.md` edits; nothing executed, no board, no probe, no live
+Core. On `core/015`'s native Windows build: the 2026-09-12 handoff asked whoever next landed a
+`core` unit to recount the tally from commits rather than propagate an ordinal. **This leg landed no
+`core` unit, so I counted anyway: `embarch-core`'s `main` carries 48 commits since 2026-09-07.** The
+entries through 2026-09-16 were narrating ordinals in the low teens. **The two numbers cannot be
+reconciled, and the reason is that nothing anywhere records when the deployed Windows exe was last
+built** — `/mnt/c/.../embarch-core` is an rsync target, not a checkout, so there is no SHA to
+measure from. **The ordinal is unanchored, and no leg can compute it correctly; what is needed is
+for the owner to record the deploy SHA at the next `embarch-dev-workflow.md` §4a sitting.** I did
+not file a task for that: it writes an owner-reserved doc. Everything else carried unchanged — no
+hardware was touched anywhere in this leg and Core was never read live, so `tasks/api/059` stays
+`open`, not blocked, for the ninth consecutive leg; the owner's `d0cf9a0` still parks the bench
+queue and `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`).
+
+**Budget:** PROCEED — weekly **19.9%** of a 90% cap at the leg's top, resets in ~154h, no 429. Wave
+**6** suggested, **3** workers dispatched, 3 landed, plus this supervisor-executed unit.
+
+**Least sure about:** **whether spending a reviewer on two one-line `CLAUDE.md` edits was
+proportionate.** It cost about ninety seconds and returned `no findings` — but it also corrected the
+premise of my own question, which is the second time in this leg a reviewer's value was in something
+other than its verdict. That is either a real argument for keeping review per-unit regardless of
+diff size, or three anecdotes in one leg; the tally this line feeds is the only thing that will
+tell.
+
+---
+
 ## 2026-09-16 21:24 — topology/050 a file that already knew, two paragraphs down, that its own header was stale
 
 **Decided:** **two things.**
