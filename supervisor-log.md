@@ -97,6 +97,105 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 00:30 — dev-bench/034 the same number with two right answers in one repo, for the second time
+
+**Decided:** **two things, and the first closes the wrap-aware census in this repo.**
+
+**1. `embarch-dev-bench`'s wrapped-citation surface is swept out: 23 lines, 39 instances, 0 wrong
+numbers, 2 missing repo labels, 1 wrong file name.** The census grep returned **24** hits, matching
+the task's estimate. Two of them are adjudications rather than citations, and both were called
+correctly: `ble_bridge_real.c:1197` is *"the decision / is made from the *entry*"* — plain prose with
+no number on the next line, **left alone**; and `workspaces/nordic/manifest/west.yml:1` is a real
+citation whose three numbers all resolve, so the coincidence the task asked about was not one. The
+three fixes:
+
+- `app/src/serial_protocol.h:39` — bare `decisions 31/32` for `GattDiscover`/`GattMonitorAll`. Those
+  are **`embarch-study-designer`'s** (`decisions/gatt.md`, literally named for those two actions);
+  dev-bench's own 31/32 (`decisions/scanning.md`) are the 16-bit UUID offset bug and the
+  `target_name` scan filter. Label added.
+- `app/src/serial_protocol.h:740` — bare `decision 39` for `streams_crc`'s *"sibling seal"*. That is
+  **`embarch-study-designer`** `decisions/seals.md` 39, whose own text says *"three sibling seals,
+  not one widened seal"*. Label added.
+- `app/tests/scan_seen_mfg/src/main.c:1` — cited `decisions/ble.md` for decision 44, which lives in
+  `decisions/scanning.md`. **Number and repo were right all along; only the file name was wrong** —
+  a shape no census in this suite had produced before, and one that a resolution check keyed on the
+  number alone cannot see.
+
+**2. The second same-number collision in this repo, and the reviewer confirmed both halves.**
+`decision 39` has **two right answers inside `embarch-dev-bench`**: the study designer's seal
+decision at `serial_protocol.h:740`, and dev-bench's own logging/verbosity 39 (`decisions/logging.md`)
+at `app/src/main.c:1085`, which is **correctly bare and was left untouched**. `dev-bench/033` found
+the first such collision on `decision 39` too, split by sentence inside one file. So the standing
+instruction for this repo — *read the sentence, not the number* — now has two independent
+confirmations, and the failure mode it guards against is a relabelling pass that "fixes" the
+correctly-bare side.
+
+**Nothing in this unit was compiled, and that is structural rather than a lapse.**
+`embarch-dev-bench` has no `Cargo.toml`, so the cargo legs of the gate select nothing, and a
+worker's worktree has no `west` and no Zephyr SDK — the standing `dev-bench/019`/`020` debt,
+restated, not added to. **This is a comment-only change, so the untestable half is untestable in the
+least dangerous way there is.** What *was* verified mechanically: all three changed lines measured
+**under 100 columns** (94, 98, 80), and the one line over 100 in these files is pre-existing and not
+this unit's.
+
+**Merged:** `agent/dev-bench/034-wrapped-citations` (code `edc278b`, doc `4288fd9`). The doc branch
+needed a rebase onto `ea5b880` first, since `topology/053`'s fold had moved `main`. Gate re-run by me
+on the merge result: in `embarch-doc`, `check-docs.py` **11/11** via the wrapper;
+`check-ownership.py --scope dev-bench` OK on 2 doc paths and OK on the code repo;
+`check-client-names.py --repo` clean against 7 denylist entries; no cargo legs, per above. I read
+the full code diff before merging rather than merging on green, because two of the three edits are
+in a **wire-format header** — `serial_protocol.h` — and that is one of the cases `.claude/leg.md`
+names. Comments only; no struct, no field, no constant touched.
+`changelog.d/dev-bench-wrapped-citation-census.changed.md` consumed into `history/dev-bench.md` with
+`--only`; **29 of the owner's own fragments left pending**, untouched. No `status.d/` and no
+`features.d/` fragment.
+
+**Blocked:** nothing. `tasks/dev-bench/034` carries its per-instance write-up in a `## Result`
+section and every `Done when` box ticked — but **the worker left its `State:` line at `claimed`**,
+and `fold-commit.py` refused the fold and said so before writing anything. I set it to `done` and
+re-ran. Worth knowing for the next leg: that refusal is the only thing standing between a landed
+unit and a task file that reads as a live claim, which the next recovery would reclaim to `open` and
+re-dispatch (`tasks/doc/028`, six prior instances). It cost one edit because the check fires before
+the commit.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written, in about two minutes — I asked all three reviewers after the
+first for tightness and got it without losing substance. This one resampled both sides of the
+`decision 39` collision independently, quoting `seals.md` 39's *"three sibling seals"* and
+`logging.md` 39's *"study state like the bond table"* against the two call sites, and it grepped
+`ble.md` for `44` and got no hit before accepting the file-name fix. **It checked exactly the three
+lines I scoped it to and did not re-audit the other twenty** — which is the shape I want on a
+23-line census, and is the first time this leg a reviewer's scope and its cost matched.
+
+**Hardware debts:** **one, carried and not worsened.** Nothing here was built or run: no board, no
+probe, no `west`, no Zephyr SDK, no live Core. That is the `dev-bench/019`/`020` debt restated — 6
+changed lines of firmware comment that nothing compiled. Standing debts otherwise unchanged: the
+dev-bench probe is **still unplugged** (`"probes": []` read live from Core at this leg's top), so
+`tasks/api/059` stays `open`, **not** `blocked`, for a **fourteenth** consecutive leg;
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`) and its buffer still claims both
+boards attached, so **do not plan a bench unit off it**; `core/015`'s native Windows build carries
+its twelfth landed `embarch-core` change from this leg's `core/070` and is untouched by this unit;
+`umbrella/037` check 13, `umbrella/033`'s check-17 arms, umbrella check 5's permission-denied probe,
+`embarch-ui`'s 18-record stale prefix and the `embarch-outpost`/`embarch-dev-bench` toolchains are
+all unchanged. The bench queue is still parked by the owner's `d0cf9a0`.
+
+**Budget:** PROCEED throughout — weekly **26.4%** of a 90% cap at the leg's top and **27.4%** at its
+last check, resets in ~150h, no 429 anywhere. Wave **6** suggested both times; **the 4-unit cap, not
+the budget, is what ended this leg** — as it has every leg since the queue got cheap work to do.
+
+**Least sure about:** **whether a citation-shaped unit is still buying anything at the margin.** Four
+units, four scopes, seven real defects, and every one of them was a comment. That is a genuinely
+good hit rate and it is also the fourth consecutive leg spending its whole budget on prose about
+code rather than on code — while `tasks/api/059` has sat `open` for fourteen legs, `core/015`'s
+Windows build for twelve `embarch-core` changes, and `umbrella/056`'s clearing behaviour and
+`suite/038`'s check 9 have never been seen on a real machine. **The queue is what it is because
+citation work is abundant and cheap to file, not because it is the most valuable work available**,
+and I filed one more of it myself this leg. Somebody with the owner's authority should decide
+whether that is the right allocation; a leg cannot, because the queue is the only thing it can see.
+
+---
+
 ## 2026-09-17 00:25 — topology/053 the same wrong sentence a third time, and the one place it is right
 
 **Decided:** **two things, and the second is the useful one.**
