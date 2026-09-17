@@ -97,6 +97,87 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 19:36 — core/067 a clean sweep, and the plural that hid a citation from its own census
+
+**Decided:** **three things, and (a) is a census-method defect every sweep task in the chain
+inherits.**
+
+**(a) THE FILING CENSUS UNDERCOUNTS BY A MECHANISM NOBODY HAD NAMED, AND I WROTE IT INTO A TASK
+THIS LEG.** The task said six citations; the re-census found **nine**. One of the three extras is
+the interesting one: `release.yml:24` cites `` `embarch-umbrella` decisions 27/29 `` and
+`grep -cE '[Dd]ecision [0-9]'` **cannot see it**, because the plural "decisions" is not "decision"
+followed by a space and a digit. Every sweep task this chain has filed uses that exact grep — it is
+copied forward verbatim — so **every census in the chain has been blind to plural citations**, and
+the running tallies published across ten-plus units were taken against a pattern that misses a
+whole citation form. The tasks have always said "treat the census as a floor"; the reason they gave
+was multi-number and range citations, which is a *different* mechanism and does not cover this one.
+`tasks/dev-bench/031`, which I filed earlier in this same leg, carries the same blind grep. **I have
+not fixed it** — settling the census pattern across the chain is worth more than patching one task
+file, and `tasks/doc/065` already records a case-sensitivity cost in the same instruction.
+
+**(b) 9 instances, 0 wrong numbers, 0 false sentences — nothing was edited in `embarch-core` at
+all.** This is the second consecutive zero-defect result in this repo (`core/066` found 3 defects in
+9, one file over), and it is a **verification-only close**: the pushed code branch is identical to
+its base and the only diff anywhere is a changelog fragment and the task file's own result table.
+That is a legitimate unit and I am recording it as one, but it is exactly the result the
+2026-09-12 handoff flagged as indistinguishable from a sweep that did not look hard — which is why
+I spent the reviewer on the claim rather than on the diff.
+
+**(c) Both flagged double-citations hold, and the reviewer found a better reason than the worker
+gave.** `embarch-umbrella` decision 14 is cited for "the four targets" in `release.yml:3` and for
+"the one target where neither is true" in `Cross.toml:3`; `embarch-topology` decision 13 is cited
+for a path-dependency choice in `README.md:108` and for the release-CI sibling-checkout fix in
+`release.yml:89`. The worker read each pair separately and called them consistent. The reviewer
+re-derived both independently and sharpened the second: decision 13 is not one claim cited twice,
+it is **broad enough that the two sentences draw on different paragraphs of it** — a distinction
+that matters, because "one decision, two claims" is the shape the task was written to catch and
+this is not it.
+
+**Merged:** `agent/core/067-citation-sweep-the-six-cross-repo-citations-outside-src-and-cargo-toml`
+(doc `2cf0798`; **no code SHA — `embarch-core` has no commit**, the branch sits at its base
+`c284d84`). The doc SHA is the only revert handle and there is nothing in the code repo to revert.
+Gate re-run by me on the merge result: `check-docs.py` **11/11**;
+`check-ownership.py --scope core` OK on 2 changed paths;
+`check-client-names.py --repo <code worktree>` clean against 7 denylist entries. The worker reported
+`cargo build`/`test` (209 passed, 2 ignored)/`clippy --all-targets -- -D warnings` clean in
+`embarch-core`; I did not re-run them, because **the merge changed no code** — the merge result in
+that repo *is* `origin/main`. `changelog.d/core-067-citation-sweep.changed.md` consumed into
+`history/core.md` with `--only`; **29 of the owner's own fragments left pending**, untouched. No
+`status.d/` and no `features.d/` fragment.
+
+**Blocked:** nothing. `tasks/core/067` closed and removed in this fold.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none created.** Nothing was executed against a board, no probe, no live Core,
+no deploy, no study — and in this unit nothing was executed at all, since no file in the code repo
+changed. **The native Windows build was not run and is not claimed**: no unattended leg can run it,
+and the WSL cross-check dies in `hidapi`'s C build script, so it is not a partial payment.
+`core/015`'s debt is **unchanged rather than incremented** — this is the first `core` unit in six
+days that adds nothing to it, because it landed no `embarch-core` commit. **No hardware has been
+touched anywhere in this leg and I have not read Core live at any point** — `tasks/api/059` stays
+`open`, not blocked, for the sixth consecutive leg; the owner's `d0cf9a0` parks the bench queue;
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`) and its buffer was neither read nor
+believed. `umbrella/037` check 13, `umbrella/033`'s check-17 arms, umbrella check 5's
+permission-denied probe, `embarch-ui`'s 18-record stale prefix and the
+`embarch-outpost`/`embarch-dev-bench` toolchains all carried unchanged.
+
+**Budget:** PROCEED — weekly **16.0%** of a 90% cap, resets in ~155h, no 429. Wave **6** suggested;
+the **4-unit leg cap** binds, and four workers went out together.
+
+**Least sure about:** **that I deleted this unit's code worktree while its own reviewer was still
+reading, and only learned it from the reviewer's report.** I spawned the reviewer at the merge, as
+the rule says, then removed both worktrees as part of the same landing — so the absolute code-repo
+path I had just handed it did not exist by the time it looked. It recovered by reading
+`git show c284d84:<path>` in the main checkout, which is SHA-addressed and therefore safe, and its
+verdict stands. But that recovery was its own idea, not something the process guaranteed, and the
+ordering that produced it is in `.claude/leg.md` as written: spawn at merge, delete worktrees at
+landing, collect the reviewer last. **On a unit with edits the reviewer would have been reading a
+path that vanished mid-review.** Not mine to fix — it is a rule file — so it is written here and
+belongs in `inbox/` if it recurs.
+
+---
+
 ## 2026-09-16 19:21 — umbrella/072 a release workflow that could never have built, found by reading a comment
 
 **Decided:** **four things, and (b) is a shipped-CI bug nobody was looking for.**
