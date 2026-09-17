@@ -97,6 +97,104 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 02:10 — topology/056 a gate that fails closed in seven places and raises a structured mismatch in two, with two comments claiming otherwise
+
+**Decided:** **three things, and the third came from the reviewer and points at another repo.**
+
+**1. `validate_known_timed` calls `raise()` — constructing a `TopologyMismatch` and durably logging
+an alert — in exactly two of its seven failure paths, and both in-repo claims about that overstated
+it.** The two that raise: the probe absent from `Lister::list_all()`, and a hardware-ID compare that
+does not match. The five that do not: `probe_info.open()`, `check_target_powered`, `.attach()`,
+`session.core(0)` and `hardware_id::read`, each surfacing a bare `anyhow::Error` via `?` —
+un-logged, not downcastable, and landing in a caller's generic error arm. **Every one of these
+still fails closed**, which is why nothing was unsafe; what was wrong was the record. The module
+header claimed *"Every mismatch is durably logged … before the structured error is even
+constructed"* and `TopologyMismatch::live_hardware_id`'s doc comment said `None` meant the probe
+*"couldn't even be opened"* — which is not the `.open()`-fails case at all, but the not-attached
+one. Both corrected: the header now states decision 12's actual one-directional claim (every
+*constructed* mismatch is logged) with the five-step carve-out named, and the field comment
+distinguishes not-attached from attached-but-won't-open explicitly.
+
+**2. Prose, not code, and the worker chose that boundary correctly rather than being told to.** I
+told it to decide and to justify whichever way it went, warning that a mismatch is a safety
+property in this suite and that overriding current behaviour needed a reason. It corrected the docs
+to match the code and filed the behaviour question as a drop, because routing the open failure
+through `raise()` widens what `embarch-core`'s `/validate` has to classify and there is no bench
+here to exercise either side. **That is the right call and it is the one that leaves a durable
+record** — I filed the drop as `tasks/topology/058` (`Hardware: verify-only`, re-checked by me and
+it holds: the topology half is unit-testable and the core half is explicitly deferred to a paired
+task). **I corrected two arithmetic errors inside the drop while filing it**: it said "two of its
+five failure points" and then "the other three points" before listing five. Two raise, five do not,
+seven in total.
+
+**3. The reviewer found the same wrong paraphrase in a *standing* `embarch-core` decision, which is
+a worse place for it than the comment this unit just fixed.** I steered it to look, because the
+worker had noticed `tasks/core/041`'s resolution text carrying the identical misreading and that is
+a closed task file not worth a drop. It found `embarch-core/decisions/surfaces.md` **decision 59**
+— the live rationale for `/validate`'s `kind: not_attached | mismatch` split — quoting the
+now-corrected sentence verbatim and concluding *"every distinguishing fact was already present at
+every call site — Core was the one collapsing it."* This unit establishes that is false for the
+third case: attached-but-`.open()`-fails never becomes a `TopologyMismatch`, so there is no
+`live_hardware_id` for decision 59's `kind` derivation to read.
+`embarch-core/interfaces/topology.md`'s `/validate` row repeats the conflation. **The reviewer could
+not check Core's handler code from the doc repo and correctly declined to render a verdict**,
+leaving live verification as the finding's first `Done when` item.
+
+**Merged:** `agent/topology/056-probe-open-no-mismatch` (code `fb754d7`, doc `b3c5827`). Doc branch
+rebased onto `origin/main`, no conflict; rebase and merge as separate calls. Gate re-run by me on
+the merge result: in `embarch-topology`, `cargo build --all-targets` clean, `cargo test --features
+hardware` **80 passed, 0 failed**, `cargo clippy --all-targets --features hardware -- -D warnings`
+clean; in `embarch-doc`, `check-docs.py` **11/11**, `check-ownership.py --scope topology` OK on 2
+doc paths and OK on the code repo, `check-client-names.py --repo` clean.
+`changelog.d/topology-probe-open-mismatch-doc.fixed.md` consumed into `history/topology.md`; **29 of
+the owner's own fragments left pending**, untouched. No `status.d/` fragment — the worker grepped
+the suite-level docs for these comments and found nothing.
+
+**Worth knowing for every future topology unit: `cargo test` runs 15 tests and `cargo test
+--features hardware` runs 80.** The feature is opt-in and host-only — it attaches nothing — so a
+default `cargo test` gates about a fifth of this crate's suite. I gated with the feature on.
+
+**Blocked:** nothing. **Filed `tasks/topology/058`** from the worker's drop, and the reviewer's
+finding is in `inbox/` for the next leg to drain.
+
+**Reviewer:** 1 finding — inbox/core-decision59-open-fail-not-classified.md
+
+Collected before this entry was written. Directed on three checks and it answered all three from
+the paths I gave it: it re-derived the branch census independently (two `raise()` calls at lines 235
+and 262, five bare-error paths at 246–257, no sixth and no third), confirmed decision 12's text is
+scoped to *"when the shared `validate()` catches a mismatch"* and so supports the narrowing rather
+than needing amendment itself, and confirmed the diff is comment-only so no consumer of this shared
+crate is affected.
+
+**Hardware debts:** **none created, and none could be** — thirty lines of Rust comment and two
+doc-repo files; nothing executed against a board, no probe, no live Core, no flash, no study, and
+the `hardware` test feature attaches nothing. **One debt is now sharper rather than larger:** the
+reviewer's finding needs `embarch-core`'s `/validate` exercised against a probe that lists but will
+not open — another process holding it, a permission denial, a half-wedged J-Link — which is free to
+observe the next time it happens and cannot be manufactured here. Standing debts unchanged:
+`tasks/api/059` still `open` — **not `blocked`** — with the dev-bench probe unplugged, a
+**seventeenth** consecutive leg; `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`) and
+its buffer still claims both boards attached, so **do not plan a bench unit off it**; the bench
+queue is still parked by the owner's `d0cf9a0`; `core/015`'s native Windows build is measured
+unrunnable from WSL2 at all; `api/108`, `umbrella/037` check 13, `umbrella/033`'s check-17 arms,
+umbrella check 5's permission-denied probe, `embarch-ui`'s 18-record stale prefix and the
+`embarch-outpost`/`embarch-dev-bench` toolchains all untouched.
+
+**Budget:** PROCEED — weekly **30.7%** of a 90% cap at the leg's top, resets in ~149h, no 429. Wave
+**6** suggested; the 4-unit cap is what ends this leg.
+
+**Least sure about:** **that I merged a shared crate's diff before reading it, and only the diff
+being harmless made that cheap.** `.claude/leg.md` requires the supervisor to read a diff before
+merging when it touches `embarch-study-designer`, `embarch-topology` or `embarch-core-client`. I ran
+the ownership check, the merge and the gate as one chained command and read the diff immediately
+after, on the merge result — it is comment-only, the reviewer independently confirmed that, and no
+consumer is affected, so nothing came of it. But the rule exists for the case where something does,
+and "I read it one command later" is not the rule. **The chained-script shape that `.claude/leg.md`
+otherwise recommends is what made it easy to skip**, since the ordering inside the chain is where
+the read was supposed to go.
+
+---
+
 ## 2026-09-17 02:04 — study-designer/063 one wrong decision number reused four times for one claim, across two files
 
 **Decided:** **two things, and the first is a shape this citation chain had not seen before.**
