@@ -97,6 +97,138 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 01:28 — umbrella/076 a check that scanned the wrong machine's USB bus, and eleven failures printed on the wrong stream
+
+**Decided:** **four things. The first is a real behaviour change on a real topology and the fourth is
+mine, not the worker's.**
+
+**1. Check 5's USB scan no longer trusts `winner_class == Local` alone under WSL2 — new `umbrella`
+decision 53, and this changes what `doctor` prints on the owner's own bench.** `usb_scan_for` gated
+purely on the class, and `decisions/topology.md` 30 already records that mirrored networking makes a
+Windows-hosted Core and a guest-hosted Core both answer at loopback, so `local` does not say *where*
+Core is. The consequence was the exact thing decisions 18 and 31 say the check refuses to do: the
+guest's bus scanned on Core's behalf, emitting `no-probe-found` — *"genuinely nothing plugged in"* —
+as a confident verdict about the wrong computer. `usb_scan_for(class, core, under_wsl2)` now scans
+when the class is `Local` **and** (not under WSL2, **or** the located binary is a native Linux one
+rather than a Windows exe reached through interop).
+
+**The worker rejected the obvious fix and the reason is the valuable part.** The task suggested
+reusing `core_belongs_to`, which the driver already computes two statements earlier. It is not a
+drop-in: it is a pure function of `(winner_class, host, under_wsl2)` whose own comment says it is
+*"only ever consulted when no binary could be located at all"*, so under WSL2 with no explicit
+`--host` it always resolves `WslHost`. Checks 1 and 14 consult it only in the `core == None` arm, so
+the blindness is harmless there; check 5 has no such precondition, and gating on it directly would
+have **silently disabled the scan on every WSL2 machine — including a genuine native-Linux Core with
+a probe passed in over `usbipd`, which is a real topology.** That is a task's suggested fix being
+wrong in a way only reading the code could show.
+
+**Note what this means on the wsl-host bench, because the next leg should not be surprised:** with
+Core a Windows service and `doctor` run from WSL2, check 5 used to scan and report a probe verdict;
+it now reports `CoreElsewhere`. That is the correction, not a regression, but it is a visible change
+to `doctor`'s output on this machine.
+
+**2. `open.md`'s check-5 settling protocol named an outcome unreachable by construction.** It told
+whoever finally gets a Linux box to expect `no-probe-found` *"with the [udev] rules back"* — but with
+the rules back Core enumerates the probe, `check_probes` returns Pass `probes-present` off the count
+before the USB scan is ever consulted, and `no-probe-found` needs a zero count **and** an empty bus.
+So the written plan for settling a check nobody has ever exercised would have led its reader to
+conclude something was broken. Corrected to the reachable code, with the reasoning inline.
+
+**3. All eleven `println!`-before-`return EXIT_FAILURE` sites in `deploy_core` moved to `eprintln!`,
+plus `setup::uninstall`'s three, `refuse_if_remote`'s two call sites, and `apply_plan`'s
+`(_, None)` arm** — the last found by the worker, not named in the task. `spec.md` has promised *"`1`
+failure with the message on stderr"* all along. **The split is principled rather than blanket**:
+progress and success prints stay on stdout, and the `Deferral` mechanism — one `println!` serving
+both the exit-0 and exit-1 outcomes — was split so only the failing arm moves.
+`install_this_platform` and `apply_plan`'s other advisories were **deliberately left** on stdout
+because those branches return 0 by design; the reviewer checked every `return 1` site in both files
+and confirms `spec.md`'s promise now holds for each.
+
+**4. Mine: I changed `tasks/umbrella/077`'s state from `open` to `blocked`, and added the three
+fields it was missing.** The worker filed it correctly as a debt — its item-2 fix pushed
+`embarch-umbrella/open.md` from 3,843 to 4,127 B, 80.6% of a 5,120 B cap — but filed it `open` while
+its own body answers **Yes** to the flux question for its single file. `.claude/leg.md` is explicit:
+a compaction task whose flux answer is yes for every file on its `Compacts:` line is `blocked`, and
+an `open` one saying yes means the filer got it wrong and the *state* is what to fix. It also carried
+the answer only as a `## In flux` prose section, with no `**In flux:**` field at a line start, no
+`**Unparks when:**` and no `**Must not delete:**` — so a grep-based reader saw a dispatchable
+compaction task. All four now present; the `**Size debt due:** 2026-10-17` the worker wrote was
+already right, so `blocked` here is dated and non-absorbing.
+
+**Also mine, and smaller: I added decision 18's forward backlink to 53**, which the reviewer flagged.
+`doctor.md` already uses that convention — decision 31 carries *"Amended by decision 38"* — and 18's
+sentence *"the scan runs only on Linux **and** class `local`"* was left standing as an unqualified
+rule while 53 narrowed it. 53 described its own relationship to 18 correctly; only the backlink was
+missing.
+
+**Coordinate drift, continuing `075`'s measurement: every shape held exactly, line numbers off by
+0–3.** `usb_scan_for`'s definition exact at 862, its call site off by 1, `core_belongs_to`'s call off
+by 2, `deploy.rs`'s four cited sites off by 0–3. Two census-sourced tasks in a row now say the same
+thing: **the shapes are reliable and the line numbers are not, by a small and consistent margin.**
+
+**Merged:** `agent/umbrella/076-three-more-contradictions` (code `2764e89`, doc `7e032c0`). The doc
+branch needed a rebase onto `8f5f612` — **and it did not conflict, because I wrote the claim line in
+its final form before dispatch**, which is exactly what leg 132 said to do after resolving two
+conflicts it had caused itself. I also did the rebase and the push as **separate calls**, checking
+`git status` between them, per leg 132's near-loss of a worker commit to a chained
+rebase-then-force-push. Gate re-run by me on the merge result: in `embarch-umbrella`, `cargo build
+--all-targets` clean, `cargo test` **228 passed**, `cargo clippy --all-targets -- -D warnings` clean;
+in `embarch-doc`, `check-docs.py` **11/11** (re-run after each of my own two edits),
+`check-ownership.py --scope umbrella` OK on 8 doc paths and OK on the code repo,
+`check-client-names.py --repo` clean. **I read the `doctor.rs` diff in full before merging** — it is
+a behaviour change on an unexercised path, which is not one of the three triggers §10 names, but a
+gate condition nothing can execute is worth reading. Three `changelog.d/umbrella-*.fixed.md`
+fragments consumed into `history/umbrella.md`; **29 of the owner's own fragments left pending**,
+untouched.
+
+**One tooling note for the next leg: `build_changelog.py --only` needs a repeated flag per fragment,
+not a comma-separated list.** A comma list matched nothing — loudly, *"--only matched none of
+[...]"*, so it costs a retry rather than a silent sweep, but it costs one every time.
+
+**Blocked:** nothing. `tasks/umbrella/077` is `blocked` by my own hand as described above.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written. Five directed checks, and I asked it to be sceptical rather
+than confirmatory because this unit changed shipped behaviour on a path no test reaches. The one that
+earned its cost: **it enumerated all four gate cases before and after** and confirmed the only newly
+suppressed one — WSL2 with no binary located at all — is disclosed in decision 53's own text rather
+than glossed. It also confirmed 53 never claims the WSL2 behaviour was observed, noted that
+`embarch-umbrella` marks this in prose rather than with literal `[measured]`/`[assumed]` tags, and
+found no test weakened by the stdout-to-stderr move. Its one non-finding was the missing decision-18
+backlink, which I then wrote.
+
+**Hardware debts:** **none created, and one narrowed on paper only.** Nothing executed: no board, no
+probe, no live Core, no deploy, and **`doctor` was never run** — which matters here because the whole
+unit is about what `doctor` would conclude, and it was settled by reading `doctor.rs`. **Check 5's
+fail branch is still unexercised**, now with four more synthetic-`Located` unit tests behind it and
+one more untested arm than before; `open.md` still says so and decision 53 says so. **Umbrella check
+5's permission-denied probe still has no Linux-native Core to meet** — item 2 corrected the written
+plan for settling it *without settling it*, so that debt is unchanged in substance and merely no
+longer mis-described. `umbrella/037`'s check-13 bench run and `umbrella/033`'s check-17 arms are
+untouched. Standing debts otherwise unchanged: `tasks/api/059` still `open` — **not `blocked`** —
+with the dev-bench probe unplugged, a **sixteenth** consecutive leg; `fleet-hardware.py --refresh`
+still crashes (`tasks/doc/041`) and its buffer still claims both boards attached, so **do not plan a
+bench unit off it**; the bench queue is still parked by the owner's `d0cf9a0`; `core/015`'s native
+Windows build, `api/108`'s Windows process-tree kill, `embarch-ui`'s 18-record stale prefix and the
+`embarch-outpost`/`embarch-dev-bench` toolchains are all untouched.
+
+**Budget:** PROCEED — weekly **29.2%** of a 90% cap at the leg's top, resets in ~150h, no 429. Wave
+**6** suggested; this is unit 2 of 4, with units 3 and 4 (`core/071`, `topology/055`) already in
+flight.
+
+**Least sure about:** **whether a fleet with no Windows and no mirrored-networking bench should be
+changing the gate on a check that only matters on those, however well-reasoned the change is.** The
+worker's reasoning is the best I have seen from a census-sourced unit — it refused the task's own
+suggested fix for a demonstrable reason — and the reviewer's case table holds. But the entire
+correctness argument for the WSL2 arms rests on `windows_exe_from_wsl2` meaning what `locate_core`
+says it means, and nothing in this suite can run the resulting binary on a mirrored-networking
+machine. The failure mode if that is wrong is **quieter than the bug it replaced**: a check that used
+to give a confident wrong answer now gives no answer, and `no-probe-unchecked` is a warn nobody
+investigates.
+
+---
+
 ## 2026-09-17 01:15 — study-designer/062 two sentences in one file making the same claim, citing two different real decisions
 
 **Decided:** **one thing, and it is a new defect shape for a chain nineteen units deep.**
