@@ -97,6 +97,97 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 19:05 — study-designer/053 the reviewer caught a false sentence the unit itself wrote, and I fixed it rather than filing it
+
+**Decided:** **three things, and (b) is the one the next leg should take seriously.**
+
+**(a) The `.cargo/config.toml` "two-word fix" was not a two-word fix, and the worker was right not
+to treat it as one.** `study-designer/052`'s reviewer had established the comment's `107/107` was
+wrong and that decision 63's `108/108` was right, measured at the commit pair that introduced both.
+This unit was told to re-measure rather than copy that number, and it did: today's
+`RUST_MIN_STACK=4194304 cargo test --quiet` gives **125**. So the instruction to re-measure paid for
+itself — a worker that had trusted the handoff would have written `108` and been wrong.
+
+**(b) BUT THE FIX THE WORKER WROTE WAS ITSELF A FALSE SENTENCE, AND ONLY THE REVIEWER CAUGHT IT.**
+It wrote *"4 MiB passed 108/108 then; the suite has grown since — 4 MiB passes 125/125"*, which
+reads as growth of 17. The reviewer checked out decision 63's own landing commit (`a68c0719`) into a
+scratch worktree and re-ran the command there: the **lib binary alone** printed 108, and
+`tests/firmware_test_vectors.rs` — which already existed, added 2026-08-25, *before* decision 63's
+measurement — printed 9 alongside it. **Decision 63's `108` was lib-only; the combined total was
+117.** Today's 125 is lib+integration (116+9, which I re-ran and confirmed myself). Same basis both
+times, the growth is **8**, and the comment overstated it by about 2x.
+
+**This is the sweep chain's own failure mode turned on the sweep chain.** Ten units in this chain
+have hunted "prose a decision made false"; this one *wrote* one, in the act of fixing a different
+one, and no gate could have seen it — a comment full of correct numbers arranged to imply a wrong
+one. It is also the first time a reviewer in this log has found a defect **introduced by the unit it
+was reviewing** rather than a pre-existing one.
+
+**(c) I fixed it in place rather than leaving the drop, and that is a judgement call worth
+challenging.** The reviewer filed
+`inbox/study-designer-cargo-test-count-scope-mismatch.md` correctly. I resolved it directly instead
+— a second commit on the same file in the same repo, restating both figures with their basis
+(`efbfe95`) — and deleted the drop. Reasoning: the wrong sentence was **this leg's own**, landed
+minutes earlier, the fix is two clauses, and I had already independently reproduced both halves of
+the measurement. Leaving it would have put a known-false sentence on `main` waiting on a future
+unit. The counter-argument is the 2026-09-12 handoff's standing doubt about supervisors hand-fixing
+things — four such fixes in one day, each reasoned individually, nobody having looked at them
+together. **This is a fifth, and it is the cleanest case of the five** (same repo, same unit, same
+hour, defect authored by the unit), so if the pattern is ever wrong it is not wrong here — but the
+next leg should count it into that tally rather than treat it as unrelated.
+
+**Merged:** `agent/study-designer/053-src-citation-sweep-remainder` (code `4cc13e4`, doc `0aca95c`),
+plus the follow-up commit `efbfe95` in `embarch-study-designer` — **three revert handles for this
+unit, not two.** Gate re-run by me on the merge result: `cargo build`, `cargo test`, `cargo clippy
+--all-targets -- -D warnings` green in `embarch-study-designer`, and re-run green again after
+`efbfe95`; `check-docs.py` **11/11**; `check-ownership.py --scope study-designer` OK on 3 doc paths,
+`--code-repo` OK; `check-client-names.py --repo /home/gabriel/Github/embarch/embarch-study-designer`
+clean against 7 denylist entries. Doc branch rebased onto `main` once before the `--ff-only` — the
+leg's own refill commit had moved `main` under it. I read the code diff before merging; this is a
+shared crate (`embarch-api`, `embarch-core`, `embarch-dev-bench`, `embarch-ui`, `embarch-umbrella`
+all depend on it).
+`changelog.d/study-designer-053-eap-citation-sweep.fixed.md` consumed into `history/study-designer.md`
+with `--only`; **29 of the owner's own fragments left pending**, untouched. No `status.d/` and no
+`features.d/` fragment.
+
+**The sweep itself:** `src/eap.rs`, **21 distinct citation instances, 1 wrong number, 0 false
+sentences.** The wrong number is a nice one: the module doc said *"three operand forms"* and
+`Operand` has four (`Literal`/`Field`/`Session`/`SpanLen`). The reviewer traced it to the file's
+first commit `fc93871` and found the *same file* already said *"Four forms"* at line 186 — **the
+file contradicted itself from the day it was written**, so this is not drift and no decision text
+carries the wrong count. Running chain tally recomputed by the worker: **390 instances checked, 15
+wrong numbers, 3 false sentences** across `044`–`053`. `tasks/study-designer/054` filed for the 13
+files remaining, `ffi.rs` next.
+
+**Blocked:** nothing. `tasks/study-designer/053` closed and removed in this fold.
+
+**Reviewer:** 1 finding — inbox/study-designer-cargo-test-count-scope-mismatch.md (resolved in this
+fold by `efbfe95` and the drop deleted; recorded here because the tally counts findings, not
+survivors).
+
+**Hardware debts:** **none created.** Two source comments and one word in a doc comment; nothing
+executed against a board, no probe, no live Core, no study, and the only thing run was this crate's
+own host test suite. `core/015`'s native Windows build is untouched — the code commits are in
+`embarch-study-designer`, not `embarch-core`, so it stands at leg 122's directly-counted **41
+commits since `1c1224e`**, not incremented by ordinal. **No hardware has been touched anywhere in
+this leg and I have not read Core live at any point** — `tasks/api/059` stays `open`, the owner's
+`d0cf9a0` parks the bench queue, and `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`)
+with a buffer I neither read nor believed. `umbrella/037` check 13, `umbrella/033`'s check-17 arms,
+umbrella check 5's permission-denied probe, `embarch-ui`'s 18-record stale prefix and the
+`embarch-outpost`/`embarch-dev-bench` toolchains all carried unchanged.
+
+**Budget:** PROCEED — weekly **13.9%** of a 90% cap, resets in ~156h, no 429. Wave **6** suggested;
+the **4-unit leg cap** binds, and the queue only had 5 dispatchable tasks across 4 scopes anyway.
+
+**Least sure about:** **whether the corrected comment is now too long for what it says.** It went
+from 2 lines to 7 across two edits in one hour, and I am the one who wrote the second edit while
+also being the one who has now twice recorded a doubt about these sweeps trading short-and-wrong for
+long-and-right. I could not find a shorter form that states both measurement scopes, and a reader
+who does not know 108 was lib-only will mis-read any form that omits it — but "I could not find a
+shorter form" is exactly what every one of the four previous instances would also have said.
+
+---
+
 ## 2026-09-16 18:37 — core/066 two thirds of a manifest's citations were wrong, and the Windows debt is now measured rather than assumed
 
 **Decided:** **four things. (b) is the leg's headline and (d) settles a number two handoffs have
