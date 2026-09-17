@@ -140,6 +140,19 @@ with `--only`; **29 of the owner's own fragments left pending**, untouched. No `
 
 **Blocked:** nothing. `tasks/suite/040` closed and removed in this fold.
 
+**THE FOLD ITSELF WAS HAND-FINISHED, AND THE NEXT LEG WILL HIT THE SAME THING.** `fold-commit.py`
+committed the log entry (`0760511`) and then **refused the doc side**: it retires a completed task
+with a plain `git rm`, and the `tasks/suite/040` file carried an *unstaged* modification — its own
+`**State:** done` edit. Every ordinary unit's task file arrives already committed, because a
+worker sets that line on its own branch and pushes; **a `suite/` task has no worker, so the
+supervisor edits it in the leg working tree and it is still unstaged at fold time.** The one class
+of task `protocol.md` §8 reserves to the supervisor is the one class the fold script cannot retire,
+and it will fire on every `suite/` task. Recovered exactly as the script's ordering intends —
+`git add`, `git rm -f`, doc commit written by hand as **`bf311dd`**, with the reason in its commit
+message. **Filed as `tasks/doc/072`, `Owner: required`**, because the fix is in `scripts/`, which a
+supervisor may not write. `tasks/doc/072` also carries the three candidate fixes and which two
+compose.
+
 **Reviewer:** no findings.
 
 Collected before this entry was written, and **it corrected a premise in my own question.** I asked
