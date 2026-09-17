@@ -97,6 +97,75 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 20:12 — study-designer/055 a comment that described the opposite of what the code does
+
+**Decided:** **two things.**
+
+**(a) The old `crc32_ieee` comment was false in both halves, and the reviewer checked the rewrite
+rather than the diff.** It said the `.eap` grammar's in-frame `crc32` primitive *"is applied
+host-side at render time (`crate::eap_parse`)"* — and `eap_parse` is the module that **refuses** to
+render a `crc32` field, by name, on purpose. The reviewer confirmed it in the code rather than from
+the worker's word: `src/eap_parse.rs:1693` maps `AstField::Crc32` to `LowerGap::Primitive("crc32")`
+into `RenderUnimplemented`, with a test at line 2025 named
+`crc32_is_refused_by_name_rather_than_rendered_flat`, exactly as decision 71 ("a host-side primitive
+still parsed but not rendered refuses loudly, by name") says it should. The function's real caller is
+`records::RecordCheck` (decision 70), post-capture, a different feature entirely — and the reviewer
+grepped the whole crate to establish that is the **complete** caller list, so the rewrite is not
+incomplete the way the original was wrong. The decision 59 citation was kept on the narrowed, true
+claim that this is the same CRC-32/ISO-HDLC algorithm. **This is the defect class this chain keeps
+producing: a citation that resolves to a real, on-topic decision while the sentence around it
+describes the opposite behaviour.** Nothing mechanical can see it; only reading the cited decision's
+text can.
+
+**(b) THE REVIEWER FOUND A REAL AMBIGUITY AND CORRECTLY DECLINED TO CALL IT A FINDING, AND I AM
+RECORDING IT BECAUSE IT WILL RECUR.** The new comment's bare `decision 59`, `decision 70` and
+`decision 71` are same-repo by convention — but `embarch-api` has its own 70 and 71, and
+`embarch-core` has its own 59, and this crate's source is read from five other repos' default
+citation index. That is not a contradiction with any standing decision, so no drop was filed, and
+the general form of the question is owner-reserved in `tasks/doc/055`. **What is worth carrying
+forward is that a leaf repo's convention and a shared crate's convention are being asked to be the
+same convention.**
+
+**Merged:** `agent/study-designer/055-src-citation-sweep-remainder` (code `aeff4b4`, doc `6bcaf14`).
+Both are the revert handles. `src/crc.rs` swept: **14 citation lines, 14 instances, 0 wrong numbers,
+1 false sentence** — and the worker reports **no plural-form lines in this file at all**, which is a
+useful negative against the six re-check tasks I filed an hour earlier. Gate re-run by me on the
+merge result: `cargo build --all-targets`, `cargo test --all-targets` (**125 passing**, 0 failed),
+`cargo clippy --all-targets -- -D warnings` green; `check-docs.py` **11/11**;
+`check-ownership.py --scope study-designer` OK on 3 doc paths; `check-client-names.py` clean against
+7 denylist entries. **I read the code diff before merging** — §10 names this crate as shared.
+`changelog.d/study-designer-crc-rs-sweep.fixed.md` consumed into `history/study-designer.md` with
+`--only`; **29 of the owner's own fragments left pending**, untouched. No `status.d/` and no
+`features.d/` fragment.
+
+**Blocked:** nothing. `tasks/study-designer/055` closed and removed in this fold;
+`tasks/study-designer/056` filed by the worker in the same branch (`eap_parse.rs` next, 11 files
+left). Running tally now **420 citations checked across `044`–`055`, 15 wrong numbers, 5 false
+sentences**.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none created.** One doc comment in a Rust source file; nothing executed
+against a board, no probe, no live Core, no deploy, no study. `core/015`'s native Windows build
+untouched — this is `embarch-study-designer`. **No hardware has been touched anywhere in this leg
+and I have not read Core live at any point** — `tasks/api/059` stays `open`, the owner's `d0cf9a0`
+parks the bench queue, `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`).
+`umbrella/037` check 13, `umbrella/033`'s check-17 arms, umbrella check 5's permission-denied probe,
+`embarch-ui`'s 18-record stale prefix and the `embarch-outpost`/`embarch-dev-bench` toolchains all
+carried unchanged.
+
+**Budget:** PROCEED — weekly **17.8%** of a 90% cap, resets in ~155h, no 429. Wave **6** suggested;
+the **4-unit leg cap** binds.
+
+**Least sure about:** **whether "no plural-form lines in `crc.rs`" is evidence against the six tasks
+I filed, or just evidence about one small file.** `crc.rs` is 14 citation lines; the 53 plural lines
+I measured in this repo are somewhere in the other 11 unswept files, so this unit's negative is
+consistent with the measurement rather than against it. I am flagging it because it is exactly the
+shape of datum a later leg could quote as "the plural re-check found nothing" when it is nothing of
+the kind.
+
+---
+
 ## 2026-09-16 20:02 — api/103 a comment that was stale the day it was written
 
 **Decided:** **two things, and (b) is the one the next leg should act on.**
