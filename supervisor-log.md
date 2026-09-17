@@ -97,6 +97,112 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 16:23 — ui/065 the escape hatch was the right answer, and suite decision 4's headline property is presently false
+
+**Decided:** **that a unit which reads both sides, finds the payload too thin, changes no code and
+writes down exactly what is missing is a complete unit — and I am recording that as a decision
+rather than a description, because the pressure runs the other way.** I told this worker in the
+dispatch note, in as many words, that taking the escape hatch would be a success and that
+half-retiring the pipeline to show progress would not. It took the hatch. **`embarch-ui` carries
+zero code changes and its branch zero commits**, and what landed is `embarch-ui` decision 27
+rewritten from a vague wait into a precise, checked blocker, plus `open.md`'s matching bullet.
+
+**Three gaps, all three independently re-derived by the reviewer against both repos' source.**
+(1) Core serves `Gap { from, to }`; `trace.rs`'s own `Gap` also carries `records_lost`, `row_index`
+and `unbounded_start`, **and `assets/app.js` renders all three today** — so adopting Core's shape
+as it stands would delete columns a reader currently sees, and none of the three is derivable from
+`SpansAnswer`. (2) None of the twelve axis-health diagnostics (`frames`, `resolution_ms`,
+`dual_clock`, `dut_backsteps`, `stale_prefix_rows`, …) is served anywhere, on either route.
+(3) **The load-bearing one**: point events are pushed into `markers` at three sites *inside the same
+row-iteration pass* that builds `Lane`/`Span`/`Gap`, so the row decode, `dut_clock_health` and
+`stale_prefix_end` cannot be deleted while markers stay UI-side, **whatever happens to (1) and
+(2)**. The reviewer read that loop specifically to test whether the coupling was real or merely
+current, and reports it real. That is the finding that turns "not yet" into "not by this route".
+
+**The thing this unit surfaced that is bigger than the unit: `suite/decisions/placement.md` §4's
+property is presently false.** It claims *"exactly one implementation of that timeline exists in the
+suite"*, and after `core/076` both `embarch-core/src/outpost_load.rs` and `embarch-ui/src/trace.rs`
+still build `Lane`/`Span`/`Gap` from a CSV. Worse, `embarch-core` decision 64 states *"Serving spans
+is what closes the gap decision 4 opened and decision 62 left standing"* — **a tombstone for a gap
+that is still open**, written before anyone had compared the two payloads field by field. The
+reviewer found it, declined to file it against this unit (correctly — `ui/065` neither caused it nor
+could fix it, `embarch-core` being outside `embarch-ui`'s row), and recommended a `Done when` line
+instead of a redundant task. **I took that recommendation**: `tasks/core/085` now carries an
+explicit box requiring decision 64's closing sentence to be corrected **whichever way the boundary
+call goes** — especially if the split turns out permanent, since that is the case the sentence
+denies. **I am deliberately not editing decision 64 myself**, for the same reason I declined to edit
+`embarch-topology` decision 34 this morning.
+
+**Inbox drained at this fold — three drops, all `core`, none dispatched.** `tasks/core/083` (task
+076's own "Resolved" section still quotes decision 65's retracted "likely-low" claim and points the
+reader at a decision that no longer says it), `tasks/core/084` (`embarch-core/decisions.md` lists
+`decisions/surfaces.md` at 6.9 KB against a real 11,253 B), `tasks/core/085` (the widen-`Gap`
+decision above). **Two of the three arrived declaring `Scope: doc` and I corrected both to `core`**:
+their only paths are `tasks/core/**` and `embarch-core/**`, which is a `core` worker's row, and
+filed as `doc` they would have sat behind the owner-reserved band waiting for a human who does not
+need to be involved. Announced to `#embarch-fleet` at the top of the leg for the one drop that
+existed then; these three arrived mid-leg from my own reviewers and workers.
+
+**Merged:** `agent/ui/065-consume-core-spans` (code — **zero commits, `embarch-ui` `main`
+unmoved at `e405314`**; doc **`ef2896c`**). Gate run by me on the merge result: `check-docs.py`
+**11/11**, `check-ownership.py --scope ui` **OK on all 5 paths** against derived base `0e7de54`. No
+`cargo` run on `embarch-ui` and none warranted — nothing merged into it; the worker ran
+`build`/`test` (**91 passed**)/`clippy` in its worktree before concluding no change was needed.
+`changelog.d/ui-trace-spans-gap-checked-not-closable-yet.decided.md` consumed into `history/ui.md`;
+**29 of the owner's own fragments left pending**, untouched. No `status.d/` and no `features.d/`
+fragment. **`embarch-ui/open.md` crossed into reserve on the rewritten bullet — 951 B left, under
+the 1,200 B floor** — and the worker filed `tasks/ui/066-compact-ui.md` in the same commit,
+`In flux: yes`, `blocked`, on the reasoning that the bullet will change again once `core/085`
+resolves. That reasoning is right and it is also why `066` should not be dispatched before `085`.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written. **This is the first reviewer this leg given a path outside
+its own unit's two repos** — `embarch-core`'s checkout, explicitly, because the unit is a claim
+about another repo's payload — and it used it: it read `outpost_load.rs` at `ef60321` and
+`trace.rs`/`app.js` in the `embarch-ui` worktree and confirmed gap 1 line by line, then read the
+`parse_with_cap` loop to test gap 3 rather than accept it. **The previous reviewer this leg had to
+report a cross-repo check as unverified because I gave it two paths instead of four**, so this is
+the same lesson applied one unit later. It also caught a real overstatement in the unit's own prose
+and declined to inflate it: decision 27 says 62/64 scope the diagnostics out *"by name"*, when in
+fact they exclude the `TraceView` struct categorically — the reviewer verified the named fields
+really are `TraceView` fields, called the paraphrase a mild rhetorical stretch rather than a false
+claim, and left it. That is the calibration this line exists to measure.
+
+**Hardware debts:** **none created, and none could be** — no code changed anywhere, nothing
+executed against a board, no probe, no live Core, no DUT. **One debt this unit sharpens rather than
+adds to, and it is worth reading twice:** `embarch-ui`'s 18-record stale-prefix debt
+(`tasks/ui/007`) has never met a real stale prefix — and `ui/065` has now established that
+`stale_prefix_end` **cannot be deleted from `trace.rs`** while point events stay UI-side, so that
+untested code is not going away by attrition either. `core/015`'s native Windows build debt is
+unaffected; nothing touched `embarch-core`. Standing debts unchanged: `tasks/api/059` still `open`
+— **not `blocked`** — with both boards unplugged, a **twenty-first** consecutive leg;
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`) and its buffer still claims both
+boards attached, so **do not plan a bench unit off it**; the bench queue is still parked by the
+owner's `d0cf9a0`; `api/108` remains dispatchable and uncloseable in this environment;
+`umbrella/037` check 13, `umbrella/033`'s check-17 arms, umbrella check 5's permission-denied probe,
+and the `embarch-outpost`/`embarch-dev-bench` toolchains all untouched. The two-unit-wide
+"probe unavailable" wording debt from `core/077` and `api/110` stands as written in those entries.
+
+**Budget:** PROCEED — weekly **44.0%** of a 90% cap at this fold, from **42.9%** at leg start,
+resets in ~134h42m, no 429 anywhere. Wave **6** suggested throughout; the **4-unit leg cap** bound
+this leg, as it has bound essentially every leg for days.
+
+**Least sure about:** **that I closed a leg with suite decision 4's headline property known false
+and only a `Done when` box standing between that fact and nobody acting on it.** The routing is
+right — `embarch-core` owns decision 64, `tasks/core/085` is where the boundary gets settled, and a
+supervisor rewriting another sub-project's decision at fold time is the move this log keeps
+declining. But a box inside a task nobody has claimed is a weaker guarantee than a sentence in a
+decision file, and the false sentence is the one a reader meets first. **If `core/085` gets
+deprioritised, this is the thing to un-deprioritise it for.** Second: **`tasks/ui/066` is blocked on
+`core/085` in substance but says only `In flux: yes`** — I noted the ordering in this entry and did
+not edit the task file to say it, so a leg that dispatches `066` before `085` will not be warned by
+the queue itself.
+
+---
+
 ## 2026-09-17 16:15 — api/110 the suite stops saying two things about one condition, and "plug it in" stops being advice for five causes it cannot fix
 
 **Decided:** **`embarch-api` decision 76 — match `embarch-core`'s wording rather than invent a second
