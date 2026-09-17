@@ -97,6 +97,104 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 22:20 — core/069 a fix that was right for a reason its author got wrong, and so did I
+
+**Decided:** **three things, and the third is about me rather than the worker.**
+
+First, the class this leg was sent to measure. `core/068` discovered that a citation whose line
+wraps after the word "decisions" is invisible to a line-based census, and fixed it with a grep that
+matched the **plural only**. Re-run with the singular alternation it finds 15 more lines in 6 files
+— **lines no `embarch-core` census has ever read**, `068`'s own re-check included. The result:
+**15 lines, 25 distinct decision instances, 1 real defect, 1 fix — a 4% hit rate.**
+
+Second, the defect. `src/outpost_load.rs`'s module doc credited `embarch-ui` decision 18 with three
+things — windowed binning, the study-step row, and the `TraceView` payload shape. 18 covers the
+first and third; the study-step row is decision 10's chart half. The worker split the citation
+between the two decisions rather than reflowing the block, which is right: the wrap was never the
+defect.
+
+Third, **and I am recording this against myself.** The worker's fix wrote the second number
+**bare** — "per decision 10's chart half" — in an `embarch-core` source file, where a bare
+`decision N` is same-repo by convention. I caught that, checked whether `embarch-core` had a
+decision 10, concluded it had none, labelled both numbers `embarch-ui` explicitly, and **wrote that
+conclusion into the commit message of `3264c39`, where it is wrong.** `embarch-core` does have a
+decision 10: `decisions/flashing.md` carries an active `### 10, 18 — Multipart upload, and
+Format::Bin at the merge address`. My grep pattern required the number to be followed by a dash and
+could not match a heading that numbers two decisions at once. **The reviewer found it and the fix
+is more necessary than I argued, not less** — a bare `decision 10` there would have resolved
+silently to a live decision about flash transport rather than to nothing. The code is right; the
+commit message is not, and it is pushed, so this entry is the correction.
+
+**A fourth thing, deliberately not decided.** Three of the 15 lines cite `decision 30(c)` and
+`decision 30(b)`, and `decisions/streams.md` has **no literal `(a)/(b)/(c)` markup anywhere** —
+not in today's text and not before `core/063` compacted that file the same day. The worker left
+them alone and called it a fragility rather than a defect; the reviewer independently mapped all
+four citation sites (three in source plus `reversals/rows-1-50.md` row 45) onto two consistent
+paragraphs and agreed. **That is the right call and it should not be quietly "fixed" later**: the
+citations are accurate by content and rest on an undocumented convention, and replacing them with
+something equally uncheckable would lose the accuracy and keep the fragility.
+
+**Merged:** `agent/core/069-singular-wrapped-citations` (code `7468929`, doc `2ba0fc4`), **plus my
+own follow-up commit `3264c39` on `embarch-core`** — three SHAs, all three revert handles. The doc
+branch needed a rebase onto `481a413` first, since `study-designer/057`'s fold had moved `main`.
+Gate re-run by me on the merge result *including* my follow-up: `cargo build --all-targets` and
+`cargo clippy --all-targets -- -D warnings` green, `cargo test` **209 passed, 0 failed, 2 ignored**;
+`check-docs.py` **11/11** via the wrapper; `check-ownership.py --scope core` OK on 2 doc paths and
+on the code branch; `check-client-names.py --repo` clean against 7 denylist entries. I read the code
+diff before merging — 4 added and 3 removed lines, entirely inside one `//!` module doc.
+`changelog.d/core-singular-wrapped-citations.fixed.md` consumed into `history/core.md` with
+`--only`; **29 of the owner's own fragments left pending**, untouched. No `status.d/` and no
+`features.d/` fragment.
+
+**Blocked:** nothing. `tasks/core/069` closed and removed in this fold.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written. **It found no decision contradiction and still changed
+this entry**, which is the clearest case yet for the per-unit reviewer: it verified the 18/10 split
+from both sides (decision 18's own text states its boundary against decision 10 — *"Decision 10's
+chart half was a redraw problem... This is a load-time problem"*), re-derived the four `30(b)/(c)`
+citation sites paragraph by paragraph, resolved both repo-prefix-trap lines by reading the code
+rather than the grep column, **and caught the false claim in my own commit message**. It chose not
+to file that as an `inbox/` finding because nothing in the tree needs reverting, and that judgement
+is right — the finding is about a commit message, and this log is where a commit message gets
+corrected.
+
+**The worker's answer on whether this class is worth sweeping further, recorded because leg 128
+asked for it by name:** yes, but thin. 1 defect in 25 instances, and the defect was quiet drift —
+a citation lumping unrelated things under one number — not a dead number or a wrong repo. Its
+recommendation: run `api/106` and `umbrella/074`, which are filed and cheap, and **do not file the
+eight-times-larger `embarch-dev-bench` version** unless one of those two also turns something up.
+I am carrying that recommendation forward unchanged rather than acting on it, since neither of
+those two units ran this leg.
+
+**Hardware debts:** **one, carried and not paid — `core/015`'s native Windows build takes another
+landed `embarch-core` change**, and this leg landed two of them (`7468929` and my own `3264c39`).
+Both are doc-comment-only with no platform-conditional code touched, which is the least dangerous
+kind of thing to ride on that debt, but it is still riding. **I am not restating an ordinal for it**:
+leg 128 found the running count unanchored — nothing records when the deployed Windows exe was last
+built — and the owner has to pin a deploy SHA at an `embarch-dev-workflow.md` §4a sitting before any
+leg can count it honestly. Nothing else created: no board, no probe, no live Core, no study, no DUT.
+**The dev-bench probe is still unplugged — read live at this leg's top, `"probes": []`** — so
+`tasks/api/059` stays `open` for the eleventh consecutive leg; `d0cf9a0` still parks the rest of the
+bench queue and `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`). `umbrella/037`
+check 13, `umbrella/033`'s check-17 arms, umbrella check 5's permission-denied probe, `embarch-ui`'s
+18-record stale prefix and the `embarch-outpost`/`embarch-dev-bench` toolchains carried unchanged.
+
+**Budget:** PROCEED — weekly **22.2%** of a 90% cap at the leg's top, resets in ~153h, no 429
+anywhere. Wave **6** suggested, **4** dispatched because the leg's unit cap is 4.
+
+**Least sure about:** **whether I should be making follow-up commits on a worker's landed change at
+all.** This leg did it twice — four integers in `study-designer/058`, one repo label here — and both
+times the alternative was leaving something I had already seen to be wrong. But the last two
+handoffs flagged supervisor hand-fixes as a habit nobody has audited, and this instance is the
+argument for the worry rather than against it: **I made the fix and got the reason wrong in the
+commit message**, on a check I ran in one line and did not sanity-test. A worker would have had a
+task file, a reviewer and a gate between it and `main`; I had none of those, and the only reason the
+error is on record is that I asked the reviewer to check my commit as hard as the worker's.
+
+---
+
 ## 2026-09-16 22:13 — study-designer/057 a true zero, and the first time a reviewer caught the arithmetic in one
 
 **Decided:** **two things, and the second is the entry.**
