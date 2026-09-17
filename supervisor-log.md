@@ -97,6 +97,83 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 19:39 — study-designer/054 a citation that went false without this repo being touched
+
+**Decided:** **two things, and (a) is a defect class this chain has not seen in eleven sweeps.**
+
+**(a) A CITATION WAS CORRECT WHEN WRITTEN, NOTHING IN THIS REPO CHANGED, AND IT IS NOW FALSE.**
+`essd_study_decode_and_verify`'s doc comment cited `embarch-topology` decision 18's amendment as
+sharing this crate's "no caller anywhere" justification for leaving `streams_crc` unchecked at the
+FFI boundary. On **2026-09-11**, `tasks/suite/014` amended `embarch-topology` decision 18 to
+**retract that mutual citation as circular**, and its current text says in as many words that
+"`embarch-study-designer`'s surface gets no such defence." So the far repo invalidated a sentence in
+this one, in a file nobody had a reason to reopen.
+
+**Nothing in this suite could have caught it.** `check-decision-refs.py` walks `*.md` only, so it
+never reads `src/ffi.rs`; the number still resolved; this crate's own git history shows no change;
+and the cited decision still exists and is still on-topic. **Only opening the far repo's decision and
+reading its amendment block found it** — which is the one step the chain's method already prescribes
+and which, on every previous sweep, had confirmed rather than refuted. Ten of the eleven prior finds
+in this chain were prose *this* repo made stale, a wrong-but-real decision, or a wrong count in the
+citing sentence. This is a fourth shape: **a cross-repo amendment invalidating a citation at a
+distance**, and the only defence against it is that somebody eventually sweeps the citing file.
+
+**The fix was repointed, not deleted**, to this crate's own decision 7's 2026-09-11 correction —
+which records both decode functions as having no caller in any repo — plus `tasks/suite/032`. I made
+the reviewer check the replacement as hard as the original, because a repointed citation that lands
+on an adjacent-but-different claim is how a sweep makes things worse; it read decision 7's text and
+`tasks/suite/032`'s item 3 verbatim and both say exactly what the new sentence claims.
+
+**(b) 16 instances, 0 wrong numbers, 1 false sentence, 2 unlabelled cross-repo citations.** Both
+bare `decision 21`s meant `embarch-dev-bench`'s 21 (`main.c` dispatches a real `Study`) and were
+relabelled; a third mention in the same file was already prefixed. This is `050`'s "third shape"
+recurring — labelled correctly on first mention, bare later, past
+`check-decision-refs.py`'s 44-character attribution window. The worker confirmed it by reading **this
+crate's own** decision 21 (`decisions/streams.md`, a superseded `GattOperation::StreamCapture`) and
+finding it unrelated, rather than inferring from the missing prefix, which is the check `049`
+established after a coincidental cross-repo number turned out correct.
+
+**Merged:** `agent/study-designer/054-src-citation-sweep-remainder` (code `ca77e32`, doc `18220b2`).
+Both are the revert handles. Gate re-run by me on the merge result: `cargo build`, `cargo test`
+(**125 passing** — 116 lib + 9 `firmware_test_vectors`, matching `053`'s fresh count with no drift),
+`cargo clippy --all-targets -- -D warnings` green in `embarch-study-designer`;
+`check-docs.py` **11/11**; `check-ownership.py --scope study-designer` OK on 3 doc paths;
+`check-client-names.py --repo /home/gabriel/Github/embarch/embarch-study-designer` clean against 7
+denylist entries. **I read the code diff before merging** — `embarch-study-designer` is a shared
+crate, so §10 requires it. `changelog.d/study-designer-ffi-citation-sweep.fixed.md` consumed into
+`history/study-designer.md` with `--only`; **29 of the owner's own fragments left pending**,
+untouched. No `status.d/` and no new `features.d/` fragment.
+
+**Blocked:** nothing. `tasks/study-designer/054` closed and removed in this fold, and the worker
+filed `tasks/study-designer/055` naming the 12 files that remain (`src/crc.rs` next) plus `ids.rs`
+at zero, so the chain's remainder is written down rather than rediscovered.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none created.** Comments in one Rust source file; nothing executed against a
+board, no probe, no live Core, no deploy, no study. `core/015`'s native Windows build untouched —
+this is `embarch-study-designer`. **No hardware has been touched anywhere in this leg and I have not
+read Core live at any point** — `tasks/api/059` stays `open`, the owner's `d0cf9a0` parks the bench
+queue, `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`) and its buffer was neither read
+nor believed. `umbrella/037` check 13, `umbrella/033`'s check-17 arms, umbrella check 5's
+permission-denied probe, `embarch-ui`'s 18-record stale prefix and the
+`embarch-outpost`/`embarch-dev-bench` toolchains all carried unchanged.
+
+**Budget:** PROCEED — weekly **16.0%** of a 90% cap, resets in ~155h, no 429. Wave **6** suggested;
+the **4-unit leg cap** binds.
+
+**Least sure about:** **whether (a) means the chain should be re-run rather than continued.** If a
+far-repo amendment can falsify a citation at a distance, then every file this chain already swept
+and marked clean is only clean **as of the day it was swept** — and `tasks/suite/014`'s amendments
+landed on 2026-09-11, after several of them. Nobody has checked whether that amendment, or any other
+cross-repo amendment since, falsified a sentence in an already-swept file. I did not order that
+re-sweep: it is a different unit of work from the remainder chain, and inventing it mid-leg on one
+instance would be guessing at its size. But the running tally this chain publishes reads as
+cumulative progress, and on this evidence **it is progress against a moving target**, which the
+tally does not say anywhere.
+
+---
+
 ## 2026-09-16 19:36 — core/067 a clean sweep, and the plural that hid a citation from its own census
 
 **Decided:** **three things, and (a) is a census-method defect every sweep task in the chain
