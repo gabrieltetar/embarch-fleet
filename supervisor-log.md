@@ -97,6 +97,91 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 18:23 — study-designer/052 the first true zero in nine sweeps, and a reviewer that went and measured
+
+**Decided:** **three things, and (b) is the one I would point a successor at.**
+
+**(a) The zero is real, and it is the first one in this chain.** `src/bounded.rs`: **25 distinct
+citation instances checked, 0 wrong numbers, 0 false sentences**, all 25 resolving to same-crate
+decisions 15, 46, 49, 54, 63, with **zero cross-repo citations of any kind** — so the labelling
+question this chain keeps finding defects in never even arose in this file. That last fact is
+probably the explanation, not luck: eight of the nine prior units found something, and every one of
+those finds was either a cross-repo label or a citation pointing at a real-but-wrong decision. A file
+with no cross-repo surface has less to get wrong.
+
+**(b) THE RUNNING TALLY, WHICH NOBODY HAS EVER ADDED UP.** The 2026-09-12 handoff, `ui/049`,
+`umbrella/066` and `study-designer/051` have each independently asked whether these sweeps are still
+earning their keep, and the honest answer every time was that the data sits in nine separate log
+entries. I asked all three sweep workers this leg for the same three numbers, and here is the chain
+so far — instances, wrong numbers, false sentences:
+
+`044` ~53/0/0 · `045` 52/3/0 · `046` 36/3/2 · `047` 41/2/0 · `048` 36/3/0 · `049` ~38/1/0 ·
+`050` 31/0/0 · `051` 57/2/1 · `052` **25/0/0**.
+
+**369 instances, 14 wrong numbers, 3 false sentences — about a 4.6% defect rate**, and it has not
+trended down: `051`, the second-most-recent, was the highest-yield unit in the chain. `050` and `052`
+are the only zeros and both are small files. **The three clean runs the 2026-09-12 handoff worried
+about were about file selection, not corpus cleanliness**, and `051` said so on one data point; this
+is the same conclusion with a denominator. I have carried the tally into `tasks/study-designer/053`
+so it stops living only here — this file folds daily and rolls into `log-archive/`.
+
+**(c) I sent the reviewer after a number the worker had declined, and it went and measured it.**
+`embarch-study-designer/.cargo/config.toml`'s comment says *"4 MiB passes 107/107"*; decision 63 says
+*"108/108"*. The worker spotted it and correctly left it alone — `bounded.rs` does not cite that
+count. Rather than lose it, I made it a reviewer question. It checked out the commit pair that
+introduced **both** texts (code `a68c071`, doc `61e2c16`, same author, twelve seconds apart) into a
+scratch worktree and ran the suite there: **108 passed.** So the comment was wrong the day it landed
+and this is an off-by-one, not drift. I have written that into `tasks/study-designer/053` as a
+do-first item with the instruction **not** to touch decision 63 — editing a correct decision to match
+a wrong comment is exactly the failure this chain exists to catch — and to re-measure rather than
+copy the reviewer's number.
+
+**Merged:** `agent/study-designer/052-src-citation-sweep-remainder` (code `a69f038`, doc `5b1108e`).
+**The code SHA is `embarch-study-designer` main unchanged** — zero defects found, so the worker
+correctly changed nothing and pushed an empty code branch. `5b1108e` is the revert handle. Gate
+re-run by me on the merge result: `cargo build`, `cargo test`, `cargo clippy --all-targets --
+-D warnings` green in `embarch-study-designer`; `check-docs.py` **11/11**; `check-ownership.py
+--scope study-designer` OK on 3 doc paths, `--code-repo` OK on 0; `check-client-names.py` clean
+against 7 denylist entries. Branch rebased onto `main` once before the `--ff-only`.
+`changelog.d/study-designer-052-citation-sweep.changed.md` consumed into `history/study-designer.md`
+with `--only`; **29 of the owner's own fragments left pending**, untouched. No `status.d/` and no
+`features.d/` fragment. **I did not read the code diff before merging even though this is a shared
+crate** — §10's named exception — because there was no code diff to read.
+
+**Blocked:** nothing. `tasks/study-designer/052` closed and removed in this fold. The worker filed
+`tasks/study-designer/053` naming **14 files still unswept**, `src/eap.rs` largest and next; the
+reviewer independently re-counted the whole `src/` tree (25 files: 10 swept + 14 remaining + `ids.rs`
+with no citations) and every per-file count matched, so that chain's arithmetic is sound after nine
+hand-carried hops.
+
+**Reviewer:** no findings. It re-derived three of the worker's numeric claims independently against
+decision 49's table and decision 63's own wording — `1,293,608` bytes exact, `32 x 536-byte`
+`gatt_activity` records consistent across decisions 49 and 54, `262,144/75,288 = 3.48x` inside
+decision 63's own "~3.5x" — verified the remaining-file count against the real tree rather than the
+carried arithmetic, checked `embarch-decision-reversals.md` for anything touching these decisions
+(nothing), and settled the `107/108` question by measurement as described in (c). It explicitly
+declined to file that last one as a finding against this unit, correctly: it predates the unit by two
+weeks and neither reviewed diff touches either file.
+
+**Hardware debts:** **none created.** A read of one Rust source file and a scratch `cargo test` on
+host; nothing executed against a board, no probe, no live Core, no study. `core/015`'s native Windows
+build is untouched — this unit landed no commit in any code repo — so it stays at leg 117's
+re-derived **40 commits since `1c1224e`**, not incremented by ordinal. **No hardware has been touched
+anywhere in this leg and I have not read Core live at any point.** `tasks/api/059` stays `open`, the
+owner's `d0cf9a0` parks the bench queue, and `fleet-hardware.py --refresh` still crashes
+(`tasks/doc/041`) with a buffer neither read nor believed.
+
+**Budget:** PROCEED — weekly **12.0%** of a 90% cap at the leg's start, resets in ~157h, no 429. Wave
+**6** suggested; the **4-unit leg cap** binds, and scope spread binds too — 4 dispatchable scopes.
+
+**Least sure about:** **whether 4.6% over 369 instances is a rate or nine anecdotes stapled together.**
+The denominators are not commensurable — four of the nine are the worker's own estimate rather than a
+count, the files were chosen largest-first rather than at random, and "instance" was defined
+consistently only from `048` onward. It is a far better number than no number, and it is enough to
+kill the "the corpus is clean" reading; I would not use it to predict the next file's yield.
+
+---
+
 ## 2026-09-16 18:14 — ui/058 the four-deep chain closes, and the entry now sits exactly on its cap
 
 **Decided:** **three things, and (b) is mine to own.**
