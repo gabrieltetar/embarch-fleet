@@ -97,6 +97,79 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 19:43 — api/102 two wrong numbers in 67, and two comments only git can verify
+
+**Decided:** **three things, and (b) is a documentation gap neither the worker nor the reviewer had a
+name for.**
+
+**(a) 67 instances, 2 wrong numbers, 0 false sentences.** One is trivial —
+`main.rs`'s `TargetSelection` doc said `(decision 12, decision 12)`, a literal duplicate, collapsed
+to one. The other is the shape this chain keeps producing: `reflash.rs`'s dev-bench-reset comment
+cited **decision 32** (`decisions/dev-bench.md`, "a dedicated pipeline outside `[[projects]]`",
+which never mentions resets) for the claim that *flashing halts the core rather than starting it
+running*. That fact belongs to **decision 40** (`decisions/study-reflash.md`), and the reviewer
+confirmed 40 carries it verbatim: *"flashing halts the core rather than starting it, so an unreset
+bench never answers the handshake."* A real, existing, topically wrong decision — not a transposed
+digit — found only by reading the cited decision's text.
+
+**(b) TWO COMMENTS CITE A DATED AMENDMENT THAT THE DECISION NO LONGER RECORDS.** `main.rs` cites
+`` `embarch-topology` decision 18's 2026-08-25 amendment `` and `study.rs` cites
+`decision 39's 2026-08-25 amendment`; **neither decision's current prose carries that date**, because
+later compaction folded the amendment note away. The worker did the right thing — it checked
+`embarch-doc`'s git history rather than flagging them, and found `05aadb3` and `c48377e`, both
+2026-08-25, the latter's commit message naming `study-designer 39` and `topology 18` among the
+decisions it records — and left them standing. The reviewer agreed and sharpened it: **these are not
+contradictions, they are claims a reader cannot verify from the docs alone.** That is a real
+category, it has no name in `DOC-CONVENTIONS.md`, and it is the predictable cost of compaction —
+`DOC-COMPACTION.md` shortens a decision by dropping the history of how it got there, and a comment
+elsewhere goes on citing that history. I did **not** author a rule for it; `DOC-CONVENTIONS.md` and
+`DOC-COMPACTION.md` are not mine.
+
+**(c) I filed `tasks/api/103` for a defect this unit found and correctly refused to fix.**
+`main.rs`'s `async_main` stack-size comment says **64 MiB** and the code sets `512 * 1024 * 1024` in
+both places, while `study.rs`'s comment on the same bug says 16 MiB and matches its own constant. It
+is not a decision citation, so it was out of the sweep's scope and the worker said so rather than
+widening. The task names the three possible causes and **says explicitly that if the comment is right
+and the constant is the slip, the worker stops and leaves it for the owner** — a stack size raised to
+512 MiB for a reason nobody wrote down is not a number to lower on a comment's word.
+
+**Merged:** `agent/api/102-citation-sweep-remaining-src-crates` (code `1b35704`, doc `c9eb7aa`).
+Both are the revert handles. Gate re-run by me on the merge result: `cargo build --all-targets`,
+`cargo test --all-targets` (**149 passing across 8 suites**, 0 failed), `cargo clippy --all-targets
+-- -D warnings` green in `embarch-api`; `check-docs.py` **11/11**; `check-ownership.py --scope api`
+OK on 2 doc paths; `check-client-names.py --repo /home/gabriel/Github/embarch/embarch-api` clean
+against 7 denylist entries. **I read the code diff before merging** — it touches
+`crates/embarch-core-client`, which §10 names. `changelog.d/api-citation-sweep-src-crates.fixed.md`
+consumed into `history/api.md` with `--only`; **29 of the owner's own fragments left pending**,
+untouched. No `status.d/` and no `features.d/` fragment.
+
+**Blocked:** nothing. `tasks/api/102` closed and removed in this fold; `tasks/api/103` filed in the
+same commit.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none created.** Two comment lines in Rust source; nothing executed against a
+board, no probe, no live Core, no deploy, no study, no route called. `core/015`'s native Windows
+build untouched — this is `embarch-api`, not `embarch-core`. **No hardware has been touched anywhere
+in this leg and I have not read Core live at any point** — `tasks/api/059` stays `open`, the owner's
+`d0cf9a0` parks the bench queue, `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`).
+`umbrella/037` check 13, `umbrella/033`'s check-17 arms, umbrella check 5's permission-denied probe,
+`embarch-ui`'s 18-record stale prefix and the `embarch-outpost`/`embarch-dev-bench` toolchains all
+carried unchanged.
+
+**Budget:** PROCEED — weekly **16.0%** of a 90% cap, resets in ~155h, no 429. Wave **6** suggested;
+the **4-unit leg cap** binds.
+
+**Least sure about:** **whether `tasks/api/103` should exist at all, or whether I should have fixed
+it in the fold.** It is one line either way and I had the finding in hand. I filed it instead
+because I do not know which of the three cases it is, and finding out means reading git history for
+a constant — which is a unit of work, not a fold's spare minute. The risk in filing is that a
+one-line comment fix now costs a whole worker; the risk in fixing was picking case (1) because it is
+the cheap one, and quietly writing "512 MiB" into a comment when the truth might be that the
+constant is wrong.
+
+---
+
 ## 2026-09-16 19:39 — study-designer/054 a citation that went false without this repo being touched
 
 **Decided:** **two things, and (a) is a defect class this chain has not seen in eleven sweeps.**
