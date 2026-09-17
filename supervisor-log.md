@@ -97,6 +97,94 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 02:04 — study-designer/063 one wrong decision number reused four times for one claim, across two files
+
+**Decided:** **two things, and the first is a shape this citation chain had not seen before.**
+
+**1. Four citations, across two files, all cited decision 57 for claims that are decision 56's
+content — the same wrong number reused for the same underlying claim.** Every prior unit in this
+chain (044–062) found either a one-off wrong number or two sentences citing two different real
+decisions for one claim. This is a third shape: `src/gatt_names.rs` at 83, 126 and 269 and
+`src/vendor.rs` at 192 all pointed at decision 57, which is entirely about the extraction scanning
+the repo rather than two files it was told about, for sentences whose near-verbatim source is
+decision 56 — *"Two maps rather than one, because a merged map would have to guess which lookup a
+UUID wanted"*, *"Vendor wins where both apply"*, *"Services get names by the same mechanism."* The
+worker confirmed the direction by cross-checking `gatt_extract.rs`'s ~24 decision-57 citations,
+which are all genuinely about repo scanning. **I asked the reviewer to re-derive all four
+independently rather than confirm them**, because a wrong correction is worse than the wrong number
+it replaces — it now reads as verified — and it re-derived the same four from decisions 56 and 57
+in full, finding no third decision that fits better.
+
+**2. `src/` closes; the repo does not, and the worker filed the difference rather than letting the
+closure claim stand unqualified.** `tasks/study-designer/064` names four citation-bearing files
+this nineteen-unit chain never covered — `tools/extract_gatt_config.rs` (7 grep-matching lines),
+`tests/firmware_test_vectors.rs` (8), `tests/eap_worked_protocols.rs` (3) and `.cargo/config.toml`
+(6) — all outside `src/` and outside `Cargo.toml`, the one non-`src/` file the chain had been
+tracking. The reviewer independently re-swept `src/` **case-insensitively and with the line-wrap
+continuation pattern**, i.e. applying the chain's own three recorded blind spots (case sensitivity,
+a plural citation, a citation split across a wrap) rather than trusting the census that has them:
+24 of 25 `src/` files carry a citation, `ids.rs` carries none in any form, and 20 swept through
+`062` plus this unit's 4 accounts for all 24 exactly. **So the closure claim is sound and the
+remainder is correctly scoped.**
+
+**This unit's numbers: 16 distinct citation instances, 4 wrong numbers, 0 false sentences.**
+Chain-wide, recomputed 044–063: **516 instances, 22 wrong numbers, 7 false sentences.** Three
+handoffs have now worried that consecutive zero-defect sweeps mean refill has converged on
+always-clean files; this unit is 4 defects in 16 instances, which is the chain's highest density in
+a while and argues the other way.
+
+**Merged:** `agent/study-designer/063-src-citation-sweep-remainder` (code `4354596`, doc
+`14dbbb4`). Doc branch rebased onto `origin/main` (no conflict), rebase and merge as separate
+calls. Gate re-run by me on the merge result, not on the branch: in `embarch-study-designer`,
+`cargo build --all-targets` clean, `cargo test --all-targets` **125 passed, 0 failed** (116 lib + 9
+`firmware_test_vectors`), `cargo clippy --all-targets -- -D warnings` clean; in `embarch-doc`,
+`check-docs.py` **11/11**, `check-ownership.py --scope study-designer` OK on 3 doc paths and OK on
+the code repo, `check-client-names.py --repo` clean against 7 denylist entries.
+`changelog.d/study-designer-063-citation-sweep-closes-src.fixed.md` consumed into
+`history/study-designer.md`; **29 of the owner's own fragments left pending**, untouched. No
+`status.d/` fragment — the worker grepped the suite-level docs for the changed sentences and found
+none.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written. Directed on both halves — re-derive the four substitutions
+from decisions 56 and 57 rather than agree with them, and re-check the `src/` closure claim against
+the chain's three known census blind spots. It confirmed all four and the closure, and re-counted
+this unit's own per-file instance figures case-insensitively (5/5, 5/6, 3/3, 2/2 lines/instances),
+finding no undercount. **That is a directed prompt producing a clean answer rather than
+manufacturing agreement**, which is the comparison `api/097` asked for and nobody has run properly.
+
+**Hardware debts:** **none created, and none could be.** Four comment lines in two Rust source
+files and three doc-repo files; nothing executed against a board, no probe, no live Core, no flash,
+no study. Standing debts unchanged and none touched: `tasks/api/059` still `open` — **not
+`blocked`** — with the dev-bench probe unplugged, a **seventeenth** consecutive leg;
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`) and its buffer still claims both
+boards attached, so **do not plan a bench unit off it**; the bench queue is still parked by the
+owner's `d0cf9a0`; `core/015`'s native Windows build is now measured as unrunnable from WSL2 at all
+(leg 133 — `cc-rs` cannot build `hidapi`'s C shim), which is a standing gate clause nothing can
+satisfy and someone should decide about; `api/108`, `umbrella/037` check 13, `umbrella/033`'s
+check-17 arms, umbrella check 5's permission-denied probe, `embarch-ui`'s 18-record stale prefix
+and the `embarch-outpost`/`embarch-dev-bench` toolchains all untouched.
+
+**Budget:** PROCEED — weekly **30.7%** of a 90% cap at the leg's top, resets in ~149h, no 429. Wave
+**6** suggested; the **4-unit leg cap** is what will end this leg, not the budget and not the queue.
+
+**Least sure about:** **whether my claim-line change is a quiet fix or a quiet divergence.**
+`tasks/doc/076` records that every recent leg writes `**State:** claimed (leg N unit N)`, which
+`queue-status.py` cannot parse — it reports a live claim as `recoverable` with `branch None`, losing
+the one handle a recovery needs. I wrote this leg's three claims in `tasks/README.md`'s documented
+form instead (`claimed by agent/<scope>/<NNN-slug>, <date time>`) and `queue-status.py` immediately
+read all three as `claimed ... (respected)`, which confirms the defect from the other direction. But
+`tasks/doc/076` is `Owner: required` precisely because the fix belongs in `.claude/leg.md`, and a
+leg that silently starts writing a different format than its siblings has made the next leg's
+recovery depend on which format it happens to meet. **I did not change any reserved file and I am
+not claiming the task is closed** — but the next leg should know that claims on `main` right now are
+in the documented form, not the improvised one.
+
+---
+
 ## 2026-09-17 01:42 — core/071 a decision whose own corrections were deleted by a file migration, reverting it to a claim the code had already outgrown
 
 **Decided:** **three things, and the first is the most instructive failure in this log for a while
