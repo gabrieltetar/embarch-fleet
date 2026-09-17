@@ -97,6 +97,80 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 23:01 — api/106 a true zero, resampled rather than trusted, and one arithmetic slip inside it
+
+**Decided:** **nothing was wrong, and the interesting part is how I convinced myself of that.**
+All 18 singular-wrapped citation lines in `embarch-api` — 20 decision-number instances across 12
+files, the form `core/068`'s plural-only wrap grep could not match and every prior `embarch-api`
+census therefore never read — resolve, resolve in the repo their own sentence names, and assert
+something true. **0 wrong numbers, 0 dead references, 0 false sentences, and `embarch-api` has a
+zero-byte code diff.**
+
+**A zero is a real result here and I did not want to take it on trust.** This chain has produced
+genuine zeros before (`bounded.rs`, `gatt.rs`), but a zero is also exactly what a sweep that checked
+only whether numbers *resolve* produces — and this leg had already hit that shape twice, in
+`study-designer/058` and `dev-bench/033`. So rather than re-audit all twenty, **I had the reviewer
+resample six**, chosen for where a wrong answer would hide: the three cross-repo citations
+(`embarch-core` 31 and 62, `embarch-ui` 14, where the repo label is itself part of the claim), the
+two lines the task flagged as traps, and the one line carrying three numbers. All six re-derived
+from the cited decisions' own bodies. The load-bearing one was `src/config.rs:255`, where the
+worker argued that `embarch-api` decision 45 falsifies a board-*identity* premise while leaving the
+"bench is one at a time" claim standing, so citing decision 32 alone stays fair — the reviewer read
+45's own text (*"the build lock key stays fixed: … the bench is still one at a time"*) and confirmed
+45 reaffirms rather than amends it.
+
+**The one thing that did not reconcile, and I found it rather than either agent.** The worker's
+`## Result` section reads *"15 lines cite exactly one decision number each"* and then lists
+**seventeen** of them. The headline totals are right — 17 single-number lines + 1 triple-number line
+= 18 lines, and 17 + 3 = 20 instances — so only the word "15" is wrong, in a report whose entire
+subject is counting accurately. I did not correct it in place: the task file is deleted in this
+same fold, so fixing-then-deleting is churn, and the durable record is this entry. The reviewer
+re-ran the 18-line grep itself and confirmed no other arithmetic is off.
+
+**Merged:** `agent/api/106-singular-wrapped` (code — **no commits**, `embarch-api` unchanged at
+`b523953`; doc `a5ed227`). The code branch was pushed carrying nothing, which is the correct
+outcome for a sweep that found nothing, and it means this unit has exactly one revert handle rather
+than two. The doc branch needed a rebase onto `2fd4574` first, since `dev-bench/033`'s fold had
+moved `main`. Gate re-run by me on the merge result: in `embarch-api`, `cargo build --all-targets`
+clean, **`cargo test` 213 passed across 13 binaries, 0 failed** (the worker's own report named only
+the 46-test binary — under-reported, not wrong), `cargo clippy --all-targets -- -D warnings` clean;
+in `embarch-doc`, `check-docs.py` **11/11** via the wrapper; `check-ownership.py --scope api` OK on
+2 doc paths; `check-client-names.py --repo` clean against 7 denylist entries.
+`changelog.d/api-106-singular-wrapped-citation-recheck.changed.md` consumed into `history/api.md`
+with `--only`; **29 of the owner's own fragments left pending**, untouched. No `status.d/` and no
+`features.d/` fragment.
+
+**Blocked:** nothing. `tasks/api/106` closed and removed in this fold. `embarch-api`'s
+singular-wrapped class is now swept out; no follow-up filed and none owed.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written. It resampled six of twenty from the decision bodies,
+checked the reversals index for all six numbers in their own sub-projects (none is a
+rejected-and-reproposed shape), re-ran the grep independently and got the same 18 lines, and said
+plainly which fourteen instances it did **not** check — which is the sentence that makes the other
+six worth anything.
+
+**Hardware debts:** **none created, and none could be.** Zero bytes of code changed anywhere. The
+dev-bench probe is still unplugged (`"probes": []` read live at this leg's top), so `tasks/api/059`
+stays `open` for the twelfth consecutive leg — note that is this same sub-project's own bench task,
+untouched by this unit. `core/015`'s native Windows build is untouched: `embarch-api`, not
+`embarch-core`. All other standing debts carried unchanged.
+
+**Budget:** PROCEED — weekly **23.7%** of a 90% cap at the leg's top, resets in ~152h, no 429
+anywhere. Wave **6** suggested, **4** dispatched (the leg's unit cap).
+
+**Least sure about:** **whether resample-six is a real check or a ritual that makes a zero feel
+earned.** Six of twenty is a 30% sample, and if the worker's failure mode were "checked resolution
+but not content" uniformly, a sample that size would very likely catch it — but if the failure mode
+were one bad instance among twenty, it would miss it 70% of the time. I chose the six by where a
+defect would be most costly rather than at random, which is the right bias for consequence and the
+wrong one for estimating a rate. **The honest statement is that this unit is well-checked and the
+repo's defect rate is still unmeasured**, and the open question about whether small sweeps deserve
+reviewer effort at all is not settled by this unit either way.
+
+---
+
 ## 2026-09-16 22:55 — dev-bench/033 twelve labels that were right, one that was wrong, and the file the worker never opened
 
 **Decided:** **three things, and the third is the entry.**
