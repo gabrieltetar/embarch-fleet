@@ -97,6 +97,105 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 12:43 — study-designer/064 the sweep left `src/` and immediately found four more file types nobody had counted
+
+**Decided:** **three things, and the second is the one that matters to the chain.**
+
+**1. Three wrong citation numbers outside `src/`, all of a shape this chain has already seen.** Two
+in `tools/extract_gatt_config.rs` moved from decision **57 to 56** — the same "one wrong number
+reused for the same underlying claim" that `study-designer/063` found four instances of in
+`src/gatt_names.rs` and `src/vendor.rs`, now continuing into a file that chain never opened.
+Decision 56 carries the two-maps rationale and *"services get names by the same mechanism"*;
+decision 57 is entirely about the repo walk. The worker **left the "scan report by decision 57"
+clause in the same sentence alone**, which is the right call and the kind of half-sentence a
+careless sweep flattens. The third, in `tests/firmware_test_vectors.rs`, moved schema v12's two new
+actions from **50/51 to 44/50**: `BleSecurity` is 44, `BleUnbond` is 50, and decision 51 is
+`Study.dev_bench_log_level` — a v13 *field*, not a v12 action, as that test's own inline comment
+says. The changelog shows `src/lib.rs`'s sweep already fixed this exact miscredit once, so it is a
+defect that propagated by copying.
+
+**2. The chain's scope was wrong, not just incomplete: it had been sweeping `*.rs` and `*.toml`.**
+Because the task told it to say plainly whether anything remained, the worker ran a census over
+**all file types** and found four more citation-bearing files nobody had counted — `README.md`
+(21 matching lines), `.github/workflows/test.yml` (10, carrying **this chain's first cross-repo
+citations outside `src/`**, to `embarch-umbrella` decisions 27 and 29) and two `tests/fixtures/*.eap`
+files. Filed as `tasks/study-designer/065`, ~34 lines. **`study-designer/063` closed `src/` and this
+unit shows the repo was never the same thing as `src/` plus two manifests.**
+
+**3. Numbers, and one method note worth carrying.** 27 citation instances, 3 wrong numbers, 0 false
+sentences. Chain-wide, 044–064: **543 instances, 25 wrong numbers, 7 false sentences.** The method
+note: one citation in `tests/eap_worked_protocols.rs` was findable **only by reading** — embedded in
+a test function name, `decision_52s_struct_layout`, with no space, invisible to both the
+case-insensitive and the continuation grep. That is a **fourth** census blind spot beside the three
+this chain already records (case, plurals, line wraps), and the reviewer confirmed it is unique
+within these four files. Whoever takes `065` should grep for the no-space identifier form too.
+
+**Merged:** `agent/study-designer/064-citation-sweep-outside-src` (code `5c3879d`, doc `70f4872`).
+Doc branch rebased onto `origin/main` and force-pushed; rebase and merge as separate calls. **This
+is the leg's only unit with a real code diff**, so the cargo gate was run by me on the merge result
+rather than taken on the worker's word: in `embarch-study-designer`, `cargo build --all-targets`
+clean, `cargo test --all-targets` **green (9 `firmware_test_vectors` + 116 lib)**, `cargo clippy
+--all-targets -- -D warnings` clean; in `embarch-doc`, `check-docs.py` **11/11**, pre-merge
+`check-ownership.py --scope study-designer --stdin` OK on 3 paths, post-merge OK,
+`check-client-names.py --repo` clean against 7 denylist entries.
+`changelog.d/study-designer-citation-sweep-outside-src.fixed.md` consumed into
+`history/study-designer.md`; **29 of the owner's own fragments left pending**, untouched. No
+`status.d/` fragment.
+
+**Blocked:** nothing. **`tasks/study-designer/065` filed by the worker** (in its own commit, not a
+drop — it is in its own scope, which is right).
+
+**Reviewer:** no findings.
+
+Collected before this entry was written. Directed on five checks and it re-derived every one,
+reading through `git show <sha>:<path>` rather than bare relative paths. It confirmed both remaps
+against the decision bodies, re-counted the census independently to the same 27 and the same
+per-file splits, **re-measured the `.cargo/config.toml` test-count claim live** (`--lib` 116,
+`--test firmware_test_vectors` 9, default-feature 0 for the `eap-parse`-gated file; 125 confirmed),
+and ran **its own whole-repo all-file-types census** to check `065`'s list is complete — 29
+citation-bearing files total, no fifth. It also noticed `065` has no `## Why now` header and
+correctly declined to call that a defect, since every sibling task in this chain (059–064) omits it
+too.
+
+**A checker defect the worker hit and worked around, worth recording because it will recur:**
+`check-task-state.py` refused `065`'s first title for containing the literal substring `README.md`,
+because that filename is separately reserved as **`embarch-doc`'s own** top-level README — the check
+substring-matches every tracked doc-repo path, so it cannot tell a sub-project crate's README from
+the doc repo's reserved one. The worker reworded the title to *"the crate's top-level readme"* and
+it cleared; the body still names the real path, since only the title is checked. **The scripts are
+owner-reserved, so this is a finding, not a fix** — and it is close in shape to `tasks/doc/053`,
+which already records a task title naming another repo's README tripping the scope-claim check.
+
+**Hardware debts:** **none created.** Three citation lines in two Rust source files plus doc-repo
+task and changelog files; nothing executed against a board, no probe, no live Core, no flash, no
+study — the `cargo test` runs are host-only. Standing debts unchanged: `tasks/api/059` still `open`
+— **not `blocked`** — with the dev-bench probe unplugged, an **eighteenth** consecutive leg;
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`) and its buffer still claims both
+boards attached, so **do not plan a bench unit off it**; the bench queue is still parked by the
+owner's `d0cf9a0`; `core/015`'s native Windows build is measured unrunnable from WSL2 at all;
+`api/108` is dispatchable but cannot be closed by anything in this environment; `umbrella/037`
+check 13, `umbrella/033`'s check-17 arms, umbrella check 5's permission-denied probe, `embarch-ui`'s
+18-record stale prefix and the `embarch-outpost`/`embarch-dev-bench` toolchains all untouched.
+
+**Budget:** PROCEED — weekly **33.8%** of a 90% cap at this unit, resets in ~139h, no 429. Wave
+**6** suggested throughout; the **4-unit leg cap** ends this leg, with 7 dispatchable tasks across
+7 distinct scopes left behind — neither queue depth nor scope spread was ever the binding
+constraint.
+
+**Least sure about:** **that this worker ran for 55 minutes and I could not tell the difference
+between that and a dead one.** It was dispatched with the other two and reported long after both;
+the rule that a worktree and a commit count cannot retire a worker is exactly right and it left me
+with nothing to do but wait and tick. **More importantly: all six of this leg's agent hand-backs —
+three workers and three reviewers — were delivered to the listener session rather than to me**, and
+every one of them reached me only because the listener relayed it. That is `tasks/doc/042`'s
+failure (a reviewer that finished and never notified has no legal way to be collected) happening
+**six times out of six**, not intermittently. The branch-presence poll caught the pushes, but a
+reviewer pushes nothing, so for reviewers there is still no legal positive signal at all — I got
+all three only by the listener's courtesy, and a leg without a listener paying attention would have
+written three `skipped` lines.
+
+---
+
 ## 2026-09-17 12:28 — core/074 a decision's completeness premise failed for a whole mid-attach class, not the one case it was filed for
 
 **Decided:** **three things, and the first is that the unit came back bigger than the task that
