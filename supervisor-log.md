@@ -97,6 +97,85 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 19:49 — ui/054 the biggest unswept file in the suite came back clean, and the reviewer checked whether that was true
+
+**Decided:** **three things, and (c) is the one that changes how the next sweep should be filed.**
+
+**(a) 73 citations, 0 wrong numbers, 0 wrong labels, 0 false sentences, in the largest never-swept
+citation surface in the suite.** `assets/app.js` is 4,855 lines, it is **shipped to the browser**
+under decision 2's zero-build rule so its comments travel with the product, and four previous units
+had each reached into it for one citation and each found a real defect in the line they happened to
+open. On that record the prior was that a full sweep would find several. It found none — across six
+repos' decision spaces (`embarch-ui`, `embarch-topology`, `embarch-core`, `embarch-study-designer`,
+`embarch-api`, `embarch-outpost`).
+
+**(b) I SPENT THE REVIEWER ON THE NEGATIVE, AND THE NEGATIVE SURVIVED.** A zero-defect sweep is
+indistinguishable from a skim, which the 2026-09-12 handoff flagged as an unexamined risk across the
+chain's recent clean run. So rather than reviewing a diff that barely exists, I gave the reviewer
+four specific citations to re-derive — the three the worker said *looked* wrong and turned out fine,
+plus one of its own choosing from the riskiest class. It **measured** the 44-character attribution
+window at line 4780 rather than trusting the worker's "~30" (24 characters raw, 17 as unwrapped
+prose — inside the window on every convention), counted decision 53's `Action` variants in
+`decisions/wire.md` and found exactly the two claimed, re-ran the `git log -S` corroboration for the
+undated 2026-08-26 amendment, and then went further than asked on the fourth.
+
+**(c) THE `decision 10` COLLISION IS REAL, DOCUMENTED, AND A TRAP FOR EVERY FUTURE SWEEP.** The
+reviewer found **six** bare `decision 10` sites in this file — and two of them spell it
+**`Decision 10`, capitalized**, which a case-sensitive grep misses. They resolve four ways: one is
+`embarch-topology`'s (labelled, correct), and the other three are `embarch-ui`'s **own decision 10 in
+three different files** — `decisions/topology-tab.md` (routing), `decisions/trace-view.md` (trace)
+and `decisions/trace-chart.md` (chart). This is not a defect: `embarch-ui`'s own `decisions.md`
+documents the collision deliberately with parenthetical tags, `10 (routing)`, `10 (trace)`,
+`10 (chart)`. **But it means a bare `decision 10` in this repo cannot be resolved by number at all,
+only by reading what the surrounding sentence is about**, and every one of the six was attributed
+correctly by context. That is worth knowing before someone writes a script to check this, and it is
+now written down here instead of only in a reviewer's transcript. `tasks/doc/033` — nothing checks
+that a decision number is unique — is the owner-reserved place this belongs.
+
+**Merged:** `agent/ui/054-app-js-citation-sweep` (doc `64da7ed`; **no code SHA — `embarch-ui` has no
+commit**, the branch sits at its base `87d01b4`). The doc SHA is the only revert handle. Gate re-run
+by me on the merge result: `check-docs.py` **11/11**; `check-ownership.py --scope ui` OK on 2 changed
+paths; `check-client-names.py --repo /home/gabriel/Github/embarch/embarch-ui` clean against 7
+denylist entries. The worker reported `cargo build`/`test` (91 passed, 4 ignored, plus 2 in
+`element_ids`)/`clippy --all-targets -- -D warnings` clean in `embarch-ui`; I did not re-run them,
+because **the merge changed no code** — the merge result in that repo *is* `origin/main`.
+`changelog.d/ui-app-js-citation-sweep.decided.md` consumed into `history/ui.md` with `--only`;
+**29 of the owner's own fragments left pending**, untouched. No `status.d/` and no `features.d/`
+fragment.
+
+**Blocked:** nothing. `tasks/ui/054` closed and removed in this fold, and I filed **`tasks/ui/060`**
+for `src/main.rs` and `src/trace.rs` — the last unswept `ui` source, ~50 grep lines, excluded from
+`054` **by scope rather than by running out of room**, which both the task and its worker said
+explicitly. That task carries the plural-census warning and the `decision 10` collision.
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **none created.** A shipped JS asset's comments were read and nothing was
+changed; no board, no probe, no live Core, no deploy, no study, and the UI was not launched.
+`core/015`'s native Windows build untouched — this is `embarch-ui`. **No hardware has been touched
+anywhere in this leg and I have not read Core live at any point** — `tasks/api/059` stays `open`,
+not blocked, for the sixth consecutive leg; the owner's `d0cf9a0` parks the bench queue;
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`) and its buffer was neither read nor
+believed. `embarch-ui`'s 18-record stale prefix still has never met a real stale prefix and nothing
+here changed that; `umbrella/037` check 13, `umbrella/033`'s check-17 arms, umbrella check 5's
+permission-denied probe and the `embarch-outpost`/`embarch-dev-bench` toolchains all carried
+unchanged.
+
+**Budget:** PROCEED — weekly **16.0%** of a 90% cap, resets in ~155h, no 429 anywhere in the leg.
+Wave **6** suggested; **4 dispatched, 4 landed**, so the **unit cap** bound the leg, not the budget
+and not the queue.
+
+**Least sure about:** **whether two zero-defect sweeps in one leg is evidence the vein is drying up,
+or evidence that the two files I picked were the wrong two.** `core/067` and this unit both came
+back clean; `api/102` and `study-designer/054`, dispatched in the same breath, each found real
+defects. The clean pair were a workflow/README set and a frontend asset; the defect pair were Rust
+source in crates other repos depend on. That is a plausible pattern — **defects concentrate where
+the code is depended upon** — and it is exactly the kind of pattern a supervisor invents after the
+fact from four data points. Nothing tracks it, and the chain's per-unit tallies are not recorded in
+a way that would let anyone test it.
+
+---
+
 ## 2026-09-16 19:43 — api/102 two wrong numbers in 67, and two comments only git can verify
 
 **Decided:** **three things, and (b) is a documentation gap neither the worker nor the reviewer had a
