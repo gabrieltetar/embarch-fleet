@@ -97,6 +97,82 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 21:24 — topology/050 a file that already knew, two paragraphs down, that its own header was stale
+
+**Decided:** **two things.**
+
+**(a) A FALSE SENTENCE FIXED, AND WHAT MAKES IT INTERESTING IS HOW LONG IT SURVIVED.**
+`embarch-topology`'s `src/hardware/validate.rs:2-6` said the shared validation functions are called
+by *"`embarch-topology`'s own CLI/UI"*. There is no UI: `bin/ui.rs` and its `Ui` subcommand were
+retired outright on **2026-08-24** (commit `7d13781`, decision 5 in `decisions/alerts.md` — *"The
+413-line UI binary is deleted along with its subcommand"*, HTTP dependencies removed with it). The
+same file's **own later paragraph** already said `embarch-ui` polls the alert log instead — so the
+file contradicted itself two paragraphs apart, and **two earlier sweeps (2026-09-07 and
+`topology/040` on 2026-09-13) edited this exact doc comment for other reasons without noticing.**
+Fixed to "own CLI" plus a one-line pointer to decision 5. Tally: **14 lines, 30 decision instances,
+0 wrong numbers, 1 false sentence, fixed.**
+
+**(b) THE WRAP-CHECK MAKES IT THREE REPOS OUT OF THREE, AND I FILED THE ONE THING THE WORKER
+WOULDN'T.** `core/068`'s `grep -rlIE '[Dd]ecisions[[:space:]]*$'` found **two more wrapped citation
+lines** here (`src/lib.rs:8-9`, `src/hardware/enrollment.rs:3-4`), neither in the filed twelve, both
+clean. `enrollment.rs:3-4` is also the repo-prefix trap in its pure form — it sits one line below a
+`` `embarch-core`'s own known_boards.rs `` mention, and the worker read the code rather than the
+grep column and correctly kept it classified as own-repo. Separately, the worker found
+`Cargo.toml:48` carrying the **identical** stale "CLI/UI binary" wording, declined to fix it because
+it cites no decision number and so fell outside a citation sweep's mandate — right call for the
+worker — and reported it. **A finding that lives only in a worker's report is a finding nobody acts
+on, so I filed `tasks/topology/051`.** The reviewer confirmed the line is still stale on `main` at
+the merge SHA before I filed.
+
+**Merged:** `agent/topology/050-plural-citation-recheck` (code
+`5212aad524fc2c510350387a9f8111109b70c7d6`, doc `19681ae4c5395c0543a5cde470fed94f022ffcf2`). Both
+SHAs are the only revert handles. Like `ui/061`, the doc branch needed a rebase onto the moved
+`main` before it would fast-forward; rebased in the worker's own doc worktree and force-pushed, so
+`git cherry` still retired it at this fold. Gate re-run by me on the merge result: in
+`embarch-topology`, `cargo build --all-targets` and `cargo clippy --all-targets -- -D warnings`
+green, `cargo test --features hardware` **80 passing**; in `embarch-doc`, `check-docs.py` **11/11**
+via the wrapper; `check-ownership.py --scope topology` OK on 2 doc paths and on the code branch;
+`check-client-names.py --repo` clean against 7 denylist entries. I read the code diff before merging
+and independently confirmed decision 5's retirement text and the 2026-08-24 date against
+`7d13781`. `changelog.d/topology-plural-citation-recheck.fixed.md` consumed into
+`history/topology.md` with `--only`; **30 of the owner's own fragments left pending**, untouched. No
+`status.d/` and no `features.d/` fragment.
+
+**Blocked:** nothing. `tasks/topology/050` closed and removed in this fold;
+`tasks/topology/051` filed in the same commit.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written. It independently re-derived the retirement date from
+`7d13781`'s own timestamp rather than taking mine, checked that the new sentence does not collide
+with decisions 12 and 19 (the live-push retirement, a separate fact one day later in the same
+untouched comment block), and — the check I most wanted — confirmed **"own CLI" is not a new
+inaccuracy**: `bin/main.rs`'s own header independently calls the survivor a thin CLI, it is a clap
+subcommand binary, and nothing under the `bin` feature serves HTTP any more.
+
+**Hardware debts:** **none created.** One doc-comment header in a Rust source file; nothing
+executed, no board, no probe, no live Core, no deploy, no study. `core/015`'s native Windows build
+is untouched by this unit — `embarch-topology`, not `embarch-core` — and the recount-from-commits
+the 2026-09-12 handoff asked for is **still owed after a third leg**. No hardware was touched
+anywhere in this leg and Core was never read live, so `tasks/api/059` stays `open`, not blocked, for
+the ninth consecutive leg; the owner's `d0cf9a0` still parks the bench queue and
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`). `umbrella/037` check 13,
+`umbrella/033`'s check-17 arms, umbrella check 5's permission-denied probe, `embarch-ui`'s 18-record
+stale prefix and the `embarch-outpost`/`embarch-dev-bench` toolchains all carried unchanged.
+
+**Budget:** PROCEED — weekly **19.9%** of a 90% cap at the leg's top, resets in ~154h, no 429. Wave
+**6** suggested, **3** workers dispatched, 3 landed.
+
+**Least sure about:** **whether the standing doubt about this sweep chain has actually flipped, or
+whether I am reading three hits in one leg as a trend.** The 2026-09-12 and 2026-09-16 handoffs both
+asked whether zero-defect sweeps mean a clean corpus or a blind census; this leg ran three sweeps
+and **two found real defects** (`ui/061` a wrong number, `topology/050` a false sentence), with a
+third defect — `api/105` — coming from a reviewer rather than a sweep. That reads like the census
+getting better rather than the corpus getting worse, but nobody tracks a per-sweep hit rate, so it
+is still an impression and not a number, and that is exactly what it was four days ago.
+
+---
+
 ## 2026-09-16 21:22 — ui/061 a citation where every number resolves and the sentence is still wrong
 
 **Decided:** **three things, and the third is a new shape of defect this chain had not seen.**
