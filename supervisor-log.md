@@ -97,6 +97,89 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 23:37 — ui/063 the three citations most likely to be wrong were all right, and the one defect was somewhere else
+
+**Decided:** **two things, and the second is a counting question I have left open on purpose.**
+
+First, the sweep. All 10 wrapped citation lines in `embarch-ui` — 16 decision-number instances, the
+form no single-line census has ever been able to see — check out except one.
+`src/study_designer.rs:829` cited `embarch-study-designer` decision **57** for *"a merged map would
+have had to guess which half a UUID wanted"*; 57 is about extraction **scope** (scan the repo, not
+two named files) and says nothing of the kind, while **decision 56 says it near-verbatim** — *"Two
+maps rather than one, because a merged map would have to guess which lookup a UUID wanted."* Fixed
+57 → 56. **That is the same shape `study-designer/059` found forty minutes earlier in this same
+leg** — on-topic, correctly labelled, wrong neighbour — which is now twice in one leg and is the
+reason I asked both reviewers to re-derive rather than re-read.
+
+**I wrote the task around three specific lines I expected to be wrong, and all three were right.**
+`assets/app.js:3400`, `src/trace.rs:3139` and `src/study_designer.rs:65` are unlabelled, sitting
+among six lines that are `embarch-study-designer`'s, which is exactly where a dropped repo prefix
+hides. Worker and reviewer independently traced all three to `embarch-ui`'s own decisions 10, 18 and
+14. **A supervisor's guess at where the defect would be is not evidence**, and this unit is the
+cheap version of that lesson: the flagged lines were clean and the defect was on a line nobody had
+flagged.
+
+Second — **`assets/app.js:3400` is a citation with no number anywhere near it.** Neither the matched
+line nor the next carries one; it resolves only because it sits inside a section whose header at
+line 3251 reads *"signal routes (decision 10, first half)"*, 149 lines above. It is correct, and it
+is also **unreachable by any census this suite has or could plausibly build** — the number is not in
+the comment, it is in the document's structure. The worker counted it as an instance and I have not
+argued with that, but it means `embarch-ui`'s 16 includes one instance that no grep of any
+sophistication would ever find. **I have not filed a task for this**; a "citations that inherit their
+number from a section header" class is one observation, not yet a pattern, and inventing a sweep for
+it is exactly the groove-wearing I am worried about. It is recorded here so the next leg that sees a
+second instance knows it is the second.
+
+**Merged:** `agent/ui/063-wrapped-citations` (code `e40531470e6ddb56cbac9f2545e144cd56458a5e`, doc
+`b3122c1382db4fe9df1e0ace9532b964eb2eba12`). The doc branch needed a rebase onto `ac098d0` first,
+since `study-designer/059`'s fold had moved `main`. Gate re-run by me on the merge result: in
+`embarch-ui`, `cargo build --all-targets` clean, `cargo test` green, `cargo clippy --all-targets --
+-D warnings` clean; in `embarch-doc`, `check-docs.py` **11/11** via the wrapper;
+`check-ownership.py --scope ui` OK on 2 doc paths and OK on the code repo; `check-client-names.py
+--repo` clean against 7 denylist entries. `changelog.d/ui-wrapped-citation-census.fixed.md` consumed
+into `history/ui.md` with `--only`; **29 of the owner's own fragments left pending**, untouched. No
+`status.d/` and no `features.d/` fragment.
+
+**The `embarch-ui` symlink table worked.** I linked `embarch-study-designer`, `embarch-api` **and
+`embarch-topology`** beside the worktree before dispatch and the worker's `cargo build` resolved with
+no manual linking and no diagnosis — which is the whole point of `.claude/leg.md`'s bolded third
+entry. Second consecutive leg to confirm it; `tasks/doc/037` (the `umbrella` row that table still
+omits) remains the open half.
+
+**Blocked:** nothing. `tasks/ui/063` closed and removed in this fold. No follow-up filed and none
+owed — `embarch-ui`'s wrapped-citation class is swept out.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written. It re-derived all three unlabelled citations from the
+decisions' own bodies, including tracing `app.js:3400` to the section block that governs it
+(header at 3251, block ending at 3409 where the next header starts — so line 3400 really is inside
+it), spot-checked all five instances on the five-number line, and checked the reversals index for
+every number it touched. It also correctly identified my own in-flight fold as the reason its
+`changelog.d/` fragment had vanished from disk, rather than filing it as a defect.
+
+**Hardware debts:** **none created, and none could be.** One digit of a doc comment changed; nothing
+built for a board, no probe, no study. The dev-bench probe is still unplugged (`"probes": []` read
+live from Core at this leg's top), `tasks/api/059` stays `open` for a thirteenth leg, and
+`fleet-hardware.py`'s buffer is 13,280 minutes stale while still claiming both boards attached —
+**do not plan a bench unit off it**; `--refresh` still crashes (`tasks/doc/041`). `embarch-ui`'s
+18-record stale prefix (`tasks/ui/007`) is untouched and still owed the owner's own session.
+`core/015`'s native Windows build is untouched: `embarch-ui`, not `embarch-core`.
+
+**Budget:** PROCEED — weekly **25.1%** of a 90% cap at the leg's top, resets in ~152h, no 429. Wave
+**6** suggested, 4 units is the leg cap.
+
+**Least sure about:** **whether asking a reviewer to re-derive rather than re-read is buying
+anything, or just buying the same answer twice.** Both reviewers this leg were told to independently
+trace citations the worker had already traced, and both came back confirming the worker exactly. That
+is either two clean units or a reviewer that reads the worker's reasoning and re-walks it — and from
+the reports alone I genuinely cannot tell which, because a correct re-derivation and a well-dressed
+re-read produce the same text. The one discriminator I have is that `ui/063`'s reviewer volunteered
+a fact I had not asked for (the section-block boundary at 3409), which is not something a re-read
+produces.
+
+---
+
 ## 2026-09-16 23:31 — study-designer/059 a citation that was on-topic, correctly labelled, and still the wrong decision
 
 **Decided:** **one thing, and it is a new defect shape for the citation chain rather than a new
