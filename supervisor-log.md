@@ -97,6 +97,102 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 21:52 — study-designer/056 a citation that was real, on-topic, correctly labelled, and still the wrong one
+
+**Decided:** **one thing, and it is a new failure shape for this fourteen-unit sweep chain.**
+`embarch-study-designer/src/eap_parse.rs`'s module doc justified refusing a named CRC-16 primitive
+by citing **`embarch-core` decision 30's "settlement 2"**. Every surface property of that citation
+was fine: decision 30 is real, it is current, it is correctly labelled as another repo's, and it is
+on topic. **It was still the wrong citation**, for two independent reasons the worker found and the
+reviewer confirmed from the introducing commit:
+
+1. **"Settlement 2" is not a citable unit anywhere in this suite.** It appears in commit `486545d`'s
+   message (2026-08-25) and nowhere in `embarch-doc`'s durable prose — a suite-wide grep finds one
+   unrelated use of the bare word. A reader following that pointer has nothing to arrive at.
+2. **What Settlement 2 actually settled was a different subject.** The reviewer read `486545d`
+   directly: it settled that manifest storage/selection/verification/refuse-render are "four
+   mechanisms with no caller" — the Outpost Phase C gap. It shares the suite's *"no caller"*
+   phrasing with the CRC-16 argument and nothing else. **The citation was not merely stale
+   terminology; it was pointing at the wrong claim the whole time.**
+
+Meanwhile this repo's **own decision 59** says the thing in almost the same words — *"implementing
+all four would be four primitives with no caller"*, specifically about the CRC-16 rejection — and
+is already cited two lines above in the same module doc. Repointed to 59, cross-repo reference
+dropped. **Tally: 12 grep-matching lines, 13 distinct instances, 1 wrong number fixed, 0 false
+sentences.** The task file said 13 lines; the measured count is 12, and the worker said so.
+
+**Why this shape matters more than the edit.** Every check this chain has institutionalised would
+have passed this line: the number resolves, the repo prefix is present and correct, the decision is
+current and on-topic, `check-decision-refs.py` is satisfied. The defect was only visible to someone
+who asked *whether a nearer, same-repo decision already said it* — which is not a rule anywhere,
+and is now written into `tasks/study-designer/057`'s carried-forward method.
+
+**Merged:** `agent/study-designer/056-src-citation-sweep-remainder` (code `2ea7299`, doc
+`4d87e52`). Both SHAs are the only revert handles. The doc branch needed a rebase onto `3a6ab99`
+before it would fast-forward, since `outpost/024`'s fold had moved `main` under it. Gate re-run by
+me on the merge result: in `embarch-study-designer`, `cargo build --all-targets` and
+`cargo clippy --all-targets -- -D warnings` green, `cargo test --all-targets` **125 passing**
+(116 lib + 9 `firmware_test_vectors`), unchanged from `053`–`055`'s baseline; in `embarch-doc`,
+`check-docs.py` **11/11** via the wrapper; `check-ownership.py --scope study-designer` OK on 3 doc
+paths and on the code branch; `check-client-names.py --repo` clean against 7 denylist entries.
+**I read the code diff before merging and verified decision 59's wording myself** — this is a shared
+crate and a cross-repo citation, which is exactly the case §10 says not to merge on green alone.
+`changelog.d/study-designer-056-eap-parse-citation-sweep.fixed.md` consumed into
+`history/study-designer.md` with `--only`; **29 of the owner's own fragments left pending**,
+untouched. No `status.d/` and no `features.d/` fragment.
+
+**Same local-checkout note as `ui/062`, recorded once more because it will recur.** The
+`embarch-study-designer` fast-forward pulled in `aeff4b4` (`study-designer/055`) as well, because my
+local checkout was a commit behind `origin/main`. Already landed, already logged, not this worker's
+change. **A leg reading `git log` will see `src/crc.rs` in a unit that only touched
+`src/eap_parse.rs`; it is the stale local main, not a rogue worker.**
+
+**Blocked:** nothing. `tasks/study-designer/056` closed and removed in this fold;
+`tasks/study-designer/057` filed by the worker in its own branch and landed here.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written, and **it did the one check that turns this unit's argument
+from plausible into established**: it read commit `486545d` itself rather than accepting "dead
+terminology", and came back with what Settlement 2 was actually about. That is the difference
+between "the label is stale" and "the pointer was wrong" — and only the second justifies dropping a
+cross-repo reference rather than repairing it. It also confirmed decision 30's current text at
+`b3d9c72` (checking that SHA is an ancestor of this leg's HEAD, so not a stale read), confirmed the
+new paragraph's implementation-status claim against `EapErrorKind::Crc16Unsupported` and its test at
+`src/eap_parse.rs:1771` — the `crc.rs`/`055` false-status shape, checked for and absent — and
+**recomputed `tasks/study-designer/057`'s carried-forward tally (433 instances / 16 wrong numbers /
+5 false sentences) independently from the 14 per-file counts: exact match, no drift.**
+
+**Hardware debts:** **none created.** One paragraph in a Rust module doc; nothing executed, no
+board, no probe, no live Core, no study, no DUT. `core/015`'s native Windows build is untouched by
+this unit — `embarch-study-designer`, not `embarch-core` — and this leg landed no `core` unit at
+all, so the unanchored-ordinal finding leg 127 recorded stands unchanged: nothing records when the
+deployed Windows exe was last built, and the owner has to pin a deploy SHA at the next
+`embarch-dev-workflow.md` §4a sitting before any leg can count it. The dev-bench probe is still
+unplugged — **read live at this leg's top, `"probes": []`** — so `tasks/api/059` stays `open`, not
+`blocked`, for the tenth consecutive leg; the owner's `d0cf9a0` still parks the rest of the bench
+queue and `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`), so the buffer was never
+consulted. `umbrella/037` check 13, `umbrella/033`'s check-17 arms, umbrella check 5's
+permission-denied probe, `embarch-ui`'s 18-record stale prefix and the
+`embarch-outpost`/`embarch-dev-bench` toolchains all carried unchanged.
+
+**Budget:** PROCEED throughout — weekly **21.1%** of a 90% cap at the leg's top, **22.1%** at its
+end, resets in ~153h, no 429 anywhere. Wave **6** suggested, **4** dispatched, because the leg's
+unit cap is 4.
+
+**Least sure about:** **whether the refill I did this leg is the right size of bet.** The queue was
+at 5 dispatchable in 5 scopes and `queue-status.py --refill-owed` said sweep for scope spread, so I
+measured the singular-wrap form of `core/068`'s grep across every repo and filed three tasks —
+`api/106` (18 lines), `core/069` (15), `umbrella/074` (9) — in the three scopes that had nothing.
+Those numbers are measured, not estimated, and I spot-checked the continuation lines to confirm the
+form is real. **What I did not measure is whether this class is worth sweeping**: `embarch-dev-bench`
+alone carries 124 matching lines, and if the hit rate on wrapped citations turns out to be the same
+near-zero as the plural form, I will have filed three units of confirmation work and pointed the
+chain at a fourth that is eight times bigger. The first of the three to run should report its hit
+rate explicitly so the next leg can decide whether to file the dev-bench one at all.
+
+---
+
 ## 2026-09-16 21:48 — outpost/024 a zero-defect sweep that found three things, and what that does to the standing doubt
 
 **Decided:** **one thing, and it is a reading of the sweep chain's own open question rather than a
