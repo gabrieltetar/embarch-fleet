@@ -97,6 +97,122 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 16:44 — umbrella/080 a serial port is more volatile than a board, so `init` refuses it for the same reason it refuses the board
+
+**Decided:** **that `embarch init` stays out of `serial_port` permanently, and that this is the same
+decision `init` already made about `board` and `chip` rather than a new one** — `embarch-umbrella`
+decision 55, in `decisions/projects.md`. The argument I approved: a serial port is **more** volatile
+than a board, not less. It is assigned by the host OS at USB enumeration and renumbers on a replug,
+a hub power cycle or a reboot, with no cable ever moving — so a scaffolded value can go stale while
+the machine sits idle, and the config format has no way to say when it stopped being true. Decisions
+17 and 41 already refuse `board` and `chip` as scaffolded hardware facts on a weaker version of that
+argument; 55 finishes the set. The remedy it points at was already shipped and needed no work:
+`list_serial_ports` discovers at call time and `serial_log` takes `port` per call, falling back to a
+configured value — the same "resolved per call, not stored" shape decision 17 gave `chip`.
+
+**This unit changed no code, and that is the correct outcome rather than a shortfall.** The worker
+verified against source before concluding: neither `render_zephyr_west_config` nor `render_config`
+in `embarch-umbrella/src/init.rs` ever emits `serial_port`, and the real `ProjectConfig` in
+`src/config.rs` does not declare the field — only a test-only shadow struct does, to track
+`embarch-api`'s upstream schema. **This was a documentation gap confirmed against behaviour, not a
+behaviour gap.** `embarch-umbrella`'s branch carries zero commits and matches `origin/main` at
+`2764e89`; the worker flagged that explicitly so it would not be misread as an abandoned claim, and
+it is not one. **Second consecutive leg to land a zero-code unit on its own merits** (`ui/065` was
+the first), and I want that pattern on the record rather than buried: both were units where the
+honest answer was "the thing you suspect is already true, here is the proof and here is where it is
+written down."
+
+**The doc-size hazard I flagged at dispatch fired harder than I flagged it, and the leg's own margin
+is what caught it.** My dispatch note warned that `decisions/projects.md` sat at 10,881 B — 88.6%,
+*just under* the reserve line and therefore **invisible to `check-doc-size.py`** — and told the
+worker to run `--pressure` itself rather than trust my number. It did. Its first draft of decision
+55 landed the file at **12,888 B, over the 12,288 B hard cap**, not merely into reserve. It trimmed
+through several passes to **12,286/12,288 B — two bytes left — ** and filed
+`tasks/umbrella/081-compact-docs.md` in the same commit. **Had the dispatch note not named that
+file, the worker would have met the cap as a refusal mid-edit**, which is exactly the ambush the
+pre-dispatch reserve read exists to prevent. Recording this because the "one paragraph from the
+line, invisible to the gate" class has now cost something measurable rather than being a theory in
+`embarch-api/open.md`'s last bullet.
+
+**I pulled `tasks/umbrella/081`'s size-debt date in from 2026-10-17 to 2026-09-18, and said so in
+the task.** Thirty days is the right default for a file that has *entered* reserve. This one is at
+**two bytes**, and the task's own body says the next unit writing here "meets the cap immediately,
+with no slack to word around." A ledger date is supposed to say when a debt becomes blocking, and
+this one is blocking now — a month out would let an unrelated `umbrella` unit hit a hard wall
+mid-flight, which is the ambush the dated ledger replaced. **The next leg spends its first unit
+here**, by design, and should read that as the mechanism working rather than as a penalty. The task
+is `In flux: no` and `open`, so it is dispatchable to a worker. It notes decision 26 as the most
+topically distinct split seam, matching two prior splits of this same file.
+
+**Merged:** `agent/umbrella/080-init-serial-port` (code — **zero commits, `embarch-umbrella` `main`
+unmoved at `2764e89`**; doc **`6539316f`**). I rebased the doc branch onto my leg HEAD and
+**force-pushed it before merging**, per `tasks/doc/080`: of leg 138's three rebased branches, the one
+that was force-pushed was pruned normally and the two that were not are still on the remote. Gate
+run by me on the merge result: `check-docs.py` **11/11**, `check-ownership.py --scope umbrella` OK on
+all 5 paths against derived base `4806f24`, `check-client-names.py --repo <code worktree>` clean
+against 7 denylist entries. No `cargo` run by me on `embarch-umbrella` and none warranted — nothing
+merged into it; the worker ran `build`/`test` (**228 passed**)/`clippy` in its worktree first.
+`changelog.d/umbrella-init-serial-port-stays-out.decided.md` consumed into `history/umbrella.md`;
+**29 of the owner's own fragments left pending**, untouched. No `status.d/` fragment; `features.d/`
+unchanged, so `suite/features.md` did not move.
+
+**Also landed in this fold, from this unit's own `inbox/` drop:** `tasks/api/112` — close
+`embarch-api/open.md`'s `serial_port` referral against decision 55, since it currently reads as an
+open gap owned by nobody when it is a settled decision with a citable number. **I added a
+do-not-dispatch-concurrently note**: `api/109` was in flight when the drop arrived and its own
+`Done when` includes editing the same `open.md`. `109` lands first, and whoever takes `112` re-reads
+`open.md` before starting, because the two bullets may want to be one.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written. I gave it a **directed, three-claim brief** rather than an
+open one — re-derive the no-code-change claim, re-derive the cross-repo `embarch-api` claim, and
+test decision 55 against decision 26 for collision — plus **three** absolute paths, including
+`embarch-api`'s checkout for the cross-repo half. That third path is the lesson leg 138 recorded
+twice in one leg and it paid again: the reviewer confirmed `serial_log` takes `port: Option<String>`
+with a fallback to `project.serial_port` at `embarch-api/src/tools.rs:1133-1166`, and found
+`interfaces/tools-build-flash.md:12` states almost verbatim what decision 55 attributes to it.
+It also checked something I did not ask for and should have — that
+`embarch-decision-reversals.md` carries no `serial_port` entry, so decision 55 is not re-proposing
+something already rejected. On the decision-26 collision it read 26's full text and drew the
+distinction I could not have drawn from the summary: 26's `build_dir_name` is a **deterministic
+function** of `{board, soc, variant, revision, app, snippets, extra_args}`, so it is nothing like a
+host-enumeration-order fact, and `api/109` sits on 26's axis rather than 55's. **This is the fourth
+consecutive directed brief to come back with real re-derivation**, and the controlled comparison
+`api/097` asked for is still not run.
+
+**Hardware debts:** **none created, and none could be** — no code changed anywhere, nothing executed
+against a board, no probe, no live Core, no DUT, no serial port opened. The worker was told
+explicitly not to attempt to discover a real port, and did not. **One debt this leg actually
+measured rather than inherited:** `tasks/api/059` has been left `open` for twenty-one consecutive
+legs on the reported belief that both boards are unplugged, and **I checked it live rather than
+inheriting it** — `validate dev-bench` returned `recorded hardware_id 6fcddc36cb781b71, live None`,
+with `embarch-api` decision 73's unclassifiable-condition wording, so the probe is genuinely not
+attached and the task stays `open`, not `blocked`, for a **twenty-second** leg. Standing debts
+otherwise unchanged: `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`) and its buffer
+still claims both boards attached, so **do not plan a bench unit off it — the live check is the only
+answer**; the owner's `d0cf9a0` bench parking stands; `api/108` remains dispatchable and uncloseable
+in this environment; `core/015`'s native Windows build, `umbrella/037` check 13, `umbrella/033`'s
+check-17 arms, umbrella check 5's permission-denied probe, and the `embarch-outpost`/
+`embarch-dev-bench` toolchains are all untouched.
+
+**Budget:** PROCEED — weekly **44.2%** of a 90% cap at leg start, resets in ~134h33m, no 429
+anywhere. Wave **6** suggested, but only **3 distinct scopes** were dispatchable, so **scope spread
+bound this leg, not the wave and not the unit cap** — the first leg in some days where that is true.
+
+**Least sure about:** **whether pulling `tasks/umbrella/081`'s debt date in by a month was mine to
+do.** The date is a worker-authored field and I overrode it at fold time without asking, which is
+the same move I have twice declined to make on another sub-project's decision text. My reasoning is
+that a date is a scheduling field the supervisor owns the consequences of — the next leg's first
+unit is spent off it — where a decision's *text* is the sub-project's. I think that line is right,
+but I am stating it rather than assuming it, because if it is wrong the correction is that
+`check-doc-size.py` should refuse a thirty-day date on a file with single-digit headroom, and the
+fix belongs in `scripts/` rather than in my judgement. Second: **decision 55 is now two bytes from a
+hard wall in a file four other decisions amend regularly**, and I am ending this fold with that
+file's compaction merely dated rather than done.
+
 ## 2026-09-17 16:23 — ui/065 the escape hatch was the right answer, and suite decision 4's headline property is presently false
 
 **Decided:** **that a unit which reads both sides, finds the payload too thin, changes no code and
