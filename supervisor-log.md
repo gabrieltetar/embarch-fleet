@@ -97,6 +97,86 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-16 20:21 — dev-bench/031 the firmware's first citation-truth pass, and the reviewer found what it left
+
+**Decided:** **three things, and (c) is the one the next leg must not lose.**
+
+**(a) Two wrong numbers in ~158 instances, in a repo where nothing can compile to catch them.** The
+`app/src/main.c` "Inbound link RX" section header cited `decision 29` — the generic capture-tap
+pipeline — for a block whose body is `decision 30`'s FIFO-overflow/ISR-ring-buffer fix verbatim,
+"~128 bytes completed, ~134 timed out" included. The reviewer read both decisions and confirmed
+**decision 29 has no claim on that section at all**, so this was a header that was simply wrong
+rather than one narrowing from two referents to one — a distinction I asked for precisely because
+the two have different meanings for a reader. The second was
+`` `embarch-study-designer` decisions 24/27 `` on `Hello` losing `steps_crc`: 24 is
+`StudyStart{steps, steps_crc}` and names the field, 27 is `Sample`'s `unit`/`channel_id` and is
+unrelated. **That second one is itself a plural-form citation** — the exact form this leg measured
+as invisible to the chain's census pattern, found here only because the dispatch note told this
+worker to census with `[Dd]ecisions? [0-9]`.
+
+**(b) Nothing was compiled, and the report says so in as many words.** `embarch-dev-bench` has no
+`Cargo.toml` and the worktree has no Zephyr, so the cargo half of the gate selects nothing and
+neither `native_sim` nor the `app/tests/serial_protocol` ztest suite can be built. This **restates**
+the standing `dev-bench/019`/`020`/`022` debt rather than adding to it: a comment-only change is
+untestable in the least dangerous way there is, and 2 changed lines is the smallest this repo has
+ever asked anyone to take on trust.
+
+**(c) THE REVIEWER CONTENT-CHECKED THE CITATIONS THE WORKER LEFT ALONE, AND SEVERAL RESOLVE TO THE
+WRONG REPO.** I asked it to separate form from truth on `main.c`'s bare `decision 36`/`39`, and it
+went further and checked every instance by content. Result: one bare `decision 39` (~line 161,
+`transcript_tap_index`, *"capture is declared, not implicit"*) carries
+**`embarch-study-designer` decision 39's content, not `embarch-dev-bench`'s** own decision 39 (log
+verbosity); and the bare `decisions 31/32` at ~1181 and ~1333 carry `embarch-study-designer`'s
+`GattDiscover`/`GattMonitorAll`, not this repo's own 31/32 (a UUID byte-order bug and a scan-name
+filter). Under `DOC-CONVENTIONS.md` a bare number means the citing repo's own, **so read strictly
+these point at real decisions about entirely different things.** The reviewer correctly declined to
+call it a finding for this unit — `031` touches none of those lines, `tasks/dev-bench/032` already
+names them by location, and whether the doc-prose convention governs C source comments in a sibling
+repo is itself unsettled (`tasks/doc/055`, `tasks/ui/038`, both owner-reserved). **I am recording it
+here anyway, because this is the strongest evidence yet that the bare-citation convention is
+actively producing wrong referents in firmware**, and because it lives in a reviewer's transcript
+and one follow-up task's prose otherwise.
+
+**Merged:** `agent/dev-bench/031-app-src-citation-sweep` (code `3c9294b`, doc `04d6ba8`). Both are
+the revert handles. Gate re-run by me on the merge result: `check-docs.py` **11/11**;
+`check-ownership.py --scope dev-bench` OK on 3 doc paths; `check-client-names.py --repo
+/home/gabriel/Github/embarch/.worktrees/embarch-dev-bench/031-app-src-citation-sweep` clean against
+7 denylist entries; **no `cargo` half — the repo has no `Cargo.toml`, which I confirmed rather than
+assumed.** I read the code diff before merging: two one-line comment edits.
+`changelog.d/dev-bench-app-src-citation-sweep.fixed.md` consumed into `history/dev-bench.md` with
+`--only`; **29 of the owner's own fragments left pending**, untouched. No `status.d/` and no
+`features.d/` fragment.
+
+**Blocked:** nothing. `tasks/dev-bench/031` closed and removed in this fold;
+`tasks/dev-bench/032` filed by the worker in the same branch, naming the 8 remaining files in
+priority order (`ble_bridge_real.c` 49 lines, down to `study_ffi.h` 4).
+
+**Reviewer:** no findings.
+
+**Hardware debts:** **one, carried and not worsened.** `embarch-dev-bench` is toolchain-gated and
+**nothing in this unit was built or run** — the `dev-bench/019`/`020`/`022` debt is restated, and at
+2 changed comment lines this is the smallest addition to it the repo has seen. Everything else
+carried unchanged: `core/015`'s native Windows build (untouched — this is firmware, not
+`embarch-core`), the **dev-bench probe still unplugged** with `tasks/api/059` `open` rather than
+blocked, the owner's `d0cf9a0` parking the bench queue, `fleet-hardware.py --refresh` still crashing
+(`tasks/doc/041`), `umbrella/037` check 13, `umbrella/033`'s check-17 arms, umbrella check 5's
+permission-denied probe, `embarch-ui`'s 18-record stale prefix, and the `embarch-outpost` toolchain.
+**No hardware has been touched anywhere in this leg and I have not read Core live at any point.**
+
+**Budget:** PROCEED — weekly **17.8%** of a 90% cap, resets in ~155h, no 429. Wave **6** suggested;
+the **4-unit leg cap** binds.
+
+**Least sure about:** **whether I should have treated the reviewer's wrong-repo bare citations as a
+blocking finding rather than a log entry.** The chain's own rule says citation *form* is
+owner-reserved, and every one of those lines predates this unit — but "a bare number that resolves
+to a real decision about something else" is not a form problem in the way a missing repo prefix is.
+It is a reader being sent to the wrong document with nothing to warn them. I left it because it is
+genuinely out of `031`'s scope and `032` names it, and because deciding the convention is not mine;
+what I am unsure about is whether recording it in three places nobody dispatches from is any better
+than the two places it was already in.
+
+---
+
 ## 2026-09-16 20:12 — study-designer/055 a comment that described the opposite of what the code does
 
 **Decided:** **two things.**
