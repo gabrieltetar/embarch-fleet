@@ -97,6 +97,94 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 13:51 — study-designer/065 the citation-sweep chain ends clean, and for once the zero was independently re-derived rather than believed
+
+**Decided:** **that the nine-unit citation-sweep chain `study-designer/057`–`065` is finished and no
+successor gets filed.** The worker reached that conclusion from its own fresh whole-repo grep and
+declined to file an `066` out of habit, which is what its dispatch note asked for; the reviewer ran
+an independent grep and agreed. **I am recording it as a decision rather than a worker's report,
+because three separate handoffs have now asked whether this chain is still earning its keep, and
+"nobody filed a successor" is not the same fact as "it is finished."** If a citation-bearing file
+appears in `embarch-study-designer` later, that is new work with a new reason, not this chain
+resuming.
+
+**A completely clean unit: 55 citation instances checked, 0 wrong numbers, 0 false sentences**,
+across `README.md` (35), `.github/workflows/test.yml` (16), `tests/fixtures/gwf1_batch.eap` (3) and
+`tests/fixtures/bds_batch_download.eap` (1). **The code branch carries zero commits** — there was
+nothing to fix in any of the four files — and the worker pushed it anyway so I had it to land, which
+is the right instinct.
+
+**Chain totals, from each unit's own stated numbers: 582 citation instances checked, 21 wrong
+numbers fixed, 7 false sentences fixed** over units 057–065. **Nobody had ever added this up**, and
+two handoffs in a row named that as the reason the chain's value could not be argued either way. It
+is one number now. Read it with `study-designer/052`'s own caveat attached: it is a sum of nine
+self-reported tallies with differing census methods, not a measured defect rate, and it should not
+be extrapolated to another repo's sweep.
+
+**The reviewer is the interesting half of this unit, and it speaks to an open question the last two
+handoffs raised.** The standing doubt is whether *directed* reviewer prompts ("re-derive this
+specific number") buy more than open-ended ones or just manufacture agreement. I gave this one a
+directed prompt built to **disconfirm** rather than confirm — re-derive at least six citations
+independently, prefer the ones the worker's report spent the fewest words on, run your own census,
+run your own whole-repo grep — and said in as many words that a zero is the cheapest result to
+produce by not looking. It came back agreeing, **but with its own numbers rather than the worker's**:
+it recounted `README.md` to 35 by a different decomposition (19 citing table rows worth 33, plus
+line 14, plus line 80) and reached 55 total; it independently confirmed all five decisions in the
+`decisions 58-62` range exist and are about protocol manifests; and its grep found the same 33
+citation-bearing files. It also **initially flagged `.cargo/config.toml` as possibly unswept** and
+withdrew it only after finding `064`'s own resolution covering it at 6/0/0 — a reviewer that was
+going to agree anyway does not do that. That is the closest thing this log has to evidence that a
+directed prompt can still disconfirm, and it is one data point.
+
+**One citation both of them stopped on, and neither called a defect:** `bds_batch_download.eap`'s
+*"which decision 57 made extractable"*, which on a fast read sounds like protocols being inferred
+from firmware source — the exact thing decision 58's never-infer principle forbids. Both read it to
+the end and reached the same correct answer: decision 57 widened the **GATT-extraction** scope, not
+protocol inference, and the fixture's own header disclaims describing real firmware opcodes. **Worth
+keeping because it is the one place in this unit where the honest answer and the alarming answer
+look alike**, and two independent readers landed on the honest one for the same stated reason.
+
+**Merged:** `agent/study-designer/065-citation-sweep-readme-ci-fixtures` (code **none** — the
+`embarch-study-designer` branch carries **zero commits** over `origin/main`, still at `5c3879d`,
+verified by me; doc `5595f7d`). Rebased onto `origin/main` immediately before the merge — **the
+second unit this leg where the branch was based behind my own queue commits** — then `--ff-only`.
+Pre-merge `check-ownership.py --scope study-designer --stdin` OK on 2 paths; post-merge
+`check-docs.py` **11/11**. No `cargo` gate was run on the merge result **because there is no merge
+result to run it on**: `embarch-study-designer`'s `main` did not move. `check-client-names.py`
+likewise skipped for the same reason, and that is a deliberate choice rather than an omission.
+`changelog.d/study-designer-citation-sweep-readme-ci-fixtures.changed.md` consumed into
+`history/study-designer.md`; **29 of the owner's own fragments left pending**, untouched. No
+`status.d/` and no `features.d/` fragment. Reserve unchanged — `embarch-study-designer/spec.md`
+(9,350/10,240) and `open.md` (4,659/5,120) both still parked and both untouched, no new compaction
+task owed.
+
+**Blocked:** nothing.
+
+**Reviewer:** no findings.
+
+Collected before this entry was written; its hand-back was **again misdelivered to the listener**,
+which relayed it — that is now three legs in a row and **both** of this leg's reviewers, so
+`tasks/doc/042` is not intermittent, it is the normal case. Its verdict and its method are summarised
+above.
+
+**Hardware debts:** **none created, and none could be.** Nothing executed, nothing built, no board,
+no probe, no live Core — the code branch is empty and the doc branch is a task file and a changelog
+fragment. Standing debts unchanged and none paid; see the `topology/057` entry below for the full
+list, which this unit did not touch.
+
+**Budget:** PROCEED — weekly **40.9%** of a 90% cap at leg start, resets in ~137h, no 429. Wave
+**6** suggested; the **4-unit leg cap** binds.
+
+**Least sure about:** **the 582 / 21 / 7 chain total, which I am the first to write down and which I
+did not re-derive.** It is a sum of nine units' self-reported numbers, taken from their own reports
+rather than recounted from the diffs, and at least two units in the chain revised an earlier unit's
+census after finding the grep method was wrong — `study-designer/051`'s 57/2/1 correction and
+`dev-bench/032`'s 9% are both in this log. So the sum inherits every census method the chain used,
+including the ones later found faulty. **Treat it as an order of magnitude, not a measurement**, and
+if anyone ever wants the real number it has to come from the nine diffs, not from nine reports.
+
+---
+
 ## 2026-09-17 13:43 — topology/057 the tightest reserve in the suite is paid by a verbatim split, and it is the corpus's first `spec.md` split
 
 **Decided:** **nothing was approved on the owner's behalf — the judgement in this unit was which seam
