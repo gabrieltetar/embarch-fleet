@@ -97,6 +97,106 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 01:00 — umbrella/075 a setup step credited with a verification it never performs
+
+**Decided:** **two things, and the second is the more useful precedent.**
+
+**1. `embarch-umbrella/spec.md`'s Token handling section credited `setup` with two things it does
+not do, and both clauses were false in different ways.** It said *"On a same-machine topology
+`setup` starts Core once so the machine-wide token file exists, then confirms `embarch-api` can
+discover it."*
+
+- **`setup` performs no token discovery at all.** Its token step is a bare `token.exists()` at a
+  path computed by string convention, and the doc comment on the helper that produces that path says
+  so outright: *"This is an existence check only, not token discovery — reading and validating the
+  value is `doctor`'s job."* The only real callers of `token_discovery::resolve_token` are
+  `doctor` checks 4/5 and `status` (decision 46). **So §6 and §5 of the same document disagreed
+  about who verifies the token, and the code sided with §5 — which is what the code comment cites.**
+- **"starts Core once" is false on the primary topology.** Only `local` installs and starts. On
+  **`wsl-host`** — which `spec.md` itself calls today's primary topology, and which *is* a
+  same-machine topology — `setup` prints the elevated Windows command for a human to run and starts
+  nothing, so it can finish with the token file absent, and correctly says "not yet".
+
+The section now names which topologies start Core, says the token step is an existence check at a
+conventional path, and routes verification to `doctor` check 4 / `status`. **The two clauses that
+were true were left word for word**: *"writes no token value into any config file"* and the
+cross-machine export-line sentence. The reviewer diffed both and confirmed it.
+
+**2. This landed as a plain doc correction with no numbered decision, and the worker justified that
+from precedent rather than from preference.** It read three same-shape commits — `44b203a`
+(`umbrella/054`), `5b854be` (`umbrella/055`, titled *"Correct the doc, not the code"*) and
+`4f2c8bc` — and none wrote a decision. **The test it applied is the right one and worth reusing: a
+correction that only restates what the code always did records no choice, so there is no "why" for a
+future reader to need.** Which topologies start Core was already settled by decisions 3/7/28 in
+`install.md`. The reviewer independently checked the same three commits and agreed.
+
+**Every census coordinate held, and the drift is the measurement worth keeping.** The task carried
+line numbers from a census pass and said plainly they were second-hand and that *"the census was
+wrong"* would be a correct outcome. The worker verified each: the sentence, the existence-check
+branch, the helper comment, the three topology arms, `token_path_for` returning `None` for `remote`,
+and a fresh grep for every `Command::new`/`resolve_token` caller. **Shape exact, coordinates off by
+1–2 lines in three places** (`320–332` not `320–333`; `"Installed and started."` at 293 not 291;
+the `wsl-host` arm `272–282` not `271–279`). That is what a second-hand citation costs, and it is
+small enough that the census-then-verify shape is worth repeating.
+
+**Merged:** `agent/umbrella/075-setup-token-discovery-doc` (doc `0752669`). **There is no code SHA,
+and that is the designed outcome, not an omission** — the task's "Not yours" forbade changing what
+`setup` does, the worker's code branch carries **zero commits**, and `src/setup.rs` is untouched.
+The doc branch needed a rebase onto `5ddc1ba`. Gate re-run by me on the merge result: in
+`embarch-umbrella`, `cargo build --all-targets` clean, `cargo test` **225 passed**, `cargo clippy
+--all-targets -- -D warnings` clean — all against an unchanged tree, so they confirm `main` rather
+than the unit; in `embarch-doc`, `check-docs.py` **11/11**, `check-ownership.py --scope umbrella` OK
+on 3 doc paths, `check-client-names.py --repo` clean. `embarch-umbrella/spec.md` went 6,384 →
+**6,911 B** of 10,240 (~67%), nowhere near reserve. `decisions/bind.md` untouched and still the only
+`umbrella` file parked. `changelog.d/umbrella-setup-token-discovery-doc.fixed.md` consumed into
+`history/umbrella.md` with `--only`; **29 of the owner's own fragments left pending**, untouched.
+
+**Blocked:** nothing. `tasks/umbrella/076` is filed and `open` — three more contradictions from the
+same census (check 5's USB scan gated on a winner class rather than on which machine Core is on,
+`open.md`'s check-5 settling protocol naming a code that cannot be reached, and `deploy-core`
+printing failures on stdout where `spec.md` promises stderr). **It is deliberately not dispatched**:
+this leg hit its 4-unit cap.
+
+**Reviewer:** no findings.
+
+**A note on my own conflicts, because it happened twice in this leg and both times for the same
+reason.** Both this unit's and `api/107`'s doc branch conflicted on the task file's `State:` line,
+because I edited both live claim lines *after* dispatch to conform them to `tasks/README.md`'s
+documented format (filed as `tasks/doc/076`). The link fix I made to `umbrella/075`'s own task file
+did **not** conflict — because I deliberately wrote it byte-identical to the fix the worker had
+already made on its branch. **That is the trick worth remembering: if you must touch a file a live
+worker owns, make your edit identical to theirs or expect to resolve it by hand.** And the real
+lesson is the simpler one: write the claim line in its final form before dispatch.
+
+**Hardware debts:** **none created, and none could be** — prose in one `spec.md` and nothing
+executed: no board, no probe, no live Core, no deploy, and **no `setup` run**, which matters here
+because the whole unit is about what `setup` does and it was settled by reading `setup.rs`. **Two
+standing umbrella debts were brushed and neither was paid or worsened:** `umbrella/037`'s check-13
+bench run and `umbrella/033`'s check-17 arms are both still unexercised, and umbrella check 5's
+permission-denied probe still has no Linux-native Core to meet — that last one is the subject of
+`tasks/umbrella/076`'s item 2, which corrects the *written plan* for settling it without settling it.
+Standing debts otherwise unchanged: `tasks/api/059` still `open` — **not `blocked`** — with the
+dev-bench probe unplugged, a **fifteenth** consecutive leg; `fleet-hardware.py --refresh` still
+crashes (`tasks/doc/041`) and its buffer still claims both boards attached, so **do not plan a bench
+unit off it**; the bench queue is still parked by the owner's `d0cf9a0`; `core/015`'s native Windows
+build, `embarch-ui`'s 18-record stale prefix and the `embarch-outpost`/`embarch-dev-bench`
+toolchains are untouched.
+
+**Budget:** PROCEED throughout — weekly **28.0%** of a 90% cap at the leg's top and **29.1%** at its
+last check, resets in ~150h, no 429 anywhere. Wave **6** suggested at every check; **the 4-unit cap
+ended this leg**, though for the first half it was the queue: 2 dispatchable tasks in 2 scopes
+against a wave of 6, which is why I spent the middle of the leg refilling.
+
+**Least sure about:** **whether a task whose coordinates are admittedly second-hand is a good shape
+or a licence to file sloppily.** It worked here — the worker verified everything, found the drift,
+and said so, and the write-up is better for it. But I wrote two such tasks this leg off one
+Explore pass, and the honesty label does real work only if whoever picks the task up actually
+re-derives rather than trusting the confident prose around the line numbers. `tasks/umbrella/076`
+is the test: it carries **three** second-hand findings at once, which is three times the chance that
+one gets waved through on the strength of how sure the task sounds.
+
+---
+
 ## 2026-09-17 00:57 — api/107 a §2 invariant that holds on one of two shipped platforms
 
 **Decided:** **three things, and the first is a real defect in the section of `spec.md` a reader is
