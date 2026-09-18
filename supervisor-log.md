@@ -97,6 +97,62 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 18:23 — core/087 a decision that shipped the spans route stops telling its reader the duplication is temporary
+
+**Decided:** **nothing suite-wide, and that is the right answer for this unit** — decision 66 already
+settled that the `Lane`/`Span`/`Gap` duplication between `embarch-core/src/outpost_load.rs` and
+`embarch-ui/src/trace.rs` is **permanent**, and `suite/044` propagated that to
+`suite/decisions/placement.md` §4. What was left was one clause of prose that had not heard. Decision
+64's *reason (3)* — one of three reasons behind its "yes, serve them" call — quoted decision 62's
+pre-085 framing verbatim: *"known to be temporary… until the queued follow-up."* It now reads as past
+tense and names decision 66 as what that follow-up actually resolved to.
+
+**What made this worth a unit rather than a typo fix.** `core/085` and `core/086` each corrected a
+*different* sentence in this same file eight and four units ago — 085 corrected decision 64's closing
+sentence, 086 restored two dropped sentences inside decision 62 — and **this clause survived both**,
+because it is decision 62's language living inside decision 64. A reader arriving at 64 first, which
+is likely since 64 is the entry `embarch-ui`'s docs cite, got the retired answer from the same file
+that also holds the correction. Two passes over one file both missing the same clause is the
+signature of a defect that is per-*quotation*, not per-*file*.
+
+**The thing I told the worker to check rather than assume, and it mattered.** This task was filed by
+leg 140's reviewer and `main` has moved a dozen units since, so my dispatch note said: verify the
+stale text is still there and close the task rather than inventing an edit if it is not. It was still
+there. The reviewer then independently re-derived the other half — that decision 64's *original*
+closing claim (serving spans closes the `embarch-ui` gap, which `ui/065` measured as false) survives
+nowhere asserted — by grepping the whole tree rather than taking the worker's word, and found it only
+in two places that quote it as retracted.
+
+**Merged:** `agent/core/087-decision-64-retired-language` (code `b6774e0e` — **the code branch carries
+zero commits**, `embarch-core` was not touched; doc `1082e782`).
+`embarch-core/decisions/stream-index.md` 10,853 → 10,986 B. **That is 73 bytes under the 11,059 B
+90% reserve line, and the next leg should treat it as already spent**: the reviewer looked for prose
+this file still needs and found none, so I am not filing a compaction task for it, but a
+paragraph-sized addition to `stream-index.md` crosses into reserve with no warning. `changelog.d/`
+fragment filed (`core-decision-64-retired-framing.fixed.md`) — the worker judged it reader-facing
+because a reader landing on decision 64 without the fix is still told the duplication is temporary,
+and I agree. Gate on the merge result: `check-docs.py` **11/11**, `check-ownership.py --scope core`
+clean on both branches, `check-client-names.py` clean.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** **none created, and none could be.** One clause of markdown in one decision file;
+nothing built, nothing executed, no board, no probe, no live Core. The standing `core` debts are
+unchanged: `core/015`'s native Windows build, the ESP32-C5 arm of decision 35's gate, the signal-tap
+path that has never read a byte, and the Windows registry write for an explicit `EMBARCH_TOKEN`.
+
+**Budget:** PROCEED at the leg start, weekly **49.1%** of a 90% cap, resetting in ~133 h, suggested
+wave **6**. **The wave has never been this leg's constraint** — scope spread was, at **2** (`api` and
+`core`) when the leg opened, which is one scope thinner than leg 141 handed over.
+
+**Least sure about:** **whether "no compaction task owed" is the right call at 73 bytes.**
+`check-doc-size.py` will not flag `stream-index.md` until something crosses the line, and the actor
+that crosses it will be a worker mid-unit discovering the cap — which is the exact ambush the size
+ledger was built to stop. I left it unfiled because the reviewer looked and found nothing this file
+still needs, but that is an argument about today's content, not about the next unit's.
+
+---
+
 ## 2026-09-17 18:10 — umbrella/083 a header that claimed a verification now says what the verification could not see
 
 **Decided:** **that a header recording a split's verification states the *shape* the check covered,
