@@ -97,6 +97,74 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 18:10 — umbrella/083 a header that claimed a verification now says what the verification could not see
+
+**Decided:** **that a header recording a split's verification states the *shape* the check covered,
+not a bare negative result.** `embarch-umbrella/decisions/serial-port.md` said *"No inbound link
+elsewhere in the suite names `projects.md` for decision 55."* That was false when written — a
+citation existed — and by the time this task was filed it had become *accidentally* true, which is
+worse, because it still asserted that a verification found nothing when in fact it had missed
+something. The header now says: a grep for the `[decision N](path)` link shape found nothing, **and
+that grep cannot see the suite's other citation shape**, inline code with a parenthetical. It names
+the one that was missed, and it names `tasks/doc/044` as the still-open general defect —
+*a verbatim split is the move `check-decision-refs.py` structurally cannot see*.
+
+**Decided, second, and it is why this unit was the right last one:** **a doc may cite a retired task
+file, but only as retired and only with the SHA.** This leg ran `api/114` as its first unit and
+retired `tasks/api/114` in that fold, which is where the missed citation lived — so the task's own
+`Done when` box, written before this leg existed, asked the worker to name a file that this leg had
+deleted three hours earlier. I caught that at dispatch and told the worker to read the file at
+`git show ca564376^:...` and cite it as *"since retired in `ca564376`"* rather than as a live path.
+**A header fixing a dangling-pointer defect that itself dangles is the same defect one level up**,
+and it would have landed green: nothing in the gate resolves a path inside prose.
+
+**The claim I thought was wrong and was not.** The new header says the citation *"now names the
+right file by accident rather than by having been checked."* Leg 140 repointed it **deliberately**,
+from a reviewer finding, so I read that as a misdescription and told the reviewer to re-derive it
+rather than confirm it. It came back defending the sentence, and the defence is right: *accident* is
+relative to **this split's own verification**, which never caught this citation shape, not to whether
+any human later fixed it — and the clause immediately before it names the deliberate repoint
+explicitly. **I record this because the reviewer disagreeing with the supervisor and winning is the
+outcome that makes directed prompts worth their cost**, and the handoff has been carrying an open
+question about whether directed prompts just manufacture agreement.
+
+**Merged:** `agent/umbrella/083-serial-port-header-verification` (code `2764e89` — **the code branch
+carries zero commits**, `embarch-umbrella` was not touched, doc `fb9a5487`).
+`embarch-umbrella/decisions/serial-port.md` 2,277 → 3,330 B (27% of its 12,288 B cap — no size
+pressure anywhere near it). **No `changelog.d/` fragment**, the worker's call and I agree: the
+correction is confined to the header it fixes and changes nothing a reader of `history/umbrella.md`
+acts on. Gate on the merge result: `check-docs.py` **11/11**, `check-doc-size.py` clean,
+`check-ownership.py --scope umbrella` clean on both branches, `check-client-names.py` clean. The
+worker had to fix its own `State:` line mid-run — it wrote `done, 2026-09-17` and
+`check-task-state.py` reads `split()[0]`, so the trailing comma made it unparseable; it found and
+fixed that itself rather than reporting green over it.
+
+**Blocked:** nothing. **All four units of this leg landed.**
+**Reviewer:** no findings.
+**Hardware debts:** **none created, and none could be.** One paragraph of markdown in one decision
+file's header; nothing built, nothing executed, no board, no probe, no live Core. The standing
+`umbrella` debts are unchanged and all still need the owner's hands: check 13's three codes on a real
+bench, check 17's two Fail arms against a real narrow-bound Core, check 5's not-permitted probe path
+(which this bench structurally cannot exercise — Core is on Windows, so the scan is skipped), and
+`apply_plan`'s sticky-host transition on a real machine.
+
+**Budget:** PROCEED at both ends; weekly **47.7% → 48.9%** of a 90% cap over the whole leg, resetting
+in ~133 h, suggested wave **6** throughout. **The wave was never the constraint and the 4-unit cap
+was not either** — scope spread was, at **3**: `api`, `core` and `umbrella` are the only scopes with
+dispatchable work, and one-task-per-sub-project is per slot.
+
+**Least sure about:** **whether this leg's refill decision was right.** `queue-status.py --refill-owed`
+fired on scope spread, I swept `inbox/` (empty), every `open.md` via
+`collect-open-questions.py`, and `suite/roadmap.md`'s Next, and I filed **nothing** into the five
+thin scopes — because everything left in `ui`, `topology`, `study-designer`, `outpost` and
+`dev-bench` is hardware-, toolchain- or owner-gated, exactly as leg 140's handoff said. That is the
+same conclusion three legs running, which is either the truth or a groove.
+`tasks/doc/081` names this shape precisely — *"the refill gate's scope-spread half fires forever on
+a queue whose thin scopes have converged"* — and it is owner-reserved, so the honest report is that I
+paid the sweep's cost, believed the previous leg, and cannot tell you which of those two I did.
+
+---
+
 ## 2026-09-17 18:09 — core/078 `/status` gets a content identity, decided and deliberately not built, and a blocked size debt was paid on the way
 
 **Decided:** **`/status` should carry a self-hash of the running binary, and neither a baked-in git
