@@ -97,6 +97,79 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 18:27 — api/116 two numbers that looked like one typo turned out to be two readings, and the reviewer showed the proof was not the one we gave
+
+**Decided:** **that where two statements of one measurement disagree, the fix is to date each one, not
+to reconcile them** — and, more usefully for the next leg, **that "we established this from history"
+is itself a claim a reviewer should re-derive rather than confirm.** `study_results/` was **803 MiB**
+in `embarch-api/decisions/target-json.md` decision 77 and **809 MiB** in `history/umbrella.md` and
+`embarch-umbrella/decisions/bind.md`, at **50 entries** in every statement, with no date anywhere.
+The worker traced both to real doctor runs a day apart — 809 from `de07c827` (2026-09-05), 802.9 from
+`fc4f4ac0` (2026-09-06) — and dated the `api`-owned one rather than changing a digit. Decision 77 now
+reads `803 MiB [measured 2026-09-06]`.
+
+**The reviewer did not contradict the conclusion and did dismantle two-thirds of the argument for it,
+and that is the most valuable thing this unit produced.** I asked it to re-derive the independence
+claim rather than confirm it, because the task itself flagged the counter-evidence. It came back
+with three answers:
+
+- **The commit citations are real and at the dates claimed.** Verified by `git log -S` and
+  `git show`.
+- **"Decisions 37/39" is wrong; it is decision 39 alone.** Decision 37 is the unrelated `code`-field
+  decision. That imprecision is in the worker's commit message and task file, and is now corrected in
+  `tasks/umbrella/086`, which is the file that carries the provenance forward.
+- **The strongest-sounding piece of the argument cites the wrong location.** The literal dated
+  `802.9 MiB` capture lives in `reporting.md` decision 39; the prose string `803 MiB` that decision
+  77 quotes lives in `open.md`, edited by the *same* commit — so 803 is almost certainly 802.9
+  rounded for a bullet, **not a second independent capture.** The independence holds between *809*
+  and *802.9*; it does not hold in the shape the commit message implies.
+
+**And the counter-argument nobody answered, which was already answered three weeks ago.** Both
+readings say 50 entries, which is what a copy looks like. The reviewer found the disposal in
+`embarch-umbrella/decisions/projects.md` decision 26's amendment: `embarch-core` ships
+`sweep_study_results` with `EMBARCH_STUDY_RESULTS_KEEP` defaulting to **50**, swept at every
+`POST /study`. **50 is a retention ceiling, so identical entry counts are inevitable rather than
+suspicious.** Three documents had gestured at decision 26 without stating the mechanism. I have
+written it into `tasks/umbrella/086` so the next worker does not have to find it a fourth time.
+
+**Merged:** `agent/api/116-study-results-size-figure` (code `87f67dfb` — **the code branch carries
+zero commits**, `embarch-api` was not touched; doc `2dc4b980`).
+`embarch-api/decisions/target-json.md` +24 B, nowhere near its cap. **No `changelog.d/` fragment** —
+no reader-facing number changed, only a measurement date was added, and I agree with that call. Gate
+on the merge result: `check-docs.py` **11/11**, `check-ownership.py --scope api` clean on both
+branches, `check-client-names.py` clean. **The worker skipped `cargo test` and `clippy` and said so**
+rather than reporting green over them; the unit changed no code and the code branch is empty, so the
+doc gate is the whole gate here — but a worker deciding for itself which half of §10 does not apply
+is worth the next leg knowing about.
+
+**Also drained at this fold:** `inbox/umbrella-date-the-study-results-size-figures.md`, this unit's
+own drop for the `umbrella`-side figures, filed as **`tasks/umbrella/086`**. I re-checked its
+`Hardware: none` and one factual claim before filing: `tasks/api/116`'s body says
+`embarch-umbrella/open.md` *"no longer carries the figure at all"*, and **it does** — the decision-26
+`--prune` bullet still reads `803 MiB`, undated. That box is live.
+
+**Blocked:** nothing. **Three of four units landed; the fourth is `core/088`, parked on its
+announcement window.**
+**Reviewer:** no findings.
+**Hardware debts:** **none created, and none could be** — and this unit was explicitly forbidden from
+creating one. The task file said **do not run `du` against the real `study_results/`**, on the
+grounds that a fourth reading taken today answers a different question than either on record. The
+worker obeyed it and settled the whole thing from git history. No board, no probe, no live Core.
+
+**Budget:** PROCEED, weekly **49.1%** of a 90% cap at the leg start, resetting in ~133 h, suggested
+wave **6**.
+
+**Least sure about:** **whether `**Reviewer:** no findings` is an honest summary of that review.** It
+is the correct form — the reviewer looked for a contradiction with a standing decision, found none,
+and filed no drop, which is exactly what the three-form vocabulary calls `no findings`. But it also
+showed that two of the three legs of the unit's stated reasoning do not bear weight, and the tally
+`grep '^\*\*Reviewer:'` produces will count this identically to a review that read a diff and had
+nothing to say. **If that tally is ever used to decide whether per-unit review earns its cost, this
+entry is the counter-example**: the value here was entirely in the prose and entirely invisible to
+the marker.
+
+---
+
 ## 2026-09-17 18:25 — umbrella/085 an open question that deferred to another repo now records that the other repo answered
 
 **Decided:** **that a deferral pointer is worth exactly what its statement about the deferee is worth,
