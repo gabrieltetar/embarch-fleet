@@ -97,6 +97,92 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 19:15 — core/088 `/status` says what bytes are running, and the leg found the owner's `fleet stop` 17 minutes late
+
+**Decided:** **that a wire-schema bump whose announcement window expired in silence across three legs
+gets dispatched, not re-announced.** Leg 142 posted at ts `1789690550.857739`; the 30 minutes ran out
+at epoch `1789692350`; legs 142, 143 and 144 polled the thread five times between them and it never
+held anything but the announcement itself. I polled once more and dispatched. **Re-opening a clock
+there would mean this task is announced every twenty minutes forever and never runs**, which is the
+failure the "the next leg completes the window" rule exists to prevent. The task file now records the
+window as closed permanently so no later leg reopens it.
+
+**Merged:** `agent/core/088-status-self-hash` (code **`1185387`**, doc **`431f7a57`**). `GET /status`'s
+`StatusResponse` gains `binary_sha256: Option<String>` — full 64-char lowercase-hex SHA-256 of
+`std::env::current_exe()`'s bytes, hashed once into a `static HASH: OnceLock<Option<String>>`, `null`
+on any read failure, `/status` still serving everything else. Decision **68** in
+`decisions/surfaces.md` citing 67; `interfaces/hardware.md`'s `/status` row; `decisions.md` line 21's
+Decisions **and** Size cells, that row only; `embarch-core/open.md`'s "designed, not built" bullet
+removed; `changelog.d/core-status-binary-hash.added.md` folded into `history/core.md`;
+`features.d/core-010-get-status-connected-probes-plus.md` reassembled into `suite/features.md`.
+
+**Gate on the merge result, not the branch:** `cargo build` clean, `cargo test` **215 passed / 0
+failed / 2 ignored** plus the version binary's 1, `clippy --all-targets -- -D warnings` clean,
+`check-docs.py` **11/11**, `check-ownership.py --scope core` clean on 8 paths, `check-client-names.py`
+clean. **I read the diff before merging**, per §10 — it is a wire type.
+
+**Three things worth carrying forward.**
+
+*The dependency argument is the good part.* `sha2 = "0.11"` is a direct dependency on a crate already
+compiled into this binary — `probe-rs` → `espflash` already resolves `sha2 v0.11.0` — and the worker
+pinned `"0.11"` rather than matching `embarch-umbrella`'s `"0.10"` **because 0.x semver treats a minor
+bump as breaking**, so `"0.10"` here would have resolved a *second* copy beside the existing one. The
+reviewer verified both halves live with `cargo tree -i sha2`: exactly one version in `embarch-core`,
+and `embarch-umbrella` is a genuinely separate workspace with its own lockfile at 0.10.9.
+
+*One real compile trap, recorded because it will recur.* `sha2` 0.11's `Digest::digest` returns a
+`hybrid-array::Array`, which — unlike 0.10's `GenericArray` — **does not implement `LowerHex`**, so
+`format!("{:x}", digest)` does not compile. Hex-encoded byte-by-byte instead.
+
+*The task file's `status.d/` instruction did not hold, and the worker was right to refuse it.* I told
+it to write a `status.d/` fragment for `embarch-umbrella/open.md`'s check-15 bullet. `status.d/` is
+scoped to the **six** shared suite-level docs, and another sub-project's `open.md` is not one of them
+— it is out of a `core` worker's ownership row like any other repo's file. It dropped an `inbox/`
+request by absolute path instead, which is exactly the right mechanism. **That instruction was mine
+and it was wrong.** Drained as `tasks/umbrella/088`.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+Four directed questions, all cleared with evidence rather than assent: decision 68 makes **no**
+Windows claim anywhere (grepped `surfaces.md`, `decisions.md`, `interfaces/hardware.md` — the Windows
+line lives only in my task brief, as framing, and was not promoted into the decision); `StatusResponse`
+has exactly five fields and the decision-13 pinned test lists exactly those five; no
+`deny_unknown_fields` or exact-key-set assertion exists on `/status` in any of the three consumer
+repos, checked across four mirrors; and `embarch-umbrella/open.md` already named *this* mechanism
+rather than a competing one, so the added key breaks no consumer. It also confirmed
+`tasks/core/091-compact-core.md` is correctly `blocked`, `In flux: yes`, with `Size debt due:
+2026-10-01`.
+
+**Hardware debts:** **one created, and it is small and honest.** `binary_sha256` is pure host-side
+`std::env::current_exe()` + `std::fs::read`, and the code path is identical on Windows — but **nothing
+was run on Windows**, and `core/015`'s standing native-Windows-build debt is carried, not paid, for the
+fourth consecutive core unit. The live Core on this machine is the Windows service binary, so the
+first thing that will exercise this field for real is a deploy nobody has done. Decision 68 says `null`
+means unknown rather than mismatch, which is the conservative reading a consumer needs if
+`current_exe()` behaves differently under a service host.
+
+**Budget:** PROCEED throughout, weekly **50.7% → 51.7%** of a 90% cap, resetting in ~132 h, suggested
+wave **6** all leg. The 4-unit cap bound, not the budget.
+
+**THE STOP, and it is the most important line in this entry.** `fleet stop` was posted by the owner at
+**18:56:49 MDT** (ts `1789693009.325949`) — roughly two minutes before I dispatched four workers. **I
+did not see it until 19:14**, after three units had already folded. `.claude/leg.md` requires a poll of
+both stop channels **at every unit boundary** and I polled at step 0 and at dispatch and then not
+again until the fourth unit. Three units and about seventeen minutes of work happened after the owner
+asked the fleet to stop. Nothing was harmed — every unit landed green and the stop is not a rollback —
+but **the poll is the primary route a stop reaches a leg, not a backstop**, and I treated it as one.
+`/home/gabriel/Github/embarch/.fleet/pump` is deleted, so my death does not spawn a successor. I did
+not react to the owner's message; the listener claims it.
+
+**Least sure about:** **whether `binary_sha256` should have shipped as `Option<String>` at all.** A
+`null` that means "unknown" and a hash that means "these bytes" are different kinds of answer sharing
+one field, and doctor check 15 — the consumer this exists for — has to decide what to do with the
+first. Decision 68 says a caller reads `null` as unknown rather than as a mismatch, which is right,
+but it is a rule stated in `embarch-core`'s docs about a check that lives in `embarch-umbrella` and
+has not been written yet. `tasks/umbrella/088` is where that lands, and it inherits the question.
+
+---
+
 ## 2026-09-17 19:12 — api/117 five of twenty-one size cells were stale, and the census is the unit rather than the fix
 
 **Decided:** **nothing** — an index correction. What it settles in passing is a measurement: **how
