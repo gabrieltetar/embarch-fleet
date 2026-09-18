@@ -97,6 +97,82 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 18:01 — umbrella/082 decision 26's `--prune` prerequisite is half closed, and its own bullet was naming a thing that does not exist
+
+**Decided:** **that `--prune` is still not buildable, and that saying so is the correction — not
+"the prerequisite is closed".** The drop this task came from was written by `api/109`'s worker at the
+moment it shipped `build_dir_name`, and read from the far side as though the last blocker had gone.
+It has not: what shipped names only the **default** snippet/extra-args combination, so a directory
+built with a non-default combo still gets no name from `list-targets` and needs
+`embarch-api` decision 69's `target.json` to be attributable at all. **`--prune` deletes things**, so
+the difference between attributing every directory and attributing the default one is the entire
+safety argument, not a detail. I dispatched this unit with that question posed rather than answered,
+and both the worker and the reviewer re-derived the same answer from `embarch-api@87f67df`'s own
+`src/resolve.rs` — `resolve_snippets` is called against `project.default_snippets` only, never a
+call-time override, and returns `null` when the default snippet is unavailable, with three tests
+pinning exactly that.
+
+**Decided, second:** **that the old bullet was factually wrong and not merely stale**, so the fix
+corrects the claim rather than its status. It said `embarch-api`'s *study listing* lacked
+`build_dir_name`; `embarch-api` has no multi-study listing at all — only the per-study
+`list_study_streams` — and decision 26's actual ask was `list-targets`, the target menu. A status
+flip would have left a sentence pointing at a surface that does not exist.
+
+**Decided, third and smaller:** **that the `study_results/` 803 MiB figure comes out of this
+bullet.** It was doing rhetorical work it could not support — it argues that the sweep bounds the
+count and not the size, which is a real gap, but it is not evidence about `build_dir_name`, and its
+presence made the bullet read as one argument when it is two. The reviewer confirmed the figure
+survives independently in `history/umbrella.md` and `embarch-umbrella/decisions/bind.md`, so nothing
+was lost by removing it here.
+
+**Merged:** `agent/umbrella/082-prune-prerequisite-closed` (code `2764e89` — **the code branch
+carries zero commits**, `embarch-umbrella` was not touched, doc `f61b43ff`).
+`embarch-umbrella/open.md` and `embarch-umbrella/decisions/projects.md` decision 26 amended in
+place — **not a new decision and not a renumber**, which is what keeps
+`embarch-api/decisions/target-json.md`'s two path links to `projects.md` resolving. `projects.md`
+10,950 → **11,163/12,288 B (90.8%)**, which crosses into reserve: the worker filed
+`tasks/umbrella/084-compact-docs.md` in the same commit, `blocked` on `In flux: yes` with a
+**Size debt due: 2026-10-17**, which is the rule working as intended rather than an exception.
+`changelog.d/umbrella-prune-prerequisite-closed.changed.md` consumed into `history/umbrella.md`;
+**29 of the owner's own fragments left pending**, untouched, via `--only`. Gate on the merge result:
+`check-docs.py` **11/11**, `check-doc-size.py` clean, `check-ownership.py --scope umbrella` clean on
+both branches, `check-client-names.py` clean.
+
+**I rebased and force-pushed this branch before merging, deliberately, and this leg is evidence
+about `tasks/doc/080`.** `main` had moved under it by one fold, so `--ff-only` refused. `doc/080`
+records that leg 139 rebased and force-pushed all three of its units and two branches still went
+unpruned, and proposes that the real cause is ordering — `fold-commit.py` evaluates the prune against
+`origin/main` **as it stands at fold time**, while the supervisor pushes `main` only *after* the fold
+commit. **This leg's first fold is a direct confirmation of that hypothesis:** `api/114`'s fold
+pruned three branches, and one of them was `agent/ui/067-decision-27-split-permanent` — **leg 140's
+branch, left behind by leg 140's own fold and collected a fold later by mine.** So the prune is not
+broken, it is one fold behind, and a leg's *last* unit is the one whose branch is structurally
+guaranteed to be orphaned. That is a much smaller defect than "a rebased branch can never be
+pruned", and it predicts which branches go stale. **I deleted nothing by hand.**
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** **none created, and none could be.** Two markdown files edited, one task file
+filed; nothing built, no board, no probe, no live Core. The unit did read `embarch-api`'s shipped
+source to check a claim, which is reading, not running. The standing `umbrella` debts — check 13's
+three codes on a real bench, check 17's two Fail arms against a real narrow-bound Core, check 5's
+not-permitted probe path, `apply_plan`'s sticky-host transition on a real machine — are all
+unchanged and all still need the owner's hands.
+
+**Budget:** PROCEED throughout, weekly **47.7%** of a 90% cap, suggested wave **6**; the binding
+constraint stayed scope spread at **3**, not the budget.
+
+**Least sure about:** an **803 vs 809 MiB** discrepancy the reviewer surfaced and correctly ruled out
+of this unit's scope. The same `study_results/` measurement, same 50-entry count, appears as 803 MiB
+in `embarch-api/decisions/target-json.md` decision 77 and as 809 MiB in `history/umbrella.md` and
+`embarch-umbrella/decisions/bind.md`. It is **probably** two honest readings taken days apart — the
+directory grows — and it is **possibly** one transcription error propagated. Neither is established,
+and an unlabelled number is exactly the class of claim this suite treats as load-bearing. I filed it
+as `tasks/api/116` rather than resolving it from here, because resolving it means deciding which
+reading is which and I have no basis for that judgement.
+
+---
+
 ## 2026-09-17 17:56 — api/114 the `serial_port` referral is closed against umbrella decision 55
 
 **Decided:** **that a question another repo has settled leaves `open.md`'s "Known wrong /
