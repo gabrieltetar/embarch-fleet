@@ -97,6 +97,87 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 18:36 — umbrella/086 the other half of the 803-vs-809 figure gets its dates, and a claim line of mine was offering a live task up for reclaim
+
+**Decided:** **nothing new — this unit deliberately decided nothing, and that was the instruction.**
+`api/116`'s reviewer had just handed the fleet the mechanism that actually settles the 50-entry
+objection (`embarch-core`'s `sweep_study_results`, `EMBARCH_STUDY_RESULTS_KEEP` defaulting to **50**,
+swept at every `POST /study`, so identical entry counts are a retention ceiling rather than a
+coincidence), and the tempting move was to write that into the prose being edited. **I told the
+worker not to**, and it agreed: all three candidate files are in the size reserve —
+`decisions/bind.md` **93.9%**, `decisions/projects.md` **90.8%**, `open.md` **85.0%** — and
+`decisions/projects.md` decision 26 already contains the mechanism in full. Restating a decision in
+three files that have no room for it is the failure `DOC-PROTOCOL.md` exists to prevent, and the
+mechanism is recorded here and in the task file instead.
+
+**Merged:** `agent/umbrella/086-date-study-results-readings` (code `2764e896` — **the code branch
+carries zero commits**, `embarch-umbrella` was not touched; doc `093c3289`).
+`decisions/bind.md` decision 22's `809 MiB` gains `[measured 2026-09-05]` (11,533 → 11,555 B,
+93.9% → **94.0%**); `open.md`'s decision-26 `--prune` bullet's `803 MiB` gains `[measured
+2026-09-06]` (4,350 → 4,372 B, 85.0% → **85.4%**). **+44 bytes, the whole unit.**
+`decisions/reporting.md` decision 39 and `history/umbrella.md` untouched, as instructed. **No new
+compaction task** — both files were already in reserve and already filed against blocked
+`umbrella/009` and `umbrella/077`, so a fresh one would be a duplicate. **No `changelog.d/`
+fragment**: provenance dates, not a reader-facing number change. Gate on the merge result:
+`check-docs.py` **11/11**, `check-ownership.py --scope umbrella` clean on both branches,
+`check-client-names.py` clean. I also spot-checked both stamps by grep before folding — **809 carries
+the 5th and 803 carries the 6th**, which is the one way this unit could have been worse than doing
+nothing.
+
+**The defect this unit exposed, and it is the most important thing in this entry.** I wrote **all
+four** of this leg's claim lines in a shape `tasks/README.md` does not document —
+`claimed <date> leg N unit M — ` plus the branch in backticks, instead of
+`claimed by agent/<scope>/<NNN-slug>, <yyyy-mm-dd HH:MM>`. **`check-task-state.py` passed every
+time** (it reads `raw.split()[0]` and `claimed` is token zero, which is deliberate), so
+`check-docs.py` was **11/11** across four separate claim commits — while **`queue-status.py` was
+reporting the task as `recoverable`, "claim line carries no parseable timestamp; branch None", with
+its worker still running.** `recoverable` is what step-0 recovery reclaims to `open`. **For about
+four minutes a live worker's task was advertised to any successor leg as free to re-dispatch**, and
+the three earlier claims were in that state for their workers' entire runs. I found it only because
+I happened to run `queue-status.py` for an unrelated reason. Fixed the live one in `007cd7ae`,
+messaged the worker to rebase, and filed **`tasks/doc/084`** (`Owner: required` — the fix is in
+`scripts/`, which is not mine) recommending the checker move rather than the reader widen.
+
+**And a race I created landing it, which cost nothing but could have.** The worker pushed, then
+rebased and pushed **again** while I was rebasing its branch myself; I force-pushed over its second
+push. I checked the trees before merging rather than after: the SHA its hand-back named
+(`1d387a6e`) was an *intermediate* commit without its own `done` edits, and my `093c3289` was the
+strictly newer one. **Nothing was lost, and I only know that because I looked.** `.claude/leg.md`
+records leg 012 losing a push to exactly this shape.
+
+**Blocked:** nothing. **All four units of this leg landed.**
+**Reviewer:** no findings.
+**A second process mistake of mine, which the reviewer caught and which the next leg should not
+repeat.** I deleted this unit's worktrees **before** spawning its reviewer, so the code-repo path in
+the spawn prompt did not exist and the reviewer could not confirm from `embarch-umbrella`'s own
+worktree that the code side was untouched. It said so plainly rather than labelling it clean — the
+right call — but that is a reviewer working with less than it was promised. **Delete a unit's
+worktrees after its reviewer reports, not after its merge.** `.claude/leg.md` says to delete them
+"once its branches have landed", and for the three earlier units of this leg that happened to be
+harmless because I deleted them after their reviews; here I did it in the wrong order.
+**Hardware debts:** **none created, and none could be.** Two date stamps in two markdown files, 44
+bytes; nothing built, nothing executed, no board, no probe, no live Core. **And one that could not be
+created on purpose**: the parent task `api/116` forbade running `du` against the real
+`study_results/`, on the grounds that a fourth reading answers a different question than either on
+record — so this whole thread was settled from git history without touching the machine. The standing
+`umbrella` debts are unchanged and all still need the owner's hands: check 13's three codes on a real
+bench, check 17's two Fail arms against a real narrow-bound Core, check 5's not-permitted probe path,
+and `apply_plan`'s sticky-host transition on a real machine.
+
+**Budget:** PROCEED throughout; weekly **49.1% → 49.8%** of a 90% cap over the whole leg, resetting
+in ~132 h, suggested wave **6** at every check. **The wave was never the constraint and neither was
+the 4-unit cap** — scope spread was, at **2** when the leg opened and **2** again as it closes.
+
+**Least sure about:** **whether `tasks/doc/084` picks the right side.** I recommended tightening
+`check-task-state.py` so a malformed claim fails at the claim commit, rather than widening
+`queue-status.py` to accept what legs actually write — on the argument that making two scripts agree
+by lowering the standard is not agreement. But the counter-argument is real and I did not resolve it:
+the documented shape has no obvious place for *which leg and which unit* made the claim, which is why
+I drifted off it in the first place, and a checker that forbids that context may just get worked
+around the same way next time.
+
+---
+
 ## 2026-09-17 18:27 — api/116 two numbers that looked like one typo turned out to be two readings, and the reviewer showed the proof was not the one we gave
 
 **Decided:** **that where two statements of one measurement disagree, the fix is to date each one, not
