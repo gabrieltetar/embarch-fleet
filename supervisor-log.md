@@ -97,6 +97,74 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 18:25 — umbrella/085 an open question that deferred to another repo now records that the other repo answered
+
+**Decided:** **that a deferral pointer is worth exactly what its statement about the deferee is worth,
+and is therefore a thing that goes stale like any other claim.** `embarch-umbrella/open.md`'s doctor
+check-15 bullet ended *"A content hash on `/status` would close it, `embarch-core`'s call."* The call
+was made on 2026-09-17 — `embarch-core` decision 67, by leg 141's `core/078` — and the bullet did not
+know. It now reads *"— `embarch-core` decided yes, not yet built (`embarch-core` decision 67), tracked
+as `tasks/core/088`."*
+
+**This is the second time the same sentence has cost something, which is why I filed it.** Leg 141's
+own entry records that this question *"had been parked in the wrong repo's `open.md` since
+`embarch-umbrella` decision 34"*, that `embarch-umbrella` correctly said it was `embarch-core`'s call,
+and that **nothing was ever filed in `embarch-core`** — so the sentence was *true and unactioned for
+as long as it existed*, until a leg went looking. Left alone, the fixed version of that failure would
+have produced the identical reading a second time: a reader arrives, sees an unowned call, and
+re-derives a decision already written down.
+
+**Where it came from, and the thing that makes me uneasy about it.** **I filed this task myself**,
+off this leg's refill sweep — `queue-status.py --refill-owed` fired on scope spread (2 scopes against
+a wave of 6), I ran `collect-open-questions.py`, and found it by reading `embarch-umbrella/open.md`
+against `embarch-core/open.md` in the same output. It was not a worker report and not a reviewer
+finding. **That is the "is supervisor-filed refill actually refill, or scope creep" question this log
+has carried unresolved for days**, and this is one more instance of it with no more resolution than
+the others. What I did about it: I told the reviewer explicitly that I wrote both the task and its
+wording constraints, so the task file is not independent evidence the framing was right, and asked it
+to read the result against decisions 67 and 34 directly. It did, and found the clause claims exactly
+decision 67's own scope — decision 67's text says in as many words that *"field name, shape, and
+whether the hash is truncated are the implementation task's to decide"*, and the new clause asserts
+none of them.
+
+**Merged:** `agent/umbrella/085-check-15-hash-call-made` (code `2764e896` — **the code branch carries
+zero commits**, `embarch-umbrella` was not touched; doc `43873deb`). `embarch-umbrella/open.md`
+4,269 → 4,350 B (83.4% → **85.0%** of its 5,120 B cap) — **not** in reserve, and the file's blocked
+compaction task `tasks/umbrella/077` is unaffected. That task's `Must not delete:` list names this
+bullet's first sentence explicitly; it survives byte-identical, which the reviewer confirmed from the
+diff rather than from the worker's report. **No `changelog.d/` fragment**, by the task's own
+instruction and the worker's agreement: an open question's pointer is not shipped behaviour. Gate on
+the merge result: `check-docs.py` **11/11**, `check-ownership.py --scope umbrella` clean on both
+branches, `check-client-names.py` clean.
+
+**One defect of my own, and it landed on `main` for about ninety seconds.** My task file quoted the
+check-15 bullet **verbatim**, including its `[decision 34](decisions/schema-skew.md)` link — which is
+relative to `embarch-umbrella/` and not to `tasks/umbrella/`, so `check-links.py` went red on `main`
+immediately after I pushed the claim. I caught it on a baseline gate run, fixed it in `d5dcdab6`, and
+**messaged the worker mid-run** because it had already branched from the broken commit; it rebased
+and gated clean. **The lesson is narrow and worth the next leg's attention: quoting a doc verbatim
+into a task file imports that doc's link depth**, and the only thing that caught it was running the
+gate for an unrelated reason.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** **none created, and none could be.** One clause of markdown in one `open.md`;
+nothing built, nothing executed, no board, no probe, no live Core. The standing `umbrella` debts are
+unchanged and all still need the owner's hands: check 13's three codes on a real bench, check 17's two
+Fail arms against a real narrow-bound Core, check 5's not-permitted probe path, and `apply_plan`'s
+sticky-host transition on a real machine.
+
+**Budget:** PROCEED, weekly **49.1%** of a 90% cap at the leg start, resetting in ~133 h, suggested
+wave **6**. This unit is the one that took scope spread from 2 back to 3.
+
+**Least sure about:** **whether filing this was refill or invention.** The defect is real and the
+reviewer confirmed the fix is right — but I found it, I filed it, I wrote its constraints, and I
+gated it, and no independent actor ever said this was worth a unit. The honest version is that the
+sweep was owed, the sweep found this, and the alternative was a leg that ran two `core` tasks in
+series instead.
+
+---
+
 ## 2026-09-17 18:23 — core/087 a decision that shipped the spans route stops telling its reader the duplication is temporary
 
 **Decided:** **nothing suite-wide, and that is the right answer for this unit** — decision 66 already
