@@ -135,7 +135,21 @@ result: `check-docs.py` **11/11**, `check-ownership.py --scope core` clean on 3 
 gate half that does not apply.
 
 **Blocked:** nothing.
-**Reviewer:** skipped (spawned at the merge with both absolute worktree paths, but the leg was ended by an enforced hand-back before it reported).
+**Reviewer:** 1 finding — inbox/core-decision-36-erase-test-coverage-overclaim.md
+**This line was corrected after the fold commit, and the next leg should know why.** The fold was
+forced early by an enforced hand-back with the reviewer still running, so the entry landed in
+`dc51786a`/`cc0fc7e` reading `skipped (… ended before it reported)`. The reviewer then reported
+~40 seconds later with a real finding, and I rewrote the line rather than leave a false one standing.
+**The finding is worth the next leg's first look**, because it is the same overclaim this unit was
+filed to fix, one level down: decision 36's new paragraph says
+`no_backend_maps_erase_to_a_full_chip_erase` asserts **both** the `nrfutil` `--options` string and the
+`jlink` script text. It asserts only the jlink half — the `nrfutil`
+`chip_erase_mode=ERASE_RANGES_TOUCHED_BY_FIRMWARE` string is built inline on a `Command` in `run()`
+(`flash_backend.rs:392-396`), no function returns it, and a repo-wide grep finds it at those two call
+sites and in no test. The source fact is still true by inspection; the claimed *test-enforced*
+guarantee for the nrfutil arm is not. The reviewer explicitly cleared the two things I asked it to
+check hardest — no contradiction with decision 32 or 49, and `interfaces/hardware.md`'s `/flash`
+citation of 36 is genuinely supported now. **The drop is in `inbox/` and nothing else records it.**
 **Hardware debts:** **none created, and none could be.** One paragraph of markdown in one decisions
 file; nothing built, nothing flashed, no board, no probe, no live Core. The task forbade touching
 erase behaviour and the worker did not.
