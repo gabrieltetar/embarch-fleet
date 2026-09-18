@@ -97,6 +97,61 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 19:10 — umbrella/087 a decision said a check had never run, three files from a dated bench run where it passed
+
+**Decided:** **that a decision may state a fact it reached by deduction, provided the deduction is
+written into the sentence rather than behind it.** `decisions/locate-api.md` claimed *"Neither check
+8 nor check 11 has run inside a live `doctor` yet"*. `decisions/budgets.md` decision 44 records, dated
+2026-09-07, `embarch doctor` on the `wsl-host` bench printing check **11** as PASS. The fix therefore
+had to assert something nobody measured directly — that check **8** ran too — and this suite's
+measured-vs-stated rule is exactly what makes that dangerous. The answer taken here: the corrected
+sentence carries its own derivation inline (*"`doctor` runs its full chain in one pass, so check 11's
+recorded verdict there means check 8 ran too"*), and claims only that check 8 **ran**, never a verdict
+for it. `interfaces/doctor-chain.md`'s own convention already says prose alone means reasoned rather
+than observed, so this is that convention applied rather than an exception to it.
+
+**Merged:** `agent/umbrella/087-open-md-pointers` (code `2764e89` — **the code branch carries zero
+commits**, `embarch-umbrella` source was not touched; doc `0b5ab9f8`). Three decision files:
+`locate-api.md`'s false claim corrected (4,579 → 4,668 B, **+89**); `budgets.md` decision 45's
+dangling pointer to a vanished `open.md` debt rewritten to stand alone (7,845 → 7,829 B, **−16**);
+`projects.md` decision 41's *"`open.md`'s undecided half"* parenthetical removed (11,163 → 11,116 B,
+**−47**). `changelog.d/umbrella-locate-api-checks-8-11-live.fixed.md` folded into `history/umbrella.md`.
+**`projects.md` ends smaller, which was the instruction** — it sits at 90.8% of its cap against a
+blocked `umbrella/084`, and a unit that fixes prose in a full file has to leave it no fuller. No new
+compaction task: all four near-cap files already carry one. Gate on the merge result: `check-docs.py`
+**11/11**, `check-ownership.py --scope umbrella` clean on 5 paths, `check-client-names.py` clean.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**This is the most useful reviewer result the leg produced, and it is worth reading why.** I asked it
+to attack the one inference the unit rests on, in three named parts. It re-derived all three at the
+merge SHA: (a) `doctor-chain.md`'s table is explicitly *ordered* and puts 8 above 11 above 13 — it
+checked the table rather than trusting the numbering; (b) it grepped every decision and interface file
+for early-exit or skip language and established that **every** instance of "skip" in this sub-project
+is a per-check *verdict the check emits about itself*, never a chain-level omission, so there is no
+mechanism by which 11 could run and 8 not; (c) it recovered the **deleted** `tasks/umbrella/034` via
+`git show f5c8a9de` to confirm check 13 came from the same single `embarch doctor` invocation. It also
+flagged one soft spot I would not have caught: the `changelog.d/` fragment states the conclusion
+**without** the inline hedge the decision text carries. It judged that not revert-worthy, and I agree —
+but a fragment that is flatter than the decision it summarises is the shape by which a hedge gets
+lost, and `history/umbrella.md` now carries the flat form permanently.
+
+**Hardware debts:** **none created, and one deliberately not paid.** Nothing here ran against a board;
+the whole unit is three markdown files. The debt it *touches* is `embarch-umbrella` check 8's own
+verdict, which still has no live-`doctor` observation — this unit records that check 8 **ran** and
+pointedly does not claim what it printed. Paying that needs a bench and an attended leg.
+
+**Budget:** PROCEED, weekly **51.3%** of a 90% cap, resetting in ~132 h, suggested wave **6**; the
+4-unit cap bound.
+
+**Least sure about:** **whether `locate-api.md` growing 89 bytes to hold a citation is the right
+trade in a sub-project where four files are at or over 90%.** The worker argued a corrected, cited
+claim cannot be stated in fewer bytes than the false one-liner it replaces without losing the
+citation, and that is true as far as it goes — but `locate-api.md` is not one of the capped files
+anybody is watching, which is precisely how a file becomes one.
+
+---
+
 ## 2026-09-17 19:06 — ui/068 decision 27 gets the index row it never had, and the census that went looking found nothing else
 
 **Decided:** **nothing** — this unit decided nothing and was not meant to. It is a pointer repair: a
