@@ -97,6 +97,60 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 19:12 — api/117 five of twenty-one size cells were stale, and the census is the unit rather than the fix
+
+**Decided:** **nothing** — an index correction. What it settles in passing is a measurement: **how
+wrong an unchecked index gets.** Nothing in this suite verifies `decisions.md`'s group table, so its
+only correction mechanism is somebody happening to look. This is the first time anyone has looked at
+`embarch-api`'s, and the answer is **20 of 21 rows right on decision numbers, 16 of 21 on sizes** —
+better than I expected and not good enough to leave unchecked.
+
+**Merged:** `agent/api/117-decisions-index-census` (code `87f67df` — **the code branch carries zero
+commits**, `embarch-api` source was not touched; doc `a942c23f`). Decision **72** added to the
+client-crate row with "and the retired mirrored `embarch-topology` types" in its description; five
+size cells corrected against measured bytes — `shape.md` 6.0→6.2, `hardware-selection.md` 9.0→8.9,
+`client-crate.md` 10.6→10.7, **`logging.md` 1.6→2.7** (2,724 B — off by ~70%, a cell written once and
+never re-measured), `dev-bench.md` 4.9→5.0 KB. No correction pushed a file into its reserve, so no new
+compaction task. No `changelog.d/` fragment — argued, not skipped. Gate on the merge result:
+`check-docs.py` **11/11**, `check-ownership.py --scope api` clean on 2 paths, `check-client-names.py`
+clean.
+
+**I wrote a claim into the task file that was not true, and both the worker and the reviewer caught
+it.** I said the table "mixes precisions" and told the worker to settle on one. It does not: all 21
+cells, before and after, use one decimal place of KiB, and the reviewer confirmed it against the
+pre-image via `git show a942c23f^`. **I invented that from the shape of the other defect** — having
+found one cell badly wrong, I asserted a second, adjacent kind of wrongness without checking. That is
+the same overclaim `core/090` is filed about, committed by the supervisor into a dispatch note. The
+standing instruction to "re-derive every coordinate, and *this does not hold* is a correct outcome" is
+what caught it, and it is the only reason it cost nothing.
+
+**Blocked:** nothing.
+**Reviewer:** 1 finding — inbox/api-signallink-mirror-stale-after-decision-72.md
+It cleared `api/117` itself and then found the contradiction one file over: `hardware-selection.md`
+decision 59 (2026-09-11) still describes `SignalLink` in the present tense as having "its own mirror",
+the exact hand-copy concept decision 72 (2026-09-12, `2b9c2581`) retired it out of in favour of a
+compiler-enforced alias. It git-blamed both commits before filing, and filed it as an inbox task
+rather than a finding against this unit, because there is no `api/117` hunk to undo. **That is a
+reviewer using the diff as a starting point rather than a boundary**, and it is the second time this
+leg a directed prompt produced a real result where an open-ended read would likely have said "clean".
+It also noted, without filing, that decision 72's own title says *seven* mirrored types while its body
+names six — pre-existing in `suite/035`, worth someone's eye.
+
+**Hardware debts:** **none created, and none could be.** One markdown table; nothing built, nothing
+flashed, no board, no probe, no live Core. The `embarch-api` gate ran on baseline and the worker said
+so plainly.
+
+**Budget:** PROCEED, weekly **51.3%** of a 90% cap, resetting in ~132 h, suggested wave **6**.
+
+**Least sure about:** **whether three index censuses in one leg should have been one script instead.**
+`ui/068` and `api/117` both ran this shape and both found exactly one missing decision number;
+`study-designer/066` is filed and unrun. A `check-decision-index.py` that diffs `### N` headers against
+the table would have found all three in a second and would keep finding them. **I cannot file that** —
+it lives in `scripts/`, which §2 reserves to the owner — so it is recorded here and nowhere else,
+which is precisely the fate this log warns about for anything not written into `inbox/` or a task.
+
+---
+
 ## 2026-09-17 19:10 — umbrella/087 a decision said a check had never run, three files from a dated bench run where it passed
 
 **Decided:** **that a decision may state a fact it reached by deduction, provided the deduction is
