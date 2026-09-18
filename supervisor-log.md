@@ -97,6 +97,118 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 18:09 — core/078 `/status` gets a content identity, decided and deliberately not built, and a blocked size debt was paid on the way
+
+**Decided:** **`/status` should carry a self-hash of the running binary, and neither a baked-in git
+SHA nor a build timestamp will do** — the suite-visible half, so it goes first. The question
+had been parked in the wrong repo's `open.md` since `embarch-umbrella` decision 34: doctor check 15
+compares served `core_version` against expected and is blind to a same-version rebuild whose deploy
+silently did not land, `embarch-umbrella` correctly said *"`embarch-core`'s call"*, and **nothing was
+ever filed here**, so the sentence was true and unactioned for as long as it existed. Recorded as
+`embarch-core` **decision 67**. The reasoning that settles it: a git SHA proves *what source was
+compiled* and is blind both to a dirty working tree — this suite rebuilds on-bench, uncommitted,
+routinely — and to a non-reproducible build, where two binaries differ under one SHA. A build
+timestamp shares that blind spot and adds its own. **Only a self-hash of the running executable
+answers the literal question a "did the deploy land" check asks.** That matters on this bench
+specifically, where `deploy-core` is already on record reporting "landed" when nothing installed.
+
+**Decided, second: it is not built, and I did not let it be.** Adding a field to `StatusResponse`
+is a wire-schema bump reaching three consumers, so `ops.md` §4's announcement applies. The worker
+filed the build as `tasks/core/088` and I **hoisted the announcement requirement out of that task's
+body and into its header**, in a block quote no one scanning headers can miss, saying in as many
+words that no announcement has been posted and a fresh 30-minute clock is owed. Without that,
+`queue-status.py` shows `088` as an ordinary `open` `core` unit beside six others and the next leg
+dispatches it to a worker. **I did not open the window myself**: this was my last-but-one unit and a
+window I could not close is a window.
+
+**Decided, third: `tasks/core/079` is done, paid as a ride-along, and its `In flux: yes` answer was
+discharged rather than overruled.** `decisions/surfaces.md` was at 91.6% with `079` blocked, and
+`core/078` had to write decision 67 into that exact file, so its dispatch note carried
+`.claude/leg.md`'s rule — a blocked compaction task parks the *pass*, not the reserve — with `079`'s
+`Must not delete:` list attached. **11,253 → 10,896 B (91.6% → 88.7%), out of reserve**, all five
+decision numbers still resolving (12, 13, 55, 59, 67).
+
+**The one thing I checked hardest, because this unit both wrote and squeezed the same decision
+file — the `core/086` shape from the leg before.** I read the diff myself before merging and found
+two named identifiers gone from decision 59's `core/074` amendment: `validate_handler` and the
+`embarch-topology/src/hardware/validate.rs` path. I then briefed the reviewer on exactly that and
+asked it to token-diff for more; **it found two I had missed** — the confirmation trail
+`validate_handler`'s final `Err(internal_err(e))` (`src/api.rs`, `src/study.rs`), and the
+`embarch-ui`/user-guide grep receipt behind *"no consumer today reads `kind` needing that
+distinction"*. It declined to file, calling it *"additional damage inside the wound you already
+found."* **It was right about the wound and wrong about the filing**, so I filed it as
+`tasks/core/089`: every protected *finding* survives, but four pieces of the *evidence* behind two
+findings do not, and none of the four lives in a permanent doc — `validate_handler` survives only in
+four task files that are all `done` and retire on close. **A `Must not delete:` list that protects
+findings but not the citations behind findings has a gap, and this is its first clean instance.**
+Everything else is intact: every status code, field name, and the other nine symbols.
+
+**Merged:** `agent/core/078-status-content-identity` (code `b6774e0` — **the code branch carries
+zero commits**, `embarch-core` was not touched, doc `00f9d79d`).
+`embarch-core/decisions/surfaces.md` 11,253 → 10,896/12,288 B; `embarch-core/decisions.md`'s index
+row for that file corrected 6.9 KB → 10.6 KB, which incidentally closes the one row
+`tasks/core/084` names — **I annotated `084` rather than closing it**, because its second `Done when`
+asks for a pass of *every* row and that is the whole value of the task. `embarch-core/open.md` gained
+one bullet, trimmed by the worker from 318 to 235 B to stay under `check-doc-size.py`'s small-file
+RESERVE_FLOOR rather than file a third compaction task for one sentence.
+`changelog.d/core-status-content-hash.decided.md` consumed into `history/core.md`; **29 of the
+owner's own fragments left pending**, untouched, via `--only`. Gate on the merge result:
+`check-docs.py` **11/11**, `check-doc-size.py` clean, `check-ownership.py --scope core` clean on both
+branches, `check-client-names.py` clean.
+
+**A gate refusal the next leg will hit, and my workaround is bad: `check-task-state.py` will not let
+a ride-along compaction task be closed while its flux answer is honest.** The rule *"`In flux: yes`
+implies `blocked`"* exempts only `Owner: required`, not `done` — where the field gates nothing,
+because nothing dispatches a completed task. But the ride-along rule *produces* exactly that state
+every time it succeeds: the debt gets paid **because** the flux answer is `yes`. Leaving `079`
+blocked was worse than flipping the field — it carries **Size debt due: 2026-09-24**, and
+`.claude/leg.md` makes an overdue entry a leg's **first unit, blocked or not**, so a future leg would
+have spent its first unit on a compaction that had already happened. So I flipped `In flux:` to
+`no`, kept the original answer **verbatim in a block quote directly underneath**, and said in the
+file that the supervisor did it under protest. **The machine-readable field is now false**, which is
+the one property `tasks/doc/030` established it must never be. Filed as `tasks/doc/083`, which also
+asks whoever picks it up to read how leg 140 closed `tasks/ui/066` — it faced the same refusal and
+its entry says it *"discharg[ed] its `In flux` answer rather than overriding it"*, which may be a
+third and better route that nobody wrote down.
+
+**A correction to my own `umbrella/082` entry, one entry below.** I wrote there that
+`fold-commit.py`'s prune *"is not broken, it is one fold behind"*. That is half right and the half I
+got wrong is the actionable half. **The variable is whether `main` was pushed before the fold ran.**
+I push `origin/main` immediately after each merge and before the fold, so `fold-commit.py` sees the
+content already on `origin/main` and prunes that unit's **own** branches in its **own** fold — all
+four units this leg did, plus it swept up leg 139's and leg 140's leftovers (`ui/067`, `core/085`,
+`api/109`) as a bonus. The remote went from six stale `agent/*` branches to the **three oldest
+only** (`api/096`, `core/052`, `ui/059`), with nothing deleted by hand. **So the remedy
+`tasks/doc/080` is looking for is probably neither patch-ids nor force-pushing: it is pushing `main`
+before the fold commit.** Force-pushing a rebased branch is still needed so the remote ref is the
+one that landed, and I did that for all three rebased branches.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** **one, named and deliberately not created.** Nothing in this unit executed — it
+is a decision and a compaction, no board, no probe, no live Core, no deploy. But decision 67's
+*implementation* (`tasks/core/088`) carries a debt from birth that is worth recording now rather than
+discovering later: **the Windows service-binary case.** The task argues `std::env::current_exe()` is
+the same call there and needs no Windows machine to verify by code inspection, and asks whoever
+builds it to say plainly if that is wrong. The live Core on this bench **is** the Windows service
+exe, so the one deployment that most needs check 15 fixed is the one whose path is reasoned rather
+than run. `core/015`'s standing native-Windows-build debt is unchanged and still the owner's.
+
+**Budget:** PROCEED throughout; weekly **47.7% → 48.9%** of a 90% cap over the leg, resetting in
+~133 h, suggested wave **6** the whole time. Scope spread, not the budget, was the binding
+constraint at **3**.
+
+**Least sure about:** decision 67's *"Trigger to reverse to 'no': none identified."* I asked the
+reviewer to judge whether that is a settled answer or a skipped question, and its argument is good —
+a trigger to reverse a **yes** and a trigger to escalate a **deferral** are different questions, and
+every other entry in that file is the second shape. But `embarch-core`'s posture is explicitly *not
+to build machinery first*, and decision 67 is a yes to machinery nothing has asked for yet: doctor
+check 15 has never actually reported a false match on this bench that anyone recorded. **If the
+self-hash never gets built, decision 67 becomes a decision that said yes and changed nothing**,
+which is the least useful kind, and no trigger means nothing will notice.
+
+---
+
 ## 2026-09-17 18:01 — umbrella/082 decision 26's `--prune` prerequisite is half closed, and its own bullet was naming a thing that does not exist
 
 **Decided:** **that `--prune` is still not buildable, and that saying so is the correction — not
