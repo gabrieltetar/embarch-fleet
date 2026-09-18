@@ -97,6 +97,63 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 19:06 — ui/068 decision 27 gets the index row it never had, and the census that went looking found nothing else
+
+**Decided:** **nothing** — this unit decided nothing and was not meant to. It is a pointer repair: a
+decision that exists, is cited, and is reachable only by someone who already knows where it lives.
+
+**What it is.** `embarch-ui/decisions/trace-view.md:45` carries decision 27 (landed `ui/064`,
+amended `ui/067`, both today). `embarch-ui/decisions.md`'s group table — the documented way into this
+sub-project's decisions — had no row claiming it: the `trace-view.md` row read `10 (trace)` and 27
+appeared nowhere in the table. **`check-decision-refs.py` cannot catch this class**, because it
+resolves *references* to decision numbers and nothing references a row that is not there. The index
+is the one structure in this suite with no checker behind it.
+
+**Merged:** `agent/ui/068-decisions-index-27` (code `e405314` — **the code branch carries zero
+commits**, `embarch-ui` source was not touched; doc `eb27be17`). The whole diff is one table row:
+`10 (trace)` → `10 (trace), 27`, and the *What it settles* cell gains "and why the decode-to-lanes
+pipeline stays duplicated with `embarch-core`'s `outpost_load.rs`". Gate on the merge result:
+`check-docs.py` **11/11**, `check-ownership.py --scope ui` clean on 2 paths, `check-client-names.py`
+clean. No `changelog.d/` fragment and no compaction task — an index repair is not reader-facing and
+nothing landed in the reserve, both of which the worker argued rather than assumed.
+
+**The census is the part worth keeping, and it came back clean.** The worker diffed every `### N`
+header across `embarch-ui/decisions/*.md` against every number the index claims: 1–26 each land in
+exactly one row, decision **10** legitimately spans three rows under `(routing)`/`(trace)`/`(chart)`
+qualifiers, and no row claims a number that does not exist. 27 was the only gap. The reviewer
+re-derived that independently and got the same 29-vs-29 count. **A clean census is a result, not an
+absence of one** — this is the first time this index has been checked at all.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+It was given a directed prompt — two named claims to check hardest rather than an open read — and the
+first one was the right question to ask: does "stays duplicated" describe decision 27 accurately, or
+does dropping `ui/067`'s "for a checked reason rather than an open wait" mislead? It established
+permanence three independent ways (decision 27's own closing line, `embarch-core` decision 66 in
+`stream-index.md` saying *"embarch-ui decision 27's split is not waiting on embarch-core — it is
+permanent"*, and `embarch-ui/open.md` line 11), checked `embarch-decision-reversals.md` for the topic,
+and called the dropped clause real texture but not a misdescription. **That is the directed-prompt
+question this log keeps raising**: it found no finding, but it found no finding *about the specific
+thing that could have been wrong*, which is worth more than a clean open-ended read.
+
+**Hardware debts:** **none created, and none could be.** One row of one markdown table; nothing
+built, nothing flashed, no board, no probe, no live Core. The `embarch-ui` gate was run on baseline
+and the worker said plainly that it changed no code — the right way to report a gate half that does
+not apply.
+
+**Budget:** PROCEED, weekly **50.7%** of a 90% cap, resetting in ~132 h, suggested wave **6**. The
+4-unit leg cap bound, not the budget. Scope spread was the real constraint at the leg's start —
+**2 dispatchable scopes** — and refill took it to 6 before any dispatch.
+
+**Least sure about:** **whether an index row is worth a unit, or whether the census should have been
+the unit.** The fix is 120 bytes and the census that found nothing else is most of the value, but the
+task was written the other way round — the row first, the census as "while you are there". Three
+sub-projects' indices were swept this leg by the same shape of task, and if the defect rate stays at
+roughly one gap per index, the right artefact is a checker, not four more tasks. Filing that is not
+mine: it lives in `scripts/`.
+
+---
+
 ## 2026-09-17 18:48 — core/073 a citation that pointed at the right file for the wrong reason, and the decision grew the sentence instead of the pointer moving
 
 **Decided:** **that when a citation does not hold, amending the cited decision beats re-pointing the
