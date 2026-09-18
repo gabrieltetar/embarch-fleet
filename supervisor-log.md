@@ -97,6 +97,62 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-17 18:48 — core/073 a citation that pointed at the right file for the wrong reason, and the decision grew the sentence instead of the pointer moving
+
+**Decided:** **that when a citation does not hold, amending the cited decision beats re-pointing the
+citation — but only after establishing that no other decision already says the thing.** `core/071`
+moved *"`erase` never becomes a chip erase in **any** backend"* from decision 32 to decision 36, and
+leg 133's reviewer then established that **36 does not establish it either**: 36 is about backend
+*selection* (which chip family gets probe-rs, why RRAM parts are refused it) and says nothing about
+what the vendor arms themselves emit. The worker's fresh grep over the whole `decisions/` and
+`interfaces/` tree found **zero** decision text anywhere asserting the vendor-arm property — only
+the citation sentence itself. So there was nothing to re-point at, and decision 36 gained the
+paragraph.
+
+**The framing is the part worth keeping.** The new text says the property holds **by construction of
+the command line each arm generates, not by an observation on hardware**: `nrfutil` is invoked with
+`chip_erase_mode=ERASE_RANGES_TOUCHED_BY_FIRMWARE` (`ERASE_NONE` otherwise), the `jlink` arm's
+generated script carries `erase` and never `erase_chip`, and `flash_backend.rs`'s
+`no_backend_maps_erase_to_a_full_chip_erase` test asserts both *generated strings*. It states in as
+many words that nobody has bricked a board to confirm it, and contrasts itself with decision 32's
+probe-rs finding, which was measured. That is this suite's measured-vs-stated rule applied to a
+decision's own prose rather than to a hardware buffer.
+
+**What I asked for and got.** The task's coordinates were second-hand — a reviewer's reading, never
+verified by the leg that filed it — so the dispatch note told the worker to re-derive every one and
+said *"this does not hold" is a correct outcome*. All four held exactly: the `interfaces/hardware.md`
+line 10 wording, decision 36's actual scope, the two code paths, and the test. No citation was
+manufactured to make the sentence true.
+
+**Merged:** `agent/core/073-erase-citation` (code `b6774e0e` — **the code branch carries zero
+commits**, `embarch-core` source was not touched; doc `a070fccb`).
+`embarch-core/decisions/flash-backend.md` 9,462 B, well clear of its reserve;
+`changelog.d/core-vendor-erase-citation.decided.md` (136 B) folded into `history/core.md`. I read the
+diff before merging because it amends a decision, per §10's one judgement call. Gate on the merge
+result: `check-docs.py` **11/11**, `check-ownership.py --scope core` clean on 3 paths,
+`check-client-names.py` clean against the code worktree. The worker ran `cargo build`/`test`
+(214 pass)/`clippy` on baseline and said plainly that it changed no code — the right way to report a
+gate half that does not apply.
+
+**Blocked:** nothing.
+**Reviewer:** skipped (spawned at the merge with both absolute worktree paths, but the leg was ended by an enforced hand-back before it reported).
+**Hardware debts:** **none created, and none could be.** One paragraph of markdown in one decisions
+file; nothing built, nothing flashed, no board, no probe, no live Core. The task forbade touching
+erase behaviour and the worker did not.
+
+**Budget:** PROCEED at the leg start, weekly **50.1%** of a 90% cap, resetting in ~132 h, suggested
+wave **6**. Scope spread was the binding constraint again, not the wave: **2 scopes** (`core`, `api`)
+against a wave of 6, and `api`'s only entry is `api/108`, which cannot be verified from WSL2.
+
+**Least sure about:** **whether decision 36 was the right home for this paragraph at all.** The
+property is about what the two vendor arms emit, and 36 is the decision about *choosing* between
+backends — the worker checked that no better home exists and I believe it, but "no other decision
+covers it" is an argument for filing it *somewhere*, not an argument that this file is where a reader
+would look. A reader arriving at `interfaces/hardware.md`'s `/flash` row now follows a pointer to a
+decision whose title is still about selection.
+
+---
+
 ## 2026-09-17 18:36 — umbrella/086 the other half of the 803-vs-809 figure gets its dates, and a claim line of mine was offering a live task up for reclaim
 
 **Decided:** **nothing new — this unit deliberately decided nothing, and that was the instruction.**
