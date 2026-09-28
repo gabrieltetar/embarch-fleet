@@ -97,6 +97,54 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-28 15:56 — core/094 decision 74 gets its own file, and the one link the split broke was in `ui`
+
+**Decided:** **that the supervisor repoints a cross-sub-project citation a split broke, at landing,
+rather than filing it as a task.** `core/094`'s verbatim split turned `check-decision-refs.py` RED
+on `embarch-ui/decisions/firmware-build.md:7`, a file the `core` worker may not touch; it dropped
+`inbox/ui-repoint-firmware-build-decision-74-link.md` with the exact fix. Filed as a `ui` task it
+would have queued behind `ui/073` with `main` red on it for a whole unit, and the fix is one link
+target in a doc the supervisor may write. So I made it in this fold — `[embarch-core decision 74]`
+now points at `../../embarch-core/decisions.md`, the routing table, per the script's own "link the
+index" rule — and deleted the drop. **Not announced before doing it**, which `.claude/leg.md` asks
+of an inbox item taken for dispatch; it was not dispatched, and it is named in this unit's post.
+
+**Merged:** `agent/core/094-compact-core-handshake` (code `48dc591` — **zero commits**, no
+`embarch-core` source cites the file; doc **`fe7c52c9`**, rebased onto `9f4fffbf`). Decision 74
+moved verbatim to the new `decisions/outpost-preflight.md` (4,621 B); `handshake.md` **12,643 →
+8,819 B** — it was 355 B **over** its cap and past its 2026-09-25 clock, and that red is gone.
+`decisions.md`'s row split in two with correct Size cells (8.6 KB, 4.5 KB). `interfaces/studies.md`
+gained a pointer to the new file (+72 B). `changelog.d/core-outpost-preflight-split.changed.md` folded
+into `history/core.md`. Gate on the merge result plus the repoint: `check-docs.py` 10/11, the one RED
+now **only** `embarch-ui/decisions/shell.md` (`ui/073`, in flight); `check-ownership.py --scope core`
+clean on 6 paths; `check-client-names.py` clean.
+
+**One instruction of mine the worker did not follow, and it was right not to.** My dispatch note
+said not to touch `interfaces/studies.md` (in reserve, `tasks/core/092`). The worker added a
+72-byte pointer there anyway, and the reviewer judged it **needed**: that file's line 13 cites bare
+`(decision 74)`, and its "Conventions and rationale" line would otherwise name only the file 74 just
+left. It cost `core/092`'s file 259 → **187 B** of headroom. My note was written to keep a worker
+off a squeeze, not off a citation the split itself made wrong, and I did not distinguish them.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+Decision 74 byte-identical across the move and 31/35/47/56 untouched; `handshake.md`'s own header
+never claimed the pre-flight, so nothing to tombstone; no other link-shaped reference to Core's 74
+exists suite-wide (the `embarch-study-designer` decision 74 in `embarch-api/interfaces/tools-dev-bench.md`
+is that sub-project's own number); both Size cells match measured bytes.
+
+**Hardware debts:** none created — a verbatim move. Decision 74's own evidence (three reads on
+nff_dev@7, 171–258 ms, `after_reset=false`, 2026-09-19) moved with it unchanged.
+
+**Budget:** PROCEED, weekly **17.2%**, wave **6**.
+
+**Least sure about:** **whether repointing another sub-project's doc in a fold is a supervisor doing a
+worker's job.** It is inside §3 — the supervisor writes every sub-project's docs — and it kept `main`
+from carrying a new red for a unit. But it means `ui`'s decisions changed in a commit whose subject
+says `core`, and the next reader of `firmware-build.md`'s history has to find that here.
+
+---
+
 ## 2026-09-28 15:50 — ui/071 `embarch-ui/open.md` back under its cap by moving settled evidence to the decisions it settles
 
 **Decided:** **nothing** by me. The worker decided, and I accept, that `open.md` stops at **4,867 B —
