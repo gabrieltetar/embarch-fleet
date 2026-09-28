@@ -97,6 +97,40 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-28 16:38 — core/092 the three `/stream/{name}*` sub-routes get their own reference file
+
+**Decided:** **nothing** by me. The worker took the seam the task named: the `arrivals`, `load` and
+`load/spans` rows moved verbatim from `interfaces/studies.md` into a new `interfaces/streams.md`;
+`/stream/{name}` itself stayed behind with the run/status routes, and `interfaces.md`'s route index
+gained a Streams row.
+
+**Merged:** `agent/core/092-compact-core-interfaces-studies` (code: **zero commits**, `embarch-core`
+main `48dc591`, no `.rs` comment cites the file; doc **`d6820f76`**, fast-forward onto `53211671`,
+no rebase). `studies.md` **12,101 → 9,076 B** (was 187 B from its cap and past its 2026-09-25
+clock); `streams.md` new at 3,969 B; `interfaces.md` 6,185 → 6,401 B.
+`changelog.d/core-interfaces-streams-split.changed.md` folded into `history/core.md`. Gate on the
+merge result: `check-docs.py` **all 11 green**; `check-ownership.py --scope core` clean on 5 paths;
+`check-client-names.py` clean on the code worktree (worker's run, zero paths changed).
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+All three moved rows byte-identical against `53211671`; every `400`/`404`/`422` clause intact,
+including `/load/spans`'s "same cases as `/load`" cross-reference; bare `(decision 74)` and the
+`outpost-preflight.md` pointer untouched above the cut; no inbound citation anywhere in the suite
+links into a moved row — they cite route text or decision numbers.
+
+**Hardware debts:** none created — a verbatim move, no source change, no native Windows build owed.
+
+**Budget:** PROCEED, weekly **17.9%**, wave **6**.
+
+**Least sure about:** **whether the worker's grep for inbound citations was wide enough.** It and
+the reviewer both searched for file-and-line pointers into `studies.md`; a prose sentence
+elsewhere saying "`studies.md` lists every `/stream` route" would pass `check-links.py` and now be
+quietly wrong, and neither search was shaped to find that. I grepped `interfaces/studies.md` with
+stream/load/arrival across live docs at the fold: only `interfaces.md`'s index, and it is right.
+
+---
+
 ## 2026-09-28 16:02 — ui/073 two verbatim splits, and `main`'s doc gate is green for the first time since the fleet stopped
 
 **Decided:** **nothing** by me. The worker took the seams the task named: decisions 8, 25 and 42 (how
