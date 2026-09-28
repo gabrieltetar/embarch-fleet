@@ -97,6 +97,42 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-28 16:44 — api/118 decision 59 stops calling `SignalLink` a mirror
+
+**Decided:** **nothing** by me. The worker amended decision 59's parenthetical in place, no new
+number: the "cannot link the `hardware` feature" constraint is what made `SignalLink` a
+hand-written mirror **before** decision 72, which replaced it with an alias. It read the two other
+places my dispatch note named and changed neither, correctly: decision 60's "this route's mirror"
+is `HelloAckResponse`'s mirror of Core's `HelloAckInfo`, a different and still-live mirror; and
+`client.rs:882`'s pointer lands on a block comment already rewritten for decision 72.
+
+**Merged:** `agent/api/118-decision-59-signallink-mirror` (code: **zero commits**, `embarch-api` main
+`2ebcfe4`; doc **`968f37f0`**, rebased onto `4f465dce`). `hardware-selection.md` 9,124 → 9,303 B.
+`changelog.d/api-decision-59-signallink-alias.fixed.md` folded into `history/api.md`. Gate on the
+merge result: `check-docs.py` **all 11 green**; `check-ownership.py --scope api` clean on 3 paths;
+`check-client-names.py` clean on the code worktree. **Filed `tasks/api/119`** in this fold from the
+reviewer's out-of-scope observation below.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+It checked the amended sentence against the code rather than the docs: `embarch-topology`'s
+`hardware` module is `cfg(any(feature = "hardware", feature = "wire"))` and `embarch-core-client`
+enables `software` + `wire` only, so "cannot link `hardware`" and "`SignalLink` is an alias" are both
+true at once. Below its bar, and **pre-existing** by `merge-base --is-ancestor` (authored
+`c62cc870`, 2026-09-12): decision 72 says "seven" three times and names six types, and the source
+comment says six. That is `tasks/api/119`.
+
+**Hardware debts:** none created — one parenthetical.
+
+**Budget:** PROCEED, weekly **17.9%**, wave **6**.
+
+**Least sure about:** **whether "seven" is the typo or the list is.** `api/117` and `api/118` both
+repeated "decision 72's retired seven" from the heading, so if the list is short a type, a seventh
+retired mirror is undocumented — which is a bigger defect than a miscount, and `api/119` has to
+settle it from `git show c62cc870` rather than from either doc.
+
+---
+
 ## 2026-09-28 16:38 — core/092 the three `/stream/{name}*` sub-routes get their own reference file
 
 **Decided:** **nothing** by me. The worker took the seam the task named: the `arrivals`, `load` and
