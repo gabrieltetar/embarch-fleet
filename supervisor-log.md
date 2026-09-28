@@ -97,6 +97,43 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-28 15:50 — ui/071 `embarch-ui/open.md` back under its cap by moving settled evidence to the decisions it settles
+
+**Decided:** **nothing** by me. The worker decided, and I accept, that `open.md` stops at **4,867 B —
+under the 5,120 B cap but inside the 3,920 B reserve floor** — rather than close a question by
+attrition, and it filed the remainder as **`tasks/ui/074`** (`blocked`, `In flux: yes`, **due
+2026-10-05**). The reviewer judged that park genuine, not a disguised debt.
+
+**Merged:** `agent/ui/071-compact-ui-open` (code: **zero commits**, `embarch-ui` main unchanged; doc
+**`48fe7e02`**, rebased onto `267bd791`). Three moves, no attrition: the decision-27 bullet left
+outright (it said "settled, permanently" and `decisions/trace-view.md` 27 carries all three of its
+claims); the 250,000-row measurement table moved into `decisions/trace-rows.md` 21 (3,046 → 3,830 B);
+the `b1e9ec7d` GATT-vs-trace placement result moved into `decisions/time-chart.md` 34 (8,910 → 9,322
+B). The open halves of both stayed in `open.md`. `embarch-ui/decisions.md` carries no size column,
+so nothing to update there. `changelog.d/ui-open-md-compaction.changed.md` folded into
+`history/ui.md`. Gate on the merge result: `check-docs.py` 10/11 — the one RED now only
+`handshake.md` (landing next) and `shell.md` (`ui/073`, in flight); `check-ownership.py --scope ui`
+clean on 6 paths; `check-client-names.py` clean.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+Verified the moved numbers digit-for-digit against the pre-image `open.md`, that the two decision
+additions extend rather than contradict 21 and 34, and that no tightened bullet touches the owner's
+decisions 41–51 of 2026-09-19/20.
+
+**Hardware debts:** none created. The two open halves it kept are both hardware: the live-Core
+`/study/{id}/streams` HTTP cost over three calls, and a power-capture check of placement — neither
+has ever run.
+
+**Budget:** PROCEED, weekly **17.2%**, wave **6**.
+
+**Least sure about:** **whether moving evidence into a decision is a move or an amendment.** Decision
+34 already stated 125/245/120, so that half is a restatement; decision 21 gained a measurement table
+it did not have. The reviewer called both "extensions of standing decisions", and a decision that
+grows an empirical table in a compaction pass is a decision that changed without anyone deciding.
+
+---
+
 ## 2026-09-28 15:49 — dev-bench/012 spec.md and open.md squeezed out of reserve, and main's gate was already red when the leg arrived
 
 **Decided:** **that a leg arriving on a red `main` pays the red first, and judges each unit on "adds no
