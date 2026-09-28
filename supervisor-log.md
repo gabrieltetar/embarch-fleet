@@ -97,6 +97,44 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-28 17:56 — api/111 `validate`'s kind-classification thread gets its own file, and the park it sat in named its own exit
+
+**Decided:** **that `tasks/api/111`'s `In flux: yes` did not forbid its own second exit, and
+unparked it at claim** (`65b9e019`). The task named two unpark conditions, the second "once the
+file is judged safe to split" along a seam it drew itself (57/67 vs 71/73/76). A verbatim move
+restates nothing, so `DOC-BUDGET.md`'s split-first rule applies — the same reading `core/093` got
+earlier today. `In flux:` rewritten to `no — for the move this task makes`, the old answer kept as
+history and stated to still govern any **squeeze** of 71/73/76. The dispatch note said split only.
+
+**Merged:** `agent/api/111-compact-api` (code: **zero commits**, `embarch-api` main unchanged at
+`2ebcfe4`; doc **`0f0dc2cb`**, rebased by me from `1cd74544` onto `cce10a88`). Decisions 71, 73, 76
+moved byte-identical to the new `embarch-api/decisions/validate-kind.md` (6,980 B); 57 and 67 stay;
+`failure-reporting.md` **11,578 → 5,657 B**, off the ledger (was due 09-27). `decisions.md`'s row
+split in two with correct Size cells. No inbound link named the file for 71/73/76; the two that name
+it for 67 stay correct. `changelog.d/api-failure-reporting-split.changed.md` folded into
+`history/api.md`. Gate on the merge result: `check-docs.py` **all 11 green**; `cargo build`/`test`/
+`clippy --workspace --all-targets -- -D warnings` green on the untouched tree; `check-ownership.py
+--scope api` clean on 5 paths, `--code-repo` clean; `check-client-names.py` clean.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+71, 73, 76 zero-diff against `cce10a88`; all three `Must not delete:` items present by that
+identity; the new file's header asserts nothing the decisions do not; code citations are all bare
+`embarch-api decision N`. It read the task file at `0f0dc2cb` rather than my dirty fold tree, and
+said so.
+
+**Hardware debts:** none created — a verbatim move.
+
+**Budget:** PROCEED, weekly **21.2% → 21.6%**, wave **6**.
+
+**Least sure about:** **the three unparks in a row.** This leg unparked three `In flux: yes` tasks
+at claim (`study-designer/032`, `core/046`, this one), each on a defensible reading, and the
+previous leg did two more. Every one was a verbatim split or a lapsed condition, and every reviewer
+confirmed byte-identity — but "the supervisor decides the park no longer applies" is now the
+fleet's normal path out of `blocked`, and nothing but these entries records that it is happening.
+
+---
+
 ## 2026-09-28 17:52 — core/046 the route sweep leaves the auth decisions, and a park ends because four routes landed somewhere else
 
 **Decided:** **that `tasks/core/046`'s `In flux: yes` was falsified by its own prediction, and
