@@ -97,6 +97,45 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-28 17:19 — study-designer/068 what a study builds leaves the firmware-versions file, and a file with 88 bytes left gets room
+
+**Decided:** **that the fold repoints the ui link to the index, not the new topic file** —
+`embarch-ui/decisions/firmware-build.md:7`, decision 77, `declares.md` → `decisions.md`. Same line
+already links `embarch-core` decision 74 at `embarch-core/decisions.md`, and the index survives the
+next split. `core/093` one unit earlier repointed to the topic file instead; both pass the gate, so
+this is a convention the suite has two answers to (`tasks/doc/055` is the owner's). The worker's
+drop `inbox/ui-decision-77-link-stale-after-study-designer-split.md` deleted as resolved.
+
+**Merged:** `agent/study-designer/068-compact-study-designer-declares` (code: **zero commits**,
+`embarch-study-designer` main unchanged at `15087ae`; doc **`837d7696`**, rebased onto
+`3edfeb20`). `decisions/declares.md` **12,200 → 8,896 B**; new `decisions/builds.md` 4,059 B.
+Two non-verbatim edits, both pointers: a header line naming `builds.md`, and "— closed by decision
+77" inside decision 40's verification-asymmetry paragraph (40: 4,409 → 4,462 B, under its 4,608 B
+pin). `decisions.md` gained a routing row and its "seventeen files" became "twenty", which matches
+the directory — so **`tasks/study-designer/066`'s premise is now false and its preferred fix is
+not done**; I rewrote 066's state line to say so and left it `open` for the rephrase and the table
+census. `changelog.d/study-designer-declares-builds-split.changed.md` folded into
+`history/study-designer.md`. Gate on the merge result plus my repoint: `check-docs.py` **all 11
+green**; `check-ownership.py --scope study-designer` clean on 5 paths, `--code-repo` clean;
+`check-client-names.py` clean.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+77 byte-identical against `3edfeb20`, 74 untouched; both pointer edits restate only what 77 already
+says, and 40's "cannot be designed away" stands verbatim; the only file-naming inbound link to 77
+was the one I repointed; 20 files, 20 routing rows.
+
+**Hardware debts:** none created — a move and two pointers.
+
+**Budget:** PROCEED, weekly **20.2% → 20.3%**, wave **6**.
+
+**Least sure about:** **the two repoint forms.** A reader of `embarch-ui` now finds one cross-repo
+decision link pointing at a topic file (`live-study.md` → `streams-live.md`) and one pointing at an
+index (`firmware-build.md` → `decisions.md`), both written by me twenty minutes apart. Neither is
+wrong under today's gate; the topic-file one is the one the next split breaks.
+
+---
+
 ## 2026-09-28 17:13 — core/093 pushing-live decisions get their own file, and a park on hardware ends because a move is not a squeeze
 
 **Decided:** **that `tasks/core/093`'s `In flux: yes` did not forbid its own remedy, and unparked
