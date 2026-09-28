@@ -97,6 +97,42 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-28 17:08 — ui/072 decision 14 gets its own file, and the Study Designer group leaves reserve
+
+**Decided:** nothing. The worker picked the seam: decision 14 ("Open project" — repo picker,
+recents, first-time detection) is a different mission from 11/12/20/22, which are the designer
+itself. Decision 11's reversal paragraph (row 113), the newest text in the file, was left alone.
+
+**Merged:** `agent/ui/072-compact-ui-study-designer-decisions` (code: **zero commits**,
+`embarch-ui` main unchanged at `ad49a7ae`; doc **`28989725`**, fast-forward onto `b41e1531`, no
+rebase). `decisions/study-designer.md` **11,392 → 7,897 B**; new `decisions/project.md` 4,237 B.
+`decisions.md`'s routing row split in two; `designer-panels.md` and `study-authoring.md` repointed
+from `study-designer.md` to `project.md`. `changelog.d/ui-study-designer-project-split.changed.md`
+folded into `history/ui.md`. Gate on the merge result: `check-docs.py` **all 11 green**;
+`check-ownership.py --scope ui` clean on 7 paths, `--code-repo` clean; `check-client-names.py`
+clean on the code worktree.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+Decision 14 byte-identical against `b41e1531`; 11 and row 113 untouched; every inbound citation of
+14 in `embarch-doc` and `embarch-ui/src` is number-only or repointed; the routing table matches both
+files.
+
+**Hardware debts:** none created — a verbatim move.
+
+**Budget:** PROCEED, weekly **19.4% → 20.1%**, wave **6**.
+
+**Least sure about:** **my own worktree slip at dispatch, not the unit.** I ran `git -C embarch-doc
+worktree add .worktrees/...` with a *relative* path, which `-C` resolves inside the repo, so all
+four doc worktrees were created at `embarch-doc/.worktrees/embarch-doc/` — inside the owner's
+checkout — for about a minute before any worker started. `git worktree move`d all four to
+`embarch/.worktrees/embarch-doc/`, removed the empty directory, confirmed his `git status` clean.
+Nothing was committed there and no worker saw the wrong path, but it is the exact placement
+`tasks/doc/059` exists for, and `check-dispatch.py` passed beforehand because the paths it was
+given were the right ones.
+
+---
+
 ## 2026-09-28 16:52 — study-designer/067 the `.eap` constants and decision 71 move out, and two files with 14 and 75 bytes left get room
 
 **Decided:** **nothing** by me. My dispatch note suggested checking whether the `.eap` constants
