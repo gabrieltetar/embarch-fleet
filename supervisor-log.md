@@ -97,6 +97,54 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-28 17:52 — core/046 the route sweep leaves the auth decisions, and a park ends because four routes landed somewhere else
+
+**Decided:** **that `tasks/core/046`'s `In flux: yes` was falsified by its own prediction, and
+unparked it at claim** (`9701f722`). The prediction was "the next new HTTP route ... is likely to
+land here again"; four have landed in `build_router` since the file's last edit (`f6e23215`,
+2026-09-12) — `.../load/spans` `4251af3`, `GET /studies` `d73a73a`, `DELETE /probes/enrolled/{role}`
+`e50de6d`, `PUT /probes/enrolled/{role}/board` `f832043` — and none touched `auth.md`. `In flux:`
+rewritten to `no` with that evidence, the old answer kept as history.
+**Also decided: I corrected the worker's Size cell in this fold** — `decisions.md` said `auth.md`
+is 2.9 KB; it is 3,799 B, so 3.8 KB. The reviewer read the cell and did not measure it.
+
+**Merged:** `agent/core/046-compact-core` (code **`fdb9b1d`**, one comment, fast-forward onto
+`48dc591`; doc **`7c5ad6f9`**, rebased by me from `2e6173ea` onto `1a42bea3`). Decisions 42, 46, 60
+moved byte-identical to the new `embarch-core/decisions/route-sweep.md` (8,468 B); 5, 6, 11, 53
+stay; `auth.md` **11,356 → 3,799 B**, off the ledger (was due 09-26). One paragraph of 53's ("What
+this decision does not claim", about the ACL) had sat after 60 in the old file; removing 60 left it
+beside 53, unreworded. `decisions.md`'s row split in two; `platform.md`'s pointer names both files;
+`src/api.rs:1712`'s file-qualified citation of 42 repointed; two bare-number cites left alone.
+`changelog.d/core-split-route-sweep.decided.md` folded into `history/core.md`. Gate on the merge
+result: `check-docs.py` **all 11 green**; `cargo build`/`test` (245 passed, 2 ignored)/`clippy
+--all-targets -- -D warnings` green; `check-ownership.py --scope core` clean on 6 paths,
+`--code-repo` clean; `check-client-names.py` clean.
+
+**One slip of mine, harmless and on `origin/main` — the same one the previous leg logged.** My
+first fold attempt was refused (I had not yet written this entry), but a `| tail` in the chain ate
+the exit status, so `git push origin HEAD:main` still ran: **`7c5ad6f9` reached `origin/main` a few
+minutes before its fold** — the worker's commit with its fragment still pending, a legal state —
+and one spurious `leg-fold` tick went into `.fleet/tick.log`. Two legs in a row is a pattern:
+`fold-commit.py` refusing is not enough while the push rides the same `&&` chain behind a pipe.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+42 and 46 zero-diff against `1a42bea3`; 60's body identical, its trailing paragraph confirmed as
+53's and verbatim; all four `Must not delete:` items present; no inbound link anywhere names
+`auth.md` for 42/46/60.
+
+**Hardware debts:** none created. The `api.rs` change is a comment, so no native Windows build is
+owed for it.
+
+**Budget:** PROCEED, weekly **21.2%**, wave **6**.
+
+**Least sure about:** **whether "four routes landed elsewhere" really falsifies the flux.** The task
+said the next route or *the next gap in this sweep family* would land here; no gap has been found
+in sixteen days, but nobody has looked, and a verbatim split does not care either way — which is
+the argument that actually carries the unpark, not the route count.
+
+---
+
 ## 2026-09-28 17:47 — study-designer/032 what a study carries gets its own spec file, and a seventeen-day park ends on its own condition
 
 **Decided:** **that `tasks/study-designer/032`'s `In flux: yes` had lapsed on its own terms, and
