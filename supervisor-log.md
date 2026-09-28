@@ -97,6 +97,53 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-28 17:13 — core/093 pushing-live decisions get their own file, and a park on hardware ends because a move is not a squeeze
+
+**Decided:** **that `tasks/core/093`'s `In flux: yes` did not forbid its own remedy, and unparked
+it at claim** (`bebb1a64`). Its block was "decisions 72 and 73 unvalidated on hardware", and its own
+body said the split is the remedy precisely because it moves that reasoning untouched.
+`DOC-BUDGET.md`'s split-first rule says the same: a verbatim move restates nothing, so flux cannot
+forbid one. `In flux:` rewritten to `no — for the move this task makes`, the old answer kept as
+history and stated to still govern any **squeeze** of 72/73. Unlike `dev-bench/014` last leg, the
+flux here has **not** lapsed — the bench is still unplugged — so this is a different argument, not
+the same one again.
+**Also decided: the one cross-scope link the split broke is fixed in this fold, by me**, not
+queued. `embarch-ui/decisions/live-study.md:30` linked decision 70 at `streams.md`; repointed to
+`streams-live.md`. The worker could not (ui is not its row), reported the merge alone as red
+(`check-decision-refs.py`), and dropped `inbox/ui-repoint-streams-md-decision-70-cite.md`, which I
+deleted as resolved. The worker's commits alone are red in history for one commit; `origin/main`
+never was.
+
+**Merged:** `agent/core/093-compact-core-streams-decisions` (code: **zero commits**, `embarch-core`
+main unchanged at `48dc591`; doc **`02e6ff79`** + **`439fea1c`**, rebased onto `d63b3752`).
+`decisions/streams.md` **11,094 → 5,760 B** (30, 38, 39 stay); new `decisions/streams-live.md`
+5,889 B (70, 72, 73). `decisions.md`'s row split, its stale "7.7 KB" corrected.
+`changelog.d/core-streams-live-split.changed.md` folded into `history/core.md`. Gate on the merge
+result plus my repoint: `check-docs.py` **all 11 green**; `check-ownership.py --scope core` clean on
+5 paths, `--code-repo` clean; `check-client-names.py` clean on the code worktree.
+**Filed `tasks/core/095`** from the reviewer's aside: `embarch-core/src/study.rs` ≈4209, the `/load`
+handler's comment, cites "`embarch-core` decision, `decisions/streams.md`" with **no number**, for a
+route that is decision 62 in `stream-index.md` since `core/060`. Pre-existing, not this unit's.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+All six decisions byte-identical against `d63b3752`; 72's render-vs-live paragraph and 73's
+`core_rx_utc_ms` clock clause intact; reversals row 112 cites "core 72" by bare number, unaffected;
+the only file-naming inbound link to 70/72/73 anywhere was the one I repointed.
+
+**Hardware debts:** none created. Decisions 72 and 73 are **still unvalidated on hardware** — a
+traced study with the outpost bridge attached — exactly as before; the split moved that debt, it did
+not pay it.
+
+**Budget:** PROCEED, weekly **20.1% → 20.2%**, wave **6**.
+
+**Least sure about:** **whether "flux cannot forbid a verbatim split" will be read as a licence to
+unpark anything by calling it a split.** It is right here because the task itself named the split as
+the remedy and the reviewer confirmed six byte-identical sections. A task whose remedy needed a
+single reworded sentence in 72 or 73 would not qualify, and nothing mechanical tells the two apart.
+
+---
+
 ## 2026-09-28 17:08 — ui/072 decision 14 gets its own file, and the Study Designer group leaves reserve
 
 **Decided:** nothing. The worker picked the seam: decision 14 ("Open project" — repo picker,
