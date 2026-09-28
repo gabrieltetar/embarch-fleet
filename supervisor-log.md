@@ -97,6 +97,49 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-28 17:47 — study-designer/032 what a study carries gets its own spec file, and a seventeen-day park ends on its own condition
+
+**Decided:** **that `tasks/study-designer/032`'s `In flux: yes` had lapsed on its own terms, and
+unparked it at claim** (`22fa5c9b`). Its unpark condition was "§4 has gone a full leg without a new
+field or seal-placement edit"; §4's last edit is `ac9c2116` (2026-09-18), one table cell for
+decision 77, and nothing has touched `spec.md` since. `In flux:` rewritten to `no` with that
+evidence, the old answer kept as history. **Also: the worker's inbox drop became
+`tasks/api/120`** at this fold (below), not dispatched this leg.
+
+**Merged:** `agent/study-designer/032-compact-study-designer` (code **`b9a2d5d`**, one comment,
+fast-forward onto `15087ae`; doc **`22dc629c`**, fast-forward onto `12731da4`). §4 ("What a study
+carries" — the carriage/seal table and its two paragraphs) moved verbatim to the new
+`embarch-study-designer/spec/carriage.md` (2,144 B); `spec.md` **9,400 → 7,924 B**, off the ledger
+(was due 09-25). **The worker renumbered the remaining sections 5/6/7 → 4/5/6** and repointed its
+own repo's one citation (`src/study.rs:1062`, §7 → §6). The one it could not reach —
+`embarch-api/src/main.rs:538`, `spec.md §7` — is **`tasks/api/120`**, filed here, preferring a
+decision-63 citation over a section number. `changelog.d/study-designer-spec-carriage-split.changed.md`
+folded into `history/study-designer.md`. Gate on the merge result: `check-docs.py` **all 11
+green**; `cargo build`/`test`/`clippy --all-targets -- -D warnings` with `--all-features` green
+(298+12+10); `check-ownership.py --scope study-designer` clean on 4 paths, `--code-repo` clean;
+`check-client-names.py` clean.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+Removed §4 byte-identical to `carriage.md`'s body; the Must-not-delete seal order (`steps, streams,
+steps_crc, streams_crc, protocols, protocols_crc`) present unchanged; §6 is now Constants, so the
+repointed comment is right; no decision touched. It also checked `embarch-ui` for a
+`study-designer/spec.md §5` citation a closed task once recorded (`ui/045`, `app.js:2542`) and found
+none — without a pinned `ui` worktree, so that half is unanchored.
+
+**Hardware debts:** none created — a move, a renumber and a comment.
+
+**Budget:** PROCEED, weekly **20.4% → 21.2%**, wave **6**.
+
+**Least sure about:** **the renumber.** Leaving a one-line "§4 moved to `spec/carriage.md`" stub
+would have kept every section number stable; renumbering broke two known citations (one fixed, one
+filed), and `embarch-core/src/study.rs` still carries a family of legacy `spec.md §4.8`/`§5.1`
+decimal citations that matched nothing before this unit and match nothing now — so a grep for
+stale section cites into this file is already noisy, and the next reader cannot tell which kind a
+hit is without reading it.
+
+---
+
 ## 2026-09-28 17:23 — umbrella/088 check 15's bullet stops saying the hash is unbuilt, and a parked `open.md` compaction rides along
 
 **Decided:** nothing by me beyond the dispatch note, which applied `.claude/leg.md`'s rule that a
