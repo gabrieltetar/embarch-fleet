@@ -97,6 +97,66 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-28 17:23 — umbrella/088 check 15's bullet stops saying the hash is unbuilt, and a parked `open.md` compaction rides along
+
+**Decided:** nothing by me beyond the dispatch note, which applied `.claude/leg.md`'s rule that a
+reserve file parked on `In flux: yes` gets compacted by the unit writing it (`tasks/umbrella/077`,
+single file). **The worker decided not to consume `binary_sha256` in check 15** — a real behavior
+change needing its own decision (warn semantics, when to hash, null handling, a new `AuthedStatus`
+field) in `decisions/schema-skew.md`, itself at 733 B left — and filed **`tasks/umbrella/089`** for
+it, open, with the design questions stated as unanswered. That is the Done-when's second legal
+answer, and it was the worker's call by the task's own words.
+
+**Merged:** `agent/umbrella/088-check-15-self-hash-bullet` (code: **zero commits**,
+`embarch-umbrella` main unchanged at `2764e89`; worker still ran `cargo build`/`test`/`clippy` green
+on the untouched tree, 228 tests; doc **`61e13c92`**, rebased onto `9140247e`).
+`embarch-umbrella/open.md` **4,372 → 3,905 B**, out of reserve (the real line is 3,920 B because
+`RESERVE_FLOOR` beats 10% on a 5 KB file — 077's prose said 4,096). **A squeeze, not a split**:
+three bullets now point at the decision that owns their mechanism instead of restating it (34,
+51, 49). `tasks/umbrella/077` and `088` closed and removed in this fold.
+`changelog.d/umbrella-check15-self-hash-bullet-corrected.changed.md` folded into
+`history/umbrella.md`. Gate on the merge result: `check-docs.py` **all 11 green**;
+`check-ownership.py --scope umbrella` clean on 5 paths, `--code-repo` clean;
+`check-client-names.py` clean.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+Directed at the squeeze: every `077` `Must not delete:` item survives; each deleted clause is stated
+near-verbatim by the decision it now points at (34's `CARGO_PKG_VERSION` blind spot, 51's three-step
+protocol, 49's "contents, not its home"); the 67/68 claim matches `embarch-core`'s record; 089
+asserts no design. It noted, below its bar, that 077's own "why `saved.host` was left unfixed" item
+already described a pre-decision-51 state before this unit.
+
+**Hardware debts:** none created. The open.md bullets carrying debts are unchanged in substance:
+check 13 (one `doctor` run on the primary bench), check 5 (a Linux box with Core native), decision
+51's three-step real-machine confirmation.
+
+**Budget:** PROCEED, weekly **20.3% → 20.3%**, wave **6**.
+
+**Least sure about:** **whether a squeeze that replaces restated mechanism with "see decision N"
+leaves `open.md` answerable cold.** The reviewer confirmed every deleted clause lives in its
+decision, so nothing is lost; but a reader of `open.md` alone now has to follow three links to learn
+*why* check 15 is blind, which is exactly the kind of thing `open.md` is read for.
+
+**Leg close, for the next leg.** 4/4 units, all green, no reds, no blocks; four doc commits and
+**zero code commits**. Three of four were the size ledger (**10 → 7 overdue**) and the fourth paid
+`umbrella/077` by riding. **Two cross-scope links broken by this leg's splits were repointed by me in
+the folds** (`embarch-ui` `live-study.md:30`, `firmware-build.md:7`) — in two different forms, see
+`study-designer/068`. Filed **`core/095`**; `study-designer/066` re-stated, still open. Oldest
+*payable* overdue: **`study-designer/069`** (`gatt-extract.md`, **36 B left**, due 09-27, `open`)
+and `api/111` (`failure-reporting.md`, blocked on flux, but its own text names a split seam — 57/67
+vs 71/73/76 — so it can be unparked for a verbatim move the way `core/093` was). `suite/030` and
+`doc/031` remain owner-only. Queue: **12 dispatchable** over 5 scopes (api 2, core 6, study-designer
+2, ui 1, umbrella 1); 2 bench tasks still waiting on the dev-bench probe (`validate dev-bench` at step
+0: `001057729826` not attached, not a mismatch). Refill fired on scope spread; I swept only the
+missing scopes' `open.md` (dev-bench, outpost, topology) and found nothing host-side, as
+`tasks/doc/081` predicts. `inbox/` empty at close. No `suite` window open. **Structural note: as a
+subagent, ending a turn to wait for workers makes the harness demand a handback** — this leg waited
+inside its turn with a scratchpad poll script instead (`git ls-remote` every 30 s). A successor that
+ends its turn after dispatching will be told to hand back with four workers in flight.
+
+---
+
 ## 2026-09-28 17:19 — study-designer/068 what a study builds leaves the firmware-versions file, and a file with 88 bytes left gets room
 
 **Decided:** **that the fold repoints the ui link to the index, not the new topic file** —
