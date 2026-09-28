@@ -97,6 +97,53 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-28 16:48 — dev-bench/014 link.md's two ceilings get their own file, and a twenty-day park ends on its own clock
+
+**Decided:** **that `tasks/dev-bench/014`'s `In flux: yes` had lapsed on its own terms, and unparked
+it at claim** (`7909f091`). Its unpark condition was "whichever of the flash-route migration or the
+step-cap divergence is next quiet"; `git log` showed `link.md` untouched since `84243a33`
+(2026-09-08) and no open task targeting decision 13 or 35 — `dev-bench/010` cites 35's divergence but
+is `toolchain`-gated and was not in flight. Same reading the previous leg gave `dev-bench/012`.
+`In flux:` rewritten to `no` with that evidence, the old answer kept as history. The worker then
+took the seam the task named.
+
+**Merged:** `agent/dev-bench/014-compact-dev-bench` (code: **zero commits**, `embarch-dev-bench`
+main `edc278bb`; doc **`3df6d63b`**, rebased onto `a9ce7fb5`). Decisions 30 (inbound FIFO ceiling)
+and 35 (step-cap divergence) moved verbatim to the new `decisions/link-limits.md` (4,419 B);
+`link.md` **11,241 → 7,434 B** (was past its 2026-09-22 clock). `decisions.md`'s "Core link" row
+split in two with correct Size cells; `decisions/dispatch.md:27`'s backtick citation of 35's
+amendment repointed to the new file. `changelog.d/dev-bench-link-limits-split.changed.md` folded
+into `history/dev-bench.md`. Gate on the merge result: `check-docs.py` **all 11 green**;
+`check-ownership.py --scope dev-bench` clean on 6 paths; `check-client-names.py` clean on the code
+worktree.
+
+**One slip of mine, harmless and on `origin/main`.** My first fold attempt failed on a stale
+`old_string` and `fold-commit.py` correctly refused, but the chained `git push origin HEAD:main`
+still ran (a `| tail` ate the exit status), so **`3df6d63b` reached `origin/main` a minute before its
+fold** — the worker's commit, with its fragment still pending, which is a legal state. One spurious
+`leg-fold` tick went into `.fleet/tick.log` at the same moment.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+30 and 35 byte-identical against `a9ce7fb5`; both `Must not delete:` items verbatim (35's
+"crate 64, bench 16" amendment in the new file, 13's "what is still unestablished" paragraph
+untouched in `link.md`); 6, 7, 12, 13, 18, 19, 25, 36 unchanged; both Size cells match measured
+bytes; source comments in `main.c`, `ble_bridge_real.c` and `serial_protocol.h` cite 30/35 by number
+only, so they resolve through the index. It noted, below its bar and outside this diff, that the
+`platform.md`, `scanning.md` and `dispatch.md` Size cells in the same table look stale.
+
+**Hardware debts:** none created — a verbatim move.
+
+**Budget:** PROCEED, weekly **17.9%**, wave **6**.
+
+**Least sure about:** **whether "quiet for twenty days" is the flux ending or the fleet having been
+stopped for eleven of them.** The fleet was down 2026-09-17 to 09-28, so the file's quiet is partly
+nobody working; the owner could have had a step-cap change in mind for exactly this file. A
+verbatim split restates nothing, so the cost of being wrong is one extra file to edit, not a clean
+statement of something about to change.
+
+---
+
 ## 2026-09-28 16:44 — api/118 decision 59 stops calling `SignalLink` a mirror
 
 **Decided:** **nothing** by me. The worker amended decision 59's parenthetical in place, no new
