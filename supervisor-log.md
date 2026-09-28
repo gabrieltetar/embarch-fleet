@@ -97,6 +97,54 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-28 16:02 — ui/073 two verbatim splits, and `main`'s doc gate is green for the first time since the fleet stopped
+
+**Decided:** **nothing** by me. The worker took the seams the task named: decisions 8, 25 and 42 (how
+the app looks and is drawn) out of `shell.md` into `decisions/design-system.md`, and decision 44's
+"Retracting" and "A saved bench" sections out of `topology-boards.md` into
+`decisions/saved-benches.md` — so **decision 44 now spans two files**, indexed as `44 (saved bench)`,
+the convention decision 10 already uses across three.
+
+**Merged:** `agent/ui/073-compact-ui` (code: **zero commits**, `embarch-ui` main `ad49a7a`, no source
+comment cites either file; doc **`ffee1b77`**, rebased onto `55adb798`). `shell.md` **12,538 → 5,228
+B** (was over its cap and past its 2026-09-27 clock), `topology-boards.md` 12,177 → 10,013 B; new
+files 7,770 B and 2,648 B. `decisions.md`'s group table updated. The worker also repointed one live
+link in a **pending fragment it did not write** — the owner's `changelog.d/ui-brand-token.added.md`
+(2026-09-09), decision 25 → `decisions.md` — which the reviewer confirmed is what `DOC-CONVENTIONS.md`
+prescribes for history-shaped links; leaving it would have been the break.
+`changelog.d/ui-compact-shell-and-boards.changed.md` folded into `history/ui.md`. **Gate on the merge
+result: `check-docs.py` all 11 green** — the first green `main` since the clocks expired;
+`check-ownership.py --scope ui` clean on 8 paths; `check-client-names.py` clean.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+Every moved section byte-identical against `55adb798`; all five must-not-delete facts present
+verbatim (25's 1.12:1 and 4.84:1 / 4.98:1, 42's 6.9 px, 47's rejected revision list, 46's ordering
+rule); 44's remaining text self-contained, with a pointer to `saved-benches.md` in the file's intro;
+every live inbound link resolves. Only `history/ui.md` and four closed task files still name
+`shell.md` for 25 — frozen narrative, not navigation.
+
+**Hardware debts:** none created — two verbatim moves.
+
+**Budget:** PROCEED, weekly **17.2%**, wave **6**.
+
+**Least sure about:** **whether splitting one decision across two files is a split or a quiet
+renumbering.** Decision 44 is now "44" in one file and "44 (saved bench)" in another, and a reader
+who greps `### 44` finds one heading and not the other half. It has a precedent in decision 10 and
+the reviewer found nothing dangling — but `check-decision-refs.py` cannot tell which half a
+citation of 44 means, so the next correction to the retract path may land against the wrong file.
+
+**Leg close, for the next leg.** 4/4 units, all four overdue size debts, `main`'s doc gate RED → green.
+Size ledger **20 → 14 overdue**; the oldest, `tasks/suite/030`, is still genuinely parked on
+owner-only `tasks/doc/045`, so the next leg's first unit is the oldest *payable* one —
+`tasks/dev-bench/014` (`decisions/link.md`, due 09-22; its `In flux: yes` names "next quiet" and the
+file has not moved since 09-08, so re-read it the way `dev-bench/012` was re-read). Queue: **15
+dispatchable** over 5 scopes, 2 bench tasks still waiting on the dev-bench probe. No `suite`
+announcement window is open. The `.worktrees/embarch-doc/embarch-ui` symlink this leg made stays — it
+is what keeps `check-links.py` green from any doc worktree until `tasks/doc/085` is settled.
+
+---
+
 ## 2026-09-28 15:56 — core/094 decision 74 gets its own file, and the one link the split broke was in `ui`
 
 **Decided:** **that the supervisor repoints a cross-sub-project citation a split broke, at landing,
