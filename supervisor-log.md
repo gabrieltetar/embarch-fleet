@@ -97,6 +97,57 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-28 16:52 — study-designer/067 the `.eap` constants and decision 71 move out, and two files with 14 and 75 bytes left get room
+
+**Decided:** **nothing** by me. My dispatch note suggested checking whether the `.eap` constants
+belonged in the existing `interfaces/eap.md`; the worker measured that it would land `eap.md` at
+12,173 B, past its own reserve floor, and made a new sibling instead — the pattern `types.md`'s
+four siblings already follow. It moved decision 71 (`render_layout` refuses loudly) to
+`decisions/payload-meaning.md` rather than `protocol-exec.md`, on mission: 71 is host-side
+rendering and cites 52 twice.
+
+**Merged:** `agent/study-designer/067-compact-study-designer` (code: **zero commits**,
+`embarch-study-designer` main unchanged; doc **`5f1ba9ab`**, rebased onto `171e0013`).
+`interfaces/limits.md` **12,274 → 8,951 B**, new `interfaces/eap-limits.md` 4,251 B (18 rows,
+decisions 58–62); `decisions/protocols.md` **12,213 → 10,876 B**, `decisions/payload-meaning.md`
+8,650 → 9,987 B. `decisions.md`'s routing table moved 71 between rows. Both files were past their
+2026-09-24 clock. `changelog.d/study-designer-eap-limits-split.changed.md` folded into
+`history/study-designer.md`. Gate on the merge result: `check-docs.py` **all 11 green**;
+`check-ownership.py --scope study-designer` clean on 7 paths; `check-client-names.py` clean on the
+code worktree.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+All 18 rows and decision 71 byte-identical against `171e0013`, every `[measured]`/`[assumed]`
+marker intact; decision 75 untouched; 71 fits `payload-meaning.md`'s mission beside 52 and 70; the
+routing table matches both files; inbound citations (`embarch-dev-bench/spec.md`,
+`embarch-ui/interfaces.md`, `src/crc.rs:180`, `src/limits.rs`) cite a Rust path or a bare number, so
+none moved. It noted the section intro above the moved table was lightly reworded for its new file
+("the constants above" → "`limits.md`'s table") — an adaptation, not a content change.
+
+**Hardware debts:** none created — two verbatim moves.
+
+**Budget:** PROCEED, weekly **17.9% → 19.3%**, wave **6**.
+
+**Least sure about:** **whether moving a decision between topic files is a split or a
+re-filing.** Decision 71 now lives beside 52 because the worker judged its mission, and the
+reviewer agreed; but a reader who learned "protocol decisions are in `protocols.md`" will look
+there first, and only the routing table tells them otherwise.
+
+**Leg close, for the next leg.** 4/4 units, all green, no reds, no blocks; four doc commits and
+**zero code commits** across the leg. Size ledger **14 → 10 overdue**. The oldest,
+`tasks/suite/030`, is still parked on owner-only `tasks/doc/045`; `tasks/doc/031` (`DOC-BUDGET.md`)
+is owner-only. The oldest *payable* overdue ones are `study-designer/068` (`declares.md`, 88 B left)
+and `ui/072` (`study-designer.md`), both due 09-25 and `open`; `core/093` (`decisions/streams.md`,
+09-25) is `blocked` on `In flux` — re-read it against `git log` the way `dev-bench/014` was. **Filed
+`tasks/api/119`** (decision 72 says seven, names six). Queue: **13 dispatchable** over 5 scopes
+(api 2, core 5, study-designer 3, ui 2, umbrella 1), 2 bench tasks still waiting on the dev-bench
+probe (`validate dev-bench` at step 0: `001057729826` not attached, not a mismatch). `inbox/` empty
+at start and end. No `suite` announcement window is open. The `.worktrees/embarch-doc/embarch-ui` and
+`embarch-fleet` symlinks stay.
+
+---
+
 ## 2026-09-28 16:48 — dev-bench/014 link.md's two ceilings get their own file, and a twenty-day park ends on its own clock
 
 **Decided:** **that `tasks/dev-bench/014`'s `In flux: yes` had lapsed on its own terms, and unparked
