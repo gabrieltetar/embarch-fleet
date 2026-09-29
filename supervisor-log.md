@@ -97,6 +97,72 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-28 18:00 — umbrella/089 check 15 compares the running Core's bytes, not just its version number
+
+**Decided:** nothing by me beyond the dispatch note, which corrected the task's reserve figure
+(`schema-skew.md` had 4.8 KB of room; the "733 B left" belonged to `bind.md`) and bounded the three
+open questions. **The worker authored `embarch-umbrella` decision 56**, in its own row: check 15
+hashes the located `embarch-core` binary **only once `core_version` already matches** and compares
+it to `/status`'s `binary_sha256` (`embarch-core` decision 68); a mismatch is a **Warn**, never a
+Fail — `embarch-core` decision 13 and this repo's 24 stand, argued in the entry rather than assumed;
+a missing hash on either side falls back to the old version-only Pass with its "invisible" text.
+Decision 34 amended with a "narrowed, not retired, by 56" pointer.
+
+**Merged:** `agent/umbrella/089-consume-binary-sha256-in-check-15` (code **`b55809c`**, fast-forward
+onto `2764e89` — `src/doctor.rs` +231/−37, `src/deploy.rs`'s `hash_file` made `pub(crate)` so there
+is one SHA-256 routine; doc **`1d85a3dd`**, rebased by me from `57c380dd` onto `127d98fb`).
+`interfaces/doctor-chain.md`'s check-15 row and the `features.d` row updated; `open.md`'s check-15
+bullet rewritten as the hardware debt below. **`open.md` went back into reserve** (3,905 → 4,048 B,
+floor 3,920) — the worker filed **`tasks/umbrella/090`** in the same commit, `blocked` on that debt,
+due 2026-10-19. `tasks/umbrella/089` closed and removed.
+`changelog.d/umbrella-check-15-binary-sha256.changed.md` folded into `history/umbrella.md`;
+`suite/features.md` reassembled. Gate on the merge result: `check-docs.py` **all 11 green**;
+`cargo build`/`test` (**233 passed**, up from 228)/`clippy --all-targets -- -D warnings` green;
+`check-ownership.py --scope umbrella` clean on 8 paths, `--code-repo` clean;
+`check-client-names.py` clean.
+
+**Blocked:** nothing.
+**Reviewer:** no findings.
+Every new arm is Warn; the hash is gated on the same `version_from_output` parse the version
+comparison uses; `hash_located_core` hashes the same `core.path` the version came from, so the
+wsl-host ambiguity is unchanged rather than new; lowercase 64-hex on both sides; every clause of
+56 has a named test; decision 34 amended in place, not retired.
+
+**Hardware debts:** **two `doctor` runs on the primary bench machine**, recorded in `open.md`'s
+check-15 bullet: one against the installed Core at a matching version and binary, confirming the
+new closed-gap Pass renders; one against a deliberately stale same-version install, confirming the
+new Warn fires with a sensible fix line. Either one also unparks `tasks/umbrella/090`. No live
+Core was touched.
+
+**Budget:** PROCEED, weekly **21.6%**, wave **6**.
+
+**Least sure about:** **what "the located binary" is on this machine.** The live Core is a Windows
+service exe built from an rsync target under `/mnt/c/...` (not a git checkout), and check 15 hashes
+whatever `doctor` locates; if that is a build output rather than the installed service copy, a
+correct deploy matches, but the Pass then attests the build directory, not the service. The
+reviewer confirmed this is the same ambiguity the version comparison already had — the first live
+run is what settles it.
+
+**Leg close, for the next leg.** 4/4 units, all green, no reds, no blocks; **two code commits**
+(`b9a2d5d` a comment, `fdb9b1d` a comment) plus **one real behavior change** (`b55809c`). Three of
+four paid the size ledger (**7 → 4 overdue**); all three were `In flux: yes` parks I unparked at
+claim with evidence. **Next leg's first unit: `tasks/study-designer/069`** (`gatt-extract.md`,
+**36 B left**, due 09-27, `open`, seam named). The other payable overdue one is `api/083`
+(`embarch-api/spec.md`, blocked on flux, names its own §§1-2 vs §§3-7 split seam — the same
+unpark argument would apply). `suite/030` and `doc/031` remain owner-only. Filed **`api/120`**.
+Queue: **12 dispatchable over 4 scopes** (api 3, core 6, study-designer 2, ui 1) — umbrella has
+nothing dispatchable now; 2 bench tasks still waiting (`validate` at step 0: dev-bench
+`001057729826` **not attached**; DUT `000852006107` attached but **USB Communication Error on
+open** — neither a mismatch). Refill was owed on scope spread; I re-swept only the thin scopes'
+`open.md` (dev-bench, outpost, topology), unchanged since the previous leg's sweep, and found
+nothing host-side. `inbox/` empty at close. No `suite` window open. **Waiting inside the turn
+worked again** — a scratchpad `git ls-remote` poll, and every worker and reviewer notification
+arrived appended to a tool result. **Two slips worth knowing**: the `| tail`-ate-the-exit push
+(see `core/046`), and a parallel Edit+fold call pair that raced `fold-commit.py`'s own heading
+restamp — harmless, refused cleanly, but issue the fold only after the entry's Edit returns.
+
+---
+
 ## 2026-09-28 17:56 — api/111 `validate`'s kind-classification thread gets its own file, and the park it sat in named its own exit
 
 **Decided:** **that `tasks/api/111`'s `In flux: yes` did not forbid its own second exit, and
