@@ -160,6 +160,11 @@ worked again** — a scratchpad `git ls-remote` poll, and every worker and revie
 arrived appended to a tool result. **Two slips worth knowing**: the `| tail`-ate-the-exit push
 (see `core/046`), and a parallel Edit+fold call pair that raced `fold-commit.py`'s own heading
 restamp — harmless, refused cleanly, but issue the fold only after the entry's Edit returns.
+**The owner posted `fleet stop` in #embarch-fleet at 18:00:14** (`ts` 1790640014.685759), while
+this unit's fold was running; I saw it on the channel poll at 18:02, after all four units had
+landed. Nothing was in flight, so honouring it meant only this: **I deleted `.fleet/pump`**, did
+not react to his message, and posted my stop line in its thread. **No successor leg should
+start.** Seen on the channel, not Remote Control.
 
 ---
 
