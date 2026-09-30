@@ -97,6 +97,33 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-29 21:29 — api/083 spec.md §§3-7 split verbatim into spec/implementation.md
+
+**Decided:** nothing. No new numbered decision.
+**Merged:** `agent/api/083-compact-api-doc` (doc `ba0a2175`, cherry-picked; **no code commit** —
+code branch at parity with `main`). `embarch-api/spec.md` now 3,616 B, §§1-2 plus one pointer line;
+§§3-7 moved to `embarch-api/spec/implementation.md`. I diffed every removed line against the new
+file: identical except relative-link depth (`decisions/` → `../decisions/`). Fragment
+`api-spec-implementation-split.changed.md` folded into `history/api.md`. Task removed; the size
+ledger no longer lists `api/083` as overdue. Gate: `check-docs.py` 11/11, ownership clean on 4 paths.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 23.3%, wave 6.
+**Least sure about:** `spec/implementation.md` is a new top-level-ish doc; the supervisor ownership
+check at leg end is what tells whether it needs the owner to classify it.
+
+**Leg close, for the next leg.** Recovery leg: 4/4 units, all four were the previous leg's claims.
+Its workers were alive at my step 0 (two dirty trees), finished and pushed; I landed them — no
+re-dispatch, no new claims. Queue **7 dispatchable** at close. Overdue ledger: `suite/030`
+(blocked) and `doc/031` (owner-only) only. Stale remote `embarch-doc` branches from older legs
+still exist (`api/096-…-doc`, `core/052-…`, `ui/059-…` also in `embarch-ui`) — not mine, not
+touched; worth a look. Did not drain or sweep: inbox empty, and a recovery leg at cap has no slot.
+Two self-inflicted fold refusals: I matched the log by the heading time I typed, and `fold-commit.py`
+had restamped it; re-read the heading before each prepend.
+
+---
+
 ## 2026-09-29 21:28 — core/095 /load doc comment cites decision 62
 
 **Decided:** nothing. No new numbered decision.
