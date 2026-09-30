@@ -97,6 +97,24 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-29 21:15 — api/120 main.rs cites study-designer decision 63 instead of a renumbered spec section
+
+**Decided:** nothing.
+**Merged:** `agent/api/120-main-rs-spec-section-cite` (code **`0ee185f`**, fast-forward, one comment
+line in `src/main.rs`; doc **`624426ae`**, rebased by me onto the `core/084` fold). No other
+`spec.md §` citation in `embarch-api`. Task closed and removed;
+`changelog.d/api-spec-section-cite.fixed.md` folded into `history/api.md`. Gate on the merge result:
+`cargo build`/`test` (226 passed)/`clippy --all-targets -- -D warnings` green;
+`check-client-names.py` clean; `check-docs.py` 11/11; `check-ownership.py --scope api` clean.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 22.0%, wave 6.
+**Least sure about:** nothing material; a one-line comment repoint the reviewer matched to the
+right decision's subject.
+
+---
+
 ## 2026-09-29 21:11 — core/084 every row of core's decisions.md size column checked against wc -c
 
 **Decided:** nothing. Leg start `1337a148`. At step 0 I filed the one inbox drop as
