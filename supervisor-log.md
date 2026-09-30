@@ -97,6 +97,23 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-29 22:08 — api/119 decision 72's retired-mirror count is six, not seven
+
+**Decided:** nothing. No new numbered decision.
+**Merged:** `agent/api/119-decision-72-mirror-count-doc` (doc `959c3fc6`, cherry-picked; **no code
+commit** — `client.rs` already said six). Recovery landing, not re-dispatched. Three places in
+`embarch-api/decisions/client-crate.md` corrected. Also drained inbox drop
+`history-api-seven-should-be-six.md` inside this fold: `history/api.md`'s suite/035 "Removed" line
+now says six (supervisor-owned file, one word; announced in channel). Gate: `check-docs.py` 11/11,
+ownership clean on 3 paths. Task removed.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 25.8%, wave 6.
+**Least sure about:** fixing the history line in the fold instead of numbering a doc task; it was one word in a file only I write.
+
+---
+
 ## 2026-09-29 22:07 — core/090 decision 36's nrfutil erase half now has a test
 
 **Decided:** nothing. No new numbered decision.
