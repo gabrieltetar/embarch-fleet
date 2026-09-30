@@ -97,6 +97,22 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-29 21:25 — study-designer/066 decisions.md file count made unstale
+
+**Decided:** nothing. No new numbered decision.
+**Merged:** `agent/study-designer/066-decisions-md-no-count-doc` (doc `276a92b8`, fast-forward;
+**no code commit** — doc-only task). "these twenty files" became "the files under `decisions/`".
+Table census clean: 78 decisions, 20 rows for 20 files, every number in exactly one row. No
+changelog fragment (not reader-facing). Task removed. Gate: `check-docs.py` 11/11; ownership clean
+on 2 paths. Recovered from the previous leg's handoff: this worker had pushed before it died.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 23.3%, wave 6.
+**Least sure about:** nothing material; a one-sentence edit.
+
+---
+
 ## 2026-09-29 21:19 — study-designer/069 gatt-extract.md squeezed out of reserve; the split was blocked by ui's links
 
 **Decided:** nothing. No new numbered decision.
