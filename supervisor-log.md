@@ -97,6 +97,23 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-29 21:28 — core/095 /load doc comment cites decision 62
+
+**Decided:** nothing. No new numbered decision.
+**Merged:** `agent/core/095-load-handler-decision-62-cite` (code `2590885`, fast-forward;
+doc `68c7d0ee`, task close, cherry-picked). `src/study.rs` `stream_load_handler`'s comment now
+says "(decision 62; suite decision 4)" instead of a file path. Gate on the merged tree: clippy
+`-D warnings` clean, `cargo test` green, ownership + client-names clean, `check-docs.py` 11/11.
+**No native Windows build**: the diff is one doc comment, which cannot change it; said here so it
+is not mistaken for a run. Task removed.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 23.3%, wave 6.
+**Least sure about:** skipping the Windows build on a comment-only diff is my reading, not a written exemption.
+
+---
+
 ## 2026-09-29 21:26 — ui/076 study-designer decision links repointed at the index
 
 **Decided:** nothing. No new numbered decision.
