@@ -97,6 +97,32 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-29 22:11 — core/081 open.md's stale decision-64 spans-route bullet removed
+
+**Decided:** nothing. No new numbered decision.
+**Merged:** `agent/core/081-open-md-spans-route-doc` (doc `94060b29`, cherry-picked from `e9064972`;
+the branch's second commit `61ea1f70` touched only the task file, which I removed instead — not
+landed). **No code commit.** The bullet named `tasks/core/076` as unbuilt; 076 landed 2026-09-17 and
+decision 66 made the `outpost_load.rs`/`trace.rs` duplication permanent, so the bullet went entirely.
+No changelog fragment (nothing user-facing). Gate: `check-docs.py` 11/11, ownership clean. Task removed.
+**My dispatch bug:** I created both worktrees with a relative path under `git -C`, so they landed at
+`embarch-core/.worktrees/…` and `embarch-doc/.worktrees/…`; the worker refused cleanly with no edits,
+I `git worktree move`d them to the right place and resumed the same worker. Use absolute paths.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 26.6%, wave 6.
+**Least sure about:** nothing about the content; the resume-after-refusal is a same-worker continuation, not a second dispatch.
+
+**Leg close, for the next leg.** 4/4 units: three recovery landings (core/090, api/119, ui/075) plus
+core/081. Drain the reviewer drop `inbox/ui-075-dropped-served-by-binary.md` first — restoring the
+phrase puts `embarch-ui/spec.md` 13 B into reserve. Owed: native Windows build of `embarch-core`
+(core/090). Removed the stale `embarch-ui` 075/076 worktrees and local branches. Did not sweep
+sources: queue had 3 dispatchable (`api/108`, `core/083`, `core/089`) and one slot left. `suite/030`
+and `doc/031` still overdue and untouchable. Old remote branches `api/096`, `core/052`, `ui/059` untouched.
+
+---
+
 ## 2026-09-29 22:09 — ui/075 spec.md squeezed out of reserve, 9,275 to 9,031 B
 
 **Decided:** nothing. No new numbered decision.
