@@ -97,6 +97,24 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-29 21:26 — ui/076 study-designer decision links repointed at the index
+
+**Decided:** nothing. No new numbered decision.
+**Merged:** `agent/ui/076-repoint-study-designer-links-doc` (doc `e810317e`, cherry-picked onto
+`276a92b8`; **no code commit** — doc-only). `embarch-ui/decisions/gatt-capture.md` (56) and
+`designer-panels.md` (33, 78) now link `embarch-study-designer/decisions.md`, not
+`decisions/gatt-extract.md` — which unblocks a future split of that topic file (see the
+`study-designer/069` entry). `changelog.d/ui-decision-links-repoint-index.changed.md` folded into
+`history/ui.md`. Task removed. Gate: `check-docs.py` 11/11; ownership clean on 4 paths.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 23.3%, wave 6.
+**Least sure about:** the reviewer read at the merge SHA in the owner checkout rather than my leg
+worktree; it used `git show <sha>`, so the read is exact, but it did not follow the path it was given.
+
+---
+
 ## 2026-09-29 21:25 — study-designer/066 decisions.md file count made unstale
 
 **Decided:** nothing. No new numbered decision.
