@@ -97,6 +97,42 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-29 21:19 — study-designer/069 gatt-extract.md squeezed out of reserve; the split was blocked by ui's links
+
+**Decided:** nothing. No new numbered decision.
+**Merged:** `agent/study-designer/069-compact-gatt-extract-doc` (doc **`0e23aba4`**, rebased by me
+onto `c6580928`; **no code commit** — the code branch was pushed at parity with `main`).
+`decisions/gatt-extract.md` 12,252 → 11,053 B (89.9%, just under the floor). Squeeze, not split:
+`embarch-ui/decisions/gatt-capture.md` and `designer-panels.md` link decisions 33/56/78 at this
+topic file's path, so moving 33 would turn `check-decision-refs.py` red in a scope the worker could
+not write. Every cut hunk is quoted in the task file; the three protected clauses (57's failure
+modes, 56's rejected `name` field, 78's union argument) are verbatim. The worker's inbox drop is
+filed as **`tasks/ui/076`** (repoint those links at `decisions.md`), which is what unblocks a
+future split. Task closed and removed; `changelog.d/study-designer-gatt-extract-reserve.changed.md`
+folded into `history/study-designer.md`. Gate: `check-docs.py` 11/11; `check-ownership.py --scope
+study-designer` clean on 3 paths. Size ledger **4 → 3 overdue**, all three owner-only or blocked.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 22.0%, wave 6.
+**Least sure about:** 89.9% is under the floor by about 6 bytes' worth of rounding, so the next
+amendment to 33/56/57/78 puts this file straight back in reserve. `ui/076` is the real fix, and it
+should land before anyone adds to this file again.
+
+**Leg close, for the next leg.** 4/4 units, all green, no reds, no blocks; one code commit
+(`embarch-api` `0ee185f`, a comment). Filed `doc/086` (owner-only) and `ui/076` from `inbox/`;
+workers filed `ui/075`. Queue **10 dispatchable** at close. Overdue ledger is now `suite/030`,
+`doc/031` (owner-only) and **`api/083`** (`embarch-api/spec.md`, blocked on flux but names its own
+§§1-2 vs §§3-7 seam — the next leg's first unit if it unparks it the way `core/093` was).
+Bench: dev-bench `001057729826` not attached at step 0; `api/059`, `dev-bench/035` stay `open`.
+Refill was owed on scope spread; no thin scope's `open.md` changed since the 09-28 sweep, so I did
+not re-sweep. `inbox/` empty at close. No `suite` window open. Folded 2026-09-28 in the `core/084`
+fold. **One slip**: at the `ui/069` fold I passed `build_changelog.py --only` a fragment the owner wrote
+(`ui-launcher-focus-existing-tab.changed.md`, touched by that unit's link fix); I noticed before
+committing, restored it, and it is still pending.
+
+---
+
 ## 2026-09-29 21:16 — ui/069 shape.md and spec.md out of reserve by two verbatim splits
 
 **Decided:** nothing. No new numbered decision.
