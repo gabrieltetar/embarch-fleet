@@ -97,6 +97,23 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-29 22:09 — ui/075 spec.md squeezed out of reserve, 9,275 to 9,031 B
+
+**Decided:** nothing. No new numbered decision.
+**Merged:** `agent/ui/075-compact-ui-spec-doc` (doc `1fe6295b`, cherry-picked; **no code commit** —
+`embarch-ui` branch identical to `main`). Recovery landing, not re-dispatched. Wording tightened,
+no split; now 9,031 B against a 9,040 B reserve line (the task's "under 90%" target was wrong).
+Gate: `check-docs.py` 11/11, ownership clean on 3 paths. Task removed.
+**Answer to DOC-COMPACTION-PASS's question:** not answered by the worker in words; my read — yes,
+`spec.md` still states the component, but see the reviewer finding for one cut phrase.
+**Blocked:** nothing.
+**Reviewer:** 1 finding — inbox/ui-075-dropped-served-by-binary.md
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 25.8%, wave 6.
+**Least sure about:** the reviewer's finding (dropped "served by the binary", uncounted in the commit's quoted cuts) is left in `inbox/` for the next leg's drain; restoring it costs ~22 B and would put the file back in reserve by 13 B.
+
+---
+
 ## 2026-09-29 22:08 — api/119 decision 72's retired-mirror count is six, not seven
 
 **Decided:** nothing. No new numbered decision.
