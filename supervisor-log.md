@@ -97,6 +97,24 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-29 22:45 — api/121 Windows-only clippy and config-test reds fixed
+
+**Decided:** nothing. Supervisor-filed from the api/108 entry's "Found" line (queue was 0 at start).
+**Merged:** `agent/api/121-windows-reds` (code `f109285`, doc `d08c10ae`, both ff). core-client's
+`Command`/`OnceLock` imports now `cfg(unix)`; firmware-build `config::` tests were a fixture bug
+(backslash paths inside TOML basic strings), fixed with a `toml_path()` test helper, no production
+change. Worker ran native Windows `cargo.exe`: config:: 22/22, clippy clean. Linux gate green, docs 11/11.
+**Blocked:** nothing. `tasks/core/091` still on disk: my `git rm` of it was classifier-refused again
+(the api/121 rm went through) — owner needs to remove it.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 29.3%, wave 6.
+**Least sure about:** the worker's code commit lacks the Co-Authored-By line (pushed, not rewritten).
+
+**Leg close.** 1 unit. Sweep: only change to sources since the last leg was a resolved core bullet;
+0 dispatchable. No dream (one posted ~30 min before this leg). Overdue size debts suite/030 and
+doc/031 both wait on the owner (reserved paths).
+
 ## 2026-09-29 22:33 — api/108 Windows Job Object tree-kill code landed, task stays open
 
 **Decided:** nothing. Worker honoured the brief: decision 75 keeps its unix-only qualifier and
