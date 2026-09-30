@@ -97,6 +97,28 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-29 22:33 — api/108 Windows Job Object tree-kill code landed, task stays open
+
+**Decided:** nothing. Worker honoured the brief: decision 75 keeps its unix-only qualifier and
+`tasks/api/108` stays `open` (kill never run on Windows).
+**Merged:** `agent/api/108-windows-tree-kill` (code `9650316`, doc `113499ab`, both ff). Gate: Linux
+clippy/test green, docs 11/11. I also ran native Windows `cargo.exe` on an rsync'd copy:
+`embarch-firmware-build` compiles clippy-clean, `build::` tests 7/7; recorded in the task file.
+**Found:** on Windows, `embarch-core-client/src/token_discovery.rs` has two unused imports (red under
+`-D warnings`) and the crate's `config::` tests fail. Pre-existing, not filed yet.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none (needs a Windows run of a timed-out forked tree, not a board).
+**Budget:** PROCEED, weekly 28.3%, wave 6.
+**Least sure about:** landing `cfg(windows)` code whose kill path has never executed; the fallback
+to `start_kill()` limits the downside.
+
+**Leg close.** 2 units (core/089, api/108). Sweep done: every open.md item is hardware- or
+trigger-gated, roadmap Next is a bench run — 0 dispatchable. Did not dream: one was posted 20 min
+before this leg (crystal_ball). Next: close `tasks/core/091` (paid; my removal was classifier-refused),
+file the Windows core-client findings above. Slack line for api/108 went out before its fold
+(a `| tail` masked the refused fold-commit's exit — the `tasks/doc/086` shape).
+
 ## 2026-09-29 22:27 — core/089 decision 59's four evidence citations restored
 
 **Decided:** nothing. Recovery landing (branch on origin = finished worker). Drained inbox drop
