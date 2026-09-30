@@ -97,6 +97,20 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-29 22:19 — ui/077 "served by the binary" restored in spec.md
+
+**Decided:** nothing.
+**Merged:** `agent/ui/077-served-by-the-binary` (doc `93f2df8e`, rebased onto the core/083 fold). No
+code commit. Worker filed `tasks/ui/078-compact-ui.md` for spec.md's reserve. Task 077 removed.
+**Blocked:** nothing. **Still in flight at leg end, NOT landed:** `api/108` (worktree dirty, no
+branch pushed) and `core/089` (dispatched 22:18). Successor: gate them when their branches appear;
+absence is not death. Check 108 did not mark done or drop decision 75's unix-only qualifier without
+a real-Windows kill.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 27.4%, wave 6.
+**Least sure about:** 078 overlaps the older open ui compaction tasks 021/043; not reconciled.
+
 ## 2026-09-29 22:18 — core/083 task 076's retracted directional claim corrected
 
 **Decided:** nothing. Recovery leg after a leg that died with 3 units dispatched; this is the first
