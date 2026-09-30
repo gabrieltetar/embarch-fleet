@@ -97,6 +97,21 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-29 22:27 — core/089 decision 59's four evidence citations restored
+
+**Decided:** nothing. Recovery landing (branch on origin = finished worker). Drained inbox drop
+`doc-must-not-delete-citations.md` → `tasks/doc/087` (`Owner: required`: DOC-COMPACTION-PASS.md is
+reserved). Set `tasks/ui/078` `open` → `blocked` (its own body says in flux; due 2026-10-13).
+**Merged:** `agent/core/089-decision-59-citations` (doc `a7259340`, rebased from `bc094a7c`). No code
+commit. `surfaces.md` now 11042/12288 B (89.9%), out of reserve. `tasks/core/091` left `blocked`:
+check-doc-size says "PAID, close its item", but my removal of it was refused by the permission
+classifier — owner or next leg should close it.
+**Blocked:** nothing. `api/108` still running (dirty worktree, no branch) — not reclaimed.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 28.3%, wave 6.
+**Least sure about:** whether 091 staying open misleads the size ledger; it is paid in fact.
+
 ## 2026-09-29 22:19 — ui/077 "served by the binary" restored in spec.md
 
 **Decided:** nothing.
