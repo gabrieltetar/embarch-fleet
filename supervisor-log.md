@@ -97,6 +97,20 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-29 22:18 — core/083 task 076's retracted directional claim corrected
+
+**Decided:** nothing. Recovery leg after a leg that died with 3 units dispatched; this is the first
+of them to report (branch present on origin = finished worker).
+**Merged:** `agent/core/083-task-076-retracted-claim` (doc `3857d592`, ff). No code commit. Task
+file 083 removed at fold. `ui/077` and `api/108` had no remote branch at leg start (api/108's
+worktree is dirty mid-run) — treated as alive, not reclaimed. `core/089` dispatched in core's slot
+(claim `e1d0ec14`), told to compact `surfaces.md` (94.2%) ride-along under 091's list.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED at start, weekly 27.4%, wave 6. Refill owed: 0 dispatchable, 0 scopes.
+**Least sure about:** whether `ui/077`'s worker is alive at all — its worktree is clean and nothing I can read may retire it.
+
 ## 2026-09-29 22:11 — core/081 open.md's stale decision-64 spans-route bullet removed
 
 **Decided:** nothing. No new numbered decision.
