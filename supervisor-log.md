@@ -97,6 +97,22 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-29 22:07 — core/090 decision 36's nrfutil erase half now has a test
+
+**Decided:** nothing. No new numbered decision.
+**Merged:** `agent/core/090-decision-36-erase-overclaim` (code `ae66d3f`, fast-forward; doc `1dc8fe16`,
+fast-forward). Recovery landing: the previous leg's worker had finished and pushed; not re-dispatched.
+`nrfutil_erase_options()` extracted from `run()` with a test that it never requests `ERASE_ALL`;
+decision 36's text corrected. Gate re-run on the merge: clippy `-D warnings` clean, `cargo test`
+green (246+1), ownership + client-names clean, `check-docs.py` 11/11. Task removed.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** native Windows build of `embarch-core` owed (real code change in `src/flash_backend.rs`); owner runs it from the main checkout.
+**Budget:** PROCEED, weekly 25.8%, wave 6.
+**Least sure about:** nothing substantive; the gate is mine, the code is test-only refactoring.
+
+---
+
 ## 2026-09-29 21:29 — api/083 spec.md §§3-7 split verbatim into spec/implementation.md
 
 **Decided:** nothing. No new numbered decision.
