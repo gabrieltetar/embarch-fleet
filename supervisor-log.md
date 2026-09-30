@@ -97,6 +97,30 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-09-29 21:16 — ui/069 shape.md and spec.md out of reserve by two verbatim splits
+
+**Decided:** nothing. No new numbered decision.
+**Merged:** `agent/ui/069-compact-ui-doc` (doc **`6e5a8c33`**, rebased by me onto `624426ae`; **no
+code commit**). Decisions 3 + 28 moved verbatim from `embarch-ui/decisions/shape.md` into new
+`decisions/launcher.md` (shape.md 12,194 → 2,079 B; launcher.md 10,373 B); the five-tab table moved
+verbatim from `spec.md` into new `spec/tabs.md` (spec.md 11,022 → 9,275 B, was **over** cap;
+tabs.md 2,435 B). `decisions.md` group table split into two rows; the one inbound citation
+(pending fragment `changelog.d/ui-launcher-focus-existing-tab.changed.md`) repointed. `spec.md` is
+still in reserve (965 B left), so the worker filed **`tasks/ui/075`**, `open`, due 2026-10-20.
+`tasks/ui/069` closed and removed; `changelog.d/ui-compact-shape-and-spec.changed.md` folded into
+`history/ui.md`. **I left `ui-launcher-focus-existing-tab.changed.md` pending** — it belongs to the
+owner's decision-28 commit `615b57bd`; this unit only edited its link. Gate: `check-docs.py` 11/11;
+`check-ownership.py --scope ui` clean on 9 paths.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 22.0%, wave 6.
+**Least sure about:** the worker's report said `ui/075` was `blocked` on `tasks/ui/070`, but the
+file on `main` says `open` — and `ui/070` is done (owner, 2026-09-17), so `open` is the right state;
+the report was wrong, not the file.
+
+---
+
 ## 2026-09-29 21:15 — api/120 main.rs cites study-designer decision 63 instead of a renumbered spec section
 
 **Decided:** nothing.
