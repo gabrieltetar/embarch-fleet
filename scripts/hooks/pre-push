@@ -15,7 +15,7 @@
 #     both, in `embarch-fleet/hardware.toml`. Scrubbed forward six minutes
 #     later, but the strings are in that commit's tree for good. It was the
 #     SECOND instance: a supervisor log entry put a client name on
-#     `origin/main` for 21 hours on 2026-09-05, removed by `cab9903`.
+#     `origin/main` for 21 hours on 2026-09-05, removed by `321e66b`.
 #   * Two files sharing `tasks/ui/016`, issued twenty minutes apart by a leg
 #     and by the owner, each reading the same "next free" before either
 #     committed.

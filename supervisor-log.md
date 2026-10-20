@@ -100,7 +100,7 @@ unit under **Merged** and **Blocked**:
 ## 2026-09-29 22:45 — api/121 Windows-only clippy and config-test reds fixed
 
 **Decided:** nothing. Supervisor-filed from the api/108 entry's "Found" line (queue was 0 at start).
-**Merged:** `agent/api/121-windows-reds` (code `f109285`, doc `d08c10ae`, both ff). core-client's
+**Merged:** `agent/api/121-windows-reds` (code `b01f203`, doc `67dbe33b`, both ff). core-client's
 `Command`/`OnceLock` imports now `cfg(unix)`; firmware-build `config::` tests were a fixture bug
 (backslash paths inside TOML basic strings), fixed with a `toml_path()` test helper, no production
 change. Worker ran native Windows `cargo.exe`: config:: 22/22, clippy clean. Linux gate green, docs 11/11.
@@ -119,7 +119,7 @@ doc/031 both wait on the owner (reserved paths).
 
 **Decided:** nothing. Worker honoured the brief: decision 75 keeps its unix-only qualifier and
 `tasks/api/108` stays `open` (kill never run on Windows).
-**Merged:** `agent/api/108-windows-tree-kill` (code `9650316`, doc `113499ab`, both ff). Gate: Linux
+**Merged:** `agent/api/108-windows-tree-kill` (code `cfa8197`, doc `f97d7a3a`, both ff). Gate: Linux
 clippy/test green, docs 11/11. I also ran native Windows `cargo.exe` on an rsync'd copy:
 `embarch-firmware-build` compiles clippy-clean, `build::` tests 7/7; recorded in the task file.
 **Found:** on Windows, `embarch-core-client/src/token_discovery.rs` has two unused imports (red under
@@ -142,7 +142,7 @@ file the Windows core-client findings above. Slack line for api/108 went out bef
 **Decided:** nothing. Recovery landing (branch on origin = finished worker). Drained inbox drop
 `doc-must-not-delete-citations.md` → `tasks/doc/087` (`Owner: required`: DOC-COMPACTION-PASS.md is
 reserved). Set `tasks/ui/078` `open` → `blocked` (its own body says in flux; due 2026-10-13).
-**Merged:** `agent/core/089-decision-59-citations` (doc `a7259340`, rebased from `bc094a7c`). No code
+**Merged:** `agent/core/089-decision-59-citations` (doc `2aa45f64`, rebased from `bc094a7c`). No code
 commit. `surfaces.md` now 11042/12288 B (89.9%), out of reserve. `tasks/core/091` left `blocked`:
 check-doc-size says "PAID, close its item", but my removal of it was refused by the permission
 classifier — owner or next leg should close it.
@@ -155,7 +155,7 @@ classifier — owner or next leg should close it.
 ## 2026-09-29 22:19 — ui/077 "served by the binary" restored in spec.md
 
 **Decided:** nothing.
-**Merged:** `agent/ui/077-served-by-the-binary` (doc `93f2df8e`, rebased onto the core/083 fold). No
+**Merged:** `agent/ui/077-served-by-the-binary` (doc `5df5d116`, rebased onto the core/083 fold). No
 code commit. Worker filed `tasks/ui/078-compact-ui.md` for spec.md's reserve. Task 077 removed.
 **Blocked:** nothing. **Still in flight at leg end, NOT landed:** `api/108` (worktree dirty, no
 branch pushed) and `core/089` (dispatched 22:18). Successor: gate them when their branches appear;
@@ -170,10 +170,10 @@ a real-Windows kill.
 
 **Decided:** nothing. Recovery leg after a leg that died with 3 units dispatched; this is the first
 of them to report (branch present on origin = finished worker).
-**Merged:** `agent/core/083-task-076-retracted-claim` (doc `3857d592`, ff). No code commit. Task
+**Merged:** `agent/core/083-task-076-retracted-claim` (doc `bc355356`, ff). No code commit. Task
 file 083 removed at fold. `ui/077` and `api/108` had no remote branch at leg start (api/108's
 worktree is dirty mid-run) — treated as alive, not reclaimed. `core/089` dispatched in core's slot
-(claim `e1d0ec14`), told to compact `surfaces.md` (94.2%) ride-along under 091's list.
+(claim `d1991ea2`), told to compact `surfaces.md` (94.2%) ride-along under 091's list.
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** none.
@@ -183,8 +183,8 @@ worktree is dirty mid-run) — treated as alive, not reclaimed. `core/089` dispa
 ## 2026-09-29 22:11 — core/081 open.md's stale decision-64 spans-route bullet removed
 
 **Decided:** nothing. No new numbered decision.
-**Merged:** `agent/core/081-open-md-spans-route-doc` (doc `94060b29`, cherry-picked from `e9064972`;
-the branch's second commit `61ea1f70` touched only the task file, which I removed instead — not
+**Merged:** `agent/core/081-open-md-spans-route-doc` (doc `55e2b314`, cherry-picked from `ba07d029`;
+the branch's second commit `6f42cf62` touched only the task file, which I removed instead — not
 landed). **No code commit.** The bullet named `tasks/core/076` as unbuilt; 076 landed 2026-09-17 and
 decision 66 made the `outpost_load.rs`/`trace.rs` duplication permanent, so the bullet went entirely.
 No changelog fragment (nothing user-facing). Gate: `check-docs.py` 11/11, ownership clean. Task removed.
@@ -209,7 +209,7 @@ and `doc/031` still overdue and untouchable. Old remote branches `api/096`, `cor
 ## 2026-09-29 22:09 — ui/075 spec.md squeezed out of reserve, 9,275 to 9,031 B
 
 **Decided:** nothing. No new numbered decision.
-**Merged:** `agent/ui/075-compact-ui-spec-doc` (doc `1fe6295b`, cherry-picked; **no code commit** —
+**Merged:** `agent/ui/075-compact-ui-spec-doc` (doc `e4167090`, cherry-picked; **no code commit** —
 `embarch-ui` branch identical to `main`). Recovery landing, not re-dispatched. Wording tightened,
 no split; now 9,031 B against a 9,040 B reserve line (the task's "under 90%" target was wrong).
 Gate: `check-docs.py` 11/11, ownership clean on 3 paths. Task removed.
@@ -226,7 +226,7 @@ Gate: `check-docs.py` 11/11, ownership clean on 3 paths. Task removed.
 ## 2026-09-29 22:08 — api/119 decision 72's retired-mirror count is six, not seven
 
 **Decided:** nothing. No new numbered decision.
-**Merged:** `agent/api/119-decision-72-mirror-count-doc` (doc `959c3fc6`, cherry-picked; **no code
+**Merged:** `agent/api/119-decision-72-mirror-count-doc` (doc `b3085b2a`, cherry-picked; **no code
 commit** — `client.rs` already said six). Recovery landing, not re-dispatched. Three places in
 `embarch-api/decisions/client-crate.md` corrected. Also drained inbox drop
 `history-api-seven-should-be-six.md` inside this fold: `history/api.md`'s suite/035 "Removed" line
@@ -243,7 +243,7 @@ ownership clean on 3 paths. Task removed.
 ## 2026-09-29 22:07 — core/090 decision 36's nrfutil erase half now has a test
 
 **Decided:** nothing. No new numbered decision.
-**Merged:** `agent/core/090-decision-36-erase-overclaim` (code `ae66d3f`, fast-forward; doc `1dc8fe16`,
+**Merged:** `agent/core/090-decision-36-erase-overclaim` (code `ae66d3f`, fast-forward; doc `f3cb903e`,
 fast-forward). Recovery landing: the previous leg's worker had finished and pushed; not re-dispatched.
 `nrfutil_erase_options()` extracted from `run()` with a test that it never requests `ERASE_ALL`;
 decision 36's text corrected. Gate re-run on the merge: clippy `-D warnings` clean, `cargo test`
@@ -259,7 +259,7 @@ green (246+1), ownership + client-names clean, `check-docs.py` 11/11. Task remov
 ## 2026-09-29 21:29 — api/083 spec.md §§3-7 split verbatim into spec/implementation.md
 
 **Decided:** nothing. No new numbered decision.
-**Merged:** `agent/api/083-compact-api-doc` (doc `ba0a2175`, cherry-picked; **no code commit** —
+**Merged:** `agent/api/083-compact-api-doc` (doc `43b9d2b4`, cherry-picked; **no code commit** —
 code branch at parity with `main`). `embarch-api/spec.md` now 3,616 B, §§1-2 plus one pointer line;
 §§3-7 moved to `embarch-api/spec/implementation.md`. I diffed every removed line against the new
 file: identical except relative-link depth (`decisions/` → `../decisions/`). Fragment
@@ -287,7 +287,7 @@ had restamped it; re-read the heading before each prepend.
 
 **Decided:** nothing. No new numbered decision.
 **Merged:** `agent/core/095-load-handler-decision-62-cite` (code `2590885`, fast-forward;
-doc `68c7d0ee`, task close, cherry-picked). `src/study.rs` `stream_load_handler`'s comment now
+doc `129b38aa`, task close, cherry-picked). `src/study.rs` `stream_load_handler`'s comment now
 says "(decision 62; suite decision 4)" instead of a file path. Gate on the merged tree: clippy
 `-D warnings` clean, `cargo test` green, ownership + client-names clean, `check-docs.py` 11/11.
 **No native Windows build**: the diff is one doc comment, which cannot change it; said here so it
@@ -303,8 +303,8 @@ is not mistaken for a run. Task removed.
 ## 2026-09-29 21:26 — ui/076 study-designer decision links repointed at the index
 
 **Decided:** nothing. No new numbered decision.
-**Merged:** `agent/ui/076-repoint-study-designer-links-doc` (doc `e810317e`, cherry-picked onto
-`276a92b8`; **no code commit** — doc-only). `embarch-ui/decisions/gatt-capture.md` (56) and
+**Merged:** `agent/ui/076-repoint-study-designer-links-doc` (doc `30b3e169`, cherry-picked onto
+`df01f487`; **no code commit** — doc-only). `embarch-ui/decisions/gatt-capture.md` (56) and
 `designer-panels.md` (33, 78) now link `embarch-study-designer/decisions.md`, not
 `decisions/gatt-extract.md` — which unblocks a future split of that topic file (see the
 `study-designer/069` entry). `changelog.d/ui-decision-links-repoint-index.changed.md` folded into
@@ -321,7 +321,7 @@ worktree; it used `git show <sha>`, so the read is exact, but it did not follow 
 ## 2026-09-29 21:25 — study-designer/066 decisions.md file count made unstale
 
 **Decided:** nothing. No new numbered decision.
-**Merged:** `agent/study-designer/066-decisions-md-no-count-doc` (doc `276a92b8`, fast-forward;
+**Merged:** `agent/study-designer/066-decisions-md-no-count-doc` (doc `df01f487`, fast-forward;
 **no code commit** — doc-only task). "these twenty files" became "the files under `decisions/`".
 Table census clean: 78 decisions, 20 rows for 20 files, every number in exactly one row. No
 changelog fragment (not reader-facing). Task removed. Gate: `check-docs.py` 11/11; ownership clean
@@ -337,8 +337,8 @@ on 2 paths. Recovered from the previous leg's handoff: this worker had pushed be
 ## 2026-09-29 21:19 — study-designer/069 gatt-extract.md squeezed out of reserve; the split was blocked by ui's links
 
 **Decided:** nothing. No new numbered decision.
-**Merged:** `agent/study-designer/069-compact-gatt-extract-doc` (doc **`0e23aba4`**, rebased by me
-onto `c6580928`; **no code commit** — the code branch was pushed at parity with `main`).
+**Merged:** `agent/study-designer/069-compact-gatt-extract-doc` (doc **`7301e0a5`**, rebased by me
+onto `2966a95b`; **no code commit** — the code branch was pushed at parity with `main`).
 `decisions/gatt-extract.md` 12,252 → 11,053 B (89.9%, just under the floor). Squeeze, not split:
 `embarch-ui/decisions/gatt-capture.md` and `designer-panels.md` link decisions 33/56/78 at this
 topic file's path, so moving 33 would turn `check-decision-refs.py` red in a scope the worker could
@@ -357,7 +357,7 @@ amendment to 33/56/57/78 puts this file straight back in reserve. `ui/076` is th
 should land before anyone adds to this file again.
 
 **Leg close, for the next leg.** 4/4 units, all green, no reds, no blocks; one code commit
-(`embarch-api` `0ee185f`, a comment). Filed `doc/086` (owner-only) and `ui/076` from `inbox/`;
+(`embarch-api` `5c6b199`, a comment). Filed `doc/086` (owner-only) and `ui/076` from `inbox/`;
 workers filed `ui/075`. Queue **10 dispatchable** at close. Overdue ledger is now `suite/030`,
 `doc/031` (owner-only) and **`api/083`** (`embarch-api/spec.md`, blocked on flux but names its own
 §§1-2 vs §§3-7 seam — the next leg's first unit if it unparks it the way `core/093` was).
@@ -373,7 +373,7 @@ committing, restored it, and it is still pending.
 ## 2026-09-29 21:16 — ui/069 shape.md and spec.md out of reserve by two verbatim splits
 
 **Decided:** nothing. No new numbered decision.
-**Merged:** `agent/ui/069-compact-ui-doc` (doc **`6e5a8c33`**, rebased by me onto `624426ae`; **no
+**Merged:** `agent/ui/069-compact-ui-doc` (doc **`efa77706`**, rebased by me onto `64faa5f3`; **no
 code commit**). Decisions 3 + 28 moved verbatim from `embarch-ui/decisions/shape.md` into new
 `decisions/launcher.md` (shape.md 12,194 → 2,079 B; launcher.md 10,373 B); the five-tab table moved
 verbatim from `spec.md` into new `spec/tabs.md` (spec.md 11,022 → 9,275 B, was **over** cap;
@@ -397,8 +397,8 @@ the report was wrong, not the file.
 ## 2026-09-29 21:15 — api/120 main.rs cites study-designer decision 63 instead of a renumbered spec section
 
 **Decided:** nothing.
-**Merged:** `agent/api/120-main-rs-spec-section-cite` (code **`0ee185f`**, fast-forward, one comment
-line in `src/main.rs`; doc **`624426ae`**, rebased by me onto the `core/084` fold). No other
+**Merged:** `agent/api/120-main-rs-spec-section-cite` (code **`5c6b199`**, fast-forward, one comment
+line in `src/main.rs`; doc **`64faa5f3`**, rebased by me onto the `core/084` fold). No other
 `spec.md §` citation in `embarch-api`. Task closed and removed;
 `changelog.d/api-spec-section-cite.fixed.md` folded into `history/api.md`. Gate on the merge result:
 `cargo build`/`test` (226 passed)/`clippy --all-targets -- -D warnings` green;
@@ -414,11 +414,11 @@ right decision's subject.
 
 ## 2026-09-29 21:11 — core/084 every row of core's decisions.md size column checked against wc -c
 
-**Decided:** nothing. Leg start `1337a148`. At step 0 I filed the one inbox drop as
+**Decided:** nothing. Leg start `f411caa1`. At step 0 I filed the one inbox drop as
 **`tasks/doc/086`** (a refused `fold-commit.py` does not stop a push chained behind it;
 `Owner: required`) and folded 2026-09-28 via `embarch-log-folder` (16 units, 65/65 SHAs kept) in
 this commit.
-**Merged:** `agent/core/084-size-column-pass-doc` (doc **`dea691e2`**, fast-forward; **no code
+**Merged:** `agent/core/084-size-column-pass-doc` (doc **`e3b57ea6`**, fast-forward; **no code
 commit** — docs-only). 14 of 17 rows in `embarch-core/decisions.md`'s size column were stale, not
 just the `surfaces.md` outlier the task named; all corrected. `surfaces.md` itself untouched (still
 parked under `core/091`). Task closed and removed; `changelog.d/core-decisions-size-column.fixed.md`
@@ -446,10 +446,10 @@ had lapsed or been satisfied by a verbatim move.
 
 **Units, oldest first:**
 
-1. **dev-bench/012** 15:49 — `spec.md`/`open.md` squeezed out of reserve (doc **`267bd791`**, base
+1. **dev-bench/012** 15:49 — `spec.md`/`open.md` squeezed out of reserve (doc **`0c528a9f`**, base
    `edc278bb`). Unparked on its own 2026-09-22 clock. Decided: a leg arriving on a red `main` pays the
    red first, judging each unit on "adds no new red" until paid. Also folded 2026-09-17 (50 units,
-   119 SHAs, done by an `embarch-log-folder`) and rolled 09-16. Slip: claim commit **`d9b9d246`** for
+   119 SHAs, done by an `embarch-log-folder`) and rolled 09-16. Slip: claim commit **`b25a513f`** for
    `ui/073` also deleted this task's retired file (harmless, on `main`). Filed `tasks/doc/085`
    (leg-worktree `check-links.py` red on `embarch-ui/decisions/study-authoring.md` via owner commit
    `685b691c`; fixed with a symlink). Bench state: dev-bench probe **`001057729826`** not attached;
@@ -459,15 +459,15 @@ had lapsed or been satisfied by a verbatim move.
 **Hardware debts:** none created.
 
 2. **ui/071** 15:50 — `embarch-ui/open.md` compacted to 4,867 B, evidence moved into
-   `decisions/trace-rows.md` and `decisions/time-chart.md` (doc **`48fe7e02`**, base `267bd791`),
+   `decisions/trace-rows.md` and `decisions/time-chart.md` (doc **`6d204cd3`**, base `0c528a9f`),
    including the **`b1e9ec7d`** GATT-vs-trace placement result. Filed `tasks/ui/074` (blocked,
    `In flux: yes`, due 2026-10-05) for the remainder.
 **Reviewer:** no findings.
 **Hardware debts:** none created. Two open halves kept, both hardware, neither ever run: the
    live-Core `/study/{id}/streams` HTTP cost over three calls, and a power-capture check of placement.
 
-3. **core/094** 15:56 — decision 74 moved to new `decisions/outpost-preflight.md` (doc **`fe7c52c9`**,
-   base `9f4fffbf`; code base `48dc591`, zero commits). Supervisor repointed the `embarch-ui`
+3. **core/094** 15:56 — decision 74 moved to new `decisions/outpost-preflight.md` (doc **`1a05988c`**,
+   base `91b9736b`; code base `48dc591`, zero commits). Supervisor repointed the `embarch-ui`
    `firmware-build.md:7` link the split broke, at landing rather than filing a task (not announced
    first, named here per `.claude/leg.md`). Worker added a 72-byte pointer in `interfaces/studies.md`
    against the dispatch note, judged needed by the reviewer.
@@ -477,7 +477,7 @@ had lapsed or been satisfied by a verbatim move.
 
 4. **ui/073** 16:02 — two verbatim splits: decisions 8/25/42 out of `shell.md` into
    `decisions/design-system.md`; decision 44's two sections out of `topology-boards.md` into
-   `decisions/saved-benches.md` (doc **`ffee1b77`**, base `55adb798`; code base `ad49a7a`/`ad49a7ae`,
+   `decisions/saved-benches.md` (doc **`ccf2eacf`**, base `9d7f2951`; code base `c5857fd`/`c5857fd9`,
    zero commits). Worker also repointed a pending fragment it did not write (owner's
    `changelog.d/ui-brand-token.added.md`, decision 25 → `decisions.md`). First green `check-docs.py`
    (all 11) on `main` since the clocks expired.
@@ -485,21 +485,21 @@ had lapsed or been satisfied by a verbatim move.
 **Hardware debts:** none created.
 
 5. **core/092** 16:38 — `arrivals`/`load`/`load/spans` rows moved from `interfaces/studies.md` into
-   new `interfaces/streams.md` (doc **`d6820f76`**, base `53211671`; code base `48dc591`, zero
+   new `interfaces/streams.md` (doc **`df7cb35e`**, base `a6cace62`; code base `48dc591`, zero
    commits).
 **Reviewer:** no findings.
 **Hardware debts:** none created — verbatim move, no source change, no native Windows build owed.
 
 6. **api/118** 16:44 — decision 59's parenthetical amended in place (`SignalLink` stopped being called
-   a mirror) (doc **`968f37f0`**, base `4f465dce`; code base `2ebcfe4`, zero commits). Reviewer found,
+   a mirror) (doc **`0db25814`**, base `e76d35cd`; code base `517a7e3`, zero commits). Reviewer found,
    below its bar, that decision 72's "seven" retired mirrors vs. six named types is pre-existing
    (authored **`c62cc870`**, 2026-09-12) — filed as `tasks/api/119`.
 **Reviewer:** no findings.
 **Hardware debts:** none created — one parenthetical.
 
 7. **dev-bench/014** 16:48 — decisions 30/35 moved to new `decisions/link-limits.md` (doc
-   **`3df6d63b`**, base `a9ce7fb5`; code base `edc278bb`, zero commits). Unparked at claim
-   (**`7909f091`**) on its own lapsed clock: `link.md` untouched since **`84243a33`** (2026-09-08).
+   **`027d62df`**, base `9807430c`; code base `edc278bb`, zero commits). Unparked at claim
+   (**`b63ddeda`**) on its own lapsed clock: `link.md` untouched since **`84243a33`** (2026-09-08).
    Slip: a refused first fold attempt
    still let `git push origin HEAD:main` run (`| tail` ate the exit status) — same pattern as
    `core/046` below; two legs in a row.
@@ -507,21 +507,21 @@ had lapsed or been satisfied by a verbatim move.
 **Hardware debts:** none created — verbatim move.
 
 8. **study-designer/067** 16:52 — `.eap` constants split from `interfaces/limits.md` into new
-   `interfaces/eap-limits.md`; decision 71 moved to `decisions/payload-meaning.md` (doc **`5f1ba9ab`**,
-   base `171e0013`; code, zero commits).
+   `interfaces/eap-limits.md`; decision 71 moved to `decisions/payload-meaning.md` (doc **`88e0b2de`**,
+   base `aef01be1`; code, zero commits).
 **Reviewer:** no findings.
 **Hardware debts:** none created — two verbatim moves.
 
-9. **ui/072** 17:08 — decision 14 split into new `decisions/project.md` (doc **`28989725`**, base
-   **`b41e1531`**; code base `ad49a7ae`, zero commits, fast-forward, no rebase). Slip noted: a
+9. **ui/072** 17:08 — decision 14 split into new `decisions/project.md` (doc **`de3efeef`**, base
+   **`d47c32e4`**; code base `c5857fd9`, zero commits, fast-forward, no rebase). Slip noted: a
    dispatch-time worktree add resolved a relative path inside the repo instead of beside it; caught
    and moved before any worker started, nothing committed there.
 **Reviewer:** no findings.
 **Hardware debts:** none created — verbatim move.
 
 10. **core/093** 17:13 — decisions 70/72/73 split into new `decisions/streams-live.md` (doc
-    **`02e6ff79`** + **`439fea1c`**, base `d63b3752`; code base `48dc591`, zero commits). Unparked at
-    claim (**`bebb1a64`**): its `In flux: yes` block (72/73 unvalidated on hardware) does not forbid
+    **`b594ac91`** + **`23987bd3`**, base `8b4786d3`; code base `48dc591`, zero commits). Unparked at
+    claim (**`9ee5de6b`**): its `In flux: yes` block (72/73 unvalidated on hardware) does not forbid
     the verbatim-move remedy the task itself named; flux otherwise unlapsed (bench still unplugged).
     Supervisor repointed `embarch-ui/decisions/live-study.md:30` (decision 70) at landing. Filed
     `tasks/core/095` from the reviewer's aside (unnumbered decision citation in `src/study.rs`).
@@ -530,7 +530,7 @@ had lapsed or been satisfied by a verbatim move.
     study with the outpost bridge attached — the split moved that debt, it did not pay it.
 
 11. **study-designer/068** 17:19 — decision 77 split from `decisions/declares.md` into new
-    `decisions/builds.md` (doc **`837d7696`**, base `3edfeb20`; code base `15087ae`, zero commits).
+    `decisions/builds.md` (doc **`01d209d8`**, base `fc08de8f`; code base `15087ae`, zero commits).
     Supervisor repointed `embarch-ui/decisions/firmware-build.md:7` to the index (`decisions.md`),
     a different repoint convention than `core/093`'s topic-file repoint one unit earlier. Rewrote
     `tasks/study-designer/066`'s now-false premise (seventeen files → twenty) and left it open.
@@ -538,7 +538,7 @@ had lapsed or been satisfied by a verbatim move.
 **Hardware debts:** none created — a move and two pointers.
 
 12. **umbrella/088** 17:23 — `check-15` bullet corrected to stop saying the hash is unbuilt;
-    `open.md` squeezed 4,372 → 3,905 B (doc **`61e13c92`**, base `9140247e`; code base `2764e89`,
+    `open.md` squeezed 4,372 → 3,905 B (doc **`ecc2880c`**, base `5bb668d6`; code base `2764e89`,
     zero commits). Worker declined to consume `binary_sha256` in check 15 itself — a real behavior
     change needing its own decision — and filed `tasks/umbrella/089` (below) instead. Reviewer noted
     pre-existing stale text in `open.md`'s own "why `saved.host` was left unfixed" item.
@@ -549,7 +549,7 @@ had lapsed or been satisfied by a verbatim move.
 
 13. **study-designer/032** 17:47 — §4 ("What a study carries") moved to new
     `embarch-study-designer/spec/carriage.md`; §§5/6/7 renumbered to §§4/5/6 (code **`b9a2d5d`**,
-    base `15087ae`; doc **`22dc629c`**, base `12731da4`). Unparked at claim (**`22fa5c9b`**): §4's
+    base `15087ae`; doc **`9fe1ec5c`**, base `01190ef5`). Unparked at claim (**`1db80acc`**): §4's
     last edit was **`ac9c2116`** (2026-09-18), a full leg quiet as the task's own unpark condition
     required. Filed `tasks/api/120` for the one repointed citation the worker couldn't reach
     (`embarch-api/src/main.rs:538`).
@@ -557,20 +557,20 @@ had lapsed or been satisfied by a verbatim move.
 **Hardware debts:** none created — a move, a renumber and a comment.
 
 14. **core/046** 17:52 — decisions 42/46/60 moved to new `decisions/route-sweep.md`;
-    `auth.md` 11,356 → 3,799 B (code **`fdb9b1d`**, base `48dc591`; doc **`7c5ad6f9`**, rebased from
-    **`2e6173ea`** onto `1a42bea3`). Unparked at claim (**`9701f722`**): the task's own prediction ("the next new HTTP
+    `auth.md` 11,356 → 3,799 B (code **`fdb9b1d`**, base `48dc591`; doc **`b887482f`**, rebased from
+    **`2e6173ea`** onto `9d7b3df1`). Unparked at claim (**`11c9ae7d`**): the task's own prediction ("the next new HTTP
     route ... likely to land here") was falsified by four routes landing in `build_router` elsewhere
     since **`f6e23215`** (2026-09-12) — `4251af3`, **`d73a73a`**, **`e50de6d`**, **`f832043`** — none
     touching `auth.md`. Supervisor corrected the worker's Size cell (2.9 KB claimed vs. measured
-    3.8 KB). Slip: same refused-fold-still-pushed pattern as `dev-bench/014` — **`7c5ad6f9`** reached
+    3.8 KB). Slip: same refused-fold-still-pushed pattern as `dev-bench/014` — **`b887482f`** reached
     `origin/main` a few minutes before its fold.
 **Reviewer:** no findings.
 **Hardware debts:** none created. The `api.rs` change is a comment, so no native Windows build
     owed for it.
 
 15. **api/111** 17:56 — decisions 71/73/76 moved to new
-    `embarch-api/decisions/validate-kind.md` (code base `2ebcfe4`, zero commits; doc **`0f0dc2cb`**,
-    base **`cce10a88`**, rebased from `1cd74544`). Unparked at claim (**`65b9e019`**): the task's own
+    `embarch-api/decisions/validate-kind.md` (code base `517a7e3`, zero commits; doc **`c8dbb6e6`**,
+    base **`8f54d73a`**, rebased from `1cd74544`). Unparked at claim (**`e92f430e`**): the task's own
     second unpark condition ("once the file is judged safe to split") is satisfied by its own named
     seam.
 **Reviewer:** no findings.
@@ -579,8 +579,8 @@ had lapsed or been satisfied by a verbatim move.
 16. **umbrella/089** 18:00 — check 15 now hashes the located `embarch-core` binary once
     `core_version` already matches and compares it to `/status`'s `binary_sha256`; a mismatch is
     **Warn**, never Fail; missing hash on either side falls back to the old version-only Pass (code
-    **`b55809c`**, fast-forward onto **`2764e89`**; doc **`1d85a3dd`**, rebased from **`57c380dd`**
-    onto **`127d98fb`**). Wrote `embarch-umbrella` decision 56; amended decision 34 as "narrowed, not
+    **`b55809c`**, fast-forward onto **`2764e89`**; doc **`ab3a56e4`**, rebased from **`57c380dd`**
+    onto **`3d01e141`**). Wrote `embarch-umbrella` decision 56; amended decision 34 as "narrowed, not
     retired". Filed `tasks/umbrella/090` (blocked on the hardware debt below, due 2026-10-19).
 **Reviewer:** no findings.
 **Hardware debts:** **two `doctor` runs on the primary bench machine**, recorded in `open.md`'s
