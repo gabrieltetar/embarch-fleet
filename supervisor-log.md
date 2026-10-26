@@ -97,6 +97,30 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 00:00 — core/096 flash `erase: true` skips alias and option-byte regions
+
+**Decided:** nothing beyond the worker's decision 84 (erase touches only non-alias, writable NVM
+regions; every kept region is checked for a flash algorithm before anything is erased; `POST /flash`
+answers `{flashed, chip, erased}`; never a chip-erase fallback, consistent with decisions 32 and
+36). The API half (print the erased ranges) is the worker's drop `inbox/api-flash-print-erased-ranges.md`.
+Filed `tasks/doc/090` (owner): `embarch-core` now path-depends on `../embarch-smp`, which
+`.claude/leg.md`'s link table omits; the worker made the link itself and I left it in place at
+`.worktrees/embarch-core/embarch-smp`.
+**Merged:** `agent/core/096-flash-erase-skips-alias-regions` (code `0d712cd`, ff; doc `ec80c3d3`,
+cherry-picked from `8f0b1ac2`). Gate re-run on the merge: build, `cargo test` 277 pass / 2 ignored,
+clippy `-D warnings` clean, client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** two, both from this unit. (1) STM32G0B1VE bench check: write a non-erased word in
+a partition the image does not cover, flash with `erase: true`, `mem-read` it back as `0xFFFFFFFF`,
+confirm `erased` is `["0x08000000..0x08080000"]` and the image boots; the algorithm-selector check
+was tested only on a synthetic memory map. (2) Native Windows build of `embarch-core`, owner's, from
+the main checkout.
+**Budget:** PROCEED, weekly 47.5%, wave 6.
+**Least sure about:** my own `check-docs.py | tail -1 && fold-commit.py` let the chat/001 fold commit
+over a red gate (the `| tail` masks the exit, `tasks/doc/086`'s shape, which I knew about): caught
+before the push and amended (`7da4011c`). Run the gate unpiped before every fold.
+
 ## 2026-10-25 23:59 — api/122 zephyr-west accepts a single-SoC board's shortened `<board>.dts`
 
 **Decided:** nothing beyond the worker's decision 86 (shortened stem accepted only for a one-SoC
