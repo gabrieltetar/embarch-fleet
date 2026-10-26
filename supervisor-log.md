@@ -97,6 +97,39 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 07:00 — api/145 sessions can take the bench lease and every Core call carries its token
+
+**Decided:** nothing beyond the worker's new decision 90 (`embarch-api/decisions/lease.md`, indexed; kept out
+of `client-crate.md`, which is in reserve): the env-var arm. `CoreClient::dispatch` sends `X-Embarch-Lease`
+on every Core request, from the process's own lease or else `EMBARCH_LEASE_TOKEN` read per request, so
+`embarch-atlas`'s live calls (it runs the `embarch-api` CLI as a subprocess, which I checked before filing)
+inherit it with no atlas change. The MCP server renews its own lease at a third of the TTL; default TTL 900 s
+(MCP, assumed) and 3600 s (CLI, which has `lease-renew`). A lease `409` (Core's body prefix `bench leased by
+`, which I checked against `embarch-core/src/lease.rs`) becomes `LeaseHeldError` with Core's text verbatim,
+ahead of the three other `409` meanings. Four MCP tools and CLI twins; `status` shows `lease` and
+`last_images`. Shared crate, so I read the client diff: additive (`LeaseView`, `LeaseGrant`,
+`FlashedImage`, `LeaseHeldError`, two consts, seven `CoreClient` methods, two `#[serde(default)]` fields on
+`StatusResponse`). A token taken through an MCP tool is not exported to other processes; `open.md` says so.
+This fold's `suite/features.md` rebuild also carries `core/115`'s amended `core-260` row, since both
+fragments were on disk.
+**Merged:** `agent/api/145-bench-lease-client` (code `3625584`, ff onto origin/main from `6d615e7`; doc
+`71db5e4d`, cherry-picked from `994f5e5e`). Gate re-run on the merge, against topology `62d776e`: `cargo
+build --workspace`, `cargo test --workspace` 295 pass, clippy `-D warnings` clean, client names clean,
+`check-docs.py` 11/11. This is the gate that caught topology's `software,wire` break.
+**Blocked:** nothing.
+**Reviewer:** 1 finding — inbox/api-last-images-option-per-decision-58.md
+Filed in this fold as `tasks/api/146` (fix forward, not a revert): `last_images` is a `Vec` with
+`#[serde(default)]`, so an old Core reads as "nothing flashed", which decision 58 (`client-crate.md`,
+"Applied api/139") rejects for exactly this shape; it should be `Option<Vec<_>>`.
+**Hardware debts:** on an installed Core at `5063c0b` or later with this client, two sessions: A takes the
+lease and exports the token; B's `reset`/`flash` gets the `409` naming A; A's MCP server holds past a 30 s
+TTL with no manual renew; an atlas live call with the variable works while B is refused; `last_images`
+shows a real flash's `sha256`. Not deployed: the MCP binary predates this, `api/131`, `api/143`, `api/135`
+and `api/124`.
+**Budget:** PROCEED, weekly 64.9% at leg start, wave 6.
+**Least sure about:** telling a lease `409` from the other three by a prose prefix couples the client to
+Core's wording; if Core rewords it the text still passes through verbatim, but the misleading lead returns.
+
 ## 2026-10-26 06:59 — topology/062 a direct route's declared serial on several ports is refused by name, not guessed
 
 **Decided:** (1) **Parked a schema bump for `core/102`** (announced `#embarch-fleet` `ts` `1793017849.375049`,
