@@ -97,6 +97,33 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 04:00 — api/142 the client and the enroll result say when an enrol moved a role
+
+**Decided:** nothing beyond the worker's new decision 87 (`embarch-api/decisions/hardware-selection.md`,
+index row): `EnrollProbeResponse` in `embarch-core-client` gains `displaced`, `vacated` (`EnrolledBoard`)
+and `vacated_kept`, all `Option` + `#[serde(default)]` + skipped when `None` (decision 58's rule; the
+bare body re-serialises byte-identical, tested), and a shared `moved_roles_note()` that `enroll-probe`
+and the MCP tool append; their JSON adds the three fields and `moved` only when a role moved. Read the
+shared-crate diff before merging: additive; only Core builds that type by struct literal, and Core has
+its own. **One supervisor fix on top, `9e4ca14`:** the new field's doc comment cited "`embarch-api`
+decision 85" (the open desk) for the omit-when-absent rule; it now cites 87. Decision 87 landed in
+`hardware-selection.md`, not the reserved `client-crate.md`, as the filing note asked; no file entered
+reserve. **Filed `tasks/ui/091`** (the Enroll tab names a moved role) from the worker's drop. **My slip:**
+I pushed the agent branch with a redundant `-f`; it was a fast-forward onto the worker's `7d0f859`, so
+nothing was rewritten.
+**Merged:** `agent/api/142-enroll-response-surfaces-a-moved-role` (code `9e4ca14`, ff onto origin/main
+from `7e6d88c`, worker commit `7d0f859` plus the citation fix; doc `45b8f577`, cherry-picked from
+`1654d56f`). Gate re-run on the merge, against topology `62c188d`: build, `cargo test --workspace` 262
+pass, clippy `--workspace --all-targets -D warnings` clean, client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none; no live enrol that moves a role was run. Not deployed: the MCP binary and CLI
+on this machine predate this unit.
+**Budget:** PROCEED, weekly 59.2%, wave 6.
+**Least sure about:** `moved_roles_note()` words a `vacated` row with `vacated_kept` absent as "its row
+is removed"; that reads Core decision 87's omission as "not kept", which holds only while Core always
+sends `vacated_kept` alongside `vacated`.
+
 ## 2026-10-26 03:57 — topology/059 a probe moved to another chip family is refused by name before any attach
 
 **Decided:** nothing beyond the worker's new decision 44 (`embarch-topology/decisions/validation.md`,
