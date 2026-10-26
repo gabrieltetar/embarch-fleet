@@ -97,6 +97,29 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 09:25 — topology/067 the identity gate reports its halts
+
+**Decided:** nothing suite-wide. The worker's topology decision 47 (in a new spot, `decisions/validate-timing.md`,
+because `enrollment.md` and `links.md` are both under 200 B from their caps): `Validation` gains `halts: u32`,
+counted by `read_halted` itself, so it also covers the Nordic last-resort halted read (decision 39) that Core's
+`stm32g0`-prefix inference never did. `Validation` derives `Serialize` only and no consumer builds it by literal
+(checked: core, api, ui, umbrella), so the field is additive. Filed `tasks/core/118` from the worker's inbox drop
+(Core's `halt_count` uses the field and `live::gate_halts` goes); corrected its "bump the pin" line, since Core
+takes topology by path.
+**Merged:** `agent/topology/067-identity-gate-reports-its-halts` (code `b4d1b0a`, doc `1de05c25`), ff onto
+origin/main. Gate: topology build/test/clippy `-D warnings` under default, `--no-default-features --features
+software,wire`, `--features hardware`, `--all-features`, all green; core, api `--workspace`, ui and umbrella
+clippy `--all-targets -D warnings` green against the branch through repointed worktree links (restored after);
+client names clean; `check-docs.py` 11/11. Owner's topology checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** skipped (fleet stop at 09:19, before the reviewer was spawned).
+**Hardware debts:** a real STM32G0 identity read reporting `halts == 1` on a running core is unverified on a
+board; carried by `tasks/core/118`.
+**Budget:** PROCEED, weekly 69.4% at leg start, 69.5% at this fold, wave 6.
+**Least sure about:** the default feature set runs only 15 tests and `Validation` lives under `hardware`, so the
+new counter is exercised only in the `hardware`/`--all-features` builds; Core builds `hardware`, so that is the
+set that matters.
+
 ## 2026-10-26 08:58 — suite/052 a direct signal route declares which serial interface carries it
 
 **Decided:** **a cross-repo shape change, approved and executed by me** (protocol §8): announced 08:09 (`ts`
