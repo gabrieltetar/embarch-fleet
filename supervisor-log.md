@@ -97,6 +97,31 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 02:26 — study-designer/076 GPIO records are named in Core's trace CSV
+
+**Decided:** nothing beyond the worker's decision 82 (`decisions/streams.md`): `OutpostManifest`
+reads schema 2's `devices` and `functions` as `#[serde(default)]` maps, `label()` names kind 9 from
+`devices` and kind 10 from `functions` with bit 0 masked, an unnamed address stays empty. Read the
+shared-crate diff before merging: two new pub fields, no struct-literal construction outside the
+crate's own tests (grepped core, ui, api), no serialized type changed, so no wire bump. A GPIO-bearing
+cross-decoder fixture is noted in decision 82 as `embarch-outpost`'s; no drop filed. **Leg start, for
+the record:** `inbox/` was empty. `validate dev-bench`: probe `001057729826` not attached, not a
+mismatch; the three bench tasks stay `open`. Overdue ledger head was `umbrella/084` (the entries
+ahead are owner-only or have nothing to pay); unparked with flux `no` for a verbatim split of
+decision 26. Four workers dispatched at once: `umbrella/084`, `core/109`, `ui/084`,
+`study-designer/076`; all four reported within about four minutes.
+**Merged:** `agent/study-designer/076-outpost-manifest-gpio-names` (code `3ec19b9`, ff onto
+origin/main from `b19c841`; doc `cd255701`, cherry-picked from `bce31f0`). Gate re-run on the merge:
+build, `cargo test` and `--all-features` green, clippy `-D warnings` clean (default and all
+features), client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none; the tests use literal JSON, not a capture from GPIO-traced firmware.
+**Budget:** PROCEED, weekly 55.4%, wave 6.
+**Least sure about:** the reviewer could not find the generator's `0x%08x` key format in the
+outpost docs, only in the task's citation of `gen_outpost_manifest.py`; the two agree by reading,
+and no fixture proves it.
+
 ## 2026-10-26 02:15 — suite/004 reversals index and studies guide out of reserve by wording only
 
 **Decided:** ran `suite/004` with my own hands after its §4 window: announced 01:40 (`ts`
