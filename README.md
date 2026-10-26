@@ -68,7 +68,8 @@ Then, in the instance repo: arm a listener window with `/fleet start`, and say
 
 | File | What it is |
 |---|---|
-| [protocol.md](protocol.md) | The design: roles, the ownership map, the queue, the worker contract, the leg, the gate, the log |
+| [protocol.md](protocol.md) | The design: roles, the ownership map, the queue, the worker contract, the leg, the log |
+| [gate.md](gate.md) | The merge gate and merge order: what a unit passes before it merges, per repo kind, and the reviewer beside it |
 | [ops.md](ops.md) | Running it: arming, the usage budget, driving it from a phone, dreaming |
 | [slack.md](slack.md) | Slack as the control plane: the three windows, the pump, what a message can and cannot do, the transport |
 | [budget.md](budget.md) | The usage budget: may the fleet dispatch right now, and how many? Why the percentages are derived |
@@ -103,7 +104,7 @@ argument is shortened to pay for a new one
 |---|---|---|---|---|
 | `risks.md` | **8,877 B** (was 12,285, 3 B left) | **done** — six unattended-authority entries → [risks-authority.md](risks-authority.md) | 8,877 + 5,109 | — |
 | `ops.md` | **22,237 B** (was 29,701, 0 B left) | **done** 2026-09-10 — §5 *Slack as a control plane* → [slack.md](slack.md), in the sitting that moved the transport to a bot | 22,237 / 25,600 cap, 3,363 B free — **the baseline retired** | — |
-| `protocol.md` | 32,466 / 25,600 cap, **0 B** | §10 *The merge gate and merge order* (5,733 B) → `gate.md` | ~26.7 KB, still over — then §6 *the leg* (6,495 B) takes it to ~20.2 KB | §10 is the most-cited section in the suite; two moves, and the second changes what a leg reads |
+| `protocol.md` | **27,237 B** (was 32,457, 9 B left) | **done** 2026-10-25 — §10 *The merge gate and merge order* → [gate.md](gate.md), in the sitting that gave the gate its first npm repo | 27,237 + 6,597; still over the 25,600 cap — §6 *the leg* (6,452 B) is the next move | §6 is what a leg reads, so moving it changes the leg's own read |
 | `DEVELOPING.md` | 11,966 / 12,288, 322 B | §4 *Deploying while the fleet is live* (3,706 B) → `deploying.md` | ~8.3 KB | **Stays for now**: §4 is a *step* in the loop §"The loop" walks a reader through in order, and splitting a procedure mid-sequence costs a reader more than the bytes are worth |
 | `open.md` | 11,717 / 12,288, 571 B | *(no split)* — the compaction question alone is 3,531 B of seven sections | — | **Stays, and shrinks by resolution instead**: an open question is deleted when it is answered, never shortened while live ([DOC-COMPACTION-PASS.md](../embarch-doc/DOC-COMPACTION-PASS.md)), and three of the seven are answerable now |
 
