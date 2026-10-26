@@ -97,6 +97,44 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 07:02 — ui/085 a Data card's table is re-fetched when it loads, so the post-run re-read is the full file
+
+**Decided:** nothing beyond the worker's new decision 64 (`embarch-ui/decisions/live-study.md`, group row
+updated; spec rule in `spec/capture-rendering.md`, so neither reserve file grew): a `/rows` read with
+`from` absent or 0 re-fetches the tap's table from Core and replaces the cache; later pages and `/series`
+reuse it, so a loaded table still costs one Core fetch. "The first page is the load" was chosen over a TTL
+or a `?refresh=1` flag, matching the trace and time-chart caches' contract. **Isolation slip, reported by
+the worker itself:** it passed scratch ports through env vars that `tests/browser/drive.py` and
+`drive_race.py` do not read, so both ran once against `127.0.0.1:4444` and `:4899`, the owner's geckodriver
+and UI; `drive.py` opened a headless session on his geckodriver and failed on its first navigation, and
+nothing was left running. Five drive scripts hardcode those ports with no override; filed
+**`tasks/ui/094`** in this fold. Also filed **`tasks/api/147`**: `bench_exchange` should place lines by
+core/115's `rx_ms` when Core sends it (the core/115 entry says I had not; this fold does).
+**Leg close, for the next leg:** ran `topology/062`, `api/145`, `core/115`, `ui/085`; three reviewers clean,
+one finding (`api/146`). **My topology landing broke the `software,wire` build for five minutes** (see the
+`topology/062` entry); a shared-crate landing must build every configuration its `Cargo.toml` names
+(`tasks/doc/091`). Drained three inbox drops (`api/145`, `core/115`, `core/116` blocked on `core/102`) and
+filed five more from this leg (`suite/052`, `core/117`, `api/146`, `api/147`, `ui/094`). **`core/102`'s
+schema-bump window closed with no reply at 07:01** (`ts` `1793017849.375049`): the next leg can dispatch
+`core/102` to a core worker and make the `HOST_TYPE_SCHEMA_VERSION` 19 to 20 bump itself in the landing;
+the plan is in the task file. `queue-status.py --count` 43. `inbox/` empty. Bench: `validate dev-bench`
+not attached, not a mismatch; `api/059`, `dev-bench/035`, `dev-bench/038` stay `open`. Overdue ledger
+unchanged and unpayable (`suite/030` blocked on `DOC-PROTOCOL.md`, `doc/031` owner-reserved,
+`study-designer/026` all live). `suite/046`-`049` and `052` open and unannounced; `atlas` still skipped
+(`tasks/doc/089`). Not deployed: live Core, the UI binary and the MCP binary all predate this leg. The
+owner's uncommitted `templates/.claude/commands/fleet-watch.md` in `embarch-fleet` is untouched.
+**Merged:** `agent/ui/085-table-is-re-read-when-its-card-loads` (code `81bde80`, ff onto origin/main from
+`35fa9da`; doc `72b042d4`, cherry-picked from `95f74625`). Gate re-run on the merge, against api `3625584`
+and topology `62d776e` (both this leg): build, `cargo test` 201 pass / 4 ignored, clippy `-D warnings`
+clean, client names clean, `check-docs.py` 11/11. I did not re-run the browser check
+(`tests/browser/drive_table_refresh.py`, recipe in the worker's task file); the Rust test pins the fix.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 64.9% at leg start, 66.3% at leg end, wave 6.
+**Least sure about:** the worker's revert check of the browser test was not re-run after it fixed its own
+stub, so only the Rust test is shown failing on the old code.
+
 ## 2026-10-26 07:01 — core/115 each line of a signal capture carries the time its first byte arrived
 
 **Decided:** nothing beyond the worker's new decision 94 (`embarch-core/decisions/signal-capture.md`, beside
