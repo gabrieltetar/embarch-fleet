@@ -97,6 +97,28 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 01:49 — core/108 the hello lock test can no longer reach a real bench
+
+**Decided:** nothing. The worker added a seam rather than a decision: `hello_handler` now calls
+`hello_with(state, resolve_dev_bench_port)`, and the test passes its own resolvers (one that panics
+if reached, for the refused-`409` case; one that errors, for the free-link case, asserting the hold
+is `HELLO_HOLDER` while it runs and gone afterwards). No test calls `hello_handler` any more. The
+`AppState` comment in `src/api.rs` now states the order `study_lock` then `hw_lock`. No changelog
+fragment (not reader-facing). This closes core/104's warning: the owner's native Windows build may
+now run `cargo test` with the dev-bench plugged in, as far as this test goes; the reviewer did not
+audit the other `resolve_dev_bench_port` callers (`src/main.rs`, `src/api.rs`, `src/study.rs`) for
+test reachability.
+**Merged:** `agent/core/108-hello-lock-test-no-bench` (code `35d9859`, ff onto origin/main from
+`8e29f06`; doc `696488bb`, cherry-picked from `6cb252ca`, task close only). Gate re-run on the
+merge: build, `cargo test` 289 pass / 2 ignored, clippy `-D warnings` clean, client names clean,
+`check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** native Windows build of `embarch-core`, owner's, from the main checkout.
+**Budget:** PROCEED, weekly 54.4%, wave 6.
+**Least sure about:** whether any other test reaches a resolver that enumerates real USB; this unit
+only fixed the one the core/104 reviewer named.
+
 ## 2026-10-26 01:47 — api/139 the exchange fields an older Core does not send are Option
 
 **Decided:** nothing beyond the worker's application of decision 58 (`decisions/client-crate.md`,
