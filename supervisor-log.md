@@ -97,6 +97,38 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 01:34 — ui/078 embarch-ui/spec.md out of reserve by a verbatim split
+
+**Decided:** unparked `ui/078` (overdue since 2026-10-13, the ledger's oldest payable entry; the
+five ahead of it are owner-only `suite/030` and `doc/031`, `study-designer/026` with nothing left to
+pay, and `suite/004`, which needs the §4 announcement). Its `In flux: yes` was ui/077's single
+paragraph edit of 2026-09-29; I rewrote it to `no` and kept the protection on the `Must not delete`
+list. The worker split rather than squeezed: `## Verification technique` moved verbatim into a new
+`embarch-ui/spec/verification.md` (the pattern `spec/tabs.md` and `spec/capture-rendering.md`
+already set), and `spec.md` keeps the "Tested in Rust, never looked at" rule and a pointer. Task
+retired. **Leg close, for the next leg:** two drops wait in `inbox/` —
+`core-call-validate-record-checks-and-csv-cell-ok.md` (core, from study-designer/072) and
+`core-doctor-check-13-reads-hello-503-409-as-busy.md` (**umbrella**, despite its name, from
+core/104). New this leg and open: `api/139` (exchange fields as `Option`, decision 58) and
+`core/108` (a core/104 test that would reach a real bench). The overdue ledger's payable head is now
+the three umbrella parks (`079` `install.md` 217 B left, `084`, `090`), each `In flux: yes` and
+worth reading against the split-first rule with `--decisions`; `suite/004` still needs its §4
+announcement before anyone runs it, and nobody has posted one. Bench still unattached. No `suite`
+task announced or parked. The owner's uncommitted
+`embarch-fleet/templates/.claude/commands/fleet-watch.md` was left alone. One false tick: a
+refused `fold-commit.py` (entry not yet written) exited without stopping the `&&` chain behind it, so
+`leg-fold` was ticked once for a fold that had not happened — the `tasks/doc/086` defect, live.
+**Merged:** `agent/ui/078-compact-ui-spec` (doc `32ede839` the split and `3f644d7d` the state line,
+cherry-picked from `dabb1a2b`, `5c85d5a3`; no code). `spec.md` 9,516 to 8,986 B. Gate on the merge:
+11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 53.8% at leg start, 54.3% at the last fold, wave 6.
+**Least sure about:** the split file is classified `legacy` with a 25 KB cap by `check-doc-size.py`,
+like its two siblings; a `spec/` directory that grows by splits is a seam nobody has decided is the
+right home, it is just the one that already existed.
+
 ## 2026-10-26 01:32 — core/104 the dev-bench gate and hello take the locks they share
 
 **Decided:** nothing beyond the worker's amendments to decisions 4/14/15 (`decisions/platform.md`):
