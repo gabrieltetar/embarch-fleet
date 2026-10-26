@@ -97,6 +97,32 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 00:51 — ui/074 embarch-ui/open.md off its cap by deleting settled halves
+
+**Decided:** unparked `ui/074` (overdue since 2026-10-05; the ledger's oldest *payable* entry, the
+three ahead of it being owner-only or parked with nothing payable). Same reasoning as `api/113`:
+`DOC-BUDGET.md` names a role-capped 5 KB `open.md` as the case with no seam, so the pass deletes
+answered halves and shortens nothing live; the flux line was rewritten to say so. The worker reached
+4,366 B, not the 3,920 B floor, and stopped because the 11 remaining bullets are all live with their
+own triggers; I accepted that (the task's Done-when allows a dated reason). It filed `tasks/ui/088`
+(blocked, `In flux: yes`, due 2026-11-26) for the reserve that remains; 088 was free on `main`.
+**Leg close, for the next leg:** the overdue ledger's payable head is now `umbrella/009`
+(`decisions/bind.md`, split-first) and `ui/078` (`ui/spec.md`); `suite/004` (reversals,
+studies-guide) is `suite` scope, so it needs the §4 announcement before anyone runs it; `suite/030`
+and `doc/031` stay the owner's. Bench still unattached. No `suite` task announced or parked. The
+owner's uncommitted `embarch-fleet/templates/.claude/commands/fleet-watch.md` was left alone.
+**Merged:** `agent/ui/074-compact-ui-open` (doc `2d29cfa9`, cherry-picked from `cb4ecd14`; no code).
+`open.md` 5,117 to 4,366 B: six settled halves removed, each checked by the reviewer against its home
+(user-guide §3 / studies-guide §4, decisions 21, 34, 37, 38), and the Debug-level 0-vs-7,440-byte
+result moved into decision 32 (`decisions/live-study.md`). Gate on the merge: 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none new; the bullets keep their own (stale-prefix replay, a refused flash
+mid-run, the traced live Time chart).
+**Budget:** PROCEED, weekly 52.3% at leg start, 52.7% at the last fold, wave 6.
+**Least sure about:** `DOC-COMPACTION-PASS.md`'s human question went unanswered for `spec.md` — the
+worker did not re-read it, so whether `spec.md` alone serves a newcomer to `embarch-ui` is unknown.
+
 ## 2026-10-26 00:51 — desk/002 fold and approve edges
 
 **Decided:** nothing beyond the worker's decision 60 (`decisions/cockpit.md`: a fold goes only into a
