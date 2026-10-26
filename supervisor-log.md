@@ -97,6 +97,38 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 05:09 — ui/080 a console's unfinished line is capped instead of growing for the whole run
+
+**Decided:** nothing beyond the worker's in-place amendment to decision 32 (`embarch-ui/decisions/live-study.md`,
+now 9,185 B; no new number): once `partial` passes the 8 KB line cap, `Console::push_chunk` publishes the first
+8 KB, cut on a char boundary, as a finished line marked `truncated` with the partial's step and timestamp, and
+carries on; those lines count in `total`/`dropped`, and a short partial is still dim and never padded. New test
+pushes ~4 MB of multi-byte text with no newline and checks `partial`, the ring counts and the frame JSON size
+on every push. `spec.md`, `open.md` untouched; no browser drive run. **Leg close, for the next leg:** this leg
+ran `study-designer/073`, `topology/061`, `core/105`, `ui/080`, all green on first gate, all reviewers clean;
+no tasks filed, `inbox/` empty, `queue-status.py --count` 48. Bench still unattached. Overdue ledger: nothing
+payable. `suite/046`-`049` still open and unannounced; `atlas` still skipped (`tasks/doc/089`); api was
+skipped this leg (11 open, `api/140` compaction has no clock). `topology/062` carries a supervisor note: its
+declared-interface half changes `Route::Direct` and breaks api and ui through path-deps, so it wants a §8
+pass or a non-breaking half only. `topology/060`'s park reads stale (its unpark condition, `059` landing, has
+happened) and `enrollment.md` is at 166 B left; due 2026-11-01. Not deployed anywhere: live Core, the UI
+binary and the MCP binary all predate this leg. `fold-day.py --status`: today unfolded, 2026-09-28/29
+rollable and not rolled. `check-ownership.py --supervisor`: none of my paths reserved; it names three
+unclassified top-level docs (`bootload-proposal.md`, `embarch-desk-sessions-proposal.md`,
+`embarch-host-study-proposal.md`), which is the owner's call. The owner's uncommitted
+`templates/.claude/commands/fleet-watch.md` in `embarch-fleet` is still there; I left it alone.
+**Merged:** `agent/ui/080-console-partial-line-is-capped` (code `aefdc8b`, ff onto origin/main from `f8b2f7e`;
+doc `b6321925`, cherry-picked from `d1b36664`). Gate re-run on the merge, against study-designer `f25533a`,
+topology `b771dd0`, api `c49e9b2`: build, `cargo test` 193 pass / 4 ignored + 5, clippy `-D warnings` clean,
+client names clean, `check-docs.py` green.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none for the unit; a live study with a `Text` tap that never sends a newline would show the
+cut lines in the console card, and no task owes it.
+**Budget:** PROCEED, weekly 61.0% at leg start, 61.8% at this fold, wave 6.
+**Least sure about:** an 8 KB cut lands mid-message for a tap that is merely slow to send its newline rather
+than binary; decision 32 accepts that, but the first such cut will read as truncation to whoever is watching.
+
 ## 2026-10-26 05:07 — core/105 GET /load/spans is retired: nothing ever called it
 
 **Decided:** nothing beyond the worker's new decision 91 (`embarch-core/decisions/stream-index.md`, 11.0 KB to
