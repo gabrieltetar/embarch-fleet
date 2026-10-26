@@ -97,6 +97,31 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 01:30 — api/138 signal_exchange and signal-exchange say what Core saw on the wire
+
+**Decided:** the worker's amendment to decision 82 (`decisions/failure-reporting.md`: a `port_lost`
+reply exits 5, checked before exit 3, because 3 reads as "send it again" for a line that already
+ran; a silent reply stays 4 and its notes carry the port identity and core state; the MCP result
+gains `wire_notes`). Read the shared-crate hunk (`embarch-core-client`) before merging: additive, no
+struct-literal construction in `embarch-ui` or `embarch-umbrella`. **I filed `api/139` from the
+reviewer's below-bar note, reading it as a real contradiction of decision 58**
+(`decisions/client-crate.md`: a field Core may not yet send is `Option`, never a fabricated default):
+`bytes_read`, `echo_seen`, `written`, `port_lost` are bare defaults, so against the live Core (older
+than core decision 85 until the owner redeploys) every exchange reports `written: false` and
+`bytes_read: 0` beside real text. Filed rather than reverted: nothing reads the fields yet but this
+crate's own CLI and MCP text, and `wire_notes` says nothing false.
+**Merged:** `agent/api/138-signal-exchange-prints-wire-fields` (code `dd49a1f`, ff onto
+origin/main; doc `d5e90265`, cherry-picked). Gate re-run on the merge, against study-designer
+`b19c841`: build, `cargo test --workspace` green, clippy `-D warnings` clean, client names clean,
+`check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none new; the fields are tested on JSON bodies only, never against a Core that
+sends them (core/098's bench debt covers the Core side).
+**Budget:** PROCEED, weekly 54.2%, wave 6.
+**Least sure about:** whether `FlashResponse.erased` (api/134, a bare `Vec` default) breaks
+decision 58 the same way; `api/139` asks its worker to decide and record it.
+
 ## 2026-10-26 01:28 — study-designer/072 a step name cannot shift CSV columns; zero records is not all verified
 
 **Decided:** nothing beyond the worker's decision 81 (`decisions/seals.md`: one crate rule
