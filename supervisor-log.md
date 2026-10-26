@@ -97,6 +97,26 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 01:50 — umbrella/079 decisions/install.md out of reserve by a verbatim split
+
+**Decided:** the unpark (see api/139's entry): flux rewritten to `no` with decision 28 fenced off,
+and the dispatch note allowed either a split along a real seam or shortening. The worker split:
+decisions 21 (`setup --dry-run`) and 25 (`setup --uninstall`) moved verbatim to a new
+`embarch-umbrella/decisions/setup-reversal.md` (2,734 B), routed from `decisions.md`; 3, 4, 5, 14,
+28, 54 stay. Decision 14 stayed because `embarch-api` and `embarch-ui` docs cite `install.md` for it
+and the worker could not fix links outside its scope; nothing cited 21 or 25 by file. Reviewer
+confirmed the move is byte-verbatim apart from the new file's header and that every reference
+(bare "decision 21" in umbrella code comments and `spec.md`) still reads right. Task retired.
+**Merged:** `agent/umbrella/079-compact-install-md` (doc `4a7007e0`, cherry-picked from
+`e1015583`; no code). `install.md` 12,071 to 9,660 B (78.6%). Gate on the merge: 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none new; decision 28's Windows verification debt stands.
+**Budget:** PROCEED, weekly 54.4%, wave 6.
+**Least sure about:** the new file name `setup-reversal.md` covers a preview (21) and an undo (25);
+it is accurate for both, but a third setup decision would have to choose between it and
+`install.md` on a seam the name only half states.
+
 ## 2026-10-26 01:49 — core/108 the hello lock test can no longer reach a real bench
 
 **Decided:** nothing. The worker added a seam rather than a decision: `hello_handler` now calls
