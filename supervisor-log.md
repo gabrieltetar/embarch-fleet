@@ -97,6 +97,29 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 09:25 — api/148 core_state tool and CLI
+
+**Decided:** nothing suite-wide. Api decision 83 amended (not a new number): a `core_state` MCP tool and
+`core-state` CLI subcommand over Core's `POST /live/core-state`, and `mem_read`'s description now says `halted`
+is deprecated (removed after 2026-11-30) and `halted: false` means "already halted", never "running".
+`embarch-core-client` gains `CoreStateResponse` and friends, mirrored field for field from
+`embarch-core/src/live.rs` (I compared the struct list), and `MemReadResponse` gains `found`/`left`/`halt_count` as
+`Option` with `serde(default)`, so an older Core still parses. Reserve: none spent.
+**Merged:** `agent/api/148-core-state-tool-and-cli` (code `b0d05a1`, doc `1a16bae7`, doc rebased onto
+`1de05c25` before the ff). Gate: api `--workspace` build/test/clippy `-D warnings`, 311 pass; ui clippy and
+test (206 pass) and umbrella clippy against the branch's client crate through repointed links (restored
+after); client names clean; `check-docs.py` 11/11. Owner's api checkout fast-forwarded. This fold's
+`suite/features.md` also carries `core/101`'s amended `core-280` row, since both doc branches had landed
+before the first fold.
+**Blocked:** nothing.
+**Reviewer:** skipped (fleet stop at 09:19, before the reviewer was spawned).
+**Hardware debts:** `core_state` (default and `halt=true`) and `mem_read` have never met a live Core; the field
+names are mirrored from source. Needs a running STM32G0 and a debugger-halted core, core decision 97's debts
+(1) and (2). The MCP binary is not redeployed, so the owner's session does not have `core_state` yet.
+**Budget:** PROCEED, weekly 69.4% at leg start, 69.5% at this fold, wave 6.
+**Least sure about:** `pc_samples` is `Vec<Option<u32>>` on both sides, but nothing has shown what Core
+serializes for a sample it could not read; the mirror is right only if the type is the whole contract.
+
 ## 2026-10-26 09:25 — topology/067 the identity gate reports its halts
 
 **Decided:** nothing suite-wide. The worker's topology decision 47 (in a new spot, `decisions/validate-timing.md`,
