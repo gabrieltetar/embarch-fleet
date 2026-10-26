@@ -97,6 +97,32 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 07:19 — api/146 an old Core's /status reads as unknown images, not as nothing flashed
+
+**Decided:** nothing new. Fix forward of api/145's reviewer finding: `StatusResponse.last_images` is
+`Option<Vec<FlashedImage>>` with `#[serde(default)]`, so a Core that predates the field gives `None`
+(`null` in `status --json` and the MCP tool) and `Some([])` means Core said it flashed nothing since start;
+decision 58's shape, recorded in decision 90 (`decisions/lease.md`), `client-crate.md` untouched. Shared
+crate, so I read the diff: one field type, doc comment, tests. **Leg start, for the record:** `inbox/`
+empty; `validate dev-bench` (MCP): probe `001057729826` not attached, not a mismatch, so `api/059`,
+`dev-bench/035`, `dev-bench/038` stay `open`; `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`).
+Overdue ledger unchanged and unpayable (`suite/030` blocked on `DOC-PROTOCOL.md`, `doc/031`
+owner-reserved, `study-designer/026` every bullet live). `core/102`'s thread polled again at 07:06, no
+reply, dispatched. Dispatched `api/146`, `core/102`, `ui/094` at once with the isolation paragraph; all
+three reported within 9 minutes. `--refill-owed` fired on scope spread (api, atlas, core, suite, ui), the
+`tasks/doc/081` shape; I dispatched the three real worker scopes before sweeping.
+**Merged:** `agent/api/146-last-images-optional` (code `903c76c`, ff onto origin/main from `3625584`; doc
+`8aa20c22`, cherry-picked from `7547221d`). Gate re-run on the merge: `cargo build`/`test --workspace` green,
+clippy `-D warnings` clean, client names clean, `check-docs.py` 11/11. `embarch-ui` built against
+`903c76c` (in the `ui/094` worktree); no reader of `last_images` in ui or umbrella.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none new; api/145's two-session lease check still owed, now with `last_images` null on
+an old Core and a real `sha256` after a flash. Not deployed: the MCP binary predates this.
+**Budget:** PROCEED, weekly 66.4% at leg start, wave 6.
+**Least sure about:** nothing reads `last_images` but `status`, so the `None`/`[]` split is only exercised by
+the mock tests until a Core with core/099 is installed.
+
 ## 2026-10-26 07:02 — ui/085 a Data card's table is re-fetched when it loads, so the post-run re-read is the full file
 
 **Decided:** nothing beyond the worker's new decision 64 (`embarch-ui/decisions/live-study.md`, group row
