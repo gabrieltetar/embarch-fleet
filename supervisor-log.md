@@ -97,6 +97,38 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 02:52 — umbrella/090 embarch-umbrella/open.md out of reserve by wording only
+
+**Decided:** the unpark (see topology/063's entry): flux rewritten to `no` with the check-15
+bullet (decision 56, `binary_sha256`) fenced off, since only that bullet is being rewritten by
+queued work; target was the 3,920 B reserve line, not the task's stale "under 90%". The worker
+shortened two bullets and retired none: the decision-26 `--prune` bullet now links
+`decisions/prune-policy.md` for its detail, and the check-5 parenthetical keeps its conclusion
+(Core enumerates the probe itself once udev rules are back, so `no-probe-found` cannot occur) in
+one clause. Every `Hardware debt:` sentence untouched. Reviewer confirmed no unresolved item or debt
+dropped; the `study_results/` 803 MiB measurement is now gone from `embarch-umbrella/` but still in
+`embarch-api/decisions/target-json.md`. Human question: yes, `spec.md` alone answers current work.
+Task retired. **Leg close, for the next leg:** `inbox/` is empty. New and open this leg: `core/110`
+(enroll response carries the vacated row), `ui/090` (Desk tab sends hours only when typed),
+`topology/064` (`link-declares.md` 11,155 B in reserve, due 2026-11-09, `In flux: no`). The overdue
+ledger has **no payable entry left**: `suite/030` and `doc/031` are the owner's and
+`study-designer/026` has nothing to pay. Next due 2026-11-01: `topology/060` (a verbatim split of
+decision 41 out of `enrollment.md` needs no unpark) and `dev-bench/040`. `suite/046`–`049` still
+open and unannounced. Bench still unattached. `fold-day.py --status`: two rollable days, not rolled;
+2026-10-26 becomes foldable after midnight. One false `leg-fold` tick at about 02:49 (a
+`fold-commit.py` refusal masked by a pipe); the fold itself landed a minute later. Scratch worktree
+`.worktrees/smp-check/` (detached core, used to test Core against the smp branch) removed at leg end.
+The owner's uncommitted `embarch-fleet/templates/.claude/commands/fleet-watch.md` was left alone.
+**Merged:** `agent/umbrella/090-compact-open-md` (doc `a053cd7e`, cherry-picked from `bcbdf34d`; no
+code). `open.md` 4,048 to 3,672 B (71.7%). Gate on the merge: 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none new; the check-13, check-15, decision-51 and check-5 debts in `open.md`
+stand.
+**Budget:** PROCEED, weekly 56.0% at leg start, 56.6% here, wave 6.
+**Least sure about:** the "no payable overdue entry" call rests on the previous legs' reading of
+`study-designer/026`; I did not re-read that file's bullets myself.
+
 ## 2026-10-26 02:51 — desk/003 a tile's hours are set by hand only when a person typed them
 
 **Decided:** nothing beyond the worker's decision 61 (`embarch-desk/decisions/cockpit.md`): ✓ writes
