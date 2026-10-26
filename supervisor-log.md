@@ -97,6 +97,39 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 08:03 — ui/089 embarch-ui/spec.md is out of reserve: the tab-navigation paragraph lives in spec/tabs.md
+
+**Decided:** nothing. A compaction pass, honest dedup rather than a squeeze: `spec.md`'s "The six tabs"
+paragraph (newer wording: open desk, decisions 46/57, bare repo with no desk) replaced `spec/tabs.md`'s
+stale "open project" copy of the same paragraph, and `spec.md` keeps a one-line pointer naming 43, 46,
+56-58. 9,099 to 8,584 B (reserve line 9,040); `tabs.md` 4,004 to 4,216 B; `tabs.md`'s header now says its
+opening paragraph is the one non-verbatim part. Must-not-delete list untouched. **Can `spec.md` alone
+answer what someone needs to work on `embarch-ui` today?** Yes, in my reading of the diff and the
+reviewer's: what the UI is, its shape and every invariant stay in it, including "one desk, and so one
+firmware repo, is open at a time" under Invariants; only per-tab behaviour is one link away, where it
+already was. **Leg close, for the next leg:** ran `api/133`, `api/136`, `core/117`, `ui/089`; all green on
+first gate, four reviewers clean, nothing blocked, one red `main` of my own making repaired in `2ffe19ec`
+(`core/117`'s entry; `tasks/doc/092` filed for the owner). `queue-status.py --count` 35; `inbox/` empty.
+`--refill-owed` fires on scope spread only (api, atlas, core, suite, ui); I swept `open.md` for the eight
+empty scopes and the only host-side candidate was `embarch-desk/open.md`'s "`embarch setup` should
+install the desk" (an `umbrella` task), not filed because how the desk is installed looks like the
+owner's call. Next candidates: `api/141` (CLI wording, tiny), `api/140`/`api/144` (api reserve, no
+clock), `ui/093` and `ui/086` (`ui/spec.md` now has 1,656 B of headroom for 086), `core/101` and `core/103`;
+**`core/116` is still `blocked` with its unpark condition fired** (the last leg's note stands: rewrite its
+first `Done when` box to what `core/102` did not ship, then open it). Bench still unattached;
+`suite/046`-`049` and `052` open and unannounced; `atlas` still skipped (`tasks/doc/089`). `embarch-core`
+path-depends on `embarch-smp`, which `leg.md`'s link table omits (already `tasks/doc/090`); the link exists.
+**Merged:** `agent/ui/089-compact-ui-spec` (doc only, `35b86fb5`, cherry-picked from `86247e1e`; the code
+branch had no commits and was not pushed). Gate: `check-ownership.py --scope ui` OK, `check-docs.py` 11/11,
+`check-doc-size.py --pressure` shows the file PAID at 83.8%.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 67.6% at leg start, 68.0% at leg end, wave 6.
+**Least sure about:** whether rolling `history/api.md` early (at the reserve line, by calling the
+assembler's own roll with a lowered cap) is what the owner wants for history files, or whether he would
+rather exempt them from the reserve rule; `tasks/doc/092` asks.
+
 ## 2026-10-26 08:02 — core/117 an ambiguous declared serial reaches every Core caller with its candidate ports
 
 **Decided:** nothing beyond the worker's new decision 96 (`embarch-core/decisions/signal-exchange.md`,
