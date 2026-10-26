@@ -97,344 +97,91 @@ unit under **Merged** and **Blocked**:
 
 ---
 
-## 2026-09-29 22:45 — api/121 Windows-only clippy and config-test reds fixed
+## 2026-10-25 23:55 — study-designer/026 open.md under its cap; main's doc gate green again
 
-**Decided:** nothing. Supervisor-filed from the api/108 entry's "Found" line (queue was 0 at start).
-**Merged:** `agent/api/121-windows-reds` (code `b01f203`, doc `67dbe33b`, both ff). core-client's
-`Command`/`OnceLock` imports now `cfg(unix)`; firmware-build `config::` tests were a fixture bug
-(backslash paths inside TOML basic strings), fixed with a `toml_path()` test helper, no production
-change. Worker ran native Windows `cargo.exe`: config:: 22/22, clippy clean. Linux gate green, docs 11/11.
-**Blocked:** nothing. `tasks/core/091` still on disk: my `git rm` of it was classifier-refused again
-(the api/121 rm went through) — owner needs to remove it.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-**Budget:** PROCEED, weekly 29.3%, wave 6.
-**Least sure about:** the worker's code commit lacks the Co-Authored-By line (pushed, not rewritten).
-
-**Leg close.** 1 unit. Sweep: only change to sources since the last leg was a resolved core bullet;
-0 dispatchable. No dream (one posted ~30 min before this leg). Overdue size debts suite/030 and
-doc/031 both wait on the owner (reserved paths).
-
-## 2026-09-29 22:33 — api/108 Windows Job Object tree-kill code landed, task stays open
-
-**Decided:** nothing. Worker honoured the brief: decision 75 keeps its unix-only qualifier and
-`tasks/api/108` stays `open` (kill never run on Windows).
-**Merged:** `agent/api/108-windows-tree-kill` (code `cfa8197`, doc `f97d7a3a`, both ff). Gate: Linux
-clippy/test green, docs 11/11. I also ran native Windows `cargo.exe` on an rsync'd copy:
-`embarch-firmware-build` compiles clippy-clean, `build::` tests 7/7; recorded in the task file.
-**Found:** on Windows, `embarch-core-client/src/token_discovery.rs` has two unused imports (red under
-`-D warnings`) and the crate's `config::` tests fail. Pre-existing, not filed yet.
+**Decided:** unparked `study-designer/026`: its own unpark condition ("any bullet gets a real
+answer") fired on 2026-09-17 when owner commit `685b691c` closed the authoring-path bullet and moved
+it to a Closed section, taking `open.md` 327 B over cap; overdue since 2026-10-04, it made
+`check-doc-size.py` red on `main`. Re-parked it `blocked` after the pay (still in reserve, nothing
+live is payable). Filed `tasks/topology/060` and `tasks/dev-bench/040` (both `blocked`, due
+2026-11-01, split-first) for three files the owner's 2026-10-06..13 commits put in reserve unfiled
+(`embarch-topology/decisions/enrollment.md`, `embarch-topology/spec.md`, `embarch-dev-bench/spec.md`):
+the over-cap red had masked them, and filing them is what turns the gate green.
+**Leg start, for the record:** first leg after a 26-day gap; drained all 50 inbox drops into the
+queue (`ee7d80c1`, numbers in its message; doc/089 added: `gate.md` has no Python bullet, so no
+`atlas` task was dispatched). Folded 2026-09-29 and rolled 2026-09-17 (`3030aed`). Linked
+`embarch-dev-bench` beside the doc worktrees (`.worktrees/embarch-doc/embarch-dev-bench`), which
+clears the worktree-only `check-links` red on `decisions/pd-bench.md` (`tasks/doc/085`'s shape).
+**Merged:** `agent/study-designer/026-compact-open-md` (doc `3f33bc0c`, `91294f77`, ff; no code).
+`open.md` 5,447 → 4,473 B: the whole Closed section went; decision 75, the authoring decision's
+RunProtocol amendment and `interfaces/eap.md` carry what it said. Gate on the merge: 11/11 green.
 **Blocked:** nothing.
 **Reviewer:** no findings.
-**Hardware debts:** none (needs a Windows run of a timed-out forked tree, not a board).
-**Budget:** PROCEED, weekly 28.3%, wave 6.
-**Least sure about:** landing `cfg(windows)` code whose kill path has never executed; the fallback
-to `start_kill()` limits the downside.
+**Hardware debts:** none. `validate dev-bench` at step 0: probe `001057729826` not attached, not a
+mismatch; Core sees only J-Link `000852006107`. `api/059`, `dev-bench/035` stay `open`.
+**Budget:** PROCEED, weekly 47.5%, wave 6 (4 units dispatched at once).
+**Least sure about:** re-parking 026 rather than leaving the worker's `open`: it keeps the next leg
+off a file with nothing payable, but the debt stays overdue on a park, which is the shape the
+ledger's clock exists to revisit.
 
-**Leg close.** 2 units (core/089, api/108). Sweep done: every open.md item is hardware- or
-trigger-gated, roadmap Next is a bench run — 0 dispatchable. Did not dream: one was posted 20 min
-before this leg (crystal_ball). Next: close `tasks/core/091` (paid; my removal was classifier-refused),
-file the Windows core-client findings above. Slack line for api/108 went out before its fold
-(a `| tail` masked the refused fold-commit's exit — the `tasks/doc/086` shape).
+## 2026-09-29 — 17 units
 
-## 2026-09-29 22:27 — core/089 decision 59's four evidence citations restored
+*Folded by the leg of 2026-10-25 from 17 entries (~21 KB): per-unit narrative, gate transcripts, "least sure about" musings and leg-close prose went; git holds them. Last activity before a ~4-week gap.*
 
-**Decided:** nothing. Recovery landing (branch on origin = finished worker). Drained inbox drop
-`doc-must-not-delete-citations.md` → `tasks/doc/087` (`Owner: required`: DOC-COMPACTION-PASS.md is
-reserved). Set `tasks/ui/078` `open` → `blocked` (its own body says in flux; due 2026-10-13).
-**Merged:** `agent/core/089-decision-59-citations` (doc `2aa45f64`, rebased from `bc094a7c`). No code
-commit. `surfaces.md` now 11042/12288 B (89.9%), out of reserve. `tasks/core/091` left `blocked`:
-check-doc-size says "PAID, close its item", but my removal of it was refused by the permission
-classifier — owner or next leg should close it.
-**Blocked:** nothing. `api/108` still running (dirty worktree, no branch) — not reclaimed.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-**Budget:** PROCEED, weekly 28.3%, wave 6.
-**Least sure about:** whether 091 staying open misleads the size ledger; it is paid in fact.
+**Standing items for the next leg**
+- `tasks/core/091` is paid (`surfaces.md` 89.9% after core/089) but still on disk: my `git rm` was classifier-refused twice (the api/121 rm went through). Owner must remove it.
+- Windows-only findings from api/108 (two unused imports in `embarch-core-client/src/token_discovery.rs`, `config::` fixture bug with backslash TOML paths) are closed by api/121; nothing left to file.
+- `api/108`: decision 75 keeps its unix-only qualifier and `tasks/api/108` stays `open`, because the kill path has never run on Windows. Do not mark it done or drop the qualifier without a real-Windows kill of a timed-out forked tree.
+- Overdue size debts `suite/030` (blocked) and `doc/031` (owner-only) wait on the owner; reserved paths.
+- Stale remote `agent/*` branches nobody owns: `api/096-...-doc`, `core/052-...`, `ui/059-...` (also in embarch-ui), and `core/081-...-doc` (its second commit `6f42cf62` task-file only, deliberately not landed). Worth a look.
+- Owed: native Windows build of `embarch-core` (core/090, `src/flash_backend.rs`); owner runs it from the main checkout.
+- `tasks/ui/078-compact-ui.md` overlaps older open ui compaction tasks 021/043; not reconciled. `tasks/ui/078` set `blocked` (due 2026-10-13). `tasks/doc/087` is `Owner: required` (DOC-COMPACTION-PASS.md reserved); `tasks/doc/086` likewise (a refused `fold-commit.py` does not stop a chained push; use no `| tail` masking its exit). `ui/075` squeezed to 9,031 B vs 9,040 B reserve line; reviewer finding below is still in `inbox/`.
+- Pending owner fragment `changelog.d/ui-launcher-focus-existing-tab.changed.md` left in place on purpose (owner commit `615b57bd`).
+- Use absolute paths when creating worktrees (relative path under `git -C` landed them inside the repos).
+- Bench: dev-bench probe `001057729826` not attached at step 0, not a mismatch; `api/059` and `dev-bench/035` stay `open`.
 
-## 2026-09-29 22:19 — ui/077 "served by the binary" restored in spec.md
+**Merged** (no code commit means doc-only; every merge ff or cherry-picked, gate green, docs 11/11)
+- core/084: doc `e3b57ea6` (leg start `f411caa1`). 14 of 17 rows of core `decisions.md` size column corrected.
+- api/120: code `5c6b199`, doc `64faa5f3`. main.rs cites study-designer decision 63.
+- ui/069: doc `efa77706` (rebased onto `64faa5f3`). Decisions 3+28 split to `decisions/launcher.md`, tabs table to `spec/tabs.md`; filed ui/075.
+- study-designer/069: doc `7301e0a5` (rebased onto `2966a95b`). gatt-extract.md squeezed to 89.9%; filed ui/076.
+- study-designer/066: doc `df01f487`. File count made unstale.
+- ui/076: doc `30b3e169`. Decision links repointed at the index.
+- core/095: code `2590885`, doc `129b38aa`. /load comment cites decision 62; no Windows build (comment-only diff).
+- api/083: doc `43b9d2b4`. spec.md §§3-7 split verbatim into `spec/implementation.md`.
+- core/090: code `ae66d3f`, doc `f3cb903e`. `nrfutil_erase_options()` extracted and tested.
+- api/119: doc `b3085b2a`. Decision 72 mirror count is six; drained `history-api-seven-should-be-six.md`.
+- ui/075: doc `e4167090`. spec.md 9,275 to 9,031 B.
+- core/081: doc `55e2b314` (from `ba07d029`; `6f42cf62` not landed). Stale decision-64 bullet removed.
+- core/083: doc `bc355356`; core/089 claim `d1991ea2`.
+- ui/077: doc `5df5d116`. "served by the binary" restored; filed ui/078.
+- core/089: doc `2aa45f64` (rebased from `bc094a7c`). Decision 59 citations restored.
+- api/108: code `cfa8197`, doc `f97d7a3a`. Windows Job Object tree-kill; task stays open.
+- api/121: code `b01f203`, doc `67dbe33b`. Windows reds fixed (`toml_path()` test helper). Worker's code commit lacks Co-Authored-By.
 
-**Decided:** nothing.
-**Merged:** `agent/ui/077-served-by-the-binary` (doc `5df5d116`, rebased onto the core/083 fold). No
-code commit. Worker filed `tasks/ui/078-compact-ui.md` for spec.md's reserve. Task 077 removed.
-**Blocked:** nothing. **Still in flight at leg end, NOT landed:** `api/108` (worktree dirty, no
-branch pushed) and `core/089` (dispatched 22:18). Successor: gate them when their branches appear;
-absence is not death. Check 108 did not mark done or drop decision 75's unix-only qualifier without
-a real-Windows kill.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-**Budget:** PROCEED, weekly 27.4%, wave 6.
-**Least sure about:** 078 overlaps the older open ui compaction tasks 021/043; not reconciled.
-
-## 2026-09-29 22:18 — core/083 task 076's retracted directional claim corrected
-
-**Decided:** nothing. Recovery leg after a leg that died with 3 units dispatched; this is the first
-of them to report (branch present on origin = finished worker).
-**Merged:** `agent/core/083-task-076-retracted-claim` (doc `bc355356`, ff). No code commit. Task
-file 083 removed at fold. `ui/077` and `api/108` had no remote branch at leg start (api/108's
-worktree is dirty mid-run) — treated as alive, not reclaimed. `core/089` dispatched in core's slot
-(claim `d1991ea2`), told to compact `surfaces.md` (94.2%) ride-along under 091's list.
 **Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-**Budget:** PROCEED at start, weekly 27.4%, wave 6. Refill owed: 0 dispatchable, 0 scopes.
-**Least sure about:** whether `ui/077`'s worker is alive at all — its worktree is clean and nothing I can read may retire it.
 
-## 2026-09-29 22:11 — core/081 open.md's stale decision-64 spans-route bullet removed
+**Reviewer:** no findings. (api/121)
+**Reviewer:** no findings. (api/108)
+**Reviewer:** no findings. (core/089)
+**Reviewer:** no findings. (ui/077)
+**Reviewer:** no findings. (core/083)
+**Reviewer:** no findings. (core/081)
+**Reviewer:** 1 finding — inbox/ui-075-dropped-served-by-binary.md (ui/075; restoring the phrase landed as ui/077)
+**Reviewer:** no findings. (api/119)
+**Reviewer:** no findings. (core/090)
+**Reviewer:** no findings. (api/083)
+**Reviewer:** no findings. (core/095)
+**Reviewer:** no findings. (ui/076)
+**Reviewer:** no findings. (study-designer/066)
+**Reviewer:** no findings. (study-designer/069)
+**Reviewer:** no findings. (ui/069)
+**Reviewer:** no findings. (api/120)
+**Reviewer:** no findings. (core/084)
 
-**Decided:** nothing. No new numbered decision.
-**Merged:** `agent/core/081-open-md-spans-route-doc` (doc `55e2b314`, cherry-picked from `ba07d029`;
-the branch's second commit `6f42cf62` touched only the task file, which I removed instead — not
-landed). **No code commit.** The bullet named `tasks/core/076` as unbuilt; 076 landed 2026-09-17 and
-decision 66 made the `outpost_load.rs`/`trace.rs` duplication permanent, so the bullet went entirely.
-No changelog fragment (nothing user-facing). Gate: `check-docs.py` 11/11, ownership clean. Task removed.
-**My dispatch bug:** I created both worktrees with a relative path under `git -C`, so they landed at
-`embarch-core/.worktrees/…` and `embarch-doc/.worktrees/…`; the worker refused cleanly with no edits,
-I `git worktree move`d them to the right place and resumed the same worker. Use absolute paths.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-**Budget:** PROCEED, weekly 26.6%, wave 6.
-**Least sure about:** nothing about the content; the resume-after-refusal is a same-worker continuation, not a second dispatch.
-
-**Leg close, for the next leg.** 4/4 units: three recovery landings (core/090, api/119, ui/075) plus
-core/081. Drain the reviewer drop `inbox/ui-075-dropped-served-by-binary.md` first — restoring the
-phrase puts `embarch-ui/spec.md` 13 B into reserve. Owed: native Windows build of `embarch-core`
-(core/090). Removed the stale `embarch-ui` 075/076 worktrees and local branches. Did not sweep
-sources: queue had 3 dispatchable (`api/108`, `core/083`, `core/089`) and one slot left. `suite/030`
-and `doc/031` still overdue and untouchable. Old remote branches `api/096`, `core/052`, `ui/059` untouched.
-
----
-
-## 2026-09-29 22:09 — ui/075 spec.md squeezed out of reserve, 9,275 to 9,031 B
-
-**Decided:** nothing. No new numbered decision.
-**Merged:** `agent/ui/075-compact-ui-spec-doc` (doc `e4167090`, cherry-picked; **no code commit** —
-`embarch-ui` branch identical to `main`). Recovery landing, not re-dispatched. Wording tightened,
-no split; now 9,031 B against a 9,040 B reserve line (the task's "under 90%" target was wrong).
-Gate: `check-docs.py` 11/11, ownership clean on 3 paths. Task removed.
-**Answer to DOC-COMPACTION-PASS's question:** not answered by the worker in words; my read — yes,
-`spec.md` still states the component, but see the reviewer finding for one cut phrase.
-**Blocked:** nothing.
-**Reviewer:** 1 finding — inbox/ui-075-dropped-served-by-binary.md
-**Hardware debts:** none.
-**Budget:** PROCEED, weekly 25.8%, wave 6.
-**Least sure about:** the reviewer's finding (dropped "served by the binary", uncounted in the commit's quoted cuts) is left in `inbox/` for the next leg's drain; restoring it costs ~22 B and would put the file back in reserve by 13 B.
-
----
-
-## 2026-09-29 22:08 — api/119 decision 72's retired-mirror count is six, not seven
-
-**Decided:** nothing. No new numbered decision.
-**Merged:** `agent/api/119-decision-72-mirror-count-doc` (doc `b3085b2a`, cherry-picked; **no code
-commit** — `client.rs` already said six). Recovery landing, not re-dispatched. Three places in
-`embarch-api/decisions/client-crate.md` corrected. Also drained inbox drop
-`history-api-seven-should-be-six.md` inside this fold: `history/api.md`'s suite/035 "Removed" line
-now says six (supervisor-owned file, one word; announced in channel). Gate: `check-docs.py` 11/11,
-ownership clean on 3 paths. Task removed.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-**Budget:** PROCEED, weekly 25.8%, wave 6.
-**Least sure about:** fixing the history line in the fold instead of numbering a doc task; it was one word in a file only I write.
-
----
-
-## 2026-09-29 22:07 — core/090 decision 36's nrfutil erase half now has a test
-
-**Decided:** nothing. No new numbered decision.
-**Merged:** `agent/core/090-decision-36-erase-overclaim` (code `ae66d3f`, fast-forward; doc `f3cb903e`,
-fast-forward). Recovery landing: the previous leg's worker had finished and pushed; not re-dispatched.
-`nrfutil_erase_options()` extracted from `run()` with a test that it never requests `ERASE_ALL`;
-decision 36's text corrected. Gate re-run on the merge: clippy `-D warnings` clean, `cargo test`
-green (246+1), ownership + client-names clean, `check-docs.py` 11/11. Task removed.
-**Blocked:** nothing.
-**Reviewer:** no findings.
 **Hardware debts:** native Windows build of `embarch-core` owed (real code change in `src/flash_backend.rs`); owner runs it from the main checkout.
-**Budget:** PROCEED, weekly 25.8%, wave 6.
-**Least sure about:** nothing substantive; the gate is mine, the code is test-only refactoring.
 
----
-
-## 2026-09-29 21:29 — api/083 spec.md §§3-7 split verbatim into spec/implementation.md
-
-**Decided:** nothing. No new numbered decision.
-**Merged:** `agent/api/083-compact-api-doc` (doc `43b9d2b4`, cherry-picked; **no code commit** —
-code branch at parity with `main`). `embarch-api/spec.md` now 3,616 B, §§1-2 plus one pointer line;
-§§3-7 moved to `embarch-api/spec/implementation.md`. I diffed every removed line against the new
-file: identical except relative-link depth (`decisions/` → `../decisions/`). Fragment
-`api-spec-implementation-split.changed.md` folded into `history/api.md`. Task removed; the size
-ledger no longer lists `api/083` as overdue. Gate: `check-docs.py` 11/11, ownership clean on 4 paths.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-**Budget:** PROCEED, weekly 23.3%, wave 6.
-**Least sure about:** `spec/implementation.md` is a new top-level-ish doc; the supervisor ownership
-check at leg end is what tells whether it needs the owner to classify it.
-
-**Leg close, for the next leg.** Recovery leg: 4/4 units, all four were the previous leg's claims.
-Its workers were alive at my step 0 (two dirty trees), finished and pushed; I landed them — no
-re-dispatch, no new claims. Queue **7 dispatchable** at close. Overdue ledger: `suite/030`
-(blocked) and `doc/031` (owner-only) only. Stale remote `embarch-doc` branches from older legs
-still exist (`api/096-…-doc`, `core/052-…`, `ui/059-…` also in `embarch-ui`) — not mine, not
-touched; worth a look. Did not drain or sweep: inbox empty, and a recovery leg at cap has no slot.
-Two self-inflicted fold refusals: I matched the log by the heading time I typed, and `fold-commit.py`
-had restamped it; re-read the heading before each prepend.
-
----
-
-## 2026-09-29 21:28 — core/095 /load doc comment cites decision 62
-
-**Decided:** nothing. No new numbered decision.
-**Merged:** `agent/core/095-load-handler-decision-62-cite` (code `2590885`, fast-forward;
-doc `129b38aa`, task close, cherry-picked). `src/study.rs` `stream_load_handler`'s comment now
-says "(decision 62; suite decision 4)" instead of a file path. Gate on the merged tree: clippy
-`-D warnings` clean, `cargo test` green, ownership + client-names clean, `check-docs.py` 11/11.
-**No native Windows build**: the diff is one doc comment, which cannot change it; said here so it
-is not mistaken for a run. Task removed.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-**Budget:** PROCEED, weekly 23.3%, wave 6.
-**Least sure about:** skipping the Windows build on a comment-only diff is my reading, not a written exemption.
-
----
-
-## 2026-09-29 21:26 — ui/076 study-designer decision links repointed at the index
-
-**Decided:** nothing. No new numbered decision.
-**Merged:** `agent/ui/076-repoint-study-designer-links-doc` (doc `30b3e169`, cherry-picked onto
-`df01f487`; **no code commit** — doc-only). `embarch-ui/decisions/gatt-capture.md` (56) and
-`designer-panels.md` (33, 78) now link `embarch-study-designer/decisions.md`, not
-`decisions/gatt-extract.md` — which unblocks a future split of that topic file (see the
-`study-designer/069` entry). `changelog.d/ui-decision-links-repoint-index.changed.md` folded into
-`history/ui.md`. Task removed. Gate: `check-docs.py` 11/11; ownership clean on 4 paths.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-**Budget:** PROCEED, weekly 23.3%, wave 6.
-**Least sure about:** the reviewer read at the merge SHA in the owner checkout rather than my leg
-worktree; it used `git show <sha>`, so the read is exact, but it did not follow the path it was given.
-
----
-
-## 2026-09-29 21:25 — study-designer/066 decisions.md file count made unstale
-
-**Decided:** nothing. No new numbered decision.
-**Merged:** `agent/study-designer/066-decisions-md-no-count-doc` (doc `df01f487`, fast-forward;
-**no code commit** — doc-only task). "these twenty files" became "the files under `decisions/`".
-Table census clean: 78 decisions, 20 rows for 20 files, every number in exactly one row. No
-changelog fragment (not reader-facing). Task removed. Gate: `check-docs.py` 11/11; ownership clean
-on 2 paths. Recovered from the previous leg's handoff: this worker had pushed before it died.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-**Budget:** PROCEED, weekly 23.3%, wave 6.
-**Least sure about:** nothing material; a one-sentence edit.
-
----
-
-## 2026-09-29 21:19 — study-designer/069 gatt-extract.md squeezed out of reserve; the split was blocked by ui's links
-
-**Decided:** nothing. No new numbered decision.
-**Merged:** `agent/study-designer/069-compact-gatt-extract-doc` (doc **`7301e0a5`**, rebased by me
-onto `2966a95b`; **no code commit** — the code branch was pushed at parity with `main`).
-`decisions/gatt-extract.md` 12,252 → 11,053 B (89.9%, just under the floor). Squeeze, not split:
-`embarch-ui/decisions/gatt-capture.md` and `designer-panels.md` link decisions 33/56/78 at this
-topic file's path, so moving 33 would turn `check-decision-refs.py` red in a scope the worker could
-not write. Every cut hunk is quoted in the task file; the three protected clauses (57's failure
-modes, 56's rejected `name` field, 78's union argument) are verbatim. The worker's inbox drop is
-filed as **`tasks/ui/076`** (repoint those links at `decisions.md`), which is what unblocks a
-future split. Task closed and removed; `changelog.d/study-designer-gatt-extract-reserve.changed.md`
-folded into `history/study-designer.md`. Gate: `check-docs.py` 11/11; `check-ownership.py --scope
-study-designer` clean on 3 paths. Size ledger **4 → 3 overdue**, all three owner-only or blocked.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-**Budget:** PROCEED, weekly 22.0%, wave 6.
-**Least sure about:** 89.9% is under the floor by about 6 bytes' worth of rounding, so the next
-amendment to 33/56/57/78 puts this file straight back in reserve. `ui/076` is the real fix, and it
-should land before anyone adds to this file again.
-
-**Leg close, for the next leg.** 4/4 units, all green, no reds, no blocks; one code commit
-(`embarch-api` `5c6b199`, a comment). Filed `doc/086` (owner-only) and `ui/076` from `inbox/`;
-workers filed `ui/075`. Queue **10 dispatchable** at close. Overdue ledger is now `suite/030`,
-`doc/031` (owner-only) and **`api/083`** (`embarch-api/spec.md`, blocked on flux but names its own
-§§1-2 vs §§3-7 seam — the next leg's first unit if it unparks it the way `core/093` was).
-Bench: dev-bench `001057729826` not attached at step 0; `api/059`, `dev-bench/035` stay `open`.
-Refill was owed on scope spread; no thin scope's `open.md` changed since the 09-28 sweep, so I did
-not re-sweep. `inbox/` empty at close. No `suite` window open. Folded 2026-09-28 in the `core/084`
-fold. **One slip**: at the `ui/069` fold I passed `build_changelog.py --only` a fragment the owner wrote
-(`ui-launcher-focus-existing-tab.changed.md`, touched by that unit's link fix); I noticed before
-committing, restored it, and it is still pending.
-
----
-
-## 2026-09-29 21:16 — ui/069 shape.md and spec.md out of reserve by two verbatim splits
-
-**Decided:** nothing. No new numbered decision.
-**Merged:** `agent/ui/069-compact-ui-doc` (doc **`efa77706`**, rebased by me onto `64faa5f3`; **no
-code commit**). Decisions 3 + 28 moved verbatim from `embarch-ui/decisions/shape.md` into new
-`decisions/launcher.md` (shape.md 12,194 → 2,079 B; launcher.md 10,373 B); the five-tab table moved
-verbatim from `spec.md` into new `spec/tabs.md` (spec.md 11,022 → 9,275 B, was **over** cap;
-tabs.md 2,435 B). `decisions.md` group table split into two rows; the one inbound citation
-(pending fragment `changelog.d/ui-launcher-focus-existing-tab.changed.md`) repointed. `spec.md` is
-still in reserve (965 B left), so the worker filed **`tasks/ui/075`**, `open`, due 2026-10-20.
-`tasks/ui/069` closed and removed; `changelog.d/ui-compact-shape-and-spec.changed.md` folded into
-`history/ui.md`. **I left `ui-launcher-focus-existing-tab.changed.md` pending** — it belongs to the
-owner's decision-28 commit `615b57bd`; this unit only edited its link. Gate: `check-docs.py` 11/11;
-`check-ownership.py --scope ui` clean on 9 paths.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-**Budget:** PROCEED, weekly 22.0%, wave 6.
-**Least sure about:** the worker's report said `ui/075` was `blocked` on `tasks/ui/070`, but the
-file on `main` says `open` — and `ui/070` is done (owner, 2026-09-17), so `open` is the right state;
-the report was wrong, not the file.
-
----
-
-## 2026-09-29 21:15 — api/120 main.rs cites study-designer decision 63 instead of a renumbered spec section
-
-**Decided:** nothing.
-**Merged:** `agent/api/120-main-rs-spec-section-cite` (code **`5c6b199`**, fast-forward, one comment
-line in `src/main.rs`; doc **`64faa5f3`**, rebased by me onto the `core/084` fold). No other
-`spec.md §` citation in `embarch-api`. Task closed and removed;
-`changelog.d/api-spec-section-cite.fixed.md` folded into `history/api.md`. Gate on the merge result:
-`cargo build`/`test` (226 passed)/`clippy --all-targets -- -D warnings` green;
-`check-client-names.py` clean; `check-docs.py` 11/11; `check-ownership.py --scope api` clean.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-**Budget:** PROCEED, weekly 22.0%, wave 6.
-**Least sure about:** nothing material; a one-line comment repoint the reviewer matched to the
-right decision's subject.
-
----
-
-## 2026-09-29 21:11 — core/084 every row of core's decisions.md size column checked against wc -c
-
-**Decided:** nothing. Leg start `f411caa1`. At step 0 I filed the one inbox drop as
-**`tasks/doc/086`** (a refused `fold-commit.py` does not stop a push chained behind it;
-`Owner: required`) and folded 2026-09-28 via `embarch-log-folder` (16 units, 65/65 SHAs kept) in
-this commit.
-**Merged:** `agent/core/084-size-column-pass-doc` (doc **`e3b57ea6`**, fast-forward; **no code
-commit** — docs-only). 14 of 17 rows in `embarch-core/decisions.md`'s size column were stale, not
-just the `surfaces.md` outlier the task named; all corrected. `surfaces.md` itself untouched (still
-parked under `core/091`). Task closed and removed; `changelog.d/core-decisions-size-column.fixed.md`
-folded into `history/core.md`. Gate: `check-docs.py` all 11 green; `check-ownership.py --scope
-core` clean on 3 paths.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none. At step 0 `validate dev-bench`: probe `001057729826` not attached, not a
-mismatch — `api/059` and `dev-bench/035` stay `open`.
-**Budget:** PROCEED, weekly 22.0%, wave 6 (4 units, all dispatched at once).
-**Least sure about:** whether a hand-maintained size column is worth keeping at all when it drifted
-on 14 of 17 rows in ~12 days; a script could print it. Not filed — `check-doc-size.py` is the
-owner's.
-
----
-
+**Budget:** PROCEED throughout, weekly 22.0% to 29.3%, wave 6.
 ## 2026-09-28 — 16 units
 
 *Folded by an `embarch-log-folder` leg, 2026-09-29, from sixteen unit entries (15:49–18:00). Per-unit
@@ -622,538 +369,4 @@ had lapsed or been satisfied by a verbatim move.
   close). Oldest remaining payable overdue at close: `study-designer/069` (`gatt-extract.md`, 36 B
   left, due 09-27) and `api/083` (blocked on flux, names its own split seam). `suite/030` and
   `doc/031` remain owner-only. Queue at close: 12 dispatchable over 4 scopes.
-## 2026-09-17 — 50 units
-
-*Folded by the `embarch-log-folder` agent on 2026-09-28, per `protocol.md` §11. Fifty per-unit
-entries collapse here with every SHA (119), every `**Hardware debts:**` line (50) and every
-`**Reviewer:**` line (50) preserved verbatim and line-anchored, so `grep '^\*\*Reviewer:'
-supervisor-log.md` still tallies correctly. What is gone is the narrative reasoning behind each
-accepted judgement; git holds it in `embarch-core`, `embarch-umbrella`, `embarch-api`, `embarch-ui`,
-`embarch-topology`, `embarch-study-designer`, `embarch-dev-bench` and `embarch-doc` at the SHAs
-below.*
-
-**The one thing that must not be missed: `fleet stop` was posted by the owner at 18:56:49 MDT
-(`ts 1789693009.325949`) and the leg did not see it until 19:14 — three units and about seventeen
-minutes after the ask.** `core/088`'s own entry is explicit about why: `.claude/leg.md` requires a
-poll of both stop channels at every unit boundary, the leg polled at step 0 and at dispatch and then
-not again until the fourth unit, and **the poll is the primary route a stop reaches a leg, not a
-backstop.** Nothing was harmed — all four units of that leg landed green and a stop is not a
-rollback — but the next legs should read this as a standing risk in the mechanism itself, not a
-one-off lapse: poll at *every* unit boundary, not only the convenient ones. `.fleet/pump` was deleted
-on the leg's own death, so no successor was spawned by that leg; the listener claims the stop.
-
-**The day's shape: almost entirely documentation-hygiene and citation-repair, run by roughly a dozen
-legs numbered in the 130s–140s, with real code changes in only six or seven of the fifty units**
-(`api/107`, `api/109`, `api/110`, `core/077`, `topology/058`, `study-designer/064`, `dev-bench/034`
-touch source; the rest are decisions, indexes, citations and prose, most landing as zero-code-commit
-branches gated on `check-docs.py`/`check-ownership.py` alone, with `cargo` run only where code
-actually changed). Two chains dominate. The `embarch-study-designer` citation-sweep chain
-(`study-designer/044` through `065`) is now **closed** — 622 citation instances checked suite-wide
-across the whole chain, 25 wrong numbers fixed, 7 false sentences fixed, `065` ending it with an
-independently re-derived zero rather than an assumed one. A parallel "formerly `embarch-core`'s own
-`X.rs`, moved here" migration-citation defect closed at **4/4** in `embarch-core` (`core/070`) and
-**3/3 fixed + 1 correctly left alone** in `embarch-topology` (`topology/052`–`054`). Four distinct
-census blind spots were found and named this day alone: case-sensitivity, a plural-only "decisions"
-grep, a citation split across a line wrap in the *singular*, and a citation with no space, embedded
-inside a Rust test-function identifier (`decision_52s_struct_layout`). **`study-designer/060`'s
-finding is the one to remember: the singular-wrap grep bug had already been found and fixed twice
-before, in `embarch-api` (`api/106`) and `embarch-umbrella` (`umbrella/074`), both three legs
-earlier — and neither produced an `inbox/` drop or a `tasks/suite/*` entry, so the study-designer
-chain kept copying the broken pattern forward for nineteen units before anyone noticed.** Filed as
-`tasks/doc/074`, `Owner: required`.
-
----
-
-### Decided
-
-The suite-wide and cross-repo calls worth carrying cold:
-
-- **`embarch-core` decision 66 (`core/085`) — the outpost's axis-health diagnostics and point events
-  will never be served by Core; the `Lane`/`Span`/`Gap` duplication between `outpost_load.rs` and
-  `embarch-ui`'s `trace.rs` is now a *permanent* boundary, not a deferral.** The reviewer put the soft
-  spot on the record: the argument partly rests on point events being built in `trace.rs`'s same
-  row-iteration pass as `Lane`/`Span`/`Gap` *today* — a future refactor separating that pass could
-  change the premise, and "permanent" rests partly on a coupling that is contingent rather than
-  necessary.
-- **`suite/decisions/placement.md` §4 (`suite/044`) is narrowed to what it actually bought: one
-  implementation of the outpost's *reduced answer*, not of the outpost timeline.** The timeline
-  itself (`Lane`/`Span`/`Gap` from a CSV) is now permanently double-implemented per decision 66 above.
-  Decision 64's own tombstone language ("serving spans closes this gap") was corrected in the same arc
-  (`core/087`) — it had been read as settled by two later units (`core/085`, `core/086`) without
-  either catching that this specific clause survived unfixed.
-- **`embarch-core` decision 64 (`core/075`) — yes, `/load` will serve decoded per-lane spans**
-  (built in `core/076`, recovered mid-leg after leg 137 was killed mid-fold). This reverses a prior
-  supervisor's own dispatch-note lean; recorded so the next leg trusts a worker's re-derivation over
-  a predecessor's steer.
-- **`embarch-core` decision 59, second amendment (`core/077`) — no third `kind` value for
-  attached-but-stuck mid-attach.** `embarch-topology` decision 34 (`topology/058`) routes all five
-  silent mid-attach failure points through `raise()` now (was 2 of 7; is 7 of 7), and Core collapses
-  all of them into the existing `"not_attached"` value rather than adding a distinction nothing
-  downstream would use. `embarch-api` matched Core's wording in decision 76 (`api/110`). **The
-  residual gap is named, not papered over: an attached-but-stuck probe still reads identically to a
-  genuinely unplugged one on the wire** — filed, open, free to observe next time a probe is
-  physically stuck.
-- **`embarch-core` decision 59 amended again (`core/074`) — the "every distinguishing fact was
-  already present at every call site" premise was false for the whole mid-attach failure class, not
-  just the one case a task was filed for.** Reading the source rather than inheriting a prior unit's
-  paraphrase found this; a `Must not delete:` list that protects a decision's *findings* but not the
-  *evidence citations* behind them has its first clean instance here (`tasks/core/089`).
-- **`embarch-umbrella` decision 55 (`umbrella/080`) — `init` refuses to scaffold `serial_port`,
-  permanently, for the same reason it already refuses `board` and `chip`:** a serial port is *more*
-  volatile than a board, assigned by host-OS USB enumeration, able to go stale with no cable ever
-  moving.
-- **`embarch-umbrella` decision 54 (`umbrella/078`) — the user-level (`systemd --user` /
-  launch-agent) service mode is rejected, and the *why* is narrower than the standing bullet said:**
-  it dies specifically on a machine with zero completed interactive logins since boot — real, but
-  previously undocumented as the actual failure case.
-- **`embarch-umbrella` decision 53 (`umbrella/076`) — doctor check 5's USB scan no longer trusts
-  `winner_class == Local` alone under WSL2.** A real, visible change to what `doctor` prints on the
-  owner's own `wsl-host` bench: check 5 now reports `CoreElsewhere` instead of scanning the wrong
-  machine's bus. Not a regression — a correction — but the next leg should not be surprised by the
-  different doctor output.
-- **`embarch-core` decision 68 (`core/088`) — `GET /status` gains `binary_sha256`, a self-hash of the
-  running binary**, closing an `embarch-umbrella`-deferred question (doctor check 15) that had sat
-  answered by nobody for days. The implementation (`tasks/core/088`) is a live wire-schema bump the
-  leg deliberately did **not** ship — see Blocked/queue reconciliation. Its own announcement window
-  (leg 142, posted `ts 1789690550.857739`, 30 minutes elapsing at epoch `1789692350`) was polled five
-  times across legs 142–144 with no reply but the announcement itself before this leg dispatched it —
-  the "next leg completes the window" rule working as designed, not re-announced and not re-timed.
-- **`suite/decisions/placement.md` §4's narrowing (`suite/044`) ran under its own announcement window
-  too** — posted with no `--action` at `ts 1789684951.085879` (16:49, closing 17:19), polled at every
-  unit boundary of that leg and executed at 31 minutes elapsed. `core/076`'s wire-schema bump (the
-  `/load/spans` route decision 64 authorized) carried its own window from leg 137, `ts
-  1789673384.645649`, closed cleanly the same way.
-- **`embarch-core` decisions 32/36 and the reversals corpus (`core/071`, `core/073`, `suite/043`) —
-  a documentation *system* failure, not a drift.** A 2026-09-02 four-file decision migration
-  (`c767f8d`, same day as the seven-file split `3854e13`) silently dropped two correction paragraphs
-  that a same-day 2026-08-25/27 self-correction had already written, reverting decision 32 to a claim
-  the code (`62ef241`) had outgrown fifteen days earlier. **A compaction/migration pass is the one
-  edit that can un-correct a decision silently** — it re-asserts the original claim with the
-  decision's own authority, breaks no gate, and its diff reads as a move. Filed into the reversals
-  corpus as row 111 under recurring shape 1, alongside rows 19/28/55 (the first occurrence).
-  `decisions/flash-backend.md` decision 36 also gained the "erase never becomes a chip erase"
-  property's actual construction argument (`core/073`), since neither decision 32 nor 36 had ever
-  stated it — only a citation sentence had.
-- **`embarch-topology` decision 34 (`topology/058`) and decision 21's provenance (`topology/055`) —
-  the identity-compare safety property was inaccurate *the day it was written*, six days before the
-  code that made it false.** `compare_self_reported`'s case-insensitive equality shortcut (`98aec25`,
-  2026-08-25) predates decision 21's own originating commit (`155fc34`, 2026-08-31) — a different and
-  worse shape than the usual drift. Corrected without weakening the safety sentence itself. Two more
-  `spec.md`/decision-20 guarantees were found never true as stated: role-uniqueness only logs the
-  *first* of two duplicate rows (the second vanishes with no record anywhere), and "the only state
-  that persists is a human's declared intent" ignored `alerts.jsonl`, which does persist (traced to
-  confirm nothing reads it back as a decision input).
-- **A second task-number collision in two legs, now filed as `tasks/doc/079`, `Owner: required`.**
-  Leg 137 predicted a recurrence; it recurred one leg later (`core/080`'s
-  `tasks/core/081-compact-core.md` collided with the supervisor's own concurrently-filed
-  `081-open-md-still-says-…`), and this time it cost a squashed worker commit history to satisfy
-  `check-task-numbers.py`, not just a rename. **Two actors compute "next free number" against
-  different views of `main` inside the same window; nothing warns either side.**
-
----
-
-### Merged
-
-All 50 units landed; none blocked at merge. `— (0 commits)` means the worker's code branch carried
-no commits over its base (a doc-only or decision-only unit), and the SHA shown is `main`'s own
-position at merge time, not a new commit.
-
-| Unit | Code SHA | Doc SHA |
-|---|---|---|
-| `core/088` | `1185387` | `431f7a57` |
-| `api/117` | `87f67df` (0 commits) | `a942c23f` |
-| `umbrella/087` | `2764e89` (0 commits) | `0b5ab9f8` |
-| `ui/068` | `e405314` (0 commits) | `eb27be17` |
-| `core/073` | `b6774e0e` (0 commits) | `a070fccb` |
-| `umbrella/086` | `2764e896` (0 commits) | `093c3289` |
-| `api/116` | `87f67dfb` (0 commits) | `2dc4b980` |
-| `umbrella/085` | `2764e896` (0 commits) | `43873deb` |
-| `core/087` | `b6774e0e` (0 commits) | `1082e782` |
-| `umbrella/083` | `2764e89` (0 commits) | `fb9a5487` |
-| `core/078` | `b6774e0` (0 commits) | `00f9d79d` |
-| `umbrella/082` | `2764e89` (0 commits) | `f61b43ff` |
-| `api/114` | `87f67df` (0 commits) | `ed59fb66` |
-| `ui/067` | `e405314` (0 commits) | `8d10b62b` |
-| `umbrella/081` | `2764e89` (0 commits) | `63f7d4ea` |
-| `api/115` | `87f67df` (0 commits) | `c904f3d4` |
-| `core/086` | `b6774e0` (0 commits) | `e75618d0` |
-| `suite/044` | — (supervisor unit, no branch) | landed in fold commit |
-| `api/109` | `87f67df` | `fffc419a` |
-| `core/085` | `b6774e0` + content `543ffe04` | `2e7195f0` |
-| `umbrella/080` | — (0 commits, main at `2764e89`) | `6539316f` |
-| `ui/065` | — (0 commits, main at `e405314`) | `ef2896c` |
-| `api/110` | `3b1d225` | `5cf0132` |
-| `core/080` | `ef60321` (unchanged, 0 commits) | `74c410b` |
-| `core/076` | `ef60321` | `e0d54e6` |
-| `core/077` | `6905c62` | `2c14f34` |
-| `study-designer/065` | — (0 commits, at `5c3879d`) | `5595f7d` |
-| `topology/057` | — (doc-only) | `76115af` |
-| `topology/058` | `b96f758` | `c34532e` |
-| `core/075` | — (0 commits over origin/main) | `5b65ea7` |
-| `umbrella/078` | — (0 commits over origin/main) | `cb1875f` |
-| `suite/043` | `280fddd` (reversals half) | folded same commit |
-| `study-designer/064` | `5c3879d` | `70f4872` |
-| `core/074` | — (marker at `641fd15`) | `83ad8cb` |
-| `ui/064` | — (zero diff) | `b0fc860` |
-| `core/072` | — (recovered, main `641fd15`) | `76a48ed` |
-| `topology/056` | `fb754d7` | `b3c5827` |
-| `study-designer/063` | `4354596` | `14dbbb4` |
-| `core/071` | `641fd15` | `4219867` |
-| `topology/055` | `2428bc2` | `1b1589e` |
-| `umbrella/076` | `2764e89` | `7e032c0` |
-| `study-designer/062` | `1432ef6` | `b1459fb` |
-| `umbrella/075` | — (0 commits) | `0752669` |
-| `api/107` | `0e4ff1c` | `ea882f7` |
-| `study-designer/061` | `56f2536` | `b8c7f5d` |
-| `topology/054` | `2031278` | `de6b5bf` |
-| `dev-bench/034` | `edc278b` | `4288fd9` |
-| `topology/053` | `c0c4f84` | `d655d1e` |
-| `study-designer/060` | — (no code SHA) | `2a020687a8bd1f6e9e11e8a21fbf58f5b08ba0e5` |
-| `core/070` | `528fb997536db0fe86674c4f71374b347d415c57` | `b05efc189a360bce7fbf5d02b2508b8c535b2d4e` |
-
-**Process incidents worth carrying, each with its own handle:**
-
-- **`845147f` / re-pushed as `ea882f7` (api/107) — a force-push overwrote a worker's still-running
-  commit; nothing was lost only because it survived in the worktree's reflog.**
-  `--force-with-lease` did not save it — the lease was valid because the leg was the last writer.
-  Resolved by reflog recovery. **Do not chain a rebase and a force-push with `&&` or `set -e`: a
-  stopped rebase is not a failed command in the way the chain assumes, and the push after it is aimed
-  wrong.**
-- **`1d387a6e` vs `093c3289` (umbrella/086) — a worker rebased and pushed again while the leg was
-  independently rebasing the same branch; the leg force-pushed over the worker's second push and
-  checked the resulting trees before merging rather than after.** The SHA the worker's hand-back
-  named was an intermediate commit missing its own `done` edits; the leg's own `093c3289` was the
-  strictly newer, complete one. Nothing was lost, and only because it was checked.
-- **`3f70bdd` / `3e7e15cf` (ui/067) — `fold-commit.py` committed the log entry (`3f70bdd`) and then
-  correctly refused the instance half**, because `tasks/ui/066-compact-ui.md` carried an uncommitted
-  state edit the leg had just written. Completed by hand as `embarch-doc@3e7e15cf`, staging the exact
-  paths the fold would have and re-verifying `check-docs.py` before committing. **A retry is
-  impossible once the log entry alone is committed — the script refuses a second run — so a
-  partially-landed fold has to be finished by hand, and this is what that looks like.**
-- **`d5dcdab6` (umbrella/085) — quoting a doc's own relative link verbatim inside a claim commit
-  broke it**, because the link was relative to `embarch-umbrella/` and the claim commit lives under
-  `tasks/umbrella/`. Caught on a baseline gate run, fixed in `d5dcdab6`, worker messaged mid-run to
-  rebase off the fix. **Quoting a doc verbatim is not always safe — a relative link is address, not
-  content, and it moves when the quoting file's location differs from the quoted file's.**
-- **`cc0fc7e` / `dc51786a` (core/073) — a fold was forced early by an enforced hand-back with the
-  reviewer still running, so the entry landed reading "skipped (ended before it reported)"; the
-  reviewer reported ~40 seconds later with a real finding, and the line was rewritten rather than left
-  false.** The finding it produced is the same overclaim class this unit itself was fixing.
-- **`007cd7ae` (umbrella/086) — `queue-status.py` was advertising a live worker's own task as free to
-  re-dispatch**, found only because the leg happened to run the tool for an unrelated reason; the four
-  minutes it was live is unknown to have caused anything, but three earlier claims sat the same way
-  for their workers' whole runs. Fixed live in `007cd7ae`; filed `tasks/doc/084`, `Owner: required`.
-- **`f5c8a9de` (umbrella/087) / `f1c18cc` (core/072) — two provenance recoveries via `git show`
-  against deleted or historical commits**, confirming check 13's doctor-run source and
-  `describe_topology_error`'s originating commit respectively, rather than trusting a paraphrase.
-- **`2b9c2581` (api/117) — a reviewer, cleared of its own unit, kept reading and found a live
-  contradiction one file over**: `hardware-selection.md` decision 59 still describes `SignalLink` in
-  the present tense as having "its own mirror" — the exact hand-copy concept decision 72 (`2b9c2581`,
-  2026-09-12) retired in favour of a compiler-enforced alias. Filed as an `inbox/` finding rather than
-  against the unit that could not have caused it.
-- Rebase/derived-base handles seen more than once and worth having on hand: `071f263`, `0e7de54`,
-  `c0025341`, `d5e2d3f`, `3a08d7c`, `13db6a8`, `4806f24`, `5ddc1ba`, `64ba56c`, `8aa0251`, `8f5f612`,
-  `a8dbff2`, `fac10a4`, `ea5b880`, `b05efc1`, `de07c827` (809 MiB reading, 2026-09-05), `fc4f4ac0`
-  (802.9 MiB reading, 2026-09-06), `44b203a`/`5b854be`/`4f2c8bc` (the three "correct the doc, not the
-  code" precedent commits `umbrella/075` cited), `ca564376` (retired `tasks/api/114`, cited as
-  "since retired in `ca564376`" rather than as a live path), `dbe3445` (the `topology/056` reviewer
-  drop folded into `tasks/core/074`), `6fcddc36cb781b71` (the dev-bench probe's own recorded
-  `hardware_id`, read live and unattached all day).
-
----
-
-### Blocked
-
-**Nothing went to `blocked` at merge across any of the 50 units.** Queue reconciliation instead:
-
-- **`tasks/umbrella/079-compact-docs.md`, owed and dated.** `decisions/install.md` went 89.6% →
-  98.2% of cap (217 B left) after decision 54 landed — the deepest reserve in the suite at day's end.
-- **`tasks/umbrella/081-compact-docs.md`, paid this day** by a verbatim split (`decisions/projects.md`
-  → new `decisions/serial-port.md`), resolving the corpus's tightest-ever reserve moment
-  (12,286/12,288 B, two bytes) before an unrelated unit could hit a hard wall mid-flight. Its own
-  split's verification missed a citation shape (`tasks/api/114`'s inline-code reference), fixed in
-  the same fold — a fresh concrete instance of `tasks/doc/044`, "a verbatim split is the one move
-  `check-decision-refs.py` cannot see", still open.
-- **`tasks/doc/078`, `Owner: required` — `embarch-topology`'s first-ever `spec.md` mission split
-  (`topology/057`) fell through to the 25 KB `legacy` cap**, because `scripts/check-doc-size.py`'s
-  `CAPS` list has purpose-built entries for a `decisions.md` or `interfaces.md` split but none for
-  `spec/`. Capped and gated, not invisible — but four times the sibling caps for no reason but being
-  the fallback.
-- **`tasks/doc/079`, `Owner: required` — the second task-number collision** (see Decided).
-- **`inbox/workers-file-compaction-tasks-that-no-consumer-can-read.md`** — two of three workers in one
-  leg (`umbrella/077`, `topology/057`) filed a compaction task missing required fields or carrying two
-  conflicting `**State:**` lines. Three candidate fixes ranked by cost, none picked.
-- **`tasks/core/091-compact-core.md`** stays `blocked`, `In flux: yes`, **Size debt due: 2026-10-01.**
-- **`tasks/api/108`** — the Windows build-timeout process-tree kill gap (`api/107`, decision 75) is
-  filed but deliberately unimplemented: no Windows test tier exists in `embarch-api` to verify a fix,
-  so an unexercised fix would read as closed when it is not. Requires a real timed-out Windows build
-  with a forked grandchild confirmed gone via `tasklist`.
-- **`DOC-COMPACTION-PASS.md`'s tally of squeezes that quoted no deleted hunk is now at four**
-  (`topology/017`, `study-designer/019`, `ui/011`, `core/085`) — owed, not written; the file is
-  owner-reserved.
-- **The `embarch-study-designer` citation-sweep chain is formally closed** (`065` is the last; no
-  `066` filed) after nine handoffs' worth of doubt about whether it still earned its keep.
-
----
-
-### Reviewer
-
-**Tally: 39 ran with no findings, 10 units produced at least one finding (12 findings total, two
-units with two each), 1 skipped** (a leg ending at its unit cap, correctly, rather than spawning a
-reviewer that would outlive it). Every line, one per unit, line-anchored:
-
-**Reviewer:** no findings. — `core/088`.
-**Reviewer:** 1 finding — inbox/api-signallink-mirror-stale-after-decision-72.md — `api/117`.
-**Reviewer:** no findings. — `umbrella/087`.
-**Reviewer:** no findings. — `ui/068`.
-**Reviewer:** 1 finding — inbox/core-decision-36-erase-test-coverage-overclaim.md — `core/073`.
-**Reviewer:** no findings. — `umbrella/086`.
-**Reviewer:** no findings. — `api/116`.
-**Reviewer:** no findings. — `umbrella/085`.
-**Reviewer:** no findings. — `core/087`.
-**Reviewer:** no findings. — `umbrella/083`.
-**Reviewer:** no findings. — `core/078`.
-**Reviewer:** no findings. — `umbrella/082`.
-**Reviewer:** no findings. — `api/114`.
-**Reviewer:** no findings. — `ui/067`.
-**Reviewer:** 1 finding — inbox/doc-umbrella081-stale-decision-55-source-anchor.md — `umbrella/081`.
-**Reviewer:** no findings. — `api/115`.
-**Reviewer:** no findings. — `core/086`.
-**Reviewer:** skipped (leg ending at its unit cap — a reviewer would outlive the leg that spawned it). — `suite/044`.
-**Reviewer:** no findings. — `api/109`.
-**Reviewer:** 1 finding — inbox/core-compaction-085-sync-burden-residue.md — `core/085`.
-**Reviewer:** no findings. — `umbrella/080`.
-**Reviewer:** no findings. — `ui/065`.
-**Reviewer:** no findings. — `api/110`.
-**Reviewer:** 2 findings — `inbox/core-task-076-retains-retracted-likely-low-claim.md`, — `core/080`.
-**Reviewer:** 1 finding — `inbox/core-decision-65-size-extrapolation.md` (drained in this same fold — `core/076`.
-**Reviewer:** no findings. — `core/077`.
-**Reviewer:** no findings. — `study-designer/065`.
-**Reviewer:** no findings. — `topology/057`.
-**Reviewer:** no findings. — `topology/058`.
-**Reviewer:** no findings. — `core/075`.
-**Reviewer:** no findings. — `umbrella/078`.
-**Reviewer:** no findings. — `suite/043`.
-**Reviewer:** no findings. — `study-designer/064`.
-**Reviewer:** no findings. — `core/074`.
-**Reviewer:** no findings. — `ui/064`.
-**Reviewer:** 1 finding — inbox/core-072-review-third-503-producer.md — `core/072`.
-**Reviewer:** 1 finding — inbox/core-decision59-open-fail-not-classified.md — `topology/056`.
-**Reviewer:** no findings. — `study-designer/063`.
-**Reviewer:** 1 finding — inbox/core-071-reversals-gap-decision-32-second-drift.md — `core/071`.
-**Reviewer:** no findings. — `topology/055`.
-**Reviewer:** no findings. — `umbrella/076`.
-**Reviewer:** no findings. — `study-designer/062`.
-**Reviewer:** no findings. — `umbrella/075`.
-**Reviewer:** no findings. — `api/107`.
-**Reviewer:** no findings. — `study-designer/061`.
-**Reviewer:** no findings. — `topology/054`.
-**Reviewer:** no findings. — `dev-bench/034`.
-**Reviewer:** no findings. — `topology/053`.
-**Reviewer:** 2 findings — tasks/doc/074-a-method-fix-found-in-one-scopes-audit-chain-has-no-path-to-anothers.md — `study-designer/060`.
-**Reviewer:** no findings. — `core/070`.
-
-**Two data points on the standing "do directed reviewer prompts just manufacture agreement" question,
-both against the "yes" answer:** `api/116`'s reviewer, told to re-derive rather than confirm an
-independence claim, dismantled two-thirds of the argument for a conclusion it still agreed with;
-`study-designer/065`'s reviewer, given a directed disconfirm-first brief, initially flagged
-`.cargo/config.toml` as possibly unswept and withdrew it only after finding the prior unit's own
-resolution already covering it — a reviewer inclined to agree does not do that.
-
----
-
-### Hardware debts
-
-**Standing debts, unchanged all day and not reproduced fifty times below:** `tasks/api/059` — the
-dev-bench probe stayed unplugged for its **22nd** consecutive leg, live-checked repeatedly this day
-rather than merely inherited (`validate dev-bench` → `recorded hardware_id 6fcddc36cb781b71, live
-None`), and stays `open`, not `blocked`. `fleet-hardware.py --refresh` still crashes
-(`tasks/doc/041`) and its cached buffer still falsely claims both boards attached — **do not plan a
-bench unit off it; a live check is the only answer.** The whole bench queue is still parked by the
-owner's `d0cf9a0`. `core/015`'s native Windows build is now **measured, twice this day, as
-structurally unrunnable from WSL2** rather than merely skipped: `x86_64-pc-windows-gnu` is not an
-installed target, and a `-msvc` build dies in `cc-rs` compiling `hidapi`'s C shim for lack of Windows
-headers — the gate's own "native Windows build wherever `embarch-core` is involved" clause **cannot
-be satisfied from this machine at all**, which is a standing rule nothing can follow and needs an
-owner decision. `core/070`'s own tally is honest about not being verified: "the twelfth landed
-`embarch-core` change" is a running count nobody has actually confirmed against `git log --oneline`.
-`api/108` (Windows process-tree kill), `umbrella/037` check 13, `umbrella/033`'s check-17 arms,
-umbrella check 5's permission-denied probe, `embarch-ui`'s 18-record stale-prefix debt
-(`tasks/ui/007`), and the `embarch-outpost`/`embarch-dev-bench` toolchains are all untouched by
-anything this day did.
-
-Per-unit lines, verbatim, one per unit:
-
-- **core/088:** **Hardware debts:** **one created, and it is small and honest.** `binary_sha256` is pure host-side
-  `std::env::current_exe()` + `std::fs::read`; nothing was run on Windows and `core/015`'s standing
-  debt is carried, not paid, for the fourth consecutive `core` unit.
-- **api/117:** **Hardware debts:** **none created, and none could be.** One markdown table; nothing built, nothing
-  flashed, no board, no probe, no live Core.
-- **umbrella/087:** **Hardware debts:** **none created, and one deliberately not paid.** Nothing here ran against a board;
-  the debt it *touches* is check 8's own verdict, which still has no live-`doctor` observation.
-- **ui/068:** **Hardware debts:** **none created, and none could be.** One row of one markdown table; nothing
-  built, nothing flashed, no board, no probe, no live Core.
-- **core/073:** **Hardware debts:** **none created, and none could be.** One paragraph of markdown in one decisions
-  file; the task forbade touching erase behaviour and the worker did not.
-- **umbrella/086:** **Hardware debts:** **none created, and none could be.** Two date stamps in two markdown files, 44
-  bytes; **and one that could not be created on purpose** — the parent task forbade running `du`
-  against the real `study_results/`, settled entirely from git history instead.
-- **api/116:** **Hardware debts:** **none created, and none could be** — and this unit was explicitly forbidden from
-  running `du` against `study_results/`; settled from git history alone.
-- **umbrella/085:** **Hardware debts:** **none created, and none could be.** One clause of markdown in one `open.md`;
-  nothing built, nothing executed, no board, no probe, no live Core.
-- **core/087:** **Hardware debts:** **none created, and none could be.** One clause of markdown in one decision file;
-  nothing built, nothing executed, no board, no probe, no live Core.
-- **umbrella/083:** **Hardware debts:** **none created, and none could be.** One paragraph of markdown in one decision
-  file's header; nothing built, nothing executed, no board, no probe, no live Core.
-- **core/078:** **Hardware debts:** **one, named and deliberately not created.** Nothing in this unit executed — it
-  is a decision and a compaction. But decision 67's implementation (`tasks/core/088`) carries a debt
-  from birth: the live Core on this bench **is** the Windows service exe, and the one deployment that
-  most needs check 15 fixed is reasoned rather than run.
-- **umbrella/082:** **Hardware debts:** **none created, and none could be.** Two markdown files edited, one task file
-  filed; nothing built, no board, no probe, no live Core.
-- **api/114:** **Hardware debts:** **none created, and none could be.** One bullet of markdown moved between two
-  sections of one file; no board, no probe, no live Core.
-- **ui/067:** **Hardware debts:** **none created, and none could be** — two sentences of prose in two markdown
-  files; `trace.rs` was not touched.
-- **umbrella/081:** **Hardware debts:** **none created, and none could be** — one decision moved between two markdown
-  files and two queue lines corrected; `embarch-umbrella` byte-identical to `main`.
-- **api/115:** **Hardware debts:** **none created, and none could be** — one table row in one markdown file;
-  `embarch-api` byte-identical to `main`.
-- **core/086:** **Hardware debts:** **none created, and none could be** — two sentences of decision prose in one
-  markdown file; `embarch-core` byte-identical to `main`.
-- **suite/044:** **Hardware debts:** **none created, and none could be** — five paragraphs of prose in one suite-level
-  doc. **One debt this leg measured rather than inherited:** `tasks/api/059` at a 22nd consecutive leg,
-  live-checked. **One debt promoted from assumed to demonstrated:** `core/015`'s native Windows build
-  is structurally unrunnable from this machine, not merely skipped.
-- **api/109:** **Hardware debts:** **none created, and none could be** — no board, no probe, no live Core, no DUT,
-  no flash, no study; settled by reading the listing type and the `decisions/` tree.
-- **core/085:** **Hardware debts:** **one carried and not paid, and I attempted it rather than assuming it.**
-  `rustup target list --installed` shows `x86_64-pc-windows-msvc` present but not `-gnu`; a `-gnu`
-  build fails for lack of std for an uninstalled target, and `-msvc` needs a Windows linker WSL2
-  cannot provide. This unit's `embarch-core` change landed on Linux evidence alone.
-- **umbrella/080:** **Hardware debts:** **none created, and none could be** — no code changed anywhere, nothing executed
-  against a board. **One debt actually measured rather than inherited:** `tasks/api/059`'s
-  twenty-second consecutive `open` leg, checked live.
-- **ui/065:** **Hardware debts:** **none created, and none could be** — no code changed anywhere, nothing
-  executed against a board. **One debt sharpened, not added to:** `embarch-ui`'s stale-prefix code
-  (`stale_prefix_end`) cannot be deleted from `trace.rs` while point events stay UI-side, so it is not
-  going away by attrition either.
-- **api/110:** **Hardware debts:** **none created, and none could be.** Two format strings, two doc comments, one
-  decision entry and two task files. **One inherited debt now two units wide:** the operator-facing
-  "probe unavailable" lead has been rewritten in two repos and no human has ever seen either version
-  against real hardware.
-- **core/080:** **Hardware debts:** **none created, and none could be** — this unit changed one sentence of
-  decision prose, one digit of a size column, and two task files.
-- **core/076:** **Hardware debts:** **one carried and widened, and one inherited unchanged.** Carried: `core/015`'s
-  native Windows build is still measured unrunnable from WSL2, and this unit widens the unbuilt
-  surface — a new HTTP route, newly `Serialize` wire types, a refactored decode path, none of it ever
-  compiled by a Windows toolchain.
-- **core/077:** **Hardware debts:** **one, carried and not paid, plus one inherited that this unit widened
-  slightly** — `core/015`'s native Windows build exposure now covers two more format strings and two
-  tests; `topology/058`'s "never rendered against a live Core" debt now also covers this unit's
-  lead-text change.
-- **study-designer/065:** **Hardware debts:** **none created, and none could be.** Nothing executed, nothing built, no board,
-  no probe, no live Core — the code branch is empty.
-- **topology/057:** **Hardware debts:** **none created, and none could be.** One doc section moved between two files and
-  a pointer left in its place; nothing built, nothing executed, no board, no probe, no live Core.
-- **topology/058:** **Hardware debts:** **one, and it is genuinely new — the first this leg created.** `Hardware:
-  verify-only` was the right call to land it, but the widened alert set has been exercised by
-  nothing: confirming Core's `POST /validate` renders the five new alerts correctly needs a probe that
-  is physically attached and genuinely stuck. Free the next time that happens; needs no dedicated
-  bench session.
-- **core/075:** **Hardware debts:** **none created, and none could be.** One decision entry, one index row, one
-  `open.md` pointer bullet; no source changed anywhere, the worker's `cargo` gate ran green on an
-  empty diff.
-- **umbrella/078:** **Hardware debts:** **none created, and none could be.** One decision entry, one deleted `open.md`
-  bullet, one index row; no code anywhere, no service installed, no probe, no live Core.
-- **suite/043:** **Hardware debts:** **none created, and none could be.** One table row, one file rename, four link
-  edits and two index lines; nothing built, nothing executed, no board, no probe, no live Core.
-- **study-designer/064:** **Hardware debts:** **none created.** Three citation lines in two Rust source files plus doc-repo
-  task and changelog files; the `cargo test` runs were host-only.
-- **core/074:** **Hardware debts:** **none created, and none could be** — three doc-repo markdown files; nothing
-  executed against a board, no Rust changed. **One debt now written down instead of merely true:** a
-  probe that enumerates but fails partway through the identity check is undistinguishable from any
-  other internal error on all four Core paths — free to catch the next time it happens, impossible to
-  manufacture here.
-- **ui/064:** **Hardware debts:** **none created, and none could be.** One decision entry, one rewritten
-  `open.md` bullet and a filed task; nothing executed against a board, the `cargo` runs were baseline
-  checks on an unmodified tree.
-- **core/072:** **Hardware debts:** **none created, and none could be** — a fold of a doc-only unit; nothing executed
-  against a board, no cargo run of any kind by the leg. One debt sharpened rather than added:
-  `topology/056`'s open-failure case still needs `/validate` exercised against a probe that lists but
-  will not open.
-- **topology/056:** **Hardware debts:** **none created, and none could be** — thirty lines of Rust comment and two
-  doc-repo files; the `hardware` test feature attaches nothing. One debt sharpened rather than
-  larger: the reviewer's finding needs `/validate` exercised against a probe that lists but will not
-  open.
-- **study-designer/063:** **Hardware debts:** **none created, and none could be.** Four comment lines in two Rust source
-  files and three doc-repo files; nothing executed against a board, no board, no probe, no live Core,
-  no flash, no study.
-- **core/071:** **Hardware debts:** **none created, and `core/015`'s native Windows build is measured today rather
-  than carried.** `cargo build --target x86_64-pc-windows-msvc` in `embarch-core` dies in `cc-rs`
-  compiling `hidapi`'s `hid.c` — no toolchain here to build the C shim against Windows headers. The
-  gate's own clause cannot be satisfied from WSL2 at all.
-- **topology/055:** **Hardware debts:** **none created, and one re-measured rather than assumed.** No board, no probe, no
-  live Core, no deploy, deliberately no `validate` run. `core/015`'s native Windows build: attempted
-  this leg and still fails, same `cc-rs`/`hidapi` wall.
-- **umbrella/076:** **Hardware debts:** **none created, and one narrowed on paper only.** Nothing executed: no board, no
-  probe, no live Core, no deploy, and `doctor` was never run — the whole unit is about what `doctor`
-  would conclude and was settled by reading `doctor.rs`.
-- **study-designer/062:** **Hardware debts:** **none created, and none could be.** One character of a source comment; nothing
-  executed, no board, no probe, no live Core, no deploy.
-- **umbrella/075:** **Hardware debts:** **none created, and none could be** — prose in one `spec.md` and nothing
-  executed: no board, no probe, no live Core, no deploy, and no `setup` run.
-- **api/107:** **Hardware debts:** **none created, and one made explicit that was previously implicit.** Nothing
-  here executed: no board, no probe, no live Core, no deploy, and — the point of the unit — nothing
-  on Windows. The Windows process-group kill gap is now a numbered decision and a task with a stated
-  verification requirement instead of an unqualified invariant. It is not paid.
-- **study-designer/061:** **Hardware debts:** **none created, and none could be** — one Rust doc comment; nothing executed, no
-  board, no probe, no live Core, no deploy. But this unit is *about* a hardware debt and sharpens it:
-  `rx_utc_ms`'s clock-resync gap is restated, not added to.
-- **topology/054:** **Hardware debts:** **none created, and none could be** — one comment line in a Rust source file;
-  nothing executed, no board, no probe, no live Core, no deploy.
-- **dev-bench/034:** **Hardware debts:** **one, carried and not worsened.** Nothing here was built or run: no board, no
-  probe, no `west`, no Zephyr SDK, no live Core — the `dev-bench/019`/`020` debt restated: six changed
-  lines of firmware comment that nothing compiled.
-- **topology/053:** **Hardware debts:** **none created, and none could be** — one doc-comment hunk, nothing built for a
-  board, no probe, no study.
-- **study-designer/060:** **Hardware debts:** **none created, and none could be** — one file read, no file written in the code
-  repo at all.
-- **core/070:** **Hardware debts:** **one, carried not created — `core/015`'s native Windows build now carries a
-  twelfth landed `embarch-core` change**, doc-comment-only with no platform-conditional code touched.
-  The last leg asked for this tally to be counted rather than propagated, and it was not — the doubt
-  stands, unresolved, one leg older.
-
----
-
-### Budget
-
-**PROCEED throughout, weekly usage moving through roughly the 50–52% band of a 90% cap across the
-legs this day covers, suggested wave 2–6 depending on scope spread.** The 4-unit cap bound before
-budget did on every leg this day; no 429 anywhere.
-
----
-
-### Carry forward — top five
-
-1. **Poll both stop channels at every unit boundary, without exception** — `core/088` found the
-   owner's `fleet stop` 17 minutes and three units late because the poll lapsed between dispatch and
-   the fourth unit. The poll is the primary route a stop reaches a leg, not a backstop.
-2. **`tasks/doc/074` (Owner: required) is a cross-scope blind spot, not a one-off bug**: a method fix
-   found and applied in one sub-project's audit chain (`api/106`, `umbrella/074`) has no path to reach
-   a different sub-project's chain running the identical method (`embarch-study-designer`'s
-   nineteen-unit citation sweep), so the same defect got fixed twice and propagated forward a third
-   time regardless.
-3. **`core/015`'s native Windows build is not merely undone — it is now measured, twice, as
-   structurally impossible from this machine** (`cc-rs` cannot compile `hidapi`'s C shim without
-   Windows headers under WSL2). The gate's own "native Windows build wherever `embarch-core` is
-   involved" clause cannot be satisfied here at all. This needs an owner decision, not another leg
-   re-discovering it.
-4. **`tasks/umbrella/079` (deepest reserve in the suite, 217 B left) and `tasks/doc/078`/`tasks/doc/079`
-   (Owner: required, spec.md split cap + second task-number collision) are the queue's live pressure
-   points** — see Blocked.
-5. **Do not chain a rebase and a force-push with `&&`/`set -e`** (`845147f`) — a stopped rebase is not
-   a failed command in the way the chain assumes, and only a worktree reflog saved a worker's commit
-   this day. Always check `git status` between a rebase and the push that follows it.
-*Days 2026-09-16 to 2026-09-16 rolled to [log-archive/supervisor-log-2026-09-16-to-2026-09-16.md](log-archive/supervisor-log-2026-09-16-to-2026-09-16.md).*
+*Days 2026-09-17 to 2026-09-17 rolled to [log-archive/supervisor-log-2026-09-17-to-2026-09-17.md](log-archive/supervisor-log-2026-09-17-to-2026-09-17.md).*
