@@ -97,6 +97,28 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 04:47 — core/113 POST /study refuses a Notify or Indicate step with a wait budget of 0
+
+**Decided:** nothing beyond the worker's new decision 90 (`embarch-core/decisions/studies.md`, now 6,862 B;
+index row in `decisions.md`): `validate_study`, the first call in `post_study_handler`, calls
+study-designer's `Study::validate_wait_budgets()` before the `steps_crc` check and returns its Display
+text (step index and operation) as the same 400 the other `validate_study` refusals use, before the
+study lock or dev-bench is touched. That is the "Core's submission validation must call it" half of
+study-designer decision 83. `probes.md`, `spec.md`, `open.md` untouched, so `core/112` is unchanged.
+**Not filed:** the task says `embarch-api` may want the same check before HTTP; nobody filed that, and I
+did not either, since Core now refuses it with the step named and the api relays Core's text.
+**Merged:** `agent/core/113-study-submission-refuses-a-zero-wait-budget` (code `74c5e4d`, ff onto
+origin/main from `359b8c7`; doc `f4062527`, cherry-picked from `f769b137`). Gate re-run on the merge,
+against study-designer `0fabb6b`, topology `62c188d`, smp `fe68a41`: build, `cargo test` 301 pass / 2
+ignored, clippy `-D warnings` clean, client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** native Windows build of `embarch-core` (owner runs it). Not deployed: live Core
+predates `core/106`, `core/110`, `core/111` and this.
+**Budget:** PROCEED, weekly 60.2% at leg start, wave 6.
+**Least sure about:** a saved study with a 0 budget that used to run (and time out at once) is now
+refused at submit; I did not look for one in any project's saved studies on this machine.
+
 ## 2026-10-26 04:45 — api/124 signal_exchange can match a prompt on a console with echo off
 
 **Decided:** nothing beyond the worker's amendment to decision 82 (`embarch-api/decisions/failure-reporting.md`,
