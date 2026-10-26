@@ -97,6 +97,29 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 05:49 — core/114 the capture routes are under the auth sweep and a split `.route(` fails the scan
+
+**Decided:** nothing beyond the worker's amendment to decision 42 (`embarch-core/decisions/route-sweep.md`;
+no new number): the capture registration is on one line, `AUTH_CASES` gains POST/GET/DELETE
+`/signals/{name}/capture`, `DOCUMENTED_ROUTE_COUNT` goes 32 to 33 (it counts paths, and the reviewer
+counted 33 one-line registrations at the merge), and `registered_route_paths()` now panics on any line
+that trims to exactly `.route(`, so the residual decision 42 named is closed for this form. A router
+assembled in another file is still invisible, and 42 still says so. `spec.md`, `open.md`, `probes.md`
+untouched. This closes `core/100`'s reviewer finding fix-forward; no revert.
+**Merged:** `agent/core/114-capture-routes-under-the-auth-sweep` (code `96cc87a`, ff onto origin/main
+from `845f3ea`; doc `b61e5610`, cherry-picked from `597c4adb`). Gate re-run on the merge, against
+study-designer `4da23d3` and topology `b771dd0`: build, `cargo test` 307 pass / 2 ignored, clippy `-D
+warnings` clean, client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+It noted decision 42's prose still says "All 22 `.route(` registrations"; 42 itself calls that number
+unchecked prose and `DOCUMENTED_ROUTE_COUNT` the pin, so I left it.
+**Hardware debts:** none owed by this unit. Native Windows build of `embarch-core` (owner runs it). Not
+deployed: live Core predates this and `core/100`, `105`, `106`, `110`, `111`, `113`.
+**Budget:** PROCEED, weekly 62.9% at leg start, wave 6.
+**Least sure about:** the worker did not mutation-test the new panic by splitting a line; it matches by
+reading, and the 33-path count is the reviewer's, not mine.
+
 ## 2026-10-26 05:48 — api/143 capture_start, capture_read and capture_stop drive Core's background signal capture
 
 **Decided:** nothing beyond the worker's new decision 88 (`embarch-api/decisions/tool-wrapping.md`,
