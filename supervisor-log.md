@@ -97,6 +97,35 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 01:28 — study-designer/072 a step name cannot shift CSV columns; zero records is not all verified
+
+**Decided:** nothing beyond the worker's decision 81 (`decisions/seals.md`: one crate rule
+`csv_cell_ok` refuses a comma, quote, CR or LF; `Sample::to_csv_row` blanks such a name rather than
+dropping the sample, the GATT renderer still refuses through the same predicate, `build_study`
+refuses with `BuildStudyError::NameBreaksCsv`; `validate_record_checks` refuses an empty magic;
+`RecordReport::all_verified()` is false at zero records). Read the shared-crate diff before merging:
+additive except `all_verified()`'s meaning at zero records, which is the task's point; no consumer
+matches `BuildStudyError` exhaustively; no serialized type changed, so no wire bump (reviewer agreed
+against decision 12). **Leg start, for the record:** drained two inbox drops from `core/098` as
+`api/138` and `atlas/022` (`84992d10`), then folded `atlas/022` into `atlas/014`, of which it was a
+subset, and retired `core/091` (its only file, `core/decisions/surfaces.md`, 11,042 B, under the
+reserve line) in `4cd0a885`. `validate dev-bench`: probe `001057729826` not attached, not a mismatch;
+`api/059`, `dev-bench/035`, `dev-bench/038` stay `open`. Atlas still undispatchable (`tasks/doc/089`,
+owner's). Four units dispatched at once: `ui/078` (overdue ledger, unparked), `api/138`, `core/104`,
+`study-designer/072`.
+**Merged:** `agent/study-designer/072-csv-step-name-and-empty-record-check` (code `b19c841`, ff onto
+origin/main; doc `5f42a4ab`, cherry-picked from `ea1934ad`). Gate re-run on the merge: build,
+`cargo test` and `--all-features` green, clippy `-D warnings` clean (default and all features),
+client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 53.8% at leg start, 54.2% here, wave 6.
+**Least sure about:** the empty-magic refusal guards nothing until Core calls
+`validate_record_checks` at `POST /study`, and Core's own step-name blanking still misses CR; both
+are the worker's drop `inbox/core-call-validate-record-checks-and-csv-cell-ok.md`, left for the next
+leg's drain.
+
 ## 2026-10-26 01:13 — umbrella/009 decisions/bind.md out of reserve by compacting decision 22's retired halves
 
 **Decided:** unparked `umbrella/009` (overdue since 2026-10-06, the ledger's oldest payable entry).
