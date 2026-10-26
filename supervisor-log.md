@@ -97,6 +97,25 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 00:51 — desk/002 fold and approve edges
+
+**Decided:** nothing beyond the worker's decision 60 (`decisions/cockpit.md`: a fold goes only into a
+strictly later real `YYYY-MM-DD` day, else 400 and nothing changes; every tile route refuses a tile id
+whose date part is not a real day; ✓ with an empty note sends the target's and the folded tiles'
+lines, oldest first; a folded row's `hours`/`computed_hours`/`captured_hours` report the gap it
+carried, frozen at the fold, while `logged_hours` stays that day's Harvest — 3 h captured, 0.5 h
+logged reports 2.5 h where it used to report 2.0). The reviewer checked the Desk tab's `desk.js`: ids
+and fold targets come from the server, so nothing it sends is newly refused.
+**Merged:** `agent/desk/002-fold-and-approve-edges` (code `41d9ff2`, ff onto `3f56975`; doc
+`0f73bb27`, two commits cherry-picked from `6082323f`). Gate re-run on the merge: build, `cargo test`
+123 pass, clippy `-D warnings` clean, client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. Not deployed: the desk service on :4891 is the owner's to rebuild.
+**Budget:** PROCEED, weekly 52.7%, wave 6.
+**Least sure about:** the fold refusal is tested at the store and `split_tile_id` level, not through an
+HTTP call (no route harness exists); `/day/{date}` and other date-taking routes were not tightened.
+
 ## 2026-10-26 00:50 — api/134 flash results carry the erased ranges
 
 **Decided:** nothing beyond the worker's change (`FlashResponse.erased: Vec<String>`,
