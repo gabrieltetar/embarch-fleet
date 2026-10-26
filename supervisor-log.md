@@ -97,6 +97,34 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 04:45 — api/124 signal_exchange can match a prompt on a console with echo off
+
+**Decided:** nothing beyond the worker's amendment to decision 82 (`embarch-api/decisions/failure-reporting.md`,
+`interfaces/tools-topology.md` row): the MCP tool and CLI take optional `match_after_echo` /
+`--match-after-echo <bool>`; omitted sends nothing, so Core's default (on) holds. `embarch-core-client`
+gains `signal_exchange_with(..., match_after_echo)` beside an unchanged `signal_exchange`; the
+client-sweep test now calls the new method, since it rejects a method that builds no request itself.
+Read the shared-crate diff before merging: additive, a `skip_serializing_if` field, and the name matches
+Core's `ExchangeRequest.match_after_echo` (`embarch-core/src/exchange.rs:72`, `#[serde(default =
+"default_true")]`). **I added one sentence** to the amendment saying it is measured against a mock Core
+only and the echo-off check is owed on a bench, so the debt outlives this log; the task file is retired.
+**My slip, harmless:** I chained `fold-commit.py | tail` into `git push`, so when the fold refused (the
+entry was not written yet) the pipe's exit 0 pushed the cherry-picked doc commit `1ebf8c94` to `main`
+alone and ticked `leg-fold` for a fold that had not happened. The fold commit follows it minutes later.
+**Merged:** `agent/api/124-signal-exchange-takes-match-after-echo` (code `c49e9b2`, ff onto origin/main
+from `9e4ca14`; doc `1ebf8c94`, cherry-picked from `fa571863`). Gate re-run on the merge, against
+study-designer `0fabb6b`, topology `62c188d`: `cargo build --workspace`, `cargo test --workspace` 263
+pass, clippy `-D warnings` clean, client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** on a Zephyr USB CDC ACM shell declared as a direct bidirectional signal, `shell echo
+off`, then `signal-exchange --until ':~$ ' --match-after-echo false` returns in tens of ms with
+`until_seen: true`, and without the flag still runs to timeout. Not deployed: the MCP binary predates
+this, so the tool parameter is not live until the owner rebuilds it.
+**Budget:** PROCEED, weekly 60.2% at leg start, wave 6.
+**Least sure about:** no test goes through the MCP tool itself; it shares `signal_exchange_with` with the
+CLI, which is tested against a mock Core.
+
 ## 2026-10-26 04:43 — study-designer/077 the alloc test cell compiles again
 
 **Decided:** nothing. The worker added `use alloc::vec;` to `src/host_study.rs`'s test module, tests
