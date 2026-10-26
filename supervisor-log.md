@@ -97,6 +97,26 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 00:50 — api/134 flash results carry the erased ranges
+
+**Decided:** nothing beyond the worker's change (`FlashResponse.erased: Vec<String>`,
+`#[serde(default)]`, in the shared `embarch-core-client`; every flash result's JSON carries `erased`,
+the CLI text appends `; erased <ranges>`; the `erase` descriptions follow `embarch-core` decision 84).
+Read the shared-crate hunk before merging: additive, and no consumer builds `FlashResponse` by struct
+literal (grepped `embarch-ui`, `embarch-umbrella`). In the fold I amended api decision 41
+(`decisions/tool-wrapping.md`) by one sentence: it still required the description to say
+"destructive full-chip erase", which decision 84 made false; the reviewer flagged it below its bar.
+**Merged:** `agent/api/134-flash-print-erased-ranges` (code `765ff8e`, ff onto `2f3749b`; doc
+`719a0d42`, two commits cherry-picked from `37012484`). Gate re-run on the merge: build, `cargo test`
+green across the workspace (client 48), clippy `-D warnings` clean, client names clean,
+`check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none of its own; decision 84's STM32G0B1VE bench check (core/096) still owed.
+**Budget:** PROCEED, weekly 52.7%, wave 6.
+**Least sure about:** only the client parse is tested; the `erased` key in the MCP and CLI JSON is
+covered by compilation, not by a mock-Core test.
+
 ## 2026-10-26 00:49 — core/107 one timeout_ms covers an exchange's write and read
 
 **Decided:** nothing beyond the worker's amendment to decision 79 (one deadline starts with the write;
