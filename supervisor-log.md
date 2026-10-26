@@ -97,6 +97,39 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 03:57 — topology/059 a probe moved to another chip family is refused by name before any attach
+
+**Decided:** nothing beyond the worker's new decision 44 (`embarch-topology/decisions/validation.md`,
+index row): additive `hardware::check_requested_chip(&EnrolledBoard, &str)` (pure; case-insensitive,
+trimmed; empty either side passes) and `hardware::validate_serial_for_chip(serial, chip)`, which finds
+the row, compares, and only then opens the probe; a differing chip is a downcastable
+`RequestedChipMismatch` naming probe, enrolled role or bench board, both chips, "Nothing was attached"
+and the `enroll_probe` fix. `validate_serial`/`validate_serial_timed` untouched; read the shared-crate
+diff before merging, additive only. **Dispatched topology half only**, by my note: Core's four call
+sites are filed as **`tasks/core/111`** from the worker's drop (`hardware.rs:180`, `:391`, `live.rs:93`,
+`:141`). In-unit compaction as dispatched: `spec.md`'s "What each consumer owns now" split verbatim
+into `embarch-topology/spec/consumers.md` (spec 81.7%, out of reserve), struck off `tasks/topology/060`'s
+`Compacts:` line; 060 stays blocked on `decisions/enrollment.md` (243 B left, due 2026-11-01), now
+waiting only on `suite/046`. **Leg start, for the record:** `inbox/` empty; `validate dev-bench` (MCP):
+probe `001057729826` not attached, not a mismatch, so `api/059`, `dev-bench/035`, `dev-bench/038` stay
+`open`; `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`); overdue ledger re-read, nothing
+payable (`suite/030` blocked on `tasks/doc/045`, `study-designer/026` unpark unmet, `doc/031` owner's);
+atlas still undispatchable (`tasks/doc/089`). Dispatched `api/142`, `core/106`, `topology/059`, `ui/083`
+at once; all four reported within 11 minutes.
+**Merged:** `agent/topology/059-moved-probe-refused-as-chip-mismatch` (code `62c188d`, ff onto
+origin/main from `7c1ef59`; doc `9f827af8`, cherry-picked from `de40e3e7`). Gate re-run on the merge:
+build, `cargo test --all-features` 108 pass, clippy `-D warnings` clean (default and all features),
+wire-only build and clippy (`--no-default-features --features software,wire`) clean, client names
+clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none until `core/111` lands; then a flash through a probe enrolled on another chip
+family, on the bench, is the verify-only check.
+**Budget:** PROCEED, weekly 58.5% at leg start, 59.1% here, wave 6.
+**Least sure about:** the comparison assumes a project's `chip` and an enrolled `chip` spell the family
+the same up to case; a `_cpuapp`-style variant would be refused once Core calls this, and `core/111`
+carries that check.
+
 ## 2026-10-26 03:38 — ui/082 a live run's badge says running and counts its step
 
 **Decided:** nothing beyond the worker's paragraph under decision 33 (`embarch-ui/decisions/
