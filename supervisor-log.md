@@ -97,6 +97,29 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 05:52 — ui/092 drive_topology.py's sidebar checks describe the Desk shell
+
+**Decided:** nothing; test-only, no decision touched. `tests/browser/drive_topology.py` now asserts the six
+`data-tab` values in order (desk, topology, study-designer, live-study, atlas, debug) instead of a count
+of five, and the no-desk path form `no desk · /tmp`; both are what the spec and `decisions/shell.md`
+say, per the reviewer, not text copied from the page. The flaky board-label check now polls up to 10 s
+for all four labels instead of reading after fixed sleeps; it never reproduced in the worker's two runs,
+so the race it closes is inferred from the code, not observed. The drive also takes `EMBARCH_GECKO_PORT`
+(default 4444) so it can run on a scratch geckodriver port. No changelog fragment (nothing
+user-visible). Worker ran the drive twice, 78/78 each, isolated on scratch ports 47311-47313 against a
+release build; I did not re-run it. It reported two geckodriver processes it did not start (PIDs 580339,
+756681) and left them; I left them too.
+**Merged:** `agent/ui/092-drive-topology-sidebar-checks-match-the-desk-shell` (code `69edcdd`, ff onto
+origin/main from `fd7f1b6`; doc `f2243590`, cherry-picked from `6fb4dbe9`, task file only). Gate re-run
+on the merge, against api `aa303c2` (this leg), study-designer `4da23d3`, topology `b771dd0`: build,
+`cargo test` 200 pass / 4 ignored, clippy `-D warnings` clean, client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 62.9% at leg start, wave 6.
+**Least sure about:** whether the polling wait fixed the flake `ui/091` saw, since nobody has seen it
+fail since.
+
 ## 2026-10-26 05:49 — core/114 the capture routes are under the auth sweep and a split `.route(` fails the scan
 
 **Decided:** nothing beyond the worker's amendment to decision 42 (`embarch-core/decisions/route-sweep.md`;
