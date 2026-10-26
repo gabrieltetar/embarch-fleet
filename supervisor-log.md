@@ -97,6 +97,39 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 04:22 — study-designer/075 a Notify or Indicate row waits for its notification
+
+**Decided:** nothing beyond the worker's new decision 83 (`embarch-study-designer/decisions/gatt.md`,
+index row; `interfaces/types.md` line 52 now says what the operation's `timeout_ms` means): `build_study`
+copies the row's `timeout_ms` into `GattOperation::Notify`/`Indicate` for Raw, Vendor and Registered
+rows instead of emitting 0, and refuses a 0 row with a new `BuildStudyError::ZeroWaitBudget`; additive
+`Study::validate_wait_budgets()`, `Step::zero_wait_operation()` and `WaitBudgetError` for a consumer to
+opt into. 0 is refused, not redefined, so dev-bench is unchanged. Read the shared-crate diff before
+merging: additive, `build_study`'s signature unchanged; the worker's read-only grep of every sibling
+found no committed study or fixture with a 0 budget and no exhaustive match on `BuildStudyError`. I ran
+`embarch-api` against it on the merge (build, `cargo test --workspace` 262 pass); core and ui are gated
+against it in their own units. **Leg start, for the record:** `inbox/` empty; `validate dev-bench`
+(MCP): probe `001057729826` not attached, not a mismatch, so `api/059`, `dev-bench/035`, `dev-bench/038`
+stay `open`; overdue ledger re-read, nothing payable (as the last leg found). Dispatched `core/111`,
+`ui/091`, `study-designer/075`, `outpost/026` at once; all four reported within 7 minutes. **Filed from
+this unit:** `tasks/core/113` (Core calls `validate_wait_budgets` on submit), drained from the worker's
+drop; `tasks/study-designer/077` for a red that is **already on `main`**: `cargo test
+--no-default-features --features alloc` fails to compile (`vec!` unresolved in `src/host_study.rs`'s
+tests, from `study-designer/070` `ba3ad46`), confirmed by me on `3ec19b9` before 075 landed, and CI's
+`test.yml:101` runs that cell.
+**Merged:** `agent/study-designer/075-notify-wait-budget` (code `5ea5ac9`, ff onto origin/main from
+`3ec19b9`; doc `d777103a`, cherry-picked from `0dbed7c4`). Gate re-run on the merge: build, `cargo test
+--all-features` 312 + 22 pass, clippy `-D warnings` clean (all features and default), client names
+clean, `check-docs.py` 11/11. The `alloc` test cell is red before and after (above).
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** a UI-built study with a Notify row against a DUT that notifies within the row's
+timeout reports `Pass` (DUT + dev-bench, Core redeployed on this crate).
+**Budget:** PROCEED, weekly 59.4% at leg start, wave 6.
+**Least sure about:** decision 83 rests on the task's reading of dev-bench's `ble_bridge_real.c` (earlier
+deadline wins, 0 becomes `K_NO_WAIT`); no dev-bench decision records that, and neither the worker nor
+the reviewer re-read the C.
+
 ## 2026-10-26 04:05 — ui/083 Live Study renders only the study and the project that are open now
 
 **Decided:** nothing beyond the worker's new decision 60 (`embarch-ui/decisions/live-study.md`, index
