@@ -97,6 +97,37 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 06:17 — api/131 one bench_exchange call drives console steps and returns every listened console as one filtered timeline
+
+**Decided:** nothing beyond the worker's new decision 89 (`embarch-api/decisions/bench-exchange.md`,
+indexed; kept out of `tool-wrapping.md` and `client-crate.md` for room). My dispatch note corrected three
+things the task assumed, and the worker followed all three: Core's capture has no per-line time, so rows
+are stamped by what the client observes (a captured line at the poll that first saw it, `poll_ms`
+default 100, minimum 20) and every answer says so in `time_basis`, never as Core's clock; a reply on a
+listened signal shows once, through its capture (decision 92's tee); no escape stripping, since no
+"plain-replies" item exists. Filters are case-sensitive substrings plus a level-tag floor; untagged lines
+are kept. Snapshots are `[projects.snapshots.<name>]` on `embarch-firmware-build`'s `ProjectConfig`, an
+additive `#[serde(default)]` map (`embarch-ui` path-depends on that crate and has no struct literal of
+it); I read that diff. **One deviation from the task, recorded in 89:** a snapshot's signals are checked
+as declared at call time, before any capture or write, not at config load, because Core is not reachable
+at load. `inbox/core-capture-line-receive-times.md` asks Core to stamp capture lines, which is the real
+fix for exact cross-console order; left for the next drain. Worker filed `tasks/api/144-compact-api.md`
+(`open.md` 4,034 / 5,120 B, into reserve).
+**Merged:** `agent/api/131-bench-exchange-one-call-both-consoles-one-timeline` (code `6d615e7`, ff onto
+origin/main from `aa303c2`; doc `31c5d788`, cherry-picked from `3e1284b9`). Gate re-run on the merge,
+against study-designer `7828256` and topology `b771dd0`: build, `cargo test --workspace` 284 pass, clippy
+`-D warnings` default and `--workspace` clean, client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** two-console order check (two declared direct signals on a real board pair, Core at
+`845f3ea` or later; a run across a DUT reset for the port-lost markers and a concurrent-call `409`), and
+the replay of one field role-swap check as one call (281 command characters against 3 to 4 helper
+calls; result characters need the bench). Both are in `embarch-api/open.md`. Not deployed: the MCP
+binary predates this, `api/143`, `api/135` and `api/124`.
+**Budget:** PROCEED, weekly 63.8% at leg start, wave 6.
+**Least sure about:** whether 100 ms client-side stamping orders two consoles correctly at PD timescales;
+it is assumed, and a command and its effect on the other console can land in one poll.
+
 ## 2026-10-26 06:14 — core/099 a session can lease the bench, and other callers are refused by name while it holds it
 
 **Decided:** nothing beyond the worker's new decision 93 (`embarch-core/decisions/lease.md`, indexed):
