@@ -97,6 +97,39 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 03:38 — ui/082 a live run's badge says running and counts its step
+
+**Decided:** nothing beyond the worker's paragraph under decision 33 (`embarch-ui/decisions/
+live-study.md`): Live Study reads the job status once before following and seeds the session's
+status and `total_steps` from it, then broadcasts a `status` frame (a browser that connected before
+the read returned otherwise kept a `pending` snapshot with no frame due to correct it); a completed
+step promotes `pending` to `running` even when that read failed; a seed never replaces a terminal
+status, `interrupted` included (api/137's decision 48). `follow_study` itself unchanged, no inbox
+drop. `stub_core.py` now holds its terminal frame 1.5 s so the browser check can see the running
+window. `spec.md` and `open.md` untouched. **Leg close, for the next leg:** this leg ran
+`umbrella/092`, `desk/004`, `core/110`, `ui/082`, all green on first gate, all reviewers clean.
+New in the queue: `api/142` (client mirror and enroll text for core decision 87; `client-crate.md`
+is in reserve). `inbox/` is empty. Bench still unattached (`validate dev-bench` at leg start). Overdue
+ledger: nothing payable. `suite/046`-`049` still open and unannounced: no leg has opened a window
+for them. `fold-day.py --status`: 2026-10-26 still today, two rollable days not rolled. Not
+deployed anywhere: live Core, the desk on :4891 and the UI binary all predate this leg's units.
+The owner's uncommitted `embarch-fleet/templates/.claude/commands/fleet-watch.md` was left alone,
+which is why `git pull --rebase` in `embarch-fleet` refuses at step 0; fetch and push still work.
+Two slips, both harmless: `leg-dispatch` was ticked after the four spawns returned rather than
+right after spawning, and two `fold-commit.py` calls were refused (my Edit anchored on a heading
+time the previous fold had restamped) before anything was committed; no push was chained to them.
+**Merged:** `agent/ui/082-live-run-badge-says-running-and-names-its-step` (code `5928bdb`, ff onto
+origin/main from `ca0caf8`; doc `ec2653df`, cherry-picked from `394add5a`). Gate re-run on the
+merge, against api `7e6d88c`: build, `cargo test` 184 pass / 4 ignored (+5 in the other test
+targets), clippy `-D warnings` clean, client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none; the badge fix is measured against `stub_core.py`, not a live Core run.
+**Budget:** PROCEED, weekly 57.5%, wave 6.
+**Least sure about:** the worker saw one browser run show `pending` before it added the seed
+broadcast and could not attribute it at the time; the broadcast is its best explanation, and four
+later runs passed, but the earlier failure was not reproduced and then fixed.
+
 ## 2026-10-26 03:37 — core/110 the enroll response reports the row a probe vacated
 
 **Decided:** nothing beyond the worker's new decision 87 (`embarch-core/decisions/enrollment.md`,
