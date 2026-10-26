@@ -97,6 +97,43 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 05:48 — api/143 capture_start, capture_read and capture_stop drive Core's background signal capture
+
+**Decided:** nothing beyond the worker's new decision 88 (`embarch-api/decisions/tool-wrapping.md`,
+indexed; `client-crate.md` left alone in reserve): three stateless MCP tools and CLI twins over Core's
+`/signals/{name}/capture` (decision 92), the caller passing `next_offset` back as `after`. The CLI is
+spelled `capture-start|capture-read|capture-stop <signal>`, not the task's nested `capture start`,
+because the tool/subcommand parity test matches by kebab-cased name; a nested form would need three
+`DOCUMENTED_ASYMMETRIES`. `capture-read`/`-stop` print the text alone on stdout, offsets/state/gaps on
+stderr, `--json` the whole reply. New `interfaces/tools-capture.md`, linked from `tools.md`. Shared
+crate, so I read the client diff: additive (`SignalCaptureResponse`, `CaptureGap`, three calls on
+`status_timeout`). One fix of mine on the branch, `aa303c2`: the worker had inserted `capture_query`
+between `urlencode`'s doc comment and `urlencode`, so the comment documented the wrong function.
+**Leg start, for the record:** `inbox/` empty; `validate dev-bench` (MCP): probe `001057729826` not
+attached, not a mismatch, so `api/059`, `dev-bench/035`, `dev-bench/038` stay `open`;
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`). Overdue ledger: same three, nothing
+payable. Refill not owed (46 dispatchable, 7 scopes). Dispatched `api/143`, `core/114`, `topology/064`,
+`ui/092` at once with the isolation paragraph; all four reported within 7 minutes. Skipped
+`study-designer/071` this leg: it adds `Repeat`/`LineCount` to the host study model, which I read as a
+probable `HOST_TYPE_SCHEMA_VERSION` bump, and a schema bump wants the §4 announcement; I did not
+confirm that, so the next leg should read `src/schema_version.rs` before dispatching it.
+**Merged:** `agent/api/143-signal-capture-client-tools` (code `aa303c2`, ff onto origin/main from
+`c4a3434`; doc `d70ac3dc`, cherry-picked from `49bb1cb5`). Gate re-run on the merge, against
+study-designer `4da23d3` and topology `b771dd0`: `cargo build --workspace`, `cargo test --workspace` 273
+pass, clippy `-D warnings` clean, client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+It noted, without asking for a revert, that `SignalCaptureResponse` defaults bare scalars (`running`,
+`next_offset`) where decision 58 prefers `Option<T>` for fields Core may not send; every Core with the
+route sends the whole shape and an older one answers 404, so I left it.
+**Hardware debts:** the two-console bench run in the task's own words (capture the DUT console, exchange
+on the bench console, read from `next_offset`, reset the DUT for `reopening` + a `gaps` entry, stop);
+needs Core at `845f3ea` or later deployed. Not deployed: the MCP binary predates this, `api/135` and
+`api/124`.
+**Budget:** PROCEED, weekly 62.9% at leg start, wave 6.
+**Least sure about:** the offset test runs against a scripted mock, so "a read from `next_offset`
+returns only new text" is proven for the request the client sends, not for Core's answer.
+
 ## 2026-10-26 05:33 — ui/087 the validate summary never says passed over a warning or an empty bench, and enrol refuses an unanswerable chip itself
 
 **Decided:** nothing beyond the worker's amendment to decision 48 (`embarch-ui/decisions/board-row.md`, now
