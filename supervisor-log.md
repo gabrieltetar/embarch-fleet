@@ -97,6 +97,39 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 03:20 — ui/090 the tile dialog sends hours only when a person changed them
+
+**Decided:** nothing beyond the worker's decision 59 (`embarch-ui/decisions/shell.md`, index row in
+`decisions.md`): `assets/desk.js` keeps the prefilled hours and `computed_hours` on the field
+(`data-orig`, `data-computed`) and sends `hours` in `PATCH /tiles/{id}` only when the value differs
+from the prefill; a new "Use computed" button fills `computed_hours` and sends `"hours": null`, and
+typing again cancels that. One clause in `spec/tabs.md`; `spec.md` and `open.md` untouched. This
+completes `desk/003` (desk decision 61): until the owner rebuilds the desk service on :4891, the
+live Desk tab still talks to the old desk. **Leg close, for the next leg:** this leg ran
+`topology/065` (filed mid-leg), `api/137`, `umbrella/091`, `ui/090`; `core/110` bounced on the
+topology gap and is `open` again with its plan written in the task file, so it is the cheapest
+dispatch in the queue. Now unblocked by this leg: `ui/082` (live-run badge; must render the new
+`interrupted` status, api/137's entry) and `umbrella/092` (check 13, on top of 091). Filed
+`tasks/doc/091` (owner's). `inbox/` is empty. Overdue ledger: still nothing payable. Bench still
+unattached. `fold-day.py --status`: 2026-10-26 is 32 unfolded units (fold it after midnight), two
+rollable days, not rolled. The owner's uncommitted `embarch-fleet/templates/.claude/commands/
+fleet-watch.md` was left alone. The `embarch-fleet` checkout's `main` has no upstream, so a bare
+`git push` there fails: push `origin main` explicitly. `core/110`'s code branch (at base, no commits)
+is still on `embarch-core`'s remote; not deleted by hand.
+**Merged:** `agent/ui/090-tile-hours-only-when-typed` (code `ca0caf8`, ff onto origin/main from
+`e111712`; doc `a9debee9`, cherry-picked from `6a6f0d21`). Gate re-run on the merge, against topology
+`7c1ef59` and api `7e6d88c`, no workaround: build, `cargo test` 186 pass / 4 ignored, clippy `-D
+warnings` clean, client names clean, `check-docs.py` 11/11. The worker's scratch UI and mock desk
+ports (:48901, :48911) are closed.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none; the browser check ran against the worker's mock desk, not the real one
+(needs the owner's rebuild of :4891).
+**Budget:** PROCEED, weekly 57.4%, wave 6.
+**Least sure about:** "Use computed" is offered on every tile because the tile JSON does not carry
+`hours_override`, so the dialog cannot tell whether an override exists; sending `null` when none
+does is harmless but the button reads as if there were one.
+
 ## 2026-10-26 03:17 — umbrella/091 doctor and uninstall verdicts say what the docs say
 
 **Decided:** nothing beyond the worker's amendments of decisions 19 (`decisions/dev-bench-firmware.md`)
