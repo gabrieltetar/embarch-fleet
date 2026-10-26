@@ -97,6 +97,41 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 06:23 — ui/081 a Slack reply from the Desk goes to the message it was drafted for
+
+**Decided:** nothing beyond the worker's new decision 63 (`embarch-ui/decisions/shell.md`, index row
+updated): the Draft button carries `[account, channel, ts]`, the reply box keeps that copy, Send posts to
+the copy, and a box whose message has left the list says so, disables Send and posts nothing (typed text
+kept). The re-render hold while the Slack bar has focus is unchanged (decision 56). `thread_ts` still comes
+from the draft response. JS-only; no `spec.md` or `open.md` line, no feature row (a fix). New browser
+check `tests/browser/drive_desk_slack.py` runs against a Python stub desk, so no Slack, connector or
+`claude -p`. **I re-ran it twice on scratch ports (geckodriver 4933, UI 4898, stub 4996): every assertion
+that ran passed (scenario 1 and then 1-2), and each run died in the next scenario's setup** on
+`#desk-slack-toggle could not be scrolled into view` (geckodriver `400 element not interactable`). Harness,
+not the fix; filed `tasks/ui/093` in this fold. I started and stopped my own geckodrivers by PID; one
+leaked between runs because `$!` named a subshell, and I killed it by PID once found. `580339` (port 4444)
+is still not mine and I left it.
+**Leg close, for the next leg:** ran `study-designer/071`, `core/099`, `api/131`, `ui/081`, all green on
+first gate, all reviewers clean. `queue-status.py --count` 40. **`inbox/` holds three drops from this leg,
+undrained:** `api-bench-lease-client.md` (client half of `core/099`), `core-capture-line-receive-times.md`
+(from `api/131`), `core-host-study-line-count-render.md` (from `study-designer/071`; it asks Core to accept
+`HostStudy`, which is where decision 80 says `HOST_TYPE_SCHEMA_VERSION` must move, and that constant lives
+in study-designer, so read it as a §8 cross-repo pass before filing it as `core`). `topology/062` carries a
+supervisor note on why it was not dispatched. `embarch-core/open.md` has 50 B left. Bench still
+unattached. `suite/046`-`049` still open and unannounced; `atlas` still skipped (`tasks/doc/089`). Not
+deployed: live Core, the UI binary and the MCP binary all predate this leg.
+**Merged:** `agent/ui/081-desk-slack-reply-goes-to-the-message-it-was-drafted-for` (code `35fa9da`, ff onto
+origin/main from `69edcdd`; doc `f7416058`, cherry-picked from `7bffd9fe`). Gate re-run on the merge,
+against api `6d615e7` and study-designer `7828256` (both this leg; this is the build that proves
+`ProjectConfig.snapshots` and `std`'s regex do not break `embarch-ui`): build, `cargo test` 200 pass / 4
+ignored, clippy `-D warnings` clean, client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 63.8% at leg start, 64.9% at leg end, wave 6.
+**Least sure about:** the worker's negative control could not run (the old Draft button has no `data-msg`,
+so the selector fails before the race), so nothing shows the new check failing on the old code.
+
 ## 2026-10-26 06:17 — api/131 one bench_exchange call drives console steps and returns every listened console as one filtered timeline
 
 **Decided:** nothing beyond the worker's new decision 89 (`embarch-api/decisions/bench-exchange.md`,
