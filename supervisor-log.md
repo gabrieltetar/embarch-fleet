@@ -97,6 +97,24 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-25 23:57 — chat/001 a message the CLI sends Claude is never an owner bubble
+
+**Decided:** nothing beyond the worker's own decision 89 (a CLI-sent `user` line is a `note` row,
+never a user entry; panel-written lines with `turnOrigin: "sdk"` and no `origin` stay the owner's
+as the one exception). The fleet's first `chat` unit: set up `.worktrees/embarch-chat/` with
+`embarch-doc`, `embarch-fleet` and `embarch-desk` links beside the code worktree. Filed
+`tasks/chat/003` (a CSS comment cites a nonexistent decision 90; fold into chat/002).
+**Merged:** `agent/chat/001-cli-turns-are-not-the-owners` (code `82b82e0`, ff; doc `c25be23c`,
+cherry-picked from `98c6ec25`). Gate re-run on the merge: `npm run build`, `typecheck` clean,
+`npm test` 216 pass / 0 fail / 67 skipped (desk tests, no `EMBARCH_DESK_BIN`), `test:webview` all
+pass, client names clean, `check-docs.py` 11/11. First `history/chat.md` created by the assembler.
+**Blocked:** nothing. `tasks/chat/002` (the hand-back card) is now unblocked by this landing.
+**Reviewer:** no findings.
+**Hardware debts:** none. Not installed: the `.vsix` is the owner's to rebuild.
+**Budget:** PROCEED, weekly 47.5%, wave 6.
+**Least sure about:** the idle-turn case where the CLI never starts a turn was not recorded;
+decision 89 marks it assumed, and its row is dropped at the owner's next message.
+
 ## 2026-10-25 23:55 — study-designer/026 open.md under its cap; main's doc gate green again
 
 **Decided:** unparked `study-designer/026`: its own unpark condition ("any bullet gets a real
