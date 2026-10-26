@@ -97,6 +97,24 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-25 23:59 — api/122 zephyr-west accepts a single-SoC board's shortened `<board>.dts`
+
+**Decided:** nothing beyond the worker's decision 86 (shortened stem accepted only for a one-SoC
+`board.yml`; refused for multi-SoC and for both stems present, as Zephyr does; "boards found, every
+candidate dropped" is `ScanError::AllBoardsDropped` with per-candidate reasons, never `Ok(vec![])`).
+Filed `tasks/api/132`: the new `zephyr.rs` comments cite decision 64, which exists and is about
+retired config keys — a wrong citation `check-decision-refs.py` passes.
+**Merged:** `agent/api/122-zephyr-west-single-soc-dts` (code `2f3749b`, ff; doc `c98c1a40`,
+cherry-picked from `e303a1f8`). Gate re-run on the merge: build, test (all green), clippy
+`-D warnings` clean, client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. Checked against Zephyr's `dts.cmake` source only, not a real build of a
+single-SoC board through `list_targets`; the field repo that reported it is the natural first use.
+**Budget:** PROCEED, weekly 47.5%, wave 6.
+**Least sure about:** an existing test's expectation changed from empty-`Ok` to the new error; the
+reviewer traced every in-crate caller through `scan_or_err`, but not `embarch-ui`.
+
 ## 2026-10-25 23:57 — chat/001 a message the CLI sends Claude is never an owner bubble
 
 **Decided:** nothing beyond the worker's own decision 89 (a CLI-sent `user` line is a `note` row,
