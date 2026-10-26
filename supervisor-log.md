@@ -97,6 +97,41 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 07:37 — api/147 bench_exchange orders lines by Core's receive times when Core sends them
+
+**Decided:** nothing beyond the worker's amendment to decision 89 (`embarch-api/decisions/bench-exchange.md`;
+`client-crate.md` untouched): a captured line sits at `started_utc_ms + rx_ms` when Core sent both (core/115's
+decision 94), an unlistened step's reply at the exchange's `started_utc_ms` (never before its own write),
+otherwise the poll that first saw it. Core's UTC clock is anchored at the earliest capture start, taken when
+that start reply arrived; two hosts' wall clocks are never compared. `lines` entries pair with raw lines in
+order, not by byte offset. `time_basis` is built per signal and names a mixed run as mixed. Shared crate, so I
+read the client diff: three additive `Option` fields plus `CaptureLine`, decision 58's shape.
+**Leg close, for the next leg:** ran `api/146`, `ui/094`, `core/102`, `api/147`; all green on first gate, all
+four reviewers clean, nothing blocked. **`HOST_TYPE_SCHEMA_VERSION` is now 20** (`core/102`'s entry): deploy
+Core before the API. `queue-status.py --count` 39; `inbox/` empty. **I did not sweep for refill** though
+`--refill-owed` fired: it fired on scope spread only (api, atlas, core, suite, ui; `tasks/doc/081`'s shape),
+the queue holds 39, and three worker scopes covered all four units. The next leg should sweep if it wants
+more than three concurrent workers: topology, study-designer, dev-bench (host-side), outpost, umbrella,
+chat, desk and smp have nothing dispatchable. Next candidates: `core/117` (wording for topology's
+`SignalAmbiguous`), `core/101` (open, builds on `core/102`), and **`core/116`, still `blocked` but its
+unpark condition fired**: rewrite its first `Done when` box to what `core/102` did not ship (Core refuses
+`Repeat` and `line_counts` with `400` today, decision 95) and open it before dispatching;
+`ui/093` (scratch ports via `EMBARCH_GECKO_PORT`/`EMBARCH_UI_PORT` now), `api/141`, `ui/086`. Bench still
+unattached; `suite/046`-`049` and `052` open and unannounced; `atlas` still skipped (`tasks/doc/089`).
+Not deployed: live Core, the UI binary and the MCP binary all predate this leg.
+**Merged:** `agent/api/147-bench-exchange-core-rx-times` (code `401c3c4`, ff onto origin/main from `903c76c`;
+doc `d6af5526`, cherry-picked from `4485f2f1`). Gate re-run on the merge, against study-designer `302784c`
+(v20): `cargo build`/`test --workspace` 298 pass, clippy `-D warnings` clean, client names clean,
+`check-docs.py` 11/11; `embarch-ui` built against `401c3c4`.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none new; `api/131`'s two-real-consoles order check now also covers the anchor error (one
+capture-start request's latency) and decision 94's cross-capture wall-clock alignment, both unmeasured.
+Not deployed: the MCP binary predates this, `api/145`, `api/146`, `api/131`, `api/143`, `api/135`, `api/124`.
+**Budget:** PROCEED, weekly 66.4% at leg start, 67.4% at leg end, wave 6.
+**Least sure about:** the anchor assumes the first capture-start reply arrives promptly; a slow first reply
+shifts every Core-timed row by that latency relative to client-stamped writes.
+
 ## 2026-10-26 07:34 — core/102 Core runs host studies: send-and-read steps against a console, with teardown on every exit
 
 **Decided:** (1) **`HOST_TYPE_SCHEMA_VERSION` 19 to 20, made by me** (`embarch-study-designer` `302784c`,
