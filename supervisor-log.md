@@ -97,6 +97,33 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 04:27 — ui/091 the enrol dialog says when an enrol moved a role
+
+**Decided:** nothing beyond the worker's new decision 61 (`embarch-ui/decisions/topology-roles.md`, index
+row, a phrase in `spec/tabs.md`): `/api/enroll` adds `moved_roles_note`, the mirror's own
+`moved_roles_note()` text, only when something moved; the dialog prints it in the warning colour and
+stays open 6 s instead of 0.7 s, and a pending auto-close is cancelled when the dialog reopens. The UI
+composes no wording of its own. `stub_core.py` has no enrol route, so the browser check is in
+`drive_topology.py`'s own stub, which now returns `displaced`/`vacated`/`vacated_kept` (`vacated_kept`
+approximated as "the row had a name"). **Isolation, as briefed:** the drive now starts the UI with
+`EMBARCH_DESK_PORT` 4899 (checked free) and scratch `EMBARCH_DESK_CONFIG_DIR`, `XDG_DATA_HOME`,
+`XDG_CONFIG_HOME`; the worker reports nothing reached a live service. **Browser run not fully green:**
+the new checks pass; `"the sidebar is five tabs"` and `"and where it is under that"` fail, and one more
+failed once. I read the first two against `main`: stale since the Desk shell (`d414560`) and the Atlas
+tab (six tabs; the no-desk path reads `no desk · /tmp`), untouched by this diff. I did not re-run the
+old drive to prove it, because the pre-091 drive is the one that reaches the live desk. Filed
+**`tasks/ui/092`** to fix those checks and look at the flaky third.
+**Merged:** `agent/ui/091-enroll-tab-says-when-an-enrol-moved-a-role` (code `26ed2ec`, ff onto
+origin/main from `ba311f8`; doc `84b1400a`, cherry-picked from `7d2986f4`). Gate re-run on the merge,
+against api `9e4ca14`, study-designer `5ea5ac9`, topology `62c188d`: build, `cargo test` 189 pass / 4
+ignored, clippy `-D warnings` clean, client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none; the moved-role note is checked against a stub, not a live Core enrol.
+**Budget:** PROCEED, weekly 59.4% at leg start, wave 6.
+**Least sure about:** the `displaced` case is exercised only through the pass-through and the mirror's
+wording, never in a browser; only `vacated` is driven.
+
 ## 2026-10-26 04:24 — core/111 Core refuses a probe enrolled on another chip family before any attach
 
 **Decided:** nothing beyond the worker's new decision 89 (`embarch-core/decisions/probes.md`, index row,
