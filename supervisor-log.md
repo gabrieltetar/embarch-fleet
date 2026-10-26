@@ -97,6 +97,29 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 01:08 — api/123 signal-exchange fails loudly when no reply came back
+
+**Decided:** nothing beyond the worker's amendment to decision 82 (`decisions/failure-reporting.md`:
+`signal-exchange` exits 3 when `--until` was given and never seen, 4 on zero bytes (outranks the
+others, with or without `--until`), 5 on `truncated`, each with one stderr line and the reply still
+printed; a deadline stop without `--until` is normal and exits 0; `--json` stdout unchanged but the
+codes apply; `--clean` is a Rust port of the atlas `live.clean()`, taking the prompt from `--until`).
+In the fold I added one clause to decision 50 (`decisions/surface.md`), whose "the exit code stays a
+single `1`" read as absolute; it now names 82's carve-out. The reviewer raised that below its bar.
+Not fixed: decision 50 still says exit-code granularity is "open again in open.md", and `open.md`
+has had no such bullet since September (pre-existing, not this unit's).
+**Merged:** `agent/api/123-signal-exchange-cli-silent-on-no-reply` (code `e5da1c4`, ff onto
+origin/main; doc `fcbc89c4`, cherry-picked from `d40d36fa`). Gate re-run on the merge, after
+study-designer/070 landed: build, `cargo test --workspace` green, clippy `-D warnings` clean, client
+names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. `core/098` (landing next) adds wire fields this CLI does not print yet; its
+drop `inbox/api-signal-exchange-prints-wire-fields.md` is the follow-up.
+**Budget:** PROCEED, weekly 52.8%, wave 6.
+**Least sure about:** `--clean` matches the Python `clean()` on five fixtures only; a console with
+other escape sequences could diverge from the atlas output without any test noticing.
+
 ## 2026-10-26 01:06 — study-designer/070 host-run study model
 
 **Decided:** nothing beyond the worker's decision 80 (`decisions/study.md`: `HostStudy`,
