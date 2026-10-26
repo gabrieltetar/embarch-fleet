@@ -97,6 +97,32 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 07:01 — core/115 each line of a signal capture carries the time its first byte arrived
+
+**Decided:** nothing beyond the worker's new decision 94 (`embarch-core/decisions/signal-capture.md`, beside
+92; index row now "92, 94"). Capture `GET`/`DELETE` gain `started_utc_ms` and `lines: [{offset, rx_ms}]`
+for lines whose first byte lies in the returned range, `offset` in the same absolute byte space as `gaps`,
+`rx_ms` monotonic from the capture's start; `POST` returns `lines: []`. The exchange reply gains
+`started_utc_ms`, so a reply spans `[started_utc_ms, +elapsed_ms]` on the same clock: one step past the
+task's text, and what its first box needed. A line is stamped at its **first byte**, not its newline
+(recorded in 94); the `port lost`/`reopened` markers are stamped too; lines in one `read()` share a time.
+Additive wire change; the reviewer and I both read it as such. **No reserve file touched**: `open.md`
+(50 B left), `spec.md`, `probes.md` unchanged; open points live inside 94. Feature row `core-260` amended,
+assembled in api/145's fold. `bench_exchange` (api decision 89) does not read the new fields yet; nobody
+filed that, and I did not either (it would be an api task to switch its stamping to Core's `rx_ms`).
+**Merged:** `agent/core/115-capture-lines-carry-receive-times` (code `731e875`, ff onto origin/main from
+`de77295`; doc `97e23132`, cherry-picked from `26a337f8`). Gate re-run on the merge, against topology
+`62d776e` and study-designer `7828256`: build, `cargo test` 320 pass / 2 ignored, clippy `-D warnings`
+clean, client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** native Windows build of `embarch-core` (owner runs it). No real port has produced these
+times: the bridge's read latency and cross-capture wall-clock error are assumed. Not deployed: live Core
+predates this and `core/099`, `100`, `105`, `106`, `110`, `111`, `113`, `114`.
+**Budget:** PROCEED, weekly 64.9% at leg start, wave 6.
+**Least sure about:** the timing test's upper bound was widened from 350 to 600 ms after one unexplained
+failure in a parallel run; it passed in my gate, but a load-sensitive test in Core's suite can flake.
+
 ## 2026-10-26 07:00 — api/145 sessions can take the bench lease and every Core call carries its token
 
 **Decided:** nothing beyond the worker's new decision 90 (`embarch-api/decisions/lease.md`, indexed; kept out
