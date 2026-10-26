@@ -97,6 +97,29 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 08:36 — ui/093 the desk-Slack browser check waits for its toggle and names a setup failure
+
+**Decided:** nothing. `fresh()` in `tests/browser/drive_desk_slack.py` polls up to 15 s for
+`#desk-slack-toggle` to be displayed (or the bar already open), retries a click refused mid-reload, and
+raises `SetupFail`, reported as `FAIL scenario setup: ...` with the bar's state; a new `poll()` reads a
+script error as false (the worker's first run died on an HTTP 500 mid-reload). Docstring start-up line now
+follows `tests/browser/README.md`. The reviewer confirmed the retry and `poll()` wrap setup only: every
+assertion carrying `ui/081`'s reply-targeting evidence still fails loudly. **The worker committed two
+`tests/browser/__pycache__/*.pyc` files**; I removed them and added `__pycache__/` to `.gitignore` in
+`c126ae4` on the branch before landing. I re-ran the driver myself once on scratch ports (gecko 4961, UI
+4962, desk 4963, scratch HOME/XDG): 8/8 PASS; the worker reported 3 consecutive 8/8 runs plus 6 more.
+**Merged:** `agent/ui/093-drive-desk-slack-setup-clicks-the-toggle-before-it-can-be-clicked` (code `15e3c63`
++ `c126ae4`, ff onto origin/main from `954a24c`; doc `417378f7`, cherry-picked from `4072f789`). Gate re-run
+on the merge: `cargo build`, `cargo test`, clippy `-D warnings` clean, ownership both branches green, client
+names clean, `check-docs.py` 11/11. Owner's `embarch-ui` checkout fast-forwarded to `c126ae4`.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. Not deployed: the UI binary predates this (test-harness change only).
+**Budget:** PROCEED, weekly 68.1% at leg start, wave 6.
+**Least sure about:** one "no `[data-draft]` button appeared" failure the worker saw once before its
+`poll()` fix and could not reproduce in 12 runs; it assumes the same mid-reload race. The shared setup's
+`until("...[data-send]")` (line ~165) is still unchecked (reviewer, below bar, pre-existing).
+
 ## 2026-10-26 08:35 — core/103 Core reads where a running or hung core is without resetting it
 
 **Decided:** nothing beyond the worker's new decision 97 (`embarch-core/decisions/live-read.md`, 81 amended
