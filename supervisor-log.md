@@ -97,6 +97,36 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 03:17 — umbrella/091 doctor and uninstall verdicts say what the docs say
+
+**Decided:** nothing beyond the worker's amendments of decisions 19 (`decisions/dev-bench-firmware.md`)
+and 25 (`decisions/setup-reversal.md`). `setup --uninstall` exits 1 naming each attempted step that
+failed, and `setup`'s own failed-install arm exits 1 too (decision 7's fallback). Check 1's
+suite-manifest mismatch is a Warn, code `manifest-mismatch` kept (decision 14 already said so).
+Check 13: a local `X-dirty` against a bench flashed from clean `X` is a Warn, new code
+`dirty-checkout`, fix line "commit or stash, or rebuild with `west build -p always`"; dirty against
+dirty on one commit still passes as `match`, and decision 19 says what that does not prove. Check 2's
+`wsl-host`/`remote` fix line now carries `install --bind <addr>` from `recommended_bind_address`,
+the call `setup` uses, with a test that fails if they diverge. `--json` keys unchanged. Built green
+with **no** feature workaround, against topology `7c1ef59` and api `7e6d88c`: the first consumer
+proof that `topology/065` fixed `main`. `umbrella/092` (check 13 reading hello's 503/409 as busy)
+touches the same check and lands on top of this. **My slip, recorded:** my first `fold-commit.py`
+for this unit was refused (entry not yet written) and a pipe masked it, so the chained `git push`
+sent the cherry-picked doc commit `c508a4a6` to `origin/main` a few minutes ahead of this fold, a
+false `leg-fold` tick was written, and the Slack "landed" line went out before the fold. Nothing was
+lost; `tasks/doc/086` is this exact class, and the last leg hit it too.
+**Merged:** `agent/umbrella/091-doctor-and-uninstall-verdicts-match-their-docs` (code `c75200d`, ff
+onto origin/main from `1e52116`; doc `c508a4a6`, cherry-picked from `3c830dd4`). Gate re-run on the
+merge: build, `cargo test` 236 pass, clippy `-D warnings` clean, client names clean,
+`check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none run; check 13's `dirty-checkout` arm is unit-tested against a temp git
+repo, never against a flashed bench.
+**Budget:** PROCEED, weekly 57.4%, wave 6.
+**Least sure about:** `dirty-checkout` is a Warn, so an unflashed firmware edit now shows only as a
+warning; and a dirty checkout against a bench flashed from an *older* commit still reports `stale`.
+
 ## 2026-10-26 03:15 — api/137 a follow ends on an unknown or interrupted study instead of waiting forever
 
 **Decided:** nothing beyond the worker's amendment of decision 48 (`decisions/study-events.md`): a
