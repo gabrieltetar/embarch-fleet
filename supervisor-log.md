@@ -97,6 +97,39 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 04:48 — ui/079 the build log says which board it built and why, and the stored log keeps it
+
+**Decided:** nothing beyond the worker's new decision 62 (`embarch-ui/decisions/firmware-build.md`, index
+row): `topology::role_target` returns `Result<RoleTarget, RoleMiss>` (`NoBoard`, `NotInCatalog`,
+`CatalogUnreadable`, which the old `None` merged), and `firmware_build::choose_board` writes one `board
+choice:` line on every path naming the study's board, the role's board, what is built and why, including
+which axis (variant or revision) a same-board role replaced. Every `info` line now lands in the stored log
+with an `[embarch-ui] ` marker, and flash/reset outcomes and failures are appended after the build. The
+file name and header keep the build's own `ok`/`failed` (decision 39), so a failed flash is an `-ok.log`
+ending in `flash failed: ...`; renaming after the flash was considered and rejected in 62. `spec.md` and
+`open.md` untouched. Browser: the worker added a section to `drive_build.py` (scratch repo, stub `west`,
+stub Core, UI on 4895, stub Core on 4894, isolated desk config and `XDG_*`/`HOME`), all PASS against a
+debug binary, using an already-running geckodriver on 4444; I did not re-run it. **Leg close, for the next
+leg:** this leg ran `study-designer/077`, `api/124`, `core/113`, `ui/079`, all green on first gate, all
+reviewers clean; no new tasks filed, `inbox/` empty, `queue-status.py --count` 52. Bench still unattached.
+Overdue ledger: nothing payable (see the 077 entry). `suite/046`-`049` still open and unannounced; topology
+was skipped this leg (next leg: `topology/061` or `064` are dispatchable, mind `enrollment.md` at 98%).
+Not deployed anywhere: live Core, the UI binary and the MCP binary all predate this leg's units.
+`fold-day.py --status`: 2026-10-26 still today, two rollable days not rolled. The owner's uncommitted
+`templates/.claude/commands/fleet-watch.md` in `embarch-fleet` is still there; I left it alone.
+**Merged:** `agent/ui/079-build-log-says-why-it-built-the-board-it-did` (code `f8b2f7e`, ff onto
+origin/main from `26ed2ec`; doc `17a9dc46`, cherry-picked from `7a3d59e4`). Gate re-run on the merge,
+against api `c49e9b2` (this leg's `signal_exchange_with`), study-designer `0fabb6b`, topology `62c188d`:
+build, `cargo test` 197 pass / 4 ignored, clippy `-D warnings` clean, client names clean, `check-docs.py`
+11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none for the unit itself; a real build-and-flash through the UI against a role whose
+board is missing from the catalog would show the new line on hardware, and is not owed by any task.
+**Budget:** PROCEED, weekly 60.2% at leg start, 61.0% at this fold, wave 6.
+**Least sure about:** an `-ok.log` whose body ends in `flash failed` may read as success to anything that
+greps the file name; decision 62 chose it deliberately and nothing in the suite is known to grep it.
+
 ## 2026-10-26 04:47 — core/113 POST /study refuses a Notify or Indicate step with a wait budget of 0
 
 **Decided:** nothing beyond the worker's new decision 90 (`embarch-core/decisions/studies.md`, now 6,862 B;
