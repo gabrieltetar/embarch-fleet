@@ -97,6 +97,34 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 03:15 — api/137 a follow ends on an unknown or interrupted study instead of waiting forever
+
+**Decided:** nothing beyond the worker's amendment of decision 48 (`decisions/study-events.md`): a
+404 from the opening poll is fatal even with a stream open (Core's SSE route opens for any id, so
+nothing would ever arrive), now a typed `UnknownStudyError` in `embarch-core-client`; any other
+opening-poll failure still follows live. `interrupted` joins `is_terminal_status`. CLI: unknown id
+exits non-zero naming it; `interrupted` exits 1 with `success: false` in `--json` (shared with
+timeout, told apart by the summary), while `failed` still exits 0. MCP `study_watch`: unknown id
+errors at once; `interrupted` returns `complete: true`, `status: "interrupted"` and a new `note`.
+`study_status`'s description lists `interrupted`. Read the shared-crate diff before merging:
+additive type, one more terminal status, one new early `Err`. **Consumer effect, by reading:**
+`embarch-ui`'s Live Study (`live_study.rs` ~:996-1060) now ends a watch of an interrupted study with
+status `interrupted` and re-reads the record, where it used to wait forever, and shows an unknown id
+as "watching this study stopped". `ui/082` (the live-run badge, same path) should render
+`interrupted`; not filed separately, since 082 is open and names this task. The ui and umbrella
+gates below build against this commit.
+**Merged:** `agent/api/137-study-follow-ends-on-unknown-or-interrupted-study` (code `7e6d88c`, ff
+onto origin/main from `9ba2714`; doc `ea13842d`, cherry-picked from `0839bc01`). Gate re-run on the
+merge, against topology `7c1ef59`: build, `cargo test` 261 pass (workspace default-members), clippy
+`-D warnings` clean, client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none run; the mock Core's 404 and `interrupted` replies are modelled on the
+task's reading of Core, not captured from a live one.
+**Budget:** PROCEED, weekly 57.4%, wave 6.
+**Least sure about:** the worker's unknown-id `--json` output is the existing `error_result` object,
+not the `summary` line the task's "Done when" asked for; its test checks content, not shape.
+
 ## 2026-10-26 03:13 — topology/065 the wire-only build compiles again and enroll_reporting is public
 
 **Decided:** filed this task myself, mid-leg, from three inbox drops written by three of this
