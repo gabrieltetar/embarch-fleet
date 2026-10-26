@@ -97,6 +97,30 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 02:49 — smp/001 an upload that moves without progressing ends, naming its offsets
+
+**Decided:** nothing beyond the worker's rewording of decision 9 (`embarch-smp/decisions.md`, now
+"five places it deliberately differs"): within `max_stalls` (5), an upload is abandoned on five
+replies at one offset (the old rule), five replies that do not pass the highest offset reached since
+the last restart, or more than five restarts to offset 0; the error names the last ten offsets. One
+restart still re-sends `len`/`image`/`upgrade` without `sha`. Public API unchanged (`Error::Upload`
+reused). Read the diff before merging, since Core consumes the crate: error paths only, request
+building untouched. **I ran Core's `cargo test` against the smp branch before pushing** (scratch
+detached worktree at `.worktrees/smp-check/`, siblings linked): 290 pass / 2 ignored. I set
+`embarch.md`'s merge-gate row for `embarch-smp` to "yes, since `smp/001`": this unit is the first the
+fleet gated there. `spec.md`'s status line now names Core's `POST /bootload` as the built consumer.
+First `history/smp.md`.
+**Merged:** `agent/smp/001-upload-ends-without-progress` (code `fe68a41`, ff onto origin/main from
+`9236362`; doc `f9138c24`, cherry-picked from `13f400b2`). Gate re-run on the merge: build,
+`cargo test --all-features` green, clippy `-D warnings` clean (default and all features), client
+names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none new; no real MCUboot has answered this client yet (`open.md`).
+**Budget:** PROCEED, weekly 56.0%, wave 6.
+**Least sure about:** the five-restart bound is assumed, not measured, like the stall count before
+it; a real bootloader that legitimately restarts more than five times in one upload would now fail.
+
 ## 2026-10-26 02:46 — topology/063 a probe moving roles never loses an enrolled row silently
 
 **Decided:** nothing beyond the worker's decisions 42 (`decisions/link-declares.md`: a probe moving
