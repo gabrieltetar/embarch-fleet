@@ -97,6 +97,32 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 04:43 — study-designer/077 the alloc test cell compiles again
+
+**Decided:** nothing. The worker added `use alloc::vec;` to `src/host_study.rs`'s test module, tests
+only; `test.yml` untouched, no decision. **Leg start, for the record:** `inbox/` empty; `validate
+dev-bench` (MCP): probe `001057729826` not attached, not a mismatch, so `api/059`, `dev-bench/035`,
+`dev-bench/038` stay `open`; `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`). Overdue
+ledger re-read: `suite/030` blocked on `DOC-PROTOCOL.md`, `doc/031` is the owner's, `study-designer/026`
+paid 2026-10-25 with nothing payable, so nothing taken. Refill not owed (56 dispatchable, 7 scopes).
+`atlas` still undispatchable (`tasks/doc/089`), `suite/046`-`049` left open and unannounced. Dispatched
+`study-designer/077`, `core/113`, `ui/079`, `api/124` at once (topology skipped: `enrollment.md` is at
+98% and parked); all four reported within 8 minutes. The reviewer noted decision 64's heading says the
+narrow cells are `cargo build`, not `cargo test`, while `test.yml` runs both for `alloc`; I read the
+workflow's own comment, which says the build step is an addition, so no drop.
+**Merged:** `agent/study-designer/077-alloc-test-cell-compiles-again` (code `0fabb6b`, ff onto
+origin/main from `5ea5ac9`; doc `ceeb34d0`, cherry-picked from `39ec7a4a`). Gate re-run on the merge,
+every `test.yml` cell: default 153, alloc 162, std 174, gatt-extract 195, study-ui 262, eap-parse 218,
+all-features 334 pass; alloc and ffi builds clean; clippy `-D warnings` clean on all three cells;
+client names clean; `check-docs.py` 11/11. CI's `alloc` cell, red on `main` since `ba3ad46`, should be
+green from `0fabb6b`.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 60.2% at leg start, wave 6.
+**Least sure about:** I did not look at CI's own run on `0fabb6b`; "green in CI" is inferred from the
+same commands passing here.
+
 ## 2026-10-26 04:28 — outpost/026 the reference decoder refuses a record layout it does not speak
 
 **Decided:** nothing beyond the worker's new decision 27 (`embarch-outpost/decisions/layout.md`, index
