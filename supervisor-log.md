@@ -97,6 +97,39 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 08:35 — core/103 Core reads where a running or hung core is without resetting it
+
+**Decided:** nothing beyond the worker's new decision 97 (`embarch-core/decisions/live-read.md`, 81 amended
+in one sentence, indexed): `POST /live/core-state {role, halt?, samples?}` behind `hw_lock` and the lease,
+through the same identity gate and guarded attach as `mem-read` (shared `with_core`); the default reads
+`DHCSR` and `DWT_PCSR` samples and makes no halt of its own, `halt=true` halts once for the core registers
+and `SCB_ICSR` and restores the state found. `mem-read` gains `found`, `left` (`running`|`halted`) and
+`halt_count`; `halted`/`halted_us` keep their old meaning, `halted` deprecated until after 2026-11-30.
+The probe layer sits behind a `CoreAccess` trait with a scripted fake core in tests;
+`DOCUMENTED_ROUTE_COUNT` 36 to 37. **The gate's halt is counted by assumption**: `gate_halts` mirrors
+topology's `Stm32G0Uid` arm by chip prefix. I read the diff before merging (wire type): additive JSON only,
+and `embarch-core-client`'s `MemReadResponse` has no `deny_unknown_fields`. In this fold I added the
+reviewer's below-bar caveat to `embarch-core/interfaces/hardware.md` (gate's halt inferred, not measured;
+"default makes no halt of its own"). **Drained three drops** from this unit into **`api/148`** (`core_state`
+tool and CLI; notes `embarch-ui` builds against the client crate), **`topology/067`** (`Validation` reports
+the gate's halts; notes the `software,wire` build and topology's two near-cap decision files) and
+**`atlas/023`** (symbol decode; atlas still skipped per `tasks/doc/089`). `open.md`/`spec.md` untouched,
+as the reserve note asked.
+**Merged:** `agent/core/103-live-core-state-without-resetting-the-board` (code `5d1a1fc`, ff onto
+origin/main from `71c65b0`; doc `20cb0159`, cherry-picked from `66334a05`). Gate re-run on the merge:
+`cargo build`, `cargo test` (343 + 1), clippy `-D warnings` clean, ownership both branches green, client
+names clean, `check-docs.py` 11/11. Owner's `embarch-core` checkout fast-forwarded to `5d1a1fc`.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** native Windows build of `embarch-core` (owner runs it). Bench, on the STM32G0 PD board:
+(1) running core, default mode returns PCs inside the image with `halt_count` 1 (the gate's), and
+`halt=true` gives 2; (2) a debugger-halted core reads found and left halted, registers read, no resume,
+`halt_count` 0; (3) `DWT_PCSR` exists on the part; also `CONTROL`/`PRIMASK` unpacking from probe-rs
+register 20, taken from probe-rs source. Not deployed: live Core predates this and `core/099`-`117`.
+**Budget:** PROCEED, weekly 68.1% at leg start, wave 6.
+**Least sure about:** the gate-halt heuristic: a halting identity read added for another family in
+topology would make Core's `halt_count` silently low until `topology/067` lands.
+
 ## 2026-10-26 08:29 — api/141 the CLI says "no records found" for a zero-record report
 
 **Decided:** nothing beyond the worker's call that this is a wording fix, not a decision (the reviewer
