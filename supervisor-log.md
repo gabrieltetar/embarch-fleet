@@ -97,6 +97,30 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 00:23 — core/097 a console exchange's write survives a throttling device
+
+**Decided:** nothing beyond the worker's amendment to decision 79 (the write retries
+`TimedOut`/`WouldBlock`/`Interrupted`/zero-length results until the request's `timeout_ms`, resuming
+from the reported count, and past it the exchange fails naming how many bytes were taken; the port
+timeout is `timeout_ms` for the write and back to 50 ms for the read poll). Retired the task with its
+bench box unticked, as `core/096` was: the debt below is the record. Filed `tasks/core/107` from the
+reviewer's below-bar note: the read's deadline now starts after the write, so one exchange can take
+`2 × timeout_ms` plus `port_wait_ms`, past the 15 s client timeout decision 79's cap was sized under.
+**Merged:** `agent/core/097-exchange-write-throttled-device` (code `3dba64b`, ff onto `0d712cd`; doc
+`bae8d660`, cherry-picked). Gate re-run on the merge: build, `cargo test` 279 pass / 2 ignored, clippy
+`-D warnings` clean, client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** three, all from this unit. (1) On the STM32G0 Zephyr CDC ACM board (the field
+board, not this bench): send a 960-character line through `POST /signals/{name}/exchange` with shell
+echo on and `timeout_ms` ≥ 2000; the device's own byte count must be 960. (2) Confirm Windows
+`serialport` honours `set_timeout` mid-session (assumed, not measured). (3) Native Windows build of
+`embarch-core`, owner's, from the main checkout.
+**Budget:** PROCEED, weekly 51.1%, wave 6.
+**Least sure about:** the `set_timeout` switch between write and read is the whole fix on the real
+port and only a fake port has exercised it; if Windows ignores a mid-session change the field bug is
+untouched while every test passes.
+
 ## 2026-10-26 00:21 — api/113 embarch-api/open.md out of reserve by deleting answered questions
 
 **Decided:** unparked `api/113` (overdue since 2026-10-01; the ledger's oldest *payable* entry, since
