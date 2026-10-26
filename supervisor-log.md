@@ -97,6 +97,42 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 03:13 — topology/065 the wire-only build compiles again and enroll_reporting is public
+
+**Decided:** filed this task myself, mid-leg, from three inbox drops written by three of this
+leg's four workers within minutes of each other: `topology/063` (`6732ad6`, last leg) re-exported
+`Upserted` from `hardware/mod.rs` unconditionally while the struct is `#[cfg(feature =
+"hardware")]`, so **every consumer built without `hardware` was red on `main`**: `embarch-api`'s
+`embarch-core-client`, `embarch-ui`, `embarch-umbrella`. Last leg's gate ran topology's default
+features and `--all-features` and neither is the `software,wire` set those consumers use. The same
+landing left `validate::enroll_reporting` unreachable (private module), which bounced `core/110`.
+Landed this first, ahead of the three finished consumer units, so their gates run against a fixed
+`main` instead of a workaround (the workers used a feature flag or a HEAD~1 copy). Read the
+shared-crate diff before merging: one `cfg` on the re-export and a documented `hardware::
+enroll_reporting` wrapper beside `enroll`; no type, wire or dependency change. The `software,wire`
+build is now named as a gate item in topology's `Cargo.toml` feature comment, nowhere enforced;
+filed `tasks/doc/091` (owner's: `gate.md` should say how a shared crate's gate covers its consumers'
+feature sets). **`core/110` reclaimed to `open`**, not logged as a blocked unit: its worker committed only a
+`## Blocked` note in the task file (cherry-picked here) with a ready plan; its code branch is at
+base. It is dispatchable now. **Leg start, for the record:** `inbox/` was empty. `validate
+dev-bench`: probe `001057729826` not attached, not a mismatch; the three bench tasks stay `open`.
+`fleet-hardware.py --refresh` crashes (`AttributeError` at :214), already `tasks/doc/041`. Overdue
+ledger: nothing payable (`suite/030`, `doc/031` owner's; `study-designer/026` paid under cap).
+Atlas still undispatchable (`doc/089`). Dispatched `ui/090`, `core/110`, `api/137`, `umbrella/091`
+at once, then this.
+**Merged:** `agent/topology/065-wire-only-build-and-enroll-reporting-reachable` (code `7c1ef59`, ff
+onto origin/main from `6732ad6`; doc `321c78d6`, cherry-picked from `34774116`). Gate re-run on the
+merge for default, `--all-features` and `--no-default-features --features software,wire`: build,
+`cargo test` 15 / 110 / 21 pass, clippy `-D warnings` clean on all three; client names clean;
+`check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 56.6% at leg start, 57.4% here, wave 6.
+**Least sure about:** the gate item is a `Cargo.toml` comment; nothing makes the next topology unit
+build the `software,wire` set, and the merge gate in `gate.md` does not name it either, so the same
+class can land again.
+
 ## 2026-10-26 02:52 — umbrella/090 embarch-umbrella/open.md out of reserve by wording only
 
 **Decided:** the unpark (see topology/063's entry): flux rewritten to `no` with the check-15
