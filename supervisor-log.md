@@ -97,6 +97,39 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 05:03 — study-designer/073 the .eap parser refuses three authoring errors it used to accept
+
+**Decided:** nothing beyond the worker's new decision 84 (`embarch-study-designer/decisions/protocol-exec.md`,
+index row now 60, 62, 84; `protocols.md` and `gatt-extract.md` had no headroom): `on_timeout` outside `u32`
+and `retry` outside `u8` are `BadInteger` at their line (new `u32v`/`u8v`, modelled on `u16v`); a float width
+on a `write` field is `NonIntegerField` at parse (its text now says "this position needs an integer", since a
+write is no guard); a `repeat` whose element names no struct is `Unknown { what: "struct" }` at the `repeat`
+line. No public enum gained a variant; the worker grepped core/api/ui/umbrella for `EapErrorKind` (0 files) and
+I grepped them for the old message text (none). The float check is parse-only, not in `validate_protocol`, so
+a `ProtocolDef` built in code can still carry one; 84 says so. Read the shared-crate diff before merging: one
+file, additive. **Leg start, for the record:** `inbox/` empty; `validate dev-bench` (MCP): probe `001057729826`
+not attached, not a mismatch, so `api/059`, `dev-bench/035`, `dev-bench/038` stay `open`. Overdue ledger
+re-read, nothing payable (same three as last leg). Refill not owed (52 dispatchable, 7 scopes). `atlas` still
+skipped (`tasks/doc/089`), `suite/046`-`049` left open and unannounced. Dispatched `study-designer/073`,
+`topology/061`, `core/105`, `ui/080` at once; all four reported within 6 minutes. I took `topology/061` over
+`062` because `062`'s fix adds a field to `Route::Direct`, which `embarch-api` (`tools.rs:751`) and
+`embarch-ui` (`topology.rs:1291`) destructure through path-deps on topology's main checkout, so landing it from
+one repo breaks two others' `main` at once: that half is a §8 pass, and I noted it in the task file.
+**My slip, caught before dispatch:** I created all eight worktrees with a relative `.worktrees/` under
+`git -C <repo>`, which put them inside each repo tree (`tasks/doc/059`'s failure). Removed all eight and the
+empty directories before any worker started, and re-created them at absolute paths; branches unchanged.
+**Merged:** `agent/study-designer/073-eap-authoring-refusals` (code `f25533a`, ff onto origin/main from
+`0fabb6b`; doc `a8c18d70`, cherry-picked from `41e0223e`). Gate re-run on the merge, every `test.yml` cell:
+default 144, alloc 153, std 165, gatt-extract 186, eap-parse 199, study-ui green, ffi build, three clippy
+cells `-D warnings` clean, client names clean, `check-docs.py` green, `build_features.py --check` green.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 61.0% at leg start, wave 6.
+**Least sure about:** `BadInteger` prints "bad integer literal" without naming the `u32`/`u8` bound, which the
+reviewer read as a literal-syntax refusal rather than a capacity limit; the spec's "names the bound actually
+exceeded" rule could be read the other way.
+
 ## 2026-10-26 04:48 — ui/079 the build log says which board it built and why, and the stored log keeps it
 
 **Decided:** nothing beyond the worker's new decision 62 (`embarch-ui/decisions/firmware-build.md`, index
