@@ -97,6 +97,32 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 03:35 — umbrella/092 doctor reads a busy bench as busy, not broken
+
+**Decided:** nothing beyond the worker's amendment of decision 19 (`decisions/dev-bench-firmware.md`,
+"busy bench" paragraph): a `503` or `409` from `GET /dev-bench/hello` is a new `HelloOutcome::Busy`;
+check 13 gives a Warn with new code `busy`, quoting Core's plain-text body whole (Core names the
+holder in prose and has no structured holder field to cite, so it is quoted, not parsed); check 11's
+bench leg says "busy (HTTP …)" for the same two. `502`, other statuses and transport errors keep the
+generic skip; `404` still passes as not plugged in. `--json` keys unchanged. Built on top of
+`umbrella/091`'s dirty-checkout arm with nothing to rebase. **Leg start, for the record:** `inbox/`
+was empty. `validate dev-bench`: probe `001057729826` not attached, not a mismatch; the three bench
+tasks stay `open`. `fleet-hardware.py`'s buffer is 48 days stale (`--refresh` crash is
+`tasks/doc/041`). Overdue ledger re-checked: `suite/030` and `study-designer/026` are blocked with
+their unpark conditions unmet, `doc/031` is the owner's; nothing payable. Dispatched `core/110`,
+`ui/082`, `umbrella/092`, `desk/004` at once; all four reported within eight minutes and gated green.
+**Merged:** `agent/umbrella/092-doctor-check-13-reads-hello-503-409-as-busy` (code `9d27e12`, ff onto
+origin/main from `c75200d`; doc `0d229bf3`, cherry-picked from `129ff9c4`). Gate re-run on the
+merge: build, `cargo test` 237 pass, clippy `-D warnings` clean, client names clean,
+`check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none run; the busy arm is unit-tested on injected outcomes with realistic
+bodies, never against a live Core holding `hw_lock` or `study_lock`.
+**Budget:** PROCEED, weekly 57.5%, wave 6.
+**Least sure about:** quoting Core's body whole couples doctor's output to Core's prose, so a Core
+rewording changes what doctor prints without any test failing on either side.
+
 ## 2026-10-26 03:20 — ui/090 the tile dialog sends hours only when a person changed them
 
 **Decided:** nothing beyond the worker's decision 59 (`embarch-ui/decisions/shell.md`, index row in
