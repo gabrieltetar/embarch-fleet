@@ -97,6 +97,26 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 02:51 — desk/003 a tile's hours are set by hand only when a person typed them
+
+**Decided:** nothing beyond the worker's decision 61 (`embarch-desk/decisions/cockpit.md`): ✓ writes
+a new `Tile.sent_hours` instead of `hours_override`; `reopen_tiles_of_entry` (deleting a ✓'d entry)
+clears `sent_hours` and keeps a typed override; `PATCH /tiles/{id}` with `"hours": null` clears the
+override, an absent key leaves it; an approved tile still reports what it sent. Decision 57's
+self-close now reads only the typed override. Tiles already stored with a ✓-written override keep it
+until cleared with `null`; no migration. Filed the worker's drop as `ui/090` (the tile dialog sends
+`hours` only when edited, and offers "use computed"): until it lands, opening a tile in the Desk tab
+still freezes its hours.
+**Merged:** `agent/desk/003-hours-set-by-hand` (code `da354f8`, ff onto origin/main from `41d9ff2`;
+doc `16a5dc4b`, cherry-picked from `b1f03b2a`). Gate re-run on the merge: build, `cargo test` 124
+pass, clippy `-D warnings` clean, client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. Not deployed: the desk service on :4891 is the owner's to rebuild.
+**Budget:** PROCEED, weekly 56.0%, wave 6.
+**Least sure about:** the one test sets the state ✓ leaves and calls the real reopen function; the
+Harvest-calling handlers (`approve_tile`, `remove_entry`) are not driven end to end.
+
 ## 2026-10-26 02:49 — smp/001 an upload that moves without progressing ends, naming its offsets
 
 **Decided:** nothing beyond the worker's rewording of decision 9 (`embarch-smp/decisions.md`, now
