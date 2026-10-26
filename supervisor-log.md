@@ -97,6 +97,37 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 05:54 — topology/064 link-declares.md is out of reserve: decision 36 has its own file
+
+**Decided:** nothing new. Decision 36 (a DUT's two bootload USB identities) moved verbatim from
+`embarch-topology/decisions/link-declares.md` to new `decisions/bootload-ports.md`, indexed;
+`link-declares.md` 11,155 to 9,676 B, no longer in reserve. Doc-only; the code branch had no commits and
+was deleted unpushed. The worker's branch left `check-docs.py` red on one line it did not own:
+`embarch-core/decisions/bootload.md:5` linked "decision 36" to `link-declares.md`. It dropped
+`inbox/core-repoint-topology-decision-36.md` rather than edit core; I made that one-line repoint myself in
+the landing (`34a4a478`) and deleted the drop, so it never became a task. Compaction question, worker's and
+reviewer's answer: yes, `embarch-topology/spec.md` alone still answers what someone needs to work on
+topology today; it cites 36 by number and no spec fact moved. **Leg close, for the next leg:** this leg
+ran `api/143`, `core/114`, `ui/092`, `topology/064`, all green on first gate, all reviewers clean.
+`queue-status.py --count` 42; `inbox/` empty. Bench still unattached (`validate dev-bench`: not attached,
+not a mismatch). Overdue ledger unchanged: same three, nothing payable. Next candidates: `topology/062`
+now has 2.6 KB of room in `link-declares.md`; `api/131` can go now that `api/143` landed;
+`study-designer/071` needs a schema-version read first (see the `api/143` entry). `suite/046`-`049`
+still open and unannounced; `atlas` still skipped (`tasks/doc/089`). No worker reached anything live as
+far as any report says. Not deployed: live Core, the UI binary and the MCP binary all predate this leg.
+The owner's uncommitted `templates/.claude/commands/fleet-watch.md` in `embarch-fleet` is still there;
+I left it alone.
+**Merged:** `agent/topology/064-compact-topology` (doc only: `3815e56c`, cherry-picked from `004f70e4`;
+supervisor repoint `34a4a478`; no code commit). Gate on the merge: `check-docs.py` 11/11 after the
+repoint, `check-doc-size.py --pressure` no longer lists `link-declares.md`.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 62.9% at leg start, 63.7% at leg end, wave 6.
+**Least sure about:** a worker that leaves `check-docs.py` red because the fix sits outside its scope is
+right by the ownership map, but it means a compaction's gate is only ever green after the supervisor's
+own commit, which nothing marks as part of the unit except this entry.
+
 ## 2026-10-26 05:52 — ui/092 drive_topology.py's sidebar checks describe the Desk shell
 
 **Decided:** nothing; test-only, no decision touched. `tests/browser/drive_topology.py` now asserts the six
