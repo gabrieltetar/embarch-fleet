@@ -97,6 +97,34 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 04:24 — core/111 Core refuses a probe enrolled on another chip family before any attach
+
+**Decided:** nothing beyond the worker's new decision 89 (`embarch-core/decisions/probes.md`, index row,
+a `spec.md` sentence, an `open.md` hardware-debt bullet): `hardware::flash`, `reset`, `live::run` and
+`live::read_dhcsr` call topology's `validate_serial_for_chip(serial, chip)`; `RequestedChipMismatch`
+maps in `describe_topology_error` to a `409` carrying topology's own `chip-mismatch: ...` text (outside
+decision 59's `not_attached`/`mismatch` kinds, no alert written), and `describe_gate_error` renders the
+same text. No chip-spelling normalisation was added: decision 89 records the spelling as assumed. Read
+the diff before merging (status mapping on hardware routes): on `/flash`, `/reset` and `/mem-read` a 409
+already meant a plain-text topology mismatch and `embarch-core-client` has no special 409 handling
+there; `/validate` (the JSON 409/503 parse), `/study`'s in-flight 409 and hello's busy 409 are
+untouched. The test exercises the mapping, not a full flash: topology's enrollment store is the fixed
+`/var/lib/embarch`, so no Core test can enrol without real data (the worker filed no drop for a seam).
+The worker filed **`tasks/core/112`** (`probes.md`, `spec.md`, `open.md` all crossed into reserve; blocked,
+`In flux: yes` for all three, due 2026-11-09). Gated against study-designer `5ea5ac9` (075, this leg).
+**Merged:** `agent/core/111-validate-requested-chip-before-attach` (code `359b8c7`, ff onto origin/main
+from `cd01043`; doc `42ebff05`, cherry-picked from `8d9012f6`). Gate re-run on the merge, against
+topology `62c188d`, study-designer `5ea5ac9`, smp `fe68a41`: build, `cargo test` 300 pass / 2 ignored,
+clippy `-D warnings` clean, client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** native Windows build of `embarch-core` (owner runs it). A moved-probe run: enrol a
+J-Link on one board, flash a project of another chip family through it, expect `409 chip-mismatch` and
+no attach. Not deployed: live Core predates `core/106`, `core/110` and this.
+**Budget:** PROCEED, weekly 59.4% at leg start, wave 6.
+**Least sure about:** `112`'s `In flux: yes` covers all three files because of one new decision; a
+verbatim split of `probes.md` or `spec.md` may already be payable, and nobody re-read it per file.
+
 ## 2026-10-26 04:22 — study-designer/075 a Notify or Indicate row waits for its notification
 
 **Decided:** nothing beyond the worker's new decision 83 (`embarch-study-designer/decisions/gatt.md`,
