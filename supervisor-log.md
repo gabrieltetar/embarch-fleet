@@ -97,6 +97,44 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 07:34 — core/102 Core runs host studies: send-and-read steps against a console, with teardown on every exit
+
+**Decided:** (1) **`HOST_TYPE_SCHEMA_VERSION` 19 to 20, made by me** (`embarch-study-designer` `302784c`,
+history entry in `src/schema_version.rs`, decision 80 marked applied, changelog fragment), the bump parked
+by the previous leg (`ts` `1793017849.375049`, re-polled 07:06, no reply). Host-only; the wire number stays
+15. **Gated before anything was pushed:** I pointed the core, api and ui worktree parents' study-designer
+link at the bump's worktree, ran study-designer's whole CI feature matrix (default, alloc, std,
+gatt-extract, study-ui, eap-parse, ffi, all-features; clippy default and all-features) and core/102, api
+`903c76c` and ui `954a24c` against it (all green), then pushed study-designer first, Core second, and put
+the links back. **Deploy order matters now:** an `embarch-api` built at 20 refuses a Core at 19 (decision
+12), so Core goes first. Umbrella was not built against it (its fixtures carry 17 as literals). (2) Worker's
+decision 95 (`embarch-core/decisions/host-study.md`, new, indexed; `interfaces/host-studies.md` new):
+`POST /host-studies` under `study_lock` (shared `take_study_lock` with `POST /study`), `hw_lock` per
+`Exchange` step through `run_signal_exchange`, now the exchange route's own body, so a step and the route
+cannot disagree. Outcome by markers only: `empty_reply` (zero bytes) apart from `until_not_seen`. Teardown
+on last step, failure, timeout, cancel and a caught panic. New `POST /study/{id}/cancel` (host studies
+only; a bench study gets `409`), both routes lease-gated, route count 34 to 36. Host steps emit a new
+`HostStepCompleted` SSE variant rather than `StepCompleted` (a bench `StepResult` has no reply field); the
+reviewer checked api's SSE client and ui's live view treat it as `Unrecognized`, not an error. `Prompt`,
+`Instrument`, `Repeat`, `streams` and `line_counts` refused by name with `400` (`core/116`, `core/101`
+untouched). Core appends `\n` to every step line: assumed. `open.md` untouched (50 B left). Wire change, so
+I read the `api.rs` and `study.rs` diffs: the exchange refactor moves the body unchanged.
+**Merged:** `agent/core/102-host-study-exchange-steps` (code `06f2d9c`, ff onto origin/main from `731e875`;
+doc `40b05d86`, cherry-picked from `44dfab48`), plus `embarch-study-designer` `302784c` (from `7828256`).
+Gate on the merge with study-designer at 20: build, `cargo test` 334 pass / 2 ignored, clippy `-D warnings`
+clean, client names clean; `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** native Windows build of `embarch-core` (owner runs it). The task's bench check: the PD
+source sequence as a host study against `pd-bench` gives the bash run's contract lines, and teardown leaves
+the partner at 5 V after a forced failure and after a cancel; needs an enrolled signal, the e-load and an
+installed Core with this build. Cancel latency against a real load (an exchange in flight cannot be
+interrupted, up to 10 s). Not deployed: live Core predates this and `core/099`, `100`, `105`, `106`, `110`,
+`111`, `113`, `114`, `115`.
+**Budget:** PROCEED, weekly 66.4% at leg start, 67.1% at 07:22, wave 6.
+**Least sure about:** the `\n` terminator on every step line is assumed for every console a signal can
+name; a console that wants `\r\n` will see each step as a partial line until the bench says otherwise.
+
 ## 2026-10-26 07:22 — ui/094 every browser drive script takes its ports from one convention, and the old names are refused
 
 **Decided:** nothing beyond the worker's new decision 65 (`embarch-ui/decisions/browser-drive.md`, indexed):
