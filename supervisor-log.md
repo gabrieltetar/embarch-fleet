@@ -97,6 +97,36 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 02:32 — umbrella/084 decisions/projects.md out of reserve by a verbatim split
+
+**Decided:** the unpark (see study-designer/076's entry): flux rewritten to `no` for a verbatim split,
+decision 26's wording fenced off. The worker moved decision 26 (`study_results/` retention and
+build-directory pruning, the file's in-flux half and off its "integrating a firmware repo" title)
+verbatim into a new `embarch-umbrella/decisions/prune-policy.md`, routed from `decisions.md`, with
+`spec.md`'s cite repointed. Reviewer confirmed byte-verbatim and all five Must-not-delete facts intact.
+I repointed the two `embarch-api/decisions/target-json.md` links that meant decision 26 in this fold
+(the worker had dropped `inbox/umbrella-084-repoint-decision-26-links.md` for them; answered and
+deleted). One dated line in `history/umbrella.md` still links `projects.md` for 26; left, history is
+append-only. The reviewer guessed `decision-size-baseline.json` would now flag decision 26 as OVER;
+`check-doc-size.py --decisions` does not list it. Task retired. **Leg close, for the next leg:**
+filed `api/141` from the core/109 drop (`inbox/` now empty). New this leg and open: `ui/089`
+(`spec.md` 9,099 B, in reserve, due 2026-11-09, `In flux: no`) and `api/141`. Overdue ledger's
+payable head is now `umbrella/090` (`open.md` 4,048 B; its reserve line is 3,920 B because the 1,200 B
+floor dominates a 5 KB file, so it is in reserve, not closable as the last leg guessed). The four
+`suite/046`–`049` tasks are open and unannounced; each reads as a multi-repo feature, and splitting one
+into sequenced single-repo tasks (§8) may serve better than running it by hand as a last unit. Bench
+still unattached. `fold-day.py --status`: two rollable days, not rolled. The owner's uncommitted
+`embarch-fleet/templates/.claude/commands/fleet-watch.md` was left alone.
+**Merged:** `agent/umbrella/084-compact-projects-md` (doc `b91291cd`, cherry-picked from `2b890be4`;
+no code). `projects.md` 11,116 to 6,782 B (55.2%), `prune-policy.md` 4,801 B. Gate on the merge: 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 55.4% at leg start, 56.0% here, wave 6.
+**Least sure about:** the name `prune-policy.md` holds a decision whose retention half (`study_results/`)
+is already Core's count-bounded sweep, not a prune; it is accurate for what 26 defers, but a future
+retention decision would have to choose between it and a new file.
+
 ## 2026-10-26 02:30 — ui/084 a saved study is never written into another repo or stripped of its taps
 
 **Decided:** nothing new in ui's decisions; the fixes apply 14 and 40. The firmware_version
