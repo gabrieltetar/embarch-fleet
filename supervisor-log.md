@@ -97,6 +97,34 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 05:26 — study-designer/074 the GATT extractor ignores definitions inside C comments
+
+**Decided:** nothing beyond the worker's new decision 85 (new topic file
+`embarch-study-designer/decisions/gatt-extract-scan.md`, indexed; 84 was already taken, and
+`gatt-extract.md` sat 6 B under its reserve line so it was left alone): one `strip_c_comments` pass
+runs over every file before any scanner, keeping string and char literals and every newline, so line
+anchoring and continuation joining are unchanged; an unterminated `/*` runs to end of file. `#if`
+evaluation stays out (decision 78), and a `//` comment ending in a backslash does not swallow the next
+line; 85 records both as assumed rare, not measured. Read the shared-crate diff before merging: one
+file, private function, no public type changed. **Leg start, for the record:** `inbox/` empty;
+`validate dev-bench` (MCP): probe `001057729826` not attached, not a mismatch, so `api/059`,
+`dev-bench/035`, `dev-bench/038` stay `open`; `fleet-hardware.py --refresh` still crashes
+(`tasks/doc/041`). Overdue ledger re-read: same three as last leg, nothing payable. Refill not owed (48
+dispatchable, 7 scopes). `atlas` still skipped (`tasks/doc/089`); `suite/046`-`049` left open and
+unannounced. Dispatched `study-designer/074`, `api/135`, `core/100`, `ui/087` at once, each with a
+dispatch note naming its reserve files and an isolation paragraph (no live Core, no desk on :4891, no
+real ports or probes, no owner data dirs, no MCP tools); all four reported within 8 minutes.
+**Merged:** `agent/study-designer/074-gatt-extractor-reads-comments` (code `4da23d3`, ff onto
+origin/main from `f25533a`; doc `096bd289`, cherry-picked from `37567d18`). Gate re-run on the merge,
+every `test.yml` cell: default, alloc build and test, std, gatt-extract, study-ui, eap-parse, ffi
+build, three clippy cells `-D warnings`, all green; client names clean; `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 61.8% at leg start, wave 6.
+**Least sure about:** a C23 digit separator (`0x1'000`) would open a char literal to end of line;
+no fixture covers it, and no firmware this suite reads is known to use one.
+
 ## 2026-10-26 05:09 — ui/080 a console's unfinished line is capped instead of growing for the whole run
 
 **Decided:** nothing beyond the worker's in-place amendment to decision 32 (`embarch-ui/decisions/live-study.md`,
