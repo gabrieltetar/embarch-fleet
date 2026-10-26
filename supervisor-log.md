@@ -97,6 +97,32 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 07:57 — api/136 the MCP startup check is retracted, and a stream 404 keeps Core's own words
+
+**Decided:** nothing beyond the worker's design call, which I read before merging because it **retires a
+decision**: `embarch-api` decision 14 amended in place (no startup check runs at all; MCP start makes no
+Core call; every hardware-facing tool fails per-call with the resolved-candidate list) and decision 17
+retired in place with its number kept (never built and unbuildable: Core serves no contract version,
+`surface.md` 14). `spec/implementation.md` §4 reworded. Code: `get_study_csv` keeps Core's 404 body
+(undeclared tap with the declared list, no captured streams, a tap that captured nothing), the fixed
+sentence only for an empty body; `get_study_stream_arrivals` shares the helper; `study_stream_data`'s tool
+description says so. `embarch-core-client` is shared, so I read it (one branch reordered, no type
+changed) and built and tested `embarch-ui` against `b7701c9`. No reversals row added: this is shape 1
+("documented as implemented, wasn't"), but the last several review-driven fixes of that shape added none
+either, so I kept to that. Dispatched as this leg's fourth unit in the slot `api/133` freed.
+**Merged:** `agent/api/136-startup-check-and-stream-404-match-their-docs` (code `b7701c9`, ff onto
+origin/main from `72f041f`; doc `a55824c3`, cherry-picked from `49a7aefe`). Gate re-run on the merge:
+`cargo build`, `test --workspace` 304 pass, clippy `-D warnings` clean, client names clean,
+`check-docs.py` 11/11; `embarch-ui` build and `cargo test` (204 pass) against `b7701c9`. Owner's
+`embarch-api` checkout fast-forwarded to `b7701c9`.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. Not deployed: the MCP binary predates this, `api/133`, `api/145`-`147`.
+**Budget:** PROCEED, weekly 67.6% at leg start, wave 6.
+**Least sure about:** the reviewer notes Core's own docs list "a tap that captured nothing" but not the
+whole-study "no captured streams" 404 separately; the new tool description names all three, so the api
+side is now ahead of Core's interface page by one case.
+
 ## 2026-10-26 07:51 — api/133 one build per lock key holds across processes, not only inside one
 
 **Decided:** nothing beyond the worker's new decision 91 (`embarch-api/decisions/build.md`, indexed;
