@@ -97,6 +97,42 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 05:33 — ui/087 the validate summary never says passed over a warning or an empty bench, and enrol refuses an unanswerable chip itself
+
+**Decided:** nothing beyond the worker's amendment to decision 48 (`embarch-ui/decisions/board-row.md`, now
+5,004 B; no new number): the validate response gains `verdict` (`failed` > `warned` > `empty` >
+`passed`) and the tab draws it, so a guessed dev-bench port reads "nothing failed, but not a pass" and
+an all-empty bench "nothing to check yet"; `ok` is unchanged. One `resolve_chip_or_refuse` serves
+`POST /api/enroll` and the role-board route: no chip and no board type, or a board type whose chip
+cannot be looked up, is a 400 with the role route's guidance and no Core call, which also covers the
+saved-bench proposal. The drag-and-drop dialog names the missing chip. `interfaces.md` names `verdict`
+(13,756 B, 68 B under its reserve line). `drive_topology.py` now also scratches `HOME`, takes
+`EMBARCH_UI_BIN`, and can toggle the stub's dev-bench port. Browser: the worker ran it isolated (own
+geckodriver and UI ports, stub Core on 4961, scratch config dirs); the new checks pass and the two
+known-stale sidebar checks (`tasks/ui/092`) fail; I did not re-run it. **Leg close, for the next
+leg:** this leg ran `study-designer/074`, `api/135`, `core/100`, `ui/087`, all green on first gate;
+reviewers clean except `core/100`'s one finding, filed as `core/114`. New in the queue: `core/114` and
+`api/143` (dispatch `api/143` before `api/131`). `inbox/` empty; `queue-status.py --count` 46. Bench
+still unattached. Overdue ledger: same three, nothing payable (`study-designer/026`'s due date stays
+2026-10-04 though it was paid under cap, so it will read overdue every leg until its trigger fires).
+`suite/046`-`049` still open and unannounced; `atlas` still skipped (`tasks/doc/089`); topology was
+skipped this leg (`064` compaction or `062`'s non-breaking half are next; `060`'s park still reads
+stale). No worker reached anything live this leg as far as any report says. Not deployed: live Core,
+the UI binary and the MCP binary all predate this leg. The owner's uncommitted
+`templates/.claude/commands/fleet-watch.md` in `embarch-fleet` is still there; I left it alone.
+**Merged:** `agent/ui/087-validate-summary-and-enroll-refusal-say-what-happened` (code `fd7f1b6`, ff onto
+origin/main from `aefdc8b`; doc `b4cc368b`, cherry-picked from `250305e0`). Gate re-run on the merge,
+against api `c4a3434` and study-designer `4da23d3` (both this leg) and topology `b771dd0`: build,
+`cargo test` 200 pass / 4 ignored, clippy `-D warnings` clean, client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by a task; validating a real bench whose dev-bench port is a lowest-interface
+guess would show the warned verdict on hardware.
+**Budget:** PROCEED, weekly 61.8% at leg start, wave 6.
+**Least sure about:** an empty `board` on the role route now gets "no chip and no board type" instead
+of "'' has no chip"; better text, but it is a changed refusal string, and I did not look for anything
+that matches on the old one.
+
 ## 2026-10-26 05:30 — core/100 a declared signal can be captured in the background while other hardware calls run
 
 **Decided:** nothing beyond the worker's new decision 92 (new topic file
