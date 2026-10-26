@@ -97,6 +97,41 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 04:05 — ui/083 Live Study renders only the study and the project that are open now
+
+**Decided:** nothing beyond the worker's new decision 60 (`embarch-ui/decisions/live-study.md`, index
+row): `lsOpenStudy` bumps an `lsOpenToken`; `lsLoadRecord` checks token and id after the record fetch,
+after `tcLoad` and between the console and data cards, and `lsOpenStudy` checks it before attaching the
+live feed, so a slow read for a study no longer open returns without writing; `sdOpenProject` now awaits
+`lsLoadSavedStudies()`, so a project switch reloads the picker. Two browser drivers
+(`tests/browser/drive_race.py`, `drive_switch.py`) fail unfixed and pass fixed against `stub_core.py`.
+Recorded in 60, not fixed: the per-tap loaders still read `lsStudyId` at fetch time, and opening a study
+does not clear the previous badge. `spec.md`/`open.md` untouched. **Incident, from the worker:** an
+early ad-hoc UI run used the default desk port and the real desk config, and one "Open project" click
+may have posted `desk: none` to the owner's live desk on :4891. I read it back with `desk_list_desks`
+(read-only): the desk still reports its one desk as `open`, so nothing visible changed; the same run
+may have touched the owner's recents list under the real `XDG_DATA_HOME`. The worker's later runs and
+its README now isolate both. **Leg close, for the next leg:** this leg ran `topology/059`, `api/142`,
+`core/106`, `ui/083`, all green on first gate; one reviewer finding (`core/106`, decision 73 not
+amended), fixed in that fold. New in the queue: `core/111` (Core calls `validate_serial_for_chip`; the
+cheapest next `core` dispatch) and `ui/091` (Enroll tab names a moved role). `inbox/` is empty.
+`queue-status.py --count` 57. Bench still unattached. Overdue ledger: nothing payable;
+`tasks/topology/060` is now one file (`decisions/enrollment.md`, 243 B left, due 2026-11-01) and blocked
+only on `suite/046`. `suite/046`-`049` still open and unannounced. Not deployed: live Core, the UI
+binary, the MCP binary and the desk all predate this leg. `fold-day.py --status`: 2026-10-26 is still
+today. Slip: `leg-dispatch` was ticked after the four workers had already reported (the spawns blocked
+until they finished), not right after spawning.
+**Merged:** `agent/ui/083-live-study-renders-only-the-open-study-and-project` (code `ba311f8`, ff onto
+origin/main from `5928bdb`; doc `4728bb02`, cherry-picked from `3c7ea06f`). Gate re-run on the merge,
+against api `9e4ca14` and topology `62c188d`: build, `cargo test` 189 pass / 4 ignored, clippy `-D
+warnings` clean, client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none; both browser checks ran against `stub_core.py`, not a live Core.
+**Budget:** PROCEED, weekly 58.5% at leg start, 59.3% here, wave 6.
+**Least sure about:** whether the desk's recents list or its open-desk state was briefly changed and
+restored by something else; `desk_list_desks` shows the end state only, not what happened in between.
+
 ## 2026-10-26 04:03 — core/106 a stream capture says when a write failed, and its sidecars stay on Core's clock and aligned
 
 **Decided:** nothing beyond the worker's new decision 88 (`embarch-core/decisions/streams.md`, index
