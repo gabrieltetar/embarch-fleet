@@ -97,6 +97,40 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 07:51 — api/133 one build per lock key holds across processes, not only inside one
+
+**Decided:** nothing beyond the worker's new decision 91 (`embarch-api/decisions/build.md`, indexed;
+`client-crate.md` and `open.md` untouched): `BuildLocks` takes its in-process mutex, then an exclusive OS
+advisory lock on `<temp dir>/embarch-build-locks/<sanitized key>-<fnv1a>.lock` (`std::fs::File::try_lock`,
+Rust 1.89+, no new crate), polled every 200 ms; a second caller waits and says so once (warn + sink) and
+its `stderr` starts with a `note: waited Ns` line; a killed holder releases by the OS. Hand-written FNV-1a
+so `embarch-ui` and `embarch-api` agree on the file name across compilers. One machine and one temp dir
+only: a WSL process and a native Windows process do not share it, and keys are not path-qualified, so two
+checkouts with one project name serialize. `embarch-firmware-build` is path-depended on by `embarch-ui`,
+so I read the diff (additive `with_lock_dir`, signatures unchanged) and built and tested `embarch-ui`
+against `72f041f` by repointing its worktree parent's `embarch-api` link, then put it back. **Leg start,
+for the record:** `inbox/` empty; `validate dev-bench` (MCP): probe `001057729826` not attached, not a
+mismatch, so the three bench tasks stay `open`; overdue ledger unchanged and unpayable (same three as the
+last leg). `--refill-owed` fired on scope spread again (api, atlas, core, suite, ui); I swept
+`collect-open-questions.py` for the eight empty scopes and found nothing host-side and dispatchable
+beyond `embarch-desk/open.md`'s "`embarch setup` should install the desk", which I did not file (a design
+the owner may want a say in). Dispatched `api/133`, `core/117`, `ui/089` at once with the isolation
+paragraph; all three reported within 4 minutes. My three claim commits lack the `Co-Authored-By` line.
+**Merged:** `agent/api/133-build-lock-holds-across-processes` (code `72f041f`, ff onto origin/main from
+`401c3c4`; doc `ffcba366`, cherry-picked from `eb6aa75a`). Gate re-run on the merge: `cargo build`,
+`test --workspace` 303 pass, clippy `-D warnings` clean, client names clean, `check-docs.py` 11/11;
+`embarch-ui` build and `cargo test` (204 pass) against `72f041f`. Owner's `embarch-api` checkout
+fast-forwarded to `72f041f` so sibling links build against it.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. The cross-process tests are unix-only; the Windows `try_lock` path is the same
+std call but has never been compiled or run (decision 91 says so). Not deployed: the MCP binary and the
+UI binary predate this.
+**Budget:** PROCEED, weekly 67.6% at leg start, wave 6.
+**Least sure about:** `embarch-ui/src/main.rs:166`'s comment still says the locks are "held per process"
+(the reviewer's non-finding), and a WSL MCP server and a Windows-native build tool still do not see each
+other's lock.
+
 ## 2026-10-26 07:37 — api/147 bench_exchange orders lines by Core's receive times when Core sends them
 
 **Decided:** nothing beyond the worker's amendment to decision 89 (`embarch-api/decisions/bench-exchange.md`;
