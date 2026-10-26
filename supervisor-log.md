@@ -97,6 +97,33 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 07:22 — ui/094 every browser drive script takes its ports from one convention, and the old names are refused
+
+**Decided:** nothing beyond the worker's new decision 65 (`embarch-ui/decisions/browser-drive.md`, indexed):
+`tests/browser/addr.py` is the one place a drive script learns its addresses, `EMBARCH_GECKO_PORT` and
+`EMBARCH_UI_PORT` (bare ports on 127.0.0.1), defaults kept at 4444/4899 for the owner's interactive use;
+all 15 `drive*.py` go through it, and the retired names (`GECKO`, `UI`, `WEBDRIVER`, `ATLAS_UI_PORT`,
+`LINKS_UI_PORT`, `DESK_UI_PORT`) make a script exit rather than be ignored. `tests/drive_addresses.rs`
+guards it; **I mutation-checked it**: a hardcoded `127.0.0.1:4444` appended to `drive.py` fails
+`every_drive_script_goes_through_addr`, then restored. `tests/browser/README.md` carries the scratch-port
+recipe. **From now on a worker brief can name the two variables** instead of hoping a script reads
+whatever the worker set. The worker started no geckodriver, UI or browser. Reviewer's texture note (the
+`drive_desk_slack.py` docstring's start-up line run together, still naming `WEBDRIVER`) added to
+`tasks/ui/093` in this fold, since that task is in the same file. **My slip:** my first fold attempt was
+refused (entry not yet written) and the `&&` chain after it pushed anyway, because `| tail` ate the exit
+code (`tasks/doc/086`'s shape): `820ca9d6`, the worker's doc commit, reached `origin/main` about a minute
+before this fold. Nothing else went with it; the false `leg-fold` tick is in `tick.log`.
+**Merged:** `agent/ui/094-drive-scripts-one-port-convention` (code `954a24c`, ff onto origin/main from
+`81bde80`; doc `820ca9d6`, cherry-picked from `1b9f0b0f`). Gate re-run on the merge, against api `903c76c`:
+build, `cargo test` green, clippy `-D warnings` clean, client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. No drive script has been run end to end since the change (each edit is its
+address lines plus `import addr`; all compile).
+**Budget:** PROCEED, weekly 66.4% at leg start, wave 6.
+**Least sure about:** refusing a generic variable name like `UI` or `WEBDRIVER` means a shell that happens
+to export one for something unrelated stops every drive script, loudly; better than silent, but a surprise.
+
 ## 2026-10-26 07:19 — api/146 an old Core's /status reads as unknown images, not as nothing flashed
 
 **Decided:** nothing new. Fix forward of api/145's reviewer finding: `StatusResponse.last_images` is
