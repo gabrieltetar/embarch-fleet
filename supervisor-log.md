@@ -97,6 +97,31 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 02:30 — ui/084 a saved study is never written into another repo or stripped of its taps
+
+**Decided:** nothing new in ui's decisions; the fixes apply 14 and 40. The firmware_version
+write-back takes the repo captured at submit time instead of re-reading the open project; an
+unparseable `_embarch_ui_taps` sidecar refuses the load with a `400` naming the file (a missing one
+still recovers from `Study.streams`); `.eap` delete scans every declared block, resolved or not, and
+the stem when none resolve. **Spec fix by me, twice.** The worker made room in `spec.md` (3 B under
+its reserve line) by dropping two clauses from the destructive-edit invariant. I restored "leaving the
+form filled" on its branch before landing (`092fc6f5`); the reviewer then found the second, "a
+directory it cannot fully read is not permission to delete", stated nowhere else in `embarch-ui/`. I
+restored it in this fold, which puts `spec.md` at 9,099 B, in reserve, and filed `ui/089` (`In flux:
+no`, due 2026-11-09, split-first toward the existing `spec/` files). The reviewer's drop is
+answered by this fold and deleted.
+**Merged:** `agent/ui/084-saved-study-not-written-elsewhere` (code `e111712`, ff onto origin/main
+from `aa5ffda`; doc `02f058da` cherry-picked from `5c59f1c1`, plus my `092fc6f5`). Gate re-run on the
+merge: build, `cargo test` 181 pass / 4 ignored, clippy `-D warnings` clean, client names clean,
+`check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** 1 finding — inbox/ui-spec-restore-unreadable-dir-clause.md
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 55.4%, wave 6.
+**Least sure about:** the write-back test calls `update_saved_firmware_version` with repo A's path
+directly rather than switching projects mid-`submit_run`; it proves the function no longer reads the
+open project, not the whole run path.
+
 ## 2026-10-26 02:28 — core/109 POST /study refuses an empty record magic
 
 **Decided:** nothing beyond the worker's decision 86 (`decisions/study-record.md`): `validate_study`
