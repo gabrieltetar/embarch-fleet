@@ -97,6 +97,32 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 01:06 — study-designer/070 host-run study model
+
+**Decided:** nothing beyond the worker's decision 80 (`decisions/study.md`: `HostStudy`,
+`HostStep`, `HostAction` (`Exchange`/`Prompt`/`Instrument`/`Wait`) and `HostStepResult`, JSON only,
+`deny_unknown_fields` on every type so no step can carry an expected value or range; `teardown`
+validated like `steps` and runs to the end even when one of its steps fails; `Exchange.refused_on`
+is a settled text marker that makes the step `Fail`, never a compared value; `MAX_HOST_STEPS` 128 and
+five sibling caps, all assumed from one field sequence). **`HOST_TYPE_SCHEMA_VERSION` deliberately
+not bumped** (still 19): nothing crosses the API-Core hop yet, and decision 80 hands the bump to the
+Core unit that accepts `HostStudy`; the reviewer checked it against decision 12 and agreed. Read the
+shared-crate diff before merging: additive (new module, re-exports, constants); grepped core, api,
+ui and umbrella for glob imports or clashing names, none. **Leg start, for the record:** inbox empty;
+`validate dev-bench`: probe `001057729826` not attached, not a mismatch (`api/059`, `dev-bench/035`,
+`dev-bench/038` stay `open`); four units dispatched at once: `umbrella/009` (overdue ledger, unparked),
+`study-designer/070`, `api/123`, `core/098`.
+**Merged:** `agent/study-designer/070-host-study-model` (code `ba3ad46`, ff onto origin/main; doc
+`30a18cdb`, ff). Gate re-run on the merge: build, `cargo test` and `--all-features` green, clippy
+`-D warnings` clean (default and all features), client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. The fixture is the field PD source sequence (49 steps, 2-step teardown);
+nothing runs it until Core accepts host studies.
+**Budget:** PROCEED, weekly 52.8% at leg start, wave 6.
+**Least sure about:** the new tests are `alloc`-gated, so plain `cargo test` skips them; a future
+gate that runs only default features would never exercise decision 80's checks.
+
 ## 2026-10-26 00:51 — ui/074 embarch-ui/open.md off its cap by deleting settled halves
 
 **Decided:** unparked `ui/074` (overdue since 2026-10-05; the ledger's oldest *payable* entry, the
