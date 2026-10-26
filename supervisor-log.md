@@ -97,6 +97,42 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 09:27 — ui/086 the Time chart says when a strip or mark lane is capped
+
+**Decided:** nothing suite-wide. The worker's ui decision 66 (`decisions/time-chart.md`): a capped post-hoc
+sample strip **stays a prefix** and says how far into the run it reaches (`covered_to`), with its drops counted in
+a new `series_dropped_by_cap` kept apart from `marks_dropped_by_cap` and from the "not placeable on this axis"
+counts; decimating over the whole run was rejected (thinning before min/max binning drops the spike a reader is
+looking for), with a reversal condition recorded. A live mark lane's note counts what the browser lacks
+(`total - held - pending`), not the ring's own `dropped`, so a tab that watched from the start does not warn
+about marks it holds. `time-chart.md` went into reserve (11,554 / 12,288 B); the worker filed `tasks/ui/095`
+(`open`, `In flux: no`, due 2026-11-26).
+**Merged:** `agent/ui/086-time-chart-says-when-a-lane-is-capped` (code `98d9263`, doc `ecd00154`, doc rebased onto
+`68fc73ad` before the ff). Gate: ui build/test/clippy `-D warnings`, 206 pass, against the new api client crate
+and topology; client names clean; `check-docs.py` 11/11; and I re-ran the worker's
+`tests/browser/drive_time_chart_caps.py` myself on scratch ports (stub 4955, gecko 4951, UI 4952): 7/7 PASS.
+Owner's ui checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** skipped (fleet stop at 09:19, before the reviewer was spawned).
+**Hardware debts:** none new. The 500,000 and 20,000 caps are still unmeasured against a real power capture, as
+`open.md` already says. The UI binary is not redeployed. **Leg close, for the next leg:** this leg ended on the
+owner's `fleet stop` (09:19, `ts` `1793027967.518769`, relayed by the listener; acknowledged in its thread, not
+reacted) and at its unit cap at the same time: all four workers had finished before the stop, so everything was
+landed and folded and nothing was dispatched after it. The pump latch was already gone when I looked. Ran
+`topology/067`, `api/148`, `core/101`, `ui/086`: all green, **all four reviewers skipped** because of the stop,
+so these four units have had no intent read. Filed: `core/118`, `core/119` (`Hardware: required`), and the
+worker's `ui/095`; `core/116` updated (its `core/101` dependency landed, box 2 now in scope).
+`queue-status.py --count` 35; `inbox/` empty. Bench: `validate dev-bench` (MCP) not attached, not a mismatch, so
+`api/059`, `dev-bench/035`, `dev-bench/038` stay `open`; `fleet-hardware.py`'s buffer is 48 days stale. Overdue
+ledger unchanged and unpayable (`suite/030` blocked on `DOC-PROTOCOL.md`, `doc/031` owner's, `study-designer/026`
+every bullet live). `fold-day.py --status`: 2026-10-26 holds 81 unfolded units (fold it tomorrow) and two days are
+rollable; I rolled nothing, not being the first unit after midnight. Next candidates: `core/116` (now unblocked),
+`core/118` (small), `topology/066`, `study-designer/078`, `ui/095`. `suite/046`-`049` still open and unannounced.
+**Budget:** PROCEED, weekly 69.4% at leg start, 70.1% at leg end, wave 6.
+**Least sure about:** this harness ran each `Agent` spawn to completion before returning, so the first worker
+(`topology/067`) finished before the other three were spawned, and those three ran together; if the next leg's
+spawns behave the same, "land each as it reports" is really "land each batch as it returns".
+
 ## 2026-10-26 09:26 — core/101 a host study's console taps hold their ports for the whole study
 
 **Decided:** nothing suite-wide. The worker's core decision 98: a host study's `Text` + `WholeStudy` direct-signal
