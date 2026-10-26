@@ -97,6 +97,34 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 05:05 — topology/061 the topology CLI's Core guard probes a named port, and the CLI enrols bench boards the way Core does
+
+**Decided:** nothing beyond the worker's new decision 45 (new topic file `embarch-topology/decisions/cli.md`,
+listed in `decisions.md`): a global `--core-port` (default `DEFAULT_CORE_PORT`) sets the port the guard
+resolves for every mutating subcommand, and the refusal names the port it probed; the guard is a flag, not a
+scan, so a Core on a port nobody names is still invisible, recorded as deliberate. `enroll --role` defaults
+to empty, and an empty role without `--name` is refused with Core's sentence; `set-board` and `validate`
+still require a canonical role. `unenroll --probe-serial` retracts by probe through
+`hardware::unenroll_probe` (clap takes exactly one of it and `--role`). `status --host` help now says
+loopback and the WSL2 gateway are tried before the named host. `enrollment.md` got only a one-line pointer
+under 28: now 12,122/12,288 B (166 B left), still parked under `topology/060`, whose unpark condition
+(`topology/059` lands) has in fact been met while its `In flux:` line still cites `suite/046`; I did not
+re-park it. Shared crate, so I read the diff: `bin/main.rs` only, no public library type changed.
+**Worker touched the real machine:** it ran `enroll` by hand during its checks; the guard found the live Core
+at the WSL2 gateway (`172.22.128.1:4884`) and refused, so nothing was written. Had the guard missed, that
+was an in-process enrol against real probes from a worker. Nothing to revert; worth the owner's eye.
+**Merged:** `agent/topology/061-cli-guard-and-role-parity` (code `b771dd0`, ff onto origin/main from
+`62c188d`; doc `c66e648c`, cherry-picked from `ab2fd2a3`). Gate re-run on the merge: build, `cargo test
+--all-features` 116 pass (plain `cargo test` skips the binary's tests, `bin` is not default), clippy `-D
+warnings` with and without `--all-features` clean, client names clean, `check-docs.py` green.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by a task; `unenroll --probe-serial` has no test against a real store.
+**Budget:** PROCEED, weekly 61.0% at leg start, wave 6.
+**Least sure about:** the reviewer did not compare the role rule against Core; I did (`embarch-core/src/api.rs:1008-1026`,
+empty role with a blank trimmed name refused, any other non-canonical role refused) and it matches, but only
+the enrol half: Core's `set-board`/`validate` paths I did not read.
+
 ## 2026-10-26 05:03 — study-designer/073 the .eap parser refuses three authoring errors it used to accept
 
 **Decided:** nothing beyond the worker's new decision 84 (`embarch-study-designer/decisions/protocol-exec.md`,
