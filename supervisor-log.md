@@ -97,6 +97,36 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 08:29 — api/141 the CLI says "no records found" for a zero-record report
+
+**Decided:** nothing beyond the worker's call that this is a wording fix, not a decision (the reviewer
+agrees: no api decision covers the stream line's wording). `record_summary` in `src/cli.rs` prints
+`[no records found]` (plus any leading bytes) at `total == 0`; test
+`a_zero_record_report_says_no_records_found_not_damage`. **Leg start, for the record:** `inbox/` empty;
+`validate dev-bench` (MCP): probe `001057729826` not attached, not a mismatch, so the three bench tasks
+stay `open`; `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`); overdue ledger the same three,
+unpayable (`suite/030` and `study-designer/026` blocked, `doc/031` owner's). `--refill-owed` fired on
+scope spread only (api, atlas, core, suite, ui); **I did not re-sweep**: `git log --since 07:00` over the
+eight empty scopes' docs, the roadmap and the reversals shows one change (`study-designer/decisions/study.md`
+at 07:34), before the previous leg's sweep, which found nothing filable. **`suite/052` announced** 08:09,
+`ts` `1793023741.728799`, window closes 08:39, recorded in its task file. **`core/116` unparked** in
+`44733b77`: `core/102` shipped none of its first box (decision 95 refuses `Repeat` and `line_counts`), and
+a second dependency surfaced: decision 95 also refuses `streams` until `core/101`, so line counts have no
+tap to count; the note says ship `Repeat` and the renderer, keep `line_counts` refused naming `core/101`.
+Dispatched `api/141`, `core/103`, `ui/093` at once with the isolation paragraph. **The three `Agent`
+calls returned only when all three workers had finished (878 s for the slowest)**, so my dispatch tick
+landed at 08:26, late. Filed **`tasks/study-designer/078`** from this unit's reviewer.
+**Merged:** `agent/api/141-zero-record-wording` (code `9e8d8bd`, ff onto origin/main from `b7701c9`;
+doc `9ad7248a`, ff from `6d662297`). Gate re-run on the merge: `cargo build`/`test`/`clippy -D warnings`
+(`--workspace`) green, ownership both branches green, client names clean, `check-docs.py` 11/11. Owner's
+`embarch-api` checkout fast-forwarded to `9e8d8bd`. No shared crate touched.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. Not deployed: the MCP and CLI binaries predate this.
+**Budget:** PROCEED, weekly 68.1% at leg start, wave 6.
+**Least sure about:** the worker kept the leading-bytes suffix on the zero-record line, assuming a capture
+with no magic can report `total == 0` with `leading_bytes > 0`; nobody checked that combination exists.
+
 ## 2026-10-26 08:03 — ui/089 embarch-ui/spec.md is out of reserve: the tab-navigation paragraph lives in spec/tabs.md
 
 **Decided:** nothing. A compaction pass, honest dedup rather than a squeeze: `spec.md`'s "The six tabs"
