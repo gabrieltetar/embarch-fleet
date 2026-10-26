@@ -97,6 +97,40 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 06:12 — study-designer/071 a host study can repeat a block of steps and count matching console lines per pass
+
+**Decided:** nothing beyond the worker's new decision 86 (`embarch-study-designer/decisions/host-repeat.md`,
+indexed; it pushed `decisions/study.md` to 13.0 K first, so it moved to a new file). `HostAction::Repeat
+{ count | values, steps }`, one nesting level, `{value}` substituted into `Exchange`/`Instrument` lines
+(the entry, or the 1-based pass number for `count`: the worker's call, the task did not say), refused
+outside a repeat including teardown; passes x inner steps capped at 512. `HostStudy.line_counts`
+(`LineCount { name, tap, pattern, kind }`, substring or regex) with no expected/min/max, enforced by
+`deny_unknown_fields` and a test. Iteration markers in a new `HostStudyResult`. `HOST_TYPE_SCHEMA_VERSION`
+stays 19: my dispatch grep and the worker's found no `HostStudy` in core, api or ui, which is decision
+80's own condition. `std` now implies `dep:regex` (already an optional dep, lock unchanged), so core,
+api and ui compile regex. Shared crate, so I read the manifest and export diff: additive. Core's renderer
+is `inbox/core-host-study-line-count-render.md`, left for the next drain.
+**Leg start, for the record:** `inbox/` empty; `validate dev-bench` (MCP): probe `001057729826` not
+attached, not a mismatch, so `api/059`, `dev-bench/035`, `dev-bench/038` stay `open`. Overdue ledger
+unchanged and unpayable (`suite/030` blocked on `DOC-PROTOCOL.md`, `doc/031` owner-reserved,
+`study-designer/026` blocked with every bullet live). Refill not owed (42 dispatchable, 7 scopes).
+Dispatched `api/131`, `core/099`, `study-designer/071`, `ui/081` at once with the isolation paragraph;
+all four reported within 8 minutes. **Skipped `topology/062`, which the last leg suggested:** a declared
+interface on `Route::Direct` breaks `embarch-api` `src/tools.rs:1342` and `embarch-ui` `src/topology.rs`
+the moment it lands, not "on their next topology bump" as the task says, because both path-depend on the
+topology checkout. That half is a §8 cross-repo pass; the half that changes no pub shape is a worker's.
+Supervisor note written into the task file in this fold; it stays `open`.
+**Merged:** `agent/study-designer/071-repeat-and-line-count` (code `7828256`, ff onto origin/main from
+`4da23d3`; doc `e1f65391`, cherry-picked from `cd1b8848`). Gate re-run on the merge: build, `cargo test
+--all-features` 352 pass, clippy `-D warnings` default and all-features clean, client names clean,
+`check-docs.py` 11/11. The three consumers build against it in their own units' gates this leg.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 63.8% at leg start, wave 6.
+**Least sure about:** under `alloc` alone a regex `LineCount` is only checked non-blank, so a study a
+non-`std` consumer accepts can carry a pattern Core's `std` build later refuses.
+
 ## 2026-10-26 05:54 — topology/064 link-declares.md is out of reserve: decision 36 has its own file
 
 **Decided:** nothing new. Decision 36 (a DUT's two bootload USB identities) moved verbatim from
