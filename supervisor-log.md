@@ -97,6 +97,30 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 05:27 — api/135 serial_log tells its caller when Core cut the capture short
+
+**Decided:** nothing new; the worker applied decision 58 (`decisions/client-crate.md`, untouched):
+`embarch-core-client`'s `SerialLogResponse` gains `truncated: Option<bool>` with `#[serde(default)]`, plus
+`truncation_note()` and `to_json()`, which the CLI and the MCP tool both call. JSON carries `true`,
+`false` or `null`, with a `truncation_note` unless Core said `false`; human output appends
+`[TRUNCATED ...]` for true and `[truncation unknown ...]` for null. `interfaces/config.md`'s
+`flash_format` row now says required for every project: I checked it against
+`crates/embarch-firmware-build/src/config.rs:153` (bare `String`, no default), which the reviewer could
+not find. Shared crate, so I read the diff: additive pub field on a struct no other repo constructs
+(grepped ui, umbrella, core; only Core's own server-side type shares the name).
+**Merged:** `agent/api/135-serial-log-reports-truncation-and-config-md-requires-flash-format` (code
+`c4a3434`, ff onto origin/main from `c49e9b2`; doc `9fd8193c`, cherry-picked from `f1b9aef0`). Gate
+re-run on the merge, against study-designer `4da23d3` (this leg) and topology `b771dd0`:
+`cargo build --workspace`, `cargo test --workspace` 268 pass, clippy `-D warnings` clean, client names
+clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none owed by a task. Not deployed: the MCP binary predates this and `api/124`, so
+neither the `truncated` field nor `match_after_echo` is live until the owner rebuilds it.
+**Budget:** PROCEED, weekly 61.8% at leg start, wave 6.
+**Least sure about:** the MCP path is tested only through `to_json()`; no harness drives the MCP
+server's `serial_log` method itself against the mock Core.
+
 ## 2026-10-26 05:26 — study-designer/074 the GATT extractor ignores definitions inside C comments
 
 **Decided:** nothing beyond the worker's new decision 85 (new topic file
