@@ -97,6 +97,30 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 00:49 — core/107 one timeout_ms covers an exchange's write and read
+
+**Decided:** nothing beyond the worker's amendment to decision 79 (one deadline starts with the write;
+the read gets what the write left, and always one read pass; the write's per-call port timeout is the
+remaining budget; bound `timeout_ms` + one 50 ms poll + `port_wait_ms`; cap 10,000 and its 15 s
+rationale unchanged). In the fold I moved core/097's "Measured: only against a fake port…" sentence
+back onto the 097 amendment (the worker had re-homed it onto 107's paragraph, where it duplicated
+107's own measured line) and marked 097's "read's own deadline starts after the write" as superseded.
+**Leg start, for the record:** the previous leg (spawned ~00:30) died before any claim, tick or
+commit; nothing to reclaim. Inbox empty. `validate dev-bench`: probe `001057729826` not attached, not
+a mismatch; `api/059`, `dev-bench/035`, `dev-bench/038` stay `open`. `fleet-hardware.py --refresh`
+still crashes (`measured: None` on the dut entry, line 214) — `tasks/doc/041`, owner's. Four units
+dispatched at once: `ui/074` (overdue ledger, unparked), `core/107`, `api/134`, `desk/002`.
+**Merged:** `agent/core/107-exchange-twice-its-timeout` (code `476e3e7`, ff onto `3dba64b`; doc
+`2fa9f645`, cherry-picked from `f93730a1`). Gate re-run on the merge: build, `cargo test` 280 pass /
+2 ignored, clippy `-D warnings` clean, client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** two. (1) On a real CDC ACM port, confirm a blocking `write` honours the shortened
+per-call timeout (folds into core/097's STM32G0 960-character check). (2) Native Windows build of
+`embarch-core`, owner's, from the main checkout.
+**Budget:** PROCEED, weekly 52.3% at start, 52.7% here, wave 6.
+**Least sure about:** the new test's 250 ms slack is wall-clock, so a loaded CI host could flake it.
+
 ## 2026-10-26 00:28 — desk/001 Harvest and Linear reads page past their first page
 
 **Decided:** nothing beyond the worker's decision 59 (a shared `take_capped` pages Harvest entries at
