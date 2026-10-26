@@ -97,6 +97,43 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 04:28 — outpost/026 the reference decoder refuses a record layout it does not speak
+
+**Decided:** nothing beyond the worker's new decision 27 (`embarch-outpost/decisions/layout.md`, index
+row): `scripts/decode_outpost.py` refuses a stream whose header layout is not its `SPOKEN_LAYOUT = 3`
+(exit 2, no rows, both numbers on stderr, no override), and refuses a manifest whose
+`record_layout_version` disagrees with the header the way a build-ID mismatch is refused (names dropped,
+stream kept, `manifest_refused`; overridable by the existing `--allow-build-id-mismatch`, so no third
+flag under decision 24; a manifest without the key is not refused). README Status, the `Kconfig` header
+and both `native_sim_stream` READMEs now say what is measured (nRF54L15 at 460800 since 2026-08-27) and
+that the test asserts 7 kinds, not every kind. `assert_stream.py` untouched, so no toolchain debt. The
+worker filed **`tasks/outpost/028`** (`spec.md` into reserve at 89.1%; blocked, `In flux: yes` until
+`outpost/027` and the layout-4 change close). **Setup I added:** symlinks `embarch-core` and
+`embarch-ui` in `/home/gabriel/Github/embarch/.worktrees/embarch-outpost/` (to the main checkouts), so
+`tests/cross_decoder.py` finds the sibling fixtures from an outpost worktree instead of SKIPping; the
+leg table names no siblings for outpost. **Leg close, for the next leg:** this leg ran
+`study-designer/075`, `core/111`, `ui/091`, `outpost/026`, all green on first gate, all reviewers
+clean. New in the queue: `core/113` (Core calls `validate_wait_budgets` on submit), `study-designer/077`
+(the `alloc` test cell is red on `main` and in CI today; cheapest next `study-designer` dispatch),
+`ui/092` (two stale `drive_topology.py` checks), plus the workers' `core/112` and `outpost/028`
+(both blocked compactions). `inbox/` is empty. `queue-status.py --count` 56. Bench still unattached.
+Overdue ledger: unchanged, nothing payable. `suite/046`-`049` still open and unannounced. Not deployed:
+live Core, the UI binary and the MCP binary predate this leg. `fold-day.py --status`: 2026-10-26 still
+today; 2 rollable days not rolled. The owner's uncommitted `templates/.claude/commands/fleet-watch.md`
+in `embarch-fleet` is still there, so `git pull --rebase` there refuses at step 0; fetch and push work.
+`leg-dispatch` was ticked just before the four spawns, since the spawns return only once the workers do.
+**Merged:** `agent/outpost/026-decoder-refuses-foreign-layout` (code `514d2c0`, ff onto origin/main
+from `2968f0c`; doc `96d2f920`, cherry-picked from `b61a8ac0`). Gate re-run on the merge:
+`tests/decoder_unit.py` 35 pass, `tests/cross_decoder.py` PASS (831 rows of 41 frames agree with the
+Rust decoder), client names clean, `check-docs.py` 11/11. ztest and `native_sim_stream` not run (no
+Zephyr toolchain in a worktree; neither was edited).
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 59.4% at leg start, 60.1% at the third fold, wave 6.
+**Least sure about:** `SPOKEN_LAYOUT` is a hand-kept copy of `OUTPOST_RECORD_LAYOUT_VERSION` in
+`src/outpost_priv.h` with no test tying them, and only the first header frame is checked.
+
 ## 2026-10-26 04:27 — ui/091 the enrol dialog says when an enrol moved a role
 
 **Decided:** nothing beyond the worker's new decision 61 (`embarch-ui/decisions/topology-roles.md`, index
