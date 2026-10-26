@@ -97,6 +97,35 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 06:14 — core/099 a session can lease the bench, and other callers are refused by name while it holds it
+
+**Decided:** nothing beyond the worker's new decision 93 (`embarch-core/decisions/lease.md`, indexed):
+`POST|GET|PUT|DELETE /lease`, token in `X-Embarch-Lease`, one lease for the whole bench, TTL 1 to 14,400 s
+(the cap is assumed, from the field's longest 1.4 h hold), lazy expiry so a crashed holder frees the
+bench at its TTL. While a lease is live, a request to a route in `lease::LEASE_GATED` without the token
+gets a plain-text `409` naming holder, purpose, start and expiry; a test forces every route into exactly
+one of `LEASE_GATED`/`LEASE_OPEN`. Capture `POST`/`DELETE` are gated, `GET` open; decision 92's no-`hw_lock`
+stance is unchanged. A study already running is not interrupted. Lease and image log are in memory
+only. `GET /status` gains additive `lease` and `last_images` (per chip: path, sha256, time, holder;
+recorded after a successful `/flash` or `/bootload`). Route sweep: one `.route(` line, four `AUTH_CASES`
+rows, `DOCUMENTED_ROUTE_COUNT` 33 to 34. I read the `api.rs` diff (wire change): the gate runs as a
+per-route layer so `MatchedPath` is set, and the two-client test drives eleven hardware routes through the
+real router to a `409`. Client half is `inbox/api-bench-lease-client.md`, left for the next drain.
+**Merged:** `agent/core/099-bench-lease` (code `5063c0b`, ff onto origin/main from `96cc87a`; doc
+`2a76ad9c`, cherry-picked from `12b9e498`). Gate re-run on the merge, against study-designer `7828256`
+(this leg) and topology `b771dd0`: build, `cargo test` 319 pass / 2 ignored, clippy `-D warnings` clean,
+client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** native Windows build of `embarch-core` (owner runs it). A two-client check against an
+installed Core with a real probe: a second session's `POST /reset` is `409` naming the first, renew and
+release work, `last_images` shows the sha256 of a real flash and a real `POST /bootload`. Not deployed:
+live Core predates this and `core/100`, `105`, `106`, `110`, `111`, `113`, `114`.
+**Budget:** PROCEED, weekly 63.8% at leg start, wave 6.
+**Least sure about:** `embarch-core/open.md` is now 5,070 / 5,120 B, 50 B left, parked under `core/112`
+(`In flux: yes`); the next core unit that adds an open question has to compact it in the same unit, and
+its dispatch note must say so.
+
 ## 2026-10-26 06:12 — study-designer/071 a host study can repeat a block of steps and count matching console lines per pass
 
 **Decided:** nothing beyond the worker's new decision 86 (`embarch-study-designer/decisions/host-repeat.md`,
