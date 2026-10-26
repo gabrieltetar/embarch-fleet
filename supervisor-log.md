@@ -97,6 +97,27 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 02:28 — core/109 POST /study refuses an empty record magic
+
+**Decided:** nothing beyond the worker's decision 86 (`decisions/study-record.md`): `validate_study`
+calls study-designer's `validate_record_checks` after `validate_taps` and returns its Display text as
+the `400`; the trace CSV's step-name blanking delegates to `csv_cell_ok` (so CR and LF now blank too);
+the warn for a capture whose records do not all verify reads "no records found, or has records that
+do not verify", since `all_verified()` is false at zero records. This closes study-designer/072's
+least-sure point: decision 81's refusal now guards `POST /study`. The worker dropped
+`inbox/api-zero-record-wording.md` for api's "0 of 0 records verified" print; left for the next drain.
+**Merged:** `agent/core/109-call-validate-record-checks` (code `fb993b1`, ff onto origin/main from
+`35d9859`; doc `1b1242e7`, cherry-picked from `91f07e4d`). Gate re-run on the merge, against
+study-designer `3ec19b9`: build, `cargo test` 290 pass / 2 ignored, clippy `-D warnings` clean,
+client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** native Windows build of `embarch-core`, owner's, from the main checkout.
+**Budget:** PROCEED, weekly 55.4%, wave 6.
+**Least sure about:** a saved study with an empty magic that Core used to accept is now refused at
+`POST /study`; nothing in the suite writes one, but a hand-written study on the owner's disk would
+start failing with the crate's error text.
+
 ## 2026-10-26 02:26 — study-designer/076 GPIO records are named in Core's trace CSV
 
 **Decided:** nothing beyond the worker's decision 82 (`decisions/streams.md`): `OutpostManifest`
