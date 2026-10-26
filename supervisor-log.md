@@ -97,6 +97,43 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 05:30 — core/100 a declared signal can be captured in the background while other hardware calls run
+
+**Decided:** nothing beyond the worker's new decision 92 (new topic file
+`embarch-core/decisions/signal-capture.md`, indexed): `POST|GET|DELETE /signals/{name}/capture`, a thread
+that owns only its own port and never takes `hw_lock`; `POST` returns at once, `GET ?after&limit&id`
+reads from a byte offset, `DELETE` stops, answers and drops. One capture per signal (`409` naming the
+first); `409` also for a via-dev-bench route, an unenumerable port, or a port a study tap holds; the
+capture claims `tap_ports`, so `/bootload` refuses it by name. An exchange on a captured signal goes
+through the capture's open handle. A read error goes `reopening` with a gap marker, retrying every
+250 ms. Caps reasoned, not measured: `max_s` 60/600, `max_bytes` 1 MiB/16 MiB. No wire-schema bump.
+Not done, recorded in 92 and `open.md`: one port owner shared with study taps (a study started on a
+captured signal fails at the OS, not by name), left to `core/101`. `spec.md` now 9,398 B and `open.md`
+4,872 / 5,120 B (248 B left), both still under the blocked `core/112`. **Filed this fold:** `core/114`
+(the reviewer's finding below) and `api/143` (the worker's client-half drop: `capture_start/read/stop`
+tools and CLI; dispatch before `api/131`); both drops deleted from `inbox/`.
+**Merged:** `agent/core/100-capture-a-signal-in-the-background` (code `845f3ea`, ff onto origin/main
+from `ffba91a`; doc `c43051a8`, cherry-picked from `8ed023a3`). Gate re-run on the merge, against
+study-designer `4da23d3` and topology `b771dd0`: build, `cargo test` 307 pass / 2 ignored, clippy `-D
+warnings` clean, client names clean, `check-docs.py` 11/11. I read the route test: the only `POST`s it
+sends are refused at the cap check, before any topology store is read, so no test reads the owner's
+store or opens a port.
+**Blocked:** nothing.
+**Reviewer:** 1 finding — inbox/core-capture-routes-outside-auth-sweep.md
+The three capture routes are registered as a multi-line `.route(`, which decision 42's scan cannot see,
+so they have no `AUTH_CASES` rows and `DOCUMENTED_ROUTE_COUNT` stays 32 (decision 46). Auth is a
+router-wide layer, so no hole is known; it is lost evidence. I confirmed it at `src/api.rs:162-165` and
+`:2501`, and filed it as `tasks/core/114` to fix forward; no revert.
+**Hardware debts:** six bench checks, listed in `embarch-core/open.md` (decision 92 "has never met a
+port"): a capture on one console while the other is exchanged and either board flashed and reset; an
+exchange on the captured signal; a boot log across a UART-bridge reset; a CDC ACM re-enumeration with
+its gap marker and a changed COM name; a multi-minute capture polled with `GET`; Windows refusing a
+second open cleanly. Native Windows build of `embarch-core` (owner runs it). Not deployed: live Core
+predates this and `core/105`, `106`, `110`, `111`, `113`.
+**Budget:** PROCEED, weekly 61.8% at leg start, wave 6.
+**Least sure about:** the 1 MiB default cap held in memory per capture, times one capture per declared
+signal, is reasoned rather than measured; nothing bounds how many signals a bench declares.
+
 ## 2026-10-26 05:27 — api/135 serial_log tells its caller when Core cut the capture short
 
 **Decided:** nothing new; the worker applied decision 58 (`decisions/client-crate.md`, untouched):
