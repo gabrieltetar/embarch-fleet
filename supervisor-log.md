@@ -97,6 +97,33 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 04:03 — core/106 a stream capture says when a write failed, and its sidecars stay on Core's clock and aligned
+
+**Decided:** nothing beyond the worker's new decision 88 (`embarch-core/decisions/streams.md`, index
+row): a failed raw or rendered append sets `StreamRef.truncated`; a failed arrival-sidecar append does
+not (frames untimed, not lost); a record the raw file refused gets no sidecar row; **both** sidecar kinds
+now stamp `core_rx_utc_ms`, never the record's `rx_utc_ms`; `GET .../arrivals` on a `Text` tap rebases
+offsets onto the surviving raw bytes (rows wholly in the deleted head dropped, a straddler clamped to 0)
+and says how much head went in a new `X-Arrivals-Head-Deleted` header. Read the route diff before
+merging: body unchanged until a head is deleted (≥ 2× `EMBARCH_STREAM_MAX_BYTES` of console), header
+additive. `interfaces/result-layout.md` now lists both sidecars. No UI drop: the worker judged the
+console lane already joins against the served (surviving) bytes, so rebased offsets are what it needs.
+**Reviewer's finding fixed in this fold:** decision 73 (`decisions/streams-live.md`) still said the
+trace sidecar keeps `record.rx_utc_ms`; I added a dated "Amended by decision 88" line under it and
+deleted the drop `core-decision-73-amend-for-88.md`, since the fold resolves it.
+**Merged:** `agent/core/106-stream-capture-reports-failed-writes-and-keeps-stamps-aligned` (code
+`cd01043`, ff onto origin/main from `9b0d016`; doc `5ac6e2af`, cherry-picked from `07c339c2`). Gate
+re-run on the merge, against topology `62c188d`: build, `cargo test` 299 pass / 2 ignored, clippy `-D
+warnings` clean, client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** 1 finding — inbox/core-decision-73-amend-for-88.md
+**Hardware debts:** native Windows build of `embarch-core` (owner runs it). Not deployed: the live Core
+predates this and `core/110`.
+**Budget:** PROCEED, weekly 59.2%, wave 6.
+**Least sure about:** the rebase derives the deleted head from the sidecar's last row end minus the
+surviving raw bytes, so a sidecar whose tail appends all failed would under-count the head and shift
+offsets short; nobody read `embarch-ui`'s `time_chart.rs` console lane against the new semantics.
+
 ## 2026-10-26 04:00 — api/142 the client and the enroll result say when an enrol moved a role
 
 **Decided:** nothing beyond the worker's new decision 87 (`embarch-api/decisions/hardware-selection.md`,
