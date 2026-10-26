@@ -97,6 +97,30 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 03:36 — desk/004 a tile from an earlier day proposes its gap against that day's current Harvest
+
+**Decided:** nothing beyond the worker's new decision 62 (`embarch-desk/decisions/desks.md`, index
+row; decision 41's fetch schedule amended): the sync loop re-reads each earlier day that has an open
+tile every 10 minutes (`PAST_DAY_REFRESH_MS`, marked chosen; one read per distinct day, never per
+tile; a failed day backs off the same interval). ✓ re-reads the tile's day before computing what to
+send: with no typed override it sends the fresh gap; with a typed override (decision 61) it sends
+what was typed but refuses once with a 400 naming the old gap, the new gap and the typed hours when
+the re-read moved the gap, and the next ✓ goes through. A failed Harvest read at ✓ falls back to
+the stored read, as before. One spec refresh row. This closes the double-log the review found
+(time typed into Harvest the next morning, dated the day before).
+**Merged:** `agent/desk/004-past-day-harvest-gap` (code `670debc`, ff onto origin/main from
+`da354f8`; doc `4594195f`, cherry-picked from `099a4e01`). Gate re-run on the merge: build,
+`cargo test` 125 pass, clippy `-D warnings` clean, client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. Live debt: a ✓ against real Harvest with an entry added after the day
+ended has not run. Not deployed: the desk service on :4891 is the owner's to rebuild, and it now
+carries `desk/003`, `ui/090`'s counterpart and this.
+**Budget:** PROCEED, weekly 57.5%, wave 6.
+**Least sure about:** the task's first Done box asked for "a test with a stubbed Harvest"; the worker
+ticked it with pure-function tests (`past_days_due`, `gap_moved_under_override`) because
+`harvest.rs` hardcodes its base URL, so the refresh and the ✓ re-read are not driven end to end.
+
 ## 2026-10-26 03:35 — umbrella/092 doctor reads a busy bench as busy, not broken
 
 **Decided:** nothing beyond the worker's amendment of decision 19 (`decisions/dev-bench-firmware.md`,
