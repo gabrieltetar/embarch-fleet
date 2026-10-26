@@ -97,6 +97,31 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 03:37 — core/110 the enroll response reports the row a probe vacated
+
+**Decided:** nothing beyond the worker's new decision 87 (`embarch-core/decisions/enrollment.md`,
+index row; `interfaces/topology.md`'s `POST /probes/enroll` row): Core calls
+`hardware::enroll_reporting` (public since `topology/065`) and the response gains `displaced`,
+`vacated` and `vacated_kept`, each omitted when empty (`vacated_kept` only alongside `vacated`),
+built by a pure `enroll_response(board, upserted)` so role-to-role is tested without a probe. Read
+the wire diff before merging: additive only. Wire check (worker's, from the first dispatch, re-stated):
+`embarch-api`'s `EnrollProbeResponse` mirror and every enroll type in api and ui carry no
+`deny_unknown_fields`, so nothing breaks; the fields are silently dropped there until a client half
+lands. **Drained the worker's inbox drop as `tasks/api/142`** (client mirror plus enroll CLI/MCP
+text names the moved role; a UI half after it), with a note that `client-crate.md` is in reserve.
+Second dispatch of this task: the first bounced on the topology gap last leg.
+**Merged:** `agent/core/110-enroll-response-reports-vacated-row` (code `9b0d016`, ff onto origin/main
+from `fb993b1`; doc `bc3d0263`, cherry-picked from `9aa520e1`). Gate re-run on the merge, against
+topology `7c1ef59`: build, `cargo test` 292 pass / 2 ignored, clippy `-D warnings` clean, client
+names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** native Windows build of `embarch-core` (owner runs it); no live enrol run. Not
+deployed: the live Core still returns the old shape.
+**Budget:** PROCEED, weekly 57.5%, wave 6.
+**Least sure about:** `displaced` and `vacated` serialise the whole `EnrolledBoard`, so a future
+field on that topology type appears in Core's enroll response without any Core change or decision.
+
 ## 2026-10-26 03:36 — desk/004 a tile from an earlier day proposes its gap against that day's current Harvest
 
 **Decided:** nothing beyond the worker's new decision 62 (`embarch-desk/decisions/desks.md`, index
