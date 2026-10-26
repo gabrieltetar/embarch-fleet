@@ -97,6 +97,36 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 01:32 — core/104 the dev-bench gate and hello take the locks they share
+
+**Decided:** nothing beyond the worker's amendments to decisions 4/14/15 (`decisions/platform.md`):
+the identity gate takes `hw_lock` for its probe attach and drops it on return (held across into the
+outpost pre-flight it would deadlock, since the pre-flight takes the lock itself); hello holds
+`study_lock` as `GET /dev-bench/hello` for its whole handshake, released by a drop guard; a study
+arriving meanwhile is refused `409` naming hello; the order is always `study_lock` then `hw_lock`,
+and the reviewer confirmed no route takes them the other way round. **I filed `core/108` from the
+reviewer's below-bar notes**: the new test that calls `hello_handler` with a free link "fails later
+(no bench here)", but on a machine with a dev-bench attached it would resolve the real port, attach
+the real probe and send `Hello` — a host test that can drive hardware; plus an `AppState` comment
+in `src/api.rs` that still calls the two locks separate. Not reverted: harmless on every machine
+the fleet gates on (WSL has no USB). Two follow-up drops left in `inbox/` for the next drain:
+`core-doctor-check-13-reads-hello-503-409-as-busy.md` (scope umbrella despite its name) and
+study-designer/072's `core-call-validate-record-checks-and-csv-cell-ok.md`.
+**Merged:** `agent/core/104-dev-bench-gate-and-hello-take-locks` (code `8e29f06`, ff onto
+origin/main; doc `da2dd1a8`, cherry-picked). Gate re-run on the merge, against study-designer
+`b19c841`: build, `cargo test` 289 pass / 2 ignored, clippy `-D warnings` clean, client names clean,
+`check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** two. (1) Native Windows build of `embarch-core`, owner's, from the main
+checkout — and run it before `core/108` lands only with the dev-bench unplugged if it includes
+`cargo test`. (2) Hello's `503` is tested through the gate function only; reaching it through the
+handler needs a bench to resolve the dev-bench port.
+**Budget:** PROCEED, weekly 54.2%, wave 6.
+**Least sure about:** the gate now waits on `hw_lock` before a study starts, so a study queued
+behind a long flash answers `503` where it used to start; that is the task's intent, but doctor's
+check 13 and any caller that retried on `502` have not been checked against it.
+
 ## 2026-10-26 01:30 — api/138 signal_exchange and signal-exchange say what Core saw on the wire
 
 **Decided:** the worker's amendment to decision 82 (`decisions/failure-reporting.md`: a `port_lost`
