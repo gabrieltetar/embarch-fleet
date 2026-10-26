@@ -97,6 +97,32 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 00:28 — desk/001 Harvest and Linear reads page past their first page
+
+**Decided:** nothing beyond the worker's decision 59 (a shared `take_capped` pages Harvest entries at
+`per_page=100` to 2,000 per account and Linear's assigned issues at 50 a page to 500 per workspace;
+both caps `[chosen]`; `POST /harvest/entries` and `GET /linear/mine` carry `truncated`, and a cut
+entries answer notes `total_hours` is a lower bound; `/pickup`, the 45-day polish read and a day's
+`logged_hours` ignore the flag). The fleet's first `desk` unit: linked `embarch-doc` and
+`embarch-fleet` beside it at `.worktrees/embarch-desk/`; the assembler created `history/desk.md`.
+**Leg close, for the next leg:** `ui/open.md` is 5,117 of 5,120 B and `ui/074` is parked, so any
+`ui` worker that adds a bullet there must compact it inside its own unit; `chat/004` now holds
+`embarch-chat/decisions/timeline.md` (12,144 of 12,288 B); the overdue ledger's next entries are
+owner-only (`suite/030`, `doc/031`) or parked with nothing payable (`study-designer/026`), then
+`ui/074`. `embarch-smp` has no links under `.worktrees/` yet. The owner's uncommitted
+`embarch-fleet/templates/.claude/commands/fleet-watch.md` was left alone.
+**Merged:** `agent/desk/001-connector-reads-past-first-page` (code `3f56975`, ff onto `880d970`; doc
+`58b0ee4f`, cherry-picked). Gate re-run on the merge: build, `cargo test` 120 pass, clippy
+`-D warnings` clean, client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. Not run against the live APIs: Harvest `/time_entries` paging and Linear's
+`viewer.assignedIssues` cursor follow the shapes `targets` and `scope_issues` already use, tested on
+synthetic pages only. Not deployed: the desk service on :4891 is the owner's to rebuild.
+**Budget:** PROCEED, weekly 51.1% at start; end figure in the leg's final report.
+**Least sure about:** the HTTP paging loops themselves never ran; the tests drive `take_capped` with
+canned pages, so a wrong `next_page`/`endCursor` read would pass every test.
+
 ## 2026-10-26 00:27 — chat/002 a background Agent's card shows the subagent's report
 
 **Decided:** nothing beyond the worker's decision 90 (the card's result is the hand-back, read from
