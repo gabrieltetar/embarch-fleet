@@ -97,6 +97,36 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 02:46 — topology/063 a probe moving roles never loses an enrolled row silently
+
+**Decided:** nothing beyond the worker's decisions 42 (`decisions/link-declares.md`: a probe moving
+role to role, or role to bench board, reports the role it vacated in `Upserted { displaced, vacated,
+vacated_kept }`; the vacated role keeps `name`/`chip`/link facts with its probe half cleared, the
+`NoProbeBound` state; a moved probe inherits link facts only under the same role) and 43
+(`decisions/storage.md`: `save_at` writes `enrollment.toml.tmp`, `sync_all`, renames over the store).
+Read the shared-crate diff before merging: `enrollment::upsert` was replaced by `upsert_reporting`,
+but `enrollment` is a private module and nothing in core, api, ui or umbrella called it; `enroll` keeps
+its signature, `enroll_reporting` and `hardware::Upserted` are additive; no serialized type changed,
+so no wire bump. Filed the worker's drop as `core/110` (enroll response carries the vacated row).
+`enrollment.md` was not written, so `topology/060`'s split did not fire; decision 42 put
+`link-declares.md` in reserve (11,155 B) and the worker filed `topology/064` (`In flux: no`, due
+2026-11-09). **Leg start, for the record:** `inbox/` was empty. `validate dev-bench`: probe
+`001057729826` not attached, not a mismatch; the three bench tasks stay `open`. Overdue ledger's
+payable head was `umbrella/090`, unparked with flux `no` and the check-15 bullet fenced off. Four
+workers dispatched at once: `umbrella/090`, `topology/063`, `smp/001` (the fleet's first `smp`
+unit), `desk/003`; all four reported within about four minutes.
+**Merged:** `agent/topology/063-enrollment-never-loses-a-row` (code `6732ad6`, ff onto origin/main
+from `93a83d9`; doc `14571823`, cherry-picked from `49114c93`). Gate re-run on the merge: build,
+`cargo test --all-features` 105 + 5 pass, clippy `-D warnings` clean (default and all features),
+client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none run; decision 43 assumes NTFS rename atomicity on the Windows Core host,
+untested.
+**Budget:** PROCEED, weekly 56.0%, wave 6.
+**Least sure about:** decision 27 still says re-enrol carries link facts "keyed on probe serial";
+decision 42 narrows that to the same role and says so, but 27's own wording now reads slightly stale.
+
 ## 2026-10-26 02:32 — umbrella/084 decisions/projects.md out of reserve by a verbatim split
 
 **Decided:** the unpark (see study-designer/076's entry): flux rewritten to `no` for a verbatim split,
