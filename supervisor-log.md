@@ -97,6 +97,45 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 06:59 — topology/062 a direct route's declared serial on several ports is refused by name, not guessed
+
+**Decided:** (1) **Parked a schema bump for `core/102`** (announced `#embarch-fleet` `ts` `1793017849.375049`,
+06:30, no `--action`, window closes 07:00): Core first accepts `HostStudy` in `core/102`, and study-designer
+decisions 80/86 put the `HOST_TYPE_SCHEMA_VERSION` bump in that unit, but the constant lives in
+`embarch-study-designer`, so the worker ships Core against 19 and **the landing leg bumps 19 to 20 itself** in
+the same fold. Plan written into `tasks/core/102`. Not run this leg. (2) Dispatched topology/062 with the
+narrower scope the last leg's note defined (no public shape change). Worker's new decision 46
+(`embarch-topology/decisions/links.md`): a declared direct-route serial matching several ports is refused
+with a new `SignalAmbiguous` listing every candidate port and interface, not a `SignalMismatch`, so Core's
+exchange wait does not wait it out; no `set-dev-bench-link` advice on the signal path; two same-VID ports
+that both report no serial are no longer "one probe" (dev-bench path too; a declared `link_port_interface`
+resolves it). The declared interface on `Route::Direct` moved to **`tasks/suite/052`** (filed here,
+unannounced), Core caller wording to **`tasks/core/117`**. Worker filed `tasks/topology/066` (`links.md`
+12,121 / 12,288 B, blocked on `suite/052`, due 2026-11-26).
+**My landing broke topology `main` for five minutes, and I fixed it forward.** `9e465cb` re-exported both
+new types unconditionally; they need `hardware`-only items (`DetectedPort` import, `describe`), so the
+`--no-default-features --features software,wire` build that `embarch-core-client`, `embarch-ui` and
+`embarch-umbrella` use failed. My gate ran default and `--all-features` only and passed it; api/145's gate
+caught it. Topology's own `Cargo.toml` names that configuration as a gate item, and `tasks/doc/091` is this
+gap. Fix `62d776e` (mine, on the worker's branch): both types and their re-exports `#[cfg(feature =
+"hardware")]`, like `select` and `resolve_link_port`. Re-gated on the full feature matrix before pushing.
+No deployed binary saw `9e465cb`.
+**Merged:** `agent/topology/062-direct-signal-route-declares-its-interface` (code `9e465cb` ff from `b771dd0`,
+then supervisor fix `62d776e`; doc `8b41ab47`, cherry-picked from `a626c70b`). Gate on `62d776e`: default,
+`--all-features`, `software,wire` and `hardware`-only builds, tests (all-features and software,wire) and
+clippy `-D warnings`, all green; client names clean; `check-docs.py` 11/11. Core, api and ui built against
+it in their own gates this leg.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+It answered the dispatch question: refusing serial-less same-VID ports does not contradict decision 20,
+whose guess covers one probe's VCOMs sharing a serial; decision 20's text still says "kept, not replaced"
+without pointing at 46's carve-out, left as is.
+**Hardware debts:** none run. Whether a two-interface direct device or a serial-less dev-bench exists on
+this bench is unknown (`embarch-topology/open.md`).
+**Budget:** PROCEED, weekly 64.9% at leg start, wave 6.
+**Least sure about:** the serial-less refusal now also applies to the dev-bench link; no board this suite
+has enrolled is known to be serial-less, but nothing measured that.
+
 ## 2026-10-26 06:23 — ui/081 a Slack reply from the Desk goes to the message it was drafted for
 
 **Decided:** nothing beyond the worker's new decision 63 (`embarch-ui/decisions/shell.md`, index row
