@@ -97,6 +97,35 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 05:07 — core/105 GET /load/spans is retired: nothing ever called it
+
+**Decided:** nothing beyond the worker's new decision 91 (`embarch-core/decisions/stream-index.md`, 11.0 KB to
+9.3 KB, index row updated): the route, its handler, `SpansAnswer`/`spans_answer*`, the auth-sweep row and three
+tests are gone (`DOCUMENTED_ROUTE_COUNT` 33 to 32); `decode_with_cap` stays for `/load`, whose tests pass
+unmodified. Decisions 65 and 66 are one-line `*(retired)*` tombstones; 64's heading is tagged; 91 carries 66's
+lasting finding (the UI keeps its own decode permanently, so a `RecordKind`/gap/five-lies change goes into both
+`outpost_load.rs` and `trace.rs`) and cites `tasks/core/021` as precedent. 66's `Gap` fields stay on `Gap`,
+computed and unserved. Retiring 65 dropped its measured CSV size (52.367 B/row); the reviewer found it cited
+nowhere else. Read the doc diff before merging since it retires two decisions. **Fold:** consumed
+`status.d/core-load-spans-retired.md`; the worker deleted `features.d/core-230-load-spans-route.md`, so the
+assemble dropped the row (162 to 161); and I added one clause to `suite/decisions/placement.md`'s history
+paragraph saying the route was later retired unused by decision 91, as the fragment suggested.
+**My slip, harmless, and the same one the last leg logged:** I chained `fold-commit.py | tail` into `git push`
+before writing this entry, so the refused fold's pipe exited 0 and pushed the cherry-picked doc commit
+`91b7fb1d` to `main` alone and ticked `leg-fold` for a fold that had not happened. The fold follows minutes
+later. Two legs in a row means the habit is the problem: run `fold-commit.py` unpiped, or `set -o pipefail`.
+**Merged:** `agent/core/105-load-spans-has-no-consumer-and-its-comments-name-one` (code `ffba91a`, ff onto
+origin/main from `74c5e4d`; doc `91b7fb1d`, cherry-picked from `00939429`). Gate re-run on the merge, against
+study-designer `f25533a` and topology `b771dd0` from this leg: build, `cargo test` 297 pass / 2 ignored + 1,
+clippy `-D warnings` clean, client names clean, `check-docs.py` green.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** native Windows build of `embarch-core` (owner runs it). Not deployed: live Core still
+predates `core/106`, `110`, `111`, `113` and this, so the live route still exists until a redeploy.
+**Budget:** PROCEED, weekly 61.0% at leg start, wave 6.
+**Least sure about:** whether anything outside the suite's repos (a saved script or an agent prompt on this
+machine) hits `/load/spans`; the search covered core, api and ui only.
+
 ## 2026-10-26 05:05 — topology/061 the topology CLI's Core guard probes a named port, and the CLI enrols bench boards the way Core does
 
 **Decided:** nothing beyond the worker's new decision 45 (new topic file `embarch-topology/decisions/cli.md`,
