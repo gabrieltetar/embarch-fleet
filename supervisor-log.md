@@ -97,6 +97,33 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 09:26 — core/101 a host study's console taps hold their ports for the whole study
+
+**Decided:** nothing suite-wide. The worker's core decision 98: a host study's `Text` + `WholeStudy` direct-signal
+taps are decision-92 captures started at submission (an unopenable or held port is a `409` and nothing is
+written) and stopped after the teardown; an `Exchange` on a tapped signal rides the capture, so the port opens
+once and the reply is the tap's bytes from the write; a capture sink writes `streams/<name>.txt` verbatim and a
+per-line `.arrival.csv` on one study-wide clock. Decision 95's `streams` refusal is lifted for those taps only;
+`Prompt`, `Instrument`, `Repeat` and `line_counts` are still refused. **One change reaches bench studies too**:
+`read_signal_tap` in `study.rs` now splits a read at newlines, one record per line with the read's receive time,
+as the task asked. Filed `tasks/core/119` (`Hardware: required`) from the worker's CY4500 drop, deliberately
+undecided; added an update line to `tasks/core/116` saying its `core/101` dependency has landed. Reserve: core
+`open.md` went from 50 to 92 B left, `spec.md` 474 to 480.
+**Merged:** `agent/core/101-console-capture-during-host-study` (code `0ba23bf`, doc `68fc73ad`, doc rebased onto
+`1a16bae7` before the ff). Gate: core build/test/clippy `-D warnings`, 349 pass, against the new topology;
+client names clean; `check-docs.py` 11/11. Owner's core checkout fast-forwarded.
+**Blocked:** nothing; the task closed `done` with its CY4500 box open by design (now `core/119`).
+**Reviewer:** skipped (fleet stop at 09:19, before the reviewer was spawned).
+**Hardware debts:** (1) the PD-bench check: 8 Hard Resets from `pd-bench` with both consoles tapped, counts
+compared against a direct read of the same ports; (2) no `gaps` across a Hard Reset on a real CDC ACM console, and
+`\n` really terminates its lines; (3) the two consoles' arrival stamps order correctly against a known PD
+exchange; (4) native Windows build of `embarch-core` (the capture opener's COM-port open is the only new
+platform surface). Everything was shown over in-process fake serial pairs. Not deployed.
+**Budget:** PROCEED, weekly 69.4% at leg start, 69.5% at this fold, wave 6.
+**Least sure about:** the per-line split in `read_signal_tap` changes record boundaries for every bench study's
+taps, not just host studies; nothing downstream I know of keys on one record per read, but I did not search the
+UI and api readers for it.
+
 ## 2026-10-26 09:25 — api/148 core_state tool and CLI
 
 **Decided:** nothing suite-wide. Api decision 83 amended (not a new number): a `core_state` MCP tool and
