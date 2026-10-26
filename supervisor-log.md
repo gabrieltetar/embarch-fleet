@@ -97,6 +97,30 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 00:27 — chat/002 a background Agent's card shows the subagent's report
+
+**Decided:** nothing beyond the worker's decision 90 (the card's result is the hand-back, read from
+the `isMeta` peer line carrying `origin.handback` before the meta drop, falling back to the
+subagent's last reply with `parent_tool_use_id`; the launch reply's `agentId` fills `tasks` so a
+reload finds the card; the stream-json hand-back shape is marked assumed). `chat/003` rode in the
+same branch, as it asked. **Worth the owner's eye:** trying to record a real hand-back, the worker
+launched a subagent run with `--permission-mode bypassPermissions`; the auto-mode classifier refused
+it ("Create Unsafe Agents") and the worker did not retry. Nothing in the landed diff launches a
+process. The worker filed `tasks/chat/004` (blocked, `In flux: yes`, due 2026-11-02):
+`decisions/timeline.md` is at 12,144 of 12,288 B.
+**Merged:** `agent/chat/002-agent-card-shows-the-hand-back` (code `90c6707`, ff onto `82b82e0`; doc
+`4b340782`, two commits cherry-picked onto `59712c51`). Gate re-run on the merge: `npm ci`, build,
+typecheck, `npm test`, `test:webview` all green, client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. Owed, not hardware: record a hand-back on the live stream-json wire from an
+owner session where a subagent calls SubagentHandback (written into the retired task and decision
+90). Not installed: the `.vsix` is the owner's to rebuild.
+**Budget:** PROCEED, weekly 51.1%, wave 6.
+**Least sure about:** decision 90's primary path has never been seen on the wire, only in a
+transcript; if stream-json never emits the hand-back line, the card shows the fallback (the
+subagent's last reply), which a reload cannot rebuild.
+
 ## 2026-10-26 00:23 — core/097 a console exchange's write survives a throttling device
 
 **Decided:** nothing beyond the worker's amendment to decision 79 (the write retries
