@@ -97,6 +97,39 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 01:12 — core/098 an exchange says what happened on the wire
+
+**Decided:** nothing beyond the worker's decision 85 (`decisions/signal-exchange.md`: the answer adds
+`bytes_read`, `echo_seen`, `written`, `port_lost`; a read error after a successful write is a `200`
+with `port_lost` and the partial text, never a `500`, because a state-changing command that answered
+`500` was sent again; a mid-line `until` match reads on to a line end, a 40 ms quiet gap or the
+deadline; a silent reply adds `port_identity` and a `core_state` decoded from two `DHCSR` reads
+through the guarded attach, never halting; a spent `port_wait_ms` puts the same `core_state` in its
+`409`; decision 79 amended by a pointer only, being over the per-decision cap). Read the wire-type
+diff before merging: additive, and the client's `SignalExchangeResponse` has no
+`deny_unknown_fields`. **Two supervisor edits:** (1) a commit on the code branch (`de5e82a`) fixed
+eleven code comments citing "decision 98", the task number, to decision 85, the `api/132` /
+`chat/003` class; re-gated after. (2) In the fold, one sentence in decision 85 from the reviewer's
+below-bar note: on a silent reply or a spent port wait the probe attach runs after the deadline, so
+79's bound grows by one guarded attach (unmeasured), about 5 s of headroom left at the 10 s cap.
+**Merged:** `agent/core/098-exchange-says-what-happened-on-the-wire` (code `de5e82a`, ff onto
+origin/main, worker commit `c0b665c` beneath it; doc `6735517f`, cherry-picked from `c9209ff8`). Gate
+re-run on the merge, after study-designer/070 landed: build, `cargo test` 286 pass / 2 ignored,
+clippy `-D warnings` clean, client names clean, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** two, from this unit; the task is retired with its bench box unticked and this is
+the record. (1) Bench check of decision 85 on a real board: an exchange to a board held in reset
+(`S_RESET_ST`) and to one halted by a debugger (`S_HALT`) each name the state; a command that drops
+the CDC ACM port answers `port_lost` with its first output line; the guarded attach leaves a running
+core undisturbed; 40 ms `QUIET_GAP` is enough for a real shell. (2) Native Windows build of
+`embarch-core`, owner's, from the main checkout.
+**Budget:** PROCEED, weekly 52.8%, wave 6.
+**Least sure about:** the 40 ms quiet gap is a guess applied to every prompt-terminated exchange; a
+shell slower than one UART burst between a marker and its line end would now be cut at 40 ms rather
+than at the deadline. Follow-ups are two drops left in `inbox/` for the next leg's drain:
+`api-signal-exchange-prints-wire-fields.md` and `atlas-shell-prints-exchange-wire-fields.md`.
+
 ## 2026-10-26 01:08 — api/123 signal-exchange fails loudly when no reply came back
 
 **Decided:** nothing beyond the worker's amendment to decision 82 (`decisions/failure-reporting.md`:
