@@ -97,6 +97,38 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 01:47 — api/139 the exchange fields an older Core does not send are Option
+
+**Decided:** nothing beyond the worker's application of decision 58 (`decisions/client-crate.md`,
+"Applied api/139" paragraph): `bytes_read`, `echo_seen`, `written`, `port_lost` are `Option` and
+skipped when absent, `wire_notes` says "this Core did not say whether the line was written" for an
+old silent reply, and `FlashResponse.erased` is `Option<Vec<_>>` too, because an empty list after
+`erase: true` would claim "nothing erased", which Core never said (side effect: flash JSON carries
+`"erased": null` against an old Core rather than omitting the key). Decision 82's "false means
+unknown" caveat removed. Read the shared-crate diff before merging; grepped `embarch-ui` and
+`embarch-umbrella` myself: neither names either type or any of the five fields. The worker filed
+`api/140` (`decisions/client-crate.md` now 11,581 B, in reserve, `In flux: no`). **Leg start, for
+the record:** drained two inbox drops as `core/109` and `umbrella/092` (`4e507c0f`). **Announced
+`suite/004`** (`ts` `1793000429.737099`, 01:40, window closes 02:10; plan: shorten
+`embarch-decision-reversals.md` and `suite/studies-guide.md` under their reserve lines by wording
+only, no split), task set `open` with the `ts` in it; I mean to run it as this leg's last unit.
+Unparked `umbrella/079` (overdue ledger head after the owner-only and announce-gated entries) with
+its flux rewritten to `no`, decision 28 fenced off. `validate dev-bench`: probe `001057729826` not
+attached, not a mismatch; the three bench tasks stay `open`. `fleet-hardware.py --refresh` still
+crashes on the unattached DUT (`tasks/doc/041`, owner's). Three workers dispatched at once:
+`umbrella/079`, `core/108`, `api/139`; all three reported within about three minutes.
+**Merged:** `agent/api/139-exchange-fields-option` (code `9ba2714`, ff onto origin/main from
+`dd49a1f`; doc `3bca3c75`, cherry-picked from `4c412021`). Gate re-run on the merge: build,
+`cargo test --workspace` green, clippy `-D warnings` clean, client names clean, `check-docs.py`
+11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none new; the fields are still tested on JSON bodies only (core/098's bench debt
+covers the Core side).
+**Budget:** PROCEED, weekly 54.4%, wave 6.
+**Least sure about:** `"erased": null` in the flash JSON is a visible output change for any script
+that read `erased` as a list; nothing in the suite does, but the owner's own tooling was not checked.
+
 ## 2026-10-26 01:34 — ui/078 embarch-ui/spec.md out of reserve by a verbatim split
 
 **Decided:** unparked `ui/078` (overdue since 2026-10-13, the ledger's oldest payable entry; the
