@@ -97,6 +97,36 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 02:15 — suite/004 reversals index and studies guide out of reserve by wording only
+
+**Decided:** ran `suite/004` with my own hands after its §4 window: announced 01:40 (`ts`
+`1793000429.737099`), no reply in the thread or the channel by 02:10, started 02:11. Re-read both
+files' flux reasons first: the reversals index had one edit since 2026-09-25 and the studies guide
+none, so neither was being rewritten; rewrote `In flux:` to `no`. Wording only, no split, no new
+file. `embarch-decision-reversals.md` 9,633 to 9,004 B (the reserve line is 9,011 B under the
+1.2 KB floor, not the 9,216 B the task carried): every shape and row number and every citation kept,
+one duplicate `umb` decision 17 link dropped. `suite/studies-guide.md` 24,783 to 22,872 B: §3a/§3b
+fix-history compacted (decision 45's misreport story, the pre-decision-46 address-path gate, a stale
+`tasks/dev-bench/009` pointer, a restated log-sink sentence, a client-firmware command list), and a
+sentence that a decision-46 insertion had split mid-way repaired. Human question, adapted to a
+guide: can it alone still tell a study author what to do? Yes; every instruction and dated
+measurement stays. Task retired. **Leg close, for the next leg:** `inbox/` is empty. New and open:
+`core/109`, `umbrella/092`, `api/140` (the last has no `Size debt due:`, legal while it is `open`).
+Overdue ledger's payable head is now `umbrella/084` (`projects.md` 1,172 B left) and `umbrella/090`
+(`open.md` at 79.1%, below its reserve line, so probably closable rather than payable); `suite/030`
+and `doc/031` stay the owner's, `study-designer/026` has nothing to pay. No `suite` task announced
+or parked. Bench still unattached. `leg.md`'s worktree link table omits `embarch-smp` for
+`embarch-core` (core path-depends on it; the link already exists under `.worktrees/embarch-core/`).
+`fold-day.py --status` shows two rollable days (2026-09-28, 2026-09-29); not rolled. The owner's
+uncommitted `embarch-fleet/templates/.claude/commands/fleet-watch.md` was left alone.
+**Merged:** supervisor commit, doc `267dc107` (no code). Gate on it: 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 54.4% at leg start, 55.2% here, wave 6.
+**Least sure about:** the reversals index clears its reserve line by 7 bytes, so the next shape
+edit puts it back in reserve; the studies guide has 168 B of margin.
+
 ## 2026-10-26 01:50 — umbrella/079 decisions/install.md out of reserve by a verbatim split
 
 **Decided:** the unpark (see api/139's entry): flux rewritten to `no` with decision 28 fenced off,
