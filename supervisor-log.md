@@ -97,6 +97,51 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 08:58 — suite/052 a direct signal route declares which serial interface carries it
+
+**Decided:** **a cross-repo shape change, approved and executed by me** (protocol §8): announced 08:09 (`ts`
+`1793023741.728799`, no `--action`), no reply by 08:39, run as this leg's fourth unit. `embarch-topology`
+`Route::Direct` gains `interface: Option<u8>` (serde default, omitted when absent: old `enrollment.toml`
+rows and old client bodies load unchanged and write back without the key, unit-tested both ways);
+`Filter::for_declared_serial(serial, interface)` narrows by it, so a two-interface device resolves to the
+declared port and is still `SignalAmbiguous` without one; a declared interface the device lacks is a
+`SignalMismatch` naming it, so Core's `port_wait_ms` wait applies to it (reviewer agrees: an interface can
+re-enumerate after the other). `SignalAmbiguous`'s message now says how to declare one. **No new type
+field on `SignalAmbiguous`**, deliberately: Core's tests build it by literal. `embarch-api`:
+`declare_signal`/`declare-signal --interface`, refused on a via-dev-bench route. `embarch-ui`: **my design
+call** — the port pick declares the interface only when another enumerated port shares the serial (a
+one-port device's route keeps its old shape), and the validate pass and carrier cell now **fail** an
+undeclared shared serial, which they used to pass on the first matching port while Core refused it;
+new `signal_check` fn, unit-tested; `drive_topology.py` gained three checks. `embarch-core`: a second
+wire-shape test only. Docs: topology 46 amended in place (its "Deliberately not done" paragraph replaced,
+`links.md` 12,121 to 12,106 B), its `open.md` item closed, Core's `POST /signals` body, api
+`tools-topology.md`, ui decision 10 amended; **`tasks/topology/066` unparked** (`In flux: no`, open).
+**Merged:** cross-repo, all ff onto origin/main: topology `5f87333` (from `62d776e`), api `c495360`
+(from `9e8d8bd`), ui `74c900e` (from `c126ae4`), core `02d38b9` (from `5d1a1fc`); doc `95b7f7c1`.
+Gate, with every consumer built against the new topology through repointed worktree links (restored
+after): topology build/test/clippy `-D warnings` under default, `--all-features`, `--no-default-features
+--features software,wire` and `--features hardware`, all green; api `--workspace` 307 pass; ui 205 pass;
+core 345 pass; umbrella build/test/clippy green (no change needed); client names clean on all four;
+`check-docs.py` 11/11; `drive_topology.py` on scratch ports (gecko 4971, UI 4972, stub 4975) 81/81.
+Owner's four checkouts fast-forwarded. **Leg close, for the next leg:** ran `api/141`, `core/103`,
+`ui/093`, `suite/052`; all green, four reviewers clean, nothing blocked. Filed this leg:
+`study-designer/078`, `api/148`, `topology/067`, `atlas/023`; unparked `core/116` and `topology/066`.
+`queue-status.py --count` 37 (api 8, atlas 19 skipped per `tasks/doc/089`, core 2, suite 4, topology 2,
+study-designer 1, ui 1); `inbox/` empty. Next candidates: `topology/067` or `066`, `study-designer/078`
+(small), `api/148` (builds `embarch-ui` against the client crate), `core/116` (Repeat half; read its
+08:09 note), `ui/086`. `suite/046`-`049` still open and unannounced. Bench still unattached.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** a real device with two serial interfaces under one USB serial has never been declared
+or resolved with an interface (fixture and stub only); whether the DUT board exposes one is still the open
+bench fact in `embarch-topology/open.md`. Not deployed: live Core, the MCP binary and the UI binary predate
+this; a new UI talking to an old Core sends `interface`, which an old Core ignores, leaving the route
+ambiguous as before.
+**Budget:** PROCEED, weekly 68.1% at leg start, 69.2% at leg end, wave 6.
+**Least sure about:** the UI omits `interface` when a serial is unshared at declare time; if a second
+interface of that device enumerates later, the route turns ambiguous and the tab says so, but nothing
+re-declares it on its own.
+
 ## 2026-10-26 08:36 — ui/093 the desk-Slack browser check waits for its toggle and names a setup failure
 
 **Decided:** nothing. `fresh()` in `tests/browser/drive_desk_slack.py` polls up to 15 s for
