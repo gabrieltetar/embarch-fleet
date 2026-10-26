@@ -97,6 +97,30 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 00:21 — api/113 embarch-api/open.md out of reserve by deleting answered questions
+
+**Decided:** unparked `api/113` (overdue since 2026-10-01; the ledger's oldest *payable* entry, since
+`suite/030` waits on the owner's `tasks/doc/045` and `doc/031` is owner-only). Its `In flux: yes`
+argued against shortening live prose, but `DOC-BUDGET.md` names a 5 KB `open.md` as a role cap with
+no seam, whose remedy is deleting answered questions, which shortens nothing live; the flux line was
+rewritten to say so. **Leg start, for the record:** drained 42 inbox drops (`df57ce53`: api/133-137,
+atlas/017-021, core/104-106, desk/001-004 and smp/001 as two new scopes, dev-bench/041-044,
+outpost/026-027, study-designer/072-076, topology/061-063, ui/079-087, umbrella/091). Completed
+`api/134`'s header (the worker's drop had no `State:`); reclassified `outpost/027` `none` to
+`toolchain` (native_sim builds against a Zephyr tree no worktree carries). Day-fold of 2026-10-25
+done by an `embarch-log-folder` (30,538 to 29,802 B), riding in this commit. Atlas still not
+dispatched (`tasks/doc/089`).
+**Merged:** `agent/api/113-compact-api-open` (doc `12c59b8d`, cherry-picked from `988469e7`; no code).
+`open.md` 4,714 to 3,780 B, under the 3,891 B floor: five answered items went, with the facts that had
+no other home moved first into decision 70 and `interfaces/config.md`. Gate on the merge: 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. `validate dev-bench` at step 0: probe `001057729826` not attached, not a
+mismatch; `api/059`, `dev-bench/035`, `dev-bench/038` stay `open`.
+**Budget:** PROCEED, weekly 51.1%, wave 6 (four units dispatched at once).
+**Least sure about:** `interfaces/config.md` is now 10,063 B and `decisions/hardware-selection.md`
+about 10.4 KB; both outside reserve today, but this pass moved bytes rather than removing them.
+
 ## 2026-10-26 00:00 — core/096 flash `erase: true` skips alias and option-byte regions
 
 **Decided:** nothing beyond the worker's decision 84 (erase touches only non-alias, writable NVM
@@ -121,69 +145,38 @@ the main checkout.
 over a red gate (the `| tail` masks the exit, `tasks/doc/086`'s shape, which I knew about): caught
 before the push and amended (`7da4011c`). Run the gate unpiped before every fold.
 
-## 2026-10-25 23:59 — api/122 zephyr-west accepts a single-SoC board's shortened `<board>.dts`
+## 2026-10-25 — 3 units
 
-**Decided:** nothing beyond the worker's decision 86 (shortened stem accepted only for a one-SoC
-`board.yml`; refused for multi-SoC and for both stems present, as Zephyr does; "boards found, every
-candidate dropped" is `ScanError::AllBoardsDropped` with per-candidate reasons, never `Ok(vec![])`).
-Filed `tasks/api/132`: the new `zephyr.rs` comments cite decision 64, which exists and is about
-retired config keys — a wrong citation `check-decision-refs.py` passes.
-**Merged:** `agent/api/122-zephyr-west-single-soc-dts` (code `2f3749b`, ff; doc `c98c1a40`,
-cherry-picked from `e303a1f8`). Gate re-run on the merge: build, test (all green), clippy
-`-D warnings` clean, client names clean, `check-docs.py` 11/11.
+*Folded by the supervisor's fold agent on 2026-10-26: per-unit decision narrative, gate-re-run detail and "least sure about" reasoning went; git holds them.*
+
+**Carry forward:**
+- Leg start: first leg after a 26-day gap; drained all 50 inbox drops into the queue (`ee7d80c1`, numbers in its message; doc/089 added: `gate.md` has no Python bullet, so no `atlas` task was dispatched). Folded 2026-09-29 and rolled 2026-09-17 (`3030aed`).
+- Linked `embarch-dev-bench` beside the doc worktrees (`.worktrees/embarch-doc/embarch-dev-bench`): clears the worktree-only `check-links` red on `decisions/pd-bench.md` (`tasks/doc/085`'s shape).
+- Tasks filed: `topology/060` and `dev-bench/040` (both `blocked`, due 2026-11-01, split-first) for three reserve files the owner's 2026-10-06..13 commits left unfiled (`embarch-topology/decisions/enrollment.md`, `embarch-topology/spec.md`, `embarch-dev-bench/spec.md`), which the over-cap red had masked; `api/132` (new `zephyr.rs` comments cite decision 64, about retired config keys, a wrong citation `check-decision-refs.py` passes); `chat/003` (a CSS comment cites nonexistent decision 90; fold into chat/002).
+- `study-designer/026` unparked (its condition fired 2026-09-17 on owner commit `685b691c`, which pushed `open.md` 327 B over cap; overdue since 2026-10-04, made `check-doc-size.py` red on main), paid, and re-parked `blocked` (nothing live payable; the debt stays overdue on a park).
+- First `chat` unit: set up `.worktrees/embarch-chat/` with `embarch-doc`, `embarch-fleet`, `embarch-desk` links. `history/chat.md` created by the assembler. `tasks/chat/002` (hand-back card) now unblocked.
+- Open caveats: api/122 checked against Zephyr's `dts.cmake` only, an existing test's expectation changed from empty-`Ok` to the new error (reviewer traced in-crate callers, not `embarch-ui`); chat/001's idle-turn case (CLI never starts a turn) unrecorded, decision 89 marks it assumed.
+- Budget: PROCEED, weekly 47.5%, wave 6 throughout.
+
+**Decisions made on the owner's behalf:** none beyond the workers' own: decision 86 (api/122: shortened `<board>.dts` stem accepted only for a one-SoC `board.yml`, refused for multi-SoC and for both stems present; "boards found, every candidate dropped" is `ScanError::AllBoardsDropped`, never `Ok(vec![])`) and decision 89 (chat/001: a CLI-sent `user` line is a `note` row, never an owner bubble; panel-written `turnOrigin: "sdk"` lines with no `origin` stay the owner's). Decision 75 plus the authoring decision's RunProtocol amendment and `interfaces/eap.md` carry what study-designer/026 removed from `open.md`.
+
+### study-designer/026 open.md under its cap; main's doc gate green again
+**Merged:** `agent/study-designer/026-compact-open-md` (doc `3f33bc0c`, `91294f77`, ff; no code). `open.md` 5,447 -> 4,473 B. Gate 11/11 green.
 **Blocked:** nothing.
 **Reviewer:** no findings.
-**Hardware debts:** none. Checked against Zephyr's `dts.cmake` source only, not a real build of a
-single-SoC board through `list_targets`; the field repo that reported it is the natural first use.
-**Budget:** PROCEED, weekly 47.5%, wave 6.
-**Least sure about:** an existing test's expectation changed from empty-`Ok` to the new error; the
-reviewer traced every in-crate caller through `scan_or_err`, but not `embarch-ui`.
+**Hardware debts:** none. `validate dev-bench` at step 0: probe `001057729826` not attached, not a mismatch; Core sees only J-Link `000852006107`. `api/059`, `dev-bench/035` stay `open`.
 
-## 2026-10-25 23:57 — chat/001 a message the CLI sends Claude is never an owner bubble
-
-**Decided:** nothing beyond the worker's own decision 89 (a CLI-sent `user` line is a `note` row,
-never a user entry; panel-written lines with `turnOrigin: "sdk"` and no `origin` stay the owner's
-as the one exception). The fleet's first `chat` unit: set up `.worktrees/embarch-chat/` with
-`embarch-doc`, `embarch-fleet` and `embarch-desk` links beside the code worktree. Filed
-`tasks/chat/003` (a CSS comment cites a nonexistent decision 90; fold into chat/002).
-**Merged:** `agent/chat/001-cli-turns-are-not-the-owners` (code `82b82e0`, ff; doc `c25be23c`,
-cherry-picked from `98c6ec25`). Gate re-run on the merge: `npm run build`, `typecheck` clean,
-`npm test` 216 pass / 0 fail / 67 skipped (desk tests, no `EMBARCH_DESK_BIN`), `test:webview` all
-pass, client names clean, `check-docs.py` 11/11. First `history/chat.md` created by the assembler.
-**Blocked:** nothing. `tasks/chat/002` (the hand-back card) is now unblocked by this landing.
+### chat/001 a message the CLI sends Claude is never an owner bubble
+**Merged:** `agent/chat/001-cli-turns-are-not-the-owners` (code `82b82e0`, ff; doc `c25be23c`, cherry-picked from `98c6ec25`). Gate: build, typecheck clean, `npm test` 216 pass / 0 fail / 67 skipped (no `EMBARCH_DESK_BIN`), `test:webview` pass, `check-docs.py` 11/11.
+**Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** none. Not installed: the `.vsix` is the owner's to rebuild.
-**Budget:** PROCEED, weekly 47.5%, wave 6.
-**Least sure about:** the idle-turn case where the CLI never starts a turn was not recorded;
-decision 89 marks it assumed, and its row is dropped at the owner's next message.
 
-## 2026-10-25 23:55 — study-designer/026 open.md under its cap; main's doc gate green again
-
-**Decided:** unparked `study-designer/026`: its own unpark condition ("any bullet gets a real
-answer") fired on 2026-09-17 when owner commit `685b691c` closed the authoring-path bullet and moved
-it to a Closed section, taking `open.md` 327 B over cap; overdue since 2026-10-04, it made
-`check-doc-size.py` red on `main`. Re-parked it `blocked` after the pay (still in reserve, nothing
-live is payable). Filed `tasks/topology/060` and `tasks/dev-bench/040` (both `blocked`, due
-2026-11-01, split-first) for three files the owner's 2026-10-06..13 commits put in reserve unfiled
-(`embarch-topology/decisions/enrollment.md`, `embarch-topology/spec.md`, `embarch-dev-bench/spec.md`):
-the over-cap red had masked them, and filing them is what turns the gate green.
-**Leg start, for the record:** first leg after a 26-day gap; drained all 50 inbox drops into the
-queue (`ee7d80c1`, numbers in its message; doc/089 added: `gate.md` has no Python bullet, so no
-`atlas` task was dispatched). Folded 2026-09-29 and rolled 2026-09-17 (`3030aed`). Linked
-`embarch-dev-bench` beside the doc worktrees (`.worktrees/embarch-doc/embarch-dev-bench`), which
-clears the worktree-only `check-links` red on `decisions/pd-bench.md` (`tasks/doc/085`'s shape).
-**Merged:** `agent/study-designer/026-compact-open-md` (doc `3f33bc0c`, `91294f77`, ff; no code).
-`open.md` 5,447 → 4,473 B: the whole Closed section went; decision 75, the authoring decision's
-RunProtocol amendment and `interfaces/eap.md` carry what it said. Gate on the merge: 11/11 green.
+### api/122 zephyr-west accepts a single-SoC board's shortened `<board>.dts`
+**Merged:** `agent/api/122-zephyr-west-single-soc-dts` (code `2f3749b`, ff; doc `c98c1a40`, cherry-picked from `e303a1f8`). Gate: build, test green, clippy `-D warnings` clean, `check-docs.py` 11/11.
 **Blocked:** nothing.
 **Reviewer:** no findings.
-**Hardware debts:** none. `validate dev-bench` at step 0: probe `001057729826` not attached, not a
-mismatch; Core sees only J-Link `000852006107`. `api/059`, `dev-bench/035` stay `open`.
-**Budget:** PROCEED, weekly 47.5%, wave 6 (4 units dispatched at once).
-**Least sure about:** re-parking 026 rather than leaving the worker's `open`: it keeps the next leg
-off a file with nothing payable, but the debt stays overdue on a park, which is the shape the
-ledger's clock exists to revisit.
-
+**Hardware debts:** none. Checked against Zephyr's `dts.cmake` source only, not a real build of a single-SoC board through `list_targets`; the field repo that reported it is the natural first use.
 ## 2026-09-29 — 17 units
 
 *Folded by the leg of 2026-10-25 from 17 entries (~21 KB): per-unit narrative, gate transcripts, "least sure about" musings and leg-close prose went; git holds them. Last activity before a ~4-week gap.*
