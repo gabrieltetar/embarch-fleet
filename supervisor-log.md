@@ -97,6 +97,36 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 08:02 — core/117 an ambiguous declared serial reaches every Core caller with its candidate ports
+
+**Decided:** nothing beyond the worker's new decision 96 (`embarch-core/decisions/signal-exchange.md`,
+indexed; `spec.md`, `open.md`, `decisions/probes.md` untouched): an ambiguity is `409` on
+`/signals/{name}/exchange` and `/capture`, which those handlers already returned for every resolve
+failure (the reviewer confirmed no new overlap with the lease or `study_lock` `409`s, which are plain-text
+reasons of their own); the study tap and outpost pre-flight print the error with `{e:#}` so topology's
+candidate list survives. `resolve_port_waiting` delegates to a testable `resolve_port_waiting_with`, and
+a test pins one call and an immediate return on `SignalAmbiguous` against a 30 s wait. **A repair landed
+between the last fold and this one, for the record:** my `api/136` fold pushed with `check-doc-size.py`
+red (`history/api.md` 90.2% with no debt filed; the `&& ... | tail` chain hid the exit, the same slip the
+previous leg logged). `2ffe19ec` rolled `history/api.md`'s `2026-09` window into
+`history/archive/api-2026-09--2026-09.md` by calling `build_changelog.roll_if_over_cap` with the cap
+lowered, which broke 19 relative links in the moved text (the roll never re-bases them); I re-based them
+by hand and filed **`tasks/doc/092`** (owner: the roll's link bug, and a reserve rule that wants a debt
+for a file that rolls itself). `main` was red for about five minutes. I now read `PIPESTATUS` on every gate.
+**Merged:** `agent/core/117-signal-callers-report-an-ambiguous-declared-serial` (code `71c65b0`, ff onto
+origin/main from `06f2d9c`; doc `1cf9c8b3`, cherry-picked from `24a2a13d`). Gate re-run on the merge:
+`cargo build`, `cargo test` 335 pass, clippy `-D warnings` clean, client names clean, `check-docs.py`
+11/11. Owner's `embarch-core` checkout fast-forwarded to `71c65b0`.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** native Windows build of `embarch-core` (owner runs it). An ambiguity has never been
+produced by a real pair of ports sharing a USB serial. Not deployed: live Core predates this and
+`core/099`-`115`, `core/102`.
+**Budget:** PROCEED, weekly 67.6% at leg start, wave 6.
+**Least sure about:** the reviewer's side note: with `port_wait_ms > 0`, `api.rs` appends `core_state` to
+the `409` text for any resolve failure, an ambiguity included, while decision 79 describes it only for a
+spent wait; pre-existing, wording only.
+
 ## 2026-10-26 07:57 — api/136 the MCP startup check is retracted, and a stream 404 keeps Core's own words
 
 **Decided:** nothing beyond the worker's design call, which I read before merging because it **retires a
