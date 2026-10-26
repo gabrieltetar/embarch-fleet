@@ -97,6 +97,32 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-26 01:13 — umbrella/009 decisions/bind.md out of reserve by compacting decision 22's retired halves
+
+**Decided:** unparked `umbrella/009` (overdue since 2026-10-06, the ledger's oldest payable entry).
+`--decisions` showed `bind.md` is one decision: 22 is 10,713 B, 92% of the file, pinned over the
+4 KB per-decision cap, so `DOC-BUDGET.md`'s own worked example applied (compact that entry, or make
+it two decisions); the flux line was rewritten to say so. The worker compacted the settled parts
+only (the split-history header, and the wording of the retired 22(b) firewall and 22(c) disk-space
+entries, each keeping its retirement reason, the 809 MiB measurement and its losing argument), and
+did not split 22: it is one argument with amendments, and `reporting.md` and `user-guide.md` link it
+by number. Task retired: its only `Compacts:` file is out of reserve. **Leg close, for the next
+leg:** two drops wait in `inbox/`, both from `core/098` (see its entry); the overdue ledger's payable
+head is now `ui/078` (`embarch-ui/spec.md`, 724 B left, its flux reason a month old) and the three
+umbrella parks (`079` `install.md` 217 B left, `084`, `090`); `suite/030`, `doc/031` stay the
+owner's, `suite/004` needs the §4 announcement; `suite/046`-`049` are open and unannounced. Bench
+still unattached. No `suite` task announced or parked. The owner's uncommitted
+`embarch-fleet/templates/.claude/commands/fleet-watch.md` was left alone.
+**Merged:** `agent/umbrella/009-compact-docs` (doc `3b923ec1`, cherry-picked from `bc5988ac`; no
+code). `bind.md` 11,555 to 10,904 B (88.7%). Gate on the merge: 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none new; 22's own (check 17's Fail branches against a real narrow-bound Core)
+stand.
+**Budget:** PROCEED, weekly 52.8% at leg start, 53.6% at the last fold, wave 6.
+**Least sure about:** the `DOC-COMPACTION-PASS.md` human question was answered for what runs (yes,
+`spec.md`'s doctor table says built versus unbuilt) but no pass on `spec.md` itself was made.
+
 ## 2026-10-26 01:12 — core/098 an exchange says what happened on the wire
 
 **Decided:** nothing beyond the worker's decision 85 (`decisions/signal-exchange.md`: the answer adds
