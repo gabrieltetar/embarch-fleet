@@ -97,6 +97,54 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 17:22 — suite/048 operator prompt step: a host study waits for a person
+
+**Decided:** **a suite-wide, supervisor-approved cross-repo design (protocol §8), run by me as this leg's last unit.**
+Announced by this leg (`ts` `1793226580.382079`, 16:29:40); the window closed 16:59:40 with no reply in the thread
+or the channel (polled 17:00:13). `embarch-core` decision 105 (new `decisions/host-prompt.md`): a `Prompt` publishes
+`PromptPending {prompt_id, list, step_index, step_name, text, opened_utc_ms, deadline_utc_ms}` and `pending_prompt`
+on `GET /study/{id}` (no SSE replay); `POST /study/{id}/prompt {prompt_id, answer: confirmed|cancelled, answered_by:
+ui|mcp|cli}` answers; confirmed passes, cancelled fails the step (teardown runs), the deadline times it out, a
+study cancel ends it; `PromptResolved` follows. **The proposal's two open points, answered by me:** anyone holding
+Core's token may answer, from any surface, **checked by prompt id** (a stale answer is `409` naming the prompt now
+waiting); **the route is not lease-gated** (the agent holds the lease, the person answers from the UI); **no
+default timeout**, the step's own `timeout_ms`, **capped at one hour** (reasoned). Prompts run in the steps, inside
+a `Repeat` (text not substituted) and in the teardown, without `hw_lock`. Decisions 95 and 99 amended in place
+(Prompt no longer refused). Core route count 41 to 42. `embarch-api` decision 99 (new `decisions/host-study.md`,
+`interfaces/tools-host-study.md`): `run_host_study`/`run-host-study`, `answer_prompt`/`answer-prompt`, whose
+description says in capitals it relays a person and never answers on the agent's judgement; `study_watch` sets
+`stop_on_prompt` and returns `prompt_pending`. In `embarch-core-client`: the event mirror decodes
+`HostStepCompleted`, `PromptPending`, `PromptResolved`; `follow_study` reports a prompt already waiting from the
+opening poll and from polling; **`GET /study/{id}` on a finished host study used to fail the typed parse (its
+`result` is not a bench `StudyResult`); the host record now moves to `host_result`**; the crate enables
+study-designer `alloc` itself. **The UI half is not built: `tasks/ui/100` filed for the modal** (as `suite/046`
+filed `ui/098`); `embarch-ui` got only feed rows, needed to keep its exhaustive match compiling. Not a wire-schema
+bump. Proposal status and `embarch.md`'s row updated.
+**Merged:** `agent/suite/048-operator-prompt-step` (core `248a899` on `52d4659`, api `124f461` on `f088971`, ui
+`4914db5` on `0b18d18`, doc `7a018932`; all ff, landed in that order 17:18-17:21, ui main uncompilable against api
+main for about two minutes in between). Gate on each merge result: core 382 pass, api `--workspace` 347 pass and
+`embarch-core-client --all-features` builds, ui 209 pass, clippy `-D warnings` all three, client names clean,
+`check-docs.py` 11/11; umbrella `cargo check --all-targets` green against the new client (scratch worktree, link
+restored). Shared crate touched (`embarch-core-client`); diff is mine. Owner's core, api and ui checkouts
+fast-forwarded. **In this fold I** filed `tasks/core/122` (below) and added a dated note to the blocked `suite/030`:
+the user guide says "all 29 tools" and `tools.rs` has 54, so its exhaustive lists were already broken by growth.
+**Blocked:** nothing. **The core gate went red once on a test this unit did not touch**: two capture-timing tests
+(`two_tapped_consoles_…`, `capture::…lines_carry_receive_times…`) fail about one full run in four, 2 of 7 on
+unchanged `main`; I re-ran the landing and it went green. Filed as `tasks/core/122`.
+**Reviewer:** no findings.
+**Hardware debts:** (1) nothing deployed: the live Core and the installed `embarch-api` predate this (and `suite/049`
+and `api/128`); (2) one prompt answered on a real bench from each surface, including a stale answer refused; (3)
+native Windows build of `embarch-core`.
+**Budget:** PROCEED, weekly 6.1% at leg start, 7.5% at 17:22, wave 6.
+**Least sure about:** leaving the answer route lease-open: anyone with Core's token can confirm a prompt while
+another client holds the lease, and the prompt id stops a stale answer but not a wrong one.
+**Leg close (next leg, read this first):** 4 of 4 units (`study-designer/080`, `api/128`, `ui/099`, `suite/048`).
+Dispatchable now (atlas skipped per `tasks/doc/089`): `api/144`, `core/122`, `topology/068`, `ui/100`, four scopes;
+bench `api/059`, `dev-bench/035`, `dev-bench/038` open (dev-bench and dut both unattached, not a mismatch). No
+`suite` task parked. I wrote three fragment files with `printf >` in the suite/048 doc worktree instead of the
+Write tool (no prompt fired); harmless, but against leg.md's shell rule. Overdue ledger unchanged: `suite/030`
+(owner), `doc/031` (owner).
+
 ## 2026-10-28 16:44 — ui/099 the Study Designer tab shows a saved study's protocol divergence
 
 **Decided:** nothing suite-wide. Filed by this leg's refill from `embarch-ui/open.md` and
