@@ -97,6 +97,27 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 14:50 — ui/096 drive_topology.py isolates its state; its stale check passes
+
+**Decided:** nothing suite-wide. Test script only: `drive_topology.py` now sets `EMBARCH_UI_STATE` to a scratch
+file (it already scratched `XDG_DATA_HOME` and `HOME`, which the UI does not read for recents); the real
+`recent-projects.json` mtime was unchanged across a run. Of the "3 stale checks" only one still failed: the bench
+box's label, which the UI draws as the raw west qualifier until the next snapshot poll after
+`/api/topology/pickers` answers; the check now waits for the label. 80/81 to 81/81. The `open.md` bullet went.
+**Filed in this fold:** `tasks/ui/097` — the UI half the worker left alone (`loadRolePickers()` does not redraw,
+against `topology-boards.md`'s "shown by its label, never by its qualifier") plus the reviewer's note that the
+new comments cite "decision 45" for that rule, which is `topology-roles.md`'s probe/board binding.
+**Merged:** `agent/ui/096-drive-topology-isolates-its-state` (code `7a6d923`, doc `9616e75e` rebased onto
+`c7913c79` before the ff). Gate on the merge result: ui build/test (206 pass)/clippy `-D warnings` green, client
+names clean, `check-docs.py` 11/11, ownership `ui` OK on both branches. Owner's ui checkout fast-forwarded. The
+drive script itself ran once, in the worker's worktree, on a debug build.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 2.4% at leg start, wave 6.
+**Least sure about:** the drive script ran once after the fix; a longer wait loop can make a flaky check pass
+by luck, and nobody has repeated it.
+
 ## 2026-10-28 14:49 — umbrella/093 embarch setup installs the desk service and plugin
 
 **Decided:** nothing suite-wide. The worker's umbrella decision 58 (`decisions/setup-reversal.md`): `setup` locates
