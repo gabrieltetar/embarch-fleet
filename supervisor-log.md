@@ -97,6 +97,35 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 15:48 — study-designer/079 a saved study can be told its protocol no longer matches the .eap
+
+**Decided:** nothing suite-wide. Filed by this leg's refill from `embarch-study-designer/open.md` (the owner-opened
+"saved study never checked against its `.eap`" bullet). The worker's study-designer decision 87 (new
+`decisions/protocol-divergence.md`; `protocols.md` had no room): `protocol_divergence(carried, current)` behind
+`eap-parse` answers `Unchanged` / `Changed(Vec<Difference>)` / `Gone` per protocol a study carries, comparing the
+resolved `ProtocolDef`s structurally (existing `PartialEq`), never a pinned digest (protocols.md rejected that);
+advisory only, a diverged study still runs what it carries (58). Nothing added to `Study`. `open.md` 4,473 to
+3,868 B, out of reserve: the bullet is a pointer handing "what to do with a divergence" to `embarch-ui`. The UI
+half is not filed; `embarch-ui/open.md` already carries it. **Leg context (next leg, read this first):** this leg
+started 15:30 at `f9ef3f03`; `suite/049` (SCPI instruments) announced 15:33, `ts` `1793223204.666079`, window
+closes 16:03, state line carries it. Bench: `validate dev-bench` not attached, not a mismatch. Overdue ledger
+was `suite/030`, `doc/031`, `study-designer/026`; **this fold retires `study-designer/026`**: its file is now under
+the 4,608 B floor that task named as its goal, every box was already ticked, and `check-doc-size.py --due` dropped
+it. `atlas` still skipped per `tasks/doc/089`.
+**Merged:** `agent/study-designer/079-protocol-divergence-check` (code `f0de25e` on `302784c`, doc `fcc7c739`, ff).
+Gate on the merge result: study-designer every CI cell (default, alloc, std, gatt-extract, study-ui, eap-parse
+tests; alloc and ffi builds; clippy `-D warnings` default and all-features) 1,214 pass, client names clean,
+`check-docs.py` 11/11, ownership `study-designer` OK on both branches. Shared crate: diff read; new root exports
+`Divergence`, `Difference`, `DifferenceKind`, `protocol_divergence`; no consumer glob-imports the crate. Owner's
+study-designer checkout fast-forwarded. This fold's `suite/features.md` also carries `api/130`'s row (merged
+before this fold; the file is assembled).
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 4.2% at leg start, wave 6 (3 worker scopes dispatchable).
+**Least sure about:** `compare()` files a pure reordering of sources, frames or session variables under the part
+label `state` (name `(order)`); the reviewer called it cosmetic, and a UI showing it would mislabel which part moved.
+
 ## 2026-10-28 15:28 — suite/046 a bench board owns signals and is read and validated by its probe
 
 **Decided:** **a suite-wide, supervisor-approved cross-repo design (protocol §8), run by me as this leg's last unit.**
