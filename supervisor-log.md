@@ -97,6 +97,25 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 15:04 — ui/097 the bench box takes its label on the first draw after the pickers answer
+
+**Decided:** nothing suite-wide, and no ui decision: `loadRolePickers()` now redraws the topology diagram when
+`/api/topology/pickers` answers, so the bench box shows its label from the first draw that has one, not the raw west
+qualifier until the next snapshot poll (`topology-boards.md`, "shown by its label, never by its qualifier"). The two
+`drive_topology.py` comments now cite that section instead of `topology-roles.md`'s decision 45, and the label wait
+went from 40 polls back to 12 (3 s); `ui/096`'s raw-qualifier exclusion in that wait is kept.
+**Merged:** `agent/ui/097-bench-box-label-on-first-draw` (code `9d23e62` on `7a6d923`, doc `589fa4f9`, rebased from
+`05ea89d6` onto `1ae3b546` before the ff). Gate on the merge result: ui build/test (198 + 8 pass)/clippy `-D warnings`
+green, client names clean, `check-docs.py` 11/11, ownership `ui` OK on both branches. Owner's ui checkout
+fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. The browser drive (`tests/browser/drive_topology.py`) was not run by the worker or by me;
+it needs no hardware, only geckodriver and a debug build.
+**Budget:** PROCEED, weekly 3.3% at leg start, wave 6.
+**Least sure about:** the 12-poll wait is unproven until someone runs the drive; if it fails on a slow pickers
+answer, raise the count before suspecting the redraw.
+
 ## 2026-10-28 15:02 — api/140 decisions/client-crate.md compacted out of reserve
 
 **Decided:** nothing. A compaction pass only: `embarch-api/decisions/client-crate.md` 11,581 to 10,817 B (88.0%), four
