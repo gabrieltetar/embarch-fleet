@@ -97,6 +97,42 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 14:28 — suite/047 every suite binary names its commit; install replaces a running binary; doctor check 18
+
+**Decided:** **a suite-wide, supervisor-approved cross-repo design (protocol §8), run by me as this leg's last
+unit.** Announced by the previous leg (`ts` `1793216385.010889`, 13:39:45); the window closed 14:09:45 with
+no reply in the thread or the channel. `embarch-umbrella` decision 57 (new `decisions/build-identity.md`):
+a `build.rs`, byte-identical in api, core and umbrella, stamps commit, dirty flag and source dir; `--version`
+prints `<name> <version> (commit <8 hex>[, dirty])`, `unknown` when not built at the root of a checkout, with
+`EMBARCH_BUILD_COMMIT`/`_DIRTY` overriding git; `manifest::version_from_output` now reads the field after the
+name (it read the last); `install_binaries` copies to `.<name>.new-<pid>` and renames over the destination
+(Linux test with a running copy; Windows unchanged and stated); `deploy-core` passes the Linux checkout's
+commit to `cargo.exe` through `WSLENV`; doctor check 18 compares the located `embarch-api` (via
+`--json versions`) and `embarch` itself with their checkouts' `HEAD` (`behind-checkout`, `not-in-checkout`,
+`no-build-identity`; never fails; fix names the MCP reconnect). The design-only Core-log check is renumbered
+18 to 19. `embarch-api` decision 93: `versions --json` adds `commit`, `dirty`, `source_dir`; `status` (CLI
+and MCP) adds `api_build`; additive, `schema_version` stays 1. `embarch-core` decision 100: `--version` only,
+`/status` unchanged. **Not a wire-schema bump.** Core is not compared by check 18 (no machine-readable
+commit; its `wsl-host` source is a copy).
+**Merged:** `agent/suite/047-installed-binary-names-its-commit` (api `525cda7`, core `2d3532d`, umbrella
+`97b1358`, doc `1c65685f`; each code repo one commit on 744b94b / 72bbd52 / 9d27e12). Gate on the merge
+result: api `--workspace` 317 pass, core 359, umbrella 245, clippy `-D warnings` green in all three, client
+names clean in all three, the three `build.rs` compared identical, `check-docs.py` 11/11. Owner's api, core
+and umbrella checkouts fast-forwarded. No shared crate touched.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** (1) nothing is rebuilt, installed or deployed: the owner's installed `embarch-api`, the
+live Core and `embarch` still print the old lines until rebuilt; **an `embarch` built before this reads the
+new `--version` lines as a manifest mismatch (checks 1 and 15), so rebuild umbrella with the others**;
+(2) `deploy-core`'s `WSLENV` hand-off has never run against the real service, so the first deploy should
+confirm the service's `--version` names the commit; (3) Windows install over a running binary is stated,
+not tested; (4) native Windows build of `embarch-core`.
+**Budget:** PROCEED, weekly 1.7% at leg start, 2.4% at this unit, wave 6.
+**Least sure about:** `build.rs` watches `HEAD`, the branch ref, `packed-refs`, `src/`, `crates/` and the
+manifests but not the index, so an edit outside those (a README, a test) leaves a stale dirty flag until one
+of them moves; and I have not run `embarch doctor` (it reads the live Core), so check 18 has met only unit
+tests and one real throwaway repo.
+
 ## 2026-10-28 13:56 — ui/095 time-chart.md split verbatim; decision 37 to time-chart-live.md
 
 **Decided:** nothing suite-wide. A compaction by verbatim split only, nothing deleted: `embarch-ui/decisions/time-chart.md`
