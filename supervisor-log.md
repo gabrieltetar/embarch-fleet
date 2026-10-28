@@ -97,6 +97,32 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 14:48 — api/125 serial_log reads a declared signal
+
+**Decided:** nothing suite-wide. The worker's api decision 94 (new `decisions/serial-log-signal.md`): `serial_log`
+(MCP tool and `serial-log` subcommand) takes `signal` and `port_wait_ms`; `CoreClient::serial_log_signal` sends
+`GET /serial-log?signal=&duration_ms=[&baud=][&port_wait_ms=]`, never `port`, `baud` only as an explicit override;
+the api resolves nothing itself. The tool description calls the signal form preferred and says an older Core
+refuses it. The Core half came back as an inbox drop and I filed it as `tasks/core/120`, dispatched as this
+leg's fourth unit. **Leg context (next leg, read this first):** `suite/046` (bench board owns signals,
+mem-read and validate by probe serial) was announced by this leg, `ts` `1793219633.062879`, window closes
+15:03:53; this leg gave its fourth slot to `core/120` instead, so `suite/046` is the next leg's last unit if
+no objection arrived. Bench: `validate dev-bench` not attached, not a mismatch; `api/059`, `dev-bench/035`,
+`dev-bench/038` stay `open`. Refill added `ui/096` (from `embarch-ui/open.md`).
+**Merged:** `agent/api/125-serial-log-reads-a-declared-signal` (code `8e25811` on `525cda7`, doc `213408cf`
+rebased onto `ea68b4bc` before the ff). Gate on the merge result: api `--workspace` build/test (319 pass)/clippy
+`-D warnings` green, `embarch-core-client --all-features` builds, client names clean, `check-docs.py` 11/11,
+ownership `api` OK on both branches. Shared crate touched (additive method only; diff read). Owner's api
+checkout fast-forwarded. The worker set `done` itself this time.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** once `core/120` lands and Core is deployed, one `serial_log signal=<DUT console>
+port_wait_ms=5000` across a DUT reset on a CDC ACM console, confirming lines arrive at the signal's baud.
+Not deployed: the installed `embarch-api` does not have `signal` yet.
+**Budget:** PROCEED, weekly 2.4% at leg start, wave 6 (3 worker scopes dispatchable).
+**Least sure about:** until `core/120` is merged and Core redeployed, an agent that follows the "preferred" tool
+description gets a 400 from the live Core; the description says so, but an agent may not read that far.
+
 ## 2026-10-28 14:28 — suite/047 every suite binary names its commit; install replaces a running binary; doctor check 18
 
 **Decided:** **a suite-wide, supervisor-approved cross-repo design (protocol §8), run by me as this leg's last
