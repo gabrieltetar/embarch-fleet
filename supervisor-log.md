@@ -97,6 +97,35 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 16:43 — api/128 a hardware test ledger per project
+
+**Decided:** nothing suite-wide. The worker's api decision 98 (new `decisions/ledger.md`, `interfaces/tools-ledger.md`):
+each project keeps `<source_path>/embarch/ledger/{tests.toml, rows.jsonl, bench.json}`; `ledger-add`, `ledger-show`,
+`ledger-pending` (flat CLI names, matching the tools, parity count 51 to 54) and `ledger_add/show/pending` MCP tools.
+The pending view is computed per call, grouped under each missing role or "runnable now", with a reason: never run,
+last result not a pass, `commit-unreachable` (`git merge-base --is-ancestor`) or `image-changed` (SHA-256, only when
+the caller passes the current image). Attached roles come from Core's topology, falling back to `bench.json` and
+saying so in `attached_source`. **`run_study` gained an optional `test`** and appends a `submitted` row at
+submission, closed to pass or fail the next time the ledger is read, because `run_study` returns at submission; the
+task's "on completion" is met that way rather than by a hook. `ledger_add` refuses an unknown test id when
+`tests.toml` is non-empty. `open.md` gained one bullet (the bench debt): 4,810/5,120 B, 310 B left, still filed on
+`api/144`. **My first fold attempt was refused (entry not yet written) and my `&&` chain ran past it through a `|
+tail`, the trap `ui/098`'s entry names: one spurious `leg-fold` tick went out, nothing else (no Slack line, both
+pushes were no-ops).**
+**Merged:** `agent/api/128-hardware-test-ledger` (code `f088971` on `2a89a61`, doc `dc7fa414` rebased from the
+worker's `993289fe` onto `67e62b55` before the ff). Gate on the merge result: api `--workspace` build/test (342
+pass)/clippy `-D warnings` green, client names clean, `check-docs.py` 11/11, ownership `api` OK on both branches. No
+shared crate touched. Owner's api checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** the task's bench box, written as three steps in the retired task and in `open.md`: a
+`tests.toml` with one `dut` test and one needing an absent role gives one runnable and one grouped; `run-study --test`
+lands a row that settles; amending a passed commit flags `commit-unreachable`. Needs a deployed Core and a rebuilt
+`embarch-api` binary; nothing is deployed.
+**Budget:** PROCEED, weekly 6.1% at leg start, wave 6.
+**Least sure about:** how a role-less bench board (topology decision 48) counts toward a test's `needs`; the worker
+assumed by role and by board name and could not confirm the stored form.
+
 ## 2026-10-28 16:41 — study-designer/080 a pure reordering is reported under the part that moved
 
 **Decided:** nothing suite-wide. Filed by this leg's refill from `study-designer/079`'s least-sure line. The
