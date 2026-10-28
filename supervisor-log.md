@@ -97,6 +97,36 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 15:49 — api/130 embarch-api stack plan, fold and restack
+
+**Decided:** nothing suite-wide. The worker's api decision 96 (new `decisions/stack.md`, `interfaces/stack.md`):
+`embarch-api stack plan|fold|restack`, CLI-only and git-only (dispatched before config and Core, listed CLI-only in
+the parity tests). `plan` blames each hunk and commits one `fixup!` per target without touching the tree; hunks no
+commit owns go to `<git dir>/embarch-stack-plan.md`. `fold` refuses a dirty tree, backs up every branch it moves,
+turns a curation file into `amend!` commits, autosquashes with `--update-refs`, restores everything on a conflict,
+checks tree identity with a plain `^{tree}` compare (my dispatch note: `build --each --same-tree-as` is `api/127`,
+unbuilt), never pushes. `restack` rebases with `--update-refs` (`--onto` drops landed commits by patch-id) and pushes
+once, `--atomic`, a lease per branch. **Backups are `refs/backup/<branch>-<12 hex>`, not the task's
+`backup/<branch>-<sha>`**: under `refs/heads` `--update-refs` moved them with the rewrite. **In this fold I** consumed
+its `status.d` fragment into `suite/user-guide.md` §6 as one short paragraph (the permission rule
+`Bash(embarch-api stack:*)`), which spends 280 B of that file's reserve (24,945/25,600 B; `suite/030` is parked on
+the owner); and corrected decision 94's "until it lands, the signal form is refused by Core" to point at core
+decision 101 (the reviewer's note). The worker deleted `open.md`'s stale `serial_log signal=` bullet and added a
+`stack` bullet; 4,647 B, still filed on `api/144`.
+**Merged:** `agent/api/130-stack-fold-restack` (code `9c7832b` on `943f89d`, doc `7cd6a2e6` rebased from the
+worker's commit onto `fcc7c739` before the ff). Gate on the merge result: api `--workspace` build/test (329
+pass)/clippy `-D warnings` green, client names clean, `check-docs.py` 11/11, ownership `api` OK on both branches. No
+shared crate touched (`src/patches.rs` only widened three items to `pub(crate)`). Owner's api checkout
+fast-forwarded. **The doc merges of this unit and `ui/098` reached `origin/main` with `study-designer/079`'s fold
+push, a few minutes before their own folds.**
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none; owner use: `stack` has run only on throwaway fixture repos, never a real PR stack or
+forge, and needs git 2.38+ (`merge-tree --write-tree`).
+**Budget:** PROCEED, weekly 4.2% at leg start, wave 6.
+**Least sure about:** a hunk spanning two commits is attributed whole to the newer one, and a force-push lease is
+only as good as the `origin` fetch before it; both are in decision 96, neither has met a real stack.
+
 ## 2026-10-28 15:48 — study-designer/079 a saved study can be told its protocol no longer matches the .eap
 
 **Decided:** nothing suite-wide. Filed by this leg's refill from `embarch-study-designer/open.md` (the owner-opened
