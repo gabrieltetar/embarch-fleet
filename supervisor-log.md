@@ -97,6 +97,31 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 16:44 — ui/099 the Study Designer tab shows a saved study's protocol divergence
+
+**Decided:** nothing suite-wide. Filed by this leg's refill from `embarch-ui/open.md` and
+`embarch-study-designer/open.md`. The worker's ui decision 68 (`decisions/study-designer.md`): the existing `GET
+/studies/{slug}` (load) and `/summary` (run-only) routes carry `protocol_divergence`, computed fresh per read with
+study-designer's `protocol_divergence(carried, repo.defs())`; no new route, no cache. Only `changed` and `gone`
+protocols are listed, `part` rendered as text and never branched on (so `study-designer/080`'s new `protocol` value
+needs nothing). The note says the study still runs what it carries; the remedy is to load it into the table and save
+again, which re-resolves the `.eap`; a run-only file keeps what it carries and the note says so. No "adopt" button,
+since Save is the one path that seals a study. An unreadable `protocols` array or a repo with duplicate names shows
+no note and the load still succeeds. `open.md` lost the "never checked against the `.eap`" bullet (pays down a file
+whose compaction, `ui/088`, is blocked). The worker named its feature fragment `ui-095-…` for task 099; the gate
+accepts it.
+**Merged:** `agent/ui/099-show-protocol-divergence` (code `0b18d18` on `7361c2b`, doc `35ad8443` rebased from the
+worker's `77eb68ef` onto `7e1fa488` before the ff). Gate on the merge result, built against study-designer `d9dee0e`:
+ui build/test (209 pass)/clippy `-D warnings` green, client names clean, `check-docs.py` 11/11, ownership `ui` OK on
+both branches. Owner's ui checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. Not driven in a browser: the note's rendering is text-guarded only (`assets/app.js`, a new
+`#sd-divergence` div above the build-error line); one headless-Firefox look at a study whose `.eap` was edited is the
+check that matters.
+**Budget:** PROCEED, weekly 6.1% at leg start, wave 6.
+**Least sure about:** that nothing has rendered the note; the route tests prove the payload, not that a person sees it.
+
 ## 2026-10-28 16:43 — api/128 a hardware test ledger per project
 
 **Decided:** nothing suite-wide. The worker's api decision 98 (new `decisions/ledger.md`, `interfaces/tools-ledger.md`):
