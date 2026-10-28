@@ -97,6 +97,33 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 13:39 — api/129 embarch-api patches round-trips a west patch series through one scratch tree
+
+**Decided:** nothing suite-wide. The worker's api decision 92 (new `decisions/patches.md`): a CLI-only
+`embarch-api patches export|import|regroup`, dispatched before config like `versions` (decision 52 allows a
+CLI-only command; the parity test lists it). `export` clones the module `--shared` at `--base` into one reusable
+scratch tree and applies each patch with `git am`; `import` rewrites only patches whose commit changed (an
+untouched or merely re-parented series comes back byte-identical), updates `patches.yml`'s sha256 and keeps its
+comments, and folds commits stacked on the series hunk by hunk into the patch that last touched those lines
+(`git blame`, then `rebase --autosquash`), checking the folded tree against the fix commit's; `regroup --map`
+writes nothing unless the tree id is identical before and after, then renumbers and rewrites patch-number
+references in commit messages, listing those it could not map. New dependency `sha2`. Not done, and said in the
+task: `--base` is read by hand, not from `west.yml`; header-less plain diffs, merge/rename/delete/binary fix
+commits are refused by name; no MCP twin. Reserve: `client-crate.md` untouched; `open.md` grew one line.
+**Merged:** `agent/api/129-west-patch-series` (code `0fdcf05`, doc `90e2cbeb`, doc rebased onto `dae32801`
+before the ff). Gate on the merge result: api `--workspace` build/test (316 pass)/clippy `-D warnings` green,
+client names clean, `check-docs.py` 11/11, ownership `api` OK on both branches. No shared crate touched
+(`embarch-core-client` unchanged). Owner's api checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. The MCP/CLI binary is not redeployed, so the owner's installed `embarch-api` does not
+have `patches` yet.
+**Budget:** PROCEED, weekly 0.5% at leg start, wave 6.
+**Least sure about:** every test runs on a synthetic 3-patch repo; it has never met a real `west patch` manifest,
+and a fix hunk on a line no patch introduced is folded into the last patch touching that file
+(`src/patches.rs:476`), which is a guess about intent a reviewer of the regenerated series should check; a file
+no patch touches is refused by name.
+
 ## 2026-10-28 13:37 — topology/066 links.md and enrollment.md split verbatim; topology/060 paid early
 
 **Decided:** nothing suite-wide. A compaction by verbatim split only, nothing deleted: `embarch-topology/decisions/links.md`
