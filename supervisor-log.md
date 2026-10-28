@@ -97,6 +97,49 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 16:27 — suite/049 SCPI bench instruments: declared, one command per exchange, a host-study step
+
+**Decided:** **a suite-wide, supervisor-approved cross-repo design (protocol §8), run by me as this leg's last unit.**
+Announced by this leg (`ts` `1793223204.666079`, 15:33:24); the window closed 16:03:24 with no reply in the thread
+or the channel (polled 16:03:34). `embarch-topology` decision 49 (new `decisions/instruments.md`): `Instrument
+{name, protocol: scpi, port: UsbPortId, baud, write/read terminators (default LF / CR LF), min_interval_ms, ack_ok?,
+ack_err?}` in its own `instruments` table beside `bootload_ports`, skipped when empty; a name is a path segment;
+`ack_err` without `ack_ok` refused; two instruments one port could match both of refused at declaration; wire types
+`InstrumentExchange`, `InstrumentReply`, `Ack` (`ok`/`refused`/`unacknowledged`) live in topology. `embarch-core`
+decision 104 (new `decisions/instruments.md`, `interfaces/instruments.md`): `PUT`/`GET /instruments`, `DELETE
+/instruments/{name}`, `POST /instruments/{name}/exchange` = open, a flush line (its answer kept as `flush_reply`),
+process-wide pacing, the command, one reply line for a query or an acknowledging set; **an unacknowledged set fails
+a host-study step**; `409` while `study_lock` is held; lease-gated; route count 38 to 41; `HostAction::Instrument`
+now executes (only `Prompt` is still refused). `embarch-api` decision 97: `declare_instrument`, `list_instruments`,
+`remove_instrument`, `instrument_exchange` (tools and subcommands), `preset: "et54"` carrying the field's measured
+line facts, terminators named `lf`/`cr`/`crlf`, an unacknowledged set an error / exit 1. **Not a wire-schema bump**
+(new routes and types only). `embarch.md`'s proposal row and the proposal's status line now say phase 2 is built.
+**In this fold I** shortened the new `embarch-topology/spec.md` row: the merge put that file 25 B into reserve and
+`check-doc-size.py` went red; it is 8,999 B now and green, no debt filed.
+**Merged:** `agent/suite/049-scpi-instruments` (topology `0803354` on `76bd3d1`, core `52d4659` on `2fccb61`, api
+`2a89a61` on `9c7832b`, doc `afbaa12f` rebased onto `eda0e50b`; all ff, pushed 16:24). Gate: topology all CI cells
+(default, hardware, bin, software+wire) test and clippy `-D warnings` green; core 374 + 2 pass, clippy green; api
+`--workspace` 332 pass, clippy green, `embarch-core-client --all-features` builds; ui and umbrella `cargo check
+--all-targets` green against the new topology and client crate (scratch worktrees, links restored); client names
+clean in all four; `check-docs.py` 11/11. Shared crates touched (topology, `embarch-core-client`); diffs are mine.
+Owner's topology, core and api checkouts fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** (1) nothing deployed: the live Core and the installed `embarch-api` predate this; (2) the task's
+bench check, owed: on the ET5410A+, `*IDN?`, `MEAS1:ALL?`, `CH1:SW ON`/`OFF` read back and `LOAD1:ABNO?`, time per
+command recorded in core decision 104 (no instrument is declared; the bench was unattached this leg); (3) native
+Windows build of `embarch-core`.
+**Budget:** PROCEED, weekly 4.2% at leg start, 5.2% at 15:52, wave 6.
+**Least sure about:** pacing is measured from the end of a command's read, so it never undershoots, but topology's
+`min_interval_ms` doc comment says "end of one write" (reviewer's note; a one-line comment fix nobody has filed);
+and the flush line adds up to 300 ms per exchange against an instrument that says nothing to an empty line.
+**Leg close (next leg, read this first):** 4 of 4 units. **I created this unit's four worktrees inside the repos**
+(`git -C <repo> worktree add .worktrees/...` with a relative path resolves against the repo) and moved them out with
+`git worktree move` within a minute; nothing was committed there. `embarch-api/.worktrees/embarch-api/` still holds
+two sibling symlinks dated 2026-09-13 that are not mine; untracked, left alone. Dispatchable now: `api/128`,
+`api/144`, `suite/048` (unannounced); `atlas/*` skipped per `tasks/doc/089`; bench `api/059`, `dev-bench/035`,
+`dev-bench/038` open (dev-bench unattached, not a mismatch). Refill will be owed: two worker scopes left.
+
 ## 2026-10-28 15:50 — ui/098 the signals table and dialog know a bench-board origin
 
 **Decided:** nothing suite-wide. The worker's ui decision 67 (`decisions/topology-tab.md`): the signals table names a
