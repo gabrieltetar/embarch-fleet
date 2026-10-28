@@ -97,6 +97,22 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 13:54 — api/132 zephyr.rs cites decision 86, not 64, for the single-SoC rules
+
+**Decided:** nothing. Ten comment and test-doc citations in `crates/embarch-firmware-build/src/zephyr.rs`
+corrected from decision 64 (retired config keys) to decision 86 (`decisions/zephyr-scan.md`, the single-SoC
+board rules). Comment-only; no doc text and no changelog fragment, since nothing reader-facing changed.
+**Merged:** `agent/api/132-zephyr-rs-cites-decision-64-for-what-86-records` (code `744b94b`, doc `25f394d4`,
+doc rebased onto `b8ca7aa6` before the ff; task file only). Gate on the merge result: api `--workspace`
+build/test (316 pass)/clippy `-D warnings` green, client names clean on the code repo (the worker had pointed
+it at the doc worktree), `check-docs.py` 11/11, ownership `api` OK on both branches. Owner's api checkout
+fast-forwarded. Worker left the claim line again; `done` committed in `4767f859` before the fold.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 1.7% at leg start, wave 6.
+**Least sure about:** nothing material; the reviewer confirmed no `decision 64` citation is left in the crate.
+
 ## 2026-10-28 13:52 — core/118 halt_count takes the gate's share from Validation.halts
 
 **Decided:** nothing suite-wide. Decision 97 (`embarch-core/decisions/live-read.md`) amended: the identity
