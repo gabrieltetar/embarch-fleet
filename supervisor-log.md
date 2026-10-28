@@ -97,6 +97,28 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 13:37 — topology/066 links.md and enrollment.md split verbatim; topology/060 paid early
+
+**Decided:** nothing suite-wide. A compaction by verbatim split only, nothing deleted: `embarch-topology/decisions/links.md`
+12,106 to 9,850 B (decisions 37 and 40 to new `decisions/links-direct.md`; 18 and 46 stay because other
+sub-projects link `links.md` by path for them); `decisions/enrollment.md` 12,122 to 10,395 B (decisions 41 and 16
+to new `decisions/enrollment-bench.md`, with a heading and one-line pointer for 41 left behind because
+`embarch-core/decisions/roles.md` and `embarch-dev-bench/decisions/pd-bench.md` link `enrollment.md` for it).
+**My dispatch call:** I handed the topology worker `tasks/topology/060` (blocked `In flux: yes` on `suite/046`,
+due 2026-11-01) as a verbatim split only, on `060`'s own statement that a split needs no unpark; it closed `060`
+and set its `In flux:` to `no (closed ...)` so `check-task-state.py` would accept `done`. No text in decisions
+14, 15, 28 or 35 was shortened, so the flux `suite/046` creates is untouched. Human question, the worker's
+answer: yes, `spec.md` alone still answers it; nothing in it changed and every decision number it cites resolves.
+**Merged:** `agent/topology/066-compact-topology` (doc `ccf66b1c`, rebased onto `5efffa07` before the ff; no code
+commit, the code branch was deleted unpushed). Gate: ownership `topology` OK, `check-docs.py` 11/11.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 0.5% at leg start, wave 6.
+**Least sure about:** decision 41 now lives in `enrollment-bench.md` while its two inbound links still name
+`enrollment.md` and reach it through a pointer; when `suite/046` amends 41, whoever writes it must edit the moved
+copy, not the pointer.
+
 ## 2026-10-28 13:35 — study-designer/078 decision 81 no longer claims a "0 of 0" print
 
 **Decided:** nothing suite-wide. Decision 81's **Record check** paragraph (`embarch-study-designer/decisions/seals.md`)
