@@ -97,6 +97,26 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 15:02 — api/140 decisions/client-crate.md compacted out of reserve
+
+**Decided:** nothing. A compaction pass only: `embarch-api/decisions/client-crate.md` 11,581 to 10,817 B (88.0%), four
+cold sentences cut (decisions 36, 55, 58, 66; each quoted in the commit message) and decision 66's consumer list moved
+inline from the cut "Corrected at its own fold" paragraph. Both `Must not delete:` items intact. **Leg context (next
+leg, read this first):** this leg started 14:53 at `70c9512b`; dispatched `api/140`, `ui/097`, `core/121` (filed by
+this leg's refill from `embarch-core/open.md`), and holds `suite/046` for its last unit (window closes 15:03:53, `ts`
+`1793219633.062879`). Bench: `validate dev-bench` not attached, not a mismatch; `api/059`, `dev-bench/035`,
+`dev-bench/038` stay `open`. `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`), buffer 51 days stale.
+Overdue size ledger unchanged and unpayable (`suite/030` on `DOC-PROTOCOL.md`, `doc/031` owner's,
+`study-designer/026` every bullet live). `atlas` still skipped per `tasks/doc/089`.
+**Merged:** `agent/api/140-compact-api-client-crate` (doc `a7d5dbec`, ff onto `c20f1713`; no code branch, the
+task was doc-only). Gate on the merge result: `check-docs.py` 11/11, ownership `api` OK on the doc branch.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 3.3% at leg start, wave 6.
+**Least sure about:** whether the cut "Corrected at its own fold" paragraph was fully cold; the reviewer found no
+citation of it and its "fourth consumer" point survives in decision 66's reversal condition.
+
 ## 2026-10-28 14:52 — core/120 GET /serial-log resolves a declared signal
 
 **Decided:** nothing suite-wide. The worker's core decision 101 (`decisions/logging.md`, beside 58): `port` on
