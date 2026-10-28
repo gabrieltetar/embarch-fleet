@@ -97,6 +97,25 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 13:56 — ui/095 time-chart.md split verbatim; decision 37 to time-chart-live.md
+
+**Decided:** nothing suite-wide. A compaction by verbatim split only, nothing deleted: `embarch-ui/decisions/time-chart.md`
+11,554 to 8,373 B; decision 37 (the live feed) moved byte-identical to new `decisions/time-chart-live.md`
+(3,504 B), a one-line pointer left behind, index rows updated. The worker moved 37 rather than 66 because
+`history/ui.md` links 66 by path and a ui worker cannot edit `history/`. In the fold I added the new file's link
+beside the old one in `embarch-ui/spec/capture-rendering.md`, whose sentence covers both (the reviewer's note).
+Human question, the worker's answer: yes, `spec.md` alone still answers it; nothing in it changed.
+**Merged:** `agent/ui/095-compact-ui-time-chart` (doc `7aa213b0`, rebased onto `213bd3d0` before the ff; no code
+commit, the code branch was deleted unpushed). Gate: ownership `ui` OK, `check-docs.py` 11/11, the removed lines
+checked present verbatim in the new file. `done` committed in `56550f47` before the fold (worker left the claim).
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 1.7% at leg start, wave 6.
+**Least sure about:** every worker this leg left its claim line in place after ticking its boxes (3 of 3), so
+the `tasks/doc/050` workaround is now the normal fold path, not an edge case; the worker definition may be where
+that belongs, and it is the owner's.
+
 ## 2026-10-28 13:54 — api/132 zephyr.rs cites decision 86, not 64, for the single-SoC rules
 
 **Decided:** nothing. Ten comment and test-doc citations in `crates/embarch-firmware-build/src/zephyr.rs`
