@@ -97,6 +97,30 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 15:50 — ui/098 the signals table and dialog know a bench-board origin
+
+**Decided:** nothing suite-wide. The worker's ui decision 67 (`decisions/topology-tab.md`): the signals table names a
+board origin by the enrolled board's name, the probe serial when none matches; the dialog lists enrolled role-less
+bench boards after the roles (`board:<serial>`) and sends `origin_board` with `origin_role: ""` (the wire type has
+no serde default for the role; topology decision 48 specifies the empty string as the board-origin form, which the
+reviewer confirmed is not "both"); a board-origin signal re-opens on its board, and one whose board is no longer
+enrolled gets a "(board not enrolled)" option rather than falling back to `dut`. No `src/` change: `/api/signals`
+passes `SignalLink` through. This closes the UI half `suite/046` left. **My first fold attempt was refused (entry
+not yet written) and my `&&` chain ran past it through a `| tail`, exactly as `core/121`'s entry describes: a
+`leg-fold` tick and the Slack line went out before the fold, and that line's detail names `6566cce6` (the `api/130`
+fold) as this unit's fold.** The real fold is the commit after it.
+**Merged:** `agent/ui/098-signals-know-a-board-origin` (code `7361c2b` on `9d23e62`, doc `58cf8732` rebased from the
+worker's commit onto `7cd6a2e6` before the ff). Gate on the merge result: ui build/test (206 pass)/clippy `-D
+warnings` green, client names clean, `check-docs.py` 11/11, ownership `ui` OK on both branches. Owner's ui checkout
+fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. Not driven in a browser by the worker or me (`tests/browser/drive_topology.py` needs only
+geckodriver and a debug build); one real `declare_signal origin_board=` then a dialog re-save is the check that matters.
+**Budget:** PROCEED, weekly 4.2% at leg start, wave 6.
+**Least sure about:** the dialog change is build- and lint-checked only; no headless or browser run exercised the
+board option or the re-save.
+
 ## 2026-10-28 15:49 — api/130 embarch-api stack plan, fold and restack
 
 **Decided:** nothing suite-wide. The worker's api decision 96 (new `decisions/stack.md`, `interfaces/stack.md`):
