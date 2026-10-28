@@ -97,6 +97,45 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 15:28 — suite/046 a bench board owns signals and is read and validated by its probe
+
+**Decided:** **a suite-wide, supervisor-approved cross-repo design (protocol §8), run by me as this leg's last unit.**
+Announced by the previous leg (`ts` `1793219633.062879`, 14:33:53); the window closed 15:03:53 with no reply in the
+thread or the channel (polled 15:06:46). `embarch-topology` decision 48 (new `decisions/links-origin.md`):
+`SignalLink.origin_board: Option<String>`, a role-less bench board's probe serial, serde default and omitted when
+absent, `origin_role` empty when set; `SignalOrigin` and `find_signal_origin_board`; `declare` resolves a board's
+enrolled name to its probe serial and refuses an unenrolled board, a name two bench boards share, a probe enrolled
+under a role, and a signal naming both or neither origin (an empty role used to be accepted); `SignalMismatch` and
+`SignalAmbiguous` gain `origin_board` (a pub struct field: the one literal in Core was updated);
+`find_enrolled_by_probe`. `embarch-core` decision 103 (in `decisions/roles.md`): the outpost pre-flight reset and an
+exchange's core-state read resolve through the signal's origin; refusals name a bench board by name and probe; the
+pre-flight's two messages lost a run of embedded spaces; `/live/mem-read` and `/live/core-state` take `probe_serial`
+(role still defaults to the DUT); `/validate` takes exactly one of `role`/`probe_serial`; both forms is 400 before
+`hw_lock`. `embarch-api` decision 95 (new `decisions/bench-board-forms.md`): `Board`, `validate_board`,
+`mem_read_board`, `core_state_board` in `embarch-core-client` (role methods delegate, ui unaffected); a by-probe live
+answer from another probe is refused as a stale Core; `declare_signal` reads a board-origin row back and refuses one
+an older Core stored without it; tools and CLI take `origin_board` / `probe_serial`. **Not a wire-schema bump**
+(additive request fields). The UI half is filed as `tasks/ui/098`: the signals dialog re-save would move a
+board-origin signal back to `dut`.
+**Merged:** `agent/suite/046-bench-board-owns-signals` (topology `462e92e` + `76bd3d1` on `b4d1b0a`, core `2fccb61`
+on `c54591a`, api `943f89d` on `8e25811`, doc `b199ab9e`; all ff). Gate on the merge result: topology all four
+feature sets build/test/clippy green, core 366 pass, api `--workspace` 321 pass, `embarch-core-client --all-features`
+builds, clippy `-D warnings` green in all three; consumers rebuilt against the new crates in scratch worktrees: ui 206
+pass, umbrella 256 pass, clippy green; client names clean in all three; `check-docs.py` 11/11. Owner's topology, core
+and api checkouts fast-forwarded. Shared crates touched (topology, `embarch-core-client`); diffs are mine.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** (1) nothing deployed: the live Core and the installed `embarch-api` predate this; (2) one real
+run on a bench board: `declare_signal origin_board=<its name>`, `mem_read probe_serial=`, `validate probe_serial=`,
+and a reset resolved from that signal; (3) native Windows build of `embarch-core`.
+**Budget:** PROCEED, weekly 3.3% at leg start, 4.1% at this unit, wave 6.
+**Least sure about:** an older Core given a by-probe `mem_read` still halts and resumes the DUT once before the
+client refuses its answer; and `declare` now refuses an empty `origin_role`, which nothing I found sends but an
+external script could. **Leg close (next leg, read this first):** 4 of 4 units; dispatchable now: `api/128`,
+`api/130`, `api/144`, `ui/098`, `suite/048`, `suite/049` (both unannounced), `atlas/*` still skipped per
+`tasks/doc/089`; bench unattached. During this unit the `.worktrees/<repo>/embarch-topology` and `embarch-api`
+sibling links of core, api, ui and umbrella pointed at my 046 trees; all six are restored to the main checkouts.
+
 ## 2026-10-28 15:06 — core/121 a bench study on a captured signal is refused at submission
 
 **Decided:** nothing suite-wide. The worker's core decision 102 (`decisions/signal-capture.md`, beside 92): `POST
