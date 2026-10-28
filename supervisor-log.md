@@ -97,6 +97,29 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 13:52 — core/118 halt_count takes the gate's share from Validation.halts
+
+**Decided:** nothing suite-wide. Decision 97 (`embarch-core/decisions/live-read.md`) amended: the identity
+gate's share of `halt_count` now comes from `embarch-topology`'s `Validation.halts` (topology decision 47),
+which also covers the Nordic last-resort halted read (decision 39); `live::gate_halts`, the chip-prefix guess,
+is deleted. `interfaces/hardware.md` matches. Reserve untouched (`open.md`, `spec.md` not grown).
+**Leg context (read this first, next leg):** `suite/047` (installed binary names its commit, atomic install)
+is announced and parked by the previous leg, `ts` `1793216385.010889`, window closes 14:09; this leg runs it
+as its last unit if no objection. Inbox drop (fold-commit retire-after-log) merged into `tasks/doc/050` as its
+second recurrence. Workaround used here: the task's `done` line is committed before the fold so the script's
+`git rm` sees an unmodified file.
+**Merged:** `agent/core/118-halt-count-uses-validation-halts` (code `72bbd52`, doc `02869ae6`, doc rebased
+onto `4b128505` before the ff). Gate on the merge result: core build/test (358 pass)/clippy `-D warnings`
+green, client names clean, `check-docs.py` 11/11, ownership `core` OK on both branches. Owner's core checkout
+fast-forwarded. The worker left the claim line; `done` set in `8f7e81f4`, committed before the fold.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** (1) a real STM32G0 through `POST /live/core-state` on a running core should report
+`halt_count == 1` by default and 2 with `halt=true`; (2) native Windows build of `embarch-core`. Not deployed.
+**Budget:** PROCEED, weekly 1.7% at leg start, wave 6.
+**Least sure about:** the new test feeds a scripted gate count; nothing has shown topology's `halts` is right
+for a family other than the ones decision 47 was written against.
+
 ## 2026-10-28 13:39 — api/129 embarch-api patches round-trips a west patch series through one scratch tree
 
 **Decided:** nothing suite-wide. The worker's api decision 92 (new `decisions/patches.md`): a CLI-only
