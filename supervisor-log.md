@@ -97,6 +97,23 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 13:35 — study-designer/078 decision 81 no longer claims a "0 of 0" print
+
+**Decided:** nothing suite-wide. Decision 81's **Record check** paragraph (`embarch-study-designer/decisions/seals.md`)
+now says the crate prints nothing itself (`RecordReport` has no `Display`) and that `all_verified()` is false at
+`total == 0`, with a 2026-10-28 amendment line pointing at the consumers' "no records found" (`embarch-core`
+decision 86, `embarch-api` `record_summary`). Nothing in the crate printed "0 of 0", so the sentence described
+consumers, not the crate. No code change.
+**Merged:** `agent/study-designer/078-decision-81-zero-record-wording` (doc `e35da7be`, rebased onto `bf6efa5d`
+before the ff; no code commit, the code branch was deleted unpushed). Gate: ownership `study-designer` OK,
+`check-docs.py` 11/11. The worker ticked both boxes but left the claim line; I set `State: done` at the fold.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 0.5% at leg start, wave 6.
+**Least sure about:** nothing material; the reviewer grepped study-designer, core and api for "0 of 0" and found no
+other occurrence, but the UI was not searched.
+
 ## 2026-10-28 13:34 — core/116 a host study runs Repeat and renders per-pass line counts
 
 **Decided:** nothing suite-wide. The worker's core decision 99 (`decisions/host-study.md`): Core runs
