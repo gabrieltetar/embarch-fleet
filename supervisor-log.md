@@ -97,6 +97,34 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 14:52 — core/120 GET /serial-log resolves a declared signal
+
+**Decided:** nothing suite-wide. The worker's core decision 101 (`decisions/logging.md`, beside 58): `port` on
+`GET /serial-log` is optional; `signal` and `port_wait_ms` (default 0, cap `exchange::MAX_TIMEOUT_MS`) are new;
+exactly one of `port`/`signal`, both or neither a 400 naming both, checked before `hw_lock`. The signal form: an
+undeclared signal is 404; a `via-dev-bench` route or a `host-to-dut` direction is 409; a running capture on the
+signal is 409 (decision 92, the capture owns the port; the worker added this, it was not in the task);
+`exchange::resolve_port_waiting` finds the port (decision 79, one resolver); it opens at the signal's baud with
+`baud` an override only; the response's `port` is the name opened. The `port` form is unchanged. This completes
+api/125's pair: the api's query names were kept. **In the fold I added 101 to the Logging row of
+`embarch-core/decisions.md`'s index (and its size, 10.9 KB), which the worker missed; the gate does not check
+that index.** **Leg close (next leg, read this first):** `suite/046` was announced at 14:33:53 (`ts`
+`1793219633.062879`), no reply at 14:58, window closes 15:03:53; run it as your last unit if the thread is still
+silent. Its task file's state line carries the `ts`. It touches the same Core `api.rs` this unit just changed.
+**Merged:** `agent/core/120-serial-log-resolves-a-declared-signal` (code `c9bdfab` on `2d3532d`, doc `3c959c85`
+rebased onto `c73f6519` before the ff). Gate on the merge result: core build/test (364 pass)/clippy `-D warnings`
+green, client names clean, `check-docs.py` 11/11, ownership `core` OK on the doc branch (the code-repo check ran
+after the ff, so it saw no diff; the code branch was one commit on unchanged `main`). Owner's core checkout
+fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** (1) once deployed, one `serial_log signal=<name> port_wait_ms=~10000` across a DUT reset on
+a CDC ACM console: expect 200, `port` the new name, lines at the signal's baud; one `signal=` on a `host-to-dut`
+signal, expect 409; (2) native Windows build of `embarch-core`. Not deployed.
+**Budget:** PROCEED, weekly 2.4% at leg start, wave 6.
+**Least sure about:** the unresolvable-port and running-capture 409s have no unit test (they need real topology
+state or a live capture), and reset survival rests on decision 79's wait, proven only against a fake resolver.
+
 ## 2026-10-28 14:50 — ui/096 drive_topology.py isolates its state; its stale check passes
 
 **Decided:** nothing suite-wide. Test script only: `drive_topology.py` now sets `EMBARCH_UI_STATE` to a scratch
