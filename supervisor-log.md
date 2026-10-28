@@ -97,6 +97,29 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 14:49 — umbrella/093 embarch setup installs the desk service and plugin
+
+**Decided:** nothing suite-wide. The worker's umbrella decision 58 (`decisions/setup-reversal.md`): `setup` locates
+`embarch-desk` (`EMBARCH_DESK_BIN`, `PATH`, the canonical bin dir) and `claude`, then runs `embarch-desk service
+install` (Linux only) and `claude plugin install embarch-desk@embarch`, each reported done / skipped / FAILED by
+name; a failed step exits 1 without stopping the other; `--dry-run` runs nothing; `setup --uninstall` removes the
+service before the install undo and the plugin only if `claude plugin list` names it. It does not add the
+`embarch` marketplace (its source is a desk checkout, a path it would have to guess). `SUITE_BINARIES` unchanged.
+In the fold I consumed its `status.d` fragment into `embarch-desk/open.md`: the "Umbrella does not install it
+yet" bullet now says setup installs it, unrun for real, marketplace by hand.
+The worker filed `tasks/umbrella/094` (compact `open.md`, 4,098/5,120 B), blocked `In flux: yes`, due 2026-11-11.
+**Merged:** `agent/umbrella/093-setup-installs-the-desk` (code `4c786fa` on `97b1358`, doc `8469ab5f` rebased
+onto `aeb1f31d` before the ff). Gate on the merge result: umbrella build/test (256 pass)/clippy `-D warnings`
+green, client names clean, `check-docs.py` 11/11, ownership `umbrella` OK on both branches. Owner's umbrella
+checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** owner run: one real `embarch setup` on a machine with `embarch-desk` and `claude`, both steps
+reporting done (the service install restarts the live desk), then `setup --uninstall` removing both.
+**Budget:** PROCEED, weekly 2.4% at leg start, wave 6.
+**Least sure about:** whether `claude plugin install embarch-desk@embarch` succeeds without the marketplace added
+first — unchecked; on a machine without it `setup` now exits 1, which can break a `setup && ...` chain.
+
 ## 2026-10-28 14:48 — api/125 serial_log reads a declared signal
 
 **Decided:** nothing suite-wide. The worker's api decision 94 (new `decisions/serial-log-signal.md`): `serial_log`
