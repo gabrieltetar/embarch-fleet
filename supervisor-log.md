@@ -97,6 +97,32 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 15:06 — core/121 a bench study on a captured signal is refused at submission
+
+**Decided:** nothing suite-wide. The worker's core decision 102 (`decisions/signal-capture.md`, beside 92): `POST
+/study` answers `409` naming the tap, the signal and the capture when a `StreamSource::Signal` tap names a signal a
+running capture holds; it runs right after `validate_study`, before the study lock, the identity gate, the flash and
+the reset, with the lookup `GET /serial-log` uses (101). Sharing the capture's handle the way a host study's taps do
+(98) is rejected for bench studies, not deferred. The `open.md` bullet went (that file was 92 B from its cap).
+**In the fold I rewrote decision 92's "Not done: one port owner with a study's signal tap" paragraph**, which still
+said such a study "is not refused by name" and pointed at the deleted `open.md` item; it now points at 102. That
+was the reviewer's finding; I fixed it here and deleted its drop rather than filing a task. My first fold attempt
+was refused (entry not yet written) and my `&&` chain ran on past it through a `| tail`, so the Slack line for this
+unit went out before the fold and its detail names `1ac397d3` (the doc merge) as the fold; the real fold is the
+commit after it.
+**Merged:** `agent/core/121-bench-study-refuses-captured-signal` (code `c54591a` on `c9bdfab`, doc `1ac397d3`
+rebased from `21d32f7d` onto `e75e9c17` before the ff). Gate on the merge result: core build/test (363 + 2 pass)/clippy
+`-D warnings` green, client names clean, `check-docs.py` 11/11, ownership `core` OK on both branches. Owner's core
+checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** 1 finding — inbox/core-decision-92-not-done-clause-stale-after-102.md (fixed in this fold, drop deleted)
+**Hardware debts:** (1) native Windows build of `embarch-core`; (2) once deployed, one bench study tapping a signal
+while `POST /signals/{name}/capture` holds it: expect `409` and no flash. Not deployed.
+**Budget:** PROCEED, weekly 3.3% at leg start, wave 6.
+**Least sure about:** the check runs before the declared-signal check, so a captured name that was removed with
+`remove_signal` after the capture started gets `409` rather than the undeclared `400`; the reviewer judged it harmless
+and no decision orders the two.
+
 ## 2026-10-28 15:04 — ui/097 the bench box takes its label on the first draw after the pickers answer
 
 **Decided:** nothing suite-wide, and no ui decision: `loadRolePickers()` now redraws the topology diagram when
