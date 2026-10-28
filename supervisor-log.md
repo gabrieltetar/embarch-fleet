@@ -97,6 +97,32 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 16:41 — study-designer/080 a pure reordering is reported under the part that moved
+
+**Decided:** nothing suite-wide. Filed by this leg's refill from `study-designer/079`'s least-sure line. The
+worker amended study-designer decision 87 in place (no new number): an order-only difference is one `(order)`
+entry under each part whose order moved (`source`, `frame`, `session variable`, `state`); a definition differing
+only outside those four lists is part `protocol`, name `(name)`, never `state`. `Difference::part` is still
+`&'static str` and its doc comment lists all five values. A part with an add, remove or modify gets no separate
+order entry (in decision 87). **Leg context (next leg, read this first):** this leg started 16:28 at `db81050d`.
+`suite/048` (operator prompt step) announced 16:29, `ts` `1793226580.382079`, window closes 16:59:40; the state
+line carries it. Refill filed `study-designer/080`, `ui/099` (show the divergence), `topology/068`
+(`min_interval_ms` measurement point, undispatched, for scope spread). Bench: `validate dev-bench` and `validate
+dut` both not attached, not a mismatch (the DUT role is now enrolled as an STM32G0B1VE, probe `000852006107`);
+`fleet-hardware.py --refresh` still crashes (`tasks/doc/041`). Overdue ledger: `suite/030` (blocked on the
+owner) and `doc/031` (owner-only); nothing payable. `atlas` still skipped per `tasks/doc/089`.
+**Merged:** `agent/study-designer/080-order-label` (code `d9dee0e` on `f0de25e`, doc `c5b6c58f`, both ff). Gate on
+the merge result: every CI cell (default, alloc, std, gatt-extract, study-ui, eap-parse tests; alloc and ffi
+builds; clippy `-D warnings` all-features, no-default, alloc) green, client names clean, `check-docs.py` 11/11,
+ownership `study-designer` OK on both branches. Shared crate: diff read, additive (one new private helper, one new
+`part` value). Owner's study-designer checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 6.1% at leg start, wave 6 (3 worker scopes dispatched).
+**Least sure about:** the `protocol`/`(name)` case cannot arise from `protocol_divergence` as called, since both
+sides resolved by the same name; it exists only so nothing borrows `state`.
+
 ## 2026-10-28 16:27 — suite/049 SCPI bench instruments: declared, one command per exchange, a host-study step
 
 **Decided:** **a suite-wide, supervisor-approved cross-repo design (protocol §8), run by me as this leg's last unit.**
