@@ -128,7 +128,11 @@ def field(body: str, name: str) -> str | None:
     m = re.search(r"^\*\*" + re.escape(name) + r":\*\*\s*[" + re.escape(EMPHASIS)
                   + r"]*([a-z-]+)", body, re.M)
     return m.group(1) if m else None
-CLAIM_RE = re.compile(r"^claimed by\s+(\S+?),\s*(\d{4}-\d{2}-\d{2} \d{2}:\d{2})")
+# The claim line's one grammar (tasks/README.md "claimed"): the branch and the
+# time, then free prose. `agent/` is required because the branch is what a
+# recovery reaches for; a bare word before the comma names nothing to recover.
+CLAIM_RE = re.compile(
+    r"^claimed by\s+(agent/\S+?),\s*(\d{4}-\d{2}-\d{2} \d{2}:\d{2})(?!\d)")
 
 
 def parse(path: str) -> dict:

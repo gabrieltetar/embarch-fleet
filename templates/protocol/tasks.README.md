@@ -96,6 +96,17 @@ after token zero** — that is what the rest of the line is for.
 
 - **claimed** — the claim line becomes
   `**State:** claimed by agent/<scope>/<NNN-slug>, <yyyy-mm-dd HH:MM>`.
+  **That prefix is parsed, and only that prefix**: the branch is the handle a
+  recovery needs, and the time is the 4-hour backstop below. Anything after
+  the time is prose — a window's `ts`, a note — and is welcome there (not a
+  leg number: a leg has none, `tasks/doc/054`). Anything *instead of* the
+  prefix is not: `queue-status.py` reads such a claim
+  as abandoned, with no branch, and a successor leg would re-dispatch the live
+  task (`tasks/doc/076`). The improvised `claimed (leg NNN unit N)` is
+  deliberately not accepted as a second form: 253 of the 509 claims written
+  before 2026-09-18 used some variant of it, and 146 of those named no branch
+  anywhere, so a wider reader would have had nothing to recover. Since then,
+  1 of 156.
   Claiming is a commit to `main` by the supervisor **before** dispatch, not by
   the worker after it starts. Two supervisors cannot both claim; one supervisor
   is what this relies on.
