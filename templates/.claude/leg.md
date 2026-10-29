@@ -732,7 +732,8 @@ is exactly the moment the watchdog needs on the clock.
 
 **Land, as each reports.** Re-run the gate yourself on the merge result, not on
 the branch (§10): the repo's `cargo build` / `test` / `clippy --all-targets --
--D warnings` (an npm or Python repo: its own bullet in `gate.md`), plus a native
+-D warnings` (a shared crate once per feature set its consumers build it with;
+an npm or Python repo its own bullet — both in `gate.md`), plus a native
 Windows build where `embarch-core` is involved, plus
 `python3 scripts/check-docs.py` in `embarch-doc` — **the wrapper, never a count
 or a list of your own**, which said "six" here while it ran eight — plus
