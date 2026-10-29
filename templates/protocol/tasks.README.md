@@ -312,6 +312,13 @@ probe-rs counterfactual, which is evidence and not proof and reads as proof once
 shortened.
 ```
 
+**Each is a field at a line start, and the task has one `**State:**` line.**
+Leg 133 shipped both other shapes green: an `In flux` answer written as a
+`## In flux: yes` heading on a task left `open`, and a second `State: blocked`
+line at the foot under a first that said `open`. The worker filing a debt
+mid-unit never reads this file, so `check-task-state.py` refuses both at its own
+gate rather than the supervisor repairing them at the fold (`tasks/doc/077`).
+
 - **`Compacts:`** is what `check-doc-size.py` matches on. It matches this field
   and nothing else: a path merely *mentioned* in a task body made five of one
   day's twelve files read as filed, because every task cites the doc it is about

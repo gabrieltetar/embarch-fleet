@@ -516,7 +516,8 @@ task file naming each file and its headroom, so it plans instead of discovering.
 And tell it the rule it owes: **if its work spends the reserve — pushes a file
 into it, or leaves one there that nothing has filed — it files
 `tasks/<its own scope>/<NNN>-compact-<its own scope>.md` in the same commit.**
-`tasks/README.md` has the shape — and note the path changed on 2026-09-05: it
+`tasks/README.md` has the shape, and the worker's own gate refuses a debt filed
+without its `In flux:` field or with two `State:` lines — and note the path changed on 2026-09-05: it
 used to say `tasks/doc/`, which `check-ownership.py` refuses to every worker
 (`tasks/doc/004`). `tasks/doc/` is yours and the owner's. It is not the worker's job to *do* the compaction; it is its job to
 record the debt while it still holds the one piece of context nobody else will
