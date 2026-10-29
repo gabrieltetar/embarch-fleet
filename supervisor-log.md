@@ -97,6 +97,25 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 16:06 — atlas/024 a non-object record line is written back as it was
+
+**Decided:** nothing suite-wide. `records.load_records` wraps a JSONL line that parses but is not an object in
+`RawLine` (an empty dict carrying the line's original text and number); `save_records` writes that text back
+verbatim; `run_check` reports it as `V: <file>:<line>: line is not a JSON object (kept as written)` and gives it no
+prov. New `common.read_jsonl_lines`; `read_jsonl` unchanged for callers. **I sent it back once before merging:** the
+first version re-serialised the value, so `[1, 2,   3]` came back `[1, 2, 3]` while the task said byte for byte;
+the worker kept the text and the test now asserts the exact input after a direct save and after `run_check`.
+**Merged:** `agent/atlas/024-save-records-keeps-a-non-object-line-as-written` (code `fa98820` on `5fd3caa`, ff, three
+commits; doc `72a7dcaf`, the worker's `da3e3dd9` cherry-picked). Gate on the merge result: worktree venv `pytest -q`
+415 passed, 2 skipped (real west workspace, built atlas; `test_public_guard` ran), client names clean,
+`check-docs.py` 12/12, ownership `atlas` OK on both branches. Owner's atlas checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 25.1% at this unit, wave 6.
+**Least sure about:** the code branch carries a commit with a failing test (`c65cb61`, fixed by `ba07dcd`), so a
+bisect over `embarch-atlas` can land on a red commit; I did not squash it.
+
 ## 2026-10-29 16:00 — chat/006 /embarch-claude-md cites agent-guide §1.1
 
 **Decided:** nothing. `plugin/commands/embarch-claude-md.md` now cites `suite/agent-guide.md` §1.1 (was
