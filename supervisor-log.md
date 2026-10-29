@@ -97,6 +97,38 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 17:52 — atlas/005 the console follows the running image
+
+**Decided:** nothing suite-wide. `[live] consoles` in `atlas.toml` maps a devicetree UART node (path, node name or
+label) to a signal; with it set and no `[live] console` pin, `Console` reads the build's `chosen`
+`zephyr,shell-uart` and, only once `image_check` shows the flash holds that build, uses the mapped signal alone (a
+node mapped to nothing answers "no signal is declared for it" and tries nothing). Unconfirmed, it tries the declared
+consoles in name order and moves past one **only when not a byte came back** (no text, no `port_lost`), never after a
+reply or a lost port. **This narrows `atlas/014`'s "a silent reply is an answer, never a retry" to the
+not-last console, as the task asked**; DESIGN.md reworded in the same diff. I read the diff before merging for that
+reason. **Filed `tasks/atlas/026`** from the reviewer's residuals: DESIGN.md's older-Core sentence ("may have run")
+now holds only on the last console, and the rule assumes a shell that echoes. I wrote into the task that gating on
+`written` (the reviewer's first suggestion) would disable the bridge case the feature exists for.
+**Merged:** `agent/atlas/005-console-follows-the-running-image` (code `b1d4e6e` on `1eb055f`, ff; doc `cc5ed29f` on
+`3d3c7037`, ff). Gate on the merge result: worktree venv `pytest -q` 498 passed, 3 skipped (real west workspace,
+built atlas, vendor SVD; `test_public_guard` ran), client names clean, `check-docs.py` 12/12, ownership `atlas` OK on
+both branches. Owner's atlas checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** the board with its shell switchable between a USB-UART bridge and USB CDC ACM, both declared as
+signals, shell on USB: with `[live] consoles` mapping both nodes and the build pinned, `embarch-atlas live shell
+"kernel uptime"` answers through the CDC signal and the `src:` line says "the image's shell is on <cdc node> (...
+flash matches ...)"; without `[live] consoles`, the bridge is passed over and the `src:` line says no byte came back
+from it. The task file that carried this is retired by this fold.
+**Budget:** PROCEED, weekly 28.6% at leg start, 29.0% at this fold, wave 6.
+**Least sure about:** whether a real Core's `signal-exchange` reply carries an empty `text` when nothing arrives;
+the tests model it that way with a fake `call_api`, and the fall-through rests on it.
+**Leg context (next leg, read this first):** started 17:42 at `46ab7922`, clean recovery (no claims, no unit
+worktrees), inbox empty. Bench: `dut` attached, `dev-bench` not (refreshed buffer), so `api/059`, `dev-bench/035`,
+`038` stay open. Ledger: nothing overdue. Spread sweep skipped: no source changed since the 15:26 "nothing filed"
+line. Only `atlas` dispatchable, so units run one at a time; `atlas/025` was dispatched at this fold's start.
+`embarch-doc`'s origin still carries `agent/ui/059-diff-new-lines-republish` (not mine; fold has not pruned it).
+
 ## 2026-10-29 17:40 — atlas/010 missing.md records the engineer's answers, and net_trace walks through generic cards
 
 **Decided:** nothing suite-wide. New `answers.py`: `inventory/answers.toml` (`[parts."<MPN>"]`, `answer` =
