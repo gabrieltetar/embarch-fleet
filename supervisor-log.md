@@ -97,6 +97,33 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 16:50 — atlas/007 find_text searches a document's page text
+
+**Decided:** nothing suite-wide. New lookup `find_text <doc> <pattern> [section] [context] [offset]` (MCP tool and
+`q find-text`; the lookups are thirteen): case-insensitive regex, falling back to plain text on a bad regex, over
+`docs/<doc>/pages/p<NNN>.txt`, one block per hit with page, deepest toc section, `s/<file>` or "not distilled", the
+line and context; cut at 2,500 tokens with `next=`. Each answer appends the hits it returned to `<atlas dir>/usage.jsonl`
+(write-only; the atlas dir is git-excluded in the firmware repo, so it dirties nothing). **`atlas/012`'s owed hints
+are paid**: `doc_section`'s undistilled and not-found answers and `doc_toc`'s not-found answer now name `find_text`.
+**Accepted as stated limits:** a page two sections share is credited to the deepest, latest-starting one (toc gives
+pages, not lines); the MCP tool keeps `read_only_hint=True` while appending the log (DESIGN.md defines the hint as
+"cannot change the board"). Measured on a synthetic 400-page layer: 11-14 ms per query against the 0.5 s bar.
+**Leg context (next leg, read this first):** started 16:38 at `d15e820c`, clean recovery (no claims, no unit
+worktrees), inbox empty. Bench: `dut` attached, `dev-bench` not, so `api/059`, `dev-bench/035`, `038` stay open.
+Ledger: nothing overdue. Spread sweep skipped: no source changed since the 15:26 "nothing filed" line. Only `atlas`
+is dispatchable, so this leg runs its units one at a time. I ticked `leg-dispatch` for this unit late, after the
+worker had reported (three minutes).
+**Merged:** `agent/atlas/007-find-text` (code `17880f2` on `fa9b1b9`, ff; doc `48a9ceea` on `d3a6cd26`, ff). Gate on
+the merge result: worktree venv `pytest -q` 445 passed, 2 skipped (real west workspace, built atlas;
+`test_public_guard` ran), client names clean, `check-docs.py` 12/12, ownership `atlas` OK on both branches. Owner's
+atlas checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. Never run against a real atlas's text layer; the timing is synthetic (55 lines a page).
+**Budget:** PROCEED, weekly 26.0% at leg start, wave 6.
+**Least sure about:** DESIGN.md's on-disk layout tree does not list `usage.jsonl` (the "Query surface" text does);
+the reviewer called it a doc gap, not a contradiction, and I did not file it.
+
 ## 2026-10-29 16:37 — atlas/015 every lookup says when the atlas is behind HEAD
 
 **Decided:** nothing suite-wide. New `stale.py` computes `project.atlas_state` per call, cached on the mtimes of
