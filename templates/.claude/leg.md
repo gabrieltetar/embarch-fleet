@@ -206,7 +206,9 @@ in a normal leg, and a wide wave is not a reason to do it less carefully.
   live Core. You run unattended; `embarch-dev-workflow.md` §5's autonomy was
   granted to an attended session.
 - **A worker gets one task, in one repo, on one branch.** Never dispatch a
-  `suite/` task to a worker — you execute those yourself (§8), and only after
+  `suite/` task to a worker — `queue-status.py` lists them under `suite` and
+  keeps them out of `dispatchable` for the reason it keeps bench tasks out
+  (`tasks/doc/043`). You execute those yourself (§8), and only after
   **announcing and parking** it: `scripts/fleet-post.py` saying in one sentence
   what you are about to do and why, with the repos and the paths in `--detail`;
   it prints the message `ts`, which you record in the task file. **No
@@ -396,7 +398,9 @@ owner's cue to top it up, and he should hear it before it reaches zero:
   line, so the post is worthless to the fleet without it. Do not pick one yourself,
   do not invent work to fill a slot, and **do not write a dreamt item into the
   queue** — an empty queue is the one moment the fleet genuinely does not know
-  what is worth doing, which is why it asks instead of guessing. The pump stays
+  what is worth doing, which is why it asks instead of guessing. **An open
+  `suite` task is not an empty queue**: zero dispatchable means zero for a
+  worker, and the suite task is yours to announce. The pump stays
   latched on; the listener will not respawn you into another dream for 6 hours.
 
   **Confirm the zero before you post it.** A dream both pages the owner and

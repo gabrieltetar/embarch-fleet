@@ -100,6 +100,12 @@ INBOX = "inbox"
 # counting them here would size a wave against work no worker can take.
 DISPATCHABLE_HW = ("none", "verify-only")
 BENCH_HW = "bench"
+# The same for a scope: a `suite/` task is never dispatched to a worker -- the
+# supervisor runs it itself, after a 30-minute announcement window (protocol.md
+# section 8). Until `tasks/doc/043` it was counted in `dispatchable`: leg 085
+# sized a wave of 6 against "dispatchable: 12" when all twelve were `suite`
+# and no worker could be given anything, and LOW QUEUE never printed.
+SUITE_SCOPE = "suite"
 
 STATE_RE = re.compile(r"^\*\*State:\*\*\s*(.+?)\s*$", re.M)
 # Markdown emphasis a field's value may legitimately carry. Stripped before the
@@ -221,7 +227,7 @@ def stale_reason(task: dict, no_supervisor: bool, after_h: float,
 def classify(tasks: list[dict], no_supervisor: bool, after_h: float,
              now: dt.datetime) -> dict:
     buckets = {"open": [], "recoverable": [], "claimed": [], "gated": [],
-               "bench": [], "owner_gated": [], "other": []}
+               "bench": [], "suite": [], "owner_gated": [], "other": []}
     for t in tasks:
         hw_ok = t["hardware"] in DISPATCHABLE_HW
         if t["state"] not in ("open", "claimed"):
@@ -235,6 +241,9 @@ def classify(tasks: list[dict], no_supervisor: bool, after_h: float,
             buckets["bench"].append(t)
         elif not hw_ok:
             buckets["gated"].append(t)
+        elif t["scope"] == SUITE_SCOPE and t["state"] == "open":
+            # Listed, never totalled into `dispatchable`, exactly as bench is.
+            buckets["suite"].append(t)
         elif t["state"] == "open":
             buckets["open"].append(t)
         else:
@@ -359,6 +368,7 @@ def main() -> int:
             "hardware_gated": [{"path": t["path"], "hardware": t["hardware"]}
                                for t in b["gated"]],
             "bench": [{"path": t["path"], "scope": t["scope"]} for t in b["bench"]],
+            "suite": [t["path"] for t in b["suite"]],
             "owner_gated": [t["path"] for t in b["owner_gated"]],
             "other": [{"path": t["path"], "state": t["state"]} for t in b["other"]],
             "inbox": drops,
@@ -369,6 +379,9 @@ def main() -> int:
     print(f"dispatchable: {dispatchable}")
     if b["bench"]:
         print(f"bench (supervisor-only, run one at a time): {len(b['bench'])}")
+    if b["suite"]:
+        print(f"suite (supervisor-only, announced and parked before it runs): "
+              f"{len(b['suite'])}")
     for t in b["open"]:
         print(f"  open        {t['scope']:<14} {t['path']}")
     for t in b["recoverable"]:
@@ -380,6 +393,8 @@ def main() -> int:
         print(f"  claimed     {t['scope']:<14} {t['path']} (respected)")
     for t in b["bench"]:
         print(f"  bench       {t['scope']:<14} {t['path']} (supervisor's own hands)")
+    for t in b["suite"]:
+        print(f"  suite       {t['scope']:<14} {t['path']} (supervisor's own; announce first)")
     for t in b["gated"]:
         print(f"  hw-gated    {t['scope']:<14} {t['path']} ({t['hardware']})")
     for t in b["owner_gated"]:
@@ -393,6 +408,10 @@ def main() -> int:
     if not dispatchable:
         print("NOTHING DISPATCHABLE -- a leg would refill, and dream if refill also "
               "finds nothing (ops.md section 7).")
+        if b["suite"]:
+            print(f"  ...to a worker. The {len(b['suite'])} suite task(s) above are "
+                  "the leg's own work, so this is not a dry queue: announce one "
+                  "rather than dream.")
     return 0 if dispatchable else 1
 
 
