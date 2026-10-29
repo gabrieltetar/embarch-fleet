@@ -55,25 +55,36 @@ esac
 fail=0
 
 # --- BLOCKING: client names ------------------------------------------------
+# What the push SENDS, from git's stdin: every commit the remote lacks -- its
+# message, every path it touched, every blob the remote does not have yet; for
+# a new repo, the whole history. Until 2026-10-29 this scanned the working
+# tree and `<main>..HEAD`'s messages, and the suite commits straight to `main`,
+# so on `main` no message was ever read: five reached public history that way
+# (tasks/suite/050). The tree scan still runs, so an uncommitted edit counts.
 if [ -f "$fleet_scripts/check-client-names.py" ]; then
-  if ! out=$(python3 "$fleet_scripts/check-client-names.py" --repo "$repo_root" 2>&1); then
+  if ! out=$(python3 "$fleet_scripts/check-client-names.py" --repo "$repo_root" --pre-push "${1-}" 2>&1); then
     printf '%s\n' "$out"
     cat <<'MSG'
 
-PUSH REFUSED: a denylisted client name is in the tree you are about to push.
+PUSH REFUSED: a denylisted client name is in what you are about to push -- the
+tree, or a commit message, path or file in a commit this push sends.
 
 This is not recoverable by a later commit. A name in pushed history stays in
-that commit's tree, and taking it out means rewriting every SHA after it.
+that commit for good, and taking it out means rewriting every SHA after it.
+Before the push it is still cheap.
 
 Fix it here, before the push:
-  1. The report above names the file and line, and an entry NUMBER rather than
-     the name -- read the number in .fleet/client-names. Do not paste the name
-     into a commit message, a log entry or an agent transcript; that is the
-     leak, not the fix.
-  2. Move the value to a machine-local file outside every repo, next to the
-     denylist itself, which is kept there for exactly this reason.
+  1. The report above names the file and line, or the commit, and an entry
+     NUMBER rather than the name -- read the number in .fleet/client-names. Do
+     not paste the name into a commit message, a log entry or an agent
+     transcript; that is the leak, not the fix.
+  2. In the tree: move the value to a machine-local file outside every repo,
+     next to the denylist itself, which is kept there for exactly this reason.
      `embarch-fleet/hardware.toml`'s header is the worked example.
-  3. Re-run the check, then push.
+  3. In a commit (its message, or a file a later commit removed): reword or
+     rewrite that commit before it leaves this clone. Removing it in a new
+     commit does not help -- the push still sends the old one.
+  4. Re-run the check, then push.
 
 MSG
     fail=1

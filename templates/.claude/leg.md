@@ -1023,6 +1023,15 @@ what a four-unit bound exists to prevent. Then `python3 scripts/fold-day.py
 --roll` if `--status` says the file is over the line. Both land in that unit's
 own `fold-commit.py` commit, like everything else.
 
+**The same unit runs `python3 scripts/check-client-names.py --suite --history`**
+once — every repo's whole history against the client denylist, ~25 s
+[2026-10-29]. The pre-push hook reads what each push sends; this finds what it
+cannot, a name added to the denylist after the push that carried it. **A red is
+not yours to fix**: a name in pushed history means rewriting public `main`,
+which is the owner's. Put each red repo and the entry numbers it names in that
+unit's log entry and your final message — never an excerpt line — and carry on.
+It is not an alert: `{{FLEET_REPO}}/ops.md` §3's set is closed.
+
 **Then check your own hands**, once, before you exit:
 `git diff --name-only <leg-start-sha>...HEAD | python3
 scripts/check-ownership.py --supervisor --stdin`. **Red now means one of two

@@ -124,12 +124,14 @@ def main() -> int:
             backup.write_text(have, encoding="utf-8")
             print(f"  kept the previous hook as {backup}")
 
+    # Before the first write, not between the two: a hooks directory git names
+    # but nobody has created yet is a normal first install.
+    dest.parent.mkdir(parents=True, exist_ok=True)
     live_impl.write_text(rendered_impl, encoding="utf-8")
     live_impl.chmod(live_impl.stat().st_mode | stat.S_IXUSR)
     # The shim execs the rendered copy, not the template -- a template with
     # placeholders left in is not runnable, and a hook that silently fails open
     # is the worst of the three outcomes.
-    dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_text(SHIM.format(source=live_impl), encoding="utf-8")
     dest.chmod(dest.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
     print(f"  installed shim   {dest}")

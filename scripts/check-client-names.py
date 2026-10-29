@@ -78,6 +78,27 @@ copies and over-extracts -- `embarch-study-designer` decision 57):
   is one commit to remove, a name in a landed commit message needs the history
   rewrite that September's scrub had to do across ten repos.
 
+**On `main` that last range is empty, and the suite commits straight to
+`main`** (`embarch-dev-workflow.md` §6). So until 2026-10-29 no gate and no hook
+ever read a message on `main`, and the tree scan never read a file a later commit
+had removed: five messages reached public `main` that way, and on 2026-10-20 five
+histories were rewritten and force-pushed for it (`tasks/suite/050`). Two modes
+close it, both reading commits rather than the tree:
+
+- **`--pre-push REMOTE`**, what the pre-push hook runs: git's stdin names each
+  ref being pushed, and every commit the remote lacks is read -- its message,
+  every path it touched, and every blob the remote does not have yet, through the
+  same decoders as the tree. Detail and the one deliberate limit:
+  `pre_push_revs()`.
+- **`--history`**, every reachable commit the same way, and **`--suite
+  --history`** for every repo under the fleet root at once -- ~25 s for the
+  whole suite on 2026-10-29, run daily by the first leg after midnight. It finds
+  what the hook cannot: a name added to the denylist after the push that carried
+  it, and a push made from anywhere the hook is not installed. Its first run
+  found one the 2026-10-20 rewrite's text search could not see -- the
+  2026-09-06 hex-encoded leak below is still in `embarch-dev-bench`'s public
+  history.
+
 The whole suite is 583 tracked files and 5.9 MB, so a full scan of all ten
 repos is milliseconds and there is no reason to sample.
 
@@ -88,7 +109,10 @@ worker and a leg both work in `embarch/.worktrees/<repo>/<slug>/`, where sibling
 resolution finds other worktrees rather than the repos, so the scan would silently
 cover `main` instead of the branch under gate. That is the class of defect
 `open.md`'s second-instance test found three of: a value derived from the wrong
-source. So the repo is an argument, and the caller says which.
+source. So the repo is an argument, and the caller says which. **`--suite` is
+the one exception, and it is history-only:** it walks the main checkouts under
+the configured root by absolute path, never siblings of the cwd, and a worktree
+shares its main checkout's refs, so for history the two are the same answer.
 
 Denylist format: one name per line, `#` comments and blank lines ignored. A
 plain name matches case-insensitively with any run of up to three non-alphanumeric
@@ -103,6 +127,9 @@ Usage:
   scripts/check-client-names.py --repo PATH     scan that repo
   scripts/check-client-names.py --no-commits    tree only, skip commit messages
   scripts/check-client-names.py --base REF      override the merge-base
+  scripts/check-client-names.py --history       plus every reachable commit
+  scripts/check-client-names.py --suite --history   that, for every repo
+  scripts/check-client-names.py --pre-push REMOTE   plus what a push sends (stdin)
 Exit status: 0 clean or skipped, 1 hits found, 2 misconfigured.
 """
 from __future__ import annotations
@@ -238,65 +265,89 @@ def line_of(blob: bytes, offset: int) -> int:
     return blob.count(b"\n", 0, offset) + 1
 
 
-def scan_repo(root: Path, pats, scan_commits: bool, base: str | None) -> list[str]:
+def scan_bytes(label: str, data: bytes, pats) -> list[str]:
+    """Every hit in one file's bytes, as text and as what it encodes.
+
+    `label` is what a hit names: a tracked path for the tree scan, a blob id and
+    the path it was first seen at for the history scan. One body for both, so a
+    decoder added for the tree is a decoder the history has too.
+    """
+    hits: list[str] = []
+    binary = b"\0" in data[:8192]
+    for entry, pat in pats:
+        # EVERY occurrence, not the first. Reporting one match per pattern
+        # turns a cleanup into whack-a-mole -- the 2026-09-05 embarch-api
+        # find had two in one file and the second only appeared after the
+        # first was fixed, which is exactly how a scrub misses one.
+        ms = list(pat.finditer(data))
+        for m in ms[:MAX_HITS_PER_PATTERN]:
+            if binary:
+                hits.append(f"  {label} (binary, byte {m.start()})  denylist entry #{entry}")
+            else:
+                hits.append(f"  {label}:{line_of(data, m.start())}  denylist entry #{entry}\n"
+                            f"      {redact(data, m, entry)}")
+        if len(ms) > MAX_HITS_PER_PATTERN:
+            hits.append(f"  {label}  ... and {len(ms) - MAX_HITS_PER_PATTERN} more "
+                        f"for entry #{entry}")
+    # What the file *encodes*. Reported separately: the fix is different --
+    # the literal on that line is not the name, it is what produces it.
+    seen = set()
+    for dec, offs, how in decoded_views(data):
+        for entry, pat in pats:
+            for m in list(pat.finditer(dec))[:MAX_HITS_PER_PATTERN]:
+                line = line_of(data, offs[m.start()])
+                if (entry, line, how) in seen:
+                    continue
+                seen.add((entry, line, how))
+                hits.append(f"  {label}:{line}  denylist entry #{entry}, "
+                            f"{how}-encoded -- the bytes decode to it, so no "
+                            f"text scan sees it")
+    return hits
+
+
+def scan_paths(paths, pats, what: str = "the PATH itself") -> list[str]:
+    hits = []
+    for raw in paths:
+        if not raw:
+            continue
+        for entry, pat in pats:
+            if pat.search(raw):
+                rel = raw.decode("utf-8", "surrogateescape")
+                hits.append(f"  {rel}  <- {what}, denylist entry #{entry}")
+    return hits
+
+
+def scan_tree(root: Path, pats) -> list[str]:
+    """The tracked files as they sit on disk: paths and contents."""
     hits: list[str] = []
     files = subprocess.run(["git", "-C", str(root), "ls-files", "-z"],
                            capture_output=True).stdout.split(b"\0")
+    hits += scan_paths(files, pats)
     for raw in files:
         if not raw:
             continue
         rel = raw.decode("utf-8", "surrogateescape")
-        for entry, pat in pats:
-            if pat.search(raw):
-                hits.append(f"  {rel}  <- the PATH itself, denylist entry #{entry}")
-        blob = (root / rel)
         try:
-            data = blob.read_bytes()
+            data = (root / rel).read_bytes()
         except OSError:
             continue  # a deleted-but-still-indexed path is not this check's problem
-        binary = b"\0" in data[:8192]
-        for entry, pat in pats:
-            # EVERY occurrence, not the first. Reporting one match per pattern
-            # turns a cleanup into whack-a-mole -- the 2026-09-05 embarch-api
-            # find had two in one file and the second only appeared after the
-            # first was fixed, which is exactly how a scrub misses one.
-            ms = list(pat.finditer(data))
-            for m in ms[:MAX_HITS_PER_PATTERN]:
-                if binary:
-                    hits.append(f"  {rel} (binary, byte {m.start()})  denylist entry #{entry}")
-                else:
-                    hits.append(f"  {rel}:{line_of(data, m.start())}  denylist entry #{entry}\n"
-                                f"      {redact(data, m, entry)}")
-            if len(ms) > MAX_HITS_PER_PATTERN:
-                hits.append(f"  {rel}  ... and {len(ms) - MAX_HITS_PER_PATTERN} more "
-                            f"for entry #{entry}")
-        # What the file *encodes*. Reported separately: the fix is different --
-        # the literal on that line is not the name, it is what produces it.
-        seen = set()
-        for dec, offs, how in decoded_views(data):
-            for entry, pat in pats:
-                for m in list(pat.finditer(dec))[:MAX_HITS_PER_PATTERN]:
-                    line = line_of(data, offs[m.start()])
-                    if (entry, line, how) in seen:
-                        continue
-                    seen.add((entry, line, how))
-                    hits.append(f"  {rel}:{line}  denylist entry #{entry}, "
-                                f"{how}-encoded -- the bytes decode to it, so no "
-                                f"text scan sees it")
-    if not scan_commits:
-        return hits
-    picked = base or _own.pick_base(str(root))
-    if picked is None:
-        print("no base ref (tried main, origin/main); commit messages not scanned",
-              file=sys.stderr)
-        return hits
+        hits += scan_bytes(rel, data, pats)
+    return hits
+
+
+def scan_messages(root: Path, pats, revs: list[str], seen: set | None = None) -> list[str]:
+    hits: list[str] = []
+    seen = set() if seen is None else seen  # commit ids already read
     log = subprocess.run(
-        ["git", "-C", str(root), "log", "--format=%H%x00%B%x00%x00", f"{picked}..HEAD"],
+        ["git", "-C", str(root), "log", "--format=%H%x00%B%x00%x00", *revs, "--"],
         capture_output=True).stdout
     for rec in log.split(b"\0\0"):
         if b"\0" not in rec:
             continue
         sha, _, msg = rec.strip(b"\n").partition(b"\0")
+        if sha in seen:
+            continue
+        seen.add(sha)
         for entry, pat in pats:
             m = pat.search(msg)
             if m:
@@ -306,6 +357,133 @@ def scan_repo(root: Path, pats, scan_commits: bool, base: str | None) -> list[st
     return hits
 
 
+def scan_history(root: Path, pats, revs: list[str], seen: dict | None = None) -> list[str]:
+    """Every commit `revs` selects: its message, the paths it touched, and every
+    blob reachable from it that is not reachable from what `revs` excludes.
+
+    `revs` is a rev-list spelling -- `["--all"]` for the whole history,
+    `[local, "^" + remote]` for what one pushed ref sends. The blobs come from
+    `rev-list --objects`, so each is read once however many commits carry it,
+    and an object the remote already has is not read at all. Paths come from
+    `log --name-only` rather than from the object walk, which prints each blob
+    under the first path it meets and would miss a known blob moved to a new
+    name. `seen` spans the refs of one push so an overlap is read once.
+    """
+    seen = {"commit": set(), "path": set(), "blob": set()} if seen is None else seen
+    hits = scan_messages(root, pats, revs, seen["commit"])
+    names = subprocess.run(
+        ["git", "-C", str(root), "log", "--format=", "--name-only", "-z",
+         "--diff-merges=first-parent", *revs, "--"], capture_output=True).stdout
+    paths = sorted({n.strip(b"\n") for n in names.split(b"\0")} - {b""} - seen["path"])
+    seen["path"].update(paths)
+    hits += scan_paths(paths, pats, "a PATH in history")
+    objs = subprocess.run(
+        ["git", "-C", str(root), "rev-list", "--objects", "--filter=object:type=blob",
+         *revs, "--"], capture_output=True).stdout
+    want: list[tuple[bytes, bytes]] = []
+    for line in objs.splitlines():
+        sha, _, path = line.partition(b" ")
+        if path and sha not in seen["blob"]:  # no path: a commit, not a blob
+            seen["blob"].add(sha)
+            want.append((sha, path))
+    if not want:
+        return hits
+    # One `cat-file --batch` for the lot: a process per blob is most of the
+    # cost of a history scan otherwise.
+    out = subprocess.run(["git", "-C", str(root), "cat-file", "--batch"],
+                         input=b"".join(s + b"\n" for s, _ in want),
+                         capture_output=True).stdout
+    pos = 0
+    for sha, path in want:
+        nl = out.index(b"\n", pos)
+        head = out[pos:nl].split()
+        if len(head) < 3 or head[1] == b"missing":
+            pos = nl + 1
+            continue
+        size = int(head[2])
+        data = out[nl + 1:nl + 1 + size]
+        pos = nl + 1 + size + 1
+        label = f"blob {sha.decode()[:12]} ({path.decode('utf-8', 'surrogateescape')})"
+        hits += scan_bytes(label, data, pats)
+    return hits
+
+
+ZERO = re.compile(rb"^0+$")
+
+
+def pre_push_revs(root: Path, remote: str, stdin: bytes) -> list[list[str]]:
+    """The rev-list spelling of what each ref in a push sends.
+
+    git hands a pre-push hook one line per ref:
+    `<local ref> <local sha> <remote ref> <remote sha>`. A deleted ref sends
+    nothing. A ref the remote already has sends `remote..local`. A NEW ref, or
+    a remote sha this clone never fetched (a force-push over work done
+    elsewhere), sends every commit the remote lacks: its tip, less everything
+    under `refs/remotes/<remote>/`. For a new repo, or a push to a bare URL,
+    that is nothing, so the whole history is read.
+
+    **Not the whole history of every new branch, deliberately.** Every worker
+    pushes two new branches per unit, and the whole of `embarch-doc`'s history
+    was 104 MB of blobs and 21 s to scan on 2026-10-29; what those pushes send
+    is a few commits. A name already public on another branch is not taken
+    back by refusing a new one -- `--history`, run daily, is what finds it.
+    """
+    out = []
+    for line in stdin.splitlines():
+        parts = line.split()
+        if len(parts) != 4:
+            continue
+        _lref, lsha, _rref, rsha = parts
+        if ZERO.match(lsha):
+            continue
+        known = (not ZERO.match(rsha)) and subprocess.run(
+            ["git", "-C", str(root), "cat-file", "-e", rsha.decode() + "^{commit}"],
+            capture_output=True).returncode == 0
+        out.append([lsha.decode(), "^" + rsha.decode()] if known
+                   else [lsha.decode(), "--not", f"--remotes={remote}"] if remote
+                   else [lsha.decode()])
+    return out
+
+
+def suite_repos(root: Path) -> list[Path]:
+    """Every git repo directly under the fleet root, once each.
+
+    A worktree there shares its main checkout's object store and refs, so its
+    history is the same history; it is skipped by comparing git common dirs.
+    """
+    repos, common = [], set()
+    for d in sorted(root.iterdir()):
+        if not (d / ".git").exists():
+            continue
+        r = subprocess.run(["git", "-C", str(d), "rev-parse", "--git-common-dir"],
+                           capture_output=True, text=True)
+        c = (d / r.stdout.strip()).resolve()
+        if r.returncode == 0 and c not in common:
+            common.add(c)
+            repos.append(d)
+    return repos
+
+
+def scan_repo(root: Path, pats, scan_commits: bool, base: str | None,
+              history: list[list[str]] | None = None) -> list[str]:
+    hits = scan_tree(root, pats)
+    if history is not None:
+        # A history scan subsumes the branch's own messages: every commit it
+        # selects is read, the branch's included.
+        seen: dict = {"commit": set(), "path": set(), "blob": set()}
+        for revs in history:
+            hits += scan_history(root, pats, revs, seen)
+        return hits
+    if not scan_commits:
+        return hits
+    picked = base or _own.pick_base(str(root))
+    if picked is None:
+        print("no base ref (tried main, origin/main); commit messages not scanned",
+              file=sys.stderr)
+        return hits
+    return hits + scan_messages(root, pats, [f"{picked}..HEAD"])
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -313,11 +491,16 @@ def main() -> int:
     ap.add_argument("--no-commits", action="store_true",
                     help="scan the tree only, not this branch's commit messages")
     ap.add_argument("--base", help="override the merge-base for commit scanning")
+    ap.add_argument("--history", action="store_true",
+                    help="also scan every reachable commit's message, paths and blobs")
+    ap.add_argument("--pre-push", metavar="REMOTE",
+                    help="also scan what a push to REMOTE sends, from git's pre-push stdin")
+    ap.add_argument("--suite", action="store_true",
+                    help="every repo under the fleet root, each on its own (with --history)")
     args = ap.parse_args()
-
-    root = repo_root(Path(args.repo).resolve() if args.repo else Path.cwd())
-    if root is None:
-        print(f"not a git repo: {args.repo or Path.cwd()}", file=sys.stderr)
+    if args.suite and (args.repo or args.pre_push is not None or not args.history):
+        print("--suite is history-only: --suite --history, no --repo, no --pre-push",
+              file=sys.stderr)
         return 2
 
     state, deny = CONF.state_dir, CONF.client_denylist
@@ -348,18 +531,40 @@ def main() -> int:
               file=sys.stderr)
         return 2
 
-    hits = scan_repo(root, pats, not args.no_commits, args.base)
-    if hits:
-        print(f"{len(hits)} client-name hit(s) in {root}:\n")
-        for h in hits:
-            print(h)
-        print(f"\nThe name is not printed. Open {deny} at the entry number to see\n"
+    if args.suite:
+        roots = suite_repos(CONF.root)
+    else:
+        root = repo_root(Path(args.repo).resolve() if args.repo else Path.cwd())
+        if root is None:
+            print(f"not a git repo: {args.repo or Path.cwd()}", file=sys.stderr)
+            return 2
+        roots = [root]
+    history = None
+    if args.pre_push is not None:
+        history = pre_push_revs(roots[0], args.pre_push, sys.stdin.buffer.read())
+    elif args.history:
+        history = [["--all"]]
+
+    rc = 0
+    for root in roots:
+        hits = scan_repo(root, pats, not args.no_commits, args.base, history)
+        if hits:
+            rc = 1
+            print(f"{len(hits)} client-name hit(s) in {root}:\n")
+            for h in hits:
+                print(h)
+            print()
+        else:
+            print(f"OK: {root.name} clean against {len(pats)} denylist entr"
+                  f"{'y' if len(pats) == 1 else 'ies'}"
+                  f"{', history included' if history is not None else ''}.")
+    if rc:
+        print(f"The name is not printed. Open {deny} at the entry number to see\n"
               "which one, and do not paste it into a commit message, a log entry or\n"
-              "an agent transcript -- that is the leak, not the fix.")
-        return 1
-    print(f"OK: {root.name} clean against {len(pats)} denylist entr"
-          f"{'y' if len(pats) == 1 else 'ies'}.")
-    return 0
+              "an agent transcript -- that is the leak, not the fix. A blob hit\n"
+              "names the path it was first seen at; `git log --all --find-object=<blob>`\n"
+              "names the commits that carry it.")
+    return rc
 
 
 if __name__ == "__main__":

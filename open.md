@@ -156,19 +156,24 @@ commit message on the branch under gate, and **never prints what it matched** �
 a red gate gets quoted into log entries and commit messages, which is the leak
 again. Contents are searched as bytes, so the 1,540 artifacts above are covered
 and no text-only scan would have seen them. Tested against all five 2026-09-04
-shapes in a fixture repo, and a clean one that stays green. **Per repo, not one
-pass over the siblings**: a worker and a leg run the gate from
-`embarch/.worktrees/`, where sibling resolution finds other worktrees, so a
-sibling walk would have scanned `main` instead of the branch under gate — the
-wrong-source shape the second-instance test found three of.
+shapes in a fixture repo, and a clean one that stays green. Per repo, never a
+sibling walk: the script's header and [gate.md](gate.md) say why.
 
-**What is still open, and the script's header states both rather than hiding
-them.** It is **dark in CI**, which has no state directory and therefore no
-denylist, so it guards what the fleet lands locally and not a push made by hand;
-closing that needs a repository secret and a job, which is a separate decision
-about whether these repos ever go public. And **a denylist cannot catch a name
-nobody thought to add** — it makes the second leak of a known name impossible
-and leaves the first leak of a new one exactly where it was.
+**2026-10-20: five commit messages had reached public `main` anyway.** The
+check read `<main>..HEAD`, which on `main` — where this suite commits — is
+empty. The owner rewrote five histories that day: 685 commits re-hashed and
+force-pushed, citations repointed (`embarch-doc` `0f68533a`, here `ffc851f`).
+**Since 2026-10-29 the pre-push hook reads what a push sends**, messages, paths
+and blobs, and the first leg after midnight runs `--suite --history`
+(`tasks/suite/050`). Its first run found a leak that rewrite's text search could
+not see: the 2026-09-06 hex-encoded name, in ten blob versions of
+`embarch-dev-bench`'s ztest file on public `main`.
+
+**Still open.** Whether GitHub Support was asked to purge the force-pushed-away
+commits, which stay fetchable by SHA until GitHub collects them: not recorded.
+It is **dark in CI**, so a push from where the hook is not installed waits for
+the daily run. And **a denylist cannot catch a name nobody thought to add** — it
+makes the second leak of a known name impossible, not the first of a new one.
 
 ## Whether a second instance is real
 
