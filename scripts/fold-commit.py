@@ -417,6 +417,66 @@ def check() -> int:
     return 0
 
 
+# Paths a fold consumes on `main`: a task file is retired, a fragment is
+# assembled and deleted. A branch's copy of one of these can never match
+# `origin/main` again, by design, so their absence there is the landing.
+CONSUMED = ("tasks/", "changelog.d/", "status.d/")
+
+
+def blob(repo: Path, rev: str, path: str) -> str:
+    return git(repo, "rev-parse", "-q", "--verify", f"{rev}:{path}", check=False).strip()
+
+
+def landed(repo: Path, ref: str, base: str = "origin/main") -> bool:
+    """Is everything `ref` carries already on `base`? False whenever unsure.
+
+    `git cherry` first: a commit whose patch-id is on `base` is proven, and that
+    answer has no false positives. It does have false negatives, and they
+    stranded branches for good (`tasks/doc/061`, `080`): a cherry-pick or a
+    rebase that **conflicted** produces a different patch, and the conflict is
+    nearly always on the task file, because `main` moved it (a claim, a fold)
+    after the worker branched. `api/096` and `core/052` sat on the remote from
+    2026-09-13 for that reason alone.
+
+    So a commit cherry cannot match is proven file by file instead: every path
+    it touched must read the same on `base` as at the branch tip -- or, for a
+    path a fold consumes (`CONSUMED`), be gone from `base` *because `base`
+    deleted it after the branch forked*, which is what a retired task file and
+    an assembled fragment look like. A fragment that never landed was never on
+    `base` to be deleted, so it still holds the branch. A path edited further
+    since it landed also still holds it: unprovable stays, the safe direction.
+    """
+    if subprocess.run(["git", "-C", str(repo), "merge-base", "--is-ancestor", ref, base],
+                      capture_output=True).returncode == 0:
+        return True           # the cheap proof, and the common one: a fast-forward
+    r = subprocess.run(["git", "-C", str(repo), "cherry", base, ref],
+                       capture_output=True, text=True)
+    if r.returncode:
+        return False
+    unmatched = [ln.split()[1] for ln in r.stdout.splitlines() if ln.startswith("+")]
+    if not unmatched:
+        return True
+    fork = git(repo, "merge-base", base, ref, check=False).strip()
+    if not fork:
+        return False
+    paths: set[str] = set()
+    for c in unmatched:
+        if len(git(repo, "rev-list", "--parents", "-n1", c, check=False).split()) != 2:
+            return False      # a merge or a root: no single diff to reason about
+        paths.update(p for p in git(repo, "diff-tree", "-z", "--no-commit-id",
+                                    "--name-only", "-r", c, check=False).split("\0") if p)
+    for p in paths:
+        there = blob(repo, base, p)
+        if there == blob(repo, ref, p):
+            continue
+        if not there and p.startswith(CONSUMED) and git(
+                repo, "log", "-1", "--format=%h", "--diff-filter=D",
+                f"{fork}..{base}", "--", p, check=False).strip():
+            continue
+        return False
+    return True
+
+
 def prune_landed_branches(doc: Path, scope: str, dry: bool) -> None:
     """Delete pushed `agent/*` branches whose work is already on `origin/main`.
 
@@ -439,10 +499,11 @@ def prune_landed_branches(doc: Path, scope: str, dry: bool) -> None:
     backlog left by earlier legs for free. That is strictly better than a rule
     telling a tired supervisor to remember, which is what this replaces.
 
-    **`git cherry`, not `merge-base --is-ancestor`.** protocol.md §6: a rebased
-    branch's tip is never an ancestor of `main` even when its content landed, so
-    ancestry cannot prove a rebased branch safe to delete. Patch-id equivalence
-    can, and batch 003 correctly refused a delete on exactly this distinction.
+    **Content, not ancestry.** protocol.md §6: a rebased branch's tip is never
+    an ancestor of `main` even when its content landed, so ancestry cannot
+    prove a rebased branch safe to delete. `landed()` proves it by patch-id and,
+    where a conflicted cherry-pick or rebase changed the patch, file by file;
+    batch 003 correctly refused a delete on exactly this distinction.
 
     Best-effort throughout: the fold is already committed when this runs, and a
     network failure must never turn a landed unit into a failed one.
@@ -452,16 +513,15 @@ def prune_landed_branches(doc: Path, scope: str, dry: bool) -> None:
     if code != doc and (code / ".git").exists():
         repos.append(code)
     for repo in repos:
+        if not git(repo, "rev-parse", "--verify", "-q", "origin/main",
+                   check=False).strip():
+            continue
         refs = git(repo, "for-each-ref", "--format=%(refname:short)",
                    "refs/remotes/origin/agent/", check=False).split()
         for ref in refs:
             branch = ref[len("origin/"):]
-            if not git(repo, "rev-parse", "--verify", "-q", "origin/main",
-                       check=False).strip():
-                continue
-            cherry = git(repo, "cherry", "origin/main", ref, check=False)
-            if any(l.startswith("+") for l in cherry.splitlines()):
-                continue          # not fully on origin/main yet -- leave it
+            if not landed(repo, ref):
+                continue          # not provably on origin/main yet -- leave it
             if dry:
                 print(f"would delete {repo.name}: origin/{branch}")
                 continue

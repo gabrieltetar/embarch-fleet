@@ -816,9 +816,13 @@ worker exists only in that worktree; a worker is told to write them absolutely,
 and this is the backstop for the one that does not. Cheap to check, total to
 lose — leg 055 found one on 2026-09-08 only by going looking. **You do
 not delete the pushed branches** — `fold-commit.py` does it, and only once
-`git cherry` proves them already on `origin/main`, so it is normally a fold
-behind. Do not "help" by deleting one by hand: before the push, the remote
-branch is the remote's only copy of that unit.
+their content is provably on `origin/main`, so it is normally a fold behind.
+The proof is patch-id first and then file by file, so a branch you rebased or
+cherry-picked through a conflict is pruned like any other; you need not
+force-push it. Do not "help" by deleting one by hand: before the push, the
+remote branch is the remote's only copy of that unit. A branch the fold cannot
+prove — a blocked unit's, or one whose files `main` has edited since — stays,
+and deleting it is the owner's call, never yours.
 
 **Spawn a reviewer the moment a unit's branches are merged. It never blocks the
 merge; it is the last thing the fold waits for.** One background
