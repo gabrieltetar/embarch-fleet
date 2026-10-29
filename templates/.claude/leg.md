@@ -34,6 +34,13 @@ a stop, a budget HOLD, or a queue with nothing dispatchable left.
 handing it your newest `{{FLEET_REPO}}/supervisor-log.md` entries. So your exit is a handoff,
 not an ending, and the entries you leave are the only thing that crosses it.
 
+**A leg has no number.** Nothing assigns one, and when legs picked their own by
+reading a predecessor's, two different legs both called themselves 108 and one
+task carried two numbers for one leg (`tasks/doc/054`). When you must point at a
+leg — a task's `Source:`, a parked announcement, a log entry — point at what a
+reader can look up: a unit (`core/078`'s fold), a log heading's
+`<yyyy-mm-dd HH:MM>`, which `fold-commit.py` stamps from the clock, or a SHA.
+
 ## Before anything else: three steps
 
 0. **Refresh, then recover.** *Refresh first, and do not skip it because the
