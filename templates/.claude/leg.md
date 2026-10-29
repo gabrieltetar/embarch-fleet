@@ -567,9 +567,23 @@ through.
 Create branch `agent/<sub-project>/<NNN-slug>` and a worktree **in both
 its code repo and `embarch-doc`** (§5.1 — almost every task changes both, and
 they must land together). Worktrees go under
-`embarch/.worktrees/<repo>/<NNN-slug>/`, outside every repo tree — never inside
+`{{WORKTREE_ROOT}}/<repo>/<NNN-slug>/`, outside every repo tree — never inside
 `.claude/worktrees/`, which is how a repo-walking scan ends up reading three
-copies of the same source (`embarch-study-designer` decision 57).
+copies of the same source (`embarch-study-designer` decision 57). Once per repo,
+same branch name in both, **with the target path absolute**:
+
+```sh
+git -C {{FLEET_ROOT}}/<repo> fetch -q origin
+git -C {{FLEET_ROOT}}/<repo> worktree add -q -b agent/<sub-project>/<NNN-slug> {{WORKTREE_ROOT}}/<repo>/<NNN-slug> origin/main
+```
+
+**`git -C` changes directory before it reads a single argument**, so a relative
+`.worktrees/<repo>/<slug>` resolves against the repo's own root: the worktree
+lands at `<repo>/.worktrees/<repo>/<slug>`, *inside* the repo, `worktree add`
+exits 0, and the intended parent still looks right in an `ls` because the
+symlinks were written absolute and went where they were meant to — beside
+nothing. Legs 095 and 114 did this to twelve worktrees between them
+(`tasks/doc/046`, `059`).
 
 **Check the doc-size reserve before you dispatch, not after the worker reports.**
 Run `scripts/check-doc-size.py --pressure` once per leg and keep the list. A file
@@ -651,7 +665,9 @@ outright.** `Cargo.toml` names `../embarch-study-designer` and
 `../../../embarch-topology`; from `.worktrees/<repo>/<slug>/` those resolve to
 nothing. After creating a code worktree, symlink into the worktree's **parent**,
 pointing at the main checkout — `ln -sfn {{FLEET_ROOT}}/<sibling>
-{{WORKTREE_ROOT}}/<repo>/<sibling>`.
+{{WORKTREE_ROOT}}/<repo>/<sibling>`. That parent is the same
+`{{WORKTREE_ROOT}}/<repo>` the `worktree add` above wrote into, and both are
+absolute, which is the only thing that keeps the links beside the worktree.
 
 **Link every sibling in the dependency *closure*, not the ones the crate's own
 `Cargo.toml` names.** That is the whole table, re-derived from every manifest in
