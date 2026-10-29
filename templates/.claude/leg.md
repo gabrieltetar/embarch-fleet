@@ -764,7 +764,13 @@ a worker's own twenty — run `git ls-remote --heads <remote> 'agent/*'` in both
 repos for each worker you dispatched, once, before doing anything else. A branch
 with commits is a finished worker: land it. No branch is a worker still running:
 `scripts/fleet-tick.py leg-waiting` so the watchdog knows the fleet is alive,
-and keep waiting. Only then recover per §3 and re-run the guard with `--allow-existing`.
+and keep waiting. Only then recover per §3, and **never by handing a tree to a
+new worker**: commit what it holds to its branch, push, `git worktree remove`
+it, and re-run the guard unchanged — it passes once the paths are gone. A
+resume is then an ordinary dispatch onto that branch (`worktree add <path>
+<branch>`, no `-b`) checked with `--created`. The guard had an
+`--allow-existing` until 2026-10-29; the auto-mode classifier refused it, and
+this route never needed it (`tasks/doc/040`).
 
 **Dispatch.** One background `embarch-worker` agent per task, launched without
 blocking on the previous one. Give each: its task file path, **both** worktree

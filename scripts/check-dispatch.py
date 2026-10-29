@@ -26,10 +26,18 @@ reason. Neither distinguishes "never started" from "about to write".
 
 **Existence has no such gap.** A fresh dispatch *creates* its worktrees, so
 finding them already there is evidence rather than a state to reuse. That is
-strictly stronger than the dirty test and it is what this checks. The dirty test
-is kept as a second opinion under `--allow-existing`, sampled twice seconds
-apart, for the one legitimate case: a leg resuming after a kill, where the
-worktrees are its own dead workers' and `ops.md` §3 recovery governs.
+strictly stronger than the dirty test and it is what this checks.
+
+**No flag accepts an existing worktree, and none is needed** (2026-10-29,
+`tasks/doc/040`). There was one, `--allow-existing`, which fell back to sampling
+the tree for activity; the auto-mode classifier refused it before the script
+ran, so the recovery this refusal recommended could not be taken. It had no case
+to serve either. `ops.md` §3 recovery deletes a clean tree with no commits and
+keeps any other for a `blocked` task -- neither is dispatched into -- and a leg
+that resumes a dead worker's tree commits it to its branch, removes the tree,
+and dispatches onto that branch fresh, at which point this check passes as
+written and `--created` checks the result. A tree is never handed to a second
+worker; that is the property leg 012 lost.
 
 **This is a backstop, not the root cause.** The root cause is that a supervisor
 may conclude a worker died from repo state at all; `tasks/README.md` settles
@@ -60,8 +68,6 @@ were never going to be created.
 Usage:
   scripts/check-dispatch.py --worktree PATH [--worktree PATH ...]       # before
   scripts/check-dispatch.py --created --worktree PATH [--worktree PATH ...]  # after
-  scripts/check-dispatch.py --worktree PATH --allow-existing   # a recovery leg
-  scripts/check-dispatch.py --worktree PATH --settle 5         # seconds between samples
 Exit status: 0 safe to dispatch, 1 refused, 2 misconfigured.
 """
 from __future__ import annotations
@@ -71,7 +77,6 @@ import os
 import re
 import subprocess
 import sys
-import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -180,12 +185,6 @@ def created(paths: list[Path]) -> int:
     return 0
 
 
-def porcelain(path: Path) -> str | None:
-    r = subprocess.run(["git", "-C", str(path), "status", "--porcelain"],
-                       capture_output=True, text=True)
-    return r.stdout if r.returncode == 0 else None
-
-
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -194,11 +193,6 @@ def main() -> int:
     ap.add_argument("--created", action="store_true",
                     help="after `worktree add`: prove each path was created where asked, "
                          "on the unit's branch, with every Cargo path-dep resolving")
-    ap.add_argument("--allow-existing", action="store_true",
-                    help="a recovery leg reclaiming its predecessor's worktrees: "
-                         "existence is expected, so fall back to sampling for activity")
-    ap.add_argument("--settle", type=float, default=3.0,
-                    help="seconds between the two samples (default %(default)s)")
     args = ap.parse_args()
     if not args.worktree:
         print("--worktree is required (repeatable)", file=sys.stderr)
@@ -212,8 +206,8 @@ def main() -> int:
     if args.created:
         return created([Path(os.path.normpath(p)) for p in args.worktree])
 
-    existing = [Path(p) for p in args.worktree if Path(p).exists()]
-    if existing and not args.allow_existing:
+    existing = [p for p in args.worktree if Path(p).exists()]
+    if existing:
         print(f"{len(existing)} worktree(s) already exist, so this task is already "
               "dispatched:\n", file=sys.stderr)
         for p in existing:
@@ -224,42 +218,18 @@ def main() -> int:
               "If you believe that worker is dead, prove it with the PROCESS TREE\n"
               "(ListAgents), which is what tasks/README.md settles staleness by -- never\n"
               "with `git status` or a branch's commit count, both of which read clean for\n"
-              "the whole reading half of a worker's run. Then recover per ops.md §3 and\n"
-              "re-run with --allow-existing.", file=sys.stderr)
-        return 1
-
-    if not existing:
-        print(f"OK: none of the {len(args.worktree)} worktree(s) exist; safe to dispatch.")
-        return 0
-
-    first = {p: porcelain(p) for p in existing}
-    time.sleep(args.settle)
-    second = {p: porcelain(p) for p in existing}
-
-    busy = []
-    for p in existing:
-        a, b = first[p], second[p]
-        if a is None or b is None:
-            busy.append((p, "not a git worktree"))
-        elif a.strip() or b.strip():
-            busy.append((p, f"dirty ({len(b.strip().splitlines())} path(s))"))
-        elif a != b:
-            busy.append((p, "changed between samples"))
-    if busy:
-        print(f"{len(busy)} worktree(s) show activity; something is working in there:\n",
-              file=sys.stderr)
-        for p, why in busy:
-            print(f"  {p} -- {why}", file=sys.stderr)
-        print("\nDo not dispatch into it. Two samples were taken because ONE can land in a\n"
-              "gap between another agent's tool calls -- which is exactly what leg 012's\n"
-              "single sample did at 21:26, reading clean while a worker was mid-pass.",
+              "the whole reading half of a worker's run. Then recover per ops.md §3: commit\n"
+              "whatever the tree holds to its branch, push it, and `git worktree remove` the\n"
+              "tree. Re-run this check unchanged; it passes once the paths are gone. To\n"
+              "resume that work, dispatch onto the existing branch -- `worktree add <path>\n"
+              "<branch>`, no `-b` -- and run --created. A tree is never handed to a second\n"
+              "worker.\n\n"
+              "If you created these yourself a moment ago, before running this: they are\n"
+              "clean with no commits, so remove them, run this, and create them again.",
               file=sys.stderr)
         return 1
 
-    print(f"OK: {len(existing)} existing worktree(s), clean across two samples "
-          f"{args.settle:g}s apart.\nThat is consistent with a dead worker, and NOT proof "
-          "of one -- a tree is clean for the\nwhole reading half of a live worker's run "
-          "too. Confirm with ListAgents.")
+    print(f"OK: none of the {len(args.worktree)} worktree(s) exist; safe to dispatch.")
     return 0
 
 
