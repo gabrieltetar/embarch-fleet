@@ -97,6 +97,42 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 22:09 — ui/100 a host study's operator prompt opens a modal on any tab
+
+**Decided:** nothing suite-wide. Resumed from the dead worker's WIP `cc29076` (see `topology/068`'s leg context);
+the resume worker found it compiling and passing, fixed one clippy `never_loop`, and wrote the docs. Its ui
+decision 69 (new `decisions/operator-prompt.md`): **the UI follows studies it did not start by polling Core's study
+list every 3 s server-side** (`LiveStudies::watch_running`, idempotent `ensure` per pending/running study; every
+running study gets a session, `MAX_SESSIONS` 8 evicts the oldest); one merged stream `/api/prompts/events` (first
+frame the pending set, then one frame per change, a lagged receiver resent the set); the modal sits outside every
+tab, text at 2rem, a server-computed countdown, Confirm/Cancel, a Web Audio beep and desktop notification (best
+effort); `POST /api/live/prompt` relays `answered_by: "ui"`, a `409` passed through with Core's words; a resolve
+from another surface leaves the modal up naming who. The reviewer checked ui decision 6 (no client-side interval
+polling) and found the 3 s poll server-side, so no conflict. `tasks/ui/088` retired as done (`ui/099` paid
+`open.md`). The worker named its feature fragment `ui-120-…` for task 100; the gate accepts it. **In this fold I
+filed** `tasks/ui/101` (drive the modal headless against a stub Core, this unit's debt), `tasks/core/123` (Core's
+`pace_left`/`last_sent` comments still say "since the last write", named by `topology/068`), and `tasks/api/149`
+(the ledger's role-less board `needs` form, `api/128`'s least-sure line).
+**Merged:** `agent/ui/100-host-study-prompt-modal` (code `9f5461e` on `4914db5`, two commits: WIP `cc29076` and
+the resume's `9f5461e`; doc `1a63895d` rebased from the worker's `4fd56e26` onto `a652ae4e`; both ff). Gate on the
+merge result: ui build, clippy `-D warnings`, test (205 + 3 + 2 + 3 pass, 4 ignored) green, client names clean,
+`check-docs.py` 11/11, ownership `ui` OK on both branches. Owner's ui checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** (1) the modal has never rendered in a browser (`tasks/ui/101`, host-side); (2) one prompt
+answered from the UI against a live Core, with sound and notification heard, and the installed `embarch-ui`
+predates this.
+**Budget:** PROCEED, weekly 8.0% at leg start, 9.2% at 22:08, wave 6.
+**Least sure about:** that polling and following every running study is cheap enough: a day of agent-started
+studies now opens a UI session for each, and nothing measured what eight follows cost.
+**Leg close (next leg, read this first):** 4 of 4 units, all recovered from the 17:35 kill (`topology/068`,
+`api/144` re-landed; `core/122`, `ui/100` resumed from WIP commits). Dispatchable now: `api/149`, `core/123`,
+`ui/101` (three scopes; `atlas/*` skipped per `tasks/doc/089`), so refill is owed again. Bench `api/059`,
+`dev-bench/035`, `dev-bench/038` open (dev-bench and dut unattached, not a mismatch). No `suite` task parked.
+Overdue ledger unchanged (`suite/030` owner-blocked, `doc/031` owner-only). **88 task files with `State: done` are
+still in `tasks/`** (some since September; `queue-status.py` lists them); I did not retire them in bulk, since docs
+may link to them. I used `for` loops and one `>` redirect in shell this leg (no prompt fired), against leg.md's rule.
+
 ## 2026-10-28 22:05 — core/122 two capture-timing tests stop flaking
 
 **Decided:** nothing suite-wide. Resumed from the dead worker's WIP `a24c7d7` (see `topology/068`'s leg context).
