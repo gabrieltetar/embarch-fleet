@@ -962,10 +962,14 @@ scripts/fold-commit.py --unit <scope>/<NNN> -m "<subject>" \
 
 Run it **from your leg worktree**: it stages in whichever instance checkout you
 are standing in, falling back to `fleet.toml`'s `doc_repo` only when you are
-nowhere near one, and `--doc-repo` overrides both. A completed task file you
-removed with `git rm` is already staged and needs no special handling — the
-script stages every path *before* it commits the log, so a bad path list costs
-nothing instead of leaving a log-only commit to undo by hand.
+nowhere near one, and `--doc-repo` overrides both. **The unit's own task file
+always goes in `--path`**, in whatever state you left it — edited and unstaged,
+`git add`ed, `git rm`'d, or untouched from the worker's branch. The script
+retires it when it reads `done` (`git rm -f`, so your own edit to it — a `suite`
+task's `done`, a worker's `closed` corrected — never blocks the fold), and
+commits your edit when it reads `blocked`. Left out, a `done` file is not
+retired at all. The script stages every path *before* it commits the log, so a
+bad path list costs nothing instead of leaving a log-only commit to undo by hand.
 
 It refuses unless the log's newest entry names *this* unit, stages by explicit
 path, and commits the log first — so the orderings a kill can leave are "nothing"
