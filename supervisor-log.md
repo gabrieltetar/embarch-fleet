@@ -97,6 +97,29 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 14:44 — atlas/008 a live read from another chip is refused, not decoded
+
+**Decided:** nothing suite-wide; **the fleet's first `atlas` unit** (gate.md's Python bullet, worktree venv,
+`.atlas-local` linked, `test_public_guard` ran). `live.py`: `reg_read` refuses when Core's `read['chip']` is not
+the atlas MCU and names both chips and the role; `image_check` raises `ChipMismatch` instead of "another build";
+`live_stacks` says "the console of role X and its probe are different boards". The atlas MCU is the SVD
+document's `device` only (not `MAP.md`'s MCU line); the match ignores case and punctuation and **accepts one name
+being a prefix of the other**; **an atlas with no SVD device compares nothing**. Both stated in `DESIGN.md`
+"Live"'s new "Wrong chip" bullet; the reviewer judged them stated weaknesses, not contradictions. Test chip names
+are invented because `test_public_guard` rejected real part names. `check_public.py`, which my dispatch note
+named, does not exist in the repo. The worker left the task's `State:` as the claim line; set to `done` at this fold.
+**Merged:** `agent/atlas/008-live-refuses-another-chip` (code `63055f7` on `0cf93ce`, ff; doc `503c1549`
+cherry-picked from the worker's `fed00c4a` onto `a90b34dd`). Gate on the merge result: `pytest -q` 409 passed, 2
+skipped (real west workspace, built atlas; both expected), client names clean, `check-docs.py` 12/12, ownership
+`atlas` OK on both branches. Owner's atlas checkout fast-forwarded; his `embarch-atlas-wt` untouched.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** one `reg_read` through a live Core against a board whose probe is another chip, seeing the
+refusal (owner-attended; the atlas tests use a fake `mem-read`).
+**Budget:** PROCEED, weekly 22.2% at leg start, wave 6.
+**Least sure about:** the prefix match: an SVD `device` written as a family (say a 7-character stem) would accept
+every part in it, and the silent pass on a missing device means the refusal protects only atlases that name one.
+
 ## 2026-10-29 14:42 — outpost/018 a 13 µs backwards DUT-clock step is pinned as tolerated
 
 **Decided:** nothing suite-wide. Test only, no decoder change: `tests/decoder_unit.py` gains
