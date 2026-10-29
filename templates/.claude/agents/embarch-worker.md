@@ -55,6 +55,12 @@ that is not written into a doc is gone.**
 - **Stay in your worktrees.** They are under `embarch/.worktrees/`, outside every
   repo tree. Do not create more, and do not work in the main checkouts. The one
   exception is the `inbox/` drop above, and only to write it.
+- **Checking a claim against a sibling repo? Read `{{FLEET_ROOT}}/<repo>`**, the
+  main checkout, read-only. **Nothing under `/mnt/c/` is a checkout**, even if
+  your session lists it as a working directory: the Windows `source/repos/<repo>`
+  copies are rsync deploy targets with no `.git`, a full compiling tree of some
+  older commit. On 2026-09-16 one nearly turned a true comment into a reported
+  defect (`{{DOC_REPO}}/embarch-dev-workflow.md` §4a).
 - **If a worktree is already dirty when you arrive, stop — do not commit and do
   not push.** It should be empty; your supervisor made it for you. Dirt means
   another worker is in it, and this has happened: leg 012 dispatched two tasks
