@@ -97,6 +97,25 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 15:40 — umbrella/096 the install test's ETXTBSY race is retried, not the install
+
+**Decided:** nothing. Test-only fix: `install_binaries_replaces_a_binary_that_is_running` retries its own `spawn`
+of the just-copied `sleep` fixture on `ErrorKind::ExecutableFileBusy` (200 tries, 10 ms). Cause, reproduced by the
+worker 1 in 80 parallel runs: a sibling test thread forks while the copy's write fd is open, so the exec gets
+ETXTBSY; 0 in 150 after. `install_binaries`/`replace_binary` unchanged. The reviewer checked production cannot
+hit it (copy to `.{name}.new-{pid}`, rename, never execs a just-written file) and that no assertion pinning
+decision 57 was weakened. This retires the one flaky test in the umbrella gate the fleet re-runs every unit.
+**Merged:** `agent/umbrella/096-install-replaces-running-binary-test-flakes` (code `d3f1c83` on `50f4022`, ff;
+doc `6e788299`, the worker's `a9384c30` cherry-picked). Gate on the merge result: build, test 258 pass, clippy
+`-D warnings` clean, client names clean, `check-docs.py` 12/12, ownership `umbrella` OK on both branches. Owner's
+umbrella checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 24.1% at leg start, wave 6.
+**Least sure about:** 1 in 80 is one observation, so 0 in 150 after is suggestive rather than proof; the diagnosis
+is the stronger evidence, and it is a known Linux fork/exec race.
+
 ## 2026-10-29 15:39 — atlas/017 doc check reports a malformed record instead of crashing
 
 **Decided:** nothing suite-wide. `run_check` (`check.py`) schema-validates every record first; an invalid one
