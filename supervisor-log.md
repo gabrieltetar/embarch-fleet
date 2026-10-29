@@ -97,6 +97,33 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 17:22 — atlas/023 live core-state names where the core is, as symbols, once the flash matches the ELF
+
+**Decided:** nothing suite-wide. New `corestate.py`: `embarch-atlas live core-state [--halt] [--samples N] [--build
+DIR] [--role R]` and MCP `core_state` (listed only when Core answers), through `embarch-api core-state --json` like
+the rest of `live.py`. `DHCSR`/`SCB_ICSR` decoded by field name, unnamed bits kept as hex; `DWT_PCSR` samples become a
+function/file:line histogram, `--halt` adds PC, LR (resolved as `LR-2`; an `EXC_RETURN` is named, not resolved), SP,
+ICSR. Symbols are named only after `live.image_check` (the `live_stacks` flash check) passes; otherwise "Refused to
+name symbols: <why>" and raw addresses. ELF reading is `nm` (`footprint.image`) plus `addr2line` derived from
+`CMAKE_NM`'s name, falling back to the symbol's definition line, marked; no new dependency. **One trade I accepted
+and asked the reviewer about:** Core decision 97's read never halts by default, but the atlas default then runs the
+flash check, which is one halted `mem-read` taken after the state (so the sample is undisturbed) and skipped when
+nothing needs naming; DESIGN.md says so. The reviewer judged it documented and not a contradiction of 97. The task's
+`check_public.py` does not exist; read as `test_public_guard` plus `check-client-names.py`.
+**Merged:** `agent/atlas/023-core-state-symbol-decode` (code `4d68d53` on `1e5541a`, ff; doc `6b7452cf` on
+`d70bcb90`, ff). Gate on the merge result: worktree venv `pytest -q` 478 passed, 2 skipped (real west workspace, built
+atlas; `test_public_guard` ran), client names clean, `check-docs.py` 12/12, ownership `atlas` OK on both branches.
+Owner's atlas checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** DUT bench with a deployed Core carrying `/live/core-state` (`core/103`) and the flashed build's
+dir: `embarch-atlas live core-state` and `--halt` name functions and lines; `addr2line` is found beside the build's
+`nm` (derived by name, tested only with a fake); a deliberately different build is refused by name. The task file
+that carried this is retired by this fold.
+**Budget:** PROCEED, weekly 27.8% at dispatch, wave 6.
+**Least sure about:** `DWT_PCSR` samples are assumed to carry no Thumb bit and are masked with `~1` either way; on a
+sleeping G0 the default read now costs one halt it used to avoid, which matters only if a hang is timing-sensitive.
+
 ## 2026-10-29 17:14 — atlas/020 a bump's second look batches changed facts by (id, key) and compares cond, condition and width
 
 **Decided:** nothing suite-wide. `secondlook.owed_by` returns `(id, key)` pairs; new `is_owed`/`split_diff` serve both
