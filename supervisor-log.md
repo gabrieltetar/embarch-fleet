@@ -97,6 +97,43 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 15:47 — suite/054 the four root proposals keep only unbuilt design
+
+**Decided:** **a supervisor-run suite task, as this leg's last unit**, after its window (`ts` `1793305739.311079`,
+closed 14:58:59; thread re-read 15:26 and 15:47, no reply). Every "built" claim checked against decision text
+first. **bootload** 1,908 → 1,347 B: dropped the "deliberately narrow, sim-only until firmware" paragraph and the
+DOC-PROTOCOL restatement; built list (smp 1–9, topology 36, core 77–78, api 80–81) and the two left items kept.
+**desk-sessions** 1,769 → 1,361 B: dropped the Why, which described the built pick-up half (desk 43–45); the
+finishing half is untouched. **host-study** 7,662 → 2,439 B: dropped the Why, the owner's six choices and the
+whole Shape; now a built list (study-designer 80; core 95, 98, 104, 105; topology 49; api 97, 99; ui 69;
+dev-bench 48, 49) and five left items: pd-bench's own west workspace (`dev-bench/036`), a first host study on a
+real bench, a numeric SCPI parse, designer rows, mixed studies. **stream-pipeline** 11,762 → 9,577 B: dropped the
+thesis, the five lessons (all recorded: reversals 18, 25; `taps.md`; core streams; api `truncated`) and the line
+calling the payload-interpretation deletion unbuilt, **which was false** (dev-bench decision 29 records it already
+done); free-text section cut to a pointer at study-designer 37 plus the unbuilt registry field kind. **None fully
+absorbed, so none deleted.** `embarch.md` §6's host-study row updated (it still named `ui/100` and the PD bench
+firmware as not built). **For the owner (not mine to decide):** the stream-pipeline outbound half has **no task,
+no `open.md` line and no roadmap line**, and study-designer decision 58 records itself as having closed that
+write direction by a different route (the `.eap` state machine); whether the generic send step is still wanted,
+or the file should go, is his call. I said so in the file.
+**Merged:** no branches (supervisor's own unit). Gate on the result: `check-docs.py` 12/12, `check-links.py`
+green, `check-ownership.py --supervisor` OK on the five paths (19 top-level docs classified). Doc SHA is this
+fold's commit.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 24.1% at leg start, wave 6.
+**Least sure about:** host-study's Shape held details (event names, `study_lock`) the reviewer traced to Core's
+`interfaces/` rather than to numbered decisions; I counted a sub-project's interface docs as "recorded".
+**Leg close (next leg, read this first):** 4 of 4 units (`ui/102`, `atlas/017`, `umbrella/096`, `suite/054`), all
+landed, none blocked. `main` was red at leg start (`suite/037`'s park named retired `suite/053`), fixed `fa05c77c`.
+**One `suite` task remains announced with its window closed and no reply: `suite/055`** (triage pre-October
+tasks, `ts` `1793305740.224299`); run it as a last unit, re-read the thread first. **Dispatchable now:** 17
+`atlas` (incl. new `024`), `chat/006`; only two scopes, so the spread gate will fire. Bench unchanged (`dut`
+attached, `dev-bench` not; `api/059`, `dev-bench/035`, `038` open). Owner-only: `tasks/doc/093`, `094`. Ledger:
+nothing overdue (next `dev-bench/040`, 2026-11-01, blocked). `changelog.d/umbrella-check-17-measured.decided.md`
+is the owner's, unconsumed since 14:01. Nothing deployed.
+
 ## 2026-10-29 15:40 — umbrella/096 the install test's ETXTBSY race is retried, not the install
 
 **Decided:** nothing. Test-only fix: `install_binaries_replaces_a_binary_that_is_running` retries its own `spawn`
