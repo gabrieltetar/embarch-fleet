@@ -97,6 +97,30 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 22:03 — api/144 compact embarch-api/open.md
+
+**Decided:** nothing suite-wide. Re-landed from the killed leg's pushed doc branch; its worker's report died with
+that leg, so the compaction judgement here is mine and the reviewer's. `embarch-api/open.md` 4,810 B to 3,905 B,
+out of reserve; 15 hunks quoted in the commit message; every item kept with its decision and task pointer, all
+three `Must not delete` debts (bootload 80/81, `study_watch` 48/49 + `api/059`, `bench_exchange` 89 + `api/147`)
+and every Settled-deferred reason intact. What went: restated costs ("a mismatched revision costs a day of
+bring-up"), history ("leg 015, 96 B left"), and a duplicate decision pointer. **The compaction question** (can
+`spec.md` alone answer what someone needs to work on `embarch-api` today?): yes, unchanged; this pass touched only
+`open.md`, which still names every known-wrong item and where it is decided. The size ledger's undated
+`embarch-api/open.md` entry is paid. **My first fold attempt was refused (entry not yet in the file, an Edit
+mismatch on the restamped heading) and my `&&` chain ran past it through a `| tail`: one spurious `leg-fold` tick,
+both pushes no-ops.** Same trap `api/128`'s entry names; it bit a second leg running.
+**Merged:** `agent/api/144-compact-api-open` (code: none, the branch carried no commits and `embarch-api` main
+stays `124f461`; doc `b2daa5e9` rebased from the worker's `a086aebc` onto `a42269ff`, ff). Gate on the merge
+result: `check-docs.py` 11/11, ownership `api` OK on the doc branch, `check-doc-size.py --pressure` no longer
+lists the file. No code gate run: no code changed, and `embarch-api` main was gated at `suite/048`'s landing.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 8.0% at leg start, wave 6.
+**Least sure about:** nothing material; the worker's own report is lost, so whether it judged any cut borderline
+is unknown.
+
 ## 2026-10-28 22:01 — topology/068 min_interval_ms states Core's measurement point
 
 **Decided:** nothing suite-wide. Re-landed from the killed leg's pushed branches (tasks/README.md, re-land outcome).
