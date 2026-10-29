@@ -97,6 +97,29 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 22:30 — ui/101 the operator-prompt modal driven headless against a stub Core
+
+**Decided:** nothing suite-wide; no UI code changed. `tests/browser/stub_core.py` gained a prompting host study
+behind an unauthenticated `POST /_stub/prompt/{start,resolve,conflict,answers,reset}` control surface (the study is
+absent from `/studies` until `start`, so no other drive sees it); `tests/browser/drive_prompt.py` passes all six
+behaviours headless (modal on another tab, countdown moves, Confirm posts `answered_by: "ui"` and closes, reload
+mid-prompt shows it again, a `409` shows the "already ended" text, another surface's resolve names who). **No
+rendering bug found.** One stub bug on the way: `HostList` serialises capitalised (`Steps`), and a stub sending
+`"steps"` made the UI drop the prompt silently, with no error anywhere. Ui decision 69's "Not measured" sentence
+and the `ui-120` feature row updated.
+**Merged:** `agent/ui/101-prompt-modal-headless-drive` (code `f6da709` on `9f5461e`, doc `7265c7e9` rebased from the
+worker's `a525b68d` onto `611c567e`; both ff). Gate on the merge result: ui build, clippy `-D warnings`, test
+(205 + 3 + 2 + 3 pass, 4 ignored) green, client names clean, `check-docs.py` 11/11, ownership `ui` OK on the doc
+branch. I did not re-run the headless drive myself; the worker's run is the evidence. Owner's ui checkout
+fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** one prompt answered from the UI against a live Core with the beep and desktop notification
+heard (not exercisable headless); the installed `embarch-ui` predates `ui/100`.
+**Budget:** PROCEED, weekly 9.2% at leg start, wave 6.
+**Least sure about:** the drive's "no uncaught JavaScript error" check reads `window.__errs`, which this page never
+installs, so that check cannot fail; and the silent drop on a mis-cased `list` is a UI behaviour worth a look.
+
 ## 2026-10-28 22:28 — core/123 instrument pacing comments say the end of the exchange
 
 **Decided:** nothing suite-wide. Comments only, no behaviour change: `last_sent` says when each instrument's last
