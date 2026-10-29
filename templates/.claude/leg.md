@@ -668,7 +668,7 @@ the branch (§10): the repo's `cargo build` / `test` / `clippy --all-targets --
 `python3 scripts/check-docs.py` in `embarch-doc` — **the wrapper, never a count
 or a list of your own**, which said "six" here while it ran eight — plus
 `scripts/check-ownership.py --scope <sub-project>` on **both** of the worker's
-branches, plus `scripts/check-client-names.py --repo <code worktree>` on the
+branches (`--code-repo` on the code one), plus `scripts/check-client-names.py --repo <code worktree>` on the
 code repo, which `check-docs.py` does not reach. **Do not trust a worker's
 report of green.** Run the checks and the merge as one script — pre-merge
 ownership, then `--ff-only`, then the full gate on the merge result, with an

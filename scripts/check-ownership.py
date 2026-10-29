@@ -122,10 +122,33 @@ def audit(repo_root: str):
     return [p for p in top if p not in known], len(top)
 
 
+LITERAL_SCOPES = {"doc", "suite"}
+
+
 def known_scopes(repo_root: str) -> set[str]:
     out = subprocess.run(["git", "-C", repo_root, "ls-tree", "--name-only", "HEAD"],
                          capture_output=True, text=True).stdout.split()
-    return {d.replace("embarch-", "") for d in out if d.startswith("embarch-") and "." not in d} | {"doc", "suite"}
+    return {d.replace("embarch-", "") for d in out if d.startswith("embarch-") and "." not in d} | LITERAL_SCOPES
+
+
+def scope_universe(repo_root: str) -> tuple[set[str], bool, str]:
+    """(the scope list, whether `repo_root` is an embarch-doc checkout, where the
+    list came from).
+
+    The list used to come from `repo_root` alone, which is the cwd by default --
+    so in a code repo, where `protocol.md` §10 has a supervisor run this on the
+    worker's other branch, every sub-project scope came back *unknown* and only
+    the two literals survived (`tasks/doc/036`, leg 070). The answer read as a
+    bad `--scope`, and the cwd is the last thing anyone suspects. A repo with no
+    `embarch-*/` directory cannot be the source of the list, so the list comes
+    from `fleet.toml`'s `doc_repo` instead. `queue-status.py` had the same
+    defect for the queue (`tasks/doc/035`): one rule for both -- a universe
+    derived from the cwd is never reported empty as though that were an answer.
+    """
+    here = known_scopes(repo_root)
+    if here != LITERAL_SCOPES:
+        return here, True, repo_root
+    return known_scopes(str(CONF.doc_repo)), False, str(CONF.doc_repo)
 
 
 def _git(repo_root: str, *args: str) -> subprocess.CompletedProcess:
@@ -245,7 +268,7 @@ def main() -> int:
         return rc
 
     global KNOWN_SCOPES
-    KNOWN_SCOPES = known_scopes(args.repo)
+    KNOWN_SCOPES, doc_checkout, scopes_from = scope_universe(args.repo)
 
     # A code repo has no `embarch-*` directories to derive the scope list from,
     # so validating the scope there is impossible -- and it used to run BEFORE
@@ -289,8 +312,19 @@ def main() -> int:
         args.scope = args.scope[len("embarch-"):]
 
     if args.scope not in KNOWN_SCOPES:
-        print(f"unknown scope '{args.scope}' (known: {', '.join(sorted(KNOWN_SCOPES))})")
+        print(f"unknown scope '{args.scope}' (known from {scopes_from}: "
+              f"{', '.join(sorted(KNOWN_SCOPES))})")
         return 1
+
+    # The scope is real, but the path rules below are embarch-doc's: a code
+    # repo's diff would fail every one of them. Say what is missing, not "red".
+    if not doc_checkout and not args.stdin:
+        print(f"'{args.scope}' is a real scope, but {Path(args.repo).resolve()} is not an\n"
+              f"embarch-doc checkout (no embarch-*/ directory at its HEAD), so there is\n"
+              f"nothing here for the path rules to apply to.\n"
+              f"  The worker's code branch: add --code-repo.\n"
+              f"  Its doc branch: run from that embarch-doc worktree, or pass --repo <it>.")
+        return 2
 
     paths = ([p.strip() for p in sys.stdin.read().split("\n") if p.strip()]
              if args.stdin else changed_paths(args.base, args.repo))
