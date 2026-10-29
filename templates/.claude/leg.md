@@ -792,7 +792,14 @@ when it touches a shared crate (`embarch-study-designer`, `embarch-topology`,
 `embarch-core-client`), a wire type, or retires a decision — those only;
 everything else merges on green. Merge order: shared crates, then consumers, then
 `embarch-doc`; oldest branch first within a tier. Rebase the remaining branches
-after each merge. **Record both merge SHAs per unit** — there is no merge commit
+after each merge, **each in its own unit worktree, where that branch is already
+checked out** — `git -C {{WORKTREE_ROOT}}/<repo>/<NNN-slug> rebase origin/main`
+— or as a `git cherry-pick` in your leg worktree. **Never `git rebase <upstream>
+<branch>` in a repo checkout:** it checks `<branch>` out where it runs, a
+remote-tracking one as a detached HEAD, and run in `{{DOC_REPO}}` it detached the
+owner's checkout with nothing printed that reads as a warning (leg 110,
+`tasks/doc/057`). Should it happen, `git -C <repo> checkout main` undoes it; only
+HEAD moved. **Record both merge SHAs per unit** — there is no merge commit
 and no surviving branch name, so the SHA is the only handle a revert has. Delete
 a worker's worktrees once its branches have landed or been abandoned — but
 **move any `inbox/` drop out of its doc worktree into `{{DOC_REPO}}/inbox/`
