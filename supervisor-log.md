@@ -97,6 +97,35 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 22:01 — topology/068 min_interval_ms states Core's measurement point
+
+**Decided:** nothing suite-wide. Re-landed from the killed leg's pushed branches (tasks/README.md, re-land outcome).
+The worker rewrote `Instrument::min_interval_ms`'s doc comment: Core measures from the end of the previous exchange
+(reply read, or write flushed when nothing is read) to the next write, process-wide, the flush line counting as an
+exchange. Decision 49 states no measurement point, so it is unchanged. Core's own `pace_left` comment ("since the
+last write") is still the old wording; the changelog fragment names it for the next `core` unit (not filed).
+**Leg context (next leg, read this first):** this leg started 21:50 at `36923622`, spawned after the previous leg
+was killed at ~17:35 with four claims in flight (`topology/068`, `api/144`, `ui/100`, `core/122`). Recovery:
+`topology/068` and `api/144` had pushed both branches, so they are re-landed as units; `ui/100` (612 uncommitted
+lines) and `core/122` (a two-test fix) died with dirty trees and no commits, so I committed each tree as a WIP
+commit on its branch (ui `cc29076`, core `a24c7d7`), **re-claimed both as resumes rather than blocking them**
+(commits `0d478fbe`, `2f2c7295`), kept their worktrees, and dispatched fresh workers into them told to judge the
+WIP before finishing it. That is a reading of tasks/README.md's "anything else → blocked, delete nothing": nothing
+was deleted and the block's only cause, a dead worker, was resolved by the dispatch. Bench: `validate dev-bench`
+and `validate dut` both not attached, not a mismatch; the `fleet-hardware.py` buffer is 51 days stale. Overdue
+ledger unchanged (`suite/030` blocked on the owner, `doc/031` owner-only). Inbox empty. Refill owed (5 scopes).
+**Merged:** `agent/topology/068-min-interval-measurement-point` (code `eebc122` on `0803354`, doc `bb75de6e` rebased
+from the worker's `f0135df7` onto `2f2c7295`; both ff). Gate on the merge result: topology test in all four CI
+cells (default, hardware only, + hardware, + bin) and clippy `-D warnings` (bin, hardware-only) green, client names
+clean, `check-docs.py` 11/11, ownership `topology` OK on both branches. Shared crate: diff read, one doc comment.
+Owner's topology checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 8.0% at leg start, wave 6.
+**Least sure about:** whether resuming the two dead workers' trees, rather than blocking them as the rule's letter
+says, is what the owner wants the next time a kill leaves uncommitted work.
+
 ## 2026-10-28 17:22 — suite/048 operator prompt step: a host study waits for a person
 
 **Decided:** **a suite-wide, supervisor-approved cross-repo design (protocol §8), run by me as this leg's last unit.**
