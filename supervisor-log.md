@@ -117,8 +117,9 @@ no `open.md` line and no roadmap line**, and study-designer decision 58 records 
 write direction by a different route (the `.eap` state machine); whether the generic send step is still wanted,
 or the file should go, is his call. I said so in the file.
 **Merged:** no branches (supervisor's own unit). Gate on the result: `check-docs.py` 12/12, `check-links.py`
-green, `check-ownership.py --supervisor` OK on the five paths (19 top-level docs classified). Doc SHA is this
-fold's commit.
+green, `check-ownership.py --supervisor` OK on the five paths (19 top-level docs classified). Doc SHAs:
+`b21b0fef` (bootload-proposal.md alone: `fold-commit.py`'s `ALLOWED` prefixes refuse a top-level doc not named
+`embarch-*`, so it went in its own commit; owner drop filed) and this fold's commit `0e6d6b06` for the rest.
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** none.
