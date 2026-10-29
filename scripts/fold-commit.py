@@ -514,6 +514,32 @@ def committed_log(unit: str, doc: Path) -> tuple[str | None, str]:
     return short, ""
 
 
+UNIT_BRANCH = re.compile(r"^agent/([a-z-]+)/(\d{3})-")
+
+
+def unfinished_units(doc: Path) -> set[tuple[str, str]]:
+    """(scope, NNN) of every task on the instance's `origin/main` not reading `done`.
+
+    A unit whose task is still open, claimed or blocked has not landed, whatever
+    its branch holds -- and its branch may be all there is of it. The case that
+    needs this is `tasks/doc/040`'s dead-worker route: commit what the worktree
+    holds, push, `git worktree remove`, and resume later with `worktree add
+    <path> <branch>`. Between the remove and the resume nothing has the branch
+    checked out, so `git branch -D` no longer refuses it, and a branch that holds
+    nothing yet is an ancestor of `main` -- `landed()` alone would delete the
+    branch the resume is about to name. A `done` file not yet retired still
+    counts as finished: on 2026-10-29, 88 `done` files sat unretired on `main`.
+    """
+    out: dict[tuple[str, str], bool] = {}
+    for ln in git(doc, "grep", "-e", r"^\*\*State:\*\*", "origin/main", "--",
+                  "tasks/", check=False).splitlines():
+        parts = ln.split(":", 2)
+        m = re.match(r"tasks/([a-z-]+)/(\d{3})-", parts[1]) if len(parts) == 3 else None
+        if m and m.groups() not in out:
+            out[m.groups()] = not DONE_TASK.match(parts[2])
+    return {u for u, live in out.items() if live}
+
+
 def prune_landed_branches(doc: Path, scope: str, dry: bool) -> None:
     """Delete `agent/*` branches, pushed and local, whose work is on `origin/main`.
 
@@ -550,6 +576,11 @@ def prune_landed_branches(doc: Path, scope: str, dry: bool) -> None:
     because `-D` refuses a branch a live worktree has checked out, which is what
     keeps an in-flight worker's branch safe whatever its content.
 
+    **And never a branch whose unit is unfinished on `origin/main`**, pushed or
+    local, whatever `landed()` says -- see `unfinished_units()`. Measured
+    2026-10-29, that protects exactly `ui/059`'s, which the proof keeps anyway;
+    what it adds is the empty branch parked for a resume.
+
     Best-effort throughout: the fold is already committed when this runs, and a
     network failure must never turn a landed unit into a failed one.
     """
@@ -559,6 +590,12 @@ def prune_landed_branches(doc: Path, scope: str, dry: bool) -> None:
     # repository under another path -- one pass is enough.
     if (code / ".git").exists() and common_git_dir(code) != common_git_dir(doc):
         repos.append(code)
+    unfinished = unfinished_units(doc)
+
+    def keep(branch: str) -> bool:
+        m = UNIT_BRANCH.match(branch)
+        return bool(m and m.groups() in unfinished)
+
     for repo in repos:
         if not git(repo, "rev-parse", "--verify", "-q", "origin/main",
                    check=False).strip():
@@ -567,7 +604,7 @@ def prune_landed_branches(doc: Path, scope: str, dry: bool) -> None:
                    "refs/remotes/origin/agent/", check=False).split()
         for ref in refs:
             branch = ref[len("origin/"):]
-            if not landed(repo, ref):
+            if keep(branch) or not landed(repo, ref):
                 continue          # not provably on origin/main yet -- leave it
             if dry:
                 print(f"would delete {repo.name}: origin/{branch}")
@@ -584,7 +621,7 @@ def prune_landed_branches(doc: Path, scope: str, dry: bool) -> None:
         name = Path(common_git_dir(repo) or repo).parent.name
         local = [b for b in git(repo, "for-each-ref", "--format=%(refname:short)",
                                 "refs/heads/agent/", check=False).split()
-                 if landed(repo, f"refs/heads/{b}")]
+                 if not keep(b) and landed(repo, f"refs/heads/{b}")]
         if not local:
             continue
         if dry:

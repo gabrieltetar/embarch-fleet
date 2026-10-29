@@ -821,9 +821,12 @@ provably on `origin/main`, so it is normally a fold behind.
 The proof is patch-id first and then file by file, so a branch you rebased or
 cherry-picked through a conflict is pruned like any other; you need not
 force-push it. Do not "help" by deleting one by hand: before the push, the
-remote branch is the remote's only copy of that unit. A branch the fold cannot
-prove — a blocked unit's, or one whose files `main` has edited since — stays,
-and deleting it is the owner's call, never yours.
+remote branch is the remote's only copy of that unit. **It never prunes a
+branch whose task on `origin/main` reads anything but `done`**, so a branch you
+parked for a resume (commit, push, `git worktree remove`, above) survives the
+folds in between, even empty. A branch the fold cannot prove — a blocked
+unit's, or one whose files `main` has edited since — stays, and deleting it is
+the owner's call, never yours.
 
 **Spawn a reviewer the moment a unit's branches are merged. It never blocks the
 merge; it is the last thing the fold waits for.** One background
