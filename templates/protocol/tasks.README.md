@@ -335,7 +335,12 @@ shortened.
   96-byte remainder pushed an `embarch-api` decision into the wrong topic file
   rather than refusing it. So a parked file's compaction **rides in the unit
   that next writes it**, same commit, carrying this task's `Must not delete:`
-  list and closing only that file's item. `DOC-COMPACTION.md` §2 is the rule;
+  list and closing only that file's item. **When that was the last file, the
+  task closes `done` with its `yes` left as written** — the debt was paid while
+  the answer was honestly yes, which is the point of riding along, and
+  `check-task-state.py` exempts `done` as it does `Owner: required`, since
+  nothing dispatches either. Never flip the answer to pass the gate
+  (`tasks/doc/083`). `DOC-COMPACTION.md` §2 is the rule;
   a mission split is the cheaper move where the file holds more than one.
 - **`Size debt due:`** is what stops a park absorbing, and it is why the state
   rule above costs what it used to cost. A leg spends its first unit on the

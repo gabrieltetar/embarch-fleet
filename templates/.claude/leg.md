@@ -561,7 +561,10 @@ the four live violations were exactly that. So:
 you are dispatching *into* is in reserve and its compaction task is blocked on
 `In flux: yes`, say so in the task file and **tell that worker to compact that
 file as part of its own unit**, carrying the parked task's `Must not delete:`
-list and closing only that file's item. It is the actor making the flux, so it is
+list and closing only that file's item. If that was its last file, close the task
+`done` at the fold and leave `In flux: yes` as written: `check-task-state.py`
+exempts `done`, and a flipped answer is a false field (`tasks/doc/083`,
+`{{DOC_REPO}}/tasks/README.md`). It is the actor making the flux, so it is
 the only one who can shorten what it is rewriting without writing a clean
 statement of something about to be wrong. Left alone this ends one of two ways
 and both are silent: the worker meets the cap mid-flight, or — as `embarch-api`
