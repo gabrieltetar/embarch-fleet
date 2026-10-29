@@ -97,6 +97,36 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 17:32 — atlas/013 reg_read says when a peripheral's clock is off
+
+**Decided:** **I sent the worker back once before landing.** Its first commit (`108ee85`) put `RTC` and `TAMP` in
+`NO_CLOCK_GATE` and mapped `COMP`/`OPAMP` to `SYSCFGEN` from memory, and said no vendor SVD existed on this machine;
+524 do, read-only, under `/home/gabriel/STMicroelectronics/STM32Cube/STM32CubeProgrammer/SVD/`. Run over the
+STM32G0B1 file, its rule stated "RTC has no gate" although the SVD has `APBENR1.RTCAPBEN`. Corrected in `0f68b0a`:
+`RTC`→`RTCAPBEN` (plain `<PERIPH>EN` would have matched `RTCEN` in the backup-domain register), `DAC`, `FDCAN1/2`,
+`HDMI_CEC` mapped by their SVD field names, `TAMP`/`COMP`/`DMAMUX` answer "unknown", `NO_CLOCK_GATE` is `RCC`, `EXTI`,
+`IWDG` (as the task named them) plus the core PPB blocks; `VREFBUF`→`SYSCFGEN` stays (the task's field note, and the
+SVD's field description names it). Measured: 50 of 56 peripherals map, 3 no gate, 3 unknown. New opt-in test
+`EMBARCH_ATLAS_REAL_SVD=<file>`; the part is not named in the repo (atlas's public-name guard denies it). Otherwise:
+`reg_read` adds the gate's RCC word to the same halted read and answers clock off (raw words, no reset markers), on
+(decode as before), unknown, or no gate of its own. **Filed `tasks/atlas/025`** from the reviewer's two residuals:
+the extra word counts against `MAX_RANGES`/`MAX_WORDS`, so a read at exactly the limit now refuses; and
+`<PERIPH>EN` is matched across every RCC register, not only enable registers.
+**Merged:** `agent/atlas/013-reg-read-says-when-the-clock-is-off` (code `0f68b0a` on `108ee85` on `4d68d53`, ff; doc
+`75224fc2` on `3ebf6dd4` on `5450f81e`, ff). Gate on the merge result: worktree venv `pytest -q` 483 passed, 3
+skipped (real west workspace, built atlas, the opt-in SVD test; `test_public_guard` ran), and `tests/test_live.py`
+with the vendor SVD 52 passed; client names clean, `check-docs.py` 12/12, ownership `atlas` OK on both branches.
+Owner's atlas checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** an STM32 board through Core (the DUT qualifies): `reg_read TIM1` (or any peripheral the image
+leaves gated) says `clock off (RCC.APBENR2.TIM1EN = 0)` with no `*`/"at reset" markers; an enabled peripheral says
+`clock on`; the RCC word rides in the same halted read. The task file that carried this is retired by this fold.
+**Budget:** PROCEED, weekly 28.1% at dispatch, wave 6.
+**Least sure about:** the tables are checked against one STM32 SVD only; on any other family an unmatched spelling
+answers "unknown", which is safe, but a same-named field in a non-enable RCC register would be read as the clock
+state until `atlas/025` lands.
+
 ## 2026-10-29 17:22 — atlas/023 live core-state names where the core is, as symbols, once the flash matches the ELF
 
 **Decided:** nothing suite-wide. New `corestate.py`: `embarch-atlas live core-state [--halt] [--samples N] [--build
