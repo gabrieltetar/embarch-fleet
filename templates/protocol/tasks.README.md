@@ -339,7 +339,11 @@ shortened.
   measured reasoning.
 - **`Must not delete:`** is what the filer knows and the eventual compactor will
   not. Anything: a failure signature, a rejected alternative, a measurement that
-  reads as an assumption once its date goes.
+  reads as an assumption once its date goes. **Name a finding's receipt with
+  it** — the symbol, path or "confirmed by reading X" sentence a later reader
+  needs to re-establish it — because `DOC-COMPACTION-PASS.md`'s hot/cold test
+  classes evidence as cold, so a compactor following it keeps the conclusion and
+  drops the receipt (`tasks/core/089` lost four that way).
 
 **`Done when` carries `DOC-COMPACTION-PASS.md`'s human question**, answered in the
 compactor's own words in the commit message: *can `spec.md` alone answer what
