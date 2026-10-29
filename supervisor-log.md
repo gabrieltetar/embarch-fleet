@@ -97,6 +97,28 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 14:42 — outpost/018 a 13 µs backwards DUT-clock step is pinned as tolerated
+
+**Decided:** nothing suite-wide. Test only, no decoder change: `tests/decoder_unit.py` gains
+`test_a_13_us_inversion_between_ordinary_records_is_tolerated_and_reported` (the recorded 13 µs step, 13 cycles
+at 1 MHz), mutation-checked against the `> (1 << 31)` wrap threshold. **The task's premise was half wrong**, and
+the reviewer confirmed it against decision 17: the restart arm (a step longer than the capture, tested against
+`rx_utc_ms`, refuse, fall back, say so) is a *host's* job and lives in `embarch-ui/src/trace.rs` and Core's
+`outpost_load.rs`; `decode_outpost.py` only unwraps. The task's unticked box ("the fallback names the clock") is
+re-homed in this fold as **`tasks/ui/102`** (Hardware: none). **Table gap for the owner:** leg.md's sibling table
+links only `embarch-core` and `embarch-ui` beside an `embarch-outpost` worktree, but `tests/vocab_check.py` also
+reads `../embarch-study-designer/src/outpost.rs` and **skips** without it; I made the link and re-ran it green.
+**Merged:** `agent/outpost/018-backwards-dut-clock-decoder-tests` (code `ac3b96f` on `514d2c0`, ff; doc `202377aa`
+cherry-picked from the worker's `b8099ee5` onto `8b81f423`). Gate on the merge result: `decoder_unit.py` 36 OK,
+`cross_decoder.py` 831 rows agree, `vocab_check.py` PASS (after the link), client names clean, `check-docs.py`
+12/12, ownership `outpost` OK on both branches. Owner's outpost checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 22.2% at leg start, wave 6.
+**Least sure about:** whether `ui/102` is real work: the four `trace.rs` tests may already assert the host-clock
+flag, and I filed it without reading them.
+
 ## 2026-10-29 14:41 — core/124 install over a registered Windows service rewrites in place
 
 **Decided:** nothing suite-wide. The worker's core decision 106 (`decisions/platform.md`): on Windows, `install`
