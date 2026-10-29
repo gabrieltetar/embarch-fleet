@@ -102,14 +102,26 @@ DISPATCHABLE_HW = ("none", "verify-only")
 BENCH_HW = "bench"
 
 STATE_RE = re.compile(r"^\*\*State:\*\*\s*(.+?)\s*$", re.M)
-HW_RE = re.compile(r"^\*\*Hardware:\*\*\s*([a-z-]+)", re.M)
-SCOPE_RE = re.compile(r"^\*\*Scope:\*\*\s*([a-z-]+)", re.M)
-# A task only the owner's own session can do -- every path it must write is
-# reserved (check-ownership.py). Dispatching one wastes a worker that will fail
-# the ownership check, so it is gated the way hardware gates one. Absent means
-# `no`, unlike Hardware: a missing line here must not gate the whole queue, and
-# check-ownership.py is the enforcement either way.
-OWNER_RE = re.compile(r"^\*\*Owner:\*\*\s*([a-z-]+)", re.M)
+# Markdown emphasis a field's value may legitimately carry. Stripped before the
+# value is read, by `field()` here and by `token()` in check-task-state.py.
+EMPHASIS = "*_`"
+
+
+def field(body: str, name: str) -> str | None:
+    """The first `**<name>:**` line's leading word, emphasis stripped.
+
+    The one way this file reads Hardware, Scope and Owner (`tasks/doc/039`).
+    Each used to be its own `([a-z-]+)` regex straight after the colon, so a
+    value written `**required**` matched nothing and read as the field's
+    absence: `tasks/doc/038` was offered to workers as ordinary work for a
+    day, and `tasks/outpost/018` -- `Hardware: **none**` -- sat hardware-gated
+    as `required` from the day it was filed, 2026-09-12, invisible to every
+    leg. Emphasis is legitimate Markdown; a reader that cannot see past it is
+    what was wrong, so nothing else about the value is forgiven.
+    """
+    m = re.search(r"^\*\*" + re.escape(name) + r":\*\*\s*[" + re.escape(EMPHASIS)
+                  + r"]*([a-z-]+)", body, re.M)
+    return m.group(1) if m else None
 CLAIM_RE = re.compile(r"^claimed by\s+(\S+?),\s*(\d{4}-\d{2}-\d{2} \d{2}:\d{2})")
 
 
@@ -124,7 +136,7 @@ def parse(path: str) -> dict:
     raw_state = m.group(1).strip() if m else "unknown"
 
     claim_branch = claim_at = None
-    state = raw_state.split()[0] if raw_state else "unknown"
+    state = raw_state.split()[0].strip(EMPHASIS) if raw_state else "unknown"
     cm = CLAIM_RE.match(raw_state)
     if cm:
         state = "claimed"
@@ -134,18 +146,21 @@ def parse(path: str) -> dict:
         except ValueError:
             claim_at = None
 
-    hw = HW_RE.search(body)
-    scope = SCOPE_RE.search(body)
-    owner = OWNER_RE.search(body)
     return {
         "path": path,
         "state": state,
         "raw_state": raw_state,
         "claim_branch": claim_branch,
         "claim_at": claim_at,
-        "hardware": hw.group(1) if hw else "required",
-        "scope": scope.group(1) if scope else "unknown",
-        "owner": owner.group(1) if owner else "no",
+        "hardware": field(body, "Hardware") or "required",
+        "scope": field(body, "Scope") or "unknown",
+        # A task only the owner's own session can do -- every path it must
+        # write is reserved (check-ownership.py). Dispatching one wastes a
+        # worker that will fail the ownership check, so it is gated the way
+        # hardware gates one. Absent means `no`, unlike Hardware: a missing
+        # line here must not gate the whole queue, and check-ownership.py is
+        # the enforcement either way.
+        "owner": field(body, "Owner") or "no",
     }
 
 

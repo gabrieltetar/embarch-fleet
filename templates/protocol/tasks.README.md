@@ -70,7 +70,10 @@ third (`tasks/doc/074`).
 **Those four words, and one of them is the first word on the line.** Everything
 after it is prose for a human and no script reads it; token zero is what every
 consumer reads, by `raw.split()[0]`, and it must match exactly — no trailing
-comma, no `partially`, no `closed`. `check-task-state.py` enforces it, and it
+comma, no `**emphasis**`, no `partially`, no `closed`. (`Hardware:`, `Scope:`
+and `Owner:` may be bolded: `queue-status.py` reads past emphasis on those,
+`tasks/doc/039`. `State:` may not, because `fold-commit.py` retires a task by
+matching the bare `done`.) `check-task-state.py` enforces it, and it
 exists because the field was prose all the way down until 2026-09-09 and three
 things had already gone wrong on `main`:
 
