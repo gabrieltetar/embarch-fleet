@@ -810,6 +810,16 @@ form and never write "pending":** `grep '^\*\*Reviewer:'` is the tally, a fourth
 form breaks it, and a `pending` nobody resolves is silent — the `umbrella/004`
 entry says exactly this about a fourth form and it was right.
 
+**When its notification is late, read its verdict file — never its transcript.**
+A reviewer's last act is one line in `{{STATE_DIR}}/reviews/<scope>-<NNN>`,
+findings or none, saying what your `**Reviewer:**` line should say. **That file
+existing means the reviewer finished** — the reviewer's version of a pushed
+branch, and positive-only for the same reason: a completion notification has
+gone astray at least twice (`tasks/doc/042`), and the only line left was a
+`skipped` that recorded a finished, clean review as a missing one. Present: copy its line.
+Absent: it is still running, so keep waiting. Delete the file once the entry is
+written.
+
 **A reviewer does not count against the worker wave.** It reads a diff for
 about ninety seconds; a worker runs for twenty minutes. Counting them equally
 made a reviewer cost a whole worker slot, and since DEGRADED — a wave of **2** —

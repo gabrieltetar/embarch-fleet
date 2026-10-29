@@ -121,10 +121,18 @@ line the supervisor puts in the unit's log entry. It must carry:
 contradiction you found by reading is `none` even if confirming it would need a
 board — say that in the body instead.
 
+**Whatever you found, your last act before reporting is one line in
+`{{STATE_DIR}}/reviews/<scope>-<NNN>`** (Write tool, the unit id you were given):
+what the supervisor's `**Reviewer:**` line should say after the marker —
+`no findings.` or `1 finding — inbox/<your drop>`. Your completion
+notification has gone astray at least twice (`tasks/doc/042`), and a file only
+a finished reviewer writes is how the supervisor collects you without it.
+
 ## What you must not do
 
-- **Never write outside `inbox/`.** Not the task file, not the docs, not the
-  code. You hold no ownership row at all, which is narrower than a worker's, and
+- **Never write outside `inbox/` and your one verdict file.** Not the task
+  file, not the docs, not the code. You hold no ownership row at all, which is
+  narrower than a worker's, and
   `check-ownership.py` is not what stops you — this instruction is.
 - **Never revert anything yourself.** You name the SHA; the owner or a
   supervisor decides. A reviewer that reverted would be an approver with the
