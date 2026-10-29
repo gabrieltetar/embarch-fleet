@@ -74,8 +74,13 @@ ALLOWED = (
     "suite/",         # a suite-level doc a status.d fragment targeted
     "embarch.md",
     "embarch-decision-reversals.md",
+    "reversals/",     # its DOC-COMPACTION split: the range files hold the rows
     "embarch-glossary.md",
 )
+# A split doc keeps its old file's rules and none of its old file's place in
+# this list (tasks/doc/073): `reversals/` was refused for a day while the
+# four-row index it was split from was accepted. A new split directory of a
+# doc above belongs here in the same edit that creates it.
 
 UNIT_RE = re.compile(r"^[a-z-]+/\d{3}$")
 
