@@ -97,6 +97,43 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 17:40 — atlas/010 missing.md records the engineer's answers, and net_trace walks through generic cards
+
+**Decided:** nothing suite-wide. New `answers.py`: `inventory/answers.toml` (`[parts."<MPN>"]`, `answer` =
+`supplied` / `not-needed` + `why` / `standard-function` + `function` + `pins`), written by `embarch-atlas missing
+--answer <MPN> ...` (rewrites the whole file, so hand comments are lost), which refuses an unknown function, a map
+missing a required card pin, a pin the part lacks, an MPN not on the boards, `not-needed` without `why`. Eleven cards
+in `CARDS` carry only `dir`/`type`/`flow`/`control`/`optional`, never a limit or timing. A card applies only to an MPN
+answered `standard-function`, only through the engineer's map, and never where a datasheet covers the part (the
+reviewer checked `join.py`'s `part_docs` guard and that `mismatch.py`/`graph.py` never see a card). `net_trace` walks a
+FET channel as a feed, its gate as the enable, and a generic logic output back up to 3 gates; hops end `[generic card,
+engineer-declared]`. `missing.md` sorts open questions by walks stopped (`nettrace.walk_stops`, one upstream walk per
+non-ground rail net), then visibility, and moves answered parts to an "Answered" section. **The worker's call,
+accepted:** "walks stopped" counts rail walks only, so a part reached only from a signal net counts 0; unmeasured on a
+real board, and DESIGN.md says so.
+**Merged:** `agent/atlas/010-missing-datasheets` (code `1eb055f` on `0f68b0a`, ff; doc `8ba01deb` on `8b2ee6a8`, ff).
+Gate on the merge result: worktree venv `pytest -q` 491 passed, 3 skipped (real west workspace, built atlas, vendor
+SVD; `test_public_guard` ran, checked separately), client names clean, `check-docs.py` 12/12, ownership `atlas` OK on
+both branches. Owner's atlas checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. The ranking and the card walk have met only the synthetic two-board fixture.
+**Budget:** PROCEED, weekly 27.1% at leg start, 28.6% at leg end, wave 6.
+**Least sure about:** a `--pins` key like `1` matches a netlist pin numbered `1` or one named `1`; the reviewer
+called it an ambiguity the engineer controls, not a contradiction, and nothing is filed for it.
+**Leg close (next leg, read this first):** 4 of 4 units (`atlas/020`, `atlas/023`, `atlas/013`, `atlas/010`), all
+landed, none blocked, all four reviews "no findings". Started 17:07 at `2d456db9`; units ran one at a time (only
+`atlas` dispatchable). **`atlas/013` went back to its worker once** for unmeasured clock-gate facts; a public vendor
+SVD set lives at `/home/gabriel/STMicroelectronics/STM32Cube/STM32CubeProgrammer/SVD/` (read-only, never copied into
+a repo) and is the place to check an STM32 register fact. **Filed `tasks/atlas/025`.** **No `suite` task is
+announced.** **Dispatchable now:** 5 `atlas` — `005`, `025`, and `004`, `011`, `016`, which I consider owner-gated
+in practice (`016` starts with the owner reviewing `embarch-atlas-wt`; `004`/`011` build on the `standard` kind it
+lands). Spread gate will fire again; no sweep source changed since 15:26 as of 17:08. Bench unchanged (`dut`
+attached, `dev-bench` not; `api/059`, `dev-bench/035`, `038` open). `toolchain` lane (17) still unstarted, for the
+reason the 17:06 entry gives. Owner-only: `tasks/doc/093`, `094`, `095`. Ledger: nothing overdue (next
+`dev-bench/040`, 2026-11-01, blocked). `changelog.d/umbrella-check-17-measured.decided.md` is still the owner's,
+unconsumed. Nothing deployed.
+
 ## 2026-10-29 17:32 — atlas/013 reg_read says when a peripheral's clock is off
 
 **Decided:** **I sent the worker back once before landing.** Its first commit (`108ee85`) put `RTC` and `TAMP` in
