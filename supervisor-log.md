@@ -97,6 +97,36 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 16:37 — atlas/015 every lookup says when the atlas is behind HEAD
+
+**Decided:** nothing suite-wide. New `stale.py` computes `project.atlas_state` per call, cached on the mtimes of
+`.git/HEAD`, its ref and `packed-refs` plus the stats of the stamp, manifest and board PDFs; all twelve lookups'
+`src:` lines end `stale=<reasons> (HEAD <sha12>)` when there are reasons, after `atlas/012`'s `pdf=`.
+`current_atlas()` treats a `current.json` whose commit is not HEAD as no match and falls through to the newest atlas,
+which then reads as stale (the fall-through order is unchanged). The MCP server runs `project.status` at start, in a
+try/except; I checked `status` writes nothing to stdout, which would corrupt the stdio protocol. `join.run` calls
+`update.rm_todo` before rendering the MAP, so both `update` and a hand-run `build` + `join` show the RM chapters; the
+reviewer confirmed `worklist.json` is derived and neither the selection nor frozen units are touched. Live tools
+(`reg_read`, `shell`) carry no `stale=`: they read the board. No `features.d` row (no maturity change).
+**Merged:** `agent/atlas/015-stale-signal` (code `fa9b1b9` on `197784a`, ff; doc `4dae8850`, ff). Gate on the merge
+result: worktree venv `pytest -q` 439 passed, 2 skipped (`test_public_guard` ran), client names clean with history,
+`check-docs.py` 12/12, ownership `atlas` OK on both branches. Owner's atlas checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 25.8% at dispatch, wave 6.
+**Least sure about:** the timing test asserts 5 ms per call over 200 iterations; the worker said "well under 1 ms"
+without reading the number off, so the margin is asserted, not recorded.
+**Leg close (next leg, read this first):** 4 of 4 units (`ui/059`, `atlas/006`, `atlas/012`, `atlas/015`), all
+landed, none blocked. **`ui/059` was unparked by me** and landed on fresh branches; its old branches
+`agent/ui/059-diff-new-lines-republish` stay on both remotes for the owner. **No `suite` task is announced.**
+**Dispatchable now:** 12 `atlas` tasks and nothing else, so the spread gate will fire again; no sweep source changed
+since 15:26 as of 16:16 (this leg skipped the sweep). Bench unchanged (`dut` attached, `dev-bench` not; `api/059`,
+`dev-bench/035`, `038` open). Owner-only: `tasks/doc/093`, `094`, `095`. Ledger: nothing overdue (next
+`dev-bench/040`, 2026-11-01, blocked). `tasks/atlas/007` now carries an "Also owed" line from `atlas/012` (add
+`find_text` to the not-distilled hints). `changelog.d/umbrella-check-17-measured.decided.md` is still the owner's,
+unconsumed. Nothing deployed.
+
 ## 2026-10-29 16:31 — atlas/012 four lookup misses become the next call to make
 
 **Decided:** nothing suite-wide. `part_card` documents `board="all"` (`""` still accepted, CLI bare `--board` maps to
