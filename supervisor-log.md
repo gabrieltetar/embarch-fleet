@@ -97,6 +97,37 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 22:26 — api/149 the ledger's needs match a role-less bench board by its enrolled name
+
+**Decided:** nothing suite-wide. The worker read `embarch-topology`'s types: a role-less bench board is an
+`EnrolledBoard` with `role == NO_ROLE` (`""`) and a `name`, rows keyed by probe, so nothing makes `name` unique.
+The ledger already matched that board by name (`attached_from` skips the empty role); no matching logic changed.
+**Added in api decision 98, in place:** a need two attached things answer to (two boards, or a board and an
+instrument, one name) is reported in `ambiguous_needs` (JSON and the human view) and **still counts as met**, the
+view saying it cannot tell which. Four unit tests (role-less board and instrument, attached and absent; the
+ambiguous cases). `attached_now` returns an `Attached` struct instead of a tuple.
+**Leg context (next leg, read this first):** this leg started 22:13 at `314ae07c`, clean recovery (no claims, no
+worktrees, no leg tree; four September `agent/*` branches on embarch-doc's remote are stale leftovers, not live).
+Bench: Core up, `probes: []`; `validate dev-bench` and `validate dut` both not attached, not a mismatch, so
+`api/059`, `dev-bench/035`, `dev-bench/038` stay open. Inbox empty. Refill swept every `open.md`, the roadmap's
+Next and the reversals: **no new host-side work found**, only hardware debts and owner calls. **I reopened
+`tasks/chat/004`** (blocked on `In flux: yes`): `embarch-chat/decisions/timeline.md` was 1,518 B **over** its cap
+after the owner's decisions 92 and 93, and `DOC-BUDGET.md` makes a verbatim split the default remedy, which flux
+cannot forbid. Four units dispatched at once (wave 6): `api/149`, `core/123`, `ui/101`, `chat/004`. **My first
+worktree adds used relative paths with `git -C`, so they landed inside the repos** (`embarch-doc/.worktrees/...`
+and four code repos); I removed them before any worker ran and recreated them under `embarch/.worktrees/`. A
+`embarch-api/.worktrees/embarch-api/` holding two symlinks dated 2026-09-13 is an older leg's same slip; left as is.
+**Merged:** `agent/api/149-ledger-role-less-board-needs` (code `0f1f0d4` on `124f461`, doc `138d1a05` on `266d925c`;
+both ff, no rebase). Gate on the merge result: api build, test, clippy `-D warnings` green, client names clean,
+`check-docs.py` 11/11, ownership `api` OK on the doc branch. Not a shared crate (`src/ledger.rs` only). Owner's api
+checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none new (decision 98's ledger has still never met a bench).
+**Budget:** PROCEED, weekly 9.2% at leg start, wave 6.
+**Least sure about:** counting an ambiguous need as met: a test needing a name two boards share shows runnable,
+and which board it would run on is undecided.
+
 ## 2026-10-28 22:09 — ui/100 a host study's operator prompt opens a modal on any tab
 
 **Decided:** nothing suite-wide. Resumed from the dead worker's WIP `cc29076` (see `topology/068`'s leg context);
