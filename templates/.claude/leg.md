@@ -117,10 +117,12 @@ next one for up to 30 minutes.
    before you dispatch. `git push origin HEAD:main` each time. A non-fast-forward
    means something else moved `main`: fetch and rebase, never force.
 
-   **The symlink is what makes the gate pass in a worktree.** Every cross-repo
-   link in the instance resolves to `<worktree parent>/embarch-fleet`, which
-   does not exist until you make it; without it `check-links.py` reports seven
-   broken links nobody wrote.
+   **The symlink is what makes the gate pass in a worktree.** Every link into
+   the framework resolves to `<worktree parent>/embarch-fleet`, which does not
+   exist until you make it; without it `check-links.py` reports all of them
+   broken (48 on 2026-10-29) and `check-docs.py` skips its two framework checks.
+   A link into a *code* repo needs no link of its own: `check-links.py` looks a
+   sibling up again where the main checkout lives (`tasks/doc/085`).
 
    **`inbox/` is the exception, and it is not optional.** Drops are gitignored,
    so they exist only in the main checkout and your worktree cannot see them.
