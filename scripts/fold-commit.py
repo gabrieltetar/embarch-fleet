@@ -671,7 +671,17 @@ def main() -> int:
         # tasks/README.md: a landed task leaves the queue in the same commit
         # that folds its fragments. Git holds it, and a completed task left in
         # the queue competes with the open ones for attention.
-        git(doc, "rm", "-q", "--", *to_delete)
+        #
+        # `-f`, because a task file reaches `done` by being edited, and plain
+        # `git rm` refuses an edited file whether the edit is staged or not.
+        # The supervisor writes `done` in the fold for every `suite` task (it
+        # has no branch to arrive on), and for any unit whose worker left
+        # `closed` or `claimed` -- which `unit_task_not_settled()` above makes
+        # it correct. So the refusal fired on exactly the edits this script
+        # demands, and after the log commit had landed (tasks/doc/050, 072,
+        # 075, 082). The file is deleted in this commit, so `-f` discards
+        # nothing the fold was not already discarding.
+        git(doc, "rm", "-q", "-f", "--", *to_delete)
     staged = git(doc, "diff", "--cached", "--name-only").strip()
     # A path that produced no change at all is worth a line. The count on its
     # own is not enough: leg 008 read "2 path(s)" for a three-path fold and had
