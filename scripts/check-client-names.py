@@ -96,8 +96,8 @@ close it, both reading commits rather than the tree:
   what the hook cannot: a name added to the denylist after the push that carried
   it, and a push made from anywhere the hook is not installed. Its first run
   found one the 2026-10-20 rewrite's text search could not see -- the
-  2026-09-06 hex-encoded leak below is still in `embarch-dev-bench`'s public
-  history.
+  2026-09-06 hex-encoded leak below, still in `embarch-dev-bench`'s public
+  history until a blob-callback rewrite took it out the same day.
 
 The whole suite is 583 tracked files and 5.9 MB, so a full scan of all ten
 repos is milliseconds and there is no reason to sample.

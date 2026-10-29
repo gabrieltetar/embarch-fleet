@@ -167,13 +167,18 @@ force-pushed, citations repointed (`embarch-doc` `0f68533a`, here `ffc851f`).
 and blobs, and the first leg after midnight runs `--suite --history`
 (`tasks/suite/050`). Its first run found a leak that rewrite's text search could
 not see: the 2026-09-06 hex-encoded name, in ten blob versions of
-`embarch-dev-bench`'s ztest file on public `main`.
+`embarch-dev-bench`'s ztest file on public `main`. **Rewritten 2026-10-29**: a
+blob callback swapped the bytes for a same-length stand-in, tip tree unchanged,
+force-pushed `5282206` → `9349801`; public history scans clean.
 
-**Still open.** Whether GitHub Support was asked to purge the force-pushed-away
-commits, which stay fetchable by SHA until GitHub collects them: not recorded.
-It is **dark in CI**, so a push from where the hook is not installed waits for
-the daily run. And **a denylist cannot catch a name nobody thought to add** — it
-makes the second leak of a known name impossible, not the first of a new one.
+**No purge is requested.** The owner's position (2026-10-29): GitHub collects
+force-pushed-away commits by itself, after 30 days. GitHub's own guidance routes
+removing cached views through Support.
+
+**Still open.** It is **dark in CI**, so a push from where the hook is not
+installed waits for the daily run. And **a denylist cannot catch a name nobody
+thought to add** — it makes the second leak of a known name impossible, not the
+first of a new one.
 
 ## Whether a second instance is real
 
