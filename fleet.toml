@@ -324,8 +324,14 @@ reserved = [
 # once already, and nothing noticed for a day.
 fleet_writable = [
   "README.md",
+  # Two more cross-repo designs awaiting acceptance, the host-study proposal's
+  # class: neither holds a rule the fleet runs under. Classified 2026-10-29,
+  # when check-ownership.py --supervisor found them in neither list and the
+  # proposal cleanup (shed what is built) needed somewhere to stand.
+  "bootload-proposal.md",
   "embarch.md",
   "embarch-decision-reversals.md",
+  "embarch-desk-sessions-proposal.md",
   "embarch-glossary.md",
   # A cross-repo design awaiting acceptance, the same class as the
   # stream-pipeline proposal below: phase 3 builds from it, and nothing in it is
