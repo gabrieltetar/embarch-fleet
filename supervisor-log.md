@@ -97,6 +97,38 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 15:23 — suite/053 the 87 done task files are retired
+
+**Decided:** **a supervisor-run suite task, as this leg's last unit**, after its window (`ts`
+`1793305738.327939`, closed 14:58:58; thread re-read 15:05 and 15:23, no reply). `git rm` of every task file
+reading `done` at token zero: 87 (core 21, api 18, topology 12, ui 12, study-designer 9, umbrella 6, dev-bench 4,
+suite 4, outpost 1); `queue-status.py` now lists no `done` rows. **Orphan check**: scripted scan of all 87 for
+unticked boxes and "left open / deliberately / follow-up / debt" lines, then a read of each hit. Three had
+unticked boxes, all already homed: `core/028` box 2 is `embarch-core/open.md`'s Espressif port-selection bullet;
+`suite/022`'s size box was paid by `suite/030`; `ui/065`'s two struck boxes are `embarch-ui` decision 27 and its
+`open.md`. The prose follow-ups (`api/036`'s schema-skew citation drop, `topology/056`'s deferred behaviour, now
+`topology/058`, `ui/024`'s three OVER decisions, since under cap) are resolved. **Nothing re-homed.** One inbound
+link repointed: `suite/decisions/placement.md` now names `embarch-ui` decision 27 where it linked `ui/065`.
+`suite/037`'s `Unparks when:` named the retired `core/015` as the Windows-build debt and turned
+`check-task-state.py` red; it now names `embarch-core/open.md`'s standing owner-run debt. Backtick mentions of
+retired numbers elsewhere (open.md, history, this log) are left: numbers are permanent and `git log` finds them.
+**Merged:** no branches (supervisor's own unit). Gate on the result: `check-docs.py` 12/12, `check-links.py`
+green, `check-task-numbers.py` green (58 live numbers, none reissued). Doc SHA is this fold's commit.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 23.4% at leg start, wave 6.
+**Least sure about:** my orphan scan was keyword-driven; the reviewer, spawned on the uncommitted diff before
+this fold, read all 87 and found nothing unhomed, but about 40 non-task files still cite retired numbers as
+prose provenance, which no gate reads.
+**Leg close (next leg, read this first):** 4 of 4 units (`umbrella/095`, `chat/005`, `atlas/009`, `suite/053`),
+all landed, none blocked. **Two `suite` tasks remain announced with windows closed and no reply**: `suite/054`
+(shed built proposal pieces, `ts` `1793305739.311079`) and `055` (triage pre-October tasks, `ts`
+`1793305740.224299`); one per leg as the last unit, re-read each thread first. **Dispatchable now:** 17 `atlas`
+tasks, `ui/102`, `chat/006` (filed this leg). Bench: `dut` attached, `dev-bench` not, so `api/059`,
+`dev-bench/035`, `038` stay open. Owner-only: `tasks/doc/093`, `094`. Ledger: nothing overdue (next
+`dev-bench/040`, 2026-11-01, blocked). Nothing deployed.
+
 ## 2026-10-29 15:20 — atlas/009 a live call that can change the board carries no read-only hint
 
 **Decided:** nothing suite-wide. Atlas MCP: `shell` runs only commands matching `atlas.toml`'s `[live] read_only`
