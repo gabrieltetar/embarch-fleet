@@ -97,6 +97,27 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 22:05 — core/122 two capture-timing tests stop flaking
+
+**Decided:** nothing suite-wide. Resumed from the dead worker's WIP `a24c7d7` (see `topology/068`'s leg context).
+The resume worker kept `host_study.rs` as the dead worker left it (the sleeping feeder thread became a direct
+`dut.feed` plus `wait_for` on the tap's 29 bytes, so the output precedes the first exchange by construction) and
+changed `capture.rs`'s window from the WIP's `200..=10_000` to `199..=10_000` ms (stamps truncate to whole ms).
+Test-only, no decision. Before this the window was `150..=600`: the floor is tighter, the ceiling is only a stall
+allowance. Worker: 20 consecutive full runs green. The worker left the task's `State:` line `claimed`, not `done`;
+retired in this fold all the same.
+**Merged:** `agent/core/122-capture-timing-flakes` (code `5a310bb` on `248a899`, two commits: WIP `a24c7d7` and
+the resume's `5a310bb`; doc `5c89ff2f` rebased from the worker's `bb26198f` onto `e724500d`; both ff). Gate on the
+merge result: core build, clippy `-D warnings` green, **3 consecutive full `cargo test` runs** 382 pass each,
+client names clean, `check-docs.py` 11/11, ownership `core` OK on both branches. Owner's core checkout
+fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 8.0% at leg start, wave 6.
+**Least sure about:** the 10 s ceiling means the capture test no longer catches a line stamped late by seconds;
+only the floor still tests decision 92's arrival stamping.
+
 ## 2026-10-28 22:03 — api/144 compact embarch-api/open.md
 
 **Decided:** nothing suite-wide. Re-landed from the killed leg's pushed doc branch; its worker's report died with
