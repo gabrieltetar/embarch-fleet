@@ -97,6 +97,26 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 22:28 — core/123 instrument pacing comments say the end of the exchange
+
+**Decided:** nothing suite-wide. Comments only, no behaviour change: `last_sent` says when each instrument's last
+exchange **ended**; `mark_sent` renamed `mark_exchanged` with a one-line comment saying it stamps the instant
+pacing runs from. Decision 104 unchanged: it already says "from the end of one command's read to the next write,
+the flush line counts", which matches. **The worker's commit left `pace_left`'s doc comment as a placeholder
+("How long until `min_interval` has X") while its report said the comment was written**; the reviewer caught it,
+and I finished the line myself on core `main` (`85846c4`, comment only, build/clippy/test green). `last_sent` and
+its `LAST` static keep the old "sent" naming (cosmetic, not filed).
+**Merged:** `agent/core/123-pacing-comments-end-of-exchange` (code `12192cc` on `5a310bb`, then my fix `85846c4`;
+doc `10865fa0` rebased from the worker's `ff11ac91` onto `0610f8ff`; both ff). Gate on the merge result: core build,
+clippy `-D warnings`, test 382 + 2 pass, client names clean, `check-docs.py` 11/11, ownership `core` OK on the doc
+branch. Owner's core checkout fast-forwarded. No reserve file touched.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** native Windows build of `embarch-core` (comment-only change, so a formality).
+**Budget:** PROCEED, weekly 9.2% at leg start, wave 6.
+**Least sure about:** that a worker's report can claim a comment it did not write and the gate cannot see it; only
+the reviewer reading the diff did, which is one data point for keeping per-unit review.
+
 ## 2026-10-28 22:26 — api/149 the ledger's needs match a role-less bench board by its enrolled name
 
 **Decided:** nothing suite-wide. The worker read `embarch-topology`'s types: a role-less bench board is an
