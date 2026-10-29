@@ -72,6 +72,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -145,6 +146,32 @@ def git(repo: Path, *args: str, check: bool = True) -> str:
     if check and r.returncode != 0:
         sys.exit(f"git {' '.join(args)} failed in {repo.name}:\n{r.stderr.strip()}")
     return r.stdout
+
+
+# fold-commit.py's, which is not importable by name.
+UNIT_BRANCH = re.compile(r"^agent/([a-z-]+)/(\d{3})-")
+BLOCKED_TASK = re.compile(r"^\*\*State:\*\*\s*blocked\b")
+
+
+def parked_units() -> set[tuple[str, str]]:
+    """(scope, NNN) of every task on the instance's `origin/main` reading `blocked`.
+
+    A parked unit's branch is the one `agent/*` branch meant to outlive its
+    worker: nothing works a `blocked` task, and the fold's prune keeps the
+    branch on purpose so a resume can name it (`fold-commit.py`'s
+    `unfinished_units`, read the same way). Counted as live work, it refused
+    every leg-boundary deploy for as long as one task stayed parked -- on
+    2026-10-29, after a full prune, `ui/059`'s pair was the only reason left.
+    `open` and `claimed` still count: a claimed unit may have a worker on it.
+    """
+    out: dict[tuple[str, str], bool] = {}
+    for ln in git(CONF.doc_repo, "grep", "-e", r"^\*\*State:\*\*", "origin/main", "--",
+                  "tasks/", check=False).splitlines():
+        parts = ln.split(":", 2)
+        m = re.match(r"tasks/([a-z-]+)/(\d{3})-", parts[1]) if len(parts) == 3 else None
+        if m and m.groups() not in out:
+            out[m.groups()] = bool(BLOCKED_TASK.match(parts[2]))
+    return {u for u, parked in out.items() if parked}
 
 
 def fast_forward_target(target: Path) -> None:
@@ -298,7 +325,8 @@ def refuse_if_live(force: bool, from_latch: bool = False,
     # crates there for path dependencies, and those stay clean and checked out
     # on main between legs. Six of them were sitting there when this was
     # written. What means work is in flight is a worktree git has registered, or
-    # a branch a worker is on.
+    # a branch a worker is on -- which a parked unit's branch is not.
+    parked = parked_units()
     for repo in sorted(p for p in CONF.root.iterdir() if (p / ".git").is_dir()):
         for line in git(repo, "worktree", "list", "--porcelain", check=False).splitlines():
             if line.startswith("worktree "):
@@ -308,6 +336,8 @@ def refuse_if_live(force: bool, from_latch: bool = False,
         branches = [b.strip() for b in
                     git(repo, "branch", "--list", "agent/*", "--format=%(refname:short)",
                         check=False).splitlines() if b.strip()]
+        branches = [b for b in branches
+                    if not ((m := UNIT_BRANCH.match(b)) and m.groups() in parked)]
         if branches:
             reasons.append(f"{repo.name} has {len(branches)} agent branch(es): "
                            + ", ".join(branches[:3]))
