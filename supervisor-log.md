@@ -97,6 +97,33 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 15:20 — atlas/009 a live call that can change the board carries no read-only hint
+
+**Decided:** nothing suite-wide. Atlas MCP: `shell` runs only commands matching `atlas.toml`'s `[live] read_only`
+globs (default `device list`, `kernel thread stacks`, `kernel uptime`, `i2c read *`, `i2c read_byte *`; `i2c
+scan` deliberately out; a set list replaces the default) and refuses the rest naming `shell_run`; new `shell_run`
+and `reg_read_clear` declare `read_only_hint=False`; `reg_read` refuses `allow_clear=true` naming
+`reg_read_clear`. CLI unchanged, one verb each. **The worker added one rule unasked**: a command containing `; | &`,
+a backtick, `$(` or a newline never matches the list, so a chained write cannot ride in behind a listed read; the
+reviewer judged it stricter in the safe direction and stated in `DESIGN.md` "The live shell". The 2026-10-06
+trade-off sentence in "MCP server" is replaced, not contradicted; `reg_read_clear` keeps `atlas/008`'s chip check.
+**My slip, the unit before this one:** `chat/005`'s fold (`9d278461`) landed with `check-task-state.py` red,
+because I piped `check-docs.py` through `tail` inside an `&&` chain; `chat/006`'s title named a path a `chat`
+worker may not write. Fixed two minutes later in `333c3ca7`. Every gate since runs unpiped with its exit printed.
+**Merged:** `agent/atlas/009-live-writes-carry-no-read-only-hint` (code `8a32edb` on `63055f7`, ff; doc `b526d00c`,
+the worker's `904f5603` rebased onto the leg's main, ff). Gate on the merge result: worktree venv `pytest -q` 412
+passed, 2 skipped (real west workspace, built atlas; `test_public_guard` ran), client names clean, `check-docs.py`
+12/12, ownership `atlas` OK on both branches. Owner's atlas checkout fast-forwarded; `embarch-atlas-wt` untouched.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none run live (tests use a fake `embarch-api`). Owner-side: the installed `atlas-use` skill
+in `~/.claude/skills/` and any running atlas MCP server are the old ones until `./install.py` runs and the
+server restarts; how a host behaves in plan mode with the new hints is unobserved.
+**Budget:** PROCEED, weekly 23.4% at leg start, wave 6.
+**Least sure about:** the default read list is short, so a session that used to run `shell` freely will now meet
+refusals for ordinary reads (`gpio get`, `sensor get`) until a project lists them; that is the intended cost, and
+nobody has felt it yet.
+
 ## 2026-10-29 15:17 — chat/005 /embarch-permissions carries the agent guide's 54-tool split
 
 **Decided:** nothing suite-wide. `plugin/commands/embarch-permissions.md` now carries `suite/agent-guide.md`
