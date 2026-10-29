@@ -87,7 +87,7 @@ nothing.
    with an older threshold looks entirely healthy"* is the sentence above; the
    stamp is what makes it visible. Disarming clears it (`--clear`).
 4. Say so in the channel — `{{FLEET_REPO}}/scripts/fleet-post.py "the watchdog
-   is armed and will speak up if the fleet goes quiet for 35 minutes"`. That is
+   is armed and will speak up if the fleet goes quiet for 50 minutes"`. That is
    an FYI, so it must not use `--action`: being armed asks nothing of anyone.
    Tell the owner in the terminal which window this is.
 
@@ -101,10 +101,10 @@ nothing.
 > end of every tick **and by a leg at every dispatch and every fold**, so it
 > means "the fleet made progress". If the file does not exist, nothing has moved
 > since the watchdog was armed; treat that as stale only if the pump latch is
-> older than 35 minutes, otherwise stop (the fleet was just started and has not
+> older than 50 minutes, otherwise stop (the fleet was just started and has not
 > ticked yet).
 >
-> 3. If the mtime is **more than 35 minutes old**, the fleet has stopped.
+> 3. If the mtime is **more than 50 minutes old**, the fleet has stopped.
 > **Delete `{{STATE_DIR}}/pump`**, then run
 > `{{FLEET_REPO}}/scripts/fleet-triage.py` — one read-only command that answers
 > *why*, which this window used to say it could not. It reports one of
@@ -136,29 +136,46 @@ nothing.
 > there afterwards. A watchdog that repeats itself every ten minutes is a pager,
 > and `ops.md` §3's alert set is closed for that reason.
 >
-> **35 minutes is measured, not chosen for roundness.** Re-derived 2026-09-06
-> from git commit times — claims and folds are the only touches that leave a
-> record — over the six 4-unit legs from 16:01 to 21:22, the first that carried
-> the dispatch touch. 46 gaps: median **4.5 min**, p90 14.1, p95 17.1, **max
+> **50 minutes is measured, not chosen for roundness — raised from 35 on
+> 2026-09-28.** The floor was first re-derived 2026-09-06 from git commit
+> times — claims and folds are the only touches that leave a record — over
+> the six 4-unit legs from 16:01 to 21:22, the first that carried the
+> dispatch touch. 46 gaps: median **4.5 min**, p90 14.1, p95 17.1, **max
 > 29.6**, nothing above 30. The reconstruction cannot see the step-0 touch or
 > the listener's between-leg cron, so every number is an **upper bound** on the
 > real gap — the conservative direction for a threshold.
 >
-> **The binding gap is a deploy, not a leg.** Both gaps over 25 minutes — 29.6
-> and 28.4 — are leg boundaries with an `embarch-deployer` in them, and nothing
-> touches `tick` while one runs, because a window holding a live background
-> agent has no cron either. *In-leg* gaps top out at **17.4**: four workers are
-> rarely all silent at once. Going below ~32 means making the deployer touch
-> `tick` too; until it does, that is the floor and 35 is the margin over it.
+> **The binding gap was a deploy, not a leg — until 2026-09-28.** Both gaps
+> over 25 minutes in the 2026-09-06 reading — 29.6 and 28.4 — were leg
+> boundaries with an `embarch-deployer` in them, and nothing touches `tick`
+> while one runs, because a window holding a live background agent has no
+> cron either. *In-leg* gaps had topped out at **17.4**, until a single
+> dispatch-to-dispatch span (`tick.log` 15:10:40→15:48:41, one worker on one
+> unit, no deploy involved) ran **38m01s** and the owner, watching the leg
+> directly, confirmed it was healthy the whole time — the watchdog's alert at
+> 38 minutes was a false wedge. That reading came out of a single unit, not a
+> percentile over many, so treat 38 as a floor rather than a ceiling.
 >
-> **Why 45 was loose.** It came from fold-to-fold gaps of 40–41 minutes over the
-> 00:12–05:20 run, measured before a leg touched `tick` at dispatch. Count that
-> run's own claim commits as the touches they would be today and its max falls
-> to **32.0** — and that was a 13-unit leg, a shape the 4-unit cap has retired.
+> Raised 35→50 on that reading: 50 clears the new 38-minute floor by 12
+> minutes, more than the ~3 minutes 35 cleared the old 32-minute floor by —
+> deliberately, since a margin that thin is what let this false wedge through.
+> Going lower than the new floor means making a slow single-unit dispatch
+> touch `tick` again before it finishes; until it does, 50 is the floor plus
+> margin.
+>
+> **Why 45 was loose (2026-09-06 finding, superseded reasoning).** It came
+> from fold-to-fold gaps of 40–41 minutes over the 00:12–05:20 run, measured
+> before a leg touched `tick` at dispatch. Count that run's own claim commits
+> as the touches they would be today and its max falls to **32.0** — and that
+> was a 13-unit leg, a shape the 4-unit cap has retired. That critique was
+> about a reconstruction artifact inflating a number; the 2026-09-28 reading
+> is a live, owner-confirmed gap from the current log and is not that kind of
+> looseness — it is why 50 is not itself loose.
 >
 > Do not lower it without new measurement; a false wedge is not a harmless
 > conservative alarm, because it unlatches the pump. Under the old 25 the
-> watchdog fired on a leg that landed 4/4 units.
+> watchdog fired on a leg that landed 4/4 units; under 35 it fired on a leg
+> whose worker was still writing.
 >
 > **Deleting the latch is the only write this window ever makes, and the only
 > direction it may push.** It can stop a fleet; it can never start one. That
@@ -188,7 +205,7 @@ ticking underneath it.
 **While a leg runs it cannot see a wedged listener**, because the leg's own
 touches keep `tick` fresh. That is the accepted cost of the signal meaning
 progress; the case it gives up is one that costs nothing until the leg ends, and
-35 minutes after that it is caught.
+50 minutes after that it is caught.
 
 **The next re-derivation reads a log rather than reconstructing one.** The
 numbers above came from git commit times, because claims and folds were the only
