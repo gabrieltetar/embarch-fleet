@@ -97,6 +97,27 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 15:17 — chat/005 /embarch-permissions carries the agent guide's 54-tool split
+
+**Decided:** nothing suite-wide. `plugin/commands/embarch-permissions.md` now carries `suite/agent-guide.md`
+§1.1's allow (23) and ask (31) lists, re-dated 2026-10-29, cites §1.1, and adds one line that `answer_prompt` and
+`instrument_exchange` ask. Worker and reviewer each checked the 54 against `embarch-api/src/tools.rs` on `main` as
+sets: exact, so the guide needed no drop. **Filed `tasks/chat/006`** in this fold from the reviewer's residue:
+`/embarch-claude-md` still cites `suite/user-guide.md` §7.1 (now a forwarding line). The worker left the task's
+`State:` as the claim line; set to `done` here.
+**Merged:** `agent/chat/005-embarch-permissions-carries-the-agent-guides-54-tool-split` (code `b9b0e6c` on
+`origin/main`, ff; doc `fd695c22`, the worker's `8562f5e8` rebased in its worktree onto the leg's main, ff). Gate
+on the merge result: `npm ci`, build, typecheck, test, `test:webview` all exit 0; client names clean;
+`check-docs.py` 12/12; ownership `chat` OK on both branches. Owner's chat checkout fast-forwarded. The rebased
+doc branch was not force-pushed (classifier refused it); the remote branch holds the pre-rebase `8562f5e8`, which
+`fold-commit.py` prunes by patch-id.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 23.4% at leg start, wave 6.
+**Least sure about:** whether `/embarch-claude-md`'s block is §1 or §1.1 of the agent guide; `chat/006` says to
+check. A grep of eight repos found no other live `user-guide §7` citation (only task text and an August note).
+
 ## 2026-10-29 15:13 — umbrella/095 check 17's fix lines name Core 106's in-place install
 
 **Decided:** nothing suite-wide. `doctor.rs`: both check 17 fix lines keep `embarch-core install --bind 0.0.0.0`
