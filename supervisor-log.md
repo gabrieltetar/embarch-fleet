@@ -97,6 +97,38 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-28 22:33 — chat/004 embarch-chat/decisions/timeline.md split by mission, verbatim
+
+**Decided:** reopened by me this leg (see `api/149`'s leg context): the park said `In flux: yes` for decisions 89
+and 90, and `DOC-BUDGET.md`'s split-first rule says a verbatim split restates nothing, so flux cannot forbid it.
+Decisions 15, 16, 67, 68, 69, 74, 85 (time, the cache line, the usage banner, copy and export, long chats, bench
+cards, atlas links) moved byte for byte into a new `embarch-chat/decisions/readouts.md`; 8, 50, 87, 51, 89, 90,
+76, 79, 62, 93 stay. `timeline.md` 13,806 B to 10,535 B (85.7%, out of reserve; the size ledger's 2026-11-02 debt is
+paid), `readouts.md` 3,724 B. **I verified the move myself**: every non-blank line of the old file survives in the
+two new ones; only the two headers and one intro line are new. No code change, no code branch pushed. **The
+compaction question** (can `spec.md` alone answer what someone needs to work on `embarch-chat` today?): this pass
+cannot change the answer, since it touched no `spec.md` byte and `spec.md` links no decision file; neither the
+worker nor I re-read `spec.md` to judge it, so it is unassessed here. The worker named the grouping "loose".
+**Merged:** `agent/chat/004-split-timeline` (code: none; doc `4949d467` rebased from the worker's `172bd8a0` onto
+`043bf14d`, ff). Gate on the merge result: `check-docs.py` 11/11, ownership `chat` OK on the doc branch,
+`check-doc-size.py --due` no longer lists the file. No npm gate: no code changed.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 9.2% at leg start, 9.2% at 22:32 (cache), wave 6.
+**Least sure about:** whether reopening a park on the split-first rule before its due date was mine to do; leg.md
+endorses that reading for an overdue entry, and this one was five days out but already over its cap.
+**Leg close (next leg, read this first):** 4 of 4 units (`api/149`, `core/123`, `ui/101`, `chat/004`), all landed,
+none blocked. **The queue is dry outside `atlas`**: `queue-status.py` says 19 dispatchable, and every one is an
+`atlas` task, skipped per `tasks/doc/089` (no atlas gate). **I posted a dream** (`ts` `1793248372.130149`, with
+`crystal_ball`, `--action`): (1) settle `tasks/doc/089` so the 19 atlas tasks become dispatchable, (2) start the
+`toolchain` lane by a leg's own hands (13 tasks; dev-bench's workspaces are present), (3) plug in the bench for an
+attended leg. **If you are the next leg and no reply has arrived and `inbox/` is empty, do not dream again and do
+not invent work: end after step 0.** The listener may keep spawning legs because the script counts atlas as
+dispatchable; that is a gap between `queue-status.py` and `tasks/doc/089`, and it is the owner's to close. Bench:
+Core up, no probes; `api/059`, `dev-bench/035`, `dev-bench/038` open. No `suite` task parked. Overdue ledger
+unchanged (`suite/030` owner-blocked, `doc/031` owner-only).
+
 ## 2026-10-28 22:30 — ui/101 the operator-prompt modal driven headless against a stub Core
 
 **Decided:** nothing suite-wide; no UI code changed. `tests/browser/stub_core.py` gained a prompting host study
