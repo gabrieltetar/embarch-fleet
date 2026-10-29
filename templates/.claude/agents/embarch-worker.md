@@ -135,7 +135,7 @@ to one sub-project needs nobody's approval. Number it per `DOC-CONVENTIONS.md`
    item. **Otherwise, if `check-doc-size.py` names a file in reserve with no debt filed, file
    it** — `tasks/<your scope>/<NNN>-compact-<your scope>.md`, in this same
    commit, per `tasks/README.md`. **Not `tasks/doc/`**, which
-   `check-ownership.py` refuses you. A file in reserve is inside the last 10% of its cap: you
+   `check-ownership.py` refuses you. A file in reserve is inside the last `max(1.2 KB, 10%)` of its cap: you
    are not blocked and you are not being asked to compact anything. You are
    being asked to record that the runway is nearly spent, and to answer the one
    question that will be unanswerable later — **`In flux:`, is this subsystem

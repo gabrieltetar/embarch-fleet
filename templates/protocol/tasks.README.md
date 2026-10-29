@@ -265,7 +265,7 @@ already-filed title does not rename the file; say so in the file.
 
 ## Compaction tasks
 
-A doc within the last 10% of its size cap is **in reserve**
+A doc within the last `max(1.2 KB, 10%)` of its size cap is **in reserve**
 (`scripts/check-doc-size.py`). The reserve is writable and the gate still
 passes, but the file must be named by an open task here, and **the commit that
 spends the reserve is the one that files it** — see `DOC-COMPACTION.md` §2. The
@@ -345,6 +345,13 @@ shortened.
 compactor's own words in the commit message: *can `spec.md` alone answer what
 someone needs to work on this component today?* No script answers it and the
 gate does not either.
+
+**`Done when` states the gate's verdict, never a byte target**:
+`scripts/check-doc-size.py --pressure` shows the file `PAID` or not at all. Below
+a 12,000 B cap the 1.2 KB floor sets the line, not the 10%, so a target worked
+out from a percentage stops a worker short — `topology/043` met its own exactly
+and was 70 B over the line (`tasks/doc/058`). `--pressure` prints each file's
+line if a number is wanted.
 
 When the paths are reserved — `DOC-PROTOCOL.md` and `DOC-COMPACTION.md` are the
 standing case — the task still lives here, because `inbox/` is not committed and

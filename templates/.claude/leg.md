@@ -506,7 +506,7 @@ copies of the same source (`embarch-study-designer` decision 57).
 
 **Check the doc-size reserve before you dispatch, not after the worker reports.**
 Run `scripts/check-doc-size.py --pressure` once per leg and keep the list. A file
-in reserve is inside the last 10% of its cap — **still writable, and the gate
+in reserve is inside the last `max(1.2 KB, 10%)` of its cap — **still writable, and the gate
 still passes**, which is the point: a cap used to be a wall a worker met only
 when its edit was refused, and that converted unrelated work into a compaction
 task mid-flight. Now it is a debt.
