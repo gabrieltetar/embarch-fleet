@@ -102,7 +102,9 @@ after token zero** — that is what the rest of the line is for.
   leg number: a leg has none, `tasks/doc/054`). Anything *instead of* the
   prefix is not: `queue-status.py` reads such a claim
   as abandoned, with no branch, and a successor leg would re-dispatch the live
-  task (`tasks/doc/076`). The improvised `claimed (leg NNN unit N)` is
+  task (`tasks/doc/076`) — so `check-task-state.py` fails it at the claim
+  commit, by asking `queue-status.py` rather than keeping a second copy of the
+  pattern (`tasks/doc/084`). The improvised `claimed (leg NNN unit N)` is
   deliberately not accepted as a second form: 253 of the 509 claims written
   before 2026-09-18 used some variant of it, and 146 of those named no branch
   anywhere, so a wider reader would have had nothing to recover. Since then,

@@ -174,6 +174,19 @@ def parse(path: str) -> dict:
     }
 
 
+def unparsed_claims(tasks: list[dict]) -> list[dict]:
+    """Claimed tasks whose claim line this file cannot read.
+
+    `tasks/doc/084`: such a task is demoted to `recoverable` -- a live worker's
+    task advertised as free -- and nothing failed, because the doc gate checked
+    only that the line began `claimed`. `check-task-state.py` now fails on
+    exactly this list, read from `--json`, so the gate and this reader cannot
+    hold two grammars for one line.
+    """
+    return [t for t in tasks
+            if t["state"] == "claimed" and t["claim_at"] is None]
+
+
 def task_files(root: str) -> list[str]:
     out = []
     for dirpath, _dirs, files in os.walk(root):
@@ -351,6 +364,7 @@ def main() -> int:
     tasks_only = args.tasks_only or args.refill_owed
     drops = [] if tasks_only else inbox_drops(os.path.join(root, INBOX))
     b = classify(tasks, args.no_supervisor, args.stale_after, now)
+    bad_claims = unparsed_claims(tasks)
 
     dispatchable = len(b["open"]) + len(b["recoverable"]) + len(drops)
     low = bool(args.warn_below and dispatchable < args.warn_below)
@@ -369,6 +383,8 @@ def main() -> int:
             "recoverable": [{"path": t["path"], "why": t["stale_reason"],
                              "branch": t["claim_branch"]} for t in b["recoverable"]],
             "claimed_respected": [t["path"] for t in b["claimed"]],
+            "unparsed_claims": [{"path": t["path"], "line": t["raw_state"]}
+                                for t in bad_claims],
             "hardware_gated": [{"path": t["path"], "hardware": t["hardware"]}
                                for t in b["gated"]],
             "bench": [{"path": t["path"], "scope": t["scope"]} for t in b["bench"]],
@@ -406,6 +422,14 @@ def main() -> int:
     for t in b["other"]:
         print(f"  {t['state']:<11} {t['scope']:<14} {t['path']}")
 
+    if bad_claims:
+        print(f"UNREADABLE CLAIM -- {len(bad_claims)} claimed task(s) whose claim "
+              "line does not parse, so each reads as recoverable with no branch: "
+              "if a worker holds one, its task is being advertised as free. The "
+              "line is `**State:** claimed by agent/<scope>/<NNN-slug>, "
+              "<yyyy-mm-dd HH:MM>` (tasks/README.md):")
+        for t in bad_claims:
+            print(f"    {t['path']}: {t['raw_state'][:70]}")
     if low:
         print(f"LOW QUEUE -- {dispatchable} dispatchable, below {args.warn_below}. "
               "Ask --refill-owed, which is the actual gate; this line is advice.")
