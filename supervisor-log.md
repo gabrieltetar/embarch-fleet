@@ -97,6 +97,30 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 16:31 — atlas/012 four lookup misses become the next call to make
+
+**Decided:** nothing suite-wide. `part_card` documents `board="all"` (`""` still accepted, CLI bare `--board` maps to
+`all`), and a test asserts no MCP tool's description or schema offers `""`. New `cmsisalias.py`: `register
+UCPD1.CFG1` resolves a CMSIS struct member to the SVD register at the same address, reading the header path `mcu
+vote --header` recorded in an RM doc's `vote*.json`; no recorded header means no alias and the old "not found".
+`doc_section` on an undistilled toc section answers title, pages and the next call; an RM register section points to
+`register`; a missing id/title and an unmatched `doc_toc under=` list the nearest titles. `src:` lines on `part_card`
+and every `doc_section` answer carry `pdf=<path relative to the firmware repo>`. **Two deviations I accepted:** the
+task named `find_text` as a next call, but no such tool exists yet (`atlas/007` builds it), so answers point to
+`doc_section tier=text` and a PDF Read — **`atlas/007` should add `find_text` to those hints when it lands**; and the
+path went on the generated `src:` line, not the card's LLM-written `Source:` prose. The worker's first docstring used a
+real client doc id; the public-guard test caught it before commit, and `check-client-names.py --history` on the branch
+is clean.
+**Merged:** `agent/atlas/012-query-misses` (code `197784a` on `c71c703`, ff; doc `4b686f3f`, ff). Gate on the merge
+result: worktree venv `pytest -q` 434 passed, 2 skipped (`test_public_guard` ran), client names clean with history,
+`check-docs.py` 12/12, ownership `atlas` OK on both branches. Owner's atlas checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. The CMSIS alias is tested on a synthetic header and SVD only, never a real vendor header.
+**Budget:** PROCEED, weekly 25.8% at dispatch, wave 6.
+**Least sure about:** the alias's struct-layout parser skips any typedef with a nested struct or union, and real
+vendor headers have those; how many registers that leaves unaliased on a real part is unmeasured.
+
 ## 2026-10-29 16:24 — atlas/006 an external reg_read names the true cause
 
 **Decided:** nothing suite-wide. `ext_reg_read`: a failed read whose own answer says `command not found` reports
