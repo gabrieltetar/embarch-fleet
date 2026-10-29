@@ -255,7 +255,7 @@ in a normal leg, and a wide wave is not a reason to do it less carefully.
   mid-fold on 2026-09-03 by a command containing both shapes.
 - **Record a tick at every dispatch and every fold** — `scripts/fleet-tick.py
   leg-dispatch` right after you spawn a worker, `scripts/fleet-tick.py leg-fold`
-  right after `fold-commit.py` returns, and `scripts/fleet-tick.py leg-step0`
+  right after `fold-commit.py` succeeds, and `scripts/fleet-tick.py leg-step0`
   once when you finish step 0, before your first dispatch. One command each: it
   touches the mtime the watchdog reads and appends one labelled line to
   `{{STATE_DIR}}/tick.log`, which is how a gap gets measured afterwards instead
@@ -959,6 +959,15 @@ file is `never` for it in §3's table. Both `build_*` scripts are mode 644, so
 scripts/fold-commit.py --unit <scope>/<NNN> -m "<subject>" \
     --path <each path this unit touched>
 ```
+
+**Never pipe it.** Its output is a few lines, so there is nothing to `tail`,
+and a pipe hands `&&` the pipe's last exit status instead of the script's:
+`fold-commit.py ... | tail -5 && git push origin HEAD:main && ... leg-fold`
+pushed a worker's merge ahead of its fold and ticked a fold that never happened,
+in two consecutive legs (`dev-bench/014`, `core/046`, 2026-09-28), while the
+script had refused correctly both times. Run it bare, read what it printed, and
+chain the push and the `leg-fold` tick only behind an unpiped
+`fold-commit.py ... &&`.
 
 Run it **from your leg worktree**: it stages in whichever instance checkout you
 are standing in, falling back to `fleet.toml`'s `doc_repo` only when you are
