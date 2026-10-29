@@ -97,6 +97,31 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 17:03 — atlas/019 an atlas names a board with no netlist and a Kconfig it failed to extract
+
+**Decided:** nothing suite-wide. **One atlas design call, by the worker, accepted:** `update` does **not** stop for a
+declared board with no netlist (it cannot make the netlist, and stopping would block every firmware bump on a board
+not ready yet); a netlist made from a changed PDF still stops it. Written in DESIGN.md "When `update` stops". Instead
+`join` logs the board, writes `missing_boards` into `inputs.json`, and `project.atlas_state` turns it into a stale
+reason naming the fix (`schematic <pdf> --board X`, then `join`), so it reaches `status`, the MAP's stale line and
+every `src:` line through `atlas/015`'s `stale.py` (whose cache key includes `inputs.json`, which I checked); the MAP
+boards section adds a "NO netlist" line. `config` on an atlas whose stamp says `kconfig: not extracted: <why>` quotes
+the reason and names a new verb, `kconfig-extract <atlas>`, which reruns the extraction over the build dir the stamp
+names with `build`'s Zephyr-match guard kept, and says only `build --force` can help when the dir is gone or Zephyr
+moved. **Gap I found after the review:** DESIGN.md's CLI verb table had no `kconfig-extract` row; I carried it to
+`atlas/014`'s worker rather than fixing it here.
+**Merged:** `agent/atlas/019-join-and-build-name-what-they-left-out` (code `b23a73d` on `5f208ad`, ff; doc `93791ed1`,
+the worker's commit rebased in its own worktree onto `84544f6f`, ff). Gate on the merge result: worktree venv
+`pytest -q` 455 passed, 2 skipped (real west workspace, built atlas; `test_public_guard` ran), client names clean,
+`check-docs.py` 12/12, ownership `atlas` OK on both branches. Owner's atlas checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. `kconfig-extract` is tested with the extraction monkeypatched, never over a real Zephyr build.
+**Budget:** PROCEED, weekly 26.0% at leg start, wave 6.
+**Least sure about:** the MAP's stale line still ends "run /atlas-update", which cannot fix a missing netlist; the
+reason text names the real fix and the reviewer called it cosmetic, but a session reading only the line's tail would
+run the wrong command. Atlases joined before this carry no `missing_boards` until joined again.
+
 ## 2026-10-29 16:56 — atlas/018 every cut answer can be continued with offset
 
 **Decided:** nothing suite-wide. The nine lookups that were cut at their budget with no way to continue
