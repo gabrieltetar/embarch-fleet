@@ -667,6 +667,16 @@ table, the table is out of date rather than the build: **the source of truth is
 `grep -rn 'path *= *"\.\.' --include=Cargo.toml embarch-*/`** in the suite root,
 run against the main checkouts. Say so in your log entry.
 
+**`embarch-atlas` is Python: it links one thing and needs a venv of its own.**
+Link the public-name denylist into its parent — `ln -sfn {{FLEET_ROOT}}/.atlas-local
+{{WORKTREE_ROOT}}/embarch-atlas/.atlas-local` — because its `test_public_guard`
+looks for `.atlas-local/` beside the repo and **skips** without it, which reads
+as green. Then, in the worktree, `uv venv -q && uv pip install -q -e
+'.[dev,tokens,mcp]'`: under ten seconds, nearly all of it hard-linked from uv's
+cache. **Never hand it the main checkout's `.venv`**: that install is editable
+and resolves to the main checkout's `src/`, so its `pytest` run in a worktree
+tests `main`, not the branch. The gate is `{{FLEET_REPO}}/gate.md`'s Python bullet.
+
 **Before you spawn, run `scripts/check-dispatch.py --worktree <each of this
 unit's worktrees>`.** It refuses if they already exist, because a fresh dispatch
 *creates* them — finding them is evidence a worker holds this task, not a state
@@ -722,7 +732,8 @@ is exactly the moment the watchdog needs on the clock.
 
 **Land, as each reports.** Re-run the gate yourself on the merge result, not on
 the branch (§10): the repo's `cargo build` / `test` / `clippy --all-targets --
--D warnings`, plus a native Windows build where `embarch-core` is involved, plus
+-D warnings` (an npm or Python repo: its own bullet in `gate.md`), plus a native
+Windows build where `embarch-core` is involved, plus
 `python3 scripts/check-docs.py` in `embarch-doc` — **the wrapper, never a count
 or a list of your own**, which said "six" here while it ran eight — plus
 `scripts/check-ownership.py --scope <sub-project>` on **both** of the worker's
