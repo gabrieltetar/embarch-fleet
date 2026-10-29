@@ -97,6 +97,27 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 16:00 — chat/006 /embarch-claude-md cites agent-guide §1.1
+
+**Decided:** nothing. `plugin/commands/embarch-claude-md.md` now cites `suite/agent-guide.md` §1.1 (was
+user-guide §7.1, a forwarding line since `suite/030`); its block equals the guide's text, markers aside. I checked
+the guide's block sits under §1.1 myself. **Leg context (next leg, read this first):** this leg started 15:49 at
+`0e6d6b06`, clean recovery (no claims, no unit worktrees), `main` green at start. Inbox: one owner drop filed as
+`tasks/doc/095` (`7674b1e3`, `Owner: required`: `fold-commit.py`'s `ALLOWED` refuses `bootload-proposal.md`),
+announced. Spread sweep skipped: no source changed since the 15:26 "nothing filed" line. Bench: `dut` attached,
+`dev-bench` not, so `api/059`, `dev-bench/035`, `038` stay open. Ledger: nothing overdue. Dispatched `atlas/024`
+and `chat/006` at 15:52; `suite/055` (window closed 14:59, thread re-read 15:51, no reply) planned as the last unit.
+**Merged:** `agent/chat/006-embarch-claude-md-cites-the-moved-user-guide-section` (code `e6186d9` on `b9b0e6c`,
+ff; doc `107e67f9`, ff). Gate on the merge result: `npm ci`, build, typecheck, test (292, 69 skipped),
+`test:webview` all exit 0; client names clean; `check-docs.py` 12/12; ownership `chat` OK on both branches.
+Owner's chat checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 24.9% at leg start, wave 6.
+**Least sure about:** I took the 69 npm skips as the known `EMBARCH_DESK_BIN` skips (gate.md says so) without
+listing them.
+
 ## 2026-10-29 15:47 — suite/054 the four root proposals keep only unbuilt design
 
 **Decided:** **a supervisor-run suite task, as this leg's last unit**, after its window (`ts` `1793305739.311079`,
