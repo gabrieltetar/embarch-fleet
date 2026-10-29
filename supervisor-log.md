@@ -97,6 +97,32 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 16:23 — ui/059 a grown trailing line is republished, not swallowed
+
+**Decided:** **I unparked `ui/059`** (blocked since leg 123's refused merge): its `Unparks when:` was its own fix, so
+only a dispatch could end the park — `suite/055`'s leg flagged this. Fresh branches from `origin/main` under a new
+name, `agent/ui/059-diff-new-lines-publishes-the-grown-line`, because the old doc branch carried a stale copy of the
+task file and both old branches sat on a two-month-old base. **The old branches `agent/ui/059-diff-new-lines-republish`
+(code `21a48de`, doc `ec150926`) are left on both remotes**; the fold cannot prove them landed, so deleting them is
+the owner's call. The fix: `diff_new_lines` matches the overlap's last line by strict extension and returns
+`new[k-1..]` when it grew, `new[k..]` on equality. I read the diff and walked the edge cases (window slid onto a
+line that is a prefix of the next, a repeat of the pre-growth text) before landing. New decision 70; decision 13's
+closing paragraph, which described the defect, became a one-line pointer (13 was at 0 B). **Leg context (next leg,
+read this first):** started 16:15 at `7eb36fa2`, clean recovery, inbox empty, spread sweep skipped (no source
+changed since the 15:26 "nothing filed" line). Bench: `dut` attached, `dev-bench` not, so `api/059`,
+`dev-bench/035`, `038` stay open. Ledger: nothing overdue. Dispatched `atlas/006` and `ui/059` at 16:18; both
+workers reported in under four minutes.
+**Merged:** `agent/ui/059-diff-new-lines-publishes-the-grown-line` (code `052990c` on `f6da709`, ff, two commits:
+`21a48de` cherry-picked as `9199da5`, then the fix; doc `78235e0c`, ff). Gate on the merge result: build, test (210
++ 8 pass), clippy `-D warnings` clean, client names clean, `check-docs.py` 12/12, ownership `ui` OK on both
+branches. Owner's ui checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 25.4% at leg start, wave 6.
+**Least sure about:** the worker did not run its five new tests against the unfixed code; the "fails before" half
+rests on leg 123's measured table, which covers the same six cases.
+
 ## 2026-10-29 16:13 — suite/055 the pre-October tasks all still describe real work
 
 **Decided:** **a supervisor-run suite task, as this leg's last unit**, after its window (`ts` `1793305740.224299`,
