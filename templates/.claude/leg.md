@@ -364,8 +364,10 @@ owner's cue to top it up, and he should hear it before it reaches zero:
 
 - **The drain, in detail** (`inbox/README.md`). Each file there is a complete task
   written by another thread or by a worker, minus its number. For each: validate
-  it parses, re-check its `Hardware:` claim yourself, assign the next free `NNN`
-  for its scope, move it into `tasks/<scope>/`, and delete the drop. A file that
+  it parses, re-check its `Hardware:` claim yourself, number it from
+  `scripts/check-task-numbers.py --next <scope>` as you write it — which sees
+  your workers' trees, so a refill cannot take a number a worker just did —
+  move it into `tasks/<scope>/`, and delete the drop. A file that
   does not parse stays in `inbox/` and is named in your log entry — never delete
   someone's request silently. **Announce in `{{SLACK_CHANNEL_NAME}}` what you took from
   the inbox before dispatching any of it**, naming the file and what you will do,

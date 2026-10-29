@@ -18,7 +18,13 @@ The work queue background agents pull from. One file per task, committed to
   task is `git rm`'d, so the highest number on disk is not the highest ever
   issued — and reading the directory is exactly how the owner and leg 018
   both allocated `tasks/doc/015` an hour apart on 2026-09-06, with all nine
-  checks green on the result.
+  checks green on the result. **Nor just your own checkout: run `--next` as you
+  write the file.** It reads every registered worktree's `tasks/`, uncommitted
+  files included, and every ref's history — because a worker filing a debt
+  mid-unit and a leg refilling the same scope each asked their own tree, and
+  legs 137 and 138 each issued one `core` number twice (`tasks/doc/079`). Its
+  answer is never one the gate would refuse; the gate reads only this branch's
+  history and stays the backstop for two calls in the same seconds.
 - **slug** — short, hyphenated.
 
 ## File format
