@@ -97,6 +97,44 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 16:13 — suite/055 the pre-October tasks all still describe real work
+
+**Decided:** **a supervisor-run suite task, as this leg's last unit**, after its window (`ts` `1793305740.224299`,
+closed 14:59:00; thread re-read 15:51 and 16:12, no reply). Candidates re-derived at run time: every live task
+added before 2026-10-01, not `done`, not `Owner: required`. **All eleven kept, none closed**, each checked against
+`main` today: `api/059` keep (needs a live study; `dev-bench` unattached). `api/108` keep (Job Object code on
+`main`, `windows_job` in `build.rs`; the forked-grandchild kill has never run on Windows). `dev-bench/003` keep
+(`pc_skip_len_prefixed` still multiplies and adds unchecked, `serial_protocol.c:100-102`). `dev-bench/004` keep
+(`goto_state`/`otherwise` still raw bytes at `serial_protocol.c:452,463,547`; only `entry_state` bounded,
+`eap_interp.c:456`). `dev-bench/010` keep (constants still typed with `limits::` comments; the CMake read still
+serves `DEV_BENCH_WIRE_SCHEMA_VERSION` alone). `dev-bench/016` keep (`scan_seen_names_summary` still only in
+`ble_bridge_real.c`, no test reaches it). `dev-bench/017` keep (`tx_scratch` still the whole `dev_bench_message`,
+`main.c:78`; `open.md:38` still names it). `dev-bench/035` keep (`main.c` gates `steps_crc_valid` and
+`streams_crc_valid` only). `suite/032` keep (`study_ffi_real.c`, the `ESSD_LIB` staticlib target and
+`embarch-study-designer`'s `ffi` feature all still exist). `suite/037` keep (Core still serves hello's
+`firmware_version`; unparks on the owner's Windows build). `ui/059` keep (`diff_new_lines` in `logs.rs` unchanged
+since `ea0227b`, 2026-08-30). Named in the task but already gone: `outpost/018` (folded today) and `suite/030`
+(done). **The owner's parked four, recommendation only:** keep all (`api/029`, `outpost/002`,
+`study-designer/007`, `ui/007`); each asks for a bench observation and no commit since 2026-09-08 records one.
+**Two observations, not acted on:** `dev-bench/035`'s fix is a ztest and C, so `Hardware: bench` looks like it
+should read `toolchain`; and `ui/059` is `blocked` on an "Unparks when" that is its own fix, which a `ui` worker
+could take now, so it reads as parked work rather than gated work. Both are the next leg's or the owner's call.
+**Merged:** no branches (supervisor's own unit). Gate on the result: `check-docs.py` 12/12. Doc SHA is this fold's
+commit.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 25.1%, wave 6.
+**Least sure about:** "keep" rests on the code still showing the defect, read by grep at the cited lines; I did
+not rebuild or run anything, which is what a `toolchain` task would need to prove the defect live.
+**Leg close (next leg, read this first):** 4 of 4 units (`chat/006`, `atlas/024`, `atlas/021`, `suite/055`), all
+landed, none blocked. `atlas/024` was sent back once before merge; `atlas/021` landed a decode bug the reviewer
+caught and was fixed forward in `af410ad`. Filed `tasks/doc/095` (owner-only) from the inbox. **No `suite` task is
+announced.** **Dispatchable now:** 15 `atlas` tasks and nothing else, so one scope; the spread gate will fire, and
+no sweep source changed since 15:26. Bench unchanged (`dut` attached, `dev-bench` not). Owner-only: `tasks/doc/093`,
+`094`, `095`. Ledger: nothing overdue (next `dev-bench/040`, 2026-11-01, blocked).
+`changelog.d/umbrella-check-17-measured.decided.md` is still the owner's and unconsumed. Nothing deployed.
+
 ## 2026-10-29 16:11 — atlas/021 write-one-to-clear does not guard a read; undefined reset bits claim no reset
 
 **Decided:** nothing suite-wide. `live.reads_clear` (true for `rclr`/"clear" only) now drives both read-to-clear
