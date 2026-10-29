@@ -369,6 +369,27 @@ the queue looks. When it says your scopes are thin, sweep *for scope spread*:
 one more task in a scope you already have a worker in buys nothing. That
 collision cost 9% of the same run.
 
+**A spread-only firing may be skipped, on one condition** (`tasks/doc/081`).
+Filing raises a count, so the depth half quiets itself; nothing raises spread
+once the thin scopes have converged — every open question in them
+hardware-gated, parked with its reason written down, or closed as not-work — and
+then every leg sweeps the same files to file nothing. So when the gate adds
+`spread only`, find the newest `Spread sweep: nothing filed` line in
+`{{FLEET_REPO}}/supervisor-log.md` and run, in your worktree:
+
+```sh
+git log --oneline --since='<yyyy-mm-dd HH:MM of that line>' -- '*open.md' '*/open/*.md' '*design.md' embarch-token.md suite/roadmap.md embarch-decision-reversals.md
+```
+
+Empty means a sweep would read exactly what that one read: skip it and say so
+in your entry. Anything listed, or no such line, means sweep. **When a
+spread-only sweep of yours files nothing, write `Spread sweep: nothing filed
+(<yyyy-mm-dd HH:MM>)` in your log entry** — that line is the whole mechanism.
+It is deliberately not a standing per-scope "converged" flag: the three scopes
+leg 139 found converged on 2026-09-17 (`ui`, `topology`, `study-designer`) had
+53 tasks filed in the six weeks after. Convergence is a moment, and a source
+changing is what ends it.
+
 Relay its `LOW QUEUE` line if the plain form prints one; a thin queue is the
 owner's cue to top it up, and he should hear it before it reaches zero:
 

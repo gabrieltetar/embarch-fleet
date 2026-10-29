@@ -52,16 +52,23 @@ Two ways it fires, because a count is not the whole predicate:
     slot of a wave of two. That cost 9% of the same run. A count-only gate
     cannot see it.
 
+The second is not self-limiting the way the first is: filing tasks raises a
+count, but no sweep can add a scope whose remaining questions all need a board
+(`tasks/doc/081`). So a spread-only firing says so, and `leg.md` lets a leg
+skip it when the last spread sweep filed nothing and no source it reads has
+changed since -- the exit status is unchanged, the judgement is the leg's.
+
 **The queue it reads is never the cwd's guess** (`tasks/doc/035`). `--root`
 used to default to `.`, so run from `embarch-fleet` -- a leg's cwd on
 2026-09-10, reset there before every Bash call -- it scanned a `tasks/` that
 does not exist and printed `0 dispatchable` with nothing to tell it from a dry
-queue: the reading that sends a leg to dream and page the owner. Now the default is
-the cwd's checkout only if that checkout has a `tasks/`, else `fleet.toml`'s
-`doc_repo` (said on stderr, so `--count` stays a bare integer), and a root with
-no `tasks/` exits 2 naming every path it tried. `check-ownership.py` takes its
-scope list the same way (`tasks/doc/036`): a universe derived from the cwd is
-never reported empty as though that were an answer.
+queue: the reading that sends a leg to dream and page the owner. Now the
+default is the cwd's checkout only if that checkout has a `tasks/`, else
+`fleet.toml`'s `doc_repo` (said on stderr, so `--count` stays a bare integer),
+and a root with no `tasks/` exits 2 naming every path it tried.
+`check-ownership.py` takes its scope list the same way (`tasks/doc/036`): a
+universe derived from the cwd is never reported empty as though that were an
+answer.
 
 Exit status is the interface:
   0  there is work (dispatchable > 0)      -- or, with --refill-owed, refill IS owed
@@ -128,6 +135,8 @@ def field(body: str, name: str) -> str | None:
     m = re.search(r"^\*\*" + re.escape(name) + r":\*\*\s*[" + re.escape(EMPHASIS)
                   + r"]*([a-z-]+)", body, re.M)
     return m.group(1) if m else None
+
+
 # The claim line's one grammar (tasks/README.md "claimed"): the branch and the
 # time, then free prose. `agent/` is required because the branch is what a
 # recovery reaches for; a bare word before the comma names nothing to recover.
@@ -300,6 +309,10 @@ def refill_owed(b: dict, args) -> int:
 
     if reasons:
         print("REFILL OWED -- " + "; and ".join(reasons))
+        if thin_scopes and not thin_count:
+            print("  spread only -- skip the sweep if the newest `Spread sweep: "
+                  "nothing filed` log line is newer than every source a sweep "
+                  "reads (leg.md, tasks/doc/081)")
         return 0
     print(f"refill not owed -- {len(ready)} dispatchable across "
           f"{len(scopes)} scope(s), wave {wave}, low-water {low_water}")
@@ -414,7 +427,8 @@ def main() -> int:
     for t in b["bench"]:
         print(f"  bench       {t['scope']:<14} {t['path']} (supervisor's own hands)")
     for t in b["suite"]:
-        print(f"  suite       {t['scope']:<14} {t['path']} (supervisor's own; announce first)")
+        print(f"  suite       {t['scope']:<14} {t['path']} "
+              "(supervisor's own; announce first)")
     for t in b["gated"]:
         print(f"  hw-gated    {t['scope']:<14} {t['path']} ({t['hardware']})")
     for t in b["owner_gated"]:
