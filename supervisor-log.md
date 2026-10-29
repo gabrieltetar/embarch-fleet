@@ -97,6 +97,27 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 15:39 — atlas/017 doc check reports a malformed record instead of crashing
+
+**Decided:** nothing suite-wide. `run_check` (`check.py`) schema-validates every record first; an invalid one
+gets `V:` issues naming id and field, ends `failed`/`llm-unverified`, is kept and saved, and is left out of
+`check_registers`, `check_invariants`, `record_checks`, the twin verdict, ref resolution of its own refs and the
+verified-values pool. A valid record's ref *to* an invalid id still resolves (reviewer checked `seen` is built
+from all records). `DESIGN.md`'s `doc check` row says so. **Filed `tasks/atlas/024`** in this fold from the
+worker's own limitation, confirmed by the reviewer: a non-object JSONL line becomes `{}` in memory and
+`save_records` persists that over the original line on any save that touches its file.
+**Merged:** `agent/atlas/017-doc-check-survives-malformed-records` (code `5fd3caa` on `8a32edb`, ff; doc
+`d212f7b1`, the worker's `85133924` cherry-picked). Gate on the merge result: worktree venv `pytest -q` 414
+passed, 2 skipped (real west workspace, built atlas; `test_public_guard` ran), client names clean,
+`check-docs.py` 12/12, ownership `atlas` OK on both branches. Owner's atlas checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 24.1% at leg start, wave 6.
+**Least sure about:** the reviewer read `DESIGN.md` and the code but not `embarch-doc/embarch-atlas/`. Separately,
+`changelog.d/umbrella-check-17-measured.decided.md` has sat unconsumed since the owner's `a5062887` (14:01); not
+this leg's, so `--only` leaves it, and nobody has folded it.
+
 ## 2026-10-29 15:36 — ui/102 the host-clock fallback is already named by an existing test
 
 **Decided:** nothing. Closed with no code change: `a_splice_that_is_not_a_leading_prefix_still_costs_the_dut_clock`
