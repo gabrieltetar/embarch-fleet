@@ -97,6 +97,31 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 16:11 — atlas/021 write-one-to-clear does not guard a read; undefined reset bits claim no reset
+
+**Decided:** nothing suite-wide. `live.reads_clear` (true for `rclr`/"clear" only) now drives both read-to-clear
+guards, so `woclr`/`wclr` registers are read and decoded, whole-peripheral reads included. `mcu svd`: no
+`resetValue` anywhere gives `reset: null` (was an invented 0); a register whose `resetMask` is not all ones gets
+`reset: null` and its fields keep a reset only when every bit is in the mask. `mcu vote` judges "reset differs"
+only on defined bits (fields' resets composed when the register's is null). Full-mask records pinned byte-identical
+by a golden file generated from the pre-change code. `DESIGN.md` "Live" gains "Undefined reset bits". **The reviewer
+caught a real bug after the merge, and I fixed it forward rather than reverting:** `live.decode` shifted a
+field-relative reset by the field's LSB a second time, so any field above bit 0 read at reset was starred with a
+made-up reset; it also stopped falling back to the register's reset for a field whose own is null (regparse
+records). The worker fixed both in `af410ad` with a test at LSB > 0 and a null-field case; `main` carried the bug
+between the two pushes, minutes, no consumer in between. The reviewer's drop is resolved by that commit and deleted.
+**Merged:** `agent/atlas/021-w1c-and-reset-mask-read-as-stated` (code `05be6a5` on `fa98820`, ff, then the fix
+`af410ad`, ff; doc `b54dbe72`, the worker's `16504b38` cherry-picked). Gate on each merge result: worktree venv
+`pytest -q` 421 then 422 passed, 2 skipped (real west workspace, built atlas; `test_public_guard` ran), client names
+clean, `check-docs.py` 12/12, ownership `atlas` OK on both branches. Owner's atlas checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** 1 finding — inbox/atlas-decode-field-reset-shifted-twice.md (fixed forward in `af410ad`, drop deleted).
+**Hardware debts:** none. Records already built from SVDs keep their invented `0` resets until `mcu svd` re-runs.
+**Budget:** PROCEED, weekly 25.1% at dispatch, wave 6.
+**Least sure about:** no reviewer read `af410ad` itself; I read its six lines and the test, and the reviewer's repro
+case is now a test, but `tasks/atlas/006` (still open) rewrites `_ext_effects` beside this guard and should be
+gated with the decode in mind.
+
 ## 2026-10-29 16:06 — atlas/024 a non-object record line is written back as it was
 
 **Decided:** nothing suite-wide. `records.load_records` wraps a JSONL line that parses but is not an object in
