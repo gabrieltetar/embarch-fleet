@@ -697,11 +697,6 @@ worktree rather than a missing link. Leg 009 did this to **both** its `ui` and
 `api` workers; batch 001's api worker hit the direct version of it. Each time the
 worker diagnosed it and made the symlink itself, which is a worker doing setup.
 
-If a `cargo build` in a fresh worktree still fails on a path that is not in this
-table, the table is out of date rather than the build: **the source of truth is
-`grep -rn 'path *= *"\.\.' --include=Cargo.toml embarch-*/`** in the suite root,
-run against the main checkouts. Say so in your log entry.
-
 **`embarch-atlas` is Python: it links one thing and needs a venv of its own.**
 Link the public-name denylist into its parent — `ln -sfn {{FLEET_ROOT}}/.atlas-local
 {{WORKTREE_ROOT}}/embarch-atlas/.atlas-local` — because its `test_public_guard`
@@ -712,13 +707,25 @@ cache. **Never hand it the main checkout's `.venv`**: that install is editable
 and resolves to the main checkout's `src/`, so its `pytest` run in a worktree
 tests `main`, not the branch. The gate is `{{FLEET_REPO}}/gate.md`'s Python bullet.
 
-**Before you spawn, run `scripts/check-dispatch.py --worktree <each of this
-unit's worktrees>`.** It refuses if they already exist, because a fresh dispatch
-*creates* them — finding them is evidence a worker holds this task, not a state
-to reuse. Leg 012 reused them and ran **both** of its first two tasks twice,
-concurrently, in the same trees; `umbrella/012`'s second worker committed and
-pushed and the first force-pushed over it, and the only reason nothing was lost
-is that the two trees happened to be identical.
+**`scripts/check-dispatch.py` brackets the creation: once before, once after,
+both with every one of this unit's worktree paths, absolute.** Before the
+`worktree add`, `--worktree <path>` for each. It refuses if they already exist,
+because a fresh dispatch *creates* them — finding them is evidence a worker holds
+this task, not a state to reuse. Leg 012 reused them and ran **both** of its
+first two tasks twice, concurrently, in the same trees; `umbrella/012`'s second
+worker committed and pushed and the first force-pushed over it, and the only
+reason nothing was lost is that the two trees happened to be identical.
+
+**After the links and before you spawn, the same command with `--created`.** The
+first run proves the paths were free; this one proves the dispatch put a
+worktree at each — registered to its repo, on the unit's one branch — and
+resolves every relative Cargo path-dep from it the way cargo does, printing the
+`ln` for any that does not. Legs 095 and 114 passed the first run and then
+created twelve worktrees somewhere else, and a link missing from the table above
+failed four workers' first build (leg 009, batch 001, `tasks/doc/090`). **When
+`--created` names a link the table lacks, the table is out of date, not the
+build:** make the link and say so in your log entry. It reads Cargo only, so the
+table's non-cargo rows stay the table's job.
 
 **And never conclude a worker died from repo state.** That leg checked
 `git status` and the branch's commit count in all four worktrees — clean, zero
