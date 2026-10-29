@@ -97,6 +97,27 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 16:56 — atlas/018 every cut answer can be continued with offset
+
+**Decided:** nothing suite-wide. The nine lookups that were cut at their budget with no way to continue
+(`part_card`, `doc_toc`, `find_fact`, `register`, `pin_trace`, `config`, `dt_node`, `footprint`, `stacks`) take
+`offset` on the function, the `q` verb and the MCP tool; `doc_toc`'s three cut points, `doc_section`'s listing and
+the `register` MSB/LSB pair path pass it through. All thirteen lookups now page. DESIGN.md "Query surface" states the
+paging contract: offsets count body characters after the header, every page repeats the `src:` header (so `pdf=` and
+`stale=` ride on each page), cuts fall on a line boundary unless one line exceeds the budget. A test walks `TOOLS`,
+`BUDGET` and the MCP schema as sets, so a new lookup without `offset` fails it; per-tool tests page at a 2-token
+budget and assert the bodies concatenate to the uncut answer exactly once.
+**Merged:** `agent/atlas/018-every-cut-answer-takes-offset` (code `5f208ad` on `17880f2`, ff; doc `4f1b0e03`, the
+worker's commit rebased in its own worktree onto `1cc26877`, ff). Gate on the merge result: worktree venv `pytest -q`
+451 passed, 2 skipped (real west workspace, built atlas; `test_public_guard` ran), client names clean,
+`check-docs.py` 12/12, ownership `atlas` OK on both branches. Owner's atlas checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 26.0% at leg start, wave 6.
+**Least sure about:** the paging tests use a 2-token budget on fixture atlases; no answer has been paged at its real
+budget on a real reference manual's `doc_toc`, which is the case the task named.
+
 ## 2026-10-29 16:50 — atlas/007 find_text searches a document's page text
 
 **Decided:** nothing suite-wide. New lookup `find_text <doc> <pattern> [section] [context] [offset]` (MCP tool and
