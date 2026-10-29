@@ -27,25 +27,52 @@ every dispatch would cost far more than the latency this log exists to measure.
 re-derived by hand from transcripts ("max gap 29.6 over six legs"), which is
 not a measurement anyone repeats. With a log it is one command.
 
+**A leg also holds a lock here, `leg`, and that is the other reason this file
+exists in a leg's day** (`tasks/doc/048`). On 2026-09-12 a listener that ticked
+five times in six minutes during a live leg spawned a second leg on the fifth,
+and the second ran step 0's recovery over the first: it landed the three units
+the first had claimed, and the first's uncommitted fold was reset under it. Every on-disk check a leg had then reads the same for a leg that is live
+and one that was killed, which is why recovery could not tell. **Freshness is
+what tells them apart**: the lock is held while it exists and its holder has
+ticked within LOCK_LIVE_MIN, because every `leg-*` label touches it and the
+listener's does not. Arming deletes it (a closed window took its leg with it),
+`leg-end` deletes it, and a holder silent that long has crashed or forgotten
+`leg-end`, so it is taken over. **A refused leg waits rather than exits**: an
+exit wakes the listener, which would respawn a refused leg every minute until
+the lock went stale.
+
 Usage:
     scripts/fleet-tick.py listener        the listener's STEP 3
+    scripts/fleet-tick.py leg-start [--wait [S]]
+                                          a leg's FIRST act: take the lock;
+                                          exit 1 while another leg holds it
+                                          (--wait polls up to S s, default 100)
+    scripts/fleet-tick.py leg-end         a leg's LAST act, whatever the exit
     scripts/fleet-tick.py leg-step0       a leg, once step 0 is done
     scripts/fleet-tick.py leg-dispatch    a leg, right after spawning a worker
     scripts/fleet-tick.py leg-fold        a leg, once the fold commit lands
     scripts/fleet-tick.py leg-waiting     a leg, waiting on a live worker
     scripts/fleet-tick.py --report        gaps between ticks, worst first
-Exit status: 0 recorded / reported, 2 unknown label or the write failed.
+Exit status: 0 recorded / reported, 1 another leg holds the lock,
+2 unknown label or the write failed.
 """
 from __future__ import annotations
 
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fleetconf import CONF  # noqa: E402
 
-WHO = ("listener", "leg-step0", "leg-dispatch", "leg-fold", "leg-waiting")
+WHO = ("listener", "leg-start", "leg-end", "leg-step0", "leg-dispatch", "leg-fold",
+       "leg-waiting")
+
+# Under the watchdog's 35 minutes, so a leg taking over a crashed holder's lock
+# ticks before the watchdog calls the fleet wedged; over the ~25 minutes a live
+# leg may wait on a worker between `leg-waiting` ticks (.claude/leg.md).
+LOCK_LIVE_MIN = 30
 
 # ~6 weeks at a hundred lines a day. The trim rewrites to KEEP when the file
 # passes CAP rather than on every call, so the common path is one append. A
@@ -60,6 +87,8 @@ def record(label: str) -> int:
     try:
         state.mkdir(parents=True, exist_ok=True)
         (state / "tick").touch()
+        if label.startswith("leg-") and (state / "leg").exists():
+            (state / "leg").touch()  # the holder's heartbeat; see the header
         log = state / "tick.log"
         with log.open("a") as fh:
             fh.write(f"{datetime.now().astimezone().isoformat(timespec='seconds')} {label}\n")
@@ -74,6 +103,44 @@ def record(label: str) -> int:
         return 2
     print(f"tick: {label}")
     return 0
+
+
+def holder() -> tuple[str, float] | None:
+    """The live lock's text and minutes since its holder ticked, or None."""
+    lock = CONF.state_dir / "leg"
+    try:
+        age = (time.time() - lock.stat().st_mtime) / 60
+        text = lock.read_text().strip()
+    except OSError:
+        return None
+    return (text, age) if age < LOCK_LIVE_MIN else None
+
+
+def leg_start(wait_s: float) -> int:
+    deadline = time.monotonic() + wait_s
+    while (held := holder()) is not None:
+        if time.monotonic() >= deadline:
+            print(f"leg lock held: {held[0]}, its holder ticked {held[1]:.0f} min ago "
+                  f"-- another leg is live; do nothing else, run this again")
+            return 1
+        time.sleep(min(15.0, max(0.0, deadline - time.monotonic())))
+    try:
+        CONF.state_dir.mkdir(parents=True, exist_ok=True)
+        (CONF.state_dir / "leg").write_text(
+            f"taken {datetime.now().astimezone().isoformat(timespec='seconds')}\n")
+    except OSError as exc:
+        print(f"could not take the leg lock: {exc}", file=sys.stderr)
+        return 2
+    return record("leg-start")
+
+
+def leg_end() -> int:
+    try:
+        (CONF.state_dir / "leg").unlink(missing_ok=True)
+    except OSError as exc:
+        print(f"could not release the leg lock: {exc}", file=sys.stderr)
+        return 2
+    return record("leg-end")
 
 
 def report() -> int:
@@ -107,9 +174,19 @@ def report() -> int:
 
 
 def main(argv: list[str]) -> int:
+    if argv[:1] == ["leg-start"] and argv[1:2] == ["--wait"] and len(argv) <= 3:
+        try:
+            return leg_start(float(argv[2]) if len(argv) == 3 else 100.0)
+        except ValueError:
+            print(__doc__, file=sys.stderr)
+            return 2
     if len(argv) != 1:
         print(__doc__, file=sys.stderr)
         return 2
+    if argv[0] == "leg-start":
+        return leg_start(0.0)
+    if argv[0] == "leg-end":
+        return leg_end()
     if argv[0] == "--report":
         return report()
     if argv[0] not in WHO:

@@ -18,7 +18,7 @@
 
 **Concurrency cap: 6 workers**, at most one per sub-project, wave size set per leg by the budget (§2). The cap exists because rebase cost grows with the number of branches waiting behind a merge, not because of the seat.
 
-**The supervisor is singular** — two would both fold `status.d/`, the one job that must be serialized, which is why a leg's concurrency is workers rather than supervisors ([the protocol](protocol.md) §6). The listener checks with `ListAgents` before spawning; a leg checks again.
+**The supervisor is singular** — two would both fold `status.d/`, the one job that must be serialized, which is why a leg's concurrency is workers rather than supervisors ([the protocol](protocol.md) §6). The listener checks with `ListAgents` before spawning; a leg checks again by taking the leg lock (`scripts/fleet-tick.py leg-start`) before step 0, because on 2026-09-12 a listener tick spawned a second leg over a live one and that leg's recovery ran against it (`tasks/doc/048`).
 
 ## 2. How much to run: the usage budget
 

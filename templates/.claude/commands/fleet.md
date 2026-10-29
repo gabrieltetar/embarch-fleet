@@ -52,8 +52,10 @@ nothing in the channel can make that commit exist. You still do not run
 
 Four steps, in this order.
 
-1. **Clear the latch and the progress mark.** `rm -f {{STATE_DIR}}/pump
-   {{STATE_DIR}}/tick`. Arming always starts with the pump **off**. The latch is a
+1. **Clear the latch, the progress mark and the leg lock.** `rm -f
+   {{STATE_DIR}}/pump {{STATE_DIR}}/tick {{STATE_DIR}}/leg`. Arming always
+   starts with the pump **off**, and a leg lock left by a closed window names a
+   leg that died with it (`.claude/leg.md`). The latch is a
    file so it survives a leg ending; it must not survive a kill, or closing VS Code
    would stop the fleet and re-arming would silently restart it. **`tick` goes with
    it because it is the last session's progress and not this one's** — left in

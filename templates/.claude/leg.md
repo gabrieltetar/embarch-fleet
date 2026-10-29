@@ -43,6 +43,19 @@ reader can look up: a unit (`core/078`'s fold), a log heading's
 
 ## Before anything else: three steps
 
+**First of all, take the leg lock: `scripts/fleet-tick.py leg-start --wait`.**
+Exit 0: it is yours. Exit 1: another leg is live, and it says when that leg last
+ticked. **Then do nothing else** — no recovery, no worktree, no claim, no other
+`fleet-tick.py` label — and run it again until it exits 0. Do not exit instead:
+your exit wakes the listener, which would spawn another leg into the same
+refusal. On 2026-09-12 a leg spawned over a live one ran step 0's recovery
+against it, landing three units the live leg had claimed and resetting its leg
+worktree under an uncommitted fold, because everything on disk reads the same
+for a live leg and a killed one (`tasks/doc/048`). The lock tells them apart by
+freshness. **`scripts/fleet-tick.py leg-end` is then your last command on every
+exit** — a normal end, a stop, a HOLD, a dream. A leg that forgets it idles the
+next one for up to 30 minutes.
+
 0. **Refresh, then recover.** *Refresh first, and do not skip it because the
    session "already knows" the repo.* `git pull --rebase` every repo this leg may
    touch, then **re-read from disk** the docs you are about to act on — the
@@ -121,12 +134,12 @@ reader can look up: a unit (`core/078`'s fold), a log heading's
    nowhere else. See `{{FLEET_REPO}}/ops.md` §3.
 
 1. Confirm no other supervisor is running (`{{FLEET_REPO}}/ops.md` §1 —
-   a second one would double-fold `status.d/`). **`ListAgents` is the
-   listener's check and you do not have it** — leg 029 spent three
-   `ToolSearch` calls discovering that before falling back. Yours is the
-   evidence on disk: a registered `leg` worktree with commits on it, a live
-   `agent/*` branch, or a `**State:** claimed` task. If one is, stop and say
-   so.
+   a second one would double-fold `status.d/`). **`leg-start` exiting 0 is
+   that confirmation, and it ran before step 0 on purpose.** `ListAgents` is the
+   listener's check and you do not have it — leg 029 spent three `ToolSearch`
+   calls discovering that. The evidence on disk this step used to read — a
+   `leg` worktree, an `agent/*` branch, a `claimed` task — is what step 0's
+   recovery clears after a killed leg, so it could never tell a live one apart.
 2. Run `scripts/usage-budget.py --suggest`. Exit `1` (HOLD) means **do not
    start** — report the numbers and the reset time and stop; the listener will
    not respawn you into a HOLD. Exit `2` (DEGRADED) is the normal case on this
@@ -964,8 +977,10 @@ fleet repo normally — **then remove your own leg worktree** — `git worktree 
 because something is uncommitted, say what in your final message rather than
 forcing it. An unpushed fold is the one thing the next leg cannot recover from
 a clean tree. Post a two-line close to
-`{{SLACK_CHANNEL_NAME}}` — units done, what is left dispatchable — and exit. **Do not
-push a notification for an ordinary leg end**; the relay ends legs constantly.
+`{{SLACK_CHANNEL_NAME}}` — units done, what is left dispatchable — then run
+`scripts/fleet-tick.py leg-end`, so the next leg does not wait on your lock, and
+exit. **Do not push a notification for an ordinary leg end**; the relay ends legs
+constantly.
 
 Your final message is read by the listener and relayed, so it carries: units run,
 branches landed **with their SHAs**, tasks blocked and why, any suite-wide design
