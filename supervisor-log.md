@@ -97,6 +97,43 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 15:01 — suite/030 the user guide's Claude Code section becomes suite/agent-guide.md
+
+**Decided:** **a supervisor-approved suite-level doc change, run by me as this leg's last unit** after a window
+with no reply (`ts` `1793305727.873799`, 14:28:47 to 14:58:47; polled 14:58:50). The overdue size-ledger debt
+(due 2026-09-18) is **paid by the split fork** `tasks/doc/045` opened: `suite/user-guide.md` §7/§7.1 moved
+verbatim into a new `suite/agent-guide.md` (3,336 B), headings renumbered §1/§1.1; user-guide keeps a two-line §7
+pointer so §8–§11 keep their numbers. `user-guide.md` 24,945 B to 22,947 B, out of reserve. **I classified the 28
+tools §7.1 had never listed** (it said "all 29" and named 26; `tools.rs` has 54): allow adds `capture_read`,
+`capture_start`, `capture_stop`, `lease_show`, `ledger_pending`, `ledger_show`, `list_instruments`,
+`show_bootload_ports`, `study_stream_load`; everything else new asks, including `mem_read`/`core_state` (on
+`validate`'s precedent: they attach to the probe), `answer_prompt`, `instrument_exchange`, all lease writes and
+`ledger_add`. Lists checked as sets against `tools.rs` on `0f1f0d4`: 23 + 31 = 54, no duplicates. Three sentences
+added below the lists (those three groups, and "a tool on neither list is newer than this page: ask").
+Repointed `embarch-chat/decisions/library.md` and user-guide §6's "the MCP tools in §7"; indexed in `embarch.md`
+§6. **Filed** `tasks/chat/005`: `/embarch-permissions` still carries the 2026-10-23 split (36 tools) and cites
+user-guide §7.1, which now lands on the forwarding line. **Owner drops left in `inbox/`** (both `Owner:
+required`): `doc-doc-protocol-guides-list-names-two-of-three.md` (DOC-PROTOCOL §3's "today" list of guides) and
+`doc-outpost-worktree-needs-study-designer-link.md` (leg.md's sibling table, `outpost/018`'s finding).
+**The compaction question** (can `spec.md` alone answer what someone needs to work on this today? here, can the
+guide alone get a newcomer working?): yes; nothing was cut, and the agent half now has a page with room to grow.
+**Merged:** no branches (supervisor's own unit). Gate on the result: `check-docs.py` 12/12, `check-doc-size.py`
+reports the item PAID. Doc SHA is this fold's commit.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 22.2% at leg start, wave 6.
+**Least sure about:** putting `capture_start` on allow: it reads a console like `serial_log` (core decision 92,
+no hardware lock, no write path), but it starts something that runs on after the call returns.
+**Leg close (next leg, read this first):** 4 of 4 units (`core/124`, `outpost/018`, `atlas/008`, `suite/030`), all
+landed, none blocked. **Three `suite` tasks are announced and their windows closed with no reply** (14:58:58 to
+14:59:00): `suite/053` (retire done task files), `054` (shed built proposal pieces), `055` (triage pre-October
+tasks); each is a supervisor's own unit, one per leg, run as the last unit. Re-read each thread first.
+**Dispatchable now:** `umbrella/095` (unblocked by `core/124`'s decision 106), 18 `atlas` tasks, `ui/102`,
+`chat/005`. Bench: `dut` attached, `dev-bench` not, so `api/059`, `dev-bench/035`, `038` stay open. Overdue
+ledger: none (next due `dev-bench/040`, 2026-11-01, blocked). Nothing deployed: `core/124` needs the owner's
+native Windows build before a reinstall can use it.
+
 ## 2026-10-29 14:44 — atlas/008 a live read from another chip is refused, not decoded
 
 **Decided:** nothing suite-wide; **the fleet's first `atlas` unit** (gate.md's Python bullet, worktree venv,
