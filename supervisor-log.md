@@ -97,6 +97,27 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 17:55 — atlas/025 the clock-gate word never tips a reg_read into refusal
+
+**Decided:** nothing suite-wide. `reg_read` plans the read without the RCC enable word when adding it would cross
+`MAX_RANGES`/`MAX_WORDS`, reads the peripheral, and says "clock state unknown (the read had no room for the enable
+word RCC.X.YEN)"; a peripheral over the limits on its own is still refused. New `is_clock_enable_reg`: `clock_gate`
+matches `<PERIPH>EN` only in RCC registers named `*ENR*`, excluding `*SMENR*` and, **the worker's call, accepted**,
+the F4-style `*LPENR*` twin too; `CLOCK_EXCEPTIONS` and `NO_CLOCK_GATE` unchanged. Name pattern chosen over register
+descriptions because the fixture SVDs carry none. The reviewer confirmed the no-room case is a third "unknown"
+reason under `atlas/013`'s rules, never marks anything against reset, and that the refusal rule still holds.
+**Merged:** `agent/atlas/025-clock-gate-word-never-tips-a-read-into-refusal` (code `e68d4d3` on `b1d4e6e`, ff; doc
+`fdb2d73d`, the worker's `063fbb51` rebased in its own worktree onto `eca4f89a`, ff). Gate on the merge result:
+worktree venv `pytest -q` 500 passed, 3 skipped (real west workspace, built atlas, vendor SVD; `test_public_guard`
+ran), and `tests/test_live.py` with the vendor SVD 61 passed; client names clean, `check-docs.py` 12/12, ownership
+`atlas` OK on both branches. Owner's atlas checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none new; `atlas/013`'s enable-bit check on an STM32 board still stands as that fold recorded it.
+**Budget:** PROCEED, weekly 29.0% at this fold, wave 6.
+**Least sure about:** on a family whose clock-enable registers lack `ENR` in the name, the answer is now "unknown"
+where it used to find the bit; the safe direction, measured against one vendor SVD only.
+
 ## 2026-10-29 17:52 — atlas/005 the console follows the running image
 
 **Decided:** nothing suite-wide. `[live] consoles` in `atlas.toml` maps a devicetree UART node (path, node name or
