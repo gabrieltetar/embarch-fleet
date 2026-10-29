@@ -815,8 +815,9 @@ first**, or you delete it. Drops are gitignored, so one written relatively by a
 worker exists only in that worktree; a worker is told to write them absolutely,
 and this is the backstop for the one that does not. Cheap to check, total to
 lose — leg 055 found one on 2026-09-08 only by going looking. **You do
-not delete the pushed branches** — `fold-commit.py` does it, and only once
-their content is provably on `origin/main`, so it is normally a fold behind.
+not delete the pushed branches, or the local ones `git worktree remove` leaves
+behind** — `fold-commit.py` does both, and only once their content is
+provably on `origin/main`, so it is normally a fold behind.
 The proof is patch-id first and then file by file, so a branch you rebased or
 cherry-picked through a conflict is pruned like any other; you need not
 force-push it. Do not "help" by deleting one by hand: before the push, the

@@ -478,7 +478,7 @@ def landed(repo: Path, ref: str, base: str = "origin/main") -> bool:
 
 
 def prune_landed_branches(doc: Path, scope: str, dry: bool) -> None:
-    """Delete pushed `agent/*` branches whose work is already on `origin/main`.
+    """Delete `agent/*` branches, pushed and local, whose work is on `origin/main`.
 
     The fleet deleted a worker's worktrees and its local branches and never the
     branch it pushed, so every unit left one behind in each of its two repos.
@@ -505,12 +505,22 @@ def prune_landed_branches(doc: Path, scope: str, dry: bool) -> None:
     where a conflicted cherry-pick or rebase changed the patch, file by file;
     batch 003 correctly refused a delete on exactly this distinction.
 
+    **The local branch goes in the same breath, on the same proof**
+    (`tasks/doc/066`). It was never "deleted with the worktree": `git worktree
+    remove` leaves the ref, so the owner's checkout held 112 dead `agent/*`
+    branches by leg 119 and 297 by 2026-10-29 -- `git branch` there, a recovery
+    tool, had become unreadable. `git branch -D` and not `update-ref -d`,
+    because `-D` refuses a branch a live worktree has checked out, which is what
+    keeps an in-flight worker's branch safe whatever its content.
+
     Best-effort throughout: the fold is already committed when this runs, and a
     network failure must never turn a landed unit into a failed one.
     """
     repos = [doc]
     code = CONF.root / f"embarch-{scope}"
-    if code != doc and (code / ".git").exists():
+    # `doc` is usually a leg worktree, so the doc scope's `code` is the same
+    # repository under another path -- one pass is enough.
+    if (code / ".git").exists() and common_git_dir(code) != common_git_dir(doc):
         repos.append(code)
     for repo in repos:
         if not git(repo, "rev-parse", "--verify", "-q", "origin/main",
@@ -534,6 +544,21 @@ def prune_landed_branches(doc: Path, scope: str, dry: bool) -> None:
             else:
                 print(f"note: could not prune {repo.name}: origin/{branch} -- "
                       f"{r.stderr.strip().splitlines()[-1] if r.stderr.strip() else 'push failed'}")
+        name = Path(common_git_dir(repo) or repo).parent.name
+        local = [b for b in git(repo, "for-each-ref", "--format=%(refname:short)",
+                                "refs/heads/agent/", check=False).split()
+                 if landed(repo, f"refs/heads/{b}")]
+        if not local:
+            continue
+        if dry:
+            print(f"would delete {len(local)} local agent/* branch(es) in {name}")
+            continue
+        r = subprocess.run(["git", "-C", str(repo), "branch", "-D", *local],
+                           capture_output=True, text=True)
+        gone = r.stdout.count("Deleted branch")
+        held = len(local) - gone
+        print(f"pruned {gone} local agent/* branch(es) in {name} (on origin/main)"
+              + (f"; {held} kept, checked out in a live worktree" if held else ""))
 
 
 def main() -> int:
@@ -549,7 +574,7 @@ def main() -> int:
     ap.add_argument("--check", action="store_true", help="verify the two repos agree")
     ap.add_argument("--dry-run", action="store_true", help="print, commit nothing")
     ap.add_argument("--no-prune-branches", action="store_true",
-                    help="keep pushed agent/* branches already landed on origin/main")
+                    help="keep agent/* branches, pushed and local, already on origin/main")
     args = ap.parse_args()
 
     if args.check:
