@@ -97,6 +97,35 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 17:14 — atlas/020 a bump's second look batches changed facts by (id, key) and compares cond, condition and width
+
+**Decided:** nothing suite-wide. `secondlook.owed_by` returns `(id, key)` pairs; new `is_owed`/`split_diff` serve both
+`update.second_look_diff` and `second-look queue --diff-from`, so a fact that kept its id but changed a checked field
+is batched and counted "changed under a new key"; a queue written before keys existed owes by id alone. `compare_one`
+now checks a limit/timing's `cond` and a strap's `condition` with `text_value_verdict` (same meaning confirmed, clearly
+different conflict, ambiguous unresolved, a reader that states none is not penalised) and a register's `width`
+numerically (different is a conflict). **The worker's call, accepted: `CHECKED_VERSION` is not bumped**, so verdicts
+confirmed before this without a condition or width check stay frozen until the fact's key changes; DESIGN.md "Caching"
+says so. `tasks/atlas/001` (toolchain-gated, not running) can reuse `split_diff` for its `--used` backlog.
+**Leg context (next leg, read this first):** started 17:07 at `2d456db9`, clean recovery (no claims, no unit
+worktrees), inbox empty. Bench: `dut` attached, `dev-bench` not, so `api/059`, `dev-bench/035`, `038` stay open.
+Ledger: nothing overdue. Spread sweep skipped: no source changed since the 15:26 "nothing filed" line. Only `atlas` is
+dispatchable, so units run one at a time. **`atlas/004`, `011` and `016` are not dispatchable in practice, though the
+queue counts them**: `016` opens with "the owner reviews the uncommitted 2026-10-08 work in `embarch-atlas-wt`", and
+`004` and `011` build on the `standard` kind that review lands; I am leaving all three for the owner. My claim commit
+`00fe466d` lacks the co-author trailer (pushed; not rewritten).
+**Merged:** `agent/atlas/020-second-look-batches-and-compares-what-changed` (code `1e5541a` on `5e7df62`, ff; doc
+`89c8602b` on `00fe466d`, ff). Gate on the merge result: worktree venv `pytest -q` 469 passed, 2 skipped (real west
+workspace, built atlas; `test_public_guard` ran), client names clean, `check-docs.py` 12/12, ownership `atlas` OK on
+both branches. Owner's atlas checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 27.1% at leg start, wave 6.
+**Least sure about:** the word-overlap compare cannot separate conditions that share most words ("CFG tied to GND"
+against "CFG tied to 10 kΩ" still reads confirmed), so a condition-bearing limit can still be frozen confirmed under the
+wrong condition; the worker recorded it in the task file, nothing is filed for it.
+
 ## 2026-10-29 17:06 — atlas/014 the live shell tells silence, a lost port and an empty success apart
 
 **Decided:** nothing suite-wide. `live.shell_status` gives five answers, shared by `shell`, `shell_run` and the CLI
