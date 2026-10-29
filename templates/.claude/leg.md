@@ -340,7 +340,8 @@ and sits in `inbox/` forever. That is exactly the state this queue was in on
 **Then sweep the sources when the queue is below its low-water mark — not when
 it is empty.** Run `scripts/queue-status.py --refill-owed --wave <your wave
 size>`, and do not hand-count `State:` lines. **Exit 0 means sweep now; exit 1
-means skip straight to selecting.** It implies `--tasks-only`, because you have
+means skip straight to selecting; exit 2 means it found no `tasks/` at all** and
+names the paths it tried — an error, never an empty queue. It implies `--tasks-only`, because you have
 just drained `inbox/` and a drop must not still count as "there is already work".
 **Run it after step 0, never before** — recovery has already reclaimed stale
 claims to `open` by then, which is exactly why you do *not* pass
@@ -397,6 +398,15 @@ owner's cue to top it up, and he should hear it before it reaches zero:
   queue** — an empty queue is the one moment the fleet genuinely does not know
   what is worth doing, which is why it asks instead of guessing. The pump stays
   latched on; the listener will not respawn you into another dream for 6 hours.
+
+  **Confirm the zero before you post it.** A dream both pages the owner and
+  forfeits the leg, so it never rests on one reading: run
+  `scripts/queue-status.py --root {{WORKTREE_ROOT}}/{{DOC_REPO_NAME}}/leg` and
+  check that its listing names the task files `ls tasks/*/` shows you. On
+  2026-09-10 a leg read `0 dispatchable` off a 38-task queue because the script
+  had resolved the wrong checkout (`tasks/doc/035`). That path now errors
+  instead, but the check is one command and a false dream ends a leg that had
+  work.
 
 ### Bench units come first, and they are yours
 

@@ -52,9 +52,21 @@ Two ways it fires, because a count is not the whole predicate:
     slot of a wave of two. That cost 9% of the same run. A count-only gate
     cannot see it.
 
+**The queue it reads is never the cwd's guess** (`tasks/doc/035`). `--root`
+used to default to `.`, so run from `embarch-fleet` -- a leg's cwd on
+2026-09-10, reset there before every Bash call -- it scanned a `tasks/` that
+does not exist and printed `0 dispatchable` with nothing to tell it from a dry
+queue: the reading that sends a leg to dream and page the owner. Now the default is
+the cwd's checkout only if that checkout has a `tasks/`, else `fleet.toml`'s
+`doc_repo` (said on stderr, so `--count` stays a bare integer), and a root with
+no `tasks/` exits 2 naming every path it tried. `check-ownership.py` takes its
+scope list the same way (`tasks/doc/036`): a universe derived from the cwd is
+never reported empty as though that were an answer.
+
 Exit status is the interface:
   0  there is work (dispatchable > 0)      -- or, with --refill-owed, refill IS owed
   1  there is nothing dispatchable         -- or, with --refill-owed, it is not
+  2  there is no queue at the root it resolved -- an error, never a zero
 
 Usage:
   scripts/queue-status.py                     human-readable breakdown
@@ -79,6 +91,7 @@ import datetime as dt
 import json
 import os
 import re
+import subprocess
 
 TASKS = "tasks"
 INBOX = "inbox"
@@ -143,6 +156,29 @@ def task_files(root: str) -> list[str]:
             if name.endswith(".md") and name != "README.md":
                 out.append(os.path.join(dirpath, name))
     return sorted(out)
+
+
+def resolve_root(given: str | None) -> tuple[str | None, list[str]]:
+    """(the instance checkout to read, every path tried that had no `tasks/`).
+
+    An explicit --root is taken as given and only checked. Otherwise the cwd's
+    git checkout -- a leg's own worktree, the owner's checkout -- and failing
+    that `fleet.toml`'s `doc_repo`. None means there is no queue anywhere it
+    looked, which the caller reports as an error rather than as an empty one.
+    """
+    def has_queue(p: str) -> bool:
+        return os.path.isdir(os.path.join(p, TASKS))
+
+    if given is not None:
+        return (given, []) if has_queue(given) else (None, [os.path.abspath(given)])
+    r = subprocess.run(["git", "rev-parse", "--show-toplevel"],
+                       capture_output=True, text=True)
+    here = r.stdout.strip() if r.returncode == 0 else os.getcwd()
+    if has_queue(here):
+        # `.` when standing at the top, so the listing's paths read as before.
+        return ("." if os.path.samefile(here, os.getcwd()) else here), []
+    doc = str(CONF.doc_repo)
+    return (doc, [here]) if has_queue(doc) else (None, [here, doc])
 
 
 def inbox_drops(root: str) -> list[str]:
@@ -267,13 +303,25 @@ def main() -> int:
     ap.add_argument("--count", action="store_true",
                     help="print only the dispatchable integer")
     ap.add_argument("--json", action="store_true", dest="as_json")
-    ap.add_argument("--root", default=".", help="repo root (default .)")
+    ap.add_argument("--root", default=None,
+                    help="the instance checkout (default: the cwd's checkout if "
+                         "it has a tasks/, else fleet.toml's doc_repo)")
     args = ap.parse_args()
 
+    root, tried = resolve_root(args.root)
+    if root is None:
+        print("no task queue: none of these has a tasks/ directory --\n  " +
+              "\n  ".join(tried) + "\nThis is not an empty queue. Pass --root "
+              "<an embarch-doc checkout or worktree>.", file=sys.stderr)
+        return 2
+    if tried:
+        print(f"queue-status: {tried[0]} has no tasks/, reading fleet.toml's "
+              f"doc_repo {root}", file=sys.stderr)
+
     now = dt.datetime.now()
-    tasks = [parse(p) for p in task_files(os.path.join(args.root, TASKS))]
+    tasks = [parse(p) for p in task_files(os.path.join(root, TASKS))]
     tasks_only = args.tasks_only or args.refill_owed
-    drops = [] if tasks_only else inbox_drops(os.path.join(args.root, INBOX))
+    drops = [] if tasks_only else inbox_drops(os.path.join(root, INBOX))
     b = classify(tasks, args.no_supervisor, args.stale_after, now)
 
     dispatchable = len(b["open"]) + len(b["recoverable"]) + len(drops)
