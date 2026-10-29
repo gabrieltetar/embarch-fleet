@@ -140,10 +140,11 @@ to one sub-project needs nobody's approval. Number it per `DOC-CONVENTIONS.md`
    being asked to record that the runway is nearly spent, and to answer the one
    question that will be unanswerable later — **`In flux:`, is this subsystem
    still moving?** You just worked in it; nobody who picks up the compaction
-   will know. `yes` is a fine answer and makes the task `blocked` until whatever
-   you name closes.
+   will know. `yes` is a fine answer and makes the task `blocked`, with what you
+   name in an `**Unparks when:**` field — the gate fails a `blocked` task without one.
 5. A `status.d/` fragment for every suite-level fact your change made false.
-6. The task file's `Done when` boxes ticked, or an honest `## Blocked` section.
+6. The task file's `Done when` boxes ticked, or an honest `## Blocked` section
+   and, if you set `blocked`, the `**Unparks when:**` field the gate requires.
 
 **Report red as red.** A branch that fails the gate and says so is worth more
 than one that passes because you stopped checking. The supervisor re-runs every

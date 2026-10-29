@@ -527,7 +527,7 @@ Whoever runs one answers `DOC-COMPACTION-PASS.md`'s human question in your log e
 its own words: *can `spec.md` alone answer what someone needs to work on this
 component today?* No script answers it and the gate does not either. **Never
 dispatch one whose `In flux:` field says yes** — that task should be `blocked`
-and naming what unparks it, and if it is `open` and says yes, the filer got it
+with an `**Unparks when:**` field, and if it is `open` and says yes, the filer got it
 wrong; fix the state rather than sending a worker.
 
 **`In flux:` is answered PER FILE, and that is what makes the rule above safe**

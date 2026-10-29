@@ -144,7 +144,13 @@ after token zero** — that is what the rest of the line is for.
   cannot settle — a supervisor that is alive but wedged — where a claim older
   than 4 hours is reclaimed the same way.
 - **blocked** — the worker appends a `## Blocked` section saying what it found
-  and exits. State returns to `open` only when whatever it named is resolved.
+  and exits. State returns to `open` only when whatever it named is resolved,
+  and **what it names goes in an `**Unparks when:**` field**: a task, a date, a
+  hardware run, the owner's word. `check-task-state.py` fails a `blocked` task
+  without one, and one naming a `tasks/<scope>/<NNN>` that is not in the queue —
+  `api/026` held the soonest-due debt in the ledger while waiting on a task that
+  never existed (`tasks/doc/032`). Only the field is read: a body cites finished
+  tasks as history, and a task file is deleted at its fold.
 - **done** — the worker ticks its `Done when` boxes and appends what shipped;
   the **supervisor deletes the file in the fold**, so a landed task leaves the
   queue in the same commit that folds its fragments. Git holds it, and a
@@ -300,7 +306,7 @@ script can make, recorded by the only actor with the context to make them:**
 ```markdown
 **Compacts:** embarch-core/spec.md, embarch-core/open.md
 **Size debt due:** 2026-09-16       <!-- set once, from the day the debt opens -->
-**In flux:** no                    <!-- one answer per file; all-yes → State: blocked + what unparks it -->
+**In flux:** no                    <!-- one answer per file; all-yes → State: blocked + Unparks when: -->
 **Must not delete:** the 18-stale-records candidate fix in open.md; decision 36's
 probe-rs counterfactual, which is evidence and not proof and reads as proof once
 shortened.
@@ -323,7 +329,7 @@ shortened.
   about a file already struck off their own `Compacts:` line, and one had it
   backwards). **Yes is a legitimate and cheap answer** — when it is yes for
   *every* file, set `**State:** blocked` and name the milestone that unparks
-  it, because `blocked` means nothing here can be done. Mixed stays `open` and
+  it in `**Unparks when:**`, because `blocked` means nothing here can be done. Mixed stays `open` and
   the dispatch note says which file to leave alone; `Owner: required` is exempt
   from the state rule entirely, since ownership already keeps agents off it and
   `blocked` would only hide the debt from the one actor who can pay it.
