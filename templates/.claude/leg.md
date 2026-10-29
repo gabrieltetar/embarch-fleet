@@ -654,16 +654,22 @@ pointing at the main checkout — `ln -sfn {{FLEET_ROOT}}/<sibling>
 {{WORKTREE_ROOT}}/<repo>/<sibling>`.
 
 **Link every sibling in the dependency *closure*, not the ones the crate's own
-`Cargo.toml` names.** That is the whole table, and it is short because only three
-repos are ever a link target:
+`Cargo.toml` names.** That is the whole table, re-derived from every manifest in
+the suite on 2026-10-29 after it had drifted twice (`tasks/doc/037`, `090`). Six
+repos are a link target, and three rows are not `cargo` at all — `outpost`'s is
+a test and `dev-bench`'s a firmware build, each reading a sibling by relative
+path, and `atlas`'s is not a repo (below):
 
 | worktree repo | link into its parent |
 |---|---|
 | `embarch-api` | `embarch-study-designer`, `embarch-topology` |
-| `embarch-core` | `embarch-study-designer`, `embarch-topology` |
+| `embarch-core` | `embarch-study-designer`, `embarch-topology`, `embarch-smp` |
 | `embarch-ui` | `embarch-study-designer`, `embarch-api`, **`embarch-topology`** |
-| `embarch-umbrella` | `embarch-topology`, `embarch-study-designer` |
-| `embarch-topology`, `embarch-study-designer`, `embarch-outpost`, `embarch-dev-bench` | none |
+| `embarch-umbrella` | `embarch-topology`, `embarch-study-designer`, `embarch-api` |
+| `embarch-outpost` | `embarch-core`, `embarch-ui` — `tests/cross_decoder.py`'s fixtures; it skips without them |
+| `embarch-dev-bench` | `embarch-study-designer` — a west build only (`app/CMakeLists.txt`) |
+| `embarch-atlas` | `.atlas-local`, the public-name denylist |
+| `embarch-topology`, `embarch-study-designer`, `embarch-smp`, `embarch-desk`, `embarch-chat` | none |
 
 The bolded one is the trap. `embarch-ui`'s manifest names only
 `embarch-study-designer` and `embarch-api/crates/embarch-core-client`, and
