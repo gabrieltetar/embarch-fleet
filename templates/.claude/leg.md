@@ -1033,8 +1033,8 @@ classifies, which is a fact about the repo rather than about your diff. The
 second is usually a [DOC-COMPACTION.md](../DOC-COMPACTION.md) split: a doc
 that appears from one carries its old file's rules and none of its old file's
 protection. **Classifying it is the owner's call, not yours** — the lists live
-in `scripts/`. Name the file in your final message and carry on; do not guess a
-classification and do not edit the script.
+in `fleet.toml`. Name the file in your final message and carry on; do not guess a
+classification and do not edit the lists.
 
 ## Ending the leg
 

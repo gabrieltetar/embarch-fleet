@@ -327,6 +327,10 @@ fleet_writable = [
   "embarch.md",
   "embarch-decision-reversals.md",
   "embarch-glossary.md",
+  # A cross-repo design awaiting acceptance, the same class as the
+  # stream-pipeline proposal below: phase 3 builds from it, and nothing in it is
+  # a rule the fleet runs under. Classified 2026-10-29 (tasks/doc/088).
+  "embarch-host-study-proposal.md",
   "embarch-remote-surfaces.md",
   "embarch-stream-pipeline-proposal.md",
   "embarch-token.md",

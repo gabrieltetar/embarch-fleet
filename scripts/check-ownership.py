@@ -257,7 +257,7 @@ def main() -> int:
                   f"list, so nothing knows whether the fleet may write them:\n")
             for u in unclassified:
                 print(f"  {u}")
-            print("\nAdd each to RESERVED or to FLEET_WRITABLE in this script, and to\n"
+            print("\nAdd each to `reserved` or to `fleet_writable` in fleet.toml, and to\n"
                   "protocol.md §3's table if it is reserved. A doc that\n"
                   "appears from a DOC-COMPACTION.md split carries its old file's rules\n"
                   "and none of its old file's protection -- that is how the risk register\n"
