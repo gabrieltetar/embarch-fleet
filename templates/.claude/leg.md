@@ -263,7 +263,7 @@ in a normal leg, and a wide wave is not a reason to do it less carefully.
   while you run you are its only writer.** The listener's cron is dark for your
   whole life (see the stop-channel rule below), so the watchdog window
   (`.claude/commands/fleet-watch.md`) reads that mtime and nothing else: fresh
-  means the fleet made progress, and stale by 35 minutes means it unlatches the
+  means the fleet made progress, and stale by 50 minutes means it unlatches the
   pump and alerts. Forget it and a healthy leg gets declared wedged — which is
   what happened on 2026-09-06, when `tick` still meant "the listener ticked" and
   a leg that landed 4/4 units was alerted on at 14:37 and had its relay cut. It

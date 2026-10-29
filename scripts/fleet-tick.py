@@ -23,8 +23,8 @@ refused in an owner's session on 2026-09-07, while `python3 scripts/*.py` is
 what every leg already runs all day. A leg suspended on a permission prompt at
 every dispatch would cost far more than the latency this log exists to measure.
 
-`--report` is the other half. The watchdog's 35-minute threshold was
-re-derived by hand from transcripts ("max gap 29.6 over six legs"), which is
+`--report` is the other half. The watchdog's threshold (35 minutes until
+2026-09-28, 50 since) was re-derived by hand from transcripts ("max gap 29.6 over six legs"), which is
 not a measurement anyone repeats. With a log it is one command.
 
 **A leg also holds a lock here, `leg`, and that is the other reason this file
@@ -69,7 +69,7 @@ from fleetconf import CONF  # noqa: E402
 WHO = ("listener", "leg-start", "leg-end", "leg-step0", "leg-dispatch", "leg-fold",
        "leg-waiting")
 
-# Under the watchdog's 35 minutes, so a leg taking over a crashed holder's lock
+# Under the watchdog's 50 minutes, so a leg taking over a crashed holder's lock
 # ticks before the watchdog calls the fleet wedged; over the ~25 minutes a live
 # leg may wait on a worker between `leg-waiting` ticks (.claude/leg.md).
 LOCK_LIVE_MIN = 30

@@ -91,9 +91,10 @@ PUMP = CONF.state_dir / "pump"
 HISTORY = CONF.state_dir / "credential-history.tsv"
 TICK = CONF.state_dir / "tick"
 
-# 35 minutes matches `/fleet-watch`; ops.md section 3 re-derived it on
-# 2026-09-06 from a max gap of 29.6 over six legs. One number, two watchers.
-STALE_MIN = 35
+# 50 minutes matches `/fleet-watch`: 35 was re-derived 2026-09-06 from a max gap
+# of 29.6 over six legs, and raised 2026-09-28 after a healthy single-unit
+# dispatch ran 38 (fleet-watch.md). One number, two watchers.
+STALE_MIN = 50
 # How far past `expiresAt` the file may sit before a missing refresh is real
 # rather than a clock skew or a slow renewal.
 REFRESH_GRACE_MIN = 15

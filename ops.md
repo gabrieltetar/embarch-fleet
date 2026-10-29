@@ -55,14 +55,14 @@ doubt commit it to a branch, which is cheap and reversible.
 notice that it is wedged: a hung tick never returns to idle, so its own cron
 cannot fire and no `fleet stop` reaches it. A second window armed with
 `/fleet-watch` reads the mtime of one file, `.fleet/tick`, and alerts when it
-goes stale by **35 minutes**. **Its whole vocabulary points one way — stop, never
+goes stale by **50 minutes**. **Its whole vocabulary points one way — stop, never
 start**: it cannot spawn, write a repo file, or launch a leg, and a declared
 wedge means an alert and deleting the pump latch. That asymmetry is why it does
 not weaken the kill switch: this section's rule bites only on what *takes away*
 the stop. Unlatching is not a graceful stop: whatever is running keeps running,
 and closing VS Code is still what ends it.
 
-**`tick` means the fleet made progress, not that the listener's cron fired** — the listener touches it each tick, **a leg at every dispatch and fold**. The listener-only reading went dark exactly when the fleet was busiest ([slack.md](slack.md) §2), so it fired on healthy legs; on 2026-09-06 it unlatched a live pump and capped the relay at one leg. The fix leaves the logic untouched (one mtime, stop-only) and *widens* it: a hung leg now trips it too. **35 min: re-derived 2026-09-06, max gap 29.6 over six legs.** The accepted cost and the rejected `.fleet/leg` alternative are in that command file.
+**`tick` means the fleet made progress, not that the listener's cron fired** — the listener touches it each tick, **a leg at every dispatch and fold**. The listener-only reading went dark exactly when the fleet was busiest ([slack.md](slack.md) §2), so it fired on healthy legs; on 2026-09-06 it unlatched a live pump and capped the relay at one leg. The fix leaves the logic untouched (one mtime, stop-only) and *widens* it: a hung leg now trips it too. **50 min since 2026-09-28** (35 re-derived 2026-09-06, max gap 29.6 over six legs; a healthy 38-minute dispatch raised it). The accepted cost and the rejected `.fleet/leg` alternative are in that command file.
 
 **Alert rarely, via `--action`.** Both posters' headers say why an owner-authored `@` notifies nobody. Unconfigured they exit 2: record that it did not send. `PushNotification` needs Remote Control, so it supplements. **The set, closed**: leg blocked and stopped · budget HOLD · a failed spawn · the same failure blocking two units · a dream · a parked `suite` task · **an agent suspended on a permission prompt** · **a re-arm owed by a landed deploy** · **the queue dry**. **Never per unit, never on an ordinary leg end** — legs end every twenty minutes, and an alert each time is a pager.
 

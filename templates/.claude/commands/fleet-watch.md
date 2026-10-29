@@ -48,7 +48,7 @@ later. The alternative, a second `.fleet/leg` file with the watchdog requiring
 *tick stale AND no live leg*, buys that window back at the cost of a second piece
 of state, a writer that must delete it on every exit path including a kill, and
 branch logic in the one window whose entire safety argument is that it reads one
-mtime and can only ever stop. Not worth it for a failure that is detected 35
+mtime and can only ever stop. Not worth it for a failure that is detected 50
 minutes later anyway.
 
 ## Why this does not weaken the kill switch
