@@ -97,6 +97,30 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 15:36 — ui/102 the host-clock fallback is already named by an existing test
+
+**Decided:** nothing. Closed with no code change: `a_splice_that_is_not_a_leading_prefix_still_costs_the_dut_clock`
+(`src/trace.rs`) asserts `unit == "ms"`, `axis_clock == "host-arrival"` and `dut_clock_refused` on both its
+refused-splice arms, which is outpost decision 17's "says so"; no `open.md` line owed. I checked the assertions on
+`main` myself before landing. **Leg context (next leg, read this first):** this leg started 15:24 at `abb009ab`,
+clean recovery (no claims, no unit worktrees). **`main` was red at start**: `suite/053`'s fold left
+`suite/037`'s `Unparks when:` naming `suite/053`, a retired task; reworded in `fa05c77c`, 12/12 since. Inbox: one
+drop filed as `umbrella/096` (`f93950b2`), announced. Bench: `dut` attached, `dev-bench` not, so `api/059`,
+`dev-bench/035`, `038` stay open. Ledger: nothing overdue. Spread sweep: nothing filed (2026-10-29 15:26) — the
+only source changed since 15:05 is `embarch-umbrella/open.md`, `umbrella/095`'s compaction, all owner-run debts.
+Dispatched three at 15:28: `atlas/017`, `ui/102`, `umbrella/096`; `suite/054` planned as the last unit (window
+closed 14:58:59, thread re-read 15:26, no reply).
+**Merged:** `agent/ui/102-a-dut-counter-restart-test-asserts-the-view-names-the-host-clock-it-fell-back-to` (code
+none, `embarch-ui` main unchanged at `f6da709`; doc `5962b4b7`, the worker's `0fe1d448` cherry-picked). Gate:
+`check-docs.py` 12/12, ownership `ui` OK on both branches; no cargo run, nothing compiled changed.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, weekly 24.1% at leg start, wave 6.
+**Least sure about:** the reviewer notes both arms of that test are *forward* jumps; no `trace.rs` test refuses
+the DUT clock on a literally backwards step longer than the capture. `dut_clock_health` uses `abs_diff`, so the
+path is sign-independent, which is why I did not file a test for it.
+
 ## 2026-10-29 15:23 — suite/053 the 87 done task files are retired
 
 **Decided:** **a supervisor-run suite task, as this leg's last unit**, after its window (`ts`
