@@ -97,6 +97,30 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 16:24 — atlas/006 an external reg_read names the true cause
+
+**Decided:** nothing suite-wide. `ext_reg_read`: a failed read whose own answer says `command not found` reports
+"the image has no I2C shell, build it with `CONFIG_I2C_SHELL=y`", with no `device list` and no "Nothing answered".
+**The worker detected it from the failed read's answer rather than the up-front probe exchange the task described**;
+same answer, no extra exchange per read, and `DESIGN.md` records the choice — I accepted it. `_ext_effects` now
+works per sentence: a clear-on-read sentence naming another register (`REG0x..`) or an underscore-named field or
+register is charged to that one, and the guard's reason quotes the sentence. `atlas/021`'s `reads_clear` path for
+`rclr` fields is untouched (reviewer checked). **Known limits, from the worker:** a plain-word field name (`AVG`) is
+not recognised as "another field"; no real BQ25730/INA700/TPS55288 records exist in any fixture, so the tests use
+synthetic records shaped like them. **Order note:** this unit's doc cherry-pick reached `origin/main` one push ahead
+of its fold, inside `ui/059`'s fold push, because I landed both doc branches before folding either.
+**Merged:** `agent/atlas/006-ext-reg-read-states-true-causes` (code `c71c703` on `af410ad`, ff; doc `0a22af11`, the
+worker's `4bdde008` cherry-picked). Gate on the merge result: worktree venv `pytest -q` 425 passed, 2 skipped
+(`test_public_guard` ran), client names clean, `check-docs.py` 12/12, ownership `atlas` OK on both branches. Owner's
+atlas checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. The no-I2C-shell answer has not met a real board without the shell.
+**Budget:** PROCEED, weekly 25.4% at leg start, wave 6.
+**Least sure about:** the reviewer observed that a register's own record-level clear sentence naming another
+register is now dropped from the carrier and charged only through the field loop; it judged that the intended fix,
+and I did not construct a case where the named register ends up unguarded.
+
 ## 2026-10-29 16:23 — ui/059 a grown trailing line is republished, not swallowed
 
 **Decided:** **I unparked `ui/059`** (blocked since leg 123's refused merge): its `Unparks when:` was its own fix, so
