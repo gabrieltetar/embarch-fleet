@@ -964,12 +964,15 @@ Run it **from your leg worktree**: it stages in whichever instance checkout you
 are standing in, falling back to `fleet.toml`'s `doc_repo` only when you are
 nowhere near one, and `--doc-repo` overrides both. A completed task file you
 removed with `git rm` is already staged and needs no special handling — the
-script settles every path *before* it commits the log, so a bad path list now
-costs nothing instead of leaving a log-only commit to undo by hand.
+script stages every path *before* it commits the log, so a bad path list costs
+nothing instead of leaving a log-only commit to undo by hand.
 
 It refuses unless the log's newest entry names *this* unit, stages by explicit
 path, and commits the log first — so the orderings a kill can leave are "nothing"
 or "an entry for a fold that did not happen", never "a fold nobody logged".
+**If a fold dies between its two commits, re-run the same command**: it finds
+its own log commit, lands the instance half against it, and says so. Never
+hand-write the instance commit while that works.
 **Never `git add -A`**: you fold in a checkout the owner also uses, and legs 004
 and 005 both swept his own `changelog.d` fragments into their folds that way. **A unit has failed if it leaves a fragment unfolded, and equally if
 it lands without its log entry** (§9, §11). You are the only actor touching

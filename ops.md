@@ -38,7 +38,7 @@ Remote Control attaches a phone or browser to a Claude Code session on this mach
 | Unfolded `status.d/` fragments | A fragment is the request, not the edit | Left for the next leg — that is what they are for |
 | Uncommitted edits in the main checkout | A unit's fold is **one commit**, so it either happened or it did not | Restore the shared docs, leave the fragments, redo the fold |
 | A leg worktree at `.worktrees/embarch-doc/leg/` | Outside every repo tree; the owner's checkout is untouched | Clean ⇒ reuse it, `git fetch && git reset --hard origin/main` first. Dirty ⇒ inspect before resetting: an unpushed fold lives here and nowhere else |
-| A log entry with no matching fold | `fold-commit.py` commits the log first, so this is the *survivable* ordering | `fold-commit.py --check` names it. Redo the fold; **do not write a second entry** |
+| A log entry with no matching fold | `fold-commit.py` commits the log first, so this is the *survivable* ordering | `fold-commit.py --check` names it. Re-run the same `fold-commit.py` command — it resumes from its own log commit; **do not write a second entry** |
 
 **"No commits" does not mean "no work", and this table used to imply it did.**
 A worker's tree is uncommitted for its whole run and only becomes commits in its

@@ -14,11 +14,15 @@ after the log commit exists -- so the orderings a kill can leave behind are:
   nothing            no unit landed, nothing to recover
   log only           an entry describing a fold that did not happen -- loud, and
                      `--check` names it, because the entry's merge SHAs resolve
-                     in none of the suite's repos
+                     in none of the suite's repos; re-running the same command
+                     finds that log commit and lands the instance half
   both               the intended state
 
 The one ordering that must never occur is "fold without entry", which is the
 one this exists to prevent, and it cannot: the doc-repo commit is last.
+
+Everything that can refuse runs before the log commit, staging included, so
+"log only" is a kill between two commits and nothing else (tasks/doc/075).
 
 It also refuses a fold whose framework repo carries a denylisted client name
 (2026-09-06). That repo is the one nothing else scans -- the instance's gate
@@ -482,6 +486,34 @@ def landed(repo: Path, ref: str, base: str = "origin/main") -> bool:
     return True
 
 
+def committed_log(unit: str, doc: Path) -> tuple[str | None, str]:
+    """For a clean log: (the log commit to resume from, "") or (None, why not).
+
+    A clean `supervisor-log.md` used to be refused outright -- "either already
+    committed or was never written" -- which was accurate and a dead end: the
+    "log only" ordering this script documents had no supported way out, so legs
+    104, 131 and 139 each finished a fold by hand-writing the instance commit
+    (tasks/doc/075, 082). The truth is cheap to establish, so establish it.
+    """
+    full, short, subject = git(FLEET_REPO, "log", "-1",
+                               "--format=%H%x00%h%x00%s").strip().split("\0", 2)
+    if not subject.startswith(f"Log {unit}: "):
+        return None, (
+            f"supervisor-log.md has no uncommitted change, and the fleet repo's newest\n"
+            f"commit is not {unit}'s log commit, so there is no half-landed fold of\n"
+            f"this unit to resume:\n\n  {short} {subject[:70]}\n\n"
+            "Write this unit's entry and re-run. If its log commit is further back,\n"
+            "commit the instance half by hand with the same paths and message,\n"
+            "ending it `Log: embarch-fleet@<that sha>`. Nothing has been written.")
+    folded = git(doc, "log", "-n", "200", "--format=%h", "-F",
+                 f"--grep=embarch-fleet@{full[:7]}", "HEAD", check=False).split()
+    if folded:
+        return None, (f"{unit} is already folded: embarch-fleet@{short} and {doc.name} "
+                      f"{folded[0]}.\nNothing to do -- push both if you have not. "
+                      "Nothing has been written.")
+    return short, ""
+
+
 def prune_landed_branches(doc: Path, scope: str, dry: bool) -> None:
     """Delete `agent/*` branches, pushed and local, whose work is on `origin/main`.
 
@@ -639,11 +671,17 @@ def main() -> int:
         print(stale, file=sys.stderr)
         return 1
 
+    # A clean log is either the "log only" ordering -- this unit's log commit
+    # is the fleet repo's newest and no instance commit names it, so a retry
+    # lands the missing half -- or a refusal that says which it is instead.
+    resume = None
     if not git(FLEET_REPO, "status", "--porcelain", "--", "supervisor-log.md").strip():
-        print("supervisor-log.md has no uncommitted change, so this unit's entry is\n"
-              "either already committed or was never written. Check before retrying.",
-              file=sys.stderr)
-        return 1
+        resume, why = committed_log(args.unit, doc)
+        if not resume:
+            print(why, file=sys.stderr)
+            return 1
+        print(f"resuming {args.unit}: its log is committed as embarch-fleet@{resume} "
+              f"and no\n{doc.name} commit names it, so this lands the instance half only.")
 
     # A client's name in a log entry is the one leak a later fix cannot make
     # cheaply: file content is one commit to remove, a landed commit message
@@ -668,8 +706,10 @@ def main() -> int:
 
 
     # After the guard above, never before it: stamping an unmodified log would
-    # manufacture the very uncommitted change that guard exists to detect.
-    note = stamp_entry_time(args.unit, datetime.datetime.now(), apply=not args.dry_run)
+    # manufacture the very uncommitted change that guard exists to detect. And
+    # never on a resume, whose entry is already committed.
+    note = None if resume else stamp_entry_time(args.unit, datetime.datetime.now(),
+                                                apply=not args.dry_run)
     if note:
         print(note)
 
@@ -731,7 +771,8 @@ def main() -> int:
         return 1
 
     if args.dry_run:
-        print(f"would commit to {FLEET_REPO.name}: supervisor-log.md")
+        print(f"would commit to {FLEET_REPO.name}: supervisor-log.md" if not resume
+              else f"would resume: the log is already embarch-fleet@{resume}")
         print(f"  staging in: {doc}")
         print(f"would commit to {doc.name}:")
         for p in addable:
@@ -744,19 +785,28 @@ def main() -> int:
             prune_landed_branches(doc, args.unit.split("/")[0], dry=True)
         return 0
 
-    # Log first. If the machine dies between the two, the surviving state is an
-    # entry for a fold that did not happen -- recoverable and loud -- rather
-    # than a fold nobody logged, which is unrecoverable.
-    git(FLEET_REPO, "add", "--", "supervisor-log.md")
-    git(FLEET_REPO, "commit", "-m", f"Log {args.unit}: {args.message}")
-    log_sha = head(FLEET_REPO)
-
+    # Stage the instance half BEFORE the log commit, so that anything staging
+    # can refuse -- a path, a removal, nothing to stage at all -- is refused
+    # with nothing written. Until 2026-10-29 this ran after the log commit,
+    # while leg.md told every supervisor the script "settles every path
+    # before it commits the log"; `dev-bench/034`'s fold proved otherwise and
+    # left a log-only commit (tasks/doc/075). Staging is local and repeatable,
+    # so a refusal here leaves nothing a retry does not simply re-stage.
+    #
     # -A with an EXPLICIT pathspec, never bare: it stages a deletion as well as
     # an add or a modification, for exactly the listed paths and nothing else.
     # Bare `git add -A` is what swept the owner's own fragments into legs 004
     # and 005, and the path allowlist above is what replaces it.
-    if addable:
-        git(doc, "add", "-A", "--", *addable)
+    def stage(*cmd: str) -> bool:
+        r = subprocess.run(["git", "-C", str(doc), *cmd], capture_output=True, text=True)
+        if r.returncode:
+            print(f"git {' '.join(cmd[:3])} ... failed in {doc.name}:\n{r.stderr.strip()}\n\n"
+                  "Nothing has been committed, the log included. Fix the path list and\n"
+                  "re-run; whatever this run staged is simply staged again.", file=sys.stderr)
+        return r.returncode == 0
+
+    if addable and not stage("add", "-A", "--", *addable):
+        return 1
     if to_delete:
         # tasks/README.md: a landed task leaves the queue in the same commit
         # that folds its fragments. Git holds it, and a completed task left in
@@ -771,7 +821,8 @@ def main() -> int:
         # demands, and after the log commit had landed (tasks/doc/050, 072,
         # 075, 082). The file is deleted in this commit, so `-f` discards
         # nothing the fold was not already discarding.
-        git(doc, "rm", "-q", "-f", "--", *to_delete)
+        if not stage("rm", "-q", "-f", "--", *to_delete):
+            return 1
     staged = git(doc, "diff", "--cached", "--name-only").strip()
     # A path that produced no change at all is worth a line. The count on its
     # own is not enough: leg 008 read "2 path(s)" for a three-path fold and had
@@ -780,13 +831,26 @@ def main() -> int:
     for p in quiet:
         print(f"note: {p} staged nothing -- it was already committed unchanged")
     if not staged:
-        print(f"nothing staged in {doc.name}; the log commit {log_sha} stands alone.\n"
-              "Investigate before retrying -- do not write a second entry.",
+        print(f"nothing staged in {doc.name}, so nothing has been committed"
+              + (f"; the log commit embarch-fleet@{resume} still stands alone"
+                 if resume else ", the log included")
+              + ".\nInvestigate before retrying -- do not write a second entry.",
               file=sys.stderr)
         return 1
+
+    # Log first. If the machine dies between the two, the surviving state is an
+    # entry for a fold that did not happen -- recoverable and loud -- rather
+    # than a fold nobody logged, which is unrecoverable.
+    if resume:
+        log_sha = resume
+    else:
+        git(FLEET_REPO, "add", "--", "supervisor-log.md")
+        git(FLEET_REPO, "commit", "-m", f"Log {args.unit}: {args.message}")
+        log_sha = head(FLEET_REPO)
     git(doc, "commit", "-m", f"{args.message}\n\nLog: embarch-fleet@{log_sha}")
 
-    print(f"{FLEET_REPO.name}  {log_sha}  supervisor-log.md")
+    print(f"{FLEET_REPO.name}  {log_sha}  supervisor-log.md"
+          + ("  (committed earlier; resumed)" if resume else ""))
     print(f"{doc.name}  {head(doc)}  {len(staged.splitlines())} path(s)"
           f"{f', {len(to_delete)} task file(s) retired' if to_delete else ''}")
 
