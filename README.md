@@ -80,7 +80,7 @@ Then, in the instance repo: arm a listener window with `/fleet start`, and say
 | [open.md](open.md) | Unresolved questions and known limitations, each with what would unblock it |
 | [supervisor-log.md](supervisor-log.md) | One entry per unit, newest first. The review surface, and the relay handoff |
 | [fleet.toml](fleet.toml) | The instance: paths, channel, identity, limits, the ownership lists |
-| [scripts/](scripts/) | The enforcement — ownership, client names, queue state, usage budget, alerting, the fold |
+| [scripts/](scripts/) | The enforcement — ownership, client names, queue state, usage budget, alerting, the fold — and a review loop's ledger |
 | [templates/](templates/) | What `install.py` renders into the instance repo |
 
 Read `protocol.md` first, then `ops.md`, then `risks.md` — in that order, and
