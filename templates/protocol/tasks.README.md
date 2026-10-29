@@ -49,6 +49,14 @@ task the supervisor invented; that is allowed, and it says so here.
       dropped, `status.d/` fragment for anything suite-level it made false.
 ```
 
+**Cite a shared method; never copy it into the task.** A procedure that more
+than one scope's tasks run — `DOC-CONVENTIONS.md`'s citation census is the
+standing one — is named by its home, so a fix lands there once for every chain.
+Its home is reserved, so whoever finds it wrong drops that in `inbox/` rather
+than patching the next task. Copied forward instead, one census pattern was
+fixed inside two scopes' chains and carried broken through sixteen units of a
+third (`tasks/doc/074`).
+
 ## States
 
 `open` → `claimed` → `done`, or → `blocked`.
