@@ -97,6 +97,41 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 15:13 — umbrella/095 check 17's fix lines name Core 106's in-place install
+
+**Decided:** nothing suite-wide. `doctor.rs`: both check 17 fix lines keep `embarch-core install --bind 0.0.0.0`
+and say it rewrites a registered service in place on Core decision 106 or newer, `uninstall` first on an older
+Core; `BindEvidence` gains `service_stopped: Option<bool>` (read via `locate::windows_core_service_state()`, WSL2
+guest only), so `bound-narrow` says "stopped and bound narrow", keeps "not a stopped service" when running, and
+says it did not read the state when it could not. `bind-too-narrow`'s NAT unreachability is in its doc comment.
+Decision 22 amended in place (`bind.md` 11,045 B, under its 11,059 B reserve line). **`umbrella/094` paid and
+closed**: the worker compacted `open.md` to 3,740 B. **The reviewer found the squeeze dropped two live claims**
+(the decision 58 desk-step "it restarts the service" caution, and "whether `embarch setup` gets past an existing
+registration" as unmeasured, which `bind.md` now asserts from reading `setup.rs`); **I restored both in this
+fold**, `open.md` 3,882 B, still under 3,919 B. Not restored, for size: check 5's "no-probe-found cannot occur"
+clause (derivable, reviewer rated it lower weight). Drop deleted as resolved.
+**Leg context (next leg, read this first):** this leg started 15:03 at `a7e87bca`, clean recovery (no claims, no
+unit worktrees; owner's `embarch-atlas-wt` left alone). Inbox: the previous leg's two owner drops filed as
+`tasks/doc/093` and `094` (both `Owner: required`), announced. Bench: `dut` attached, `dev-bench` not, so
+`api/059`, `dev-bench/035`, `038` stay open. Ledger: nothing overdue. Spread sweep: nothing filed (2026-10-29
+15:05) — the only source changed since 14:30 is `embarch-core/open.md` (`core/124`), whose new bullet is an
+owner-run Windows debt. Dispatched three at 15:07: `umbrella/095`, `chat/005`, `atlas/009`; `suite/053` planned
+as this leg's last unit (window closed 14:58:58, thread re-read 15:05, no reply).
+**Merged:** `agent/umbrella/095-check-17s-fix-lines-name-an-install-that-refuses-a-registered-service` (code
+`50f4022` on `4c786fa`, ff; doc `5e93f5b3` on `2c5ed35c`, ff). Gate on the merge result: build, test 258 pass,
+clippy `-D warnings` clean, client names clean, `check-docs.py` 12/12, ownership `umbrella` OK on both branches.
+Owner's umbrella checkout fast-forwarded. The worker saw `install::tests::install_binaries_replaces_a_binary_that_is_running`
+fail once in a parallel run and pass twice after; my run passed.
+**Blocked:** nothing.
+**Reviewer:** 1 finding — inbox/umbrella-open-md-compaction-dropped-desk-restart-warning.md
+**Hardware debts:** owner-run, in `embarch-umbrella/open.md` (it reinstalls the service): with Core 106 deployed,
+register `--bind 127.0.0.1`, stop it, `doctor` in the guest says "stopped and bound narrow", then the printed
+`install --bind 0.0.0.0` widens it; `bind-too-narrow` from a mirrored guest and `setup` over a registration
+unmeasured. Core 106 itself still needs the owner's native Windows build.
+**Budget:** PROCEED, weekly 23.4% at leg start, wave 6.
+**Least sure about:** the `service_stopped` read runs only from a WSL2 guest, so a native-Windows `doctor` always
+takes the "did not read the state" arm; nobody has seen that wording on a real narrow Core.
+
 ## 2026-10-29 15:01 — suite/030 the user guide's Claude Code section becomes suite/agent-guide.md
 
 **Decided:** **a supervisor-approved suite-level doc change, run by me as this leg's last unit** after a window
