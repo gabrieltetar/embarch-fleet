@@ -97,6 +97,47 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 17:06 — atlas/014 the live shell tells silence, a lost port and an empty success apart
+
+**Decided:** nothing suite-wide. `live.shell_status` gives five answers, shared by `shell`, `shell_run` and the CLI
+(exit 0/1/2/3): the output; an empty success with what `retval` says it returned (asked on the console that
+answered); did not run (only when provably before the write); nothing came back (no "longer timeout" advice; echo
+verdict, port VID:PID/product/serial and DHCSR state from Core decision 85); sent and the port went away or unknown
+whether it ran (shown, never resent). **The safety rule, which I and the reviewer both checked against
+`embarch-core/src`:** `Console.exchange` falls through to the next console only on an error text Core raises before
+the write (`nothing was written`, `signal-mismatch`, `; core state: ` on a port-wait 409, an undeclared or non-writable
+signal, embarch-api absent); every other failure, a capture-owned port's included, raises with `may_have_written` and
+is not resent, and an older Core without the wire fields counts as "may have run". `retval` is skipped when the pinned
+build's `kconfig.json` lacks or unsets `CONFIG_SHELL_CMDS_RETURN_VALUE`; with no `kconfig.json` it is asked and a
+`command not found` reply is read. **One deviation accepted**: a command that ran and returned nonzero exits 0 (it
+answered), stated in DESIGN.md. `live reg-read` and `live stacks` now exit 1 on a failed read. DESIGN.md's CLI table
+gained the `kconfig-extract <atlas>` row owed by `atlas/019`.
+**Merged:** `agent/atlas/014-shell-tells-silence-lost-port-and-empty-success-apart` (code `5e7df62` on `b23a73d`, ff;
+doc `f2b577f4`, the worker's commit rebased in its own worktree onto `ce45fb98`, ff). Gate on the merge result:
+worktree venv `pytest -q` 465 passed, 2 skipped (real west workspace, built atlas; `test_public_guard` ran), client
+names clean, `check-docs.py` 12/12, ownership `atlas` OK on both branches. Owner's atlas checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** owner-attended or a bench leg, on the dev bench with a DUT console declared, a Core with decision
+85 deployed and an image built with `CONFIG_SHELL_CMDS_RETURN_VALUE=y`: `embarch-atlas live shell <a command that
+prints nothing>` prints "printed nothing and returned 0" and exits 0; a refused value prints its nonzero code; with
+the DUT unpowered or held in reset, `live shell` exits 2 with port identity and core state; a command that drops the
+DUT's USB port exits 3 and is not resent on a second console. The task file carried this and is retired by this fold.
+**Budget:** PROCEED, weekly 26.0% at leg start, 27.1% at leg end, wave 6.
+**Least sure about:** the not-written decision rests on matching Core's error wording, because embarch-api forwards no
+HTTP status; a future Core rewording a pre-write error fails safe (no resend), but a future post-write error that
+happened to contain "nothing was written" would resend.
+**Leg close (next leg, read this first):** 4 of 4 units (`atlas/007`, `atlas/018`, `atlas/019`, `atlas/014`), all
+landed, none blocked, all four reviews "no findings". Started 16:38 at `d15e820c`; every unit ran alone because only
+`atlas` was dispatchable. **No `suite` task is announced.** **Dispatchable now:** 8 `atlas` tasks (`004`, `005`,
+`010`, `011`, `013`, `016`, `020`, `023`) and nothing else, so the spread gate fires again; no sweep source changed
+since 15:26 as of 16:39. `atlas/023`'s Done-when names `check_public.py`, which does not exist in the repo (the
+`test_public_guard` test is the check); `atlas/020` shares `update.py` lines with the toolchain-gated `atlas/001`.
+Bench unchanged (`dut` attached, `dev-bench` not; `api/059`, `dev-bench/035`, `038` open). The `toolchain` lane (17
+tasks) is still unstarted by any leg; the 2026-10-28 dream offered it and the owner chose another option, so I did not
+start it. Owner-only: `tasks/doc/093`, `094`, `095`. Ledger: nothing overdue (next `dev-bench/040`, 2026-11-01,
+blocked). `changelog.d/umbrella-check-17-measured.decided.md` is still the owner's, unconsumed. Nothing deployed.
+
 ## 2026-10-29 17:03 — atlas/019 an atlas names a board with no netlist and a Kconfig it failed to extract
 
 **Decided:** nothing suite-wide. **One atlas design call, by the worker, accepted:** `update` does **not** stop for a
