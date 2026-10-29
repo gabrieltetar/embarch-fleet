@@ -37,7 +37,7 @@ Modes:
 Exit status, for a leg's step 0:
   0  the buffer is present and (for --check) still true
   1  the bench has moved, or a role is unattached, or --refresh could not
-     reach Core; the message says which
+     reach Core, or (plain form) the last --refresh FAILED; the message says which
   2  no buffer and none could be written
 """
 from __future__ import annotations
@@ -69,6 +69,13 @@ BUFFER = CONF.state_dir / "hardware.json"
 # seconds. A leg is four units and well under an hour, so one refresh at step 0
 # covers a whole leg.
 STALE_AFTER_S = 4 * 3600
+# A --refresh that raises keeps the last good buffer, which is right -- but the
+# plain form then printed that old topology with nothing worse than "STALE, run
+# --refresh", and running --refresh only tracebacked again: 79 hours of a
+# confident view nobody could renew, read as "nobody renewed it" (tasks/doc/041).
+# So a failed refresh leaves this marker, a good one deletes it, and the plain
+# form names the failure instead of only the age.
+REFRESH_FAILED = CONF.state_dir / "hardware.refresh-failed"
 
 
 def load_facts() -> dict:
@@ -211,7 +218,11 @@ def measure(facts: dict) -> dict:
     ble = facts.get("dut_ble")
     if ble:
         dut = next((r for r in snap["roles"] if r["stated"]["role"] == "dut"), None)
-        hwid = (dut or {}).get("measured", {}).get("hardware_id") if dut else None
+        # `measured` is present and None for every role whose validate did not
+        # report ok -- an unattached DUT, a mismatch, a CLI error. `.get(k, {})`
+        # returns that stored None rather than the default, so this line raised
+        # on exactly the benches a refresh most needs to describe (tasks/doc/041).
+        hwid = ((dut or {}).get("measured") or {}).get("hardware_id")
         snap["dut_ble"] = dict(ble)
         snap["dut_ble"]["derived_from_hardware_id"] = hwid
         tmpl = ble.get("name_template", "{suffix}")
@@ -309,8 +320,16 @@ def main() -> int:
     facts = load_facts()
 
     if args.refresh:
-        snap = measure(facts)
-        write_buffer(snap)
+        try:
+            snap = measure(facts)
+            write_buffer(snap)
+        except Exception as e:
+            REFRESH_FAILED.parent.mkdir(parents=True, exist_ok=True)
+            REFRESH_FAILED.write_text(
+                f"{time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())} "
+                f"{type(e).__name__}: {e}\n", encoding="utf-8")
+            raise
+        REFRESH_FAILED.unlink(missing_ok=True)
         print(json.dumps(snap, indent=2) if args.as_json else render(snap, 0))
         unattached = [r["stated"]["role"] for r in snap["roles"] if r.get("attached") is not True]
         return 1 if (unattached or not snap["core"]["reachable"]) else 0
@@ -338,12 +357,24 @@ def main() -> int:
         return 0 if same else 1
 
     snap = read_buffer()
+    try:
+        failed = REFRESH_FAILED.read_text(encoding="utf-8").strip()
+    except OSError:
+        failed = ""
     if snap is None:
         print(f"no buffer at {BUFFER} -- run --refresh", file=sys.stderr)
+        if failed:
+            print(f"last --refresh FAILED at {failed}", file=sys.stderr)
         return 2
     age = time.time() - snap.get("generated_at_epoch", 0)
-    print(json.dumps(snap, indent=2) if args.as_json else render(snap, age))
-    return 0
+    if args.as_json:
+        print(json.dumps(dict(snap, last_refresh_failed=failed or None), indent=2))
+    else:
+        print(render(snap, age))
+        if failed:
+            print(f"  last --refresh FAILED at {failed}\n"
+                  "  -- everything above predates that failure; do not plan bench work on it")
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":
