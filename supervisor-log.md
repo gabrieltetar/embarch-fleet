@@ -97,6 +97,45 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-10-29 18:01 — atlas/026 a silent console reply follows one rule
+
+**Decided:** **I parked `atlas/016` (`blocked`, unparks on the owner's review of `embarch-atlas-wt`) and `atlas/004`,
+`011` behind it (`blocked`, unparks on `tasks/atlas/016`), commit `8854b1d1` on `main`, before the `026` claim.**
+Three legs had called them owner-gated in their entries and left them `open`, so `queue-status.py` counted three
+dispatchable tasks no leg would take: the relay could neither drain the queue nor reach the dream that asks him.
+Reverse by setting them back to `open` the moment he answers. Unit: `Console.exchange` now passes over a silent
+console only on an explicit `echo_seen: false` (no text, no `port_lost`); a Core that sends no `echo_seen` has its
+silence taken as the answer on every console ("may have run"), which makes DESIGN.md's older-Core sentence true again.
+DESIGN.md's "Which console" states the echo-on assumption (Zephyr's shell default), says it is not known whether any
+real image has echo off, and advises pinning `[live] console` or mapping `consoles` with a confirmed build. Not gated
+on `written`, as the task said. The reviewer verified current `embarch-core/src/exchange.rs` always sends
+`echo_seen`, so the new branch is defensive.
+**Merged:** `agent/atlas/026-silent-console-fall-through-says-one-thing` (code `fad13ca` on `e68d4d3`, ff; doc
+`cdc38857` on `d1997f85`, ff). Gate on the merge result: worktree venv `pytest -q` 501 passed, 3 skipped (real west
+workspace, built atlas, vendor SVD; `test_public_guard` ran), client names clean, `check-docs.py` 12/12, ownership
+`atlas` OK on both branches. Owner's atlas checkout fast-forwarded.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none new; `atlas/005`'s two-console bench check now also expects the deployed Core to send
+`echo_seen` (a Core older than decision 85 never falls through).
+**Budget:** PROCEED, weekly 29.4% at this fold, wave 6.
+**Least sure about:** whether the live Core on this machine predates `echo_seen`; if it does, the `atlas/005`
+fall-through cannot fire against it until Core is redeployed, which is the safe direction but would make the bench
+check read as a failure.
+**Leg close (next leg, read this first):** 3 units (`atlas/005`, `atlas/025`, `atlas/026`), all landed, none
+blocked, all three reviews "no findings"; ended one short of the cap because **the queue is dry**. Started 17:42 at
+`46ab7922`. After `026` the depth gate fired (0 dispatchable); I swept all 13 `open.md`/`design.md` sources
+(`collect-open-questions.py`) and the roadmap's Next, and filed nothing; `embarch-decision-reversals.md` was not
+re-read (unchanged since the 15:26 sweep). **Dream posted, `ts` `1793318476.457199`, with `crystal_ball`:** (1) review
+the `standard` design in `embarch-atlas-wt` (unparks `atlas/016`, `004`, `011`); (2) plug in the dev bench
+(`api/059`, `dev-bench/035`); (3) delete `embarch-ui/vscode-extension/` to finish `embarch-chat` decision 29 (changes
+his launcher reinstall path, so offered, not filed). The toolchain lane (17) was not re-offered: it was the 2026-10-28
+dream's option 2 and not chosen. **If no reply has arrived and `inbox/` is empty, do not dream again and do not
+invent work: end after step 0.** Bench unchanged (`dut` attached, `dev-bench` not). Owner-only: `tasks/doc/093`,
+`094`, `095`. Ledger: nothing overdue (next `dev-bench/040`, 2026-11-01, blocked).
+`changelog.d/umbrella-check-17-measured.decided.md` is still the owner's, unconsumed. `embarch-doc`'s origin still
+carries `agent/ui/059-diff-new-lines-republish`, not pruned by any fold. Nothing deployed.
+
 ## 2026-10-29 17:55 — atlas/025 the clock-gate word never tips a reg_read into refusal
 
 **Decided:** nothing suite-wide. `reg_read` plans the read without the RCC enable word when adding it would cross
