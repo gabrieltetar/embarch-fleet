@@ -134,7 +134,9 @@ def issue_field(key: str) -> str:
 def tasks_on_main(key: str) -> list[str]:
     """Task files on origin/main that name this issue."""
     out = git("grep", "-lE", issue_field(key), "origin/main", "--", "tasks/")
-    return [line.split(":", 1)[1] for line in out.splitlines() if ":" in line]
+    paths = [line.split(":", 1)[1] for line in out.splitlines() if ":" in line]
+    # tasks/README.md shows the field, and it is no task.
+    return [p for p in paths if not p.endswith("/README.md")]
 
 
 def closed_tasks(key: str) -> list[str]:

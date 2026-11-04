@@ -34,7 +34,7 @@ The work queue background agents pull from. One file per task, committed to
 
 **State:** open
 **Source:** embarch-core/open.md — "api/CLI consumption of /study/{id}/events is not built"
-**Issue:** EMB-12                  <!-- only for a task split from a Linear issue -->
+**Issue:** EMB-0                   <!-- only for a task split from a Linear issue -->
 **Scope:** api                     <!-- one sub-project, or `suite` -->
 **Hardware:** none                 <!-- none | verify-only | bench | required -->
 **Owner:** no                      <!-- `required` if every path it writes is reserved -->

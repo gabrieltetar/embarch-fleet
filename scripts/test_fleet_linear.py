@@ -157,6 +157,16 @@ class Fleet(unittest.TestCase):
         self.assertIn("no task ever named it", r.stdout)
         self.assertEqual(self.desk.issues["EMB-1"]["state"], "Fleet Working")
 
+    def test_the_tasks_readme_showing_the_field_is_no_task(self):
+        self.desk.issue("EMB-1", "Fleet Working")
+        (self.doc / "tasks" / "README.md").write_text("**Issue:** EMB-1\n")
+        self.task("001-a.md", "EMB-1")
+        self.commit("split")
+        (self.doc / "tasks" / "ui" / "001-a.md").unlink()
+        self.commit("Fold ui/001")
+        self.assertEqual(self.linear("finish").returncode, 0)
+        self.assertEqual(self.desk.issues["EMB-1"]["state"], "Done")
+
     def test_finish_waits_for_the_last_task_then_moves_to_done(self):
         self.desk.issue("EMB-1", "Fleet Working")
         self.task("001-a.md", "EMB-1")
