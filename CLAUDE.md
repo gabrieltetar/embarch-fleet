@@ -27,7 +27,7 @@ and commits, and `install.py --check` is what catches a hand-edit. DEVELOPING.md
 
 ## Git
 
-Work directly on `main` — no feature branches, no PRs (2026-08-25). Overrides the
-general "branch before committing to the default branch" default, for this suite
-only; ends when the repo owner explicitly says so. See
+Work on a branch, land when the owner asks — no PRs (2026-11-03). One branch name
+across every repo the change touches, pushed; land on `main` only when the repo
+owner asks, by rebase and fast-forward. See
 `../embarch-doc/embarch-dev-workflow.md` §6.

@@ -4,9 +4,9 @@
 
 ## 1. Why this exists
 
-Every rule in this suite was written for one engineer in one session. [embarch-dev-workflow.md](../embarch-doc/embarch-dev-workflow.md) §6 says commit straight to `main` and justifies it *by* that assumption — "this suite has one engineer … there is nothing to collide with". [DOC-PROTOCOL.md](../embarch-doc/DOC-PROTOCOL.md) §5 tells whoever ships a change to update the suite-level status tables in the same pass, safe exactly once per moment. Both stop being safe the moment four agents work at once.
+Every rule in this suite was written for one engineer in one session. [embarch-dev-workflow.md](../embarch-doc/embarch-dev-workflow.md) §6 said commit straight to `main` when this was written, and justified it *by* that assumption — "this suite has one engineer … there is nothing to collide with". [DOC-PROTOCOL.md](../embarch-doc/DOC-PROTOCOL.md) §5 tells whoever ships a change to update the suite-level status tables in the same pass, safe exactly once per moment. Both stop being safe the moment four agents work at once.
 
-So: **a supervisor thread keeps 4–6 short-lived worker threads in flight, each owning one sub-project, and lands their work itself.** A supervisor runs a bounded **leg** — four tasks — and a listener spawns its successor, so the fleet outlives any one supervisor's context (§6). This doc replaces the single-session assumption for those threads. It governs background threads only — the owner's interactive sessions keep working as before, on `main`, under §6 unchanged.
+So: **a supervisor thread keeps 4–6 short-lived worker threads in flight, each owning one sub-project, and lands their work itself.** A supervisor runs a bounded **leg** — four tasks — and a listener spawns its successor, so the fleet outlives any one supervisor's context (§6). This doc replaces the single-session assumption for those threads. It governs background threads only — the owner's interactive sessions work under that doc's §6.
 
 The design principle throughout: **prevent collisions structurally; do not resolve them.** A supervisor merging two workers' edits to one table is guessing at two intents it never held. Every rule below exists so that merge never has to happen.
 
