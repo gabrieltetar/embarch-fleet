@@ -164,14 +164,14 @@ def main() -> int:
         verdict, why = "WINDOW_GONE", (
             "No Claude process is running, so the listener window is closed or its "
             "process died. Nothing was wedged; there is nothing to wake.")
-        fix = "Reopen the listener window, arm it with /fleet start, then say `fleet start` in the channel."
+        fix = "Reopen the listener window and run /fleet start in it."
     elif branches and ev["activity_after_tick_s"] and ev["activity_after_tick_s"] > 60:
         verdict, why = "ORPHANED_LEG", (
             f"{len(branches)} pushed branch(es) are unmerged and an agent was still "
             f"writing {ev['activity_after_tick_s']}s after the last tick. That is a leg "
             "that stopped while its workers finished -- the completion notification did "
             "not reach it. Nothing is lost: the work is on the remotes.")
-        fix = ("Relatch (`fleet start`). Phase 0 re-lands a pushed branch rather than "
+        fix = ("Relatch (scripts/fleet-pump.py --start). Phase 0 re-lands a pushed branch rather than "
                "blocking it (tasks/README.md), and the task files should say so.")
     elif branches:
         verdict, why = "UNMERGED_WORK", (
@@ -191,7 +191,7 @@ def main() -> int:
             "A Claude process is alive, nothing is claimed, nothing is pushed and no agent "
             "has written since the tick. Either the queue went dry, the pump was never "
             "latched, or the listener is wedged. This script cannot tell those apart.")
-        fix = "Check the listener window directly, then `fleet start` in the channel."
+        fix = "Check the listener window directly, then scripts/fleet-pump.py --start."
 
     if args.as_json:
         print(json.dumps({"verdict": verdict, "why": why, "fix": fix, "evidence": ev}, indent=2))

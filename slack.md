@@ -1,6 +1,6 @@
 # Slack as the fleet's control plane
 
-**#embarch-fleet** (`C0BUKTL2FPC`, private, one member) is where the fleet is started, steered, questioned and reported. Arm the listener with `/fleet start`; the vocabulary is in [.claude/commands/fleet.md](../embarch-doc/.claude/commands/fleet.md). Split out of [ops.md](ops.md) §5 on 2026-09-10, when the transport moved to a bot and that section ran out of room to say so.
+**#embarch-fleet** (`C0BUKTL2FPC`, private, one member) is where the fleet is stopped, steered, questioned and reported. It starts from a window, with `/fleet start`; the vocabulary is in [.claude/commands/fleet.md](../embarch-doc/.claude/commands/fleet.md). Split out of [ops.md](ops.md) §5 on 2026-09-10, when the transport moved to a bot and that section ran out of room to say so.
 
 **The fleet has its own identity in this workspace, and everything below depends on it.** A Slack app — *EmbArch Fleet*, `U0BUTKNUXB8` — holds a bot token in `embarch/.fleet/bot-token`, and every call the fleet makes, in both directions, goes through it. **What it deliberately does not use is the Slack connector**, which authenticates as the *owner*: under that arrangement everything the fleet said arrived from his own account, a channel of one person talking to himself in which `<@owner>` badged nobody, because Slack only notifies you about a message somebody else sent.
 
@@ -12,15 +12,15 @@ The listener is **not** the owner's session, and that separation is newer than t
 
 | Window | Armed with | May write | Context |
 |---|---|---|---|
-| **Listener** | `/fleet start` | nothing — it spawns and relays | near-flat; a few hundred tokens per wake |
-| **Leg** (spawned) | `fleet start`, `fleet go`, `/supervise` | everything a supervisor owns ([protocol](protocol.md) §3) | bounded at four units, then dies |
+| **Listener** | `/fleet start` or `/fleet arm` | nothing — it spawns and relays | near-flat; a few hundred tokens per wake |
+| **Leg** (spawned) | the pump, or `/supervise` | everything a supervisor owns ([protocol](protocol.md) §3) | bounded at four units, then dies |
 | **Owner's** | nothing; an ordinary session | standing rules, `scripts/`, `.claude/`, hardware, `inbox/` | the owner's problem |
 
 The listener has no hands **so that it can live all day**. Reading a doc to answer a question is work, and work is what it spawns agents for; the one read it is allowed is the dispatchable count, because the heartbeat needs a predicate. One consequence: **a standing rule cannot be changed from Slack at all**, by anyone, the owner included — the listener cannot write those paths and neither can any agent it spawns (`check-ownership.py --supervisor`), so the answer is "open your own window".
 
 ## 2. How the pump runs
 
-`fleet start` writes `embarch/.fleet/pump` and spawns the first leg. Each leg's completion **wakes the listener directly** — a background agent's exit is an event, not something polled — so the next leg starts in seconds. The 10-minute cron is the heartbeat for when nothing is in flight: a stop that needs delivering, a queue that just became non-empty, a dream window that expired.
+`/fleet start` writes `embarch/.fleet/pump` and spawns the first leg; `scripts/fleet-pump.py --start` writes the same latch for the next heartbeat. **Slack's `fleet start`, `fleet go` and `fleet burndown` were retired on 2026-11-04**: the channel stops and steers the fleet and nothing there starts it, including a request in other words. Each leg's completion **wakes the listener directly** — a background agent's exit is an event, not something polled — so the next leg starts in seconds. The 10-minute cron is the heartbeat for when nothing is in flight: a stop that needs delivering, a queue that just became non-empty, a dream window that expired.
 
 **The heartbeat only fires while the listener is idle, and that is load-bearing.** `CronCreate`'s contract: a job fires only while the REPL is idle, never mid-query — so the fallback is unavailable for as long as a tick runs, and **a tick that retries a failure internally suppresses its own retry.** That cost five hours on 2026-09-03, when a 529 killed a leg and the respawn died too. So [fleet.md](../embarch-doc/.claude/commands/fleet.md)'s STEP 2 makes **one** attempt then ends the turn: a tick that gives up returns to idle, and the next heartbeat retries in about eleven minutes.
 
@@ -44,7 +44,7 @@ A leg that finds it has no channel **says so once**, in its first log entry and 
 
 ## 3. What a message can do, and what it cannot
 
-A message beginning `fleet` is a command; a question about fleet state is answered by an agent the listener spawns. **Anything else is treated as a normal request and acted on**, with the owner's authority, by a spawned agent: no task file, no ownership map, no branch, but the normal repo rules (build, test, clippy, the six doc checks, commit to `main`) still apply.
+A message beginning `fleet` is a command; a question about fleet state is answered by an agent the listener spawns. A request to start the fleet, however worded, gets told where to start it. **Anything else is treated as a normal request and acted on**, with the owner's authority, by a spawned agent: no task file, no ownership map, no branch, but the normal repo rules (build, test, clippy, the six doc checks, commit to `main`) still apply.
 
 A deliberate widening, with a cost worth stating: **work can now start on this machine from a phone, outside the queue, the gate and the ownership map** — the three things [protocol.md](protocol.md) §3 and §10 exist to enforce. Chosen knowingly, in exchange for not having to be at the desk to ask for anything. What bounds it is identity, not vocabulary:
 

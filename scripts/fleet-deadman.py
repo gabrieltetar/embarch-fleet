@@ -75,7 +75,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from fleetconf import CONF  # noqa: E402
+from fleetconf import CONF, login_dir  # noqa: E402
 
 import argparse  # noqa: E402
 import datetime  # noqa: E402
@@ -85,7 +85,7 @@ import subprocess  # noqa: E402
 import time  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
-CREDENTIALS = Path.home() / ".claude" / ".credentials.json"
+CREDENTIAL_FILE = ".credentials.json"
 STATE = CONF.state_dir / "deadman-state.json"
 PUMP = CONF.state_dir / "pump"
 HISTORY = CONF.state_dir / "credential-history.tsv"
@@ -124,8 +124,9 @@ def expiries() -> tuple[int | None, int | None, float | None]:
     Every other field -- both tokens above all -- is dropped on the floor here
     and never reaches a caller, a log line or a Slack post.
     """
+    credentials = login_dir() / CREDENTIAL_FILE
     try:
-        raw = json.loads(CREDENTIALS.read_text(encoding="utf-8"))
+        raw = json.loads(credentials.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None, None, None
     oauth = raw.get("claudeAiOauth")
@@ -133,7 +134,7 @@ def expiries() -> tuple[int | None, int | None, float | None]:
         return None, None, None
     acc = oauth.get("expiresAt")
     ref = oauth.get("refreshTokenExpiresAt")
-    mt = CREDENTIALS.stat().st_mtime
+    mt = credentials.stat().st_mtime
     return (acc if isinstance(acc, int) else None,
             ref if isinstance(ref, int) else None, mt)
 
@@ -328,7 +329,7 @@ def main() -> int:
 
     conds: list[tuple[str, str, str, str, str]] = []  # key, id, msg, action, detail
 
-    relogin = "run /login in a Claude Code window, then say fleet start"
+    relogin = "run /login in a Claude Code window, then /fleet start"
     cred_state = "present" if cred_mt else "MISSING or unreadable"
     base = (f"pump latch: {'present' if latched else 'absent'}\n"
             f"tick: {'never' if tick is None else f'{tick:.0f} min old'}\n"
@@ -401,7 +402,7 @@ def main() -> int:
                 f"are still open, and the usage gate says {verdict} — so it "
                 f"could be running and is not.",
                 "look at the listener window; if it is logged out, run /login and "
-                "say fleet start",
+                "/fleet start",
                 base + held))
 
     # 4. The one that can be seen coming.

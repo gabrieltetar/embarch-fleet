@@ -12,7 +12,9 @@ is left -- see the degradation note below, which is the case that actually
 applies on this machine.
 
 So ``~/.claude/statusline-usage.py`` runs as the status line, caches those
-numbers to ``~/.claude/usage-cache.json``, and this script reads that cache.
+numbers to ``usage-cache.json`` in the login's config folder, and this script
+reads that cache. Where no status line runs, `fleet-usage-cache.py` writes the
+same file from a probe of the login.
 
 Two thresholds, deliberately different, both overridable:
 
@@ -59,45 +61,40 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from fleetconf import CONF  # noqa: E402
+from fleetconf import CONF, usage_cache_path  # noqa: E402
 
 import argparse
 import calendar
 import json
 import os
+import subprocess
 import time
 
-CACHE = os.path.expanduser("~/.claude/usage-cache.json")
+CACHE = str(usage_cache_path())
 MAX_WORKERS = CONF['limits']['max_workers']          # ops.md §1's cap
 DEGRADED_WORKERS = CONF['limits']['degraded_workers']  # wave when percentages are unavailable
 TRANSCRIPTS = os.path.expanduser("~/.claude/projects")
 
 
 def check_feeder() -> str | None:
-    """Is the thing that WRITES the cache still the versioned copy?
+    """Is the thing that WRITES the cache installed?
 
     risks.md: the budget's data source lived outside every repo, unversioned and
-    uncovered by any check. A machine reinstall or a settings edit silently turns
-    every leg DEGRADED -- and DEGRADED is the steady state on this machine, so
-    nothing would ever report it. The script is now in this repo; this asserts
-    that settings.json actually points at it.
+    uncovered by any check. A machine reinstall silently turns every leg DEGRADED.
+    `fleet-usage-cache.py` on a cron is what writes it on this machine, because
+    the VS Code extension runs no status line.
 
-    Advisory, never fatal. A wrong statusLine is a reason to distrust a verdict,
+    Advisory, never fatal. A missing feeder is a reason to distrust a verdict,
     not a reason to refuse to produce one -- the whole design of this gate is to
     degrade rather than block.
     """
-    settings = os.path.expanduser("~/.claude/settings.json")
-    versioned = str(Path(__file__).resolve().parent / "statusline-usage.py")
     try:
-        with open(settings) as fh:
-            cmd = json.load(fh).get("statusLine", {}).get("command", "")
-    except (OSError, ValueError) as e:
-        return f"cannot read {settings}: {e}"
-    if not cmd:
-        return f"no statusLine configured in {settings}; nothing writes the cache"
-    if versioned not in cmd:
-        return (f"statusLine runs {cmd.split()[-1]!r}, not the versioned "
-                f"{versioned!r} -- an unversioned feeder can break silently")
+        cron = subprocess.run(["crontab", "-l"], capture_output=True, text=True).stdout
+    except OSError as e:
+        return f"cannot read the crontab: {e}"
+    if "fleet-usage-cache.py" not in cron:
+        return ("no fleet-usage-cache.py in the crontab; nothing writes the cache "
+                "(scripts/fleet-usage-cache.py --install-cron)")
     return None
 
 
@@ -117,8 +114,9 @@ def read_cache(path: str, max_age: int):
 
     age = int(time.time()) - int(data.get("cached_at", 0))
     if age > max_age:
-        return None, (f"cache is {age}s old (limit {max_age}s) -- the status "
-                      "line has not run recently; set statusLine.refreshInterval")
+        return None, (f"cache is {age}s old (limit {max_age}s) -- the */4 "
+                      "fleet-usage-cache.py cron probes only while the pump is "
+                      "latched, and writes nothing if the probe gives no reading")
     if not isinstance(data.get("rate_limits"), dict):
         return None, "cache has no rate_limits (not a Pro/Max seat, or no API response yet)"
     data["_age"] = age
@@ -573,7 +571,6 @@ def main() -> int:
             "seven_day": seven, "seven_day_resets_at": seven_reset,
             "blocking": blocking,
             "cache_age_s": data["_age"],
-            "derived": bool(data.get("derived")),
             "burndown": burndown,
             "burndown_until": (bd_latch or {}).get("until") if burndown else None,
             "burndown_why_not": None if burndown else bd_why,
@@ -594,13 +591,6 @@ def main() -> int:
     print(f"{verdict}  (cache {data['_age']}s old)")
     for line in mode_lines():
         print(line)
-    if data.get("derived"):
-        # A derived cache is byte-compatible with the status line's, so nothing
-        # downstream could otherwise tell a proxy from a first-party number.
-        print("  DERIVED: these percentages come from fleet-usage-cache.py -- a "
-              "pinned allowance\n           over the transcripts' own token sum, "
-              "not from `rate_limits`. Re-pin with\n           "
-              "fleet-usage-reading.py after a fresh /usage.")
     print(fmt("5-hour", five if five is not None else five_graced,
               five_reset, args.five_hour_max))
     if five_graced is not None:

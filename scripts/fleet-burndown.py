@@ -22,24 +22,18 @@ remaining allowance is a mode that can decide wrong at 3 a.m., and the owner is
 the only one who knows whether he wants the seat tonight.
 
 *Deadlined.* Every burndown races a known reset instant, and is bounded by
-`[burndown] max_horizon_h`. **The instant defaults to the pinned weekly reset**
--- the scraped `/usage` reading that pins the allowance carries it, so `--arm`
-alone is the normal form and `--until` is the override. Requiring it to be typed
-was, briefly, asking the owner to re-enter data already on disk. The deadline is
+`[burndown] max_horizon_h`. **The instant defaults to the login's weekly reset**
+-- its own reading carries it, so `--arm` alone is the normal form and `--until`
+is the override. The deadline is
 the entire justification, so it is also the expiry: `CONF.burndown()` reads a
 passed deadline as "not a burndown" with no write from anyone, which means
 forgetting to end it cannot leave the safeties off. **Early in a week the
-derived deadline is refused**, because a reset 160 hours out is not something
+read deadline is refused**, because a reset 160 hours out is not something
 about to expire -- it is the fleet with its safeties off.
 
-*Pinned to a fresh reading.* The percentages on this machine are DERIVED
-(budget.md): a pinned allowance over the transcripts' own token sum. Burndown is
-the only mode that spends to the wall, so it is the only one that refuses to run
-on a stale denominator -- `[burndown] pin_max_age_h`, tighter than the 24 h the
-cache itself enforces, because at a 97% stop the margin for drift is three
-points. **Running `/usage` is the whole ceremony**: its rendered output lands in
-the session transcript, `fleet-usage-reading.py --scan` pins it, and `--until`
-runs that refresh itself rather than making the owner wait out a cron tick.
+*On a fresh reading.* Burndown is the only mode that spends to the wall, so it
+refuses to start without a reading of the login under 300 s old (budget.md), and
+arming takes one itself rather than waiting for the cron.
 
 **What ends it.** The deadline, `fleet stop`, an empty queue, a hard fault, or a
 real 429 -- the owner's call, 2026-09-08: in burndown a 429 does not throttle,
@@ -50,8 +44,7 @@ whether anything runs next, and after a 429 at 97% that gate holds by itself.
 Usage:
   scripts/fleet-burndown.py                      report (default)
   scripts/fleet-burndown.py --arm [--scope core,ui]
-                                    arm until the pinned weekly reset -- run
-                                    /usage first, this pins it for you
+                                    arm until the login's weekly reset
   scripts/fleet-burndown.py --until '2026-09-09 07:00'
                                     same, with the deadline stated by hand
   scripts/fleet-burndown.py --clear --reason '429 at 04:12Z'
@@ -70,10 +63,9 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from fleetconf import CONF, parse_instant  # noqa: E402
+from fleetconf import CONF, parse_instant, usage_cache_path  # noqa: E402
 
-CACHE = os.path.expanduser("~/.claude/usage-cache.json")
-READINGS = CONF.state_dir / "usage-readings.tsv"
+CACHE = usage_cache_path()
 PUMP = CONF.state_dir / "pump"
 BD = CONF.get("burndown", {})
 
@@ -90,26 +82,6 @@ def human(seconds: float) -> str:
     seconds = int(max(0, seconds))
     h, m = divmod(seconds // 60, 60)
     return f"{h}h{m:02d}m" if h else f"{m}m"
-
-
-def pin_age_h() -> float | None:
-    """Hours since the newest `/usage` reading, or None if there is none.
-
-    The reading log is the denominator's provenance: every percentage this repo
-    prints is `measured_billable / implied_allowance`, and the allowance came
-    from one of these rows. An unreadable log is not a fresh pin -- it is no pin
-    at all, and returns None so the caller refuses rather than proceeds.
-    """
-    try:
-        rows = [r for r in READINGS.read_text().splitlines()[1:] if r.strip()]
-    except OSError:
-        return None
-    newest = None
-    for row in rows:
-        ts = parse_instant(row.split("\t")[0])
-        if ts is not None and (newest is None or ts > newest):
-            newest = ts
-    return None if newest is None else (time.time() - newest) / 3600.0
 
 
 def cache() -> tuple[dict | None, str | None]:
@@ -156,9 +128,7 @@ def snapshot() -> dict:
         "until": parse_instant((latch or {}).get("until", "")) if latch else None,
         "weekly_pct": weekly, "weekly_resets_at": weekly_reset,
         "five_hour_pct": five, "five_hour_resets_at": five_reset,
-        "derived": bool((data or {}).get("derived")),
         "cache_problem": cache_why,
-        "pin_age_h": pin_age_h(),
         "caps": {"max_workers": cfg("max_workers", CONF['limits']['max_workers']),
                  "weekly_pct": cfg("weekly_pct", 97),
                  "five_hour_pct": cfg("five_hour_pct", 97),
@@ -176,24 +146,21 @@ def arm(until_raw: str | None, scope: str | None, snap: dict) -> tuple[int, list
 
     **`until_raw` is optional, and defaulting it is not a weakening of the
     deadline rule.** The rule is that a burndown must race a known reset
-    instant; it was a required argument only because, when this was written, the
-    only place that instant existed was the owner's eyes reading `/usage`. It is
-    now on disk -- the same scraped reading that pins the allowance carries
-    `seven_day.resets_at` -- so asking him to retype it was asking him to
-    re-enter data the machine already had, which is how a wrong date gets typed.
-    Stated still wins over derived, and the latch records which it was.
+    instant, and the login's own reading carries it as `seven_day.resets_at`, so
+    asking the owner to retype it would be asking for data the machine already
+    has, which is how a wrong date gets typed. Stated still wins over read, and
+    the latch records which it was.
     """
     bad: list[str] = []
     horizon = float(cfg("max_horizon_h", 48))
-    max_pin = float(cfg("pin_max_age_h", 4))
     derived = until_raw is None
 
     if derived:
         reset = snap["weekly_resets_at"]
         when = float(reset) if isinstance(reset, (int, float)) else None
         if when is None:
-            bad.append("no weekly reset instant is pinned, so there is no "
-                       "deadline to derive -- run /usage, or pass --until")
+            bad.append("the login's reading gives no weekly reset instant, so "
+                       "there is no deadline to take -- pass --until")
     else:
         when = parse_instant(until_raw)
         if when is None:
@@ -218,15 +185,6 @@ def arm(until_raw: str | None, scope: str | None, snap: dict) -> tuple[int, list
     if snap["cache_problem"]:
         bad.append(snap["cache_problem"] + " -- burndown stops at a percentage, "
                    "so it will not start without one")
-    age = snap["pin_age_h"]
-    if age is None:
-        bad.append(f"no /usage reading in {READINGS} -- the allowance every "
-                   "percentage divides by has never been pinned")
-    elif age > max_pin:
-        bad.append(f"the newest /usage reading is {age:.1f}h old (limit "
-                   f"{max_pin:g}h, [burndown] pin_max_age_h). Run /usage and "
-                   "record it:\n      scripts/fleet-usage-reading.py --session "
-                   "<pct> --session-resets <iso> --weekly <pct> --weekly-resets <iso>")
 
     weekly = snap["weekly_pct"]
     if weekly is not None and weekly >= float(snap["caps"]["weekly_pct"]):
@@ -239,9 +197,8 @@ def arm(until_raw: str | None, scope: str | None, snap: dict) -> tuple[int, list
 
     lines = ["mode=burndown",
              f"until={iso(when)}",
-             # Which it was, because a derived deadline is only as good as the
-             # pin it came from and a reader of this file should not have to
-             # guess. Nothing branches on it; it is provenance.
+             # Which it was, so a reader of this file does not have to guess.
+             # Nothing branches on it; it is provenance.
              f"until_source={'weekly-reset' if derived else 'stated'}",
              f"armed_at={iso(time.time())}"]
     if scope:
@@ -301,13 +258,6 @@ def report(snap: dict) -> int:
         else:
             print(f"  {label}: {pct:5.1f}%  resets in "
                   f"{human(reset - time.time()) if reset else 'unknown'}")
-    if snap["derived"]:
-        age = snap["pin_age_h"]
-        pin = "never pinned" if age is None else f"{age:.1f}h old"
-        print("  DERIVED: percentages are a pinned allowance over the "
-              "transcripts' token sum,\n           not `rate_limits`. "
-              f"Newest /usage pin: {pin} "
-              f"(burndown refuses past {cfg('pin_max_age_h', 4):g}h).")
     if snap["cache_problem"]:
         print(f"  PROBLEM: {snap['cache_problem']}")
     return 0 if snap["active"] else 1
@@ -318,12 +268,12 @@ def main() -> int:
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--arm", action="store_true",
-                    help="arm burndown until the pinned weekly reset instant")
+                    help="arm burndown until the login's weekly reset instant")
     ap.add_argument("--until", metavar="INSTANT",
                     help="arm until this instant instead of the weekly reset "
                          "(no timezone = local)")
     ap.add_argument("--scope", help="comma-separated sub-projects, recorded in "
-                                    "the latch the way `fleet start core,ui` does")
+                                    "the latch the way `/fleet start core,ui` does")
     ap.add_argument("--clear", action="store_true",
                     help="end the burndown, leave the pump latched in normal mode")
     ap.add_argument("--reason", help="with --clear, why it ended (recorded in the latch)")
@@ -348,15 +298,13 @@ def main() -> int:
         return rc
 
     if arming and not args.no_refresh:
-        # **Arming refreshes first, because the owner has just run `/usage`.**
-        # The pin comes from the transcripts and the cache from the pin, both on
-        # a */4 cron -- so without this, "run /usage, then arm" fails its own
-        # freshness check for up to four minutes after the reading it needs is
-        # already on disk. One subprocess rather than an import: this is the
-        # same command the cron runs, and running exactly that is what makes a
-        # refusal here mean the cron would have failed too.
+        # **Arming reads the login first.** The cron probes only while the pump
+        # is latched, and this runs before it is, so nothing else would have a
+        # fresh reading. One subprocess rather than an import: this is the same
+        # command the cron runs, and running exactly that is what makes a refusal
+        # here mean the cron would have failed too.
         r = subprocess.run([sys.executable, str(Path(__file__).resolve().parent
-                                                / "fleet-usage-cache.py")],
+                                                / "fleet-usage-cache.py"), "--force"],
                            capture_output=True, text=True)
         if r.returncode != 0:
             print("could not refresh the usage cache "
@@ -376,7 +324,7 @@ def main() -> int:
         else:
             left = snap["until"] - time.time()
             src = (snap["latch"] or {}).get("until_source")
-            how = " (the pinned weekly reset)" if src == "weekly-reset" else ""
+            how = " (the login's weekly reset)" if src == "weekly-reset" else ""
             print(f"BURNDOWN ARMED until {iso(snap['until'])}{how} "
                   f"({human(left)} from now)")
             print(f"  {snap['caps']['max_workers']} workers, no taper, stops at "
@@ -384,8 +332,7 @@ def main() -> int:
                   f"{snap['caps']['five_hour_pct']}% 5-hour")
             if snap["weekly_pct"] is not None:
                 print(f"  weekly is {snap['weekly_pct']:.1f}% now")
-            print("  The pump is latched. A leg starts on the next tick, or "
-                  "say `fleet go` to start one immediately.")
+            print("  The pump is latched. A leg starts on the next tick.")
         return rc
 
     if args.as_json:

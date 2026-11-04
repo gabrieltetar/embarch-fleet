@@ -10,9 +10,9 @@ disk can tell you, because quota state only ever arrives over the wire.
 So this script does two jobs:
 
 1. Prints a compact status line (what a status line is for).
-2. Writes the rate-limit numbers to ``~/.claude/usage-cache.json`` so a process
-   that is NOT the status line -- e.g. embarch-doc's supervisor, via
-   ``scripts/usage-budget.py`` -- can read them.
+2. Writes the rate-limit numbers to ``usage-cache.json`` in the login's config
+   folder so a process that is NOT the status line -- e.g. embarch-doc's
+   supervisor, via ``scripts/usage-budget.py`` -- can read them.
 
 ``rate_limits`` is present only for Claude.ai Pro/Max subscribers and only
 after the first API response of a session, and each window disappears once its
@@ -32,7 +32,8 @@ import sys
 import tempfile
 import time
 
-CACHE = os.path.expanduser("~/.claude/usage-cache.json")
+CACHE = os.path.join(os.path.expanduser(os.environ.get("CLAUDE_CONFIG_DIR") or "~/.claude"),
+                     "usage-cache.json")
 
 
 def pct(node):

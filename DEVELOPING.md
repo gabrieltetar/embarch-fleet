@@ -10,7 +10,7 @@ loop you actually run.
 $EDITOR templates/... | scripts/... | protocol.md      # 1. author
 python3 scripts/deploy.py                              # 2. render, gate, stamp, commit
 git push && git -C ../embarch-doc push                 # 3. publish
-/fleet start                                           # 4. re-arm, IF §4 says so
+/fleet arm                                             # 4. re-arm, IF §4 says so
 ```
 
 `deploy.py` refuses to run while the fleet is live. **With the fleet running,
@@ -170,7 +170,7 @@ between "the pump is on" and "a leg is mid-unit".
 
 **Two things stay yours.** A **re-arm** — `deploy.py` says when one is owed and
 the deployer relays it, but arming is a Claude Code session and no agent may do
-it, so a changed heartbeat prompt sits dormant until you type `/fleet start`. And
+it, so a changed heartbeat prompt sits dormant until you type `/fleet arm`. And
 a **red gate**: the deployer leaves the instance rendered and uncommitted with
 the latch still pinned, and stops. Fix the template here and re-queue.
 
@@ -199,7 +199,7 @@ of the artifact.
 
 - **Push.** Two repos, and pushing the instance before the framework would leave
   a stamp naming a SHA nobody else can fetch. It prints both commands in order.
-- **Re-arm.** That is a Claude Code session doing `/fleet start`, not a shell.
+- **Re-arm.** That is a Claude Code session doing `/fleet arm`, not a shell.
 - **Restart a leg.** The pump is the owner's latch, by design ([protocol.md](protocol.md) §2).
 
 ## 7. Testing a change without a fleet

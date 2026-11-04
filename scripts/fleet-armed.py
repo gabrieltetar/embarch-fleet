@@ -26,6 +26,10 @@ Code is the fleet's kill switch and re-arming re-stamps, so the residue is a
 stamp that is merely unused. The failure this closes is the other one: a window
 that IS running, on wording nobody can see.
 
+Stamping the listener also records the login it was armed under, from its own
+`CLAUDE_CONFIG_DIR`. Its agents share its process, so they share that login, and a
+cron or a UI has no other way to learn which account the fleet is spending.
+
 Usage:
   scripts/fleet-armed.py --stamp .claude/commands/fleet.md
   scripts/fleet-armed.py --clear .claude/commands/fleet.md
@@ -36,11 +40,14 @@ from __future__ import annotations
 
 import argparse
 import difflib
+import os
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fleetconf import ARMED_PROMPTS, CONF, armed_stamp, cron_block  # noqa: E402
+
+LISTENER = ARMED_PROMPTS[0]
 
 
 def _instance_block(rel: str) -> str | None:
@@ -64,6 +71,9 @@ def stamp(rel: str) -> int:
     p = armed_stamp(rel)
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(block + "\n")
+    if rel == LISTENER:
+        login = os.environ.get("CLAUDE_CONFIG_DIR") or str(Path.home() / ".claude")
+        (p.parent / "login").write_text(login + "\n")
     print(f"stamped {rel} ({len(block.splitlines())} lines) -> {p}")
     return 0
 
@@ -72,6 +82,8 @@ def clear(rel: str) -> int:
     p = armed_stamp(rel)
     existed = p.exists()
     p.unlink(missing_ok=True)
+    if rel == LISTENER:
+        (p.parent / "login").unlink(missing_ok=True)
     print(f"{'cleared' if existed else 'no stamp for'} {rel}")
     return 0
 
@@ -102,7 +114,7 @@ def check(verbose: bool) -> int:
                     lineterm="", n=1):
                 print("    " + ln)
     if worst:
-        print("\nRe-arm the window that owns it: `/fleet start` for the listener,\n"
+        print("\nRe-arm the window that owns it: `/fleet arm` for the listener,\n"
               "`/fleet-watch` for the watchdog. Editing the file is not enough.")
     return worst
 

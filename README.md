@@ -61,8 +61,8 @@ The scripts are **shims** rather than copies: every doc in the suite names
 depth, so the path has to keep working, but there must be exactly one
 implementation. Two held equal by a checker is still two.
 
-Then, in the instance repo: arm a listener window with `/fleet start`, and say
-`fleet start` in the channel to latch the pump.
+Then, in the instance repo, run `/fleet start` in a window: it arms the listener
+and latches the pump.
 
 ## What is here
 
@@ -72,7 +72,7 @@ Then, in the instance repo: arm a listener window with `/fleet start`, and say
 | [gate.md](gate.md) | The merge gate and merge order: what a unit passes before it merges, per repo kind, and the reviewer beside it |
 | [ops.md](ops.md) | Running it: arming, the usage budget, driving it from a phone, dreaming |
 | [slack.md](slack.md) | Slack as the control plane: the three windows, the pump, what a message can and cannot do, the transport |
-| [budget.md](budget.md) | The usage budget: may the fleet dispatch right now, and how many? Why the percentages are derived |
+| [budget.md](budget.md) | The usage budget: may the fleet dispatch right now, and how many? Where the percentages come from |
 | [burndown.md](burndown.md) | The one mode whose goal is to reach the ceiling, for a weekly window about to reset |
 | [risks.md](risks.md) | The risk register — what each choice traded away and what its failure looks like |
 | [risks-authority.md](risks-authority.md) | The same register, one mission: what an agent may do unattended, and what each grant cost |

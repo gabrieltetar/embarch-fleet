@@ -40,27 +40,22 @@ of the allowance can decide wrong at 3 a.m., and only the owner knows whether he
 wants the seat tonight.
 
 *Deadlined.* Every burndown races a known reset instant, bounded by
-`max_horizon_h` (48). **The instant defaults to the pinned weekly reset**: the
-scraped `/usage` reading that pins the allowance carries it, so `--arm` alone is
-the normal form and `--until` is the override for stopping short. It was a
+`max_horizon_h` (48). **The instant defaults to the login's weekly reset**: its
+own reading carries it, so `--arm` alone is the normal form and `--until` is the override for stopping short. It was a
 required argument for one afternoon, until the owner asked why he was retyping a
 number already on disk — which is how a wrong date gets typed. **Early in a week
-the derived deadline is refused**, because a reset 160 hours out is not something
+the read deadline is refused**, because a reset 160 hours out is not something
 about to expire. The instant is also the expiry: `CONF.burndown()` reads a passed
 `until` as **not a burndown**, with no write from anyone, so forgetting to end
 one cannot leave the safeties off. The same reading covers an unparseable
 `until` — an unreadable date must never widen a wave.
 
-*Pinned to a fresh reading.* The percentages here are DERIVED ([budget.md](budget.md)), and
-burndown is the only mode that spends to the wall, so it is the only one that
-refuses a stale denominator: `pin_max_age_h` is **4**, tighter than the 24 h the
-cache itself enforces, because at a 97% stop the margin for drift is three
-points. **The precondition costs one command**: `/usage` writes what it rendered
-into the session transcript, `fleet-usage-reading.py --scan` pins it, and
-arming runs that refresh itself. So the ceremony is two commands, and the second
-takes no arguments: run `/usage`, then `--arm`. **97 and not 100 for the same reason** — a proxy reading three points
-low puts 97% of it at 100% of the real thing, and the one cost burndown must not
-pay is the *start* of the next week.
+*On a fresh reading.* Burndown is the only mode that spends to the wall, so it
+refuses to start without a reading of the login under 300 s old ([budget.md](budget.md)),
+and arming takes one itself. **97 and not 100, the owner's call of 2026-09-08**: the
+cache can be four minutes old with six workers in flight, and the one cost burndown
+must not pay is the *start* of the next week. It is started with `/fleet start
+burndown` in a window, or `/fleet start burndown until <when>` to stop short.
 
 **A 429 ends the mode rather than pausing it** (owner, 2026-09-08). Normally a
 429 is a throttle to wait out; in burndown the fleet is already at the wall and

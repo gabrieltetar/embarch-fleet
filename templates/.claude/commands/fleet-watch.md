@@ -61,7 +61,7 @@ vocabulary, and every word of it points the same way: **stop, never start.**
 The rule `ops.md` §3 states is that **nothing may be arranged to outlive the
 editor in a way that takes away the stop.** A watchdog that could restart a leg
 would take it away. One whose only action *is* a stop cannot: the worst it can
-do to you is stop a fleet that was fine, which costs a `fleet start` you type
+do to you is stop a fleet that was fine, which costs a restart you type
 yourself.
 
 So closing the *listener* window still ends every unit of work in flight —
@@ -180,7 +180,7 @@ nothing.
 > **Deleting the latch is the only write this window ever makes, and the only
 > direction it may push.** It can stop a fleet; it can never start one. That
 > asymmetry is what keeps it from being a second control plane: the worst a
-> false positive costs is a `fleet start` you have to type, and the worst a
+> false positive costs is a restart you have to type, and the worst a
 > failure of this window costs is the silence you had before it existed.
 >
 > 4. If the mtime is fresh, do nothing and print nothing.

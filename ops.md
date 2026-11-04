@@ -6,11 +6,11 @@
 
 **Three windows, and only one of them is armed.**
 
-1. **The listener** — a dedicated VS Code window running `/fleet start` ([.claude/commands/fleet.md](../embarch-doc/.claude/commands/fleet.md)). It reads #embarch-fleet on a 10-minute heartbeat — which fires **only while that window is idle**, and it is not idle while a leg runs ([slack.md](slack.md) §2) — spawns agents, relays what they say, nothing else. Arming leaves the pump **off**.
-2. **The pump** — `fleet start` in the channel: writes the latch, spawns the first leg, and from then on each leg's death spawns the next, the relay ([the protocol](protocol.md) §6). `fleet stop` ends it.
+1. **The listener** — a dedicated VS Code window armed with `/fleet start` or `/fleet arm` ([.claude/commands/fleet.md](../embarch-doc/.claude/commands/fleet.md)), in Claude Code's panel: a chat in EmbArch Chat closes when idle and takes its cron with it. It reads #embarch-fleet on a 10-minute heartbeat — which fires **only while that window is idle**, and it is not idle while a leg runs ([slack.md](slack.md) §2) — spawns agents, relays what they say, nothing else.
+2. **The pump** — `/fleet start` in that window, or `scripts/fleet-pump.py --start` once it is armed: writes the latch, and from then on each leg's death spawns the next, the relay ([the protocol](protocol.md) §6). `fleet stop` in the channel or `scripts/fleet-pump.py --stop` ends it, finishing the unit.
 3. **The owner's window** — an ordinary session for standing rules, `scripts/`, `.claude/`, hardware, and drops into `inbox/`. Not armed, and not the fleet.
 
-`/supervise` runs **one leg** by hand — the same as `fleet go`. Agent definitions: [supervisor](../embarch-doc/.claude/agents/embarch-supervisor.md), [worker](../embarch-doc/.claude/agents/embarch-worker.md).
+`/supervise` runs **one leg** by hand. Agent definitions: [supervisor](../embarch-doc/.claude/agents/embarch-supervisor.md), [worker](../embarch-doc/.claude/agents/embarch-worker.md).
 
 **Editing a rule no longer stops the fleet.** `deploy.py` still refuses to render into a live fleet, but the owner now commits and runs `deploy.py --queue`, which pins the framework SHA; the listener spawns an [`embarch-deployer`](../embarch-doc/.claude/agents/embarch-deployer.md) at the next leg boundary — where it has just proved with `ListAgents` that no leg is alive — and that agent renders the pinned commit and nothing else. It was worth building because the old loop was the largest measured hole in the fleet's uptime: ~3.7 h of a 14 h window, the fleet stopped so the owner could hold the pen. [DEVELOPING.md](DEVELOPING.md) §4.1 is the loop; a **re-arm stays the owner's** either way.
 
@@ -94,7 +94,7 @@ Reading replies makes Slack a **control plane**, not just the surface the log is
 
 ## 5. Slack as a control plane
 
-**#embarch-fleet** (`C0BUKTL2FPC`, private, one member) is where the fleet is started, steered, questioned and reported. Arm the listener with `/fleet start`.
+**#embarch-fleet** (`C0BUKTL2FPC`, private, one member) is where the fleet is stopped, steered, questioned and reported. It starts from a window, with `/fleet start`.
 
 **This section moved to [slack.md](slack.md) on 2026-09-10** — the three windows and what each may write, how the pump runs, what happens when the channel is unreachable, and the identity rules that bound what a message can do. It moved because the transport changed: the fleet now reads *and* posts as its own Slack app over a bot token, nothing in it touches the owner's personal OAuth, and the gate deciding what counts as an instruction became code rather than prose in a cron prompt. Saying that where §5 sat would have cost more than the section had left.
 
@@ -140,7 +140,7 @@ Three threads, three different answers, and the differences are deliberate.
 **Built after the owner asked whether his own session was part of the fleet.** It was — and it was also the listener, *and* the session that wrote the rules the supervisor obeys: three roles in one context, legitimate every time because he asked every time, and structurally unenforced. Split twice the same day, first the work and then the listener, into three contexts with disjoint powers:
 
 - **The owner's window** — an ordinary session holding the pen for standing rules, `scripts/`, `.claude/`, hardware, and `inbox/` drops.
-- **The listener** — its own window, armed with `/fleet start`, with **no hands at all** ([slack.md](slack.md) §1). It spawns and relays.
+- **The listener** — its own window, armed with `/fleet start` or `/fleet arm`, with **no hands at all** ([slack.md](slack.md) §1). It spawns and relays.
 - **A leg** — an [`embarch-supervisor`](../embarch-doc/.claude/agents/embarch-supervisor.md) agent that works and dies at four units, its context bounded the way a worker's is bounded by a task, so there is nothing to clear, only a handoff to write.
 
 **What makes it hold is not the doc.** `scripts/check-ownership.py --supervisor` rejects every owner-reserved path, and a leg runs it on its own commits before finishing; neither the listener nor any agent it spawns can write those paths. So **there is no route from Slack to a standing rule**, even for the owner. **A supervisor that can edit its own constraints has none** — including when it is right: batch 002 found three real defects in exactly those reserved files, every one worth fixing and none of them the supervisor's to fix. They belong in the log and in `inbox/`, and the owner's commit closes them.

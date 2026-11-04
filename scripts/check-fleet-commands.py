@@ -113,7 +113,7 @@ def main() -> int:
     for rel, text in scanned():
         for i, line in enumerate(text.splitlines(), start=1):
             # Each span on its own. Joining them made `/supervise` and a
-            # neighbouring `fleet go` read as `/supervise fleet` -- two things
+            # neighbouring `fleet stop` read as `/supervise fleet` -- two things
             # a reader would never type together.
             for hay in (sp.group(1) for sp in CODE_SPAN.finditer(line)):
                 for m in pattern.finditer(hay):

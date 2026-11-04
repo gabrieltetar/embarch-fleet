@@ -123,14 +123,12 @@ five_hour_grace_min = 60
 #
 # 22.6M is 90% of that implied allowance -- the owner's hard stop, expressed in
 # the only unit this fallback can read. **It is a proxy pinned to one real
-# percentage, not a published limit**: `scripts/fleet-usage-reading.py` records
-# each `/usage` reading against the burn measured from that window's own start,
-# so the pin is re-derived rather than guessed, and drift shows up as the ratio
-# moving between readings.
+# percentage, not a published limit**.
 #
-# `usage-budget.py --burn` prints the current number. Set to 0 to disable the
-# measured wave and restore the constant `degraded_workers`.
-five_hour_token_ceiling = 22_600_000
+# **0 since 2026-11-04, which restores the constant `degraded_workers`.** That
+# calibration belonged to one seat, and the transcripts it sums now hold two logins.
+# A machine with one login can set it again from `usage-budget.py --burn`.
+five_hour_token_ceiling = 0
 
 [burndown]
 # burndown.md, split out of budget.md the day it was written. The one mode
@@ -143,7 +141,7 @@ five_hour_token_ceiling = 22_600_000
 # week at 81%, and the 19% remaining had no other way to be spent.
 #
 # So burndown is the normal gate with four numbers swapped and one extra
-# precondition. It is MANUAL and DEADLINED: `fleet burndown until <instant>`,
+# precondition. It is MANUAL and DEADLINED: `/fleet start burndown until <instant>`,
 # never self-arming, never open-ended. Everything else about a leg is unchanged
 # -- same protocol, same reviewer, same commits to main.
 
@@ -169,10 +167,8 @@ five_hour_token_ceiling = 22_600_000
 max_workers = 6
 
 # The hard stops, replacing [limits] weekly_pct and five_hour_pct. 97, not 100,
-# and the three points are not timidity: the percentages on this machine are
-# DERIVED (budget.md) -- a pinned allowance over the transcripts' own token sum,
-# absorbing a constant factor of whatever is actually metered. 97% of a proxy
-# that reads 3% low is 100% of the real thing. Overrunning the weekly costs the
+# and the three points are not timidity: the reading can be four minutes old with
+# a full wave in flight. Overrunning the weekly costs the
 # START of the next week, which is the one cost burndown must not pay.
 weekly_pct = 97
 five_hour_pct = 97
@@ -182,15 +178,6 @@ five_hour_pct = 97
 # so narrowing on approach defeats it. `suggest()` already reads `band <= 0` as
 # full width, so this is the policy and no code.
 taper = 0.0
-
-# **Refuse to arm on a pin older than this.** Burndown is the only mode that
-# spends the whole allowance, so it is the only one that must insist the
-# allowance is current: everything downstream is arithmetic over a number
-# `/usage` last told us. The session half of the pin is refused outright at 24 h
-# (fleet-usage-cache.py --pin-max-age-h) because the 5-hour window is anchored to
-# activity; 4 h here is tighter than that on purpose, because at 97% the margin
-# for a drifted denominator is three points.
-pin_max_age_h = 4
 
 # Refuse a deadline further out than this. A burndown with no near reset instant
 # is just the fleet with its safeties off, and the mode's whole justification is

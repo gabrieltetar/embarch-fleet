@@ -13,7 +13,7 @@ and never walked this one.
 
 It deliberately does NOT push and does NOT re-arm. Pushing the instance before
 the framework would leave a stamp naming a SHA nobody can fetch, and re-arming
-is a Claude Code session doing `/fleet start`, which no shell can do. It prints
+is a Claude Code session doing `/fleet arm`, which no shell can do. It prints
 what you still owe, in order.
 
 See DEVELOPING.md for the loop this belongs to -- in particular §2, on the fact
@@ -444,7 +444,7 @@ def queue(target: Path, clear: bool, note: str | None) -> int:
               "was armed with:")
         for rel, why in rearm_detail(target):
             print(f"  {rel}: {why}")
-        print("The deployer cannot `/fleet start`; that stays yours.")
+        print("The deployer cannot `/fleet arm`; that stays yours.")
     print(f"\nPush the framework now, or the stamp will name a SHA nobody can\n"
           f"fetch:\n  git -C {FLEET_REPO} push")
     return 0
@@ -690,7 +690,7 @@ def main() -> int:
                   "it was armed with:")
             for rel, why in detail:
                 print(f"  {rel}: {why}")
-            print("Say so in the channel: a deployer cannot run `/fleet start`, and a\n"
+            print("Say so in the channel: a deployer cannot run `/fleet arm`, and a\n"
                   "fleet running the previous tick prompt looks entirely healthy.")
         return 0
 
@@ -701,7 +701,7 @@ def main() -> int:
     if detail:
         print("  re-arm the window that owns each of these:")
         for rel, why in detail:
-            who = "/fleet-watch" if "watch" in rel else "/fleet start"
+            who = "/fleet-watch" if "watch" in rel else "/fleet arm"
             print(f"     {who:14} {rel}\n     {'':14} {why}")
         print("     A live cron job keeps the wording it was armed with, so editing\n"
               "     the file is not enough. `scripts/fleet-armed.py --check --diff`\n"

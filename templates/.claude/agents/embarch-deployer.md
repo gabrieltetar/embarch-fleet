@@ -47,14 +47,14 @@ the reason — and exit.
 - **Never re-queue and never re-pin.** If `deploy.py` says HEAD no longer matches
   the latch, that is the owner having moved on; say so and stop. Do not run
   `--queue` to "fix" it.
-- **Never `/fleet start`.** A re-arm is the owner's and cannot be delegated —
+- **Never `/fleet arm`.** A re-arm is the owner's and cannot be delegated —
   arming copies the heartbeat prompt into a cron job, so a live job keeps the
   wording it was armed with however many times the file changes. **If a deploy
   that LANDED reports a re-arm owed, that is one of the few things allowed to
   notify him** (`{{FLEET_REPO}}/ops.md` §3): post it with `scripts/fleet-post.py`
   and an `--action` naming **the command file `deploy.py` itself named, and the
   window that arms it** — `.claude/commands/fleet.md` is the listener and
-  `/fleet start`, `.claude/commands/fleet-watch.md` is the watchdog and
+  `/fleet arm`, `.claude/commands/fleet-watch.md` is the watchdog and
   `/fleet-watch`, and a deploy can owe either, both, or neither. Take the file
   from the script's output and read the window off it; **do not carry an example
   from this file into a post.** One did, on 2026-09-07: a refusal that landed

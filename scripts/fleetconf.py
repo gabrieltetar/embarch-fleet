@@ -122,7 +122,7 @@ class Conf:
     def pump(self) -> dict[str, str] | None:
         """The pump latch, parsed. `None` when the fleet is stopped.
 
-        The latch has always carried content -- `fleet start core,ui` records a
+        The latch has always carried content -- `/fleet start core,ui` records a
         scope filter in it -- but nothing parsed it: every reader asked
         `exists()` and a human read the rest. Burndown needs one machine-read
         field (`mode`), so this is the one parser, here rather than in the
@@ -271,3 +271,38 @@ def armed_stamp(rel: str) -> Path:
     armed when only one machine's window ever was.
     """
     return CONF.state_dir / "armed" / (rel.replace("/", "%") + ".block")
+
+
+def armed_login() -> Path | None:
+    """The Claude config folder the listener was armed under, or None.
+
+    A window's agents run in its own process, so they take its login. Everything
+    that runs outside that process -- a cron, a UI's server -- learns the login
+    here. Like the stamp, it says what was armed and not that the window is open.
+    """
+    try:
+        text = (CONF.state_dir / "armed" / "login").read_text().strip()
+    except OSError:
+        return None
+    return Path(text) if text else None
+
+
+def login_dir() -> Path:
+    """Whose quota and credentials this process means.
+
+    Its own `CLAUDE_CONFIG_DIR` first: a leg inherits the listener's. Then the
+    armed login, for a cron with no such variable. `~/.claude` is what Claude Code
+    itself uses with neither.
+    """
+    own = os.environ.get("CLAUDE_CONFIG_DIR")
+    return Path(own).expanduser() if own else (armed_login() or Path.home() / ".claude")
+
+
+def login_name(folder: Path) -> str:
+    """`~/.claude-personal` is "personal"; plain `~/.claude` is "default"."""
+    return folder.name.removeprefix(".claude").lstrip("-") or "default"
+
+
+def usage_cache_path() -> Path:
+    """The quota cache of the login this process means."""
+    return login_dir() / "usage-cache.json"

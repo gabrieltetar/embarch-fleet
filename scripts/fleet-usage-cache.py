@@ -1,69 +1,49 @@
 #!/usr/bin/env python3
-"""Write the quota cache the status line would write, without a status line.
+"""Ask a login what its quota is, and write the cache the budget gate reads.
 
-**The problem.** `rate_limits` -- the only first-party "how much of my limit is
-left" -- arrives solely in a status line payload, and a status line exists only
-inside a live `claude` session. **The VS Code extension runs none**, which is why
-`~/.claude/usage-cache.json` has never existed on this machine and why
-`usage-budget.py` has always degraded to a token-burn proxy. Keeping a terminal
-session open forever fixes it with better numbers than this script produces; this
-exists for when nobody wants to keep a window open.
+**The source.** A Claude Code process in `stream-json` mode sends a
+`rate_limit_event` on its first turn, and the event's `unifiedWindows` carries
+both windows as the account sees them: `{utilization 0..1, resetsAt}` for
+`five_hour` and `seven_day`. One very small `claude -p` is therefore a first-party
+reading of exactly the login it ran under, with nothing pasted and nothing
+estimated. Measured 2026-11-04: a Haiku probe took about 500 tokens, and two
+logins answered with their own numbers.
 
-**The idea.** A percentage is a numerator over a denominator. The denominator is
-the seat's allowance and changes essentially never; the numerator is
-`message.usage`, which is on disk for every request ever made. So one pasted
-`/usage` reading pins the allowance (`fleet-usage-reading.py`), and from then on
-the percentage is arithmetic over the transcripts. Each new reading re-pins it.
+**Why this replaced the derived percentages.** Those divided the transcripts'
+token sum by an allowance pinned from a `/usage` reading. With two logins on one
+machine that stopped being a measurement: the logins share one `projects` folder,
+so the numerator summed both accounts, and the pin belonged to whichever account
+last ran `/usage`. On the day it was retired the cache said 2.5% of the week while
+the login the fleet would run on said 25%.
 
-**What it writes is byte-compatible with `statusline-usage.py`'s cache**, so
-`usage-budget.py` reads it unchanged and the whole percentage path -- PROCEED /
-HOLD, the taper, the 5-hour grace -- comes alive with no code downstream. It adds
-one key, `derived: true`, precisely because the two are otherwise
-indistinguishable: a proxy standing in for a first-party number must say so, and
-`usage-budget.py` prints it.
+**What it costs.** About 500 tokens per probe, so this runs only while the pump is
+latched, and only on the armed login. An idle account is never probed, because a
+5-hour window opens with the first message after an idle gap and a probe would
+open one.
 
-**The limits, and they are not small.**
+**What it relies on.** `unifiedWindows` is a field Claude Code marks internal. If
+an update removes it, this falls back to the one limit the event names, then to
+writing nothing. **It never writes an empty `rate_limits`**, which would pass the
+reader's validity check and produce "PROCEED with 0 workers". With no cache, or an
+old one, `usage-budget.py` reports DEGRADED and runs its capped wave.
 
-- `billable` is input + output + cache writes, excluding cache reads, which bill
-  at roughly a tenth. That is a ratio, not a contract. The implied allowance
-  absorbs a constant factor of whatever is really metered, so the percentage
-  holds while the workload mix holds and drifts when it changes.
-- **The weekly reset is a true weekly instant**, so projecting a recorded one
-  forward in 7-day steps is sound.
-- **The 5-hour window is anchored to activity, not to a grid.** It starts with
-  the first message after an idle gap, so a projected boundary drifts as soon as
-  the machine goes quiet for a few hours. A session pin older than
-  `--pin-max-age-h` is therefore refused rather than projected, and the weekly
-  half is still written on its own -- `usage-budget.py` treats a missing window
-  as "not currently constraining", which is the correct reading. **The drift is
-  in the safe direction**, which is why projecting at all is defensible: a grid
-  boundary sits at or before the real one, so the sum spans at least the real
-  window and the percentage reads high rather than low.
-- **It never writes an empty `rate_limits`.** That would pass the reader's
-  validity check and then produce "PROCEED with 0 workers", the one verdict a
-  leg cannot act on.
-
-Pair it with cron at **`*/4`**, not `*/5`: the reader rejects a cache older than
-300s, so a five-minute cadence is sometimes one second too late.
-
-**It pins new readings before it computes** (2026-09-08). `/usage` writes its
-rendered output into the session transcript, so `fleet-usage-reading.py --scan`
-turns every glance the owner takes at his usage into a fresh pin with nothing
-pasted. Running it from here rather than from a second cron entry means the pin
-and the cache can never be a cycle out of step.
+The cron stays at **`*/4`**, not `*/5`: the reader rejects a cache older than 300 s,
+so a five-minute cadence is sometimes one second too late.
 
 Usage:
-    scripts/fleet-usage-cache.py                 recompute and write the cache
-    scripts/fleet-usage-cache.py --check         print what it would write
+    scripts/fleet-usage-cache.py                 while the pump is on, probe and write
+    scripts/fleet-usage-cache.py --force         probe and write with the pump off
+    scripts/fleet-usage-cache.py --login DIR     a named config folder, not the armed one
+    scripts/fleet-usage-cache.py --check         probe and print, write nothing
     scripts/fleet-usage-cache.py --install-cron  add the */4 entry, once
-Exit status: 0 written / printed, 1 nothing pinned or every pin too old, 2 bad args.
+Exit status: 0 written, printed or nothing to do; 1 the probe gave no reading.
 """
 from __future__ import annotations
 
 import argparse
-import datetime
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -71,111 +51,120 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from fleetconf import CONF  # noqa: E402
+from fleetconf import CONF, login_dir  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
-CACHE = Path(os.path.expanduser("~/.claude/usage-cache.json"))
-LOG = CONF.state_dir / "usage-readings.tsv"
-KEYS = {"session": "five_hour", "weekly": "seven_day"}
-LENGTH_H = {"session": 5.0, "weekly": 168.0}
+CACHE_NAME = "usage-cache.json"
 CRON = (f"*/4 * * * * /usr/bin/python3 {HERE / 'fleet-usage-cache.py'} "
         f">> {CONF.state_dir / 'usage-cache.log'} 2>&1")
+PROBE_PROMPT = "Reply OK"
+PROBE_TIMEOUT_S = 60
+PROBE_MAX_OUTPUT_TOKENS = 16
+PROBE_ARGV = ["-p", "--model", "haiku", "--output-format", "stream-json", "--verbose",
+              "--tools", "", "--strict-mcp-config", "--setting-sources", "",
+              "--system-prompt", PROBE_PROMPT, "--max-thinking-tokens", "0",
+              "--no-session-persistence"]
+# What the cache calls a window, from what the event may call it. The second
+# weekly name is what a seat with overage reports.
+WINDOW_NAMES = {"five_hour": "five_hour", "seven_day": "seven_day",
+                "seven_day_overage_included": "seven_day"}
 
 
-def pins(now: float | None = None,
-         horizons: dict[str, float] | None = None) -> dict[str, dict]:
-    """The most PRECISE usable pin per window, not simply the newest.
-
-    A pin's whole job is the denominator: `implied_allowance` came out of
-    `measured_billable / (used_pct/100)`, and `/usage` renders **whole
-    percentages**. So a reading's own percentage IS its precision -- rounding
-    alone puts the allowance within +-`0.5/used_pct` of the truth. At 71% that
-    is +-0.7%. At **1% it is +-50%**.
-
-    Taking the newest row unconditionally therefore lets a worthless reading
-    evict a good one, and it did. On 2026-09-08 at 22:05, arming the first
-    burndown, `/usage` caught the 5-hour window six minutes old at `1%` and
-    pinned the session allowance at 36.9M off 369,287 billable; better readings
-    the same week implied ~25.1M. Every 5-hour percentage that night's
-    supervisor log recorded therefore read about a third low -- `43.4%` at the
-    last fold against a real ~66%, and ~74% of the calibrated five-hour
-    ceiling. Nothing caught it because every guard in this repo is on a pin's
-    AGE. **Fresh and precise are different properties**, and only one of them
-    was being checked.
-
-    So: among the rows inside this window's horizon, keep the tightest; a newer
-    row wins a tie. `read_at` still comes from the row actually chosen, so the
-    caller's own age checks stay honest about what they are describing, and
-    `project()` walks an older row's reset instant forward -- sound for the
-    weekly, and the reason the session horizon is the caller's own
-    `--pin-max-age-h` rather than something longer. With no horizon given, or
-    nothing inside it, this falls back to the newest row and is exactly what it
-    replaced.
-
-    **Every row is still written to the log.** This changes which reading is
-    believed, not what is recorded: `usage-readings.tsv` is also the drift
-    series, and a low reading remains perfectly good evidence about the
-    numerator and about the reset instant.
-    """
-    out: dict[str, dict] = {}
-    if not LOG.is_file():
-        return out
-    now = time.time() if now is None else now
-    horizons = horizons or {}
-    best: dict[str, tuple[tuple[float, float], dict]] = {}
-    newest: dict[str, tuple[float, dict]] = {}
-    for line in LOG.read_text().splitlines()[1:]:
-        f = line.split("\t")
-        if len(f) < 8:
-            continue
-        try:
-            row = {"read_at": datetime.datetime.fromisoformat(f[0]),
-                   "used_pct": float(f[2]),
-                   "resets_at": datetime.datetime.fromisoformat(f[3]),
-                   "allowance": float(f[7])}
-        except ValueError:
-            continue
-        win, at = f[1], row["read_at"].timestamp()
-        if win not in newest or at >= newest[win][0]:
-            newest[win] = (at, row)
-        if row["allowance"] <= 0 or row["used_pct"] <= 0:
-            continue
-        horizon = horizons.get(win)
-        if horizon is not None and (now - at) / 3600 > horizon:
-            continue
-        # Smaller rounding error first; a newer row breaks a tie.
-        key = (0.5 / row["used_pct"], -at)
-        if win not in best or key < best[win][0]:
-            best[win] = (key, row)
-    for win, (_key, row) in best.items():
-        out[win] = row
-    for win, (_at, row) in newest.items():
-        out.setdefault(win, row)
+def window(node: object) -> dict | None:
+    """One window as the cache holds it, or None if it says no share."""
+    if not isinstance(node, dict):
+        return None
+    used = node.get("utilization")
+    if isinstance(used, bool) or not isinstance(used, (int, float)):
+        return None
+    out = {"used_percentage": round(100 * max(0.0, min(1.0, float(used))), 1)}
+    if isinstance(node.get("resetsAt"), (int, float)):
+        out["resets_at"] = int(node["resetsAt"])
     return out
 
 
-def project(reset: datetime.datetime, length_h: float, now: float) -> float:
-    """The next reset instant at or after `now`, stepping by the window length."""
-    at = reset.timestamp()
-    step = length_h * 3600
-    if step <= 0:
-        return at
-    while at <= now:
-        at += step
-    return at
+def limits_of(info: object) -> dict[str, dict]:
+    """The cache's `rate_limits` from a `rate_limit_info`.
+
+    Without `unifiedWindows`, the one limit the event names still says its own
+    share. A rejected limit that gives no share is at its ceiling: that is what
+    rejected means, and leaving it out would read as "not constraining".
+    """
+    if not isinstance(info, dict):
+        return {}
+    out: dict[str, dict] = {}
+    unified = info.get("unifiedWindows")
+    if isinstance(unified, dict):
+        for name, key in WINDOW_NAMES.items():
+            one = window(unified.get(name))
+            if one and key not in out:
+                out[key] = one
+    key = WINDOW_NAMES.get(info.get("rateLimitType"))
+    if key and key not in out:
+        one = window(info)
+        if not one and info.get("status") == "rejected":
+            one = window({"utilization": 1.0, "resetsAt": info.get("resetsAt")})
+        if one:
+            out[key] = one
+    return out
+
+
+def reading(printed: str) -> dict[str, dict]:
+    """The newest usable reading in what a probe printed."""
+    out: dict[str, dict] = {}
+    for line in printed.splitlines():
+        try:
+            rec = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(rec, dict) and rec.get("type") == "rate_limit_event":
+            out = limits_of(rec.get("rate_limit_info")) or out
+    return out
+
+
+def claude_binary() -> str | None:
+    """`claude`, from a cron's short PATH as well as a shell's."""
+    path = os.environ.get("PATH", "") + os.pathsep + str(Path.home() / ".local" / "bin")
+    return shutil.which("claude", path=path)
+
+
+def probe(login: Path) -> tuple[dict[str, dict], str]:
+    """(the login's windows, why there are none)."""
+    binary = claude_binary()
+    if not binary:
+        return {}, "no claude on PATH or in ~/.local/bin"
+    env = dict(os.environ, CLAUDE_CONFIG_DIR=str(login), EMBARCH_DESK_INTERNAL="1",
+               CLAUDE_CODE_MAX_OUTPUT_TOKENS=str(PROBE_MAX_OUTPUT_TOKENS))
+    try:
+        run = subprocess.run([binary, *PROBE_ARGV], input=PROBE_PROMPT, env=env,
+                             cwd=tempfile.gettempdir(), capture_output=True, text=True,
+                             timeout=PROBE_TIMEOUT_S)
+    except (OSError, subprocess.TimeoutExpired) as e:
+        return {}, f"could not run the probe: {e}"
+    limits = reading(run.stdout)
+    if limits:
+        return limits, ""
+    tail = (run.stderr or run.stdout).strip().splitlines()[-1:] or ["no output"]
+    return {}, f"no rate_limit_event with a window (exit {run.returncode}): {tail[0][:200]}"
+
+
+def write(cache: Path, limits: dict[str, dict], now: float) -> None:
+    payload = {"cached_at": int(now), "session_id": "probe:fleet-usage-cache.py",
+               "rate_limits": limits}
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=str(cache.parent), prefix=".usage-cache.")
+    with os.fdopen(fd, "w") as fh:
+        json.dump(payload, fh)
+    os.replace(tmp, cache)
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--check", action="store_true", help="print, write nothing")
+    ap.add_argument("--force", action="store_true", help="probe with the pump off")
+    ap.add_argument("--login", type=Path, help="a config folder, not the armed login")
     ap.add_argument("--install-cron", action="store_true", help="add the */4 entry")
-    ap.add_argument("--no-scan", action="store_true",
-                    help="do not pin new /usage output found in the transcripts "
-                         "first; compute from the pins already logged")
-    ap.add_argument("--pin-max-age-h", type=float, default=24.0,
-                    help="refuse a session pin older than this, because the "
-                         "5-hour window is anchored to activity (default 24)")
     args = ap.parse_args()
 
     if args.install_cron:
@@ -188,69 +177,22 @@ def main() -> int:
         print(f"installed:\n  {CRON}")
         return 0
 
-    sys.path.insert(0, str(HERE))
-    from importlib.machinery import SourceFileLoader
-    reading = SourceFileLoader("reading", str(HERE / "fleet-usage-reading.py")).load_module()
-
-    # **Scan first, so the cron is the whole loop.** `/usage` writes what it
-    # rendered into the session transcript, so every reading the owner takes is
-    # on disk within a second; pinning it here means the pin refreshes itself
-    # and the "paste a reading" step this file's docstring describes is now
-    # only a fallback. It is cheap when there is nothing new -- one pass with a
-    # string pre-filter -- and it must run BEFORE `pins()`, or a reading taken
-    # in the last four minutes would be computed against the previous pin.
-    if not args.no_scan:
-        reading.scan(quiet=True)
-
-    now = time.time()
-    # The horizon each window picks its pin from. Session gets the same limit
-    # the age check below enforces, so a chosen pin can never be one that
-    # check would then refuse; weekly gets its own length, because a reading
-    # from a previous week describes an allowance that has not changed but a
-    # reset instant `project()` handles anyway.
-    have = pins(now, {"session": args.pin_max_age_h, "weekly": LENGTH_H["weekly"]})
-    limits: dict[str, dict] = {}
-    notes: list[str] = []
-    for name, key in KEYS.items():
-        pin = have.get(name)
-        if not pin or pin["allowance"] <= 0:
-            notes.append(f"{name}: no pin in {LOG.name} -- paste a /usage reading")
-            continue
-        age_h = (now - pin["read_at"].timestamp()) / 3600
-        if name == "session" and age_h > args.pin_max_age_h:
-            notes.append(f"{name}: pin is {age_h:.0f}h old (max {args.pin_max_age_h:g}h) "
-                         "-- the 5-hour window has almost certainly re-anchored")
-            continue
-        reset = project(pin["resets_at"], LENGTH_H[name], now)
-        start = reset - LENGTH_H[name] * 3600
-        total, reqs, _sub = reading.burn_since(start)
-        used = 100.0 * total / pin["allowance"]
-        limits[key] = {"used_percentage": round(used, 1), "resets_at": int(reset)}
-        notes.append(f"{name}: {used:.1f}% ({total:,} of {pin['allowance']:,.0f} "
-                     f"billable, {reqs:,} req), resets "
-                     f"{datetime.datetime.fromtimestamp(reset):%H:%M %d-%b}, "
-                     f"pin {age_h:.1f}h old @{pin['used_pct']:g}% "
-                     f"(+-{0.5 / pin['used_pct']:.1%})")
-
-    for n in notes:
-        print(f"  {n}")
-    if not limits:
-        print("nothing pinned and usable: writing no cache. An empty rate_limits "
-              "would read as\nvalid and produce 'PROCEED with 0 workers'.",
-              file=sys.stderr)
-        return 1
-
-    payload = {"cached_at": int(now), "session_id": "derived:fleet-usage-cache.py",
-               "derived": True, "rate_limits": limits}
-    if args.check:
-        print(json.dumps(payload, indent=2))
+    if CONF.pump() is None and not (args.force or args.check):
         return 0
-    CACHE.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp = tempfile.mkstemp(dir=str(CACHE.parent), prefix=".usage-cache.")
-    with os.fdopen(fd, "w") as fh:
-        json.dump(payload, fh)
-    os.replace(tmp, CACHE)
-    print(f"wrote {CACHE}")
+
+    login = args.login.expanduser() if args.login else login_dir()
+    limits, why = probe(login)
+    if not limits:
+        print(f"{login.name}: {why}: writing no cache. An empty rate_limits would read "
+              "as valid\nand produce 'PROCEED with 0 workers'.", file=sys.stderr)
+        return 1
+    now = time.time()
+    if args.check:
+        print(json.dumps({"login": str(login), "rate_limits": limits}, indent=2))
+        return 0
+    write(login / CACHE_NAME, limits, now)
+    shares = ", ".join(f"{k} {v['used_percentage']:g}%" for k, v in sorted(limits.items()))
+    print(f"{time.strftime('%Y-%m-%dT%H:%M:%S%z')} {login.name}: {shares}")
     return 0
 
 
