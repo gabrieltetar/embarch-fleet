@@ -5,8 +5,8 @@ Three kinds of thing have to exist inside the instance repo rather than here,
 and they get two different treatments because they fail differently.
 
 **Prose gets copied.** `.claude/commands/` and `.claude/agents/` are only loaded
-from the working directory's own `.claude/`, and the four protocol READMEs are
-read in place by anyone who opens `tasks/` or `inbox/`. A pointer would not be
+from the working directory's own `.claude/`, and the three protocol READMEs are
+read in place by anyone who opens `tasks/`. A pointer would not be
 read. So they are rendered from `templates/` with `{{PLACEHOLDER}}` expanded from
 fleet.toml, and `--check` re-renders and diffs -- which is what stops the copy
 drifting from its source, the failure this repo exists to make impossible.
@@ -74,6 +74,8 @@ SHIMMED = ("check-ownership.py", "queue-status.py", "usage-budget.py",
            "fleet-alert.py", "fleet-post.py", "fold-commit.py", "fold-day.py",
            "check-client-names.py", "check-dispatch.py", "fleet-armed.py",
            "fleet-hardware.py", "fleet-tick.py", "fleet-burndown.py",
+           # A worker or an auditor files through this, from its own worktree.
+           "fleet-linear.py",
            # The Slack read/mark path, shimmed for the same reason fleet-post.py
            # is: a tick and a leg invoke these as `scripts/...` from whichever
            # repo they are standing in, and on 2026-09-10 the first render after

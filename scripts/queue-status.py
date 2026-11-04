@@ -26,12 +26,13 @@ The timeout survives as the backstop for the one case the process tree cannot
 settle -- a supervisor alive but wedged -- as --stale-after, default 4 hours,
 matching `tasks/README.md`.
 
-**--tasks-only exists because an inbox drop can starve itself.** A drop counts as
-dispatchable, and refill is the only thing that drains `inbox/`. So a leg whose
-refill gate counts drops sees a non-zero count, skips refill, never drains, and
-the drop sits there permanently keeping the count non-zero. The leg passes
---tasks-only and drains `inbox/` unconditionally before counting; the listener
-does not, because for it a drop is a real reason to spawn a leg.
+**--tasks-only exists because a Fleet Ready issue can starve itself.** An issue
+counts as dispatchable, and a leg's split is the only thing that takes one in. So
+a leg whose refill gate counts issues sees a non-zero count, skips the split, and
+the issue sits there permanently keeping the count non-zero. The leg passes
+--tasks-only and reads Fleet Ready unconditionally before counting; the listener
+does not, because for it an issue is a real reason to spawn a leg. With the desk
+down the count is the tasks alone, and stderr says so.
 
 **--refill-owed is the low-water mark, and it replaced refilling on zero.**
 Refill used to run only when *nothing* was dispatchable, on the argument that
@@ -101,7 +102,6 @@ import re
 import subprocess
 
 TASKS = "tasks"
-INBOX = "inbox"
 # What a WORKER may be sent at. `bench` is deliberately absent: the supervisor
 # runs those with its own hands, one at a time (protocol.md section 7), so
 # counting them here would size a wave against work no worker can take.
@@ -228,11 +228,26 @@ def resolve_root(given: str | None) -> tuple[str | None, list[str]]:
     return (doc, [here]) if has_queue(doc) else (None, [here, doc])
 
 
-def inbox_drops(root: str) -> list[str]:
-    if not os.path.isdir(root):
-        return []
-    return sorted(os.path.join(root, n) for n in os.listdir(root)
-                  if n.endswith(".md") and n != "README.md")
+def ready_issues() -> tuple[list[dict], str | None]:
+    """Linear's Fleet Ready issues, and why not if they could not be read.
+
+    A subprocess, so a desk that hangs costs a timeout and no more: the listener
+    runs this on every tick, and a dead desk must not read as an empty fleet.
+    """
+    if not CONF.get("linear"):
+        return [], None
+    script = Path(__file__).resolve().parent / "fleet-linear.py"
+    try:
+        r = subprocess.run([sys.executable, str(script), "list"],
+                           capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.TimeoutExpired) as e:
+        return [], str(e)
+    if r.returncode != 0:
+        return [], r.stderr.strip() or f"fleet-linear.py exited {r.returncode}"
+    try:
+        return json.loads(r.stdout), None
+    except ValueError as e:
+        return [], f"fleet-linear.py printed no JSON: {e}"
 
 
 def stale_reason(task: dict, no_supervisor: bool, after_h: float,
@@ -332,18 +347,18 @@ def main() -> int:
                     help="print a LOW QUEUE line when dispatchable is under N "
                          "(default 2); 0 disables")
     ap.add_argument("--tasks-only", action="store_true",
-                    help="exclude inbox/ drops from the count. A leg's refill "
-                         "gate must pass this: refill is the only thing that "
-                         "drains inbox/, so counting a drop as dispatchable "
-                         "keeps the count non-zero, suppresses refill, and the "
-                         "drop starves itself. The listener does NOT pass it -- "
-                         "a drop is a real reason to spawn a leg.")
+                    help="exclude Fleet Ready issues from the count. A leg's refill "
+                         "gate must pass this: a leg's split is the only thing "
+                         "that takes one in, so counting an issue as dispatchable "
+                         "keeps the count non-zero, suppresses the split, and the "
+                         "issue starves itself. The listener does NOT pass it -- "
+                         "an issue is a real reason to spawn a leg.")
     ap.add_argument("--refill-owed", action="store_true", dest="refill_owed",
                     help="the low-water mark: exit 0 if refill is owed, 1 if "
                          "not. Owed when dispatchable is below --low-water, or "
                          "when the dispatchable tasks span fewer distinct "
                          "scopes than --wave. Implies --tasks-only, because a "
-                         "drop that suppresses the drain that would file it is "
+                         "issue that suppresses the split that would take it in is "
                          "the starvation this flag exists to end.")
     ap.add_argument("--wave", type=int, default=None, metavar="N",
                     help="the wave size this leg will run, from "
@@ -375,11 +390,13 @@ def main() -> int:
     now = dt.datetime.now()
     tasks = [parse(p) for p in task_files(os.path.join(root, TASKS))]
     tasks_only = args.tasks_only or args.refill_owed
-    drops = [] if tasks_only else inbox_drops(os.path.join(root, INBOX))
+    issues, issues_error = ([], None) if tasks_only else ready_issues()
+    if issues_error:
+        print(f"queue-status: cannot read Fleet Ready: {issues_error}", file=sys.stderr)
     b = classify(tasks, args.no_supervisor, args.stale_after, now)
     bad_claims = unparsed_claims(tasks)
 
-    dispatchable = len(b["open"]) + len(b["recoverable"]) + len(drops)
+    dispatchable = len(b["open"]) + len(b["recoverable"]) + len(issues)
     low = bool(args.warn_below and dispatchable < args.warn_below)
 
     if args.refill_owed:
@@ -404,7 +421,8 @@ def main() -> int:
             "suite": [t["path"] for t in b["suite"]],
             "owner_gated": [t["path"] for t in b["owner_gated"]],
             "other": [{"path": t["path"], "state": t["state"]} for t in b["other"]],
-            "inbox": drops,
+            "issues": issues,
+            "issues_error": issues_error,
             "low": low,
         }))
         return 0 if dispatchable else 1
@@ -420,8 +438,8 @@ def main() -> int:
     for t in b["recoverable"]:
         print(f"  recoverable {t['scope']:<14} {t['path']}")
         print(f"              -> {t['stale_reason']}; branch {t['claim_branch']}")
-    for p in drops:
-        print(f"  inbox drop  {'-':<14} {p}")
+    for i in issues:
+        print(f"  issue       {str(i.get('project') or '-'):<14} {i.get('key')} {i.get('title')}")
     for t in b["claimed"]:
         print(f"  claimed     {t['scope']:<14} {t['path']} (respected)")
     for t in b["bench"]:

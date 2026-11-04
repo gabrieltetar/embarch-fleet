@@ -1,6 +1,6 @@
 ---
-description: Run one suite review pass - seven parallel hunters over every sub-project at once, looking for design flaws and improvement opportunities, landing as inbox drops.
-argument-hint: "[dimension filter, e.g. dry,layering] [--no-drops]"
+description: Run one suite review pass - seven parallel hunters over every sub-project at once, looking for design flaws and improvement opportunities, landing as Linear issues in Backlog.
+argument-hint: "[dimension filter, e.g. dry,layering] [--no-issues]"
 disable-model-invocation: true
 ---
 
@@ -11,12 +11,12 @@ below. Relay its final report; do not predict it.
 Why the indirection is the same as `/supervise`'s: the owner's session holds the
 pen for standing rules, `scripts/` and `.claude/`, and a pass that reads the
 whole suite looking for things to change must not also be the context that can
-change them. The auditor writes to `inbox/` and one ignored report file, and
+change them. The auditor files Linear issues and writes one ignored report file, and
 nothing else (`{{DOC_REPO}}/SUITE-REVIEW-PASS.md` §10).
 
 Arguments: `$ARGUMENTS` — an optional comma-separated subset of the seven
-dimensions to run (default: all seven), and `--no-drops` to write the report
-without writing anything to `inbox/`.
+dimensions to run (default: all seven), and `--no-issues` to write the report
+without filing anything.
 
 ## Before you spawn anything
 
@@ -46,16 +46,16 @@ that fact to the auditor so the report carries it.
 - The working directory `{{DOC_REPO}}`, absolute.
 - The `main` SHA of `{{DOC_REPO}}` and of every sub-project repo, read at
   preflight. The report is against those SHAs and says so.
-- Which dimensions to run, and whether `--no-drops` is set.
+- Which dimensions to run, and whether `--no-issues` is set.
 - Any dirty repos from check 2, by name.
 - The pump's state as you found it.
 
 ## What comes back
 
 A report at `{{DOC_REPO}}/.claude/suite-review-<yyyy-mm-dd>.md` — uncommitted,
-`.gitignore`d, regenerable — plus one `inbox/` drop per finding that cleared the
-bar. Relay the ranking and the count; the drops speak for themselves at the next
-leg's phase 1.
+`.gitignore`d, regenerable — plus one Linear issue per finding that cleared the
+bar, in Backlog. Relay the ranking and the count. Nothing runs until the owner moves
+an issue to Fleet Ready.
 
 **The report's owner-only section is for you.** Findings about the fleet's own
 rules, `DOC-PROTOCOL.md`, `scripts/`, `.claude/` or anything else in
@@ -65,7 +65,7 @@ auditor is forbidden from filing any of it.
 
 ## Afterwards, one question
 
-`{{DOC_REPO}}/SUITE-REVIEW-PASS.md` §7: **of what this run dropped, how much
+`{{DOC_REPO}}/SUITE-REVIEW-PASS.md` §7: **of what this run filed, how much
 would you have wanted done anyway?** Mostly yes means the pass is working;
 mostly no means the bar drifted, and the next run's instruction is to raise it
 rather than to find more. Nothing records the answer — say it out loud so the

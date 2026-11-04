@@ -11,7 +11,7 @@
 # the `.worktrees/` root workers and legs are created in. Absolute.
 root = "/home/gabriel/Github/embarch"
 
-# The instance repo, relative to root. Holds the queue (`tasks/`, `inbox/`,
+# The instance repo, relative to root. Holds the queue (`tasks/`,
 # `status.d/`, `changelog.d/`) and the docs the queue is a view of. This is the
 # repo a leg's cwd is, and the one `install.py` writes `.claude/` into.
 doc_repo = "embarch-doc"
@@ -43,6 +43,29 @@ owner = "U0AGQGSHM2P"
 
 # Where cloud sessions go. Never invite @Claude to the fleet channel.
 cloud_channel = "C0C00CNS9KJ"
+
+[linear]
+# The desk holding the Linear token, read here and not from a window's
+# environment: the work desk reads client workspaces, and no leg may reach them.
+desk_port = 4892
+desk_config_dir = "~/.config/embarch-desk-dev"
+# Every key scripts/fleet-linear.py is handed must be in this team.
+team = "EMB"
+# The statuses an issue moves through. Fleet Ready is the owner's mark, or a
+# worker's or reviewer's finding; `filed` moves it to Fleet Working; `finish` to Done.
+ready = "Fleet Ready"
+working = "Fleet Working"
+done = "Done"
+backlog = "Backlog"
+
+[linear.file_status]
+# Where a new issue from `fleet-linear.py file --from <kind>` starts. A finding made
+# in passing runs without the owner, as it did as an inbox drop. An audit's findings
+# and a withheld decision wait for the owner to mark them (owner's call, 2026-11-04).
+worker = "Fleet Ready"
+reviewer = "Fleet Ready"
+audit = "Backlog"
+decision = "Backlog"
 
 [limits]
 # protocol.md §6: a leg is this many units, then it dies and hands off.
@@ -237,7 +260,7 @@ reserved = [
   #
   #   2  WORK DISCOVERY. `collect-open-questions.py` is what a leg sweeps at
   #      refill to decide what work exists (leg.md step 1);
-  #      `check-duplication.py` feeds the auditor that files inbox drops. These
+  #      `check-duplication.py` feeds the auditor that files issues. These
   #      are not gates and they are the more insidious case for it: a gate
   #      failure is loud, a refill blind spot is silent. tasks/doc/003 was
   #      exactly that -- collect-open-questions reporting nothing from three
@@ -288,7 +311,6 @@ reserved = [
   # queue-status.py implements, and a leg editing it would be editing its own
   # dispatch predicate. install.py owns these files; edit them here.
   "tasks/README.md",
-  "inbox/README.md",
   "changelog.d/README.md",
   "status.d/README.md",
   # The suite-level view of this repo, added 2026-09-05 because DOC-PROTOCOL.md

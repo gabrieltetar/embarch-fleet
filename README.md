@@ -51,7 +51,7 @@ had a home was worse than no instruction: it read as a gap.
 
 `install.py` writes into the instance repo the things that only work in place:
 `.claude/commands/` and `.claude/agents/`, which load only from the working
-directory's own `.claude/`, and the four protocol READMEs, which are read where
+directory's own `.claude/`, and the three protocol READMEs, which are read where
 they sit. Those are **copies, rendered from [templates/](templates/)**, so
 `--check` re-renders and diffs — the instance copy is output, not source, and
 editing it there is a change that the next check reverts.
@@ -119,7 +119,7 @@ earns real room and a file can never grow back toward where it was.
 
 ## What stays in the instance repo, and why
 
-The queue does: `tasks/`, `inbox/`, `status.d/`, `changelog.d/`. The claim
+The queue does: `tasks/`, `status.d/`, `changelog.d/`. The claim
 commit on the instance repo's `main` **is** the double-dispatch interlock — two
 supervisors cannot claim the same task because one of them loses a race in git —
 and the queue is a view of docs that live there. Splitting them would buy a sync

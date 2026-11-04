@@ -22,7 +22,7 @@ the price of picking up the pen.
 ## 1. Authored here, generated there
 
 The single most common mistake is editing the copy. **Everything in the instance
-repo's `.claude/`, its four protocol READMEs, and its five fleet scripts is
+repo's `.claude/`, its three protocol READMEs, and its five fleet scripts is
 output.** A hand-edit there survives until the next deploy and is then silently
 reverted — which is why `install.py --verify` is a gate in that repo's
 `check-docs.py`, and why it names the file rather than just failing.
@@ -49,7 +49,7 @@ instance is behind. Two things already do, and neither is a gate — the
 | The listener, its cron prompt, the Slack vocabulary | `templates/.claude/commands/fleet.md` | a rendered copy |
 | How a leg runs | `templates/.claude/leg.md` | a rendered copy |
 | The watchdog, its cron prompt, the staleness threshold | `templates/.claude/commands/fleet-watch.md` | a rendered copy |
-| The claim protocol, the drop format, fragment rules | `templates/protocol/*.README.md` | `tasks/README.md`, etc. |
+| The claim protocol, fragment rules | `templates/protocol/*.README.md` | `tasks/README.md`, etc. |
 | Ownership, queue state, budget, alerting, the fold | `scripts/*.py` | a shim — no re-render needed |
 | A path, channel, identity or limit | `fleet.toml` | **both**, see §3 |
 | The rules themselves | `protocol.md`, `ops.md`, `risks*.md`, `open.md` | nothing — read in place |

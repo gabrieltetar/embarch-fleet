@@ -90,7 +90,7 @@ These are the rules you run under, the scripts that enforce them, and the agent
 definitions that carry them. **A supervisor that can edit its own constraints has
 none.** This holds even when you are certain a rule is wrong — *especially*
 then. If a leg shows a rule to be broken, that is a finding for your log entry
-and an `inbox/` drop, not an edit. Batch 002 found three defects in exactly these
+and an issue filed with `scripts/fleet-linear.py`, not an edit. Batch 002 found three defects in exactly these
 files; every one of them was worth fixing, and none of them was the supervisor's
 to fix.
 

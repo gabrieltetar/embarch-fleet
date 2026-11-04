@@ -19,7 +19,7 @@ something here changes what the fleet *is*; history goes in a
 
 ## Editing this repo
 
-**The instance's `.claude/`, its four protocol READMEs and its `scripts/` shims
+**The instance's `.claude/`, its three protocol READMEs and its `scripts/` shims
 are generated from [templates/](templates/) and [scripts/](scripts/) here.** Edit
 the template, never the copy; `python3 scripts/deploy.py` renders, gates, stamps
 and commits, and `install.py --check` is what catches a hand-edit. DEVELOPING.md

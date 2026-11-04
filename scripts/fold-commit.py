@@ -119,7 +119,7 @@ def entry_shape_problems(body: str) -> list[str]:
     if not any(f.startswith("Reviewer") for f in missing) and \
             not REVIEWER_FORM.search(body):
         out.append("the `**Reviewer:**` line is not one of the three forms "
-                   "(`no findings` /\n      `N finding — <inbox file>` / "
+                   "(`no findings` /\n      `N finding — <issue key>` / "
                    "`skipped (<why>)`). `pending` is not a form:\n"
                    "      collect the reviewer before writing the entry, and if it never\n"
                    "      reported say `skipped (reviewer did not report -- <what "

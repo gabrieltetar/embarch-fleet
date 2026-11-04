@@ -8,7 +8,7 @@
 
 1. **The listener** — a dedicated VS Code window armed with `/fleet start` or `/fleet arm` ([.claude/commands/fleet.md](../embarch-doc/.claude/commands/fleet.md)), in Claude Code's panel: a chat in EmbArch Chat closes when idle and takes its cron with it. It reads #embarch-fleet on a 10-minute heartbeat — which fires **only while that window is idle**, and it is not idle while a leg runs ([slack.md](slack.md) §2) — spawns agents, relays what they say, nothing else.
 2. **The pump** — `/fleet start` in that window, or `scripts/fleet-pump.py --start` once it is armed: writes the latch, and from then on each leg's death spawns the next, the relay ([the protocol](protocol.md) §6). `fleet stop` in the channel or `scripts/fleet-pump.py --stop` ends it, finishing the unit.
-3. **The owner's window** — an ordinary session for standing rules, `scripts/`, `.claude/`, hardware, and drops into `inbox/`. Not armed, and not the fleet.
+3. **The owner's window** — an ordinary session for standing rules, `scripts/`, `.claude/`, and hardware. New work goes in as a Linear issue from anywhere. Not armed, and not the fleet.
 
 `/supervise` runs **one leg** by hand. Agent definitions: [supervisor](../embarch-doc/.claude/agents/embarch-supervisor.md), [worker](../embarch-doc/.claude/agents/embarch-worker.md).
 
@@ -115,11 +115,11 @@ An empty queue is not idleness to fill. It is the one moment the fleet genuinely
 
 **A dream post carries `crystal_ball` as well as `robot_face`, and that is what the gate reads.** The old rule looked for "a `robot_face` dream post", but every fleet message carries `robot_face`, leaving the gate unfalsifiable both ways. One extra reaction fixes that without a state file.
 
-The second trigger is the one that matters: without it the fleet sits idle until the owner notices and pokes it, and noticing is the work the fleet exists to take off him. Six hours rather than ten minutes because an empty queue stays empty until someone acts. **The pump stays latched on through a dream** (owner's call): the ticks cost a directory count, and the moment a proposal is answered or a file lands in `inbox/`, work starts with no restart.
+The second trigger is the one that matters: without it the fleet sits idle until the owner notices and pokes it, and noticing is the work the fleet exists to take off him. Six hours rather than ten minutes because an empty queue stays empty until someone acts. **The pump stays latched on through a dream** (owner's call): the ticks cost a directory count, and the moment a proposal is answered or an issue reaches Fleet Ready, work starts with no restart.
 
 **The fleet does not write a dreamt item into its own queue.** Rejected 2026-09-03 when the pump was specified — the tempting version is a supervisor that dreams one item and runs it, and that is a fleet both filling and draining a queue it invented, which is a machine for generating plausible busywork. Three proposals cost one word to answer instead. **Three, not one and not ten**: one is a decision wearing a question's clothes, ten is a survey the owner has to read.
 
-**Every proposal must come from something already written down** — [suite/roadmap.md](../embarch-doc/suite/roadmap.md)'s Next, a sub-project's `open.md`, an unaddressed [reversals](../embarch-doc/embarch-decision-reversals.md) follow-up, or a finding a worker dropped in `inbox/`. **Nothing invented.** Each carries only what is needed to answer in one word: **what** it would do, in one line; **why now**, with the doc that says it matters, linked; **scope** and **`Hardware:`**, because a `required` proposal is asking for his hands rather than the fleet's; and **the cost**, honestly — one unit, or a cross-repo pass the supervisor would run itself. Then: *"reply `do 2`, or tell me what you actually want."* The second half matters — the three are a starting point, not a menu, and the most useful answer is often none of them.
+**Every proposal must come from something already written down** — [suite/roadmap.md](../embarch-doc/suite/roadmap.md)'s Next, a sub-project's `open.md`, an unaddressed [reversals](../embarch-doc/embarch-decision-reversals.md) follow-up, or an issue in Linear that a worker or an audit filed. **Nothing invented.** Each carries only what is needed to answer in one word: **what** it would do, in one line; **why now**, with the doc that says it matters, linked; **scope** and **`Hardware:`**, because a `required` proposal is asking for his hands rather than the fleet's; and **the cost**, honestly — one unit, or a cross-repo pass the supervisor would run itself. Then: *"reply `do 2`, or tell me what you actually want."* The second half matters — the three are a starting point, not a menu, and the most useful answer is often none of them.
 
 **A dream is recorded like anything else**, in the log ([the protocol](protocol.md) §11) — a pattern of all three being rejected would mean the refill sources have drifted from what he cares about, and that is worth seeing.
 
@@ -139,7 +139,7 @@ Three threads, three different answers, and the differences are deliberate.
 
 **Built after the owner asked whether his own session was part of the fleet.** It was — and it was also the listener, *and* the session that wrote the rules the supervisor obeys: three roles in one context, legitimate every time because he asked every time, and structurally unenforced. Split twice the same day, first the work and then the listener, into three contexts with disjoint powers:
 
-- **The owner's window** — an ordinary session holding the pen for standing rules, `scripts/`, `.claude/`, hardware, and `inbox/` drops.
+- **The owner's window** — an ordinary session holding the pen for standing rules, `scripts/`, `.claude/`, and hardware.
 - **The listener** — its own window, armed with `/fleet start` or `/fleet arm`, with **no hands at all** ([slack.md](slack.md) §1). It spawns and relays.
 - **A leg** — an [`embarch-supervisor`](../embarch-doc/.claude/agents/embarch-supervisor.md) agent that works and dies at four units, its context bounded the way a worker's is bounded by a task, so there is nothing to clear, only a handoff to write.
 

@@ -34,6 +34,7 @@ The work queue background agents pull from. One file per task, committed to
 
 **State:** open
 **Source:** embarch-core/open.md — "api/CLI consumption of /study/{id}/events is not built"
+**Issue:** EMB-12                  <!-- only for a task split from a Linear issue -->
 **Scope:** api                     <!-- one sub-project, or `suite` -->
 **Hardware:** none                 <!-- none | verify-only | bench | required -->
 **Owner:** no                      <!-- `required` if every path it writes is reserved -->
@@ -58,7 +59,7 @@ task the supervisor invented; that is allowed, and it says so here.
 **Cite a shared method; never copy it into the task.** A procedure that more
 than one scope's tasks run — `DOC-CONVENTIONS.md`'s citation census is the
 standing one — is named by its home, so a fix lands there once for every chain.
-Its home is reserved, so whoever finds it wrong drops that in `inbox/` rather
+Its home is reserved, so whoever finds it wrong files an issue rather
 than patching the next task. Copied forward instead, one census pattern was
 fixed inside two scopes' chains and carried broken through sixteen units of a
 third (`tasks/doc/074`).
@@ -334,6 +335,11 @@ probe-rs counterfactual, which is evidence and not proof and reads as proof once
 shortened.
 ```
 
+**`Issue:`** ties a task to the Linear issue it was split from, and
+`fleet-linear.py finish` reads it: when no task on `main` names the issue, the issue
+moves to Done. Most tasks have none, and need none. The issue itself is private, so
+the task must make sense without it.
+
 **Each is a field at a line start, and the task has one `**State:**` line.**
 Leg 133 shipped both other shapes green: an `In flux` answer written as a
 `## In flux: yes` heading on a task left `open`, and a second `State: blocked`
@@ -406,8 +412,8 @@ and was 70 B over the line (`tasks/doc/058`). `--pressure` prints each file's
 line if a number is wanted.
 
 When the paths are reserved — `DOC-PROTOCOL.md` and `DOC-COMPACTION.md` are the
-standing case — the task still lives here, because `inbox/` is not committed and
-a debt filed there would pass on the filer's machine and fail in CI. Mark it
+standing case — the task still lives here, because a debt held outside git
+would pass on the filer's machine and fail in CI. Mark it
 `**Owner:** required` so no worker is sent at it.
 
 ## Why the queue is a file and not the supervisor's head

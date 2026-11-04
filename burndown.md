@@ -72,7 +72,7 @@ first is about `hw_lock` with nobody watching; the second is that a decision is
 the most expensive thing in this suite to reverse, and this is the one mode
 explicitly optimising for volume.
 
-**A withheld decision is owed, and owing it means dropping an inbox file** —
+**A withheld decision is owed, and owing it means filing an issue** —
 not a log line. The first run produced five and recorded them three ways: one
 task, two `open.md` sections, and two that lived in `supervisor-log.md` alone,
 which folds daily and rolls to `log-archive/`. Volume is the point of this mode

@@ -38,23 +38,18 @@ that is not written into a doc is gone.**
 - **Never edit** `DOC-PROTOCOL.md`, `DOC-COMPACTION.md`, `embarch-dev-workflow.md`,
   `{{FLEET_REPO}}/protocol.md`, or `scripts/`.
 - **Never merge.** Push both branches; the supervisor lands them together.
-- **Found something outside your task? Drop it in `{{DOC_REPO}}/inbox/`, by
-  absolute path** — one file, full task format minus the number
-  (`inbox/README.md`). That is how you report work you must not do yourself —
-  never reach outside your ownership row to fix it, and never leave it only in
-  your final report where it depends on someone reading carefully.
-
-  **The absolute path is load-bearing.** `inbox/` is gitignored, so a drop
-  exists only in the tree that wrote it: a bare `inbox/` lands in *your*
-  worktree, which the supervisor deletes the moment your unit lands, and the
-  drop goes with it — silently, with no trace in git, the log or the gate.
-  That fired on 2026-09-08 (`outpost/013`) and the drop survived only because
-  the supervisor went looking. The crossing out of your worktree is safe for
-  exactly the reason `.claude/leg.md` gives the supervisor: the source is
-  untracked, so there is nothing for git to conflict on.
+- **Found something outside your task? File an issue:**
+  `{{DOC_REPO}}/scripts/fleet-linear.py file --from worker --project embarch-<repo>
+  --title '...' --body-file <file>`. The body says what is wrong, why it matters,
+  a `Done when`, and your honest `Hardware:` read, which the supervisor re-checks.
+  It goes straight to Fleet Ready and the next leg splits it. That is how you
+  report work you must not do yourself — never reach outside your ownership row to
+  fix it, and never leave it only in your final report where it depends on someone
+  reading carefully. It exits 0 with the desk down too, having kept the issue for
+  the next leg. **Linear is private, so name what you must;** the supervisor writes
+  the public task.
 - **Stay in your worktrees.** They are under `embarch/.worktrees/`, outside every
-  repo tree. Do not create more, and do not work in the main checkouts. The one
-  exception is the `inbox/` drop above, and only to write it.
+  repo tree. Do not create more, and do not work in the main checkouts.
 - **Checking a claim against a sibling repo? Read `{{FLEET_ROOT}}/<repo>`**, the
   main checkout, read-only. **Nothing under `/mnt/c/` is a checkout**, even if
   your session lists it as a working directory: the Windows `source/repos/<repo>`

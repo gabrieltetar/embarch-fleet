@@ -42,7 +42,7 @@ definition; `tasks/README.md` owns the staleness rule it implements. Nothing
 else in the repo is this window's business.
 
 **So this window is not the owner's window.** Standing rules, `scripts/`,
-`.claude/`, hardware and `inbox/` drops belong to an ordinary session the owner
+`.claude/` and hardware belong to an ordinary session the owner
 opens separately. A Slack message asking for a standing-rule change has nowhere
 to go — no agent may write those paths (`check-ownership.py --supervisor`) — and
 the honest answer is "this needs your interactive session", posted in-thread,
@@ -88,6 +88,11 @@ Four steps, in this order.
    ran on a tick prompt three deploys old and looked entirely healthy;
    `deploy.py` now refuses to call a deploy finished until this matches its
    render. Do it **after** the `CronCreate`, so a failed arming leaves no stamp.
+   Then keep this window off the dev desk, as it is no chat anyone has:
+   `scripts/fleet-linear.py hide-session <id>`, with the desk session id in your
+   context. Its agents share its session, so this covers them. With no id in your
+   context, or a refusal, say so and carry on: all that costs is a row on the Work
+   sub-tab.
    It also records this window's login, which its agents share because they run
    in this process, so a cron or a UI can say which account the fleet is spending.
 4. Say so in the channel with `{{FLEET_REPO}}/scripts/fleet-post.py` — that the
@@ -384,7 +389,7 @@ not read the repo to answer.
 **Who runs what, because it is easy to get backwards.** This window is the
 *listener*: a dispatcher with no hands. The **owner's** window — a separate,
 ordinary session — holds the pen for standing rules, `scripts/`, `.claude/`,
-hardware, and `inbox/` drops. A **leg** is a disposable `embarch-supervisor` that
+and hardware. A **leg** is a disposable `embarch-supervisor` that
 cannot write any of those paths (`check-ownership.py --supervisor` enforces it)
 and dies at 4 units. Three contexts, no overlap. That split is the only thing
 standing between "the owner instructed a rule change" and "the fleet decided to

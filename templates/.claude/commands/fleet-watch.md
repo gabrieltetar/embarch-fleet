@@ -86,6 +86,9 @@ nothing.
    leaves no stamp. This window's block has drifted before and *"a job armed
    with an older threshold looks entirely healthy"* is the sentence above; the
    stamp is what makes it visible. Disarming clears it (`--clear`).
+   Then keep this window off the dev desk, as it is no chat anyone has:
+   `scripts/fleet-linear.py hide-session <id>`, with the desk session id in your
+   context. With no id, or a refusal, say so and carry on.
 4. Say so in the channel — `{{FLEET_REPO}}/scripts/fleet-post.py "the watchdog
    is armed and will speak up if the fleet goes quiet for 50 minutes"`. That is
    an FYI, so it must not use `--action`: being armed asks nothing of anyone.

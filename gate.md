@@ -18,7 +18,7 @@ That is [embarch-dev-workflow.md](../embarch-doc/embarch-dev-workflow.md) §6's 
 **A reviewer reads for intent, alongside landing, and gates no merge.** When a
 unit's branches merge, the supervisor spawns an `embarch-reviewer` on the diff
 against that sub-project's decisions and the reversals index. Findings land in
-`inbox/` and in the unit's log entry; a confirmed contradiction is reverted by
+Linear as Fleet Ready issues and in the unit's log entry; a confirmed contradiction is reverted by
 SHA — the first thing that ever uses the SHAs §11 requires.
 **Merge-on-green is unchanged**: a blocking reviewer would make every unit a
 two-agent serial dependency, and the owner chose progress over caution here as

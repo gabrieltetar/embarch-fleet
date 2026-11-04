@@ -14,7 +14,7 @@ The listener is **not** the owner's session, and that separation is newer than t
 |---|---|---|---|
 | **Listener** | `/fleet start` or `/fleet arm` | nothing — it spawns and relays | near-flat; a few hundred tokens per wake |
 | **Leg** (spawned) | the pump, or `/supervise` | everything a supervisor owns ([protocol](protocol.md) §3) | bounded at four units, then dies |
-| **Owner's** | nothing; an ordinary session | standing rules, `scripts/`, `.claude/`, hardware, `inbox/` | the owner's problem |
+| **Owner's** | nothing; an ordinary session | standing rules, `scripts/`, `.claude/`, hardware | the owner's problem |
 
 The listener has no hands **so that it can live all day**. Reading a doc to answer a question is work, and work is what it spawns agents for; the one read it is allowed is the dispatchable count, because the heartbeat needs a predicate. One consequence: **a standing rule cannot be changed from Slack at all**, by anyone, the owner included — the listener cannot write those paths and neither can any agent it spawns (`check-ownership.py --supervisor`), so the answer is "open your own window".
 

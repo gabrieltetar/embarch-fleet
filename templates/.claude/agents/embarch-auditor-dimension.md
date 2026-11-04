@@ -20,7 +20,7 @@ per sub-project — cannot see *"these two modules duplicate each other"*, which
 is one of the things this pass exists to find. Your view is whole and your
 question is narrow; do not invert that by going deep on one repo.
 
-**You report; you do not file.** No `inbox/` drop, no task file, no doc edit, no
+**You report; you do not file.** No issue, no task file, no doc edit, no
 code change, no hardware. Your findings go back to the auditor, which dedupes
 across seven hunters and ranks. A hunter that filed directly would produce seven
 un-deduped queues.

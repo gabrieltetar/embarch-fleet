@@ -96,8 +96,7 @@ next one for up to 30 minutes.
    once and left a stray symlink inside a tracked doc directory.
 
    Work there for the whole leg — land, fold, run the gate, everything. You
-   share `{{DOC_REPO}}` with the owner, who drops files into `inbox/` and edits
-   docs while you run; two actors in one working tree is how legs 004 and 005
+   share `{{DOC_REPO}}` with the owner, who edits docs while you run; two actors in one working tree is how legs 004 and 005
    swept his fragments into their folds. A `git checkout` or a rebase in a tree
    he has dirtied fails outright, which is a leg blocked on something that has
    nothing to do with it.
@@ -123,12 +122,6 @@ next one for up to 30 minutes.
    broken (48 on 2026-10-29) and `check-docs.py` skips its two framework checks.
    A link into a *code* repo needs no link of its own: `check-links.py` looks a
    sibling up again where the main checkout lives (`tasks/doc/085`).
-
-   **`inbox/` is the exception, and it is not optional.** Drops are gitignored,
-   so they exist only in the main checkout and your worktree cannot see them.
-   Read them at `{{DOC_REPO}}/inbox/`, by absolute path, and delete them there;
-   write the task files in your worktree. That crossing is safe precisely
-   because the source is untracked — there is nothing for git to conflict on.
 
    If the worktree already exists from a killed leg, reuse it after checking it
    is clean, then `git fetch origin && git reset --hard origin/main` in it. If
@@ -196,12 +189,12 @@ in a normal leg, and a wide wave is not a reason to do it less carefully.
   attended leg. Unattended, at full width, is the worst moment to be the only
   thing holding Core's `hw_lock`.
 - **No new numbered decisions.** Implement, document, fix, compact — but a unit
-  that would author a new decision in any sub-project stops, **drops an inbox
-  file for it** (`{{DOC_REPO}}/inbox/`, full task format), and says so in its
-  log line. A decision is the most expensive thing in this suite to reverse,
+  that would author a new decision in any sub-project stops, **files an issue
+  for it** (`scripts/fleet-linear.py file --from decision`, which starts in
+  Backlog for the owner), and says so in its log line. A decision is the most expensive thing in this suite to reverse,
   and burndown is the one mode explicitly optimising for volume.
 
-  **The drop is the requirement; the log line is not.** The 2026-09-08 burndown
+  **The issue is the requirement; the log line is not.** The 2026-09-08 burndown
   produced five owed decisions and recorded them three different ways — one
   task, two `open.md` "Owed decisions" sections, and two that existed in
   `supervisor-log.md` alone. That file folds daily and rolls into
@@ -349,20 +342,22 @@ in a normal leg, and a wide wave is not a reason to do it less carefully.
 
 ## The leg
 
-**Drain `inbox/` at the top of every leg, before you count anything.** It is a
-directory listing and a few file moves — not the expensive half of refill — and
-it is the only thing that ever files a drop. **It must not be gated on the
-count.** `queue-status.py` counts a drop as dispatchable, so gating the drain on
-a non-zero count means a lone drop holds the count up, suppresses its own drain,
-and sits in `inbox/` forever. That is exactly the state this queue was in on
-2026-09-03.
+**Read Fleet Ready at the top of every leg, before you count anything:**
+`scripts/fleet-linear.py ready`, then `scripts/fleet-linear.py finish`. They are a
+few local calls, not the expensive half of refill, and `ready` is the only thing
+that ever takes an issue in. **It must not be gated on the count.**
+`queue-status.py` counts a Fleet Ready issue as dispatchable, so gating the read
+on a non-zero count means a lone issue holds the count up, suppresses its own
+split, and sits there forever. An `inbox/` drop reached exactly that state on
+2026-09-03. Exit 2 means the desk or Linear is down: say so in your entry and go
+on with the tasks you have. `ready` also files what a down desk left in the spool.
 
 **Then sweep the sources when the queue is below its low-water mark — not when
 it is empty.** Run `scripts/queue-status.py --refill-owed --wave <your wave
 size>`, and do not hand-count `State:` lines. **Exit 0 means sweep now; exit 1
 means skip straight to selecting; exit 2 means it found no `tasks/` at all** and
 names the paths it tried — an error, never an empty queue. It implies `--tasks-only`, because you have
-just drained `inbox/` and a drop must not still count as "there is already work".
+just split Fleet Ready and an issue must not still count as "there is already work".
 **Run it after step 0, never before** — recovery has already reclaimed stale
 claims to `open` by then, which is exactly why you do *not* pass
 `--no-supervisor` here: you are the supervisor and you are alive, so a claim
@@ -411,16 +406,29 @@ changing is what ends it.
 Relay its `LOW QUEUE` line if the plain form prints one; a thin queue is the
 owner's cue to top it up, and he should hear it before it reaches zero:
 
-- **The drain, in detail** (`inbox/README.md`). Each file there is a complete task
-  written by another thread or by a worker, minus its number. For each: validate
-  it parses, re-check its `Hardware:` claim yourself, number it from
-  `scripts/check-task-numbers.py --next <scope>` as you write it — which sees
-  your workers' trees, so a refill cannot take a number a worker just did —
-  move it into `tasks/<scope>/`, and delete the drop. A file that
-  does not parse stays in `inbox/` and is named in your log entry — never delete
-  someone's request silently. **Announce in `{{SLACK_CHANNEL_NAME}}` what you took from
-  the inbox before dispatching any of it**, naming the file and what you will do,
-  so there is a window to say stop.
+- **The split, in detail.** An issue is an outcome, and a task is the fleet's
+  smaller step. For each issue `ready` prints:
+  - **`ALREADY SPLIT` means a killed leg wrote its tasks.** Do not split it again;
+    run `filed` with the paths it names.
+  - **Task files are public and Linear is private.** Write each task for public
+    reading: no client or project names, no internals, nothing the issue says
+    that is not the suite's own. `check-client-names.py` is in the gate, and it
+    only knows the names on its list, so this is on you. A task that cannot be
+    written without them does not get written: send the issue back.
+  - Write the tasks per `tasks/README.md`, with `**Issue:** <key>` under
+    `**Source:**`. Set `Hardware:` yourself: a worker's issue states a claim, not
+    a verdict. Number each from `scripts/check-task-numbers.py --next <scope>` as
+    you write it, which sees your workers' trees, so a refill cannot take a number
+    a worker just did.
+  - **Commit and push them, then** `scripts/fleet-linear.py filed <key> <path>...`,
+    which lists the paths on the issue and moves it to Fleet Working. In that
+    order, so a leg that dies in between leaves `ALREADY SPLIT` rather than a
+    second split.
+  - **An issue you cannot state a `Done when` for goes back:**
+    `scripts/fleet-linear.py send-back <key> --why '...'` says why on the issue and
+    moves it to Backlog. Never drop someone's request silently.
+  - **Announce in `{{SLACK_CHANNEL_NAME}}` what you took before dispatching any of
+    it**, naming the issue and what you will do, so there is a window to say stop.
 - Then sweep `suite/roadmap.md`'s Now/Next, every sub-project's `open.md`
   (`scripts/collect-open-questions.py` prints them all in one pass), and
   `embarch-decision-reversals.md`'s unaddressed follow-ups. Write new task files
@@ -458,6 +466,13 @@ Never dispatch one to a worker (`{{FLEET_REPO}}/protocol.md` §7). There is one
 `hw_lock` and one study in flight, and Core's `409` is a refusal a worker will
 misread as a bug in its own change — serialization is the point, and it needs no
 lock because exactly one supervisor exists.
+
+**Take the bench lease first.** You inherit `EMBARCH_REQUIRE_LEASE=1` from a
+listener under the suite, so `embarch-api` refuses every hardware route until a
+lease is live (`embarch-api` decision 101). `lease_take` before the first hardware
+call, and `lease_release` when the unit ends, because a live lease refuses every
+other window. The server renews a lease from `lease_take` by itself; a Bash call
+or an atlas run also needs its token exported as `EMBARCH_LEASE_TOKEN`.
 
 **Take every runnable bench unit before any host-side one.** `queue-status.py`
 prints them under `bench` and, deliberately, does **not** count them in
@@ -499,8 +514,8 @@ check is what you act on.
 not write to a client repo** — no commit, no source edit, no release, no branch.
 §2 still reserves that; what the owner granted on 2026-09-06 is exercising
 EmbArch against real hardware, not developing someone else's firmware. If a bench
-unit turns out to need a source change in a client repo, that is a finding for
-`inbox/`, not a change to make.
+unit turns out to need a source change in a client repo, that is a finding to
+file, not a change to make.
 
 **Flash what is already built; do not build client sources.** The grant is
 flash-and-study over an existing artifact. If the firmware a task needs is not
@@ -812,12 +827,7 @@ owner's checkout with nothing printed that reads as a warning (leg 110,
 `tasks/doc/057`). Should it happen, `git -C <repo> checkout main` undoes it; only
 HEAD moved. **Record both merge SHAs per unit** — there is no merge commit
 and no surviving branch name, so the SHA is the only handle a revert has. Delete
-a worker's worktrees once its branches have landed or been abandoned — but
-**move any `inbox/` drop out of its doc worktree into `{{DOC_REPO}}/inbox/`
-first**, or you delete it. Drops are gitignored, so one written relatively by a
-worker exists only in that worktree; a worker is told to write them absolutely,
-and this is the backstop for the one that does not. Cheap to check, total to
-lose — leg 055 found one on 2026-09-08 only by going looking. **You do
+a worker's worktrees once its branches have landed or been abandoned. **You do
 not delete the pushed branches, or the local ones `git worktree remove` leaves
 behind** — `fold-commit.py` does both, and only once their content is
 provably on `origin/main`, so it is normally a fold behind.
@@ -850,7 +860,7 @@ for all four of its reviewers and one reported a `decisions/reporting.md` that
 the paths for all four and it worked.** It costs you one line per spawn.
 
 It reads the diff for one thing — does this contradict a
-decision it left standing — and drops a finding in `inbox/` if it finds one. **It
+decision it left standing — and files an issue if it finds one. **It
 gates no merge**: merge-on-green is the owner's choice and a reviewer that
 blocked a merge would make every unit a two-agent serial dependency. It is the
 only thing in this design that ever reads a diff for intent, and `risks.md` names
@@ -913,7 +923,7 @@ recovery:
 
 ```
 **Reviewer:** no findings.
-**Reviewer:** 1 finding — inbox/api-contradicts-decision-41.md
+**Reviewer:** 1 finding — EMB-41
 **Reviewer:** skipped (budget DEGRADED, wave 2).
 ```
 
@@ -974,6 +984,12 @@ in two consecutive legs (`dev-bench/014`, `core/046`, 2026-09-28), while the
 script had refused correctly both times. Run it bare, read what it printed, and
 chain the push and the `leg-fold` tick only behind an unpiped
 `fold-commit.py ... &&`.
+
+**After the push, run `scripts/fleet-linear.py finish`.** A fold removes a task
+file, and that may have been the last task from its Linear issue: this comments the
+closed tasks with their commits and moves the issue to Done. It reads `origin/main`,
+so before the push it would see nothing new. Exit 1 means nothing moved, and a failed
+call blocks nothing, as the next leg's step runs it again.
 
 Run it **from your leg worktree**: it stages in whichever instance checkout you
 are standing in, falling back to `fleet.toml`'s `doc_repo` only when you are
