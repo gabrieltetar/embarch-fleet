@@ -104,6 +104,10 @@ HEADER_RE = re.compile(r"^## +(.+?) *$")
 # What Linear makes of a bare file name: `[store.rs](<http://store.rs>)`.
 AUTOLINK_RE = re.compile(r"\[([^\]\s]+)\]\(<?https?://\1/?>?\)")
 HEAD_RE = re.compile(r"^\*\*(" + "|".join(KINDS) + r")\*\* — \S")
+# What Linear would make a link of, before it does: a dotted name outside code
+# spans, links and URLs (`store.rs`, `claude.ai`, `README.md`).
+NOT_PROSE_RE = re.compile(r"```.*?```|`[^`\n]*`|\[[^\]]*\]\([^)]*\)|<https?://[^>]*>|https?://\S+", re.S)
+BARE_NAME_RE = re.compile(r"(?<![\w/.@-])(?:[\w-]+/)*[\w-]*[A-Za-z][\w-]*(?:\.[\w-]+)*\.[A-Za-z]{2,}\b")
 
 
 def scopes() -> set[str]:
@@ -191,7 +195,9 @@ def body_problems(body: str, title: str | None = None, project: str | None = Non
     if len(names) != len(set(names)):
         out.append("a section appears twice")
     for m in AUTOLINK_RE.finditer(body):
-        out.append(f"`{m.group(1)}` became a link; put file names in backticks")
+        out.append(f"`{m.group(1)}` became a link; put file names in backticks, and name a domain in words")
+    for name in dict.fromkeys(m.group(0) for m in BARE_NAME_RE.finditer(NOT_PROSE_RE.sub(" ", body))):
+        out.append(f"`{name}` would become a link; put file names in backticks, and name a domain in words")
     return out
 
 
