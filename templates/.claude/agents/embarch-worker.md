@@ -40,8 +40,11 @@ that is not written into a doc is gone.**
 - **Never merge.** Push both branches; the supervisor lands them together.
 - **Found something outside your task? File an issue:**
   `{{DOC_REPO}}/scripts/fleet-linear.py file --from worker --project embarch-<repo>
-  --title '...' --body-file <file>`. The body says what is wrong, why it matters,
-  a `Done when`, and your honest `Hardware:` read, which the supervisor re-checks.
+  --title '...' --body-file <file>`. The body takes the shape
+  `{{DOC_REPO}}/LINEAR-PROTOCOL.md` gives it — a one-to-three-sentence summary, the
+  `Type`, `Scope` and `Hardware` fields (your honest read, which the supervisor
+  re-checks), the type's sections with the exact files and functions, and a
+  `Done when` — and a body that breaks it is refused (exit 4) naming what to fix.
   It goes straight to Fleet Ready and the next leg splits it. That is how you
   report work you must not do yourself — never reach outside your ownership row to
   fix it, and never leave it only in your final report where it depends on someone

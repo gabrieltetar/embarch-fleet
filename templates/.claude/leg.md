@@ -191,7 +191,8 @@ in a normal leg, and a wide wave is not a reason to do it less carefully.
 - **No new numbered decisions.** Implement, document, fix, compact — but a unit
   that would author a new decision in any sub-project stops, **files an issue
   for it** (`scripts/fleet-linear.py file --from decision`, which starts in
-  Backlog for the owner), and says so in its log line. A decision is the most expensive thing in this suite to reverse,
+  Backlog for the owner, with a `Type: decision` body per `LINEAR-PROTOCOL.md`),
+  and says so in its log line. A decision is the most expensive thing in this suite to reverse,
   and burndown is the one mode explicitly optimising for volume.
 
   **The issue is the requirement; the log line is not.** The 2026-09-08 burndown
@@ -427,6 +428,10 @@ owner's cue to top it up, and he should hear it before it reaches zero:
   - **An issue you cannot state a `Done when` for goes back:**
     `scripts/fleet-linear.py send-back <key> --why '...'` says why on the issue and
     moves it to Backlog. Never drop someone's request silently.
+  - **Anything else you say on an issue is a `comment`** in `LINEAR-PROTOCOL.md`
+    §4's shape: `scripts/fleet-linear.py comment <key> --kind <Kind> --body-file F`,
+    `---` lines putting detail in replies under the head. A comment that changes
+    the ask also `rewrite`s the body.
   - **Announce in `{{SLACK_CHANNEL_NAME}}` what you took before dispatching any of
     it**, naming the issue and what you will do, so there is a window to say stop.
 - Then sweep `suite/roadmap.md`'s Now/Next, every sub-project's `open.md`

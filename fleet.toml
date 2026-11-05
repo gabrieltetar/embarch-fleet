@@ -62,10 +62,14 @@ backlog = "Backlog"
 # Where a new issue from `fleet-linear.py file --from <kind>` starts. A finding made
 # in passing runs without the owner, as it did as an inbox drop. An audit's findings
 # and a withheld decision wait for the owner to mark them (owner's call, 2026-11-04).
+# The owner's own notes and an interactive session's findings wait the same way
+# (embarch-doc LINEAR-PROTOCOL.md, 2026-11-05). Each kind is a `Filed by:` value.
 worker = "Fleet Ready"
 reviewer = "Fleet Ready"
 audit = "Backlog"
 decision = "Backlog"
+owner = "Backlog"
+session = "Backlog"
 
 [limits]
 # protocol.md §6: a leg is this many units, then it dies and hands off.
@@ -235,6 +239,10 @@ reserved = [
   # reads every reserved path in this list -- a doc a worker could edit is a doc
   # that could aim the pass, or blunt it.
   "SUITE-REVIEW-PASS.md",
+  # The shape of every Linear issue and comment, which `fleet-linear.py` enforces
+  # on the fleet's own filings. Reserved for the reason the review pass is: a leg
+  # that could edit it could loosen the check on what it files.
+  "LINEAR-PROTOCOL.md",
   "embarch-dev-workflow.md",
   "CLAUDE.md",
   # scripts/ -- the WHOLE directory. Re-examined 2026-09-06 against the backlog

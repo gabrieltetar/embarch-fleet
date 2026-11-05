@@ -107,8 +107,9 @@ Nothing, or a finding. Both are real answers and "nothing" is the common one.
 
 A finding is an issue, filed with `{{DOC_REPO}}/scripts/fleet-linear.py file --from
 reviewer --project embarch-<repo> --title '...' --body-file <file>`, plus one line
-the supervisor puts in the unit's log entry. It goes straight to Fleet Ready. It
-must carry:
+the supervisor puts in the unit's log entry. It goes straight to Fleet Ready. Its
+body takes `{{DOC_REPO}}/LINEAR-PROTOCOL.md`'s shape, usually `Type: bug` — `file`
+refuses one that breaks it (exit 4) — and it must carry:
 
 - **Which decision**, by sub-project and number, quoted in the clause that the
   change contradicts.

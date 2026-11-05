@@ -91,8 +91,11 @@ and the ones suppressed as already-queued, naming the task.
 
 **5. File the issues**, one per finding, with `{{DOC_REPO}}/scripts/fleet-linear.py
 file --from audit --project embarch-<repo> --title '...' --body-file <file>`. The
-body carries the full task format from `tasks/README.md`, minus the number. Skip
-this step entirely on `--no-issues`.
+body takes `{{DOC_REPO}}/LINEAR-PROTOCOL.md`'s shape: the summary, the fields, the
+sections of the type that fits (most findings are `change` or `gap`; one that needs
+the owner's call is `decision`), the files it rests on under `Where`, and a
+`Done when` checking the property rather than an implementation. `file` refuses a
+body that breaks it (exit 4). Skip this step entirely on `--no-issues`.
 
 **6. Report back**: the count filed and their keys, the top five by rank in one line each,
 the count suppressed as already-queued, and **an explicit pointer to the
