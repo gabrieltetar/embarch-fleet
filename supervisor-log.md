@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-06 13:38 — atlas/036 codecheck keeps a hex-addressed offset register
+
+**Decided:** nothing suite-wide. `EMB-79`. `classify` in `codecheck.py`: a `REG_` define whose last token is OFFSET or OFS stays `register` when its body is a hex literal (`0x12`) and no earlier token names a bit (BIT, BITS, SHIFT, POS, FIELD, FLD); a decimal, an expression or a `BIT(n)` body stays `encoding`. The worker used the body's spelling instead of the issue's "value under 64" test, because the issue's own example `0x12` is under 64 and a value test would have refused it; I accepted that. The end-to-end mask test runs `cc.run` on an excerpt, so `_assoc0`, `_check_masks` and `_mask_finding` all run, and the worker measured it failing with the fix reverted. No `DESIGN.md` change: neither design doc describes `classify`'s tokens.
+**Merged:** `agent/atlas/036-codecheck-keeps-a-hex-addressed-offset-register` (code `9e0e8d2` on `55d0331`, ff; doc `0db2ef34`, the worker's `f4594526` cherry-picked onto `7138f3a6`). Gate on the merge result: `pytest` 655 passed, 3 skipped (real west, real atlas, real SVD; `test_public_guard` ran), client names clean on the code worktree, ownership `atlas` OK on both branches, `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. A real `codecheck` run on a driver with an offset-calibration register is the confirmation, owner-attended or a toolchain leg.
+**Budget:** PROCEED (5-hour 48.0%, weekly 30.0%, wave 6).
+**Least sure about:** the spelling test's two stated misses, not filed: a register written in decimal (`X_REG_ADC_OFFSET 18`) is still `encoding` and never compared, and a bit offset written in hex with no bit token in its name reads as a register again. The worker also reasoned, untested, that no value test is safe for `*_POS`, `*_SHIFT`, `*_BLOCK` or `*_FLAG`, so those stay `encoding`. `atlas/035` dispatched 13:38.
+
 ## 2026-11-06 13:33 — atlas/037 second-look reads high-impedance as floating
 
 **Decided:** (1) **Split the two Fleet Ready issues** the last leg filed from reviewer residuals: `EMB-79` → `tasks/atlas/036` (codecheck keeps a hex-addressed `*_OFFSET` register, plus an end-to-end mask test), `EMB-80` → `tasks/atlas/037` (this unit), in `afbc07ed`; `filed` moved both to Fleet Working; announced `ts` `1793996945.000199` before any dispatch, no reply. (2) Ran `037` ahead of `035` and `036` because a false strap conflict freezes into a second-look round and outlives it. `EMB-80`. `pin_states` in `secondlook.py` rewrites high-impedance, hi-z and high-Z to `floating` before tokenising, drops open-drain/collector/emitter (an output type, not a pin state), and drops a negated word ("not floating"). The code repo's `DESIGN.md` compare paragraph says so; `CHECKED_VERSION` not bumped. The issue's "GND or VDD" set-intersection case was named in the task's What but not its Done-when, and the worker left it unchanged and said so.
