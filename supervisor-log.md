@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-06 13:21 — atlas/032 DT-limits mapping needs quantity and role
+
+**Decided:** nothing suite-wide. `EMB-53`. `role_conflict` in `limits.py` runs after a name score reaches `THRESHOLD`: a record stated in a state the property does not name (`STATE_WORDS`: ship, shutdown, standby, sleep, quiescent, leakage), or an offset against an absolute value or the reverse (`OFFSET_WORDS`: offset, below, above, delta, hysteresis, recharge), goes to the record's new `uncertain` list with status `mapping-uncertain`, folded as "DT limits: mapping uncertain", never compared. `re-charge` reads as `recharge`. Declared `prop_limits` mappings skip the test. `limits.json` gains `uncertain` per record and `counts.mapping_uncertain`; the reviewer found nothing outside `limits.py` that reads its status values or counts. Module docstring and `DESIGN.md`'s limits row say the new rule.
+**Merged:** `agent/atlas/032-dt-limits-mapping-needs-quantity-and-role` (code `7257c9e` on `cc83425`, ff; doc `9a14275d`, the worker's `6bb43696` cherry-picked onto `2d77bca9`). Gate on the merge result: `pytest` 648 passed, 3 skipped (real west, real atlas, real SVD; `test_public_guard` ran), client names clean on the code worktree, ownership `atlas` OK on both branches, `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. The tests use generic stand-ins for the two false pairings; the worker could not see the real threshold-range record, so whether the real one takes this path is unproven until the next real `limits` run. Read `counts.mapping_uncertain` and `uncertain[].why` there.
+**Budget:** PROCEED (5-hour 40.0%, weekly 29.0%, wave 6).
+**Least sure about:** `below` and `above` as offset words: a record whose param reads "input voltage above which…" now counts as an offset, so a genuine absolute pair against it lands in "uncertain" and a real out-of-limit finding goes unreported. It is listed rather than dropped, and the reviewer could not size it without a real atlas. Not filed; the next real run is the measurement. `atlas/034` dispatched 13:21 as the leg's fourth unit.
+
 ## 2026-11-06 13:15 — atlas/033 second-look strap wording is not a conflict
 
 **Decided:** nothing suite-wide. `EMB-55`. A strap's `condition` now compares by the pin state it names (`pin_states`, `_strap_condition` in `secondlook.py`: fixed, GND, VDD, SDA, SCL, floating): a shared state matches, disjoint states conflict. An address strap whose value agrees but whose wording names no state is `unresolved` with "values agree, wording differs", never `conflict`; the worker chose `unresolved` over `confirmed` so the case stays visible. A mode strap keeps the word-overlap rule. `READER_RULES` tells the reader to give only the pin state. `DESIGN.md`'s compare paragraph says the new rule; `CHECKED_VERSION` not bumped, so false strap conflicts frozen in earlier rounds stay frozen until a deliberate bump, which that paragraph already names as the route.
