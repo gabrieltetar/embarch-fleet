@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-06 12:39 — ui/104 spec.md and open.md out of reserve by verbatim splits
+
+**Decided:** nothing suite-wide. Taken ahead of its 2026-11-12 due date because the budget turned PROCEED (wave 6) mid-leg and atlas, the other live scope, holds one slot at a time. The worker split rather than squeezed: three role, catalog-row and board-type invariants (decisions 44, 45, 47, 48, 49) moved verbatim to new `embarch-ui/spec/roles.md`, with one pointer bullet left in `spec.md` that states the gist; five trace and live-study questions moved verbatim to new `embarch-ui/open/trace.md`. The task's must-not-delete items (the unit-install and release-archive bullets, the binds-before-it-polls sentence) are untouched. I normalised `**State:** done (token zero)` to `done`: my dispatch prompts said "done (token zero)" and two workers copied the parenthesis literally.
+**Merged:** `agent/ui/104-compact-ui` (doc `44b31310`, the worker's `06dc5aa9` cherry-picked onto `6dfcfc7b`; code none, the `embarch-ui` branch has no commits and was never pushed). `spec.md` 9,265 → 8,290 B, `open.md` 4,226 → 2,220 B, both PAID. Gate on the merge result: `check-docs.py` 12/12, ownership `ui` OK (6 paths). `cargo` not run, no code changed.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED (5-hour 16.0%, weekly 27.0%, wave 6).
+**Least sure about:** the pointer bullet left in `spec.md` paraphrases five decisions in one sentence; the reviewer read it as stating the gist without restating a rule differently, but a paraphrase beside its own source is where drift starts.
+
 ## 2026-11-06 12:37 — atlas/027 build picks the app image of a multi-image sysbuild
 
 **Decided:** nothing suite-wide. The first of the seven Fleet Ready atlas bugs (`EMB-49`). `kconfig.py` gained `image_dir(bdir, marker, app=None)`: under sysbuild the image is `domains.yaml`'s `default:`, then the target app directory's basename, and when neither picks one the error names every `zephyr/edt.pickle` found. `run_build` and `extract_kconfig` both go through it, so `.config` and `edt.pickle` come from one image. I normalised the worker's `**State:** done (token zero)` to a bare `done` before the fold.
