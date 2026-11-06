@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-06 13:15 — atlas/033 second-look strap wording is not a conflict
+
+**Decided:** nothing suite-wide. `EMB-55`. A strap's `condition` now compares by the pin state it names (`pin_states`, `_strap_condition` in `secondlook.py`: fixed, GND, VDD, SDA, SCL, floating): a shared state matches, disjoint states conflict. An address strap whose value agrees but whose wording names no state is `unresolved` with "values agree, wording differs", never `conflict`; the worker chose `unresolved` over `confirmed` so the case stays visible. A mode strap keeps the word-overlap rule. `READER_RULES` tells the reader to give only the pin state. `DESIGN.md`'s compare paragraph says the new rule; `CHECKED_VERSION` not bumped, so false strap conflicts frozen in earlier rounds stay frozen until a deliberate bump, which that paragraph already names as the route.
+**Merged:** `agent/atlas/033-second-look-strap-wording-is-not-a-conflict` (code `cc83425` on `5685cee`, ff; doc `42258045`, the worker's `eb031b87` cherry-picked onto `07409c25`). Gate on the merge result: `pytest` 645 passed, 3 skipped (real west, real atlas, real SVD; `test_public_guard` ran), client names clean on the code worktree, ownership `atlas` OK on both branches, `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. The next real `second-look` round is the confirmation that strap conflicts drop from 15 of 20 to the real ones.
+**Budget:** PROCEED (5-hour 36.0%, weekly 29.0%, wave 6).
+**Least sure about:** the pin-state words match single tokens, so "high-impedance" reads as VDD and "open-drain" as floating; a strap one pass calls floating and the other high-impedance is a new false conflict. Filed from the reviewer's edge cases as `EMB-80` (Fleet Ready, `--from reviewer`). `atlas/032` dispatched 13:14.
+
 ## 2026-11-06 13:12 — atlas/031 codecheck offset define is not a register
 
 **Decided:** nothing suite-wide. `EMB-52`. Re-landed from the last leg: its worker had finished and pushed both branches, nothing merged, so step 0 gated and landed it rather than reclaiming it. `ENCODING_TOKENS` in `codecheck.py` gained `OFFSET` and `OFS`, so a `REG_`-named define ending in one classifies as `encoding`, not `register`, and the masks after it lose their phantom positional register. The worker tested at the `classify` level only and said so in the task's Done section. I filed the reviewer's residual (below) as `EMB-79` (Fleet Ready, `--from reviewer`); the next leg's `ready` splits it.
