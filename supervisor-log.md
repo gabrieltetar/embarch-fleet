@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-06 12:37 — atlas/027 build picks the app image of a multi-image sysbuild
+
+**Decided:** nothing suite-wide. The first of the seven Fleet Ready atlas bugs (`EMB-49`). `kconfig.py` gained `image_dir(bdir, marker, app=None)`: under sysbuild the image is `domains.yaml`'s `default:`, then the target app directory's basename, and when neither picks one the error names every `zephyr/edt.pickle` found. `run_build` and `extract_kconfig` both go through it, so `.config` and `edt.pickle` come from one image. I normalised the worker's `**State:** done (token zero)` to a bare `done` before the fold.
+**Merged:** `agent/atlas/027-build-picks-the-app-image-of-a-multi-image-sysbuild` (code `238db6f` on `029c41b`, ff; doc `2aa05c86`, the worker's `72a34d97` cherry-picked onto the leg HEAD after `dev-bench/040`'s fold). Gate on the merge result: `pytest` 633 passed, 3 skipped (real west, real atlas, real SVD; `test_public_guard` ran), client names clean on the code worktree, ownership `atlas` OK on both branches, `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. The only check on a real two-image layout is the synthetic-tree test: the first `embarch-atlas build` of a real application-plus-MCUboot target is the confirmation, owner-attended or a toolchain leg.
+**Budget:** PROCEED at this unit's boundary (5-hour 16.0%, weekly 27.0%, wave 6); the leg started DEGRADED with no cache.
+**Least sure about:** the reviewer's residual: `buildq.named()` (a build dir the caller names, for `config` and `dt_node`) still calls `zephyr_dir(p)` with no app, so a named multi-image sysbuild with no `domains.yaml` still errors there. Not a contradiction and not `atlas/028`'s scope either. I filed it as `EMB-77` (Fleet Ready, `--from reviewer`), so the next leg's `ready` splits it.
+
 ## 2026-11-06 12:34 — dev-bench/040 spec.md out of reserve by a verbatim split
 
 **Decided:** (1) **Split all seven Fleet Ready issues** (`EMB-49`–`55`, every one an `embarch-atlas` bug filed by a worker, `Hardware: none`) into `tasks/atlas/027`–`033`, one task per issue (`f6eaffa6`), `filed` moved all seven to Fleet Working, announced `ts` `1793993406.066929` before dispatch, no reply. Map: 027 `EMB-49` sysbuild app image, 028 `EMB-54` build dir keyed on args, 029 `EMB-50` Nordic DT pin decode, 030 `EMB-51` codecheck compiled sources, 031 `EMB-52` offset define, 032 `EMB-53` DT-limits quantity and role, 033 `EMB-55` strap wording. (2) **Reopened `dev-bench/040` from `blocked`** as the size ledger's first unit (overdue since 2026-11-01), flipping `In flux:` to `no, for the remedy this task now takes` on `chat/004`'s 2026-10-28 reading: a verbatim split restates nothing. The filer expected a PD bench section to move, but `spec.md` holds only one paragraph and one row about it, which is the in-flux text; so the worker moved settled §5 instead and left both PD bench passages word for word. (3) Committed one `suite/features.md` row with no fragment from this unit (a desk-notes row already on `main` as a fragment, unassembled), the same deterministic rebuild `ui/103` made.
