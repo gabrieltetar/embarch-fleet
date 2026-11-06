@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-06 12:58 — atlas/028 build dir follows the build arguments
+
+**Decided:** nothing suite-wide. `EMB-54`. The worker chose a directory key over `-p always`: `.work/build-<target>-<commit12>-<args8>`, `args8` the first 8 hex of a sha256 over board, app and `extra_args` (`build_dir_name`, `build.py`), with the log on the same key. An unchanged rebuild keeps its directory and incremental cache; a changed argument list never meets the old cache. `kconfig-extract` and `config` read the directory from the stamp, so atlases built before this still resolve. No decision entry: the task asked for one only if the choice was not obvious from the code, and `embarch-atlas` keeps its design in the code repo's `DESIGN.md`, which the change updates.
+**Merged:** `agent/atlas/028-build-dir-follows-the-build-arguments` (code `25ee47b` on `49c8169`, ff; doc `360219e2`, the worker's `3b644a00` cherry-picked onto `256de75e`). Gate on the merge result: `pytest` 639 passed, 3 skipped (real west, real atlas, real SVD; `test_public_guard` ran), client names clean on the code worktree, ownership `atlas` OK on both branches, `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. The CMake cache error the task names (`--sysbuild` then `--no-sysbuild` at one commit) was not reproduced; the test is on the directory key. The first real rebuild with changed `extra_args` is the confirmation, owner-attended or a toolchain leg.
+**Budget:** PROCEED (5-hour 27.0%, weekly 28.0%, wave 6).
+**Least sure about:** a target's old `.work/build-<target>-<commit12>` directories are now orphaned on disk rather than reused; nothing prunes `.work/`, so they stay until someone deletes them.
+
 ## 2026-11-06 12:54 — desk/005 spec.md out of reserve
 
 **Decided:** (1) **Split the two Fleet Ready issues** the last leg filed from reviewer residuals: `EMB-77` → `tasks/atlas/034` (a named build dir picks its sysbuild image the way `atlas build` does), `EMB-78` → `tasks/atlas/035` (a Nordic end-to-end `join` test), in `bb483366`; `filed` moved both to Fleet Working; announced `ts` `1793994691.038249` before any dispatch. (2) Took `desk/005` (due 2026-11-28) now because only two scopes are dispatchable and atlas holds one slot at a time. The worker folded `spec.md`'s per-decision deploy history (56–68) into one "deployed through decision 68" line and trimmed phrasing elsewhere; every `Must not delete:` item is untouched.
