@@ -33,8 +33,9 @@ it.** `file`, `rewrite` and `comment` refuse one that breaks it, naming what is
 wrong, with exit 4 and nothing sent; `lint` reports open issues that break it.
 
 **An issue the fleet cannot take leaves Fleet Ready at `ready`.** Its fields say
-so: `Scope: fleet` (reserved to the owner), `Hardware: required` (the owner's
-hands) or `Type: decision` (the owner's call). `ready` comments why and moves it
+so: `Scope: fleet` (reserved to the owner), a Scope the fleet does not work (a
+clone with no embarch-doc directory, such as `private`), `Hardware: required`
+(the owner's hands) or `Type: decision` (the owner's call). `ready` comments why and moves it
 to `owner_ready`, the owner's own lane, instead of listing it to split.
 
 **Where a new issue starts is `file_status` in `fleet.toml`.** A worker's or a
@@ -115,13 +116,16 @@ NOT_PROSE_RE = re.compile(r"```.*?```|`[^`\n]*`|\[[^\]]*\]\([^)]*\)|<https?://[^
 BARE_NAME_RE = re.compile(r"(?<![\w/.@-])(?:[\w-]+/)*[\w-]*[A-Za-z][\w-]*(?:\.[\w-]+)*\.[A-Za-z]{2,}\b")
 
 
-def owner_only(body: str) -> list[str]:
+def owner_only(body: str, fleet: set[str]) -> list[str]:
     """Why an issue is the owner's to work, from its fields; empty when the
-    fleet may take it (LINEAR-PROTOCOL.md §6)."""
+    fleet may take it (LINEAR-PROTOCOL.md §6). `fleet` is fleet_scopes()."""
     fields = parse_body(body)[1]
+    scope = fields.get("Scope", "")
     why = []
-    if fields.get("Scope") == "fleet":
+    if scope == "fleet":
         why.append("`Scope: fleet` is reserved to the owner")
+    elif scope and scope not in fleet:
+        why.append(f"`Scope: {scope}` is a repo the fleet does not work")
     if fields.get("Hardware") == "required":
         why.append("`Hardware: required` needs the owner's hands")
     if fields.get("Type") == "decision":
@@ -129,11 +133,20 @@ def owner_only(body: str) -> list[str]:
     return why
 
 
-def scopes() -> set[str]:
+def fleet_scopes() -> set[str]:
     """The worker scopes, as check-ownership.py derives them: embarch-doc's
     `embarch-*` directories on origin/main, plus `doc` and `suite`."""
     out = git("ls-tree", "--name-only", "origin/main").split()
     return {d.removeprefix("embarch-") for d in out if d.startswith("embarch-") and "." not in d} | {"doc", "suite"}
+
+
+def scopes() -> set[str]:
+    """Every Scope an issue may name: the fleet's, plus each other clone in the
+    suite root, such as `private`, which only the owner works. A linked
+    worktree (`.git` a file, like `embarch-atlas-wt`) is no repo of its own."""
+    clones = {d.name.removeprefix("embarch-") for d in CONF.root.iterdir()
+              if d.name.startswith("embarch-") and (d / ".git").is_dir()}
+    return fleet_scopes() | clones
 
 
 def parse_body(body: str) -> tuple[str, dict[str, str], list[tuple[str, str]]]:
@@ -458,11 +471,11 @@ def cmd_ready(s: dict, args) -> int:
     git("fetch", "-q", "origin")
     flush_spool(s)
     rows = open_rows(s, s["ready"])
-    full = []
+    full, fleet = [], fleet_scopes()
     for r in rows:
         detail = call(s, "GET", f"/linear/issue/{quote(r['key'])}")
         description, tasks = detail.get("description") or "", tasks_on_main(r["key"])
-        why = owner_only(description)
+        why = owner_only(description, fleet)
         # A split already on main is the fleet's, whatever the fields say now.
         if why and not tasks:
             lane = s["owner_ready"]

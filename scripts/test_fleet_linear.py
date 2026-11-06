@@ -343,6 +343,25 @@ class Fleet(unittest.TestCase):
             self.assertIn(why, said[0]["body"])
         self.assertEqual(self.desk.issues["EMB-4"]["state"], "Fleet Ready")
 
+    def test_a_clone_the_fleet_does_not_work_is_a_scope_and_the_owners(self):
+        root = self.doc.parent
+        (root / "embarch-private" / ".git").mkdir(parents=True)
+        (root / "embarch-x-wt").mkdir()
+        (root / "embarch-x-wt" / ".git").write_text("gitdir: elsewhere\n")
+        private = FILED.replace("**Scope:** ui", "**Scope:** private")
+        r = self.linear("file", "--from", "owner", "--project", "embarch-private", "--title", "P",
+                        "--body", private.replace("**Filed by:** worker", "**Filed by:** owner"))
+        self.assertEqual(r.returncode, 0, r.stderr)
+        r = self.linear("file", "--from", "owner", "--project", "embarch-x-wt", "--title", "W",
+                        "--body", FILED.replace("**Scope:** ui", "**Scope:** x-wt").replace("**Filed by:** worker", "**Filed by:** owner"))
+        self.assertEqual(r.returncode, 4, "a linked worktree is no scope")
+        self.desk.issue("EMB-1", "Fleet Ready", project="embarch-private")
+        self.desk.issues["EMB-1"]["description"] = private
+        self.linear("ready")
+        self.assertEqual(self.desk.issues["EMB-1"]["state"], "Todo")
+        said = [b for p, b in self.desk.calls if p == "/drafts" and b.get("issue_key") == "EMB-1"]
+        self.assertIn("`Scope: private` is a repo the fleet does not work", said[0]["body"])
+
     def test_ready_leaves_an_owner_only_issue_the_fleet_already_split(self):
         self.desk.issue("EMB-1", "Fleet Ready")
         self.desk.issues["EMB-1"]["description"] = FILED.replace("**Scope:** ui", "**Scope:** fleet")
