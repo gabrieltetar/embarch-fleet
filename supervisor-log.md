@@ -97,42 +97,32 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-06 12:34 — dev-bench/040 spec.md out of reserve by a verbatim split
+
+**Decided:** (1) **Split all seven Fleet Ready issues** (`EMB-49`–`55`, every one an `embarch-atlas` bug filed by a worker, `Hardware: none`) into `tasks/atlas/027`–`033`, one task per issue (`f6eaffa6`), `filed` moved all seven to Fleet Working, announced `ts` `1793993406.066929` before dispatch, no reply. Map: 027 `EMB-49` sysbuild app image, 028 `EMB-54` build dir keyed on args, 029 `EMB-50` Nordic DT pin decode, 030 `EMB-51` codecheck compiled sources, 031 `EMB-52` offset define, 032 `EMB-53` DT-limits quantity and role, 033 `EMB-55` strap wording. (2) **Reopened `dev-bench/040` from `blocked`** as the size ledger's first unit (overdue since 2026-11-01), flipping `In flux:` to `no, for the remedy this task now takes` on `chat/004`'s 2026-10-28 reading: a verbatim split restates nothing. The filer expected a PD bench section to move, but `spec.md` holds only one paragraph and one row about it, which is the in-flux text; so the worker moved settled §5 instead and left both PD bench passages word for word. (3) Committed one `suite/features.md` row with no fragment from this unit (a desk-notes row already on `main` as a fragment, unassembled), the same deterministic rebuild `ui/103` made.
+**Merged:** `agent/dev-bench/040-compact-dev-bench` (doc `e3caf357` on `8dd4bd2f`, ff; code none, the `embarch-dev-bench` branch has no commits and was never pushed). `spec.md` 9,632 → 7,151 B, PAID; new `embarch-dev-bench/spec/constants.md` 2,898 B. I diffed the removed lines against the added ones: identical except the SRAM paragraph's `open.md` link, now `../open.md`. Gate on the merge result: `check-docs.py` 12/12, ownership `dev-bench` OK (4 paths). `cargo` not run, no code changed.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** DEGRADED at start, no usage cache, measured wave 2, no 429.
+**Least sure about:** whether flipping a `yes` to `no, for the remedy` is the reading the owner meant `In flux:` to allow. The gate forces it (`claimed` with `yes` is red), `DOC-BUDGET.md` says a split is never forbidden by flux, and one precedent did it, but `.claude/leg.md` also says "never dispatch one whose `In flux:` says yes", and a field rewritten to make a dispatch legal is the pattern that rule watches for.
+**Leg notes (this leg, first unit):** step 0 found no claims, no worker worktrees, no mid-ops; the pump latch was present, no stop marker. Bench refreshed: `dev-bench` and `dut` both **not attached**, so `api/059`, `dev-bench/035`, `038` stay `open`. Refill not owed (10 dispatchable across 4 scopes, wave 2). This fold also carries the `2026-11-04` day fold (by the log-folder) and the roll of `2026-10-28`; `check-client-names.py --suite --history` clean on all 16 repos. `embarch-fleet`'s `scripts/fleet-pump.py` is modified in its working tree and is not mine: left alone, not staged.
+
+## 2026-11-04 — 1 units
+
+*Folded by a leg's log-folder, 2026-11-06: the narrative reasoning behind each accepted call is dropped, git holds it; the ledger, the three judgement calls and the leg-close carry-forward stay.*
+
+**Carry-forward (next leg, read this first):** 1 of 1 units, the cap the prompt set; no pump latch was present. **Owed by the next unrestricted leg:** `dev-bench/040` is overdue (due 2026-11-01, `blocked`) and takes the first unit; the refill sweep was last run 2026-10-29. Read the `2026-10-29` carry-forward's "`inbox/` is empty" as "Fleet Ready is empty": that directory is gone. The dream `ts` `1793318476.457199` has had no human reply. `desk/005` is the only other dispatchable task. `changelog.d/` holds 66 fragments I did not write and left alone, `umbrella-check-17-measured.decided.md` among them. This `ui` fold pruned `embarch-ui`'s two `agent/ui/059-*` branches (the `2026-10-29` carry-forward listed them as unproven): `9199da5` and `052990c` are on `main`, and the one unmatched commit, `21a48de`, is the earlier draft of the same `src/logs.rs` fix. `embarch-doc`'s origin copy still stands. `agent/ui/103-*` stays as `embarch-doc`'s origin branch and a local branch in both repos until the next `ui` fold, since a fold prunes one behind. The day's fold also carried `2026-10-29`'s day fold and the roll of `2026-10-26`; `check-client-names.py --suite --history` was clean on every repo. Nothing deployed.
+
 ## 2026-11-04 16:00 — ui/103 a tab manifest says icon is required
 
-**Decided:** nothing suite-wide. The first issue through Linear intake since `inbox/` was retired: `EMB-8` split into
-`tasks/ui/103` (`eb2c5ab6`), `filed` moved it to Fleet Working, announced `ts` `1793832990.931349` before dispatch, no
-reply. `embarch-ui/interfaces.md`'s manifest section now says `label`, `icon` and `panel` are required, `icon` must
-name an `.svg`, and a tab that fails this is left off the page with `tab <id> is left out: <error>` logged. Three calls
-of mine: (1) **I honoured the prompt's `1 ui` over the size ledger**, so overdue `dev-bench/040` did not get this leg's
-first unit. (2) **I skipped the sweep although `--refill-owed` exited 0**: a one-unit leg restricted to `ui` had its
-unit from the split, and nothing it filed could run. (3) **I committed `suite/features.md` with no `features.d/`
-fragment from this unit**, because `build_features.py` found `main`'s table stale: it picked up already-committed rows
-(the lease row's update, a `tab-folders` row, a desk Start-work row, a two-logins row), rebuilt deterministically, so a
-revert of this fold only makes the table stale again. Worker left the task's `State:` at `claimed` with its boxes
-ticked, which is all its definition's checklist asks; I set `done` at the fold, so the file retires.
-**Merged:** `agent/ui/103-tab-manifest-says-icon-is-required` (doc `a2081aac` on `5218e1a6`, ff; code none, doc-only
-unit, `embarch-ui` `main` stays at `ca9e6bc`, its worktree never committed or pushed). Gate on the merge result:
-`check-docs.py` 12/12, client names clean on the code worktree, ownership `ui` OK on both branches (3 paths and 0).
-`cargo` not run: no code changed.
+**Decided:** nothing suite-wide. First issue through Linear intake since `inbox/` was retired: `EMB-8` split into `tasks/ui/103` (`eb2c5ab6`), announced `ts` `1793832990.931349` before dispatch, no reply. `embarch-ui/interfaces.md` now says a manifest's `label`, `icon` and `panel` are required, `icon` names an `.svg`, and a failing tab is left off the page with `tab <id> is left out: <error>` logged. Three calls: (1) honoured the prompt's `1 ui` over the size ledger, so overdue `dev-bench/040` got no unit this leg; (2) skipped the refill sweep though `--refill-owed` exited 0; (3) committed `suite/features.md` with no `features.d/` fragment, because `build_features.py` found `main`'s table stale and rebuilt it deterministically (a revert only makes it stale again).
+**Merged:** `agent/ui/103-tab-manifest-says-icon-is-required` (doc `a2081aac` on `5218e1a6`, ff; code none, doc-only, `embarch-ui` `main` stays at `ca9e6bc`). Gate: `check-docs.py` 12/12, client names clean, ownership `ui` OK. `cargo` not run.
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** none.
 **Budget:** DEGRADED at start and end, no usage cache, measured wave 2, no 429.
-**Least sure about:** the "missing `icon` is left out" sentence rests on `Manifest.icon` being a required `String` and
-on the four log call sites in `src/tabs.rs`; no test has a manifest with that key missing. Worker, reviewer and I all
-read it from the type.
-**Leg close (next leg, read this first):** 1 of 1 units, the cap the prompt set; no pump latch was present. This fold
-also carries `2026-10-29`'s day fold and the roll of `2026-10-26`, and `check-client-names.py --suite --history` was
-clean on every repo. **Owed by the next unrestricted leg:** `dev-bench/040` is overdue (due 2026-11-01, `blocked`) and
-takes the first unit; the refill sweep, last run 2026-10-29. **Read the `2026-10-29` carry-forward's "`inbox/` is
-empty" as "Fleet Ready is empty"**: that directory is gone. The dream `ts` `1793318476.457199` has had no human reply.
-`desk/005` is the only other dispatchable task. `changelog.d/` holds 66 fragments I did not write and left alone,
-`umbrella-check-17-measured.decided.md` among them. This `ui` fold prunes `embarch-ui`'s two `agent/ui/059-*` branches,
-which the 2026-10-29 carry-forward lists as unproven: I checked, `9199da5` and `052990c` are on `main` and the one
-unmatched commit, `21a48de`, is the earlier draft of the same `src/logs.rs` fix. `embarch-doc`'s origin copy still
-stands. `agent/ui/103-*` stays as `embarch-doc`'s origin branch and a local branch in both repos until the next `ui`
-fold, since a fold prunes one behind. Nothing deployed.
-
+**Least sure about:** "missing `icon` is left out" rests on `Manifest.icon` being a required `String` and four log call sites in `src/tabs.rs`; no test has a manifest missing that key.
 ## 2026-10-29 — 31 units
 
 *Folded 2026-11-04 by the log-folder for the supervisor leg: the per-unit reasoning, gate-result lists and "least sure about" prose went to git; SHAs, reviewer lines and hardware debts are kept per unit. Five legs ran (14:24 to 18:01), wave 6, budget PROCEED throughout, weekly 22.2% rising to 29.4%.*
@@ -335,146 +325,4 @@ fold, since a fold prunes one behind. Nothing deployed.
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** owner-run, in `embarch-core/open.md`: (1) native Windows build, since the `cfg(windows)` registry and `sc failure` code has never been compiled; (2) a live `install --bind` over the registered service, checking `EMBARCH_SIGNAL_BAUD` survives and `sc qfailure` shows five restarts.
-## 2026-10-28 — 32 units
-
-*Folded by an `embarch-log-folder` subagent for the next leg's first unit, 2026-10-29: the per-unit narrative reasoning, gate-result detail, budget lines and "least sure about" prose went; every SHA, every reviewer line and every owed hardware debt is kept below, and git holds the rest.*
-
-**Carry forward (read this first):**
-- **The queue is dry outside `atlas`.** `queue-status.py` counted 19 dispatchable at the day's end and every one is an `atlas` task, skipped per `tasks/doc/089` (no atlas gate). The listener may keep spawning legs because the script counts atlas as dispatchable; that gap is the owner's to close. A dream was posted (`ts` `1793248372.130149`): settle `tasks/doc/089`, start the `toolchain` lane by a leg's own hands (13 tasks), plug in the bench. **If no reply has arrived and `inbox/` is empty, do not dream again and do not invent work: end after step 0.**
-- **Bench:** Core up, no probes; `validate dev-bench` and `validate dut` both not attached (not a mismatch). `api/059`, `dev-bench/035`, `dev-bench/038` open. `fleet-hardware.py --refresh` still crashes (`tasks/doc/041`). Overdue size ledger: `suite/030` (owner-blocked), `doc/031` (owner-only); `study-designer/026` retired this day.
-- **Nothing from this day is deployed:** the live Core, the installed `embarch-api`, `embarch-ui` and `embarch` all predate it (`suite/046`-`049`, `api/125`, `api/128`, `api/129`, `api/130`, `core/116`-`121`, `ui/100`). An `embarch` built before `suite/047` reads the new `--version` lines as a manifest mismatch (doctor checks 1 and 15), so rebuild umbrella together with api and core.
-- **Suite-wide cross-repo designs approved by the supervisor under protocol §8, announced windows closed with no reply:** `suite/046` (bench board owns signals; topology decision 48, core 103, api 95), `suite/049` (SCPI instruments; topology 49, core 104, api 97), `suite/047` (every binary names its commit, install replaces a running binary, doctor check 18, core-log check renumbered 19; umbrella 57, api 93, core 100), `suite/048` (operator prompt step; core 105, api 99, `embarch-core-client`; the answer route is deliberately **not** lease-gated, anyone holding Core's token may answer, checked by prompt id; step `timeout_ms` capped at one hour). None is a wire-schema bump. `GET /study/{id}` on a finished host study now carries `host_result` rather than `result`.
-- **Open filings:** `tasks/umbrella/094` (compact `open.md`, blocked `In flux: yes`, due 2026-11-11); `tasks/ui/101`, `core/123`, `api/149` were filed and landed same day. Decision-compaction by verbatim split is the default remedy that `DOC-BUDGET.md` allows even over `In flux: yes` (used for `chat/004`, `topology/066`). **88 task files with `State: done` remain in `tasks/`**, not bulk-retired (docs may link them).
-- **Recurring failures likely to repeat:** (1) the fold's `&&` chain running past a refused fold through a `| tail` (three units named it: `api/128`, `ui/098`, `core/121`, `api/144`); a spurious `leg-fold` tick and Slack line go out before the real fold. (2) Workers leave the task's `State:` at `claimed` after ticking boxes (`tasks/doc/050`; workaround: commit `done` before the fold). (3) `git -C <repo> worktree add` with a relative path creates trees inside the repo; use absolute paths under `embarch/.worktrees/`. `embarch-api/.worktrees/embarch-api/` holds two 2026-09-13 symlinks, left alone. (4) The core gate flaked about one run in four on two capture-timing tests until `core/122` fixed them. (5) A worker can report a comment it did not write (`core/123`); only the reviewer's diff read caught it.
-- **A leg killed at ~17:35 left four claims in flight;** recovered by re-landing pushed branches (`topology/068`, `api/144`) and committing dead trees as WIP and re-claiming them as resumes (`ui/100` `cc29076`, `core/122` `a24c7d7`). Whether the owner wants resume rather than block next time is unasked.
-- **Open design questions the units left:** counting an ambiguous role-less-board `need` as met (`api/149`); the answer route being lease-open (`suite/048`); a 3 s server-side poll opening a UI session per running study (`ui/100`, nothing measured eight follows); `ui/101`'s "no uncaught JavaScript error" check reads `window.__errs`, which the page never installs, so it cannot fail. This fold also carried the 2026-10-26 day-fold (85 units; 268/268 SHAs, 85 reviewer lines, 27/27 debts) and `--roll` of 2026-09-28 and 2026-09-29.
-
-**Merged** (one line per unit; code SHA on its base, doc SHA rebased from the worker's; all ff unless stated; each gated on the merge result: build/test/clippy `-D warnings`, client names, `check-docs.py` 11/11, ownership):
-- `chat/004` timeline.md split by mission, verbatim (decisions 15, 16, 67, 68, 69, 74, 85 to `readouts.md`; 13,806 to 10,535 B): doc `4949d467` (worker `172bd8a0`) onto `043bf14d`; no code. Budget 9.2%. Leg 22:13 closed 4 of 4 (`api/149`, `core/123`, `ui/101`, `chat/004`); dream `ts` `1793248372.130149`.
-- `ui/101` modal driven headless against a stub Core (no rendering bug found): code `f6da709` on `9f5461e`, doc `7265c7e9` (worker `a525b68d`) onto `611c567e`.
-- `core/123` pacing comments say end of exchange (`mark_sent` renamed `mark_exchanged`; I finished the worker's placeholder comment): code `12192cc` on `5a310bb`, then fix `85846c4`; doc `10865fa0` (worker `ff11ac91`) onto `0610f8ff`.
-- `api/149` ledger needs match a role-less bench board by enrolled name (api decision 98 amended, `ambiguous_needs`): code `0f1f0d4` on `124f461`, doc `138d1a05` on `266d925c`, no rebase. Leg started 22:13 at `314ae07c`.
-- `ui/100` operator-prompt modal on any tab (ui decision 69, `operator-prompt.md`; server-side 3 s poll, `MAX_SESSIONS` 8): code `9f5461e` on `4914db5` (WIP `cc29076` + resume), doc `1a63895d` (worker `4fd56e26`) onto `a652ae4e`.
-- `core/122` capture-timing tests stop flaking (window `199..=10_000` ms): code `5a310bb` on `248a899` (WIP `a24c7d7` + resume), doc `5c89ff2f` (worker `bb26198f`) onto `e724500d`.
-- `api/144` compact `embarch-api/open.md` (4,810 to 3,905 B): doc `b2daa5e9` (worker `a086aebc`) onto `a42269ff`; code none, api main stays `124f461`.
-- `topology/068` `min_interval_ms` states Core's measurement point: code `eebc122` on `0803354`, doc `bb75de6e` (worker `f0135df7`) onto `2f2c7295`. Leg started 21:50 at `36923622`; resume re-claims `0d478fbe` (ui/100) and `2f2c7295` (core/122).
-- `suite/048` operator prompt step (announced `ts` `1793226580.382079`, 16:29:40): core `248a899` on `52d4659`, api `124f461` on `f088971`, ui `4914db5` on `0b18d18`, doc `7a018932`; ff in that order 17:18-17:21, ui main uncompilable against api main about two minutes between.
-- `ui/099` Study Designer tab shows protocol divergence (ui decision 68): code `0b18d18` on `7361c2b`, doc `35ad8443` (worker `77eb68ef`) onto `7e1fa488`.
-- `api/128` hardware test ledger per project (api decision 98; `run_study` gained optional `test`): code `f088971` on `2a89a61`, doc `dc7fa414` (worker `993289fe`) onto `67e62b55`.
-- `study-designer/080` pure reordering reported under the part that moved (decision 87 amended): code `d9dee0e` on `f0de25e`, doc `c5b6c58f`. Leg started 16:28 at `db81050d`; DUT role enrolled as an STM32G0B1VE, probe `000852006107`.
-- `suite/049` SCPI bench instruments (announced `ts` `1793223204.666079`, 15:33:24): topology `0803354` on `76bd3d1`, core `52d4659` on `2fccb61`, api `2a89a61` on `9c7832b`, doc `afbaa12f` onto `eda0e50b`.
-- `ui/098` signals table and dialog know a bench-board origin (ui decision 67): code `7361c2b` on `9d23e62`, doc `58cf8732` onto `7cd6a2e6`. Its Slack line names `6566cce6` (the `api/130` fold) as its fold by mistake; the real fold is the next commit.
-- `api/130` `embarch-api stack plan|fold|restack` (api decision 96; backups under `refs/backup/`): code `9c7832b` on `943f89d`, doc `7cd6a2e6` onto `fcc7c739`.
-- `study-designer/079` saved study told its protocol no longer matches the `.eap` (decision 87): code `f0de25e` on `302784c`, doc `fcc7c739`. Leg started 15:30 at `f9ef3f03`; announced `suite/049` `ts` `1793223204.666079`.
-- `suite/046` bench board owns signals (announced `ts` `1793219633.062879`, 14:33:53): topology `462e92e` + `76bd3d1` on `b4d1b0a`, core `2fccb61` on `c54591a`, api `943f89d` on `8e25811`, doc `b199ab9e`.
-- `core/121` bench study on a captured signal refused at submission (core decision 102): code `c54591a` on `c9bdfab`, doc `1ac397d3` (from `21d32f7d`) onto `e75e9c17`.
-- `ui/097` bench box takes its label on the first draw: code `9d23e62` on `7a6d923`, doc `589fa4f9` (from `05ea89d6`) onto `1ae3b546`.
-- `api/140` `decisions/client-crate.md` compacted (11,581 to 10,817 B): doc `a7d5dbec` onto `c20f1713`; no code. Leg started 14:53 at `70c9512b`.
-- `core/120` `GET /serial-log` resolves a declared signal (core decision 101): code `c9bdfab` on `2d3532d`, doc `3c959c85` onto `c73f6519`.
-- `ui/096` `drive_topology.py` isolates its state: code `7a6d923`, doc `9616e75e` onto `c7913c79`.
-- `umbrella/093` `embarch setup` installs the desk service and plugin (umbrella decision 58): code `4c786fa` on `97b1358`, doc `8469ab5f` onto `aeb1f31d`.
-- `api/125` `serial_log` reads a declared signal (api decision 94): code `8e25811` on `525cda7`, doc `213408cf` onto `ea68b4bc`.
-- `suite/047` every suite binary names its commit (announced `ts` `1793216385.010889`, 13:39:45): api `525cda7` on `744b94b`, core `2d3532d` on `72bbd52`, umbrella `97b1358` on `9d27e12`, doc `1c65685f`.
-- `ui/095` `time-chart.md` split verbatim (decision 37 to `time-chart-live.md`): doc `7aa213b0` onto `213bd3d0`; no code; `done` in `56550f47`.
-- `api/132` `zephyr.rs` cites decision 86, not 64: code `744b94b`, doc `25f394d4` onto `b8ca7aa6`; `done` in `4767f859`.
-- `core/118` `halt_count` takes the gate's share from `Validation.halts` (decision 97 amended): code `72bbd52`, doc `02869ae6` onto `4b128505`; `done` in `8f7e81f4`.
-- `api/129` `embarch-api patches export|import|regroup` (api decision 92, new dependency `sha2`): code `0fdcf05`, doc `90e2cbeb` onto `dae32801`.
-- `topology/066` links.md and enrollment.md split verbatim, `topology/060` paid early: doc `ccf66b1c` onto `5efffa07`; no code.
-- `study-designer/078` decision 81 no longer claims a "0 of 0" print: doc `e35da7be` onto `bf6efa5d`; no code.
-- `core/116` host study runs Repeat, per-pass line counts (core decision 99): code `29b552e`, doc `710dde87` onto `60f97214`.
-
-**Blocked:** nothing, all 32 units. One reviewer finding (`core/121`) was fixed in its fold and its drop deleted.
-
-**Reviewer** (one per unit, newest first):
-**Reviewer:** chat/004 — no findings.
-**Reviewer:** ui/101 — no findings.
-**Reviewer:** core/123 — no findings (it caught the unwritten placeholder comment; fixed as `85846c4`).
-**Reviewer:** api/149 — no findings.
-**Reviewer:** ui/100 — no findings.
-**Reviewer:** core/122 — no findings.
-**Reviewer:** api/144 — no findings.
-**Reviewer:** topology/068 — no findings.
-**Reviewer:** suite/048 — no findings.
-**Reviewer:** ui/099 — no findings.
-**Reviewer:** api/128 — no findings.
-**Reviewer:** study-designer/080 — no findings.
-**Reviewer:** suite/049 — no findings.
-**Reviewer:** ui/098 — no findings.
-**Reviewer:** api/130 — no findings.
-**Reviewer:** study-designer/079 — no findings.
-**Reviewer:** suite/046 — no findings.
-**Reviewer:** core/121 — 1 finding — inbox/core-decision-92-not-done-clause-stale-after-102.md (fixed in this fold, drop deleted)
-**Reviewer:** ui/097 — no findings.
-**Reviewer:** api/140 — no findings.
-**Reviewer:** core/120 — no findings.
-**Reviewer:** ui/096 — no findings.
-**Reviewer:** umbrella/093 — no findings.
-**Reviewer:** api/125 — no findings.
-**Reviewer:** suite/047 — no findings.
-**Reviewer:** ui/095 — no findings.
-**Reviewer:** api/132 — no findings.
-**Reviewer:** core/118 — no findings.
-**Reviewer:** api/129 — no findings.
-**Reviewer:** topology/066 — no findings.
-**Reviewer:** study-designer/078 — no findings.
-**Reviewer:** core/116 — no findings.
-
-**Hardware debts owed** (14 of 32 units; the rest none or "none new"; each in the day's own words, unit named on the line above):
-ui/101:
-**Hardware debts:** one prompt answered from the UI against a live Core with the beep and desktop notification
-heard (not exercisable headless); the installed `embarch-ui` predates `ui/100`.
-core/123:
-**Hardware debts:** native Windows build of `embarch-core` (comment-only change, so a formality).
-ui/100:
-**Hardware debts:** (1) the modal has never rendered in a browser (`tasks/ui/101`, host-side); (2) one prompt
-answered from the UI against a live Core, with sound and notification heard, and the installed `embarch-ui`
-predates this.
-suite/048:
-**Hardware debts:** (1) nothing deployed: the live Core and the installed `embarch-api` predate this (and `suite/049`
-and `api/128`); (2) one prompt answered on a real bench from each surface, including a stale answer refused; (3)
-native Windows build of `embarch-core`.
-api/128:
-**Hardware debts:** the task's bench box, written as three steps in the retired task and in `open.md`: a
-`tests.toml` with one `dut` test and one needing an absent role gives one runnable and one grouped; `run-study --test`
-lands a row that settles; amending a passed commit flags `commit-unreachable`. Needs a deployed Core and a rebuilt
-`embarch-api` binary; nothing is deployed.
-suite/049:
-**Hardware debts:** (1) nothing deployed: the live Core and the installed `embarch-api` predate this; (2) the task's
-bench check, owed: on the ET5410A+, `*IDN?`, `MEAS1:ALL?`, `CH1:SW ON`/`OFF` read back and `LOAD1:ABNO?`, time per
-command recorded in core decision 104 (no instrument is declared; the bench was unattached this leg); (3) native
-Windows build of `embarch-core`.
-suite/046:
-**Hardware debts:** (1) nothing deployed: the live Core and the installed `embarch-api` predate this; (2) one real
-run on a bench board: `declare_signal origin_board=<its name>`, `mem_read probe_serial=`, `validate probe_serial=`,
-and a reset resolved from that signal; (3) native Windows build of `embarch-core`.
-core/121:
-**Hardware debts:** (1) native Windows build of `embarch-core`; (2) once deployed, one bench study tapping a signal
-while `POST /signals/{name}/capture` holds it: expect `409` and no flash. Not deployed.
-core/120:
-**Hardware debts:** (1) once deployed, one `serial_log signal=<name> port_wait_ms=~10000` across a DUT reset on
-a CDC ACM console: expect 200, `port` the new name, lines at the signal's baud; one `signal=` on a `host-to-dut`
-signal, expect 409; (2) native Windows build of `embarch-core`. Not deployed.
-umbrella/093:
-**Hardware debts:** owner run: one real `embarch setup` on a machine with `embarch-desk` and `claude`, both steps
-reporting done (the service install restarts the live desk), then `setup --uninstall` removing both.
-api/125:
-**Hardware debts:** once `core/120` lands and Core is deployed, one `serial_log signal=<DUT console>
-port_wait_ms=5000` across a DUT reset on a CDC ACM console, confirming lines arrive at the signal's baud.
-Not deployed: the installed `embarch-api` does not have `signal` yet.
-suite/047:
-**Hardware debts:** (1) nothing is rebuilt, installed or deployed: the owner's installed `embarch-api`, the
-live Core and `embarch` still print the old lines until rebuilt; **an `embarch` built before this reads the
-new `--version` lines as a manifest mismatch (checks 1 and 15), so rebuild umbrella with the others**;
-(2) `deploy-core`'s `WSLENV` hand-off has never run against the real service, so the first deploy should
-confirm the service's `--version` names the commit; (3) Windows install over a running binary is stated,
-not tested; (4) native Windows build of `embarch-core`.
-core/118:
-**Hardware debts:** (1) a real STM32G0 through `POST /live/core-state` on a running core should report
-`halt_count == 1` by default and 2 with `halt=true`; (2) native Windows build of `embarch-core`. Not deployed.
-core/116:
-**Hardware debts:** (1) run the designer's fixture study (`host_pd_hard_reset_counts.json`, 8 Hard Resets, two
-taps) on the PD bench and compare the per-pass counts against a hand count of the console dump — it checks the
-assumption that a console line lands in the pass that caused it (a reply delayed past a pass's end counts in the
-next pass); (2) native Windows build of `embarch-core`. Not deployed.
-Not owed but unrun: ui/099, ui/098, ui/097 and ui/096 were never driven in a browser (`tests/browser/drive_topology.py` needs only geckodriver and a debug build; one headless look at an edited `.eap` study, one `declare_signal origin_board=` then a dialog re-save); `api/130`'s `stack` has met only throwaway fixture repos and needs git 2.38+; `api/129`'s `patches` has met only a synthetic 3-patch repo.
-*Days 2026-10-26 to 2026-10-26 rolled to [log-archive/supervisor-log-2026-10-26-to-2026-10-26.md](log-archive/supervisor-log-2026-10-26-to-2026-10-26.md).*
+*Days 2026-10-28 to 2026-10-28 rolled to [log-archive/supervisor-log-2026-10-28-to-2026-10-28.md](log-archive/supervisor-log-2026-10-28-to-2026-10-28.md).*
