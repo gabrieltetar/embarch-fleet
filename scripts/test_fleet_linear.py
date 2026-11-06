@@ -323,6 +323,36 @@ class Fleet(unittest.TestCase):
         self.assertEqual(list(self.state.glob("*.json")), [])
         self.assertIn("x\n\nFiled by the fleet (worker).", self.desk.said("/drafts")[0])
 
+    def test_ready_moves_what_the_fleet_cannot_take_to_the_owners_lane(self):
+        owned = {"EMB-1": FILED.replace("**Scope:** ui", "**Scope:** fleet"),
+                 "EMB-2": FILED.replace("**Hardware:** none", "**Hardware:** required"),
+                 "EMB-3": FILED.replace("**Type:** bug", "**Type:** decision")}
+        for key, body in {**owned, "EMB-4": FILED}.items():
+            self.desk.issue(key, "Fleet Ready")
+            self.desk.issues[key]["description"] = body
+        r = self.linear("ready")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("== EMB-4", r.stdout)
+        for key, why in (("EMB-1", "`Scope: fleet` is reserved to the owner"),
+                         ("EMB-2", "`Hardware: required` needs the owner's hands"),
+                         ("EMB-3", "`Type: decision` is the owner's call")):
+            self.assertNotIn(f"== {key}", r.stdout)
+            self.assertEqual(self.desk.issues[key]["state"], "Todo")
+            said = [b for p, b in self.desk.calls if p == "/drafts" and b["issue_key"] == key]
+            self.assertTrue(said[0]["body"].startswith("**Sent back** — this is mine to work"), said)
+            self.assertIn(why, said[0]["body"])
+        self.assertEqual(self.desk.issues["EMB-4"]["state"], "Fleet Ready")
+
+    def test_ready_leaves_an_owner_only_issue_the_fleet_already_split(self):
+        self.desk.issue("EMB-1", "Fleet Ready")
+        self.desk.issues["EMB-1"]["description"] = FILED.replace("**Scope:** ui", "**Scope:** fleet")
+        self.task("001-a.md", "EMB-1")
+        self.commit("split")
+        out = self.linear("ready").stdout
+        self.assertIn("ALREADY SPLIT", out)
+        self.assertEqual(self.desk.issues["EMB-1"]["state"], "Fleet Ready")
+        self.assertEqual(self.desk.said("/drafts"), [])
+
     def test_hide_session_asks_the_desk_to_hide_it(self):
         self.assertEqual(self.linear("hide-session", "abc").returncode, 0)
         self.assertEqual(self.desk.calls, [("/sessions/abc/assign", {"hidden": True})])
@@ -371,6 +401,8 @@ class Protocol(unittest.TestCase):
         self.assertTrue(any(x.startswith("Type 'feature' is not one of") for x in p), p)
         self.assertTrue(any(x.startswith("Hardware 'maybe' is not one of") for x in p), p)
         self.assertTrue(any(x.startswith("Scope 'nope' is not a sub-project") for x in p), p)
+        self.assertEqual(self.problems(FILED.replace("**Hardware:** none", "**Hardware:** toolchain")), [],
+                         "every value tasks/README.md defines")
 
     def test_the_summary_title_and_linear_autolinks_are_checked(self):
         self.assertIn("no summary before the fields", self.problems(VALID.split("\n", 2)[2]))

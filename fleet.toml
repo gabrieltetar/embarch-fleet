@@ -57,6 +57,10 @@ ready = "Fleet Ready"
 working = "Fleet Working"
 done = "Done"
 backlog = "Backlog"
+# The owner's own lane: `ready` moves a Fleet Ready issue the fleet cannot take
+# here (Scope fleet, Hardware required, Type decision), and Start work takes it
+# on to In Progress (embarch-doc LINEAR-PROTOCOL.md §6, owner's call 2026-11-05).
+owner_ready = "Todo"
 
 [linear.file_status]
 # Where a new issue from `fleet-linear.py file --from <kind>` starts. A finding made

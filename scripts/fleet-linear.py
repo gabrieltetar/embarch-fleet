@@ -32,6 +32,11 @@ every key it is handed must be in the configured team.
 it.** `file`, `rewrite` and `comment` refuse one that breaks it, naming what is
 wrong, with exit 4 and nothing sent; `lint` reports open issues that break it.
 
+**An issue the fleet cannot take leaves Fleet Ready at `ready`.** Its fields say
+so: `Scope: fleet` (reserved to the owner), `Hardware: required` (the owner's
+hands) or `Type: decision` (the owner's call). `ready` comments why and moves it
+to `owner_ready`, the owner's own lane, instead of listing it to split.
+
 **Where a new issue starts is `file_status` in `fleet.toml`.** A worker's or a
 reviewer's finding goes straight to Fleet Ready, as those are small and found in
 passing. An audit finding or a withheld decision goes to Backlog, for the owner
@@ -90,7 +95,7 @@ TYPES = {
     "investigation": (("Symptom", "Known", "Next check"), ("Hypotheses", "Where", "Found while")),
 }
 FIELDS = ("Type", "Scope", "Hardware", "Filed by")
-HARDWARE = ("none", "verify-only", "bench", "required")
+HARDWARE = ("none", "verify-only", "bench", "toolchain", "required")
 FILERS = ("owner", "session", "worker", "reviewer", "audit", "decision")
 KINDS = ("Split", "Sent back", "Closed", "Question", "Answer", "Progress", "Handoff",
          "Blocked", "Changed", "Finding")
@@ -108,6 +113,20 @@ HEAD_RE = re.compile(r"^\*\*(" + "|".join(KINDS) + r")\*\* — \S")
 # spans, links and URLs (`store.rs`, `claude.ai`, `README.md`).
 NOT_PROSE_RE = re.compile(r"```.*?```|`[^`\n]*`|\[[^\]]*\]\([^)]*\)|<https?://[^>]*>|https?://\S+", re.S)
 BARE_NAME_RE = re.compile(r"(?<![\w/.@-])(?:[\w-]+/)*[\w-]*[A-Za-z][\w-]*(?:\.[\w-]+)*\.[A-Za-z]{2,}\b")
+
+
+def owner_only(body: str) -> list[str]:
+    """Why an issue is the owner's to work, from its fields; empty when the
+    fleet may take it (LINEAR-PROTOCOL.md §6)."""
+    fields = parse_body(body)[1]
+    why = []
+    if fields.get("Scope") == "fleet":
+        why.append("`Scope: fleet` is reserved to the owner")
+    if fields.get("Hardware") == "required":
+        why.append("`Hardware: required` needs the owner's hands")
+    if fields.get("Type") == "decision":
+        why.append("`Type: decision` is the owner's call")
+    return why
 
 
 def scopes() -> set[str]:
@@ -442,9 +461,19 @@ def cmd_ready(s: dict, args) -> int:
     full = []
     for r in rows:
         detail = call(s, "GET", f"/linear/issue/{quote(r['key'])}")
+        description, tasks = detail.get("description") or "", tasks_on_main(r["key"])
+        why = owner_only(description)
+        # A split already on main is the fleet's, whatever the fields say now.
+        if why and not tasks:
+            lane = s["owner_ready"]
+            comment(s, r["key"], *thread("Sent back", f"this is mine to work, not the fleet's, so it is in {lane} :\n\n"
+                                                      + "\n".join(f"- {w}" for w in why)))
+            move(s, r["key"], lane)
+            print(f"{r['key']} moved to {lane}: " + "; ".join(why), file=sys.stderr)
+            continue
         full.append({"key": r["key"], "title": r["title"], "project": r.get("project"),
-                     "url": r.get("url"), "description": detail.get("description") or "",
-                     "comments": detail.get("comments") or [], "tasks": tasks_on_main(r["key"])})
+                     "url": r.get("url"), "description": description,
+                     "comments": detail.get("comments") or [], "tasks": tasks})
     if args.json:
         print(json.dumps(full, indent=1))
         return 0 if full else 1
