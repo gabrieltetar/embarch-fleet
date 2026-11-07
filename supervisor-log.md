@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-07 10:45 — dev-bench/041 a study over a bench cap is refused out loud
+
+**Decided:** nothing suite-wide. Third `toolchain` unit by the leg's own hands. **New `embarch-dev-bench` decision 51** (`decisions/link-limits.md`): `dbm_decode_frame` returns `DBM_DECODE_OVER_CAP` (-2) for a well-formed `StudyStart` over a decode-time cap, `dbm_decode_frame_why` also names the cap, the value and the limit, and `receive_message` sends `StudyStart refused: 17 steps over the bench cap of 16` as a `LogLine`; a malformed frame stays -1 and silent. Every cap refuses through one helper writing to a call-scoped pointer and still returning -1, so none of the propagation sites changed; I declined a context threaded through every reader and a code per cap. **Amended decision 50** (written by `dev-bench/004` an hour earlier): its "a decode refusal is silent" argument no longer holds, and the amendment says what is left of it. Overlay ride-along: `uart20` is VCOM1, interface 2 (decision 43); `uart30` is no longer given a VCOM, since nothing records which it is.
+**Merged:** `agent/dev-bench/041-a-study-the-bench-cannot-hold-is-refused-out-loud` (code `4026cde` on `952f788`, ff; doc `73f4d033`, `d35e009f` cherry-picked onto the claim commit). Gate on the merge result: ztests `serial_protocol` 65/65, `dev_bench_log` 15/15, `scan_seen_mfg` 7/7, `scan_seen_names` 5/5; `native_sim` app and nRF54L15DK image build; ownership `dev-bench` OK on both branches; client names clean; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** the ESP32-C5 image, one `Done when` box left unticked in the task for it (`EMB-83`, no `esptool` in the fleet venv). On a board: a 17-step `StudyStart` should produce the `LogLine` in Core's `dev-bench.log`; nothing has sent one yet.
+**Budget:** DEGRADED at the last boundary (wave 2); serial anyway.
+**Least sure about:** closing the task `done` with the ESP32-C5 box unticked. The code it builds is the same C the Nordic and `native_sim` builds compile, so I judged the box an environment debt rather than an open question, and wrote that in the box itself.
+
 ## 2026-11-07 10:36 — dev-bench/004 a state-machine index the run cannot follow fails the run
 
 **Decided:** nothing suite-wide. Second `toolchain` unit by the leg's own hands, built the same way (worktree sources, main checkout's workspace). **New `embarch-dev-bench` decision 50** (`decisions/protocols.md`, a new entry because 41 is pinned with 249 B left): a `when … goto`, `otherwise` or `on_timeout` target past `states_len`, or a `remember` variable past `session_len`, ends the run as `Fail` without moving (`EAP_FAIL_NO_SUCH_STATE`, `EAP_FAIL_NO_SUCH_VARIABLE` in `eap_interp.h`), so `final_state` names the state whose entry was bad. **Run-time rather than a decode refusal**, my pick of the task's two: a refused `StudyStart` is dropped without a word on the link today, while a failed run reaches Core by name. The cost, stated in the decision: a bad index on a branch never taken is never reported, which Core's validation covers. Four ztests (the task asked three; the `remember` got its own), all four failing with the interpreter change reverted (59/63), 63/63 with it.
