@@ -136,8 +136,9 @@ next one for up to 30 minutes.
    `leg` worktree, an `agent/*` branch, a `claimed` task — is what step 0's
    recovery clears after a killed leg, so it could never tell a live one apart.
 2. Run `scripts/usage-budget.py --suggest`. Exit `1` (HOLD) means **do not
-   start** — report the numbers and the reset time and stop; the listener will
-   not respawn you into a HOLD. Exit `2` (DEGRADED) is the normal case on this
+   start** — report the numbers and the reset time and stop; the listener runs
+   this same check before every spawn, so it will not respawn you into a HOLD.
+   Exit `2` (DEGRADED) is the normal case on this
    machine, not a failure: the percentages are unavailable and you proceed with
    the capped wave it prints. Its suggested wave size, not the cap, is how many
    workers you keep in flight.

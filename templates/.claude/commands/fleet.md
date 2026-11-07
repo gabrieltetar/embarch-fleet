@@ -173,7 +173,16 @@ Four steps, in this order.
 > as an ordinary FYI — **no `--action`, no mention** — because nothing is owed by
 > anyone.
 >
-> Otherwise run, in
+> **Otherwise ask the budget before any leg**, in `{{DOC_REPO}}`, exactly:
+> `scripts/usage-budget.py --suggest`, the same check a leg's step 2 runs. **Exit
+> `1` (HOLD) means spawn nothing this tick**, a dream included, and post nothing:
+> the leg that reached the cap has already said so. A leg spawned into a HOLD
+> only reads its protocol and exits, and its exit wakes this window to spawn the
+> next, a loop that spends whatever the window has left. The next heartbeat asks
+> again, and the first one after the reset spawns. Exit `0`, or `2` (DEGRADED, the
+> normal case when no reading is fresh), carries on.
+>
+> Then run, in
 > `{{DOC_REPO}}`, exactly:
 > `scripts/queue-status.py --no-supervisor --count`. **Pass `--no-supervisor`
 > because you just established it** — workers are a supervisor's own subagents,
