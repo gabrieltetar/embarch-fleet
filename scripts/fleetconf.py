@@ -55,6 +55,13 @@ def parse_instant(raw: str) -> float | None:
         dt = dt.astimezone()
     return dt.timestamp()
 
+# The pump latch's switch for the usage gate: one key, one value that turns it
+# off. The writers (`fleet-pump.py`, `fleet-burndown.py`) and the reader
+# (`Conf.gate_off`) share these so the three cannot spell it differently.
+GATE_KEY = "gate"
+GATE_OFF = "off"
+GATE_OFF_LINE = f"{GATE_KEY}={GATE_OFF}"
+
 _HERE = Path(__file__).resolve().parent
 _CANDIDATES = (
     os.environ.get("EMBARCH_FLEET_CONF"),
@@ -171,6 +178,19 @@ class Conf:
             return None, (f"the burndown deadline ({raw}) has passed; "
                           "normal caps apply")
         return latch, None
+
+    def gate_off(self) -> bool:
+        """True while the pump latch switches the usage gate off.
+
+        The field is `gate=off`, written by `fleet-pump.py --start --no-gate` or
+        `fleet-burndown.py --arm --no-gate`, and it lives exactly as long as the
+        latch: `fleet stop` deletes the latch and every start writes a new one,
+        so the gate comes back unless the owner asks again. Only the value `off`
+        counts. Anything else leaves the gate on, because a typo in a hand-edited
+        latch must never remove it.
+        """
+        latch = self.pump()
+        return latch is not None and latch.get(GATE_KEY, "").lower() == GATE_OFF
 
     @property
     def reserved(self) -> tuple[str, ...]:

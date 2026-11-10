@@ -7,7 +7,7 @@
 **Three windows, and only one of them is armed.**
 
 1. **The listener** — a dedicated VS Code window armed with `/fleet start` or `/fleet arm` ([.claude/commands/fleet.md](../embarch-doc/.claude/commands/fleet.md)), in Claude Code's panel: a chat in EmbArch Chat closes when idle and takes its cron with it. It reads #embarch-fleet on a 10-minute heartbeat — which fires **only while that window is idle**, and it is not idle while a leg runs ([slack.md](slack.md) §2) — spawns agents, relays what they say, nothing else.
-2. **The pump** — `/fleet start` in that window, or `scripts/fleet-pump.py --start` once it is armed: writes the latch, and from then on each leg's death spawns the next, the relay ([the protocol](protocol.md) §6). `fleet stop` in the channel or `scripts/fleet-pump.py --stop` ends it, finishing the unit.
+2. **The pump** — `/fleet start` in that window, or `scripts/fleet-pump.py --start` once it is armed: writes the latch, and from then on each leg's death spawns the next, the relay ([the protocol](protocol.md) §6). `fleet stop` in the channel or `scripts/fleet-pump.py --stop` ends it, finishing the unit. `--start --no-gate` latches it with the usage gate off ([budget.md](budget.md)).
 3. **The owner's window** — an ordinary session for standing rules, `scripts/`, `.claude/`, and hardware. New work goes in as a Linear issue from anywhere. Not armed, and not the fleet.
 
 `/supervise` runs **one leg** by hand. Agent definitions: [supervisor](../embarch-doc/.claude/agents/embarch-supervisor.md), [worker](../embarch-doc/.claude/agents/embarch-worker.md).

@@ -62,7 +62,9 @@ burndown` in a window, or `/fleet start burndown until <when>` to stop short.
 there is nothing to back off into. The leg lands what is in flight and runs
 `--clear`, which reverts the latch to `mode=normal` rather than deleting it — so
 the pump survives and the ordinary 90% gate decides what happens next, which at
-97% used is a HOLD it reaches by itself. An empty queue and a hard fault end it
+97% used is a HOLD it reaches by itself. `--clear` keeps the latch's `scope`
+and `gate` lines. **`--arm --no-gate` also writes `gate=off`**, which switches
+the gate off for the latch's life, the 97% stops included ([budget.md](budget.md)). An empty queue and a hard fault end it
 the same way; burndown spends the allowance on work that already exists and
 authorises nobody to invent more.
 

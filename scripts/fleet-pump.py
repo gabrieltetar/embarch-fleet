@@ -20,6 +20,7 @@ Usage:
   scripts/fleet-pump.py                        what is true now
   scripts/fleet-pump.py --json                 the same, for a program
   scripts/fleet-pump.py --start [--scope a,b]  latch the pump
+  scripts/fleet-pump.py --start --no-gate      latch it with the usage gate off
   scripts/fleet-pump.py --stop                 unlatch it, finishing the unit
 Exit status: 0 done or printed, 1 refused.
 """
@@ -37,7 +38,8 @@ from importlib.machinery import SourceFileLoader
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from fleetconf import ARMED_PROMPTS, CONF, armed_login, armed_stamp, login_name  # noqa: E402
+from fleetconf import (ARMED_PROMPTS, CONF, GATE_OFF_LINE, armed_login,  # noqa: E402
+                       armed_stamp, login_name)
 
 HERE = Path(__file__).resolve().parent
 LISTENER = ARMED_PROMPTS[0]
@@ -137,6 +139,7 @@ def status(now: float | None = None) -> dict:
         "now_s": int(now),
         "pump_on": latch is not None,
         "mode": (latch or {}).get("mode", ""),
+        "gate_off": CONF.gate_off(),
         "stop_requested": STOP.exists(),
         "leg_live": leg is not None,
         "login": login_name(login) if login else "",
@@ -159,16 +162,19 @@ def write_atomically(path: Path, text: str) -> None:
     os.replace(tmp, path)
 
 
-def start(scope: str | None) -> tuple[bool, str]:
+def start(scope: str | None, no_gate: bool = False) -> tuple[bool, str]:
     now = status()
     if not now["can_start"]:
         return False, now["why_not"]
     lines = ["mode=normal", f"started_at={time.strftime('%Y-%m-%dT%H:%M:%S%z')}"]
     if scope:
         lines.append(f"scope={scope}")
+    if no_gate:
+        lines.append(GATE_OFF_LINE)
     STOP.unlink(missing_ok=True)
     write_atomically(PUMP, "\n".join(lines) + "\n")
-    return True, "pump on: the listener starts a leg on its next heartbeat"
+    return True, ("pump on: the listener starts a leg on its next heartbeat"
+                  + (", usage gate off until the latch goes" if no_gate else ""))
 
 
 def stop() -> tuple[bool, str]:
@@ -182,7 +188,8 @@ def stop() -> tuple[bool, str]:
 
 
 def human(s: dict) -> str:
-    rows = [f"pump:     {'on' if s['pump_on'] else 'off'}" + (f" ({s['mode']})" if s["mode"] else ""),
+    rows = [f"pump:     {'on' if s['pump_on'] else 'off'}" + (f" ({s['mode']})" if s["mode"] else "")
+            + (", usage gate OFF" if s["gate_off"] else ""),
             f"leg:      {'running' if s['leg_live'] else 'none'}"
             + (", told to stop" if s["stop_requested"] else ""),
             f"login:    {s['login'] or 'none recorded'}",
@@ -198,16 +205,21 @@ def main() -> int:
     g.add_argument("--start", action="store_true", help="latch the pump")
     g.add_argument("--stop", action="store_true", help="unlatch it, finishing the unit")
     ap.add_argument("--scope", help="with --start, sub-projects recorded in the latch")
+    ap.add_argument("--no-gate", action="store_true", dest="no_gate",
+                    help="with --start, write gate=off: usage-budget.py answers "
+                         "PROCEED until the latch is deleted")
     ap.add_argument("--json", action="store_true", dest="as_json")
     a = ap.parse_args()
     if a.scope and not a.start:
         ap.error("--scope goes with --start")
+    if a.no_gate and not a.start:
+        ap.error("--no-gate goes with --start")
 
     if not (a.start or a.stop):
         s = status()
         print(json.dumps(s) if a.as_json else human(s))
         return 0
-    done, said = start(a.scope) if a.start else stop()
+    done, said = start(a.scope, a.no_gate) if a.start else stop()
     print(json.dumps({"done": done, "said": said}) if a.as_json else said)
     return 0 if done else 1
 

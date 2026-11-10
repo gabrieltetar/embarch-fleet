@@ -43,8 +43,13 @@ taper -- and the missing-percentage degradation is turned OFF, because that
 mode's only stop is a percentage. `scripts/fleet-burndown.py` arms it and
 `burndown.md` argues it. `--no-burndown` answers as if it were not armed.
 
+**The owner can switch the gate off through the same latch.** `gate=off` in
+`<state_dir>/pump` (`fleet-pump.py --start --no-gate`, `fleet-burndown.py --arm
+--no-gate`) makes every answer PROCEED with the burndown wave, and says so.
+
 Exit status is the whole interface:
-  0  PROCEED  -- headroom on both windows; ``--suggest`` prints a wave size
+  0  PROCEED  -- headroom on both windows, or the gate is off by latch;
+                 ``--suggest`` prints a wave size
   1  HOLD     -- a threshold is reached, or a recent 429; stop dispatching
   2  DEGRADED -- no percentages available; proceed with a capped wave.
                  ``--strict`` turns this back into HOLD.
@@ -73,6 +78,9 @@ import time
 CACHE = str(usage_cache_path())
 MAX_WORKERS = CONF['limits']['max_workers']          # ops.md §1's cap
 DEGRADED_WORKERS = CONF['limits']['degraded_workers']  # wave when percentages are unavailable
+# The wave while the latch carries `gate=off`: the burndown cap, the widest a
+# leg runs (burndown.md), so switching the gate off never widens past it.
+GATE_OFF_WORKERS = int(CONF.get("burndown", {}).get("max_workers", MAX_WORKERS))
 # The transcripts of the login whose quota this gate answers for -- the same
 # folder its cache comes from. Each login is its own account with its own
 # windows, so a 429 recorded under another login says nothing about this one,
@@ -467,6 +475,29 @@ def main() -> int:
         else:
             print(f"5h burn: {b[0]:,} billable tokens, {b[1]:,} requests, "
                   f"oldest {b[2]:.1f} h back -- {pct}")
+        return 0
+
+    # **The owner can switch this gate off, and only through the pump latch**
+    # (`gate=off`, `CONF.gate_off`). It is checked before any reading, so no
+    # percentage, stale cache, burn or 429 can hold a fleet the owner chose to
+    # run ungated, and it says so in every answer so it can never apply
+    # silently. It dies with the latch: `fleet stop` deletes it and every
+    # start writes a fresh one.
+    if CONF.gate_off():
+        workers = GATE_OFF_WORKERS
+        reason = (f"the usage gate is OFF by latch ({CONF.state_dir / 'pump'} "
+                  "says gate=off): no percentage, burn or 429 is checked")
+        if args.as_json:
+            print(json.dumps({"verdict": "PROCEED", "gate": "off", "reason": reason,
+                              "workers": workers, "blocking": [],
+                              "burndown": burndown, "end_burndown": False,
+                              "max_workers": workers}))
+        else:
+            print(f"PROCEED -- {reason}")
+            print("  It comes back with the next latch: fleet stop, or a start "
+                  "or burndown arm without --no-gate.")
+            if args.suggest:
+                print(f"  suggested wave: {workers} worker(s)")
         return 0
 
     throttled = recent_429(args.check_429)

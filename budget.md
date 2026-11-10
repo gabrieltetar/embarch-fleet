@@ -30,6 +30,8 @@ So the gate degrades rather than blocking: `usage-budget.py` exits `0` PROCEED, 
 
 **The backstop needs no percentage at all.** If a worker dies with a real rate-limit error: stop dispatching, land what is done, write the log entries, exit. That is what keeps this safe when the numbers are wrong.
 
+**The owner can switch the gate off, and only through the pump latch** (owner's call, 2026-11-09). `scripts/fleet-pump.py --start --no-gate`, or `scripts/fleet-burndown.py --arm --no-gate`, writes `gate=off` into the latch beside `mode` and `scope`. While it is there, `usage-budget.py` answers PROCEED, exit 0, with the burndown wave of `[burndown] max_workers` (6), and reads no percentage, burn or 429; its first line says the gate is off by latch, and `--json` carries `"gate": "off"`. Only the value `off` counts. It dies with the latch: `fleet stop` deletes it and every start writes a fresh one, so the gate comes back unless asked for again. `fleet-burndown.py --clear` keeps it, as it keeps the pump. The backstop above still applies, because it never read the gate.
+
 
 # Burndown
 

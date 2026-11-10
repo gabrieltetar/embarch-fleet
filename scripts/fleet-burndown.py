@@ -43,8 +43,10 @@ whether anything runs next, and after a 429 at 97% that gate holds by itself.
 
 Usage:
   scripts/fleet-burndown.py                      report (default)
-  scripts/fleet-burndown.py --arm [--scope core,ui]
-                                    arm until the login's weekly reset
+  scripts/fleet-burndown.py --arm [--scope core,ui] [--no-gate]
+                                    arm until the login's weekly reset;
+                                    --no-gate also writes gate=off, which turns
+                                    usage-budget.py's checks off (budget.md)
   scripts/fleet-burndown.py --until '2026-09-09 07:00'
                                     same, with the deadline stated by hand
   scripts/fleet-burndown.py --clear --reason '429 at 04:12Z'
@@ -63,7 +65,8 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from fleetconf import CONF, parse_instant, usage_cache_path  # noqa: E402
+from fleetconf import (CONF, GATE_KEY, GATE_OFF_LINE, parse_instant,  # noqa: E402
+                       usage_cache_path)
 
 CACHE = usage_cache_path()
 PUMP = CONF.state_dir / "pump"
@@ -136,7 +139,8 @@ def snapshot() -> dict:
     }
 
 
-def arm(until_raw: str | None, scope: str | None, snap: dict) -> tuple[int, list[str]]:
+def arm(until_raw: str | None, scope: str | None, snap: dict,
+        no_gate: bool = False) -> tuple[int, list[str]]:
     """Write the burndown latch, or refuse and say which precondition failed.
 
     Every refusal below is a case where arming would produce a burndown that
@@ -203,6 +207,8 @@ def arm(until_raw: str | None, scope: str | None, snap: dict) -> tuple[int, list
              f"armed_at={iso(time.time())}"]
     if scope:
         lines.append(f"scope={scope}")
+    if no_gate:
+        lines.append(GATE_OFF_LINE)
     lines += ["",
               "# Written by scripts/fleet-burndown.py. See embarch-fleet/budget.md",
               "# 'Burndown'. Deleting this file stops the fleet; setting mode",
@@ -226,16 +232,20 @@ def clear(reason: str | None) -> int:
     if latch.get("mode") != "burndown":
         print("the pump latch is already in normal mode")
         return 0
+    # The gate switch outlives the mode: clearing keeps the pump latched, and
+    # `gate=off` lives as long as the latch does.
     keep = [f"{k}={v}" for k, v in latch.items()
-            if k in ("scope",)]
+            if k in ("scope", GATE_KEY)]
+    caps = ("the usage gate stays off (gate=off)" if CONF.gate_off()
+            else "normal caps apply")
     body = ["mode=normal"] + keep + [
         "",
         f"# Burndown ended {iso(time.time())}"
         + (f": {reason}" if reason else "."),
-        "# The pump is still latched -- the normal [limits] caps apply now.",
+        f"# The pump is still latched -- {caps}.",
         ""]
     PUMP.write_text("\n".join(body) + "\n")
-    print("burndown ended; pump still latched, normal caps apply"
+    print(f"burndown ended; pump still latched, {caps}"
           + (f" ({reason})" if reason else ""))
     return 0
 
@@ -274,6 +284,9 @@ def main() -> int:
                          "(no timezone = local)")
     ap.add_argument("--scope", help="comma-separated sub-projects, recorded in "
                                     "the latch the way `/fleet start core,ui` does")
+    ap.add_argument("--no-gate", action="store_true", dest="no_gate",
+                    help="when arming, also write gate=off: usage-budget.py "
+                         "answers PROCEED until the latch is deleted")
     ap.add_argument("--clear", action="store_true",
                     help="end the burndown, leave the pump latched in normal mode")
     ap.add_argument("--reason", help="with --clear, why it ended (recorded in the latch)")
@@ -285,6 +298,8 @@ def main() -> int:
 
     if (args.until or args.arm) and args.clear:
         ap.error("--clear is the opposite of arming")
+    if args.no_gate and not (args.until or args.arm):
+        ap.error("--no-gate goes with --arm or --until")
     # Arming is never the default. `--until` implies it, because passing a
     # deadline can mean nothing else; a bare invocation reports, because a
     # command that latches the fleet when run with no arguments is one typo
@@ -313,7 +328,7 @@ def main() -> int:
 
     snap = snapshot()
     if arming:
-        rc, bad = arm(args.until, args.scope, snap)
+        rc, bad = arm(args.until, args.scope, snap, args.no_gate)
         snap = snapshot()
         if args.as_json:
             print(json.dumps(dict(snap, refused=bad), default=str))
@@ -332,6 +347,9 @@ def main() -> int:
                   f"{snap['caps']['five_hour_pct']}% 5-hour")
             if snap["weekly_pct"] is not None:
                 print(f"  weekly is {snap['weekly_pct']:.1f}% now")
+            if args.no_gate:
+                print("  The usage gate is OFF (gate=off): no cap above is "
+                      "enforced until the latch goes.")
             print("  The pump is latched. A leg starts on the next tick.")
         return rc
 
