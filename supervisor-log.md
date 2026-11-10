@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 21:11 — atlas/046 Check K reads side-by-side groups and a lone TYP column
+
+**Decided:** nothing numbered. `DocText.columns` in `check.py` now splits a header band into MIN/TYP/MAX groups (`_hdr_groups`: a repeated key starts the next group; a lone MIN, TYP or MAX word beside a UNIT header is a group of its own), reads each within its own x-range (`_read_group`), and holds the record to the group whose cells agree with most of its numbers (`_agree`). `DESIGN.md` has no check-K text, so the K line of `check.py`'s module docstring is what was amended. Unreadable tables were already non-failing `not checkable` statuses, so `_is_fail` is unchanged.
+**Merged:** `agent/atlas/046-check-k-reads-side-by-side-groups-and-a-lone-typ` (code `ca32a6c`, ff on `4a27ae0`; doc `aadfe5e5`, the worker's `9f20c0b8` cherry-picked onto `2a544fae`). Gate on the merge result: `pytest` 668 passed, 3 expected skips (`test_public_guard` ran); client names clean; ownership `atlas` OK on both branches; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, gate off by latch (burndown until 2026-11-11 06:00), wave 6.
+**Least sure about:** holding a record to its best-agreeing group means a number taken from the other condition's group (the 5 V column for a 3.3 V row) now passes K. The reviewer called it a trade-off rather than a contradiction, since K read the wrong group outright before; I filed it for the owner as EMB-113 (Backlog, change).
+
 ## 2026-11-09 21:05 — atlas/045 nets joined through an off-sheet port are one net
 
 **Decided:** nothing numbered; `DESIGN.md` gains a "How nets join" paragraph and an `aliases` key in the `netlist.json` shape. `join_board_nets` in `smartpdf.py` replaces the one-net-per-name block: same-named sheet nets join as before, and sheet nets carrying a same-named port on different sheets join too, transitively; the joined net takes the first non-auto-named name in natural order and lists the rest in `aliases`. A port with no port, sheet-level port or same-named net on another sheet is an `issues` entry. `geom.py` still cross-checks per sheet and per name, which `DESIGN.md` says.
