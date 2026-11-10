@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 19:30 — atlas/039 a step marker in a rule is not a numeric claim
+
+**Decided:** (1) **Split five more Fleet Ready issues** (`bf619a2a`): EMB-16 into `desk/009`, EMB-18 into `desk/010`, EMB-31, 39 and 44 into `atlas/042`–`044`, each checked against `main` first (the desk and atlas code paths each names still read as the issue says). Announced at `ts` `1794277712.673199`. **Left in Fleet Ready on purpose:** EMB-82 asks for a new `embarch-desk` decision, which burndown withholds; EMB-76 has half its Done when in a repo the fleet does not work; EMB-40 needs the one real datasheet that showed it. 28 remain (10 desk, 18 atlas). (2) For the unit itself, nothing: `NOT_CLAIMS` gains a bare one- or two-digit integer in parentheses, which `rm.py` also picks up through `blank_not_claims`; `DESIGN.md` says so.
+**Merged:** `agent/atlas/039-a-step-marker-in-a-rule-is-not-a-numeric-claim` (code `335939a`, ff on `50a9a15`; doc `a61362e6`, the worker's `e3084a54` cherry-picked onto `bf619a2a`). Gate on the merge result: `pytest` 657 passed, 3 expected skips, client names clean, `check-docs.py` 12/12; ownership `atlas` OK on both branches.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, gate off by latch (burndown), wave 6, 4 in flight.
+**Least sure about:** a bare `(12)` meant as a real value is now ignored by check M too, and only `(100)` and up still counts; the reviewer called it a narrow loss of coverage rather than a contradiction, and no test pins where a real two-digit bare value appears in a distilled section.
+
 ## 2026-11-09 19:26 — atlas/038 a spaced minus and a thousands separator parse as one number
 
 **Decided:** nothing new; the worker refined atlas `DESIGN.md` decision 2's number-reading note in the same diff. **This fold is recovery.** The leg that started 17:47 split six Fleet Ready issues (`273ed317`: EMB-36, 37, 38, 41 into `atlas/038`–`041`, EMB-13 and 9 into `desk/007`–`008`), claimed four tasks, dispatched at 17:54, landed `atlas/038`'s code and doc to `main`, and died without a tick, a fold or a log entry. The listener's ticks resumed at 18:58; I took the lock at 19:20. Recovery: its three other claims (`chat/009`, `desk/007`, `promptu/002`) had clean worktrees and no commits anywhere, so I removed the worktrees, deleted the empty local branches and reclaimed them to `open` (`2bc10797`), then claimed and dispatched them again in this leg.
