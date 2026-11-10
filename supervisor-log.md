@@ -97,6 +97,17 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 21:02 — desk/013 a word search names the team it searched
+
+**Decided:** nothing; decision 34 (`embarch-desk/decisions/desks.md`) unchanged and the search not widened. A new `LinearBinding::scope_label()` in `src/store.rs` is the project name, else `team <KEY>`; `/linear/search` returns it as `scope` and `/pickup` now calls it instead of its own inline copy. The `linear_search` tool description says a word query searches the desk's scope and the answer names it, and a key reads from any connected workspace. `interfaces.md` says both routes carry `scope`.
+**Merged:** `agent/desk/013-a-word-search-names-the-team-it-searched` (code `5a8fcad`, ff on `bc06133`; doc `3c9141d4`, the worker's `04c05358` cherry-picked onto `169207d2`). Gate on the merge result: `cargo build`, `cargo test` (196), `clippy --all-targets -D warnings` green; client names clean; ownership `desk` OK on both branches; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. Owed to a live desk: a team-bound desk's word search answering with `team <KEY>`. Nothing installed; the running desk keeps the old answer until the owner rebuilds it.
+**Budget:** PROCEED, gate off by latch (burndown until 2026-11-11 06:00), wave 6.
+**Least sure about:** the test covers `scope_label` alone, not the HTTP handler (which needs live Linear); and `/linear/mine` and `/linear/open` still answer the bare project name, empty on a team-bound desk — the same gap, which the worker reported and did not file; I filed it as EMB-111 (Fleet Ready).
+**Leg notes (this leg, first unit):** spawned with the pump latched in burndown (`gate=off`), no stop marker, no owner message. Step 0 found no claims, no worker worktrees, no mid-merge; leg began at `504bd5e6`. **Split EMB-24 into `tasks/atlas/045` and EMB-35 into `tasks/atlas/046`** (`5fdc6473`), so `atlas` has tasks again; both are synthetic-fixture only, and 046 drops the issue's "the real datasheet gives no K failure" item as unrunnable in a public repo. `--refill-owed` fired on spread only; skipped, as no source changed since `2026-11-09 17:34`. Dispatched `chat/016`, `desk/013`, `atlas/045`. Nothing overdue on the size ledger; not past midnight, so no day fold. `embarch-chat/spec.md` is 9,034 B, 5 B under its reserve line; the chat worker was told.
+
 ## 2026-11-09 20:54 — chat/011 the inline diff is one line until opened
 
 **Decided:** nothing new; decision 8 in `embarch-chat/decisions/timeline.md` is amended in place (EMB-58). `ToolViewInner` in `tools.tsx` no longer starts an Edit or Write row open, so the timeline shows the file and `+N −M` until a click opens it in place and a second click closes it; `DiffView` and `cards.tsx` are unchanged, so a permission card keeps its diff open (the card renders its own `DiffView`; the worker's citation of decision 64 was wrong, as that one is about the diff tab). `spec.md` untouched, so it stays just under its reserve line.
