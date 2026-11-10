@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 20:24 — atlas/042 a kind override reaches a prepped document's doc.json
+
+**Decided:** nothing new. `_refresh_manifest` now calls a new `_sync_doc_json` after rewriting the manifest: any prepped document whose `doc.json` has the manifest record's sha256 and a different `kind` gets the manifest's kind, and the command prints `docs/<id>/doc.json: kind X -> Y`. That covers `missing --kind`, `--confirm reference-manual` and `--confirm-all`'s reference-manual path, which all go through `_refresh_manifest`. An unprepped document needs nothing: `doc prep` already reads the manifest's kind. `DESIGN.md` says so in its override paragraph and verb table.
+**Merged:** `agent/atlas/042-a-kind-override-reaches-a-prepped-documents-doc-json` (code `fe7c00c`, ff on `da6c505`; doc `0da06622` and `d7f95f58`, the worker's `77dd3890` and `0391c5c2` cherry-picked onto `d2a90464`). Gate on the merge result: `pytest` 662 passed, 3 expected skips (`test_public_guard` ran); client names clean; ownership `atlas` OK on both branches; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, gate off by latch (burndown), wave 6.
+**Least sure about:** when `inventory.run` raises `FileNotFoundError`, `_refresh_manifest` still prints that the next `embarch-atlas inventory` applies the kind and returns before the sync; nobody checked that a plain `inventory` run also rewrites a prepped `doc.json`, so on that path the two can still disagree.
+
 ## 2026-11-09 20:22 — desk/011 decisions/agents.md leaves the reserve by verbatim split
 
 **Decided:** nothing new. Decisions 29–32, 56 and 59 moved word for word from `embarch-desk/decisions/agents.md` into a new `decisions/access-point.md` (6,373 B); `agents.md` is 11,455 to 5,455 B, out of reserve; `decisions.md`'s index has one row per file. I checked the move myself: every removed line appears unchanged in the new file. **In the fold I fixed the one red the split left**: `history/desk.md`'s decision-59 link pointed at `agents.md`, which `check-decision-refs.py` caught and which a desk worker may not edit; it now points at `decisions.md`, the index (`b0c191b3`). The compaction question (can `spec.md` alone answer what someone needs to work on this component today?) the worker left untested; my read is yes: `spec.md` (8,441 B) states the three roles, the invariants and the interfaces, and cites decisions through the index, so a split under it changes nothing it says.
