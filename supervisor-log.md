@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 20:08 — atlas/041 check S reads a dimension cell as one value
+
+**Decided:** nothing. Check S's `packed` test now counts numbers per `×`-joined part of a cell, so `1.5 × 2.0` is one value and `1.0 2.0` is still flagged. `DESIGN.md` never described the packed-cell rule, so it is unchanged; the worker noted that on the task's Done-when box.
+**Merged:** `agent/atlas/041-check-s-reads-a-dimension-cell-as-one-value` (code `da6c505`, ff on `18756a3`; doc `38280b72`, the worker's `93d563cf` cherry-picked onto `4eee35c3`). Gate on the merge result: `pytest` 659 passed, 3 expected skips (`test_public_guard` ran); client names clean; ownership `atlas` OK on both branches; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, gate off by latch (burndown), wave 6.
+**Least sure about:** a cell using a letter `x` as the separator was already exempt through the `[A-Za-z=x]` exclusion, so only the `×` sign changed behaviour; no test pins a three-part dimension such as `1.5 × 2.0 × 0.8`.
+
 ## 2026-11-09 20:06 — core/112 two full Core docs leave the reserve by verbatim split
 
 **Decided:** (1) **I unparked `core/112` on its due date, a day before it would have fallen overdue**, because the queue held only three scopes (`atlas`, `chat`, `desk`) and a fourth slot had nothing else to fill it. `In flux:` flipped to `no` for a verbatim split only, per `DOC-BUDGET.md`'s split-first rule and the `umbrella/084` precedent: decision 89 is still unverified against a moved probe, and nothing of it was squeezed. (2) **Fixed a red on `main`** (`f76b9305`): the previous fold retired `chat/017` after its gate ran, leaving `promptu/004`'s `Unparks when:` naming a task no longer in the queue, so `check-task-state.py` was red from `fa94400b`. (3) For the unit: `decisions/probes.md` keeps 9, 22, 23, 26, 61 (11,263 to 5,566 B); "Chip mapping" (8/34, 80, 89) moved word for word to `decisions/chip-mapping.md` (6,272 B); `spec.md` §4's module table moved to `interfaces/modules.md` (9,783 to 7,496 B). In this fold I corrected the worker's hand-estimated size cells in `decisions.md` and `interfaces/hardware.md`'s link text, which read `../decisions/probes.md` while pointing at the index.
