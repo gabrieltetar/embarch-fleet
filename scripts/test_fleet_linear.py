@@ -134,6 +134,8 @@ class Fleet(unittest.TestCase):
         (self.doc / "embarch-ui" / "spec.md").write_text("# ui\n")
         self.commit("start")
         self.state = root / ".fleet" / "linear-spool"
+        # A real fleet has a denylist, and with a state folder and none the check is dark.
+        self.deny()
 
     def tearDown(self):
         self.tmp.cleanup()
@@ -304,6 +306,53 @@ class Fleet(unittest.TestCase):
         self.assertEqual(r.returncode, 4)
         self.assertIn("move detail below a `---` line", r.stderr)
         self.assertEqual(self.linear("comment", "EMB-1", "--kind", "Hello", "--body", "x").returncode, 2)
+
+    NAME = "Zyxwv Corp"
+
+    def deny(self, text=NAME + "\n"):
+        self.state.parent.mkdir(parents=True, exist_ok=True)
+        (self.state.parent / "client-names").write_text(text)
+
+    def test_a_filing_that_names_a_client_sends_nothing_and_never_prints_the_name(self):
+        named = VALID.replace("skips the tab", "skips the zyxwv-corp tab")
+        r = self.linear("file", "--from", "worker", "--project", "embarch-ui", "--title", "T", "--body", named)
+        self.assertEqual(r.returncode, 4, r.stderr)
+        self.assertIn("names a client", r.stderr)
+        self.assertIn("denylist entry #1", r.stderr)
+        self.assertNotIn("zyxwv", (r.stdout + r.stderr).lower())
+        self.assertEqual(self.desk.calls, [], "refused before the duplicate search sends the title")
+        self.assertFalse(list(self.state.glob("*.json")) if self.state.exists() else [])
+        r = self.linear("file", "--from", "owner", "--project", "embarch-ui", "--title", "Zyxwv Corp board", "--body", VALID)
+        self.assertEqual(r.returncode, 4)
+        self.assertIn("title:1", r.stderr)
+        self.assertEqual(self.linear("file", "--from", "worker", "--project", "embarch-ui", "--title", "T", "--body", VALID).returncode, 0)
+
+    def test_an_edit_or_a_comment_that_names_a_client_sends_nothing(self):
+        self.desk.issue("EMB-1", "Backlog")
+        r = self.linear("rewrite", "EMB-1", "--body", FILED, "--title", "For Zyxwv Corp")
+        self.assertEqual(r.returncode, 4, r.stderr)
+        r = self.linear("comment", "EMB-1", "--kind", "Question", "--body", "which one ?\n---\nthe zyxwv corp detail")
+        self.assertEqual(r.returncode, 4, r.stderr)
+        self.assertIn("reply:1", r.stderr)
+        self.assertEqual(self.desk.said("/drafts"), [])
+
+    def test_a_dark_denylist_refuses_rather_than_passing(self):
+        self.deny("# nobody\n")
+        r = self.linear("file", "--from", "worker", "--project", "embarch-ui", "--title", "T", "--body", VALID)
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("check is dark", r.stderr)
+        self.assertEqual(self.desk.calls, [])
+        self.assertFalse(list(self.state.glob("*.json")) if self.state.exists() else [])
+
+    def test_a_spooled_issue_is_checked_again_when_ready_files_it(self):
+        self.state.mkdir(parents=True, exist_ok=True)
+        spooled = self.state / "20261110-000000-1-named.json"
+        spooled.write_text(json.dumps({"kind": "worker", "project": "embarch-ui", "title": "Named",
+                                       "body": VALID.replace("skips the tab", "skips the Zyxwv Corp tab"), "why": "down"}))
+        r = self.linear("ready")
+        self.assertIn("still spooled, as it names a client", r.stderr)
+        self.assertTrue(spooled.exists())
+        self.assertEqual(self.desk.said("/drafts"), [])
 
     def test_the_fleets_comments_open_with_their_kind_and_a_long_list_is_a_thread(self):
         self.desk.issue("EMB-1", "Fleet Ready")

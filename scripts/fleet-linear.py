@@ -33,6 +33,14 @@ every key it is handed must be in the configured team.
 it.** `file`, `rewrite` and `comment` refuse one that breaks it, naming what is
 wrong, with exit 4 and nothing sent; `lint` reports open issues that break it.
 
+**Nothing it sends names a client** (owner's call, 2026-11-10). Every issue, edit
+and comment goes through `draft()`, which runs `check-client-names.py`'s
+`text_hits()` on its words first: the fleet copies an issue into public task
+files, so a name that reaches Linear is one step from a public repo. A hit is
+exit 4 with nothing sent, each hit named by its denylist entry and never by the
+name; a dark denylist is exit 2. `file` checks before it spools, and `ready`
+checks a spooled issue again, since a name can join the denylist in between.
+
 **An issue the fleet cannot take leaves Fleet Ready at `ready`.** Its fields say
 so: `Scope: fleet` (reserved to the owner), a Scope the fleet does not work (a
 clone with no embarch-doc directory, such as `private`), `Hardware: required`
@@ -53,7 +61,8 @@ Tasks are read from `origin/main`, so a leg's dirty worktree cannot change the
 answer: a task file on main is open, and a fold `git rm`s it.
 
 Exit status: 0 done, 1 nothing there, 2 the desk or Linear refused or is down,
-3 no `[linear]` table in fleet.toml, 4 a body or comment breaks the protocol.
+or the client-name check is dark, 3 no `[linear]` table in fleet.toml, 4 a body
+or comment breaks the protocol or names a client.
 """
 from __future__ import annotations
 
@@ -64,6 +73,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fleetconf import CONF  # noqa: E402
 
 import argparse
+import importlib.util
 import json
 import os
 import re
@@ -83,6 +93,30 @@ class DeskError(Exception):
 
 class Broken(Exception):
     """A body or comment breaks LINEAR-PROTOCOL.md; each arg is one problem."""
+
+
+class NamesClient(Broken):
+    """The words name a client; each arg is one hit, the name never in it."""
+
+
+# The denylist, its decoders and its redaction live in check-client-names.py,
+# whose dash keeps it from being imported by name; loaded by path, as it loads
+# check-ownership.py, so there is one implementation.
+_spec = importlib.util.spec_from_file_location(
+    "_check_client_names", Path(__file__).resolve().parent / "check-client-names.py")
+_names = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_names)
+
+
+def refuse_names(**parts: str) -> None:
+    """Raise NamesClient when a part names a client, labelled by its keyword
+    and line; ValueError when the check is dark, so nothing is sent unchecked."""
+    try:
+        hits = _names.text_hits([(label, text) for label, text in parts.items() if text])
+    except _names.Dark as e:
+        raise ValueError(f"nothing sent: the client-name check is dark: {e}") from None
+    if hits:
+        raise NamesClient(*(re.sub(r"\s*\n\s*", " — ", h.strip()) for h in hits))
 
 
 # --- the protocol (embarch-doc/LINEAR-PROTOCOL.md) ---------------------------
@@ -359,6 +393,14 @@ def comment(s: dict, key: str, head: str, replies: list[str] | None = None,
         body["replies"] = replies
     if reply_to:
         body["reply_to"] = reply_to
+    return draft(s, body)
+
+
+def draft(s: dict, body: dict) -> dict:
+    """Every write of words to Linear, an issue, an edit or a comment, checked
+    for a client's name before it leaves."""
+    refuse_names(title=body.get("title") or "", body=body.get("body") or "",
+                 reply="\n\n".join(body.get("replies") or []))
     return call(s, "POST", "/drafts", body)
 
 
@@ -423,10 +465,13 @@ def create(s: dict, kind: str, project: str, title: str, body: str) -> str:
     status = s["file_status"].get(kind)
     if not status:
         raise ValueError(f"no file_status for {kind!r}; it has {sorted(s['file_status'])}")
+    # Before the duplicate search sends the title, and before `file` can spool it:
+    # a spooled issue is checked again when `ready` files it.
+    refuse_names(title=title, body=body)
     for row in call(s, "POST", "/linear/search", {"query": title}).get("issues", []):
         if row.get("title") == title and row.get("state") not in (s["done"], "Canceled"):
             return f"{row['key']} already open with this title, in {row.get('state')}"
-    sent = call(s, "POST", "/drafts", {
+    sent = draft(s, {
         "kind": "linear_issue", "team_key": s["team"], "project": project, "title": title,
         "body": body.rstrip()})
     url = sent.get("url") or ""
@@ -462,6 +507,8 @@ def flush_spool(s: dict) -> None:
                 body = f"{body.rstrip()}\n\nFiled by the fleet ({e['kind']})."
             print(f"from the spool: {create(s, e['kind'], e['project'], e['title'], body)}")
             path.unlink()
+        except NamesClient as err:
+            print(f"still spooled, as it names a client: {path} ({'; '.join(err.args)})", file=sys.stderr)
         except (DeskError, ValueError, KeyError) as err:
             print(f"still spooled: {path} ({err})", file=sys.stderr)
 
@@ -576,7 +623,7 @@ def cmd_rewrite(s: dict, args) -> int:
     problems = body_problems(body, title or now.get("title"), now.get("project"), scopes())
     if problems:
         raise Broken(*problems)
-    sent = call(s, "POST", "/drafts", {"kind": "linear_edit", "issue_key": key, "title": title,
+    sent = draft(s, {"kind": "linear_edit", "issue_key": key, "title": title,
                                        "body": body.rstrip()})
     print(f"{key} rewritten: {sent.get('url') or sent.get('status')}")
     return 0
@@ -688,6 +735,12 @@ def main() -> int:
     s = need_settings()
     try:
         return args.fn(s, args)
+    except NamesClient as e:
+        print(f"fleet-linear: nothing sent; the text names a client (open {CONF.client_denylist} "
+              "at the entry number to see which; the name is not printed here):", file=sys.stderr)
+        for p in e.args:
+            print(f"  - {p}", file=sys.stderr)
+        return BROKEN
     except Broken as e:
         print("fleet-linear: nothing sent; this breaks embarch-doc/LINEAR-PROTOCOL.md:", file=sys.stderr)
         for p in e.args:
