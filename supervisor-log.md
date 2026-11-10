@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 21:28 — desk/015 an issue whose card the view window hides is listed in Pick up
+
+**Decided:** nothing new; decision 43 in `embarch-desk/decisions/sessions.md` is amended in place (EMB-72): Pick up lists the user's open issues with no card **on the board**, and a card the view window hid does not count. In `src/server.rs`, a new pure `pickup_open` filters with the board's own `visible` rule and `open_tile_keys`, so a quiet, unpinned card no longer hides its issue; `ensure_item` now sets `last_activity_ms` when it returns an existing card, so Add card on that row brings the card back (Start work already did, through `start_work`). `interfaces.md`'s `/pickup` row says so.
+**Merged:** `agent/desk/015-a-card-outside-the-view-window-is-in-pick-up` (code `d48a18d`, ff on `3d29d6c`; doc `51bd41a7`, the worker's `a68f1316` cherry-picked onto `3f82ff92`). Gate on the merge result: `cargo build`, `cargo test` (197), `clippy --all-targets -D warnings` green; client names clean; ownership `desk` OK on both branches; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. Owed to a live desk: a card quiet past the window showing its issue in Pick up, and Add card putting it back. Nothing installed.
+**Budget:** PROCEED, gate off by latch (burndown until 2026-11-11 06:00), wave 6.
+**Least sure about:** the `ensure_item` bump has no test, and it also runs for `timer_start` on an existing card's key, where it marks the card active; that is activity anyway, but nothing asserted it. The UI's Pick up title ("with no card") and its empty note are now slightly untrue; the worker did not file it, so I filed **EMB-115** (Fleet Ready, ui).
+
 ## 2026-11-09 21:27 — atlas/047 application reports and reference-manual user's guides get their kind
 
 **Decided:** nothing numbered; `DESIGN.md` "Kinds" amended. `APPNOTE_WORDS` in `inventory.py` gains `application report`. A new `guide_is_reference_manual` runs before `is_appnote` in `classify`: a PDF whose only note wording is "user's guide" (no application note or report, no technical note, no `AN`/`UM`/`TN` number) and whose page 1 has a line at its top, at most 80 characters and not citing one ("see", "refer", "in the"), calling it a reference manual, is `reference-manual`. A guide that only cites the manual, or is also an application note, stays `appnote`.
