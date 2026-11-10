@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 20:22 — desk/011 decisions/agents.md leaves the reserve by verbatim split
+
+**Decided:** nothing new. Decisions 29–32, 56 and 59 moved word for word from `embarch-desk/decisions/agents.md` into a new `decisions/access-point.md` (6,373 B); `agents.md` is 11,455 to 5,455 B, out of reserve; `decisions.md`'s index has one row per file. I checked the move myself: every removed line appears unchanged in the new file. **In the fold I fixed the one red the split left**: `history/desk.md`'s decision-59 link pointed at `agents.md`, which `check-decision-refs.py` caught and which a desk worker may not edit; it now points at `decisions.md`, the index (`b0c191b3`). The compaction question (can `spec.md` alone answer what someone needs to work on this component today?) the worker left untested; my read is yes: `spec.md` (8,441 B) states the three roles, the invariants and the interfaces, and cites decisions through the index, so a split under it changes nothing it says.
+**Merged:** `agent/desk/011-compact-desk` (doc only: `49030a21`, the worker's `6cf2b043` cherry-picked onto `f4925c97`, plus my link fix `b0c191b3`; no code worktree). Gate on the merge result: `check-docs.py` 12/12; ownership `desk` OK on the branch; `check-doc-size.py` green.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, gate off by latch (burndown until 2026-11-11 06:00), wave 6; three scopes dispatchable, three in flight.
+**Least sure about:** pointing a history line at the index rather than at `access-point.md`: the index survives the next split, but a reader takes one more click to reach the decision.
+
 ## 2026-11-09 20:14 — chat/008 the Memory menu shows when a memory pass is due
 
 **Decided:** nothing new; decision 98 in `embarch-chat/decisions/promptu.md` is amended in place (EMB-86). Three machine-scope settings (`embarchChat.memoryPass.stampPath`, `.intervalDays`, `.command`, no defaults) drive one Memory-menu line with the last pass's date and a due dot on the rail's Memory icon (a CSS dot; the SVG stays one-colour per decision 94). A click asks the host, which reads the command from the setting itself, to open a new chat in the window's folder with it as the first message. **The worker made that chat `untracked`**; the reviewer read decision 48 ("only the owner's own pick untracks a chat") as not contradicted, since its reason is a resume clearing time spans and decision 98 now says so in the same diff, but the owner may want it tracked: one line in `startMemoryPass`. The worker filed `tasks/chat/019-compact-chat.md` (`spec.md` 9,231 of 10,240 B), `blocked`, `In flux: yes`, due 2026-11-23.
