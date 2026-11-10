@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 20:41 — desk/012 the skill and the server take the work item from the prompt first
+
+**Decided:** nothing; no decision amended or added, as decision 7 (`embarch-desk/decisions/cockpit.md`, amended for EMB-16) already states the rule. `SKILL.md`'s "The work item" step 1, the MCP server instructions' last sentence and both "not on a work item yet" tool replies in `src/mcp.rs` now say what `ask_text` says: a connected team's key in the opening prompt or a handoff is set without asking (a lookalike in prose is not one), and the user is asked only when there is none. No test asserted the old strings and no doc quoted them.
+**Merged:** `agent/desk/012-the-skill-and-server-take-the-work-item-from-the-prompt` (code `bc06133`, ff on `b47c12e`; doc `f4bc2dc9`, the worker's `2c0b9858` cherry-picked onto `39ba6c6a`). Gate on the merge result: `cargo build`, `cargo test` (196), `clippy --all-targets -D warnings` green; client names clean; ownership `desk` OK on both branches; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. Owed to a live session: a session started with an issue key in its prompt taking it from the skill or the server instructions rather than asking. Nothing installed; the running desk keeps the old strings until the owner rebuilds it.
+**Budget:** PROCEED, gate off by latch (burndown until 2026-11-11 06:00), wave 6.
+**Least sure about:** the guard against a lookalike key is now stated in four texts and enforced in none; whether `desk_set_work_item` refuses a key no connected team holds is still unchecked (the `desk/009` entry's open question).
+
 ## 2026-11-09 20:40 — atlas/043 the renderer reads Note N footnotes
 
 **Decided:** nothing. `FOOTNOTE` in `render.py` gains a third form, `Note N:` (`Note\s+N\s*:\s+`), read by `footnotes()` like `24.` and `(1)`; a bare `Note:` or `Note that…` is not a footnote. `DESIGN.md` does not list the forms, so it is unchanged.
