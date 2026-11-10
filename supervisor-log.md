@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-10 03:44 — desk/024 decisions 38, 40 and 41 leave desks.md by verbatim split
+
+**Decided:** nothing numbered. `embarch-desk/decisions/desks.md` 11,066 → 9,424 B (76.7%): decisions 38, 40 and 41 (a tile's default Harvest target, the Desk tab's day list, Harvest's entries joined) moved verbatim to a new `decisions/day-list.md`, with a pointer stub in `desks.md` and the index row split. I compared removed against added lines: identical except the headers, the stub and the index rows. PAID; no desk file is in reserve now. **Compaction-pass answer** (the worker's, after reading `spec.md`): yes, `spec.md` says what the desk is, its invariants and constants, and points to `interfaces.md` for every route and tool; its Desks paragraph cites "decisions 33–40, 77" by number, so a reader goes through the index to find `day-list.md`. On the reviewer's note I re-pointed `decisions/tiles-after-send.md`'s line naming 41 at `day-list.md` (one line, in this fold).
+**Merged:** `agent/desk/024-compact-desk` (doc only: `40c6f27d`, the worker's `32d80fd6` cherry-picked onto `6b5ff8e7`; no code worktree). Gate on the merge result: `check-docs.py` 12/12; ownership `desk` OK.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, wave 6; 5-hour 10%, weekly 61%.
+**Least sure about:** nothing in the unit. **The worker queue is now empty** (no `none` or `verify-only` task open; Fleet Ready holds only what the last five legs could not split), so this leg's last two units are `toolchain` tasks by my own hands, as `protocol.md` §7 grants and the 2026-11-07 leg did first; `dev-bench/044` claimed at 03:45 (`6b5ff8e7`). EMB-83, the owner's question about that lane, is still in Backlog with no reply.
+
 ## 2026-11-10 03:41 — desk/023 decisions 79 and 81 leave access-point.md by verbatim split
 
 **Decided:** nothing numbered. `embarch-desk/decisions/access-point.md` 11,206 → 6,477 B: decisions 79 and 81 moved verbatim to a new `decisions/linear-reads.md` (5,269 B), with a header, a pointer line in `access-point.md`, and the index row in `decisions.md` split in two. I compared removed against added lines: identical except the two headers and the index rows. PAID. **Compaction-pass answer** (the worker could not give one, it did not open `spec.md`; mine): no. `spec.md` names no Linear read tool and points to `interfaces.md` for every tool, so someone working on the desk's Linear reads needs `decisions/linear-reads.md` for the no-fallback rule and the file-read limits.
