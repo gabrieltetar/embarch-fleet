@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-10 02:14 — promptu/005 decision 39 still keeps the handoff chip
+
+**Decided:** nothing new; `embarch-promptu` decision 39 (the owner's, 2026-10-30, fork P9) **retired in place** for EMB-125: its heading now reads "Retired: the handoff card and its 'Fresh chat with this handoff' chip are gone", and an "Amended 2026-11-10 (EMB-66, EMB-125)" note in decision 40's form says the chat no longer offers a handoff card, so the chip and the handoff-request marker are gone (chat 36 and 97), and points to chat 103 for an agent's own handoff. The original sentence and the **Rejected** line stay as history; the number stands. The worker picked retire over amend, which the task allowed. `spec.md`, `open.md` and `interfaces.md` claim neither the chip nor the marker (checked by worker and reviewer); `docs/forks.md` P9 in the code repo stays as the dated fork record. Doc only.
+**Merged:** `agent/promptu/005-decision-39-still-keeps-the-handoff-chip` (doc `20cde62c`, the worker's `68f102d4` cherry-picked onto `3953b4c8`; no code branch). Gate on the merge result: `check-docs.py` 12/12; client names clean; ownership `promptu` OK.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, burndown until 2026-11-11 06:00, wave 6; 5-hour 38%, weekly 56%.
+**Least sure about:** 39 now says "the chat no longer offers a handoff card" beside chat 103, which has a handoff card of its own (the agent's `handoff` tool's); the reviewer calls it loose, not contradictory, and EMB-125 is otherwise closed by this unit and `chat/022`.
+
 ## 2026-11-10 02:13 — chat/022 decision 103 stops naming a deleted function and chip
 
 **Decided:** nothing. `embarch-chat` decision 103's decision text is unchanged; its **As built** sentence now says the fresh session starts through `startChat` on the old chat's cwd, work item and mode, then takes its model, effort and Ultracode (what `handoffChat` in `src/extension.ts` does), where it said "`freshChat`'s start"; its **Rejected** "a new tab (36's chip does that)" now gives a reason that stands without the removed chip (the old panel would be left showing the ended chat). The chat half of EMB-125; the Promptu half is `promptu/005`. Doc only: no `embarch-chat` commit (nothing under `src/`, `webview/` or `test/` names `freshChat` any more, checked at dispatch).
