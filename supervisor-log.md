@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-10 12:58 — outpost/029 overflow and override decisions leave transport.md and manifest.md by verbatim split
+
+**Decided:** nothing numbered. Unparked by me at this leg's start (see `desk/027`'s leg notes). `embarch-outpost/decisions/transport.md` 7,908 → 5,402 B: decisions 5 and 28 (overflow policy, blocking overflow) moved verbatim to a new `decisions/overflow.md`. `decisions/manifest.md` 7,350 → 5,666 B: decision 24 (the operator's override of both post-hoc refusals) moved verbatim to a new `decisions/override.md`. Pointer lines where each left; the `decisions.md` index row split into four. Two link edits outside the moved text, both to keep a link true: `decisions/clocks.md`'s and decision 9's closing sentence's pointers to 24 now name `override.md`. I diffed removed against added lines: only those two lines differ. Both files PAID. **Compaction-pass answer** (the worker's, and I agree): yes, `spec.md` states current behaviour; the reasons sit in `decisions/`, found through the index. Its line 79 cites decision 20, which did not move.
+**Merged:** `agent/outpost/029-compact-outpost` (doc only: `e48351bb`, the worker's `428b0dd0` cherry-picked onto `843882b0`; no code worktree). Gate on the merge result: `check-docs.py` 12/12; ownership `outpost` OK.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, burndown wave 6; 5-hour 5%, weekly 70%.
+**Least sure about:** whether the worker that filed the park would have agreed. Its `In flux: yes` argued a squeeze would restate what layout 4 changes; a split restates nothing, but layout 4 will now amend decisions spread over three files instead of two.
+
 ## 2026-11-10 12:57 — desk/027 three suite-desk paragraphs leave spec.md by verbatim split
 
 **Decided:** nothing numbered. `embarch-desk/spec.md` 9,440 → 8,882 B, out of reserve: the suite-desk, west-module and login-flag paragraphs (decisions 70, 80, 82) moved verbatim to a new `spec/suite-desk.md`, with a one-sentence pointer left in §1. I diffed removed against added lines: identical apart from the new file's header and status line. **Compaction-pass answer** (the worker's, and I agree): yes, `spec.md` still says what the desk is, its invariants including decision 83's close-out contract, and its constants; the three moved paragraphs are one link away.
