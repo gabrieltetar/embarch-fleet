@@ -99,7 +99,7 @@ unit under **Merged** and **Blocked**:
 
 ## 2026-11-09 20:54 — chat/011 the inline diff is one line until opened
 
-**Decided:** nothing new; decision 8 in `embarch-chat/decisions/timeline.md` is amended in place (EMB-58). `ToolViewInner` in `tools.tsx` no longer starts an Edit or Write row open, so the timeline shows the file and `+N −M` until a click opens it in place and a second click closes it; `DiffView` and `cards.tsx` are unchanged, so a permission card keeps its diff open (decision 64). `spec.md` untouched, so it stays just under its reserve line.
+**Decided:** nothing new; decision 8 in `embarch-chat/decisions/timeline.md` is amended in place (EMB-58). `ToolViewInner` in `tools.tsx` no longer starts an Edit or Write row open, so the timeline shows the file and `+N −M` until a click opens it in place and a second click closes it; `DiffView` and `cards.tsx` are unchanged, so a permission card keeps its diff open (the card renders its own `DiffView`; the worker's citation of decision 64 was wrong, as that one is about the diff tab). `spec.md` untouched, so it stays just under its reserve line.
 **Merged:** `agent/chat/011-the-inline-diff-is-one-line-until-opened` (code `55e758b`, ff on `9fd3f0b`; doc `6761d22d`, the worker's `aca3157b` cherry-picked onto `325d8acd`). Gate on the merge result: `npm ci`, `build`, `typecheck`, `test` (260 pass, 0 fail, 75 skipped for want of `EMBARCH_DESK_BIN`), `test:webview` all passed; client names clean; ownership `chat` OK on both branches; `check-docs.py` 12/12.
 **Blocked:** nothing.
 **Reviewer:** no findings.
