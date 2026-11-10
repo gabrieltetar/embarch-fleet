@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 17:36 — promptu/001 a header-less memory index may take its first header
+
+**Decided:** nothing. The first `promptu` unit the fleet has run; every gate script already knew the scope. Check I2 on a `MEMORY.md` with no `## <domain>` header now says the writer may add the first one in the same write; with headers present the message is unchanged. Decision 21 gains one sentence saying so; the rule itself and I3 are untouched.
+**Merged:** `agent/promptu/001-a-header-less-memory-index-may-take-its-first-header` (code `94181bb` on `866a24e`, ff; doc `0b519941`, the worker's `f76382b0` cherry-picked onto `c8f4b929`). Gate on the merge result: `cargo build`, `cargo test` (67 + 17 + 26), `clippy --all-targets -D warnings` green; ownership `promptu` OK on both branches; client names clean; `check-docs.py` 12/12. First `history/promptu.md`, created by the assembler.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. The installed hook on this machine still runs the old binary until the owner rebuilds or reinstalls it; nothing here deploys.
+**Budget:** PROCEED (wave 6).
+**Least sure about:** nothing material; the change is one message string and its test.
+
 ## 2026-11-09 17:34 — desk/006 four desk docs leave the reserve by verbatim split
 
 **Decided:** (1) **Split 14 of the 54 Fleet Ready issues, not all 54**, into 16 tasks (`cef37baf`): `chat/007`–`018`, `promptu/001`–`003` (the first `promptu` tasks ever), `ui/105`. EMB-65 and EMB-56 each span two repos and split into a chat and a promptu task. Five are `blocked` on the task each waits for: `chat/014` on `012`, `promptu/002` on `chat/007`, `chat/017` on `promptu/002`, `chat/018` on `chat/017`, `promptu/003` on `chat/009`. **Whoever folds a dependency sets its dependant `open` in the same fold**, or `check-task-state.py` refuses a `blocked` task naming a task no longer in the queue; each dependency's task file says so. The 14 `desk` and 25 `atlas` issues stay in Fleet Ready for the next legs: reading 110 KB of issues and writing 54 task files in one leg is the context a four-unit bound exists to prevent. Announced at `ts` `1794270556.536659`, no reply. (2) **desk/006's three `In flux: yes` files were dispatched split-only, the field left as written.** Decision 77 landed today (desk `0c44f9d`, doc `5b8d8362`), which is the condition the field named; `DOC-BUDGET.md` makes a verbatim split the default remedy whatever the flux. My dispatch note in the task says so. (3) **`core/112`, due today, did not take the first unit**: `check-doc-size.py --due` reads 0 overdue on its due date, so it is overdue from tomorrow and takes the first unit of the first leg after midnight.
