@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 22:34 — ui/107 a session row whose folder is gone says so
+
+**Decided:** nothing; no `embarch-ui` decision describes the session row's buttons, so none was amended. `assets/desk.js`: a new `folderGone(r)` returns a muted `desk-detail` span reading "folder gone", the cwd and "no longer exists" in its title, shown where Jump or the chat button would be in both `sessionRow` and `sessionLine` when `folder_missing` is true and `folder_uri` is null. A row whose folder exists is unchanged. This closes the follow-up `desk/016` left (EMB-117).
+**Merged:** `agent/ui/107-a-session-whose-folder-is-gone-says-so-on-the-desk-tab` (code `c3c4909`, ff on `9f2026d`; doc `5bb109d7`, the worker's `99bc240c` cherry-picked onto `34e9fab6`). Gate on the merge result: `cargo build`, `cargo test` (313 + 8, 4 ignored), `clippy --all-targets -D warnings` green; client names clean; ownership `ui` OK on both branches; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. Owed to a live UI: a session whose folder was deleted showing "folder gone" on the Desk tab. Nothing installed.
+**Budget:** PROCEED, gate off by latch (burndown until 2026-11-11 06:00), wave 6.
+**Least sure about:** no test covers the new text, since no existing test exercises session rows; a later change to the row builders could drop it silently.
+
 ## 2026-11-09 22:32 — desk/017 a start that resolves no desk is no desk everywhere
 
 **Decided:** nothing new; decision 74 in `embarch-desk/decisions/desks.md` (not `notes.md`, as the task guessed) is amended in place for EMB-48 points 1 to 3. `Session` gains `start_cwd` (serde default; an old state file reads), `start_notes` records it, and `notes_desk` falls back to `session_desk(sid, start_cwd or cwd)`, so a start that resolved no desk stays no desk for every reader. `ask_text` now takes the start's cwd and scopes its cards by `session_desk`, the same resolution `start_notes` uses, so one start block names one desk. `check_desk_note` accepts an edit whose cost does not grow, even on a desk over 4,000. **There is no `switch_text` in `src/events.rs`**: the issue named one, and since decision 21 the start block has no switch question, so the notes are the only part naming a desk.
