@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 23:08 — ui/108 the Desk tab's note count and switch warning match the desk
+
+**Decided:** nothing; no `embarch-ui` decision covers the count or the warning's wording, and desk decision 74 is not contradicted. `assets/desk.js` `cleanNote` now trims with Rust's `char::is_whitespace` set, said once as `RUST_SPACE` (has U+0085, lacks U+FEFF), in place of JS `\s`, so a note holding either counts as the desk counts it. The desk-switch warning is held in `dnotesMoveWarn`: typing no longer clears it, an Add or another desk change does, and it says "so nothing was added" only after an Add found the desk changed (otherwise "and nothing has been added"). This closes EMB-48 (points 1 to 3 were `desk/017`).
+**Merged:** `agent/ui/108-the-desk-note-count-and-switch-warning-match-the-desk` (code `08f9a53`, ff on `c3c4909`; doc `b4c08f80`, the worker's `a0ba7d4b` cherry-picked onto `64098d7c`). Gate on the merge result: `cargo build`, `cargo test` (313 + 8, 4 ignored), `clippy --all-targets -D warnings` green; client names clean; ownership `ui` OK on both branches; `check-docs.py` 12/12. **I also ran `tests/browser/drive_desk.py`** (geckodriver is at `/snap/bin/geckodriver`; desk binary from `main` via `EMBARCH_DESK_BIN`): all passed, the new "a note holding U+FEFF and U+0085 is counted as the desk counts it — 3 of 500" among them. The worker had left it as an unrun debt for want of geckodriver.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. The e2e debt the worker recorded is paid (above).
+**Budget:** PROCEED, gate off by latch (burndown until 2026-11-11 06:00), wave 6.
+**Least sure about:** nothing tests the "and nothing has been added" wording, the branch where the desk changes while typing but no Add was tried; the e2e covers only the Add path.
+
 ## 2026-11-09 23:03 — atlas/050 doc freeze reports the document's real page count
 
 **Decided:** nothing numbered; `DESIGN.md` does not state the count, so nothing amended. Cause, reproduced on a synthetic document: `freeze` built `page_sha` from every page any unit cites with no check against `1..pages`, so a cite of page 0 or one past the end counted as a page. `page_sha` now holds only `1..pages`; an out-of-range cite stays in the unit's `pages` (its key reads `missing`, so fixing the cite thaws it), is recorded as `out_of_range` in the frozen entry, and `doc freeze` warns on stderr naming the unit and page. `thaw_check` compares an absent frozen page as `missing`. Refusing the cite at `doc check` was left undone and unfiled by the worker; I filed it as **EMB-120** (Fleet Ready, atlas, gap).
