@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-10 12:59 — promptu/004 the uninstalled build steps leave spec.md by verbatim split
+
+**Decided:** nothing numbered. Unparked by me at this leg's start (see `desk/027`'s leg notes). `embarch-promptu/spec.md` 9,563 → 6,949 B, out of reserve: §2b and §2c (build steps 2 and 3, committed or built but not installed) moved verbatim to a new `spec/build-steps.md`, with a two-line §2b pointer left. One edit outside the moved text: the status line's "(§2c)" now links the new file. I diffed removed against added lines: only the status line differs. §3 (invariants) and §5 (does not do) untouched. **Compaction-pass answer** (the worker's, and I agree): yes, `spec.md` says what promptu is, what is installed (step 1), the invariants and the does-not-do list; work on steps 2 or 3 needs `spec/build-steps.md`. The worker's first push was red on two checks (a changelog link, the task's state line) and it fixed both in a second commit before reporting.
+**Merged:** `agent/promptu/004-compact-promptu` (doc only: `f1b22701` and `67fc2606`, the worker's `62fe3cd5` and `5584d2aa` cherry-picked onto `6ef3e8f0`; no code worktree). Gate on the merge result: `check-docs.py` 12/12; ownership `promptu` OK.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, burndown wave 6; 5-hour 5%, weekly 70%.
+**Least sure about:** nothing in the unit. The status line still says "2026-10-30", and the split did not refresh it; that is a status-line date, not a fact the split changed.
+
 ## 2026-11-10 12:58 — outpost/029 overflow and override decisions leave transport.md and manifest.md by verbatim split
 
 **Decided:** nothing numbered. Unparked by me at this leg's start (see `desk/027`'s leg notes). `embarch-outpost/decisions/transport.md` 7,908 → 5,402 B: decisions 5 and 28 (overflow policy, blocking overflow) moved verbatim to a new `decisions/overflow.md`. `decisions/manifest.md` 7,350 → 5,666 B: decision 24 (the operator's override of both post-hoc refusals) moved verbatim to a new `decisions/override.md`. Pointer lines where each left; the `decisions.md` index row split into four. Two link edits outside the moved text, both to keep a link true: `decisions/clocks.md`'s and decision 9's closing sentence's pointers to 24 now name `override.md`. I diffed removed against added lines: only those two lines differ. Both files PAID. **Compaction-pass answer** (the worker's, and I agree): yes, `spec.md` states current behaviour; the reasons sit in `decisions/`, found through the index. Its line 79 cites decision 20, which did not move.
