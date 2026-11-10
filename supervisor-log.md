@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 20:43 — atlas/044 a cite of another document is checked there
+
+**Decided:** nothing; `DESIGN.md`'s check M paragraph is amended in place. A new `split_cites()` in `check.py` reads a `<name> p.N` cite whose name is a sibling document directory (by directory name or `doc_id`) from that document, and `check_markdown_file` anchors the line's numbers on its page as well as this document's; a number on neither cited page still fails.
+**Merged:** `agent/atlas/044-a-cite-of-another-document-is-checked-there` (code `b2d418e`, the worker's `f893727` rebased by me onto `9bc7b11` (atlas/043) and ff; doc `94f703fd`, the worker's `73129abc` cherry-picked onto `e2609b78`). Gate on the merge result: `pytest` 664 passed, 3 expected skips (`test_public_guard` ran); client names clean; ownership `atlas` OK on both branches; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, gate off by latch (burndown until 2026-11-11 06:00), wave 6.
+**Least sure about:** `freeze.py` still hashes `cited_pages` over the whole text, so a foreign cite's page number enters this document's page list: a change on that page of this document thaws a unit for no reason, or the page is keyed missing past this document's length. The worker and the reviewer both called it conservative; nobody filed it. The remote `agent/atlas/044` branch still holds the pre-rebase `f893727`; the auto-mode classifier refused my force-push to it, which leg.md says is not needed, so the fold's patch-id proof is what prunes it.
+
 ## 2026-11-09 20:41 — desk/012 the skill and the server take the work item from the prompt first
 
 **Decided:** nothing; no decision amended or added, as decision 7 (`embarch-desk/decisions/cockpit.md`, amended for EMB-16) already states the rule. `SKILL.md`'s "The work item" step 1, the MCP server instructions' last sentence and both "not on a work item yet" tool replies in `src/mcp.rs` now say what `ask_text` says: a connected team's key in the opening prompt or a handoff is set without asking (a lookalike in prose is not one), and the user is asked only when there is none. No test asserted the old strings and no doc quoted them.
