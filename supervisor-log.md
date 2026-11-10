@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 19:53 — desk/008 a foreign issue key names the desk that holds it
+
+**Decided:** nothing new; decision 77 is amended in place with one sentence (a key no workspace has says why), and `agents.md`, in reserve, is untouched. A missing key now gets one of three messages: its team is bound to another desk, so the message names that desk and its first folder; no connected workspace has its team, so it says so and names no desk; otherwise the old plain message. Wired into `GET /linear/issue/{key}`, `POST /linear/status`, `ensure_item` and `link_item`, through a typed `linear::NoWorkspaceHas` whose text is unchanged.
+**Merged:** `agent/desk/008-a-foreign-issue-key-names-the-desk-that-holds-it` (code `aa56a7a`, ff on `3141190`; doc `677278e6`, the worker's `1e60c745` cherry-picked onto `61deb548`). Gate on the merge result: `cargo build`, `cargo test` (194), `clippy --all-targets -D warnings` green; client names clean; ownership `desk` OK on both branches; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. Nothing installed or deployed; the running desk keeps the old message until the owner rebuilds it.
+**Budget:** PROCEED, gate off by latch (burndown), wave 6; this leg holds 4.
+**Least sure about:** the Send-side paths (`post_comment`, `edit_issue`, `create_issue`'s team message) still give the plain message, and a key whose team is bound to another desk names that desk even if the team has since left every workspace; neither is in the task's `Done when`, and nothing is filed for them.
+
 ## 2026-11-09 19:53 — atlas/040 check U finds a unit as a token and reads a symbol whole
 
 **Decided:** nothing new; `DESIGN.md`'s check U row says what changed. A unit is on the page only as a token: no letter may touch it on either side, digits may, so `100mA` still matches and `µA` no longer passes on "guaranteed". A CamelCase symbol (`LoadReg`) gets no dimension from its first letter; `VOVP`, `IQ`, `Lx`, `tPD`, `fSWmin` still do. The font case (µ and Ω printed as `m` and `W`) stayed out of scope with no fixture showing it, as the task allowed.
