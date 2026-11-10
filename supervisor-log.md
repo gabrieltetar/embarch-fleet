@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 21:05 — atlas/045 nets joined through an off-sheet port are one net
+
+**Decided:** nothing numbered; `DESIGN.md` gains a "How nets join" paragraph and an `aliases` key in the `netlist.json` shape. `join_board_nets` in `smartpdf.py` replaces the one-net-per-name block: same-named sheet nets join as before, and sheet nets carrying a same-named port on different sheets join too, transitively; the joined net takes the first non-auto-named name in natural order and lists the rest in `aliases`. A port with no port, sheet-level port or same-named net on another sheet is an `issues` entry. `geom.py` still cross-checks per sheet and per name, which `DESIGN.md` says.
+**Merged:** `agent/atlas/045-nets-joined-through-an-off-sheet-port-are-one-net` (code `4a27ae0`, ff on `b2d418e`; doc `48a93f88`, the worker's `d9baa1e0` cherry-picked onto `d9e681b6`). Gate on the merge result: `pytest` 666 passed, 3 expected skips (`test_public_guard` ran); client names clean; ownership `atlas` OK on both branches; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. Owed to a real export: that a net's `Ports > <title>` outline children carry the port name, which only the synthetic fixtures show.
+**Budget:** PROCEED, gate off by latch (burndown until 2026-11-11 06:00), wave 6.
+**Least sure about:** the join is global by port name and ignores sheet hierarchy, so a repeated-channel or hierarchical design could merge unconnected nets or report a child port as unpartnered; the reviewer raised it as not-a-contradiction and I filed it as EMB-112 (Backlog, investigation), since the check needs a real export only the owner has.
+
 ## 2026-11-09 21:02 — desk/013 a word search names the team it searched
 
 **Decided:** nothing; decision 34 (`embarch-desk/decisions/desks.md`) unchanged and the search not widened. A new `LinearBinding::scope_label()` in `src/store.rs` is the project name, else `team <KEY>`; `/linear/search` returns it as `scope` and `/pickup` now calls it instead of its own inline copy. The `linear_search` tool description says a word query searches the desk's scope and the answer names it, and a key reads from any connected workspace. `interfaces.md` says both routes carry `scope`.
