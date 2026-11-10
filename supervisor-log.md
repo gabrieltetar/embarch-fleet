@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-10 02:38 — atlas/058 part_card and mismatch_report answer before an atlas exists
+
+**Decided:** nothing numbered; `DESIGN.md` "Query surface" amended in place (EMB-23), on the direction set at the split. With no atlas (`a.atlas is None`), `part_card` builds the part-to-document join from the netlists and `Coverage.part_docs` (`Atlas.part_docs`); a board MPN resolves to its card, `board=all` lists refs and nets, and a covered but undistilled MPN answers with the covering file and "not translated yet". `mismatch_report` runs `mismatch.run_netlist_only` (in memory, writes nothing; the MCU from `atlas.toml` `[mcu] part`) and lists every check in `mismatch.NEEDS_BUILD` under "Not run" with what it lacked. Run without a build: connector net names, DNI parts on MCU paths, pull rail vs MCU I/O supply, MCU symbol pin name vs datasheet, far-end level vs pin tolerance (when pin records exist), driver claims vs datasheet. **The worker's calls:** open-drain far-end pull goes under "Not run" (its pull may be a DT flag); an atlas present but missing `pins.json` behaves as before. Also `DESIGN.md`'s "declare no hint" sentence now names `reg_read_bank` (`atlas/057`'s reviewer aside).
+**Merged:** `agent/atlas/058-part-card-and-mismatch-report-answer-before-an-atlas-exists` (code `38a87fa`, ff on `6eca094`; doc `f8d6fca9`, the worker's `f53565ea` cherry-picked onto `e91066b0`). Gate on the merge result: `pytest -rs` 704 passed, 3 expected skips (`test_public_guard` ran); client names clean; ownership `atlas` OK on both branches; `check-docs.py` 12/12. The worker again left the claim line; I set `done` at the fold.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. Owed to a real project: `q part_card` and `q mismatch_report` on a repo with netlists and translated datasheets but no `/atlas-build` yet.
+**Budget:** PROCEED, burndown until 2026-11-11 06:00, wave 6.
+**Least sure about:** the no-atlas `mismatch_report` is not cached and rebuilds the join, every distillation's records included, on each call; nobody measured it on a real project's size.
+
 ## 2026-11-10 02:31 — atlas/057 a live read selects a register's bank first
 
 **Decided:** nothing numbered; `DESIGN.md`'s `bus` row and live-read section amended in place (EMB-124). A `bus` record may state `bank_select: {reg, values: {<bank>: <value>}}`. `ext_reg_read` reads the select register once (the previous page), writes the bank's value, reads, and writes the previous page back on every exit, a failed read included; consecutive registers on one bank share one select; an unreadable select register means nothing is written. **The opt-in is `allow_bank_select`**: CLI `live reg-read --allow-bank-select`, and **a new MCP write tool `reg_read_bank`** (the worker's pick: `reg_read` stays read-only and gains no parameter). Without it a single banked register is refused naming the opt-in and nothing reaches the shell; a whole-part read lists banked registers under "Not read"; a part with no `bank_select` reads as before and says "Page not selected".
