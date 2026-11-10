@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 19:33 — desk/007 an issue read says when comments were cut
+
+**Decided:** nothing new; the worker chose a `skip` parameter on `linear_get_issue` (and `GET /linear/issue/{key}?skip=N`) over a second tool and recorded it as an amendment to decision 59, as my dispatch note asked under burndown. Both account paths now page comments 50 a request up to 500, return the newest 25 oldest first with `comments_total`, `comments_truncated`, `comments_capped` and a `comments_note` naming the next `skip`. The worker filed `tasks/desk/011-compact-desk.md` (`decisions/agents.md` 11,455 of 12,288 B), `open`, `In flux: no`, due 2026-11-23. I set the task `done` in this fold; the worker had ticked every box and left my claim line.
+**Merged:** `agent/desk/007-an-issue-read-says-when-comments-were-cut` (code `3141190`, ff on `0c44f9d`; doc `15f59412`, the worker's `84a8c0ef` cherry-picked onto `816f2c92`). Gate on the merge result: `cargo build`, `cargo test` (193), `clippy --all-targets -D warnings` green; client names clean; `check-docs.py` 12/12; ownership `desk` OK on both branches.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. Owed to a live Linear check, written into the task and decision 59: which end of a thread of more than 25 comments each account type keeps is assumed newest-first, not measured. Nothing installed or deployed.
+**Budget:** PROCEED, gate off by latch (burndown), wave 6.
+**Least sure about:** every issue read now pages all comments, including the description-only callers (`linear_edit`'s draft checks, search, the brief), so a long thread costs up to ten requests where it cost one; the reviewer found no decision against it, but nobody measured it.
+
 ## 2026-11-09 19:32 — promptu/002 the pass plans for work that will outgrow one context window
 
 **Decided:** nothing new; decision 41 was the owner's design and now reads built for the Promptu side. The pass takes `promptu prep --context-usage <0-100>` (over 100 exits 2), judges whether the work runs at high context, and names one of `workers`, `handoff`, `compactions`, `decimation` as one line in Who does it; the footer carries `way=<name>` only when one is picked. The input is `docs/contract.md` §7.10. **In this fold I set `chat/017` `open`**, as its `Unparks when:` named this task, with the flag's name in its state line. The worker filed `tasks/promptu/004-compact-promptu.md` (`spec.md` 9,564 of 10,240 B), `blocked` with `In flux: yes`, due 2026-11-23.
