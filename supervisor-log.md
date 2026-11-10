@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-10 01:50 — atlas/053 a variant record kind lists orderable parts
+
+**Decided:** nothing numbered; `DESIGN.md`'s record-kind table gains a `variant` row in place (EMB-47). A `variant` is one orderable part: `mpn` (non-empty string) and `options` (an object of option name to string, number or boolean, at least one; no other fields). `rule` stays behaviour and `quirk` class `variant` still only flags a row that differs by variant. It is in `KINDS`, `FACT_KEYS`, the schema enum with its own `$defs/variant`, `render.RENDERERS` (`t_variant`) and the datasheet procedure. The records mini-validator now honours `minProperties`, which only `variant.options` sets, so no existing record's validation changes (checked on the diff). No `features.d` row: a schema kind, not a capability.
+**Merged:** `agent/atlas/053-a-variant-record-kind-lists-orderable-parts` (code `ca710c5`, ff on `9b875c2`; doc `63142756`, the worker's `92c1d85b` cherry-picked onto `6f6b3b97`). Gate on the merge result: `pytest -rs` 686 passed, 3 expected skips (`test_public_guard` ran); client names clean; ownership `atlas` OK on both branches; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. Owed to a real vendor file: a distillation that writes `variant` records for a regulator's orderable-parts table.
+**Budget:** PROCEED, burndown until 2026-11-11 06:00, wave 6; 5-hour 30%, weekly 56%.
+**Least sure about:** `secondlook.py` has no `variant` entry and falls back to its generic re-read, as `requirement`, `conflict` and `check` already do (the reviewer's non-finding); whether that re-read checks an `options` table well is untested.
+
 ## 2026-11-10 01:46 — atlas/052 a session before the first atlas is told there is none
 
 **Decided:** nothing numbered; `DESIGN.md` "How a session sees the atlas" amended in place (EMB-22). `embarch-atlas init` writes `<atlas_dir>/MAP.md` as a placeholder (`NO_ATLAS_MAP`, first line `# No hardware atlas is built yet`, naming `/atlas-translate-docs` then `/atlas-build`) when none exists, never over a real map; the first `join` replaces it as before. `mark_map` and `stale.py` needed no change: `mark_map` already ignores a first line that is not an atlas header, and `stale.py` never reads `MAP.md`. A `join` of an atlas not at HEAD leaves the placeholder, which is right. Filed **EMB-123** (Fleet Ready, atlas) from the reviewer's aside: the `atlas-use` skill triggers on `MAP.md` existing and its step 1 does not know the placeholder.
