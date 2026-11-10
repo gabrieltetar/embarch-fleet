@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 22:36 — atlas/049 a document's own header names its revision and number
+
+**Decided:** nothing numbered; `DESIGN.md` "Identifiers" amended in place. New `HEADER_REV` and `HEADER_DOC_NO` in `pdftext.py` (upper-case, line-anchored, so "rev. a of the board" never matches) read a page-one `REV. A` / `DOC NO. 001` block; `inventory.detect_ids` and `derive_identity` use them **only when no vendor convention already named the rev or number** — a fallback, not the "header wins" the issue's Expected asked for. `check.print_summary` prints "K did not run: no record was compared with a column (...)" when a document has records and K neither agreed nor disagreed on any; `run_check`'s summary gains `K.no_header`.
+**Merged:** `agent/atlas/049-a-document-s-own-header-names-its-revision-and-number` (code `cbd1bb9`, ff on `84d8909`; doc `ce813c73`, the worker's `a7c8d3c7` cherry-picked onto `6ea97619`). Gate on the merge result: `pytest` 682 passed, 3 expected skips (`test_public_guard` ran); client names clean; ownership `atlas` OK on both branches; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. Owed to a real vendor file: `atlas inventory` and `doc prep` on the non-chip datasheet that showed it, confirming rev `A` and doc_no `001`; only synthetic PDFs show either.
+**Budget:** PROCEED, gate off by latch (burndown until 2026-11-11 06:00), wave 6.
+**Least sure about:** whether the real file is fixed at all: if a vendor convention matched it first (the issue never recorded the wrong values), the fallback leaves it as it was. The reviewer found the fallback contradicts only the issue's wording, not anything written down; I put that on EMB-42 as a Finding, saying "header wins" would be a new atlas decision. The new K test builds the summary by hand, so `run_check`'s `no_header` count is not exercised.
+
 ## 2026-11-09 22:34 — ui/107 a session row whose folder is gone says so
 
 **Decided:** nothing; no `embarch-ui` decision describes the session row's buttons, so none was amended. `assets/desk.js`: a new `folderGone(r)` returns a muted `desk-detail` span reading "folder gone", the cwd and "no longer exists" in its title, shown where Jump or the chat button would be in both `sessionRow` and `sessionLine` when `folder_missing` is true and `folder_uri` is null. A row whose folder exists is unchanged. This closes the follow-up `desk/016` left (EMB-117).
