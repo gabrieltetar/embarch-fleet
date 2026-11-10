@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 22:12 — atlas/048 a part named in passing is not covered
+
+**Decided:** nothing numbered; `DESIGN.md` amended in place. Part tokens now come from the PDF title, keywords, subject and page 1 only (`inventory.FRONT_PAGES = 1`, was `pages[:3]`), and the `exact` rung covers on page 1 or an ordering-information page only (`coverage.FRONT_PAGES` aliases it). `MATCH_VERSION` is 2, so `inventory/matches.json` rescans. So a part named only on page 2 or later of another part's datasheet is proposed, not covered. `DESIGN.md` gains "A part named in passing is not covered" under "Covered, proposed, missing", the `exact` row says page 1, and the stale "only" in the Kinds `appnote` bullet (047's reviewer) is fixed.
+**Merged:** `agent/atlas/048-a-part-named-in-passing-is-not-covered` (code `84d8909`, ff on `df232e9`; doc `108cc9c1`, the worker's commit cherry-picked onto `25a6cd7e`). Gate on the merge result: `pytest` 679 passed, 3 expected skips (`test_public_guard` ran); client names clean; ownership `atlas` OK on both branches; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. Owed to a real vendor file: a datasheet whose own part first appears on page 2 (a long cover page) is now proposed rather than covered; only synthetic PDFs show either case.
+**Budget:** PROCEED, gate off by latch (burndown until 2026-11-11 06:00), wave 6.
+**Least sure about:** narrowing to page 1 trades a false "covered" for a false "proposed" on any datasheet that names its own part only after page 1; the worker wrote that into `DESIGN.md` as synthetic-only, and the `stem` rung (title or pages 1-2) still reads two pages, so the two rungs now disagree on how far a datasheet's front reaches.
+
 ## 2026-11-09 22:12 — ui/106 Pick up says no card on the board
 
 **Decided:** nothing; `embarch-desk` decision 43 already says what `/pickup` lists. `assets/desk.js` `loadPickup`: the Pick up title now ends "with no card on the board", and the empty note reads "Every open issue of yours already has a card on the board." The worker searched `assets/` and `embarch-doc/embarch-ui/` and found no other text to fix.
