@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 19:50 — promptu/003 decision 40 follows the one-colour rail
+
+**Decided:** nothing new; the owner's EMB-56 change, recorded on the Promptu side. Decision 40 in `embarch-promptu/decisions/chat.md` is amended in place: the rail's icons are one-colour inline SVGs in `currentColor`, bottom placement and Usage-at-top kept, colour emoji added to its Rejected list. `spec.md` §2c no longer names 📚 and 💡; the worker made that edit one byte smaller rather than larger, since `spec.md` is in reserve under the parked `promptu/004`. Leg notes: **I split no Fleet Ready issue this leg.** All 28 are `desk` or `atlas`, the queue already holds five `atlas` and four `desk` tasks beyond this wave, and a split adds depth without scope spread. `--refill-owed` fired on spread only, and no sweep source changed since the `2026-11-09 17:34` marker, so I skipped the sweep.
+**Merged:** `agent/promptu/003-decision-40-follows-the-one-colour-rail` (doc only: `b92ffb51`, the worker's `ec956b31` cherry-picked onto `724d0dfa`; the `embarch-promptu` worktree stayed clean and was not pushed). Gate on the merge result: `check-docs.py` 12/12; ownership `promptu` OK.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, gate off by latch (burndown until 2026-11-11 06:00), wave 6; this leg holds 4.
+**Least sure about:** nothing material; two lines of prose, and `chat` decision 94 already said the same thing.
+
 ## 2026-11-09 19:43 — chat/009 the rail's icons are one-colour SVGs
 
 **Decided:** nothing new; the owner changed his own pick (EMB-56) and decision 94 is amended in place, naming `tasks/promptu/003` for the promptu side. The five rail entries are inline SVGs in `currentColor`; lit and unlit differ by opacity or the theme's colours, with no CSS filter left on a rail icon. The worker also dropped incidental emoji wording from `decisions/promptu.md` and `decisions/readouts.md`. **In this fold I set `promptu/003` `open`**, as its `Unparks when:` named this task, and corrected the worker's state line (`done,` is not a state token; `check-task-state.py` was red on `main` for the minutes between the doc landing and this fold, see below).
