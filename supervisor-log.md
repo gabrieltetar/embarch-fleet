@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 17:37 — ui/105 the README points at the chat's launcher
+
+**Decided:** nothing. Most of EMB-69 was already true on `main` when the worker started: `vscode-extension/` is deleted, so its README does not exist, and the architecture sketch already names `embarch-ui.service`. What remained: the README's launcher section now names `embarch-chat` as the launcher's home, its four commands, and its status bar states. The task named three states; `embarch-chat`'s `launcher.ts` has a fourth, `embarch-ui (not installed)`, and the README lists it. No `embarch-doc/embarch-ui/` change; `spec.md` already agreed.
+**Merged:** `agent/ui/105-the-readmes-point-at-the-chats-launcher` (code `877a042`, ff; doc `6164b79d`, the worker's `1f1a082e` cherry-picked onto `e222ce57`, task file and changelog fragment only). Gate on the merge result: README only, so no `cargo`; ownership `ui` OK on both branches; client names clean; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED (wave 6).
+**Least sure about:** the split itself: I wrote the task from the issue's text without checking `main`, and two of its three targets had already been fixed. The next leg splitting 39 more issues should read the named files before writing a task.
+
 ## 2026-11-09 17:36 — promptu/001 a header-less memory index may take its first header
 
 **Decided:** nothing. The first `promptu` unit the fleet has run; every gate script already knew the scope. Check I2 on a `MEMORY.md` with no `## <domain>` header now says the writer may add the first one in the same write; with headers present the message is unchanged. Decision 21 gains one sentence saying so; the rule itself and I3 are untouched.
