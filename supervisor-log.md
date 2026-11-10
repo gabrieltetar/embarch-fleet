@@ -97,6 +97,17 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-10 03:41 — desk/023 decisions 79 and 81 leave access-point.md by verbatim split
+
+**Decided:** nothing numbered. `embarch-desk/decisions/access-point.md` 11,206 → 6,477 B: decisions 79 and 81 moved verbatim to a new `decisions/linear-reads.md` (5,269 B), with a header, a pointer line in `access-point.md`, and the index row in `decisions.md` split in two. I compared removed against added lines: identical except the two headers and the index rows. PAID. **Compaction-pass answer** (the worker could not give one, it did not open `spec.md`; mine): no. `spec.md` names no Linear read tool and points to `interfaces.md` for every tool, so someone working on the desk's Linear reads needs `decisions/linear-reads.md` for the no-fallback rule and the file-read limits.
+**Merged:** `agent/desk/023-compact-desk-access-point-decisions` (doc only: `c312b30f`, ff on the claim `88d8d133`; no code worktree). Gate on the merge result: `check-docs.py` 12/12; ownership `desk` OK.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, wave 6; 5-hour 10%, weekly 61%.
+**Least sure about:** nothing in the unit; the leg's open question is what follows `desk/024`, below.
+**Leg notes (this leg, first unit):** spawned with the pump latched in normal mode, no stop marker, no owner message; nothing to recover (no claims, no unit or leg worktrees). Leg began at `a2b538b5`. Fleet Ready unchanged and not split: atlas EMB-27 (needs a real build), EMB-32, 33, 34 (need a vendor file), EMB-73 (`Scope: suite`, its last box is an `embarch-dev-workflow.md` edit, the owner's). Refill owed (depth and spread); the only refill source changed since `2026-11-10 03:12` was `embarch-desk/open.md` (`desk/020` removing its answered item), so nothing filed. Spread sweep: nothing filed (2026-11-10 03:41). Size ledger: nothing overdue. Bench: `--refresh` at 03:40, neither role attached; three bench tasks stay `open`. The worker ran one empty inline-Python heredoc by mistake and did not file on the hook's prompt.
+
 ## 2026-11-10 03:36 — desk/022 the desk says when a repo has no embarch-api in its login
 
 **Decided:** `embarch-desk` decision 82 (new, `decisions/desks.md`; EMB-17), on the direction I set at the split: the desk reads the instance login's `.claude.json` (`<CLAUDE_CONFIG_DIR>/.claude.json`, else `~/.claude.json`) and the folder's `.mcp.json`, and **never writes either**; `embarch-api` counts as registered at user scope, in `projects.<folder>.mcpServers`, or in the folder's `.mcp.json` (another login's file does not count). New `src/mcpreg.rs`. `GET /desks` gains an `embarch_api` list per desk, one entry per folder, and a folder without it carries `login` and `register_command`; a SessionStart in such a folder appends one paragraph after the standing notes (74). **The worker's picks:** the command is `[CLAUDE_CONFIG_DIR=<dir> ]claude mcp add --scope user embarch-api -- <binary> <args>` (flags checked against `--help`), binary and args copied from an existing entry in this login, `~/.claude.json` or a sibling `~/.claude*` login (user scope first), else two placeholders; no `desks.json` field; **every desk is told**, not only ones that build; no parent-folder search; `embarch setup` registering it recorded as out of scope. `features.d/desk-078-embarch-api-login-check.md` added.
