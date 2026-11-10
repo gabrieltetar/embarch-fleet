@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 20:09 — desk/009 the start hook takes the work item from the prompt
+
+**Decided:** nothing new; decision 7 in `embarch-desk/decisions/cockpit.md` is amended in place (EMB-16). The worker chose the text route over a hook that reads the prompt: `ask_text` now tells a session with no item to take an issue key of a connected team (`linear_teams`; a lookalike in prose does not count) from its opening prompt or a handoff, set it with `desk_set_work_item`, say which in one line and not ask; with no key anywhere it is asked every prompt as before. `spec.md` matches. **Filed EMB-105 (Fleet Ready)** from the reviewer's note: the desk skill's work-item step and the MCP server instructions still say only "ask the user".
+**Merged:** `agent/desk/009-the-start-hook-takes-the-item-from-the-prompt` (code `5837ef5`, ff on `aa56a7a`; doc `ec7d333f`, the worker's `10570fdb` cherry-picked onto `529a0a77`). Gate on the merge result: `cargo build`, `cargo test` (194), `clippy --all-targets -D warnings` green; client names clean; ownership `desk` OK on both branches; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. Owed to a live session: the key-first behaviour lives in a model following the hook's text, and the test asserts only the text. Nothing installed; the running desk keeps the old text until the owner rebuilds it.
+**Budget:** PROCEED, gate off by latch (burndown), wave 6.
+**Least sure about:** the guard against a lookalike key is the session reading `linear_teams`, not the desk; nobody checked whether `desk_set_work_item` itself refuses a key no connected team holds.
+
 ## 2026-11-09 20:08 — atlas/041 check S reads a dimension cell as one value
 
 **Decided:** nothing. Check S's `packed` test now counts numbers per `×`-joined part of a cell, so `1.5 × 2.0` is one value and `1.0 2.0` is still flagged. `DESIGN.md` never described the packed-cell rule, so it is unchanged; the worker noted that on the task's Done-when box.
