@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 21:27 — atlas/047 application reports and reference-manual user's guides get their kind
+
+**Decided:** nothing numbered; `DESIGN.md` "Kinds" amended. `APPNOTE_WORDS` in `inventory.py` gains `application report`. A new `guide_is_reference_manual` runs before `is_appnote` in `classify`: a PDF whose only note wording is "user's guide" (no application note or report, no technical note, no `AN`/`UM`/`TN` number) and whose page 1 has a line at its top, at most 80 characters and not citing one ("see", "refer", "in the"), calling it a reference manual, is `reference-manual`. A guide that only cites the manual, or is also an application note, stays `appnote`.
+**Merged:** `agent/atlas/047-application-reports-and-reference-manual-users-guides-get-their-kind` (code `df232e9`, ff on `ca32a6c`; doc `dba08bbe`, the worker's `640ece3a` cherry-picked onto `2a255c73`). Gate on the merge result: `pytest` 676 passed, 3 expected skips (`test_public_guard` ran); client names clean; ownership `atlas` OK on both branches; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. Owed to a real vendor file: that an actual reference manual published as a user's guide carries the self-naming line within page 1's top and 80 characters; only synthetic PDFs show it.
+**Budget:** PROCEED, gate off by latch (burndown until 2026-11-11 06:00), wave 6.
+**Least sure about:** the 80-character, top-of-page-1 line is a heuristic chosen without a real file, so a real manual whose cover puts the words in a longer line stays `appnote` and still needs `--kind`. The reviewer's nit, that `DESIGN.md`'s "only a title saying reference manual comes first" is now stale, went into `atlas/048`'s dispatch notes in this fold rather than a fix of mine.
+
 ## 2026-11-09 21:24 — desk/014 my issues and open issues name their scope
 
 **Decided:** nothing; decision 34 (`embarch-desk/decisions/desks.md`) unchanged. `/linear/mine` and `/linear/open` in `src/server.rs` now answer `scope` through `LinearBinding::scope_label()` (the project name, else `team <KEY>`), the helper `desk/013` added, so all four routes carry the same label. `interfaces.md` says so. The `linear_my_issues` tool description never described the scope, so it is unchanged.
