@@ -27,6 +27,7 @@ every key it is handed must be in the configured team.
     lint [KEY...] [--json]
                          check open issues (or these) against the protocol
     hide-session ID      keep this window's desk session off the session list
+    template             the issue shape as JSON, for a form that files one
 
 **Every body and comment has the shape embarch-doc's `LINEAR-PROTOCOL.md` gives
 it.** `file`, `rewrite` and `comment` refuse one that breaks it, naming what is
@@ -620,6 +621,22 @@ def cmd_hide_session(s: dict, args) -> int:
     return 0
 
 
+def cmd_template(s: dict, args) -> int:
+    """What `body_problems` checks, for a form to lay out rather than restate:
+    the Dev tab's Linear sub-tab builds its fields from this."""
+    print(json.dumps({
+        "team": s["team"],
+        "title_max": TITLE_MAX,
+        "summary_max": SUMMARY_MAX,
+        "types": {t: {"required": list(r), "optional": list(o)} for t, (r, o) in TYPES.items()},
+        "hardware": list(HARDWARE),
+        "scopes": sorted(scopes()),
+        "done_when": DONE_WHEN,
+        "file_status": s["file_status"],
+    }, indent=1))
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -666,6 +683,7 @@ def main() -> int:
     p = sub.add_parser("hide-session")
     p.add_argument("session_id")
     p.set_defaults(fn=cmd_hide_session)
+    sub.add_parser("template").set_defaults(fn=cmd_template)
     args = ap.parse_args()
     s = need_settings()
     try:

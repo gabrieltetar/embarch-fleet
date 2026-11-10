@@ -114,6 +114,11 @@ the one exception, and it is history-only:** it walks the main checkouts under
 the configured root by absolute path, never siblings of the cwd, and a worktree
 shares its main checkout's refs, so for history the two are the same answer.
 
+**`--text-file PATH` reads words that are about to leave the machine, not a
+repo** (2026-11-10): an issue the Dev tab files is copied into public task files
+by the fleet, so its text is checked before it is sent, with the same decoders
+and the same redaction. It takes no repo option, and a hit names the line.
+
 Denylist format: one name per line, `#` comments and blank lines ignored. A
 plain name matches case-insensitively with any run of up to three non-alphanumeric
 characters allowed between its words, so `Acme Corp` also finds `acme-corp`,
@@ -130,6 +135,7 @@ Usage:
   scripts/check-client-names.py --history       plus every reachable commit
   scripts/check-client-names.py --suite --history   that, for every repo
   scripts/check-client-names.py --pre-push REMOTE   plus what a push sends (stdin)
+  scripts/check-client-names.py --text-file PATH    one file's text, no repo
 Exit status: 0 clean or skipped, 1 hits found, 2 misconfigured.
 """
 from __future__ import annotations
@@ -497,9 +503,15 @@ def main() -> int:
                     help="also scan what a push to REMOTE sends, from git's pre-push stdin")
     ap.add_argument("--suite", action="store_true",
                     help="every repo under the fleet root, each on its own (with --history)")
+    ap.add_argument("--text-file", metavar="PATH",
+                    help="scan one file's text, not a repo: words about to leave the machine")
     args = ap.parse_args()
     if args.suite and (args.repo or args.pre_push is not None or not args.history):
         print("--suite is history-only: --suite --history, no --repo, no --pre-push",
+              file=sys.stderr)
+        return 2
+    if args.text_file and (args.repo or args.suite or args.history or args.pre_push is not None):
+        print("--text-file scans one file: no --repo, --suite, --history or --pre-push",
               file=sys.stderr)
         return 2
 
@@ -530,6 +542,23 @@ def main() -> int:
               "its gate; remove it from check-docs.py rather than leaving it dark.",
               file=sys.stderr)
         return 2
+
+    if args.text_file:
+        try:
+            data = Path(args.text_file).read_bytes()
+        except OSError as e:
+            print(f"{args.text_file}: {e.strerror}", file=sys.stderr)
+            return 2
+        hits = scan_bytes("text", data, pats)
+        if not hits:
+            print(f"OK: the text is clean against {len(pats)} denylist entr"
+                  f"{'y' if len(pats) == 1 else 'ies'}.")
+            return 0
+        print(f"{len(hits)} client-name hit(s) in the text:\n")
+        for h in hits:
+            print(h)
+        print(f"\nThe name is not printed. Open {deny} at the entry number to see which one.")
+        return 1
 
     if args.suite:
         roots = suite_repos(CONF.root)

@@ -255,6 +255,19 @@ class Fleet(unittest.TestCase):
         self.assertEqual(self.desk.calls, [], "refused before the duplicate search, and nothing spooled")
         self.assertFalse(self.state.exists() and list(self.state.glob("*.json")))
 
+    def test_a_body_laid_out_from_the_template_is_filed_for_every_type(self):
+        t = json.loads(self.linear("template").stdout)
+        self.assertEqual((t["team"], t["file_status"]["owner"]), ("EMB", "Backlog"))
+        self.assertIn("ui", t["scopes"])
+        for typ, sections in t["types"].items():
+            body = "\n\n".join(
+                ["One sentence.", f"**Type:** {typ}\n**Scope:** ui\n**Hardware:** {t['hardware'][0]}"]
+                + [f"## {name}\n\nText." for name in sections["required"]]
+                + [f"## {t['done_when']}\n\n- [ ] It holds."])
+            r = self.linear("file", "--from", "owner", "--project", "embarch-ui", "--title", f"a {typ}", "--body", body)
+            self.assertEqual(r.returncode, 0, f"{typ}: {r.stderr}")
+        self.assertEqual(len(self.desk.said("/drafts")), len(t["types"]))
+
     def test_file_writes_the_filer_and_refuses_one_that_contradicts_it(self):
         self.assertEqual(self.linear("file", "--from", "worker", "--project", "embarch-ui",
                                      "--title", "T", "--body", VALID).returncode, 0)
