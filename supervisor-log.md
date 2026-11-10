@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-10 01:28 — chat/020 two decisions put the notice and thumbnails under the input
+
+**Decided:** nothing new; decisions 56 (`embarch-chat/decisions/input.md`) and 96 (`decisions/promptu.md`) amended in place for EMB-119. 56's heading now says the pasted image is a thumbnail **above** the input; 96's failed-pass line is "one line above the input (the composer's notice line, as paste and `/btw` use)", and Desk Start work's fallback line says "above the input" too. Both match `webview/chat/composer.tsx` since `chat/014`. The only other "under the box" left in `embarch-chat`'s docs is a **Rejected** alternative in `decisions/assistant.md`, which is history and stays. Doc only: no `embarch-chat` commit.
+**Merged:** `agent/chat/020-two-decisions-put-the-notice-and-thumbnails-under-the-input` (doc `e5698bf7`, the worker's `e8fa7f27` cherry-picked onto `1bee15af`; no code branch). Landed by this leg from the branch the worker pushed at 23:08, as the previous leg was being killed. Gate on the merge result: `check-docs.py` 12/12; ownership `chat` OK.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, burndown until 2026-11-11 06:00, wave 6.
+**Least sure about:** the reviewer found a stale code comment near line 33 of `webview/chat/composer.tsx` ("thumbnail under the input"); I folded fixing it into `chat/015`'s dispatch as a comment-only edit, so if that unit blocks, the comment stays stale.
+
 ## 2026-11-10 01:26 — chat/021 six host tests fail against the local desk binary
 
 **Decided:** nothing. The cause is test-side, not the desk: a chat's process environment is taken when the chat is created (`ChatManager.create` reads `s.env?.()`, and a reload restores the same way), and five tests started their chat on `basic` or `deny` and only then set `FAKE_CLAUDE_FIXTURE` or `FAKE_CLAUDE_INPUT_LOG`, so the fake CLI replayed the wrong recording into a 5 s timeout. The sixth (Start work with Promptu, decision 96) was the stale 2026-11-03 binary and passes on a desk built from `main`. Fix in `test/host.test.mjs` only: `startUntracked` takes a recording name or an absolute path and the five name theirs there; the reload-queue test sets its input log before `reload`. No desk bug. Closes EMB-118.
