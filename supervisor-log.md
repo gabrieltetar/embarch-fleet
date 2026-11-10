@@ -97,6 +97,17 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 22:32 — desk/017 a start that resolves no desk is no desk everywhere
+
+**Decided:** nothing new; decision 74 in `embarch-desk/decisions/desks.md` (not `notes.md`, as the task guessed) is amended in place for EMB-48 points 1 to 3. `Session` gains `start_cwd` (serde default; an old state file reads), `start_notes` records it, and `notes_desk` falls back to `session_desk(sid, start_cwd or cwd)`, so a start that resolved no desk stays no desk for every reader. `ask_text` now takes the start's cwd and scopes its cards by `session_desk`, the same resolution `start_notes` uses, so one start block names one desk. `check_desk_note` accepts an edit whose cost does not grow, even on a desk over 4,000. **There is no `switch_text` in `src/events.rs`**: the issue named one, and since decision 21 the start block has no switch question, so the notes are the only part naming a desk.
+**Merged:** `agent/desk/017-a-start-that-resolves-no-desk-is-no-desk-everywhere` (code `4b83b5e`, ff on `377c116`; doc `5c77a371`, the worker's `08ca0b5e` cherry-picked onto `bc5a34f7`). Gate on the merge result: `cargo build`, `cargo test` (201), `clippy --all-targets -D warnings` green; client names clean; ownership `desk` OK on both branches; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. Owed to a live desk: a session resumed in a folder with no desk hearing and writing no desk's notes. Nothing installed.
+**Budget:** PROCEED, gate off by latch (burndown until 2026-11-11 06:00), wave 6, at start and end.
+**Least sure about:** the point-1 test sets `start_desk` and `start_cwd` by hand and calls `notes_desk`, rather than driving two `SessionStart` events through `apply` and then `GET /sessions/{sid}`, so a route that stopped going through `notes_desk` would still pass.
+**Leg notes (this leg, first unit):** spawned with the pump latched in burndown (`gate=off`), no stop marker, no owner message. Step 0 found no claims, no worker worktrees, no mid-merge; leg began at `836d2a3c`. **Split EMB-117 into `tasks/ui/107`, EMB-42 into `atlas/049`, and EMB-48 into `desk/017` (points 1 to 3) and `ui/108` (points 4 and 5, the Desk tab's)** (`dc2a64de`). `--refill-owed` fired on spread only; skipped, as no source changed since `2026-11-09 17:34`. Dispatched `chat/014`, `ui/107`, `desk/017`, `atlas/049` at once, at 22:29; three of them reported inside four minutes. Every worker again used inline Python against the brief and skipped the hook's filing prompt. Not past midnight, so no day fold; nothing overdue on the size ledger.
+
 ## 2026-11-09 22:20 — chat/013 a window start never raises the UI tab
 
 **Decided:** nothing; no source changed. **The task's premise was stale**: `bce5ac7` (decision 102, `decisions/shape.md`) had already removed `embarchUi.autoStart` and the activation-time start, so `activateLauncher` only reads the unit's state and `reveal()` runs only from the Start command and the status-bar click. The worker added one regression test, "window start opens no browser tab: activation never calls openExternal" in `test/host.test.mjs`, and wrote the finding into the task file. If the owner still sees a tab raised on window start, the cause is elsewhere (another window's Start, or the old standalone launcher still installed); I said so on EMB-64.
