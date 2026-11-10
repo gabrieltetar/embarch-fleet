@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-10 01:32 — atlas/051 doc check reports a cite of a page outside the document
+
+**Decided:** nothing numbered; `DESIGN.md`'s `doc check` row amended in place (EMB-120). `doc check` now **fails** a cite outside `1..pages` as a new `P:` check, the worker's choice by analogy: `check.py` already fails a quote cited on the wrong page (A `wrong-page`) and an unanchored prose number (M), and an out-of-range cite can never anchor anything. A record is `failed` with `P: cites page N, outside 1-n`; a `card.md` or `s/*.md` cite goes into `checks.json` under `P` and prints as `P <file>: ...`; either exits 1. `freeze` and `check` share one test, `check.out_of_range`, which reports nothing when `pages` is 0 (a non-PDF source). A record cite of page 0 is already refused by the schema as `V:` and never reaches `P:`, so page 0 is covered through prose and the helper's own assertions.
+**Merged:** `agent/atlas/051-doc-check-refuses-a-cite-outside-the-document` (code `f796611`, ff on `bfeae59`; doc `059f6796`, the worker's `6432aa52` cherry-picked onto `29a2d4e8`). Gate on the merge result: `pytest` 684 passed, 3 expected skips (`test_public_guard` ran); client names clean; ownership `atlas` OK on both branches; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. Owed to a real vendor file: `doc check` on the datasheet behind EMB-40, to see whether its extra page was an out-of-range cite (now a `P:` line) or a high `pages` in `doc.json`.
+**Budget:** PROCEED, burndown until 2026-11-11 06:00, wave 6.
+**Least sure about:** `freeze` used to flag every cite as out of range when `pages` was 0 and now flags none (the reviewer's non-finding); no decision covers that case, and a PDF whose `doc.json` read 0 pages would now pass both checks silently.
+
 ## 2026-11-10 01:28 — chat/020 two decisions put the notice and thumbnails under the input
 
 **Decided:** nothing new; decisions 56 (`embarch-chat/decisions/input.md`) and 96 (`decisions/promptu.md`) amended in place for EMB-119. 56's heading now says the pasted image is a thumbnail **above** the input; 96's failed-pass line is "one line above the input (the composer's notice line, as paste and `/btw` use)", and Desk Start work's fallback line says "above the input" too. Both match `webview/chat/composer.tsx` since `chat/014`. The only other "under the box" left in `embarch-chat`'s docs is a **Rejected** alternative in `decisions/assistant.md`, which is history and stays. Doc only: no `embarch-chat` commit.
