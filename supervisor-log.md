@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 19:53 — atlas/040 check U finds a unit as a token and reads a symbol whole
+
+**Decided:** nothing new; `DESIGN.md`'s check U row says what changed. A unit is on the page only as a token: no letter may touch it on either side, digits may, so `100mA` still matches and `µA` no longer passes on "guaranteed". A CamelCase symbol (`LoadReg`) gets no dimension from its first letter; `VOVP`, `IQ`, `Lx`, `tPD`, `fSWmin` still do. The font case (µ and Ω printed as `m` and `W`) stayed out of scope with no fixture showing it, as the task allowed.
+**Merged:** `agent/atlas/040-check-u-finds-a-unit-as-a-token-and-reads-a-symbol-whole` (code `18756a3`, ff on `335939a`; doc `61deb548`, the worker's `e15cda32` cherry-picked onto `be0a0118`). Gate on the merge result: `pytest` 658 passed, 3 expected skips (west workspace, built atlas, vendor SVD; `test_public_guard` ran); client names clean; ownership `atlas` OK on both branches; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, gate off by latch (burndown), wave 6; this leg holds 4.
+**Least sure about:** the word-symbol guard also exempts names like `VoutMax` from the first-letter read, so U no longer checks their unit at all, and plural `ohms` no longer matches the `ohm` token; the worker judged both rare, and no test pins either.
+
 ## 2026-11-09 19:50 — promptu/003 decision 40 follows the one-colour rail
 
 **Decided:** nothing new; the owner's EMB-56 change, recorded on the Promptu side. Decision 40 in `embarch-promptu/decisions/chat.md` is amended in place: the rail's icons are one-colour inline SVGs in `currentColor`, bottom placement and Usage-at-top kept, colour emoji added to its Rejected list. `spec.md` §2c no longer names 📚 and 💡; the worker made that edit one byte smaller rather than larger, since `spec.md` is in reserve under the parked `promptu/004`. Leg notes: **I split no Fleet Ready issue this leg.** All 28 are `desk` or `atlas`, the queue already holds five `atlas` and four `desk` tasks beyond this wave, and a split adds depth without scope spread. `--refill-owed` fired on spread only, and no sweep source changed since the `2026-11-09 17:34` marker, so I skipped the sweep.
