@@ -97,6 +97,17 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 22:09 — desk/016 a session whose folder is gone says so
+
+**Decided:** nothing new; decision 71 in `embarch-desk/decisions/built.md` is amended in place (EMB-76, desk half only). In `src/server.rs`, new helpers `folder_missing(cwd)` (non-empty and not a directory) and `folder_link(cwd, cache)` feed both row builders, `session_rows` (a card's live sessions) and `view_sessions` (`/view`'s `sessions`): a row carries `folder_missing: bool`, and `folder_uri` is null when the folder is gone. `interfaces/chat-routes.md` states the field. The existing links test used a path that does not exist, so it now uses a real temp dir.
+**Merged:** `agent/desk/016-a-session-whose-folder-is-gone-says-so` (code `377c116`, ff on `d48a18d`; doc `664a1198`, the worker's `9817a08a` cherry-picked onto `a6129099`). Gate on the merge result: `cargo build`, `cargo test` (198), `clippy --all-targets -D warnings` green; client names clean; ownership `desk` OK on both branches; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. Owed to a live desk: a session whose folder was deleted showing `folder_missing` and no Go to chat. Nothing installed.
+**Budget:** PROCEED, gate off by latch (burndown until 2026-11-11 06:00), wave 6.
+**Least sure about:** `embarch-ui`'s Desk tab and `embarch-chat` now silently lose their Jump and chat buttons on such a row rather than saying why; the Work tab half of EMB-76 is in a repo the fleet does not work, which I said on the issue, so EMB-76 will reach Done with that item open.
+**Leg notes (this leg, first unit):** spawned with the pump latched in burndown (`gate=off`), no stop marker, no owner message. Step 0 found no claims, no worker worktrees, no mid-merge; leg began at `0d7c20c4`. **Split EMB-76 into `tasks/desk/016` (desk half) and EMB-115 into `tasks/ui/106`** (`e4273cec`), so `ui` is a fourth scope. `--refill-owed` fired on spread only; skipped, as no source changed since `2026-11-09 17:34`. Dispatched `atlas/048`, `chat/013`, `desk/016`, `ui/106` at once. Nothing overdue on the size ledger; not past midnight, so no day fold.
+
 ## 2026-11-09 21:58 — chat/010 the chat never scrolls sideways
 
 **Decided:** nothing numbered, per burndown. **The rule's decision is owed and filed as EMB-116** (Backlog, `Type: decision`, recommending a new `embarch-chat` decision beside 91); the proposed text is also under `## Owed decision` in the retired task file. `webview/shared/style.css`: `.timeline`, `.codeblock pre` and `.tablewrap` no longer scroll sideways; code, table cells, `.diff` lines, the compaction summary and `.ctx-row pre` wrap (`pre-wrap`, `overflow-wrap: anywhere`); `.tool .name`, `.tool .st`, `.tool .subject-key` and the run count shrink with an ellipsis. A new webview check, `nothing in the chat scrolls sideways`, asserts no `overflow-x: auto|scroll` element is wider than its box, plus `scrollWidth <= clientWidth` on the timeline, document, code block, table, diff and message.
