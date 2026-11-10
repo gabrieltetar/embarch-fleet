@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 19:32 — promptu/002 the pass plans for work that will outgrow one context window
+
+**Decided:** nothing new; decision 41 was the owner's design and now reads built for the Promptu side. The pass takes `promptu prep --context-usage <0-100>` (over 100 exits 2), judges whether the work runs at high context, and names one of `workers`, `handoff`, `compactions`, `decimation` as one line in Who does it; the footer carries `way=<name>` only when one is picked. The input is `docs/contract.md` §7.10. **In this fold I set `chat/017` `open`**, as its `Unparks when:` named this task, with the flag's name in its state line. The worker filed `tasks/promptu/004-compact-promptu.md` (`spec.md` 9,564 of 10,240 B), `blocked` with `In flux: yes`, due 2026-11-23.
+**Merged:** `agent/promptu/002-the-pass-plans-for-high-context-work` (code `95f0d69`, ff on `94181bb`; doc `71b1dfb0`, the worker's `5a71d01a` cherry-picked onto `35f430ef`). Gate on the merge result: `cargo build`, `cargo test` (67 + 17 + 28), `clippy --all-targets -D warnings` green; client names clean; `check-docs.py` 12/12; ownership `promptu` OK on both branches.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. The installed Promptu on this machine runs the old binary until the owner rebuilds it; nothing here deploys.
+**Budget:** PROCEED, gate off by latch (burndown), wave 6.
+**Least sure about:** `promptu/004` parks `spec.md` on `In flux: yes` until `chat/017` and decision 30's build step 4 settle; `DOC-BUDGET.md` says a verbatim split restates nothing, so whoever reaches its due date should read it as splittable now rather than wait for the flux to end.
+
 ## 2026-11-09 19:30 — atlas/039 a step marker in a rule is not a numeric claim
 
 **Decided:** (1) **Split five more Fleet Ready issues** (`bf619a2a`): EMB-16 into `desk/009`, EMB-18 into `desk/010`, EMB-31, 39 and 44 into `atlas/042`–`044`, each checked against `main` first (the desk and atlas code paths each names still read as the issue says). Announced at `ts` `1794277712.673199`. **Left in Fleet Ready on purpose:** EMB-82 asks for a new `embarch-desk` decision, which burndown withholds; EMB-76 has half its Done when in a repo the fleet does not work; EMB-40 needs the one real datasheet that showed it. 28 remain (10 desk, 18 atlas). (2) For the unit itself, nothing: `NOT_CLAIMS` gains a bare one- or two-digit integer in parentheses, which `rm.py` also picks up through `blank_not_claims`; `DESIGN.md` says so.
