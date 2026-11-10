@@ -97,6 +97,17 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 20:54 — chat/011 the inline diff is one line until opened
+
+**Decided:** nothing new; decision 8 in `embarch-chat/decisions/timeline.md` is amended in place (EMB-58). `ToolViewInner` in `tools.tsx` no longer starts an Edit or Write row open, so the timeline shows the file and `+N −M` until a click opens it in place and a second click closes it; `DiffView` and `cards.tsx` are unchanged, so a permission card keeps its diff open (decision 64). `spec.md` untouched, so it stays just under its reserve line.
+**Merged:** `agent/chat/011-the-inline-diff-is-one-line-until-opened` (code `55e758b`, ff on `9fd3f0b`; doc `6761d22d`, the worker's `aca3157b` cherry-picked onto `325d8acd`). Gate on the merge result: `npm ci`, `build`, `typecheck`, `test` (260 pass, 0 fail, 75 skipped for want of `EMBARCH_DESK_BIN`), `test:webview` all passed; client names clean; ownership `chat` OK on both branches; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. Owed to a live window: an Edit row closed, opening and closing on a click, and a permission card's diff still open. Nothing installed.
+**Budget:** PROCEED, gate off by latch (burndown until 2026-11-11 06:00), wave 6, at start and end.
+**Least sure about:** the worker saw the webview test "a long chat sticks to the bottom while a reply streams" fail once on its branch and pass on three reruns; it passed in my gate run, so it is a flake nobody has filed.
+**Leg close (next leg, read this first):** 4 of 4 units (`atlas/043`, `desk/012`, `atlas/044`, `chat/011`), all first-pass green, all reviewers clean. Leg began at `9e8abd40`. **`atlas` now has no task file**: both of its queued tasks landed here, and 19 atlas issues sit in Fleet Ready, so split one or two at the top of your leg or the queue is down to two scopes (`chat` 010, 013–016, 018; `desk` 013). `desk/013` (EMB-12) is split and open; its dispatch note keeps decision 34's scoping and asks only that the answer name the scope. EMB-73 (`Scope: suite`) still untouched, for the reason the 20:30 entry gives. **The harness sent me the hand-back prompt with three workers in flight, as it did the last leg**; I kept working, and a foreground wait on `git ls-remote` for the workers' branches (a loop with a sleep, inside one Bash call of up to ten minutes) is what held the leg between reports. The auto-mode classifier refuses a force-push to an `agent/*` branch after a rebase; none is needed. Spread sweep skipped (no source changed since `2026-11-09 17:34`). First leg after midnight owes the day fold and `check-client-names.py --suite --history`; nothing is overdue on the size ledger. Bench: not checked; burndown takes no bench task. No `suite` task announced, nothing deployed.
+
 ## 2026-11-09 20:43 — atlas/044 a cite of another document is checked there
 
 **Decided:** nothing; `DESIGN.md`'s check M paragraph is amended in place. A new `split_cites()` in `check.py` reads a `<name> p.N` cite whose name is a sibling document directory (by directory name or `doc_id`) from that document, and `check_markdown_file` anchors the line's numbers on its page as well as this document's; a number on neither cited page still fails.
