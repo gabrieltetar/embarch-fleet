@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-10 01:55 — atlas/054 a register record can state its bank
+
+**Decided:** nothing numbered; `DESIGN.md`'s `register` and `field` rows amended in place (EMB-46). `register` takes an optional `bank` (non-empty string or non-negative integer); **a `field` has no `bank` of its own and inherits its register's through `reg`** (the worker's pick, offered in the dispatch). Check G keys duplicates on `(bank, addr)`. Codecheck's `RegMap` keeps `(bank, addr)` maps beside the old address-only view, which stays the default, so unbanked parts and every existing caller resolve as before. **The worker invented a live-target syntax, `<label>.<REG>@<bank>`**; a name on several banks with none on the main map errors naming them. Not done: codecheck does not know which bank a driver's constants mean (driver constants carry none). Page-select writes on the device were out of scope and the worker filed **EMB-124** (Fleet Ready, `Hardware: verify-only`). The edit dropped `width` from `DESIGN.md`'s `register` row (the reviewer's aside); I restored it on `main` as `c302ffe`, doc only.
+**Merged:** `agent/atlas/054-a-register-record-can-state-its-bank` (code `d6efe11`, ff on `ca710c5`, plus my fix-forward `c302ffe`; doc `370801a6`, the worker's `a9f97f5f` cherry-picked onto `1c71cca2`). Gate on the merge result: `pytest -rs` 690 passed, 3 expected skips (`test_public_guard` ran); client names clean (also after `c302ffe`); ownership `atlas` OK on both branches; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** a live read of a banked register returns whichever page the part is on, because nothing selects the page (EMB-124); needs a board with a paged sensor to confirm. Owed to a real vendor file: check G on the paged sensor that showed 59 duplicate addresses.
+**Budget:** PROCEED, burndown until 2026-11-11 06:00, wave 6; 5-hour 30%, weekly 56%.
+**Least sure about:** the `@<bank>` syntax is now a user-facing name nobody chose; it is cheap to change before anyone types it, and costly after.
+
 ## 2026-11-10 01:50 — atlas/053 a variant record kind lists orderable parts
 
 **Decided:** nothing numbered; `DESIGN.md`'s record-kind table gains a `variant` row in place (EMB-47). A `variant` is one orderable part: `mpn` (non-empty string) and `options` (an object of option name to string, number or boolean, at least one; no other fields). `rule` stays behaviour and `quirk` class `variant` still only flags a row that differs by variant. It is in `KINDS`, `FACT_KEYS`, the schema enum with its own `$defs/variant`, `render.RENDERERS` (`t_variant`) and the datasheet procedure. The records mini-validator now honours `minProperties`, which only `variant.options` sets, so no existing record's validation changes (checked on the diff). No `features.d` row: a schema kind, not a capability.
