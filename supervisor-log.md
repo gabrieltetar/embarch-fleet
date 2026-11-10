@@ -97,6 +97,17 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 21:24 — desk/014 my issues and open issues name their scope
+
+**Decided:** nothing; decision 34 (`embarch-desk/decisions/desks.md`) unchanged. `/linear/mine` and `/linear/open` in `src/server.rs` now answer `scope` through `LinearBinding::scope_label()` (the project name, else `team <KEY>`), the helper `desk/013` added, so all four routes carry the same label. `interfaces.md` says so. The `linear_my_issues` tool description never described the scope, so it is unchanged.
+**Merged:** `agent/desk/014-my-issues-and-open-issues-name-their-scope` (code `3d29d6c`, ff on `5a8fcad`; doc `a3c58e99`, the worker's `67707ef2` cherry-picked onto `57a9dbb5`). Gate on the merge result: `cargo build`, `cargo test` (196), `clippy --all-targets -D warnings` green; client names clean; ownership `desk` OK on both branches; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. Owed to a live desk: a team-bound desk's My issues and open-issues answers reading `team <KEY>`. Nothing installed.
+**Budget:** PROCEED, gate off by latch (burndown until 2026-11-11 06:00), wave 6.
+**Least sure about:** the new test asserts `scope_label` on a team-bound desk, not either route's answer (both need live Linear), so a route that stopped calling the helper would still pass.
+**Leg notes (this leg, first unit):** spawned with the pump latched in burndown (`gate=off`), no stop marker, no owner message. Step 0 found no claims, no worker worktrees, no mid-merge; leg began at `62b51dff`. **Split EMB-111 into `tasks/desk/014`, EMB-72 into `desk/015`, EMB-29 into `atlas/047` and EMB-30 into `atlas/048`** (`e20382b7`), two per scope so the next leg need not split first. `desk/015` tells its worker that `embarch-ui/assets/desk.js`'s Pick up wording is ui's to file, not to edit. `--refill-owed` fired on spread only; skipped, as no source changed since `2026-11-09 17:34`. Dispatched `chat/010` (told: no new decision in burndown, draft it in the task file for me to file), `desk/014`, `atlas/047`, then `desk/015` when 014 landed. Nothing overdue on the size ledger; not past midnight, so no day fold.
+
 ## 2026-11-09 21:15 — chat/016 a deleted chat folder is named as missing
 
 **Decided:** nothing; no decision states the spawn-error wording. In `src/wire/chat.ts` `proc.on("error")`, an `ENOENT` while the chat's `cwd` no longer exists now reads "the chat's folder no longer exists: <cwd>"; any other `ENOENT` still reads "claude not found: <claudePath>". The log line, `releaseUntaken()` and the error state are unchanged. No chat doc described the error, so `spec.md` did not grow (9,034 B, 5 B under its reserve line).
