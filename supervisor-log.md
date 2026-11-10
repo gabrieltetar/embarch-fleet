@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 22:12 — ui/106 Pick up says no card on the board
+
+**Decided:** nothing; `embarch-desk` decision 43 already says what `/pickup` lists. `assets/desk.js` `loadPickup`: the Pick up title now ends "with no card on the board", and the empty note reads "Every open issue of yours already has a card on the board." The worker searched `assets/` and `embarch-doc/embarch-ui/` and found no other text to fix.
+**Merged:** `agent/ui/106-pick-up-says-no-card-on-the-board` (code `9f2026d`, ff on `877a042`; doc `25a6cd7e`, the worker's commit cherry-picked onto `ad2cd9dc`). Gate on the merge result: `cargo build`, `cargo test` (313 + 8, 4 ignored), `clippy --all-targets -D warnings` green; client names clean; ownership `ui` OK on both branches; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. Owed to a live UI: the Pick up title and empty note reading the new words. Nothing installed.
+**Budget:** PROCEED, gate off by latch (burndown until 2026-11-11 06:00), wave 6.
+**Least sure about:** nothing in the change; the worker wrote a malformed `done (` state line, which I rewrote at the fold. I filed **EMB-117** (Fleet Ready, ui) for `desk/016`'s follow-up: the Desk tab now drops a session's Jump and chat buttons when its folder is gone and says nothing, where it could read `folder_missing`.
+
 ## 2026-11-09 22:09 — desk/016 a session whose folder is gone says so
 
 **Decided:** nothing new; decision 71 in `embarch-desk/decisions/built.md` is amended in place (EMB-76, desk half only). In `src/server.rs`, new helpers `folder_missing(cwd)` (non-empty and not a directory) and `folder_link(cwd, cache)` feed both row builders, `session_rows` (a card's live sessions) and `view_sessions` (`/view`'s `sessions`): a row carries `folder_missing: bool`, and `folder_uri` is null when the folder is gone. `interfaces/chat-routes.md` states the field. The existing links test used a path that does not exist, so it now uses a real temp dir.
