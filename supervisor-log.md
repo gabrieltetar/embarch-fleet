@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 19:26 — atlas/038 a spaced minus and a thousands separator parse as one number
+
+**Decided:** nothing new; the worker refined atlas `DESIGN.md` decision 2's number-reading note in the same diff. **This fold is recovery.** The leg that started 17:47 split six Fleet Ready issues (`273ed317`: EMB-36, 37, 38, 41 into `atlas/038`–`041`, EMB-13 and 9 into `desk/007`–`008`), claimed four tasks, dispatched at 17:54, landed `atlas/038`'s code and doc to `main`, and died without a tick, a fold or a log entry. The listener's ticks resumed at 18:58; I took the lock at 19:20. Recovery: its three other claims (`chat/009`, `desk/007`, `promptu/002`) had clean worktrees and no commits anywhere, so I removed the worktrees, deleted the empty local branches and reclaimed them to `open` (`2bc10797`), then claimed and dispatched them again in this leg.
+**Merged:** `agent/atlas/038-a-spaced-minus-and-a-thousands-separator-parse-as-one-number` (code `50a9a15`, ff on `a034cc6`; doc `3ffc8e00`), both landed by the dead leg. I re-ran the gate on the merge result: `pytest` 656 passed, 3 skipped (west workspace, built atlas, vendor SVD; `test_public_guard` ran), client names clean. The task now reads `done` and this fold retires it; one changelog fragment assembled into `history/atlas.md`.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, the usage gate OFF by latch (`gate=off`, `mode=burndown` until 2026-11-11 06:00), suggested wave 6; this leg holds 4.
+**Least sure about:** whether the dead leg ran its own gate before landing; I re-ran it after the fact on `main`, which is the same tree, so the code is checked, but any reasoning it did about the split of the six issues died with it.
+
 ## 2026-11-09 17:45 — chat/007 an agent hands its chat to a fresh session
 
 **Decided:** nothing suite-wide; decision 103 was the owner's design and the worker built it as written. A `handoff(prompt)` tool on the panel's own MCP server (`src/handoff.ts`), declared whenever `embarchChat.handoff` (machine scope: `card` default, `immediate`, `off`) is not `off`. Continue starts a fresh session on the same item in the same panel, keeping mode (never looser), model, effort and Ultracode, with the old timeline above a divider holding the prompt; Stay answers the call. Decision 103 now reads built, with an as-built note including one known limit: after a window reload the fresh chat shows only its own transcript, because the copied history lived in memory. **In this fold I set `promptu/002` `open`**, as its `Unparks when:` named this task.
