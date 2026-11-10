@@ -97,6 +97,17 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-10 02:56 — atlas/060 unnamed pins get a recorded name and its source
+
+**Decided:** nothing numbered; `DESIGN.md`'s `netlist.json` section, CLI table and "Not yet built" amended in place (EMB-25), on the direction set at the split. **`boards/<label>/pin_names.json`**, an overlay `schematic` never writes, holds `{ref: {pin: {name, prov, note}}}`. New verb **`embarch-atlas declare-pin-name <board> <ref> <pin> <name> [--prov llm-unverified|engineer-declared|engineer-confirmed] [--note]`**, **default `llm-unverified`** (the worker's pick: the documented step is a read of a rendered crop). It refuses a board with no netlist, an unknown ref or pin, a pin the PDF's text already named, an empty name and an unknown prov; the same key replaces; it also merges into `netlist.json`, `nets.md` and `parts.md`. `netlist.json` is the merged view: every named pin carries `name_source` (`pdf-text` or `overlay:<prov>`), PDF text always wins, and `schematic` re-applies the overlay. `counts` gains `pins_named_from_overlay` and `pins_unnamed_on_3plus_pin_parts`, printed by `schematic`. The step is `atlas-translate-docs` step 3: render the region with PyMuPDF, read it, declare it `llm-unverified`, have the engineer confirm. No crop verb (listed under "Not yet built"). No `features.d` row.
+**Merged:** `agent/atlas/060-unnamed-pins-get-a-recorded-name-and-its-source` (code `dbeac7c`, ff on `17af295`; doc `17ea11e8`, the worker's `088a56a1` cherry-picked onto `26138cfb`). Gate on the merge result: `pytest -rs` 716 passed, 3 expected skips (`test_public_guard` ran); client names clean; ownership `atlas` OK on both branches; `check-docs.py` 12/12. The worker set `done` itself.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. Owed to a real project: a module symbol whose pad names the netlist lacks, named through the skill step from a rendered crop, then `pin_trace` showing the overlay name and its source.
+**Budget:** PROCEED, wave 6; 5-hour 56% (inside its reset grace), weekly 59%.
+**Least sure about:** an overlay entry may name a pin on a part with fewer than 3 pins, where the PDF deliberately names none (values, not names); the reviewer finds DESIGN.md silent on it, so it is allowed rather than decided.
+**Leg notes:** the worker used inline Python for two doc edits despite the dispatch line, and saw the hook's filing prompt and did not file. `desk/019` dispatched 02:55.
+
 ## 2026-11-10 02:54 — desk/018 desk_add_line can note another item
 
 **Decided:** `embarch-desk` decision 78 (new, `decisions/notes.md`; EMB-82, on the owner's direction in the issue). `desk_add_line` and `POST /sessions/{sid}/line` take an optional `item`: an issue key (any case) or a desk item id, on any desk. With it, the note is an ordinary note on that item's tile for today, carrying the calling session's id; a tile it opens waits in the hand at 0 h. An unknown `item` is a 404 naming it, and nothing is written or held. Absent or blank, unchanged (held line included; the old body still parses). **The worker's reading:** a tile already approved takes the note as an ordinary line, with no `require_waiting` refusal, as the session's own item does; the reviewer confirmed decision 64 expects lines on an approved tile. The tool description and `plugin/skills/desk/SKILL.md` say when to set `item`. No `features.d` row.
