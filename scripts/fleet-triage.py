@@ -33,16 +33,16 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import subprocess
 import sys
 import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from fleetconf import CONF  # noqa: E402
+from fleetconf import CONF, login_dir  # noqa: E402
 
-PROJECTS = Path(os.path.expanduser("~/.claude/projects"))
+# The listener's own login: its legs and workers write their transcripts there.
+PROJECTS = login_dir() / "projects"
 
 
 def project_dir() -> Path:

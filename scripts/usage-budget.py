@@ -61,7 +61,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from fleetconf import CONF, usage_cache_path  # noqa: E402
+from fleetconf import CONF, login_dir, login_name, usage_cache_path  # noqa: E402
 
 import argparse
 import calendar
@@ -73,7 +73,13 @@ import time
 CACHE = str(usage_cache_path())
 MAX_WORKERS = CONF['limits']['max_workers']          # ops.md §1's cap
 DEGRADED_WORKERS = CONF['limits']['degraded_workers']  # wave when percentages are unavailable
-TRANSCRIPTS = os.path.expanduser("~/.claude/projects")
+# The transcripts of the login whose quota this gate answers for -- the same
+# folder its cache comes from. Each login is its own account with its own
+# windows, so a 429 recorded under another login says nothing about this one,
+# and reading `~/.claude/projects` regardless held a fleet on the work login
+# for a 429 the personal login had hit (2026-11-09).
+LOGIN = login_dir()
+TRANSCRIPTS = str(LOGIN / "projects")
 
 
 def check_feeder() -> str | None:
@@ -166,6 +172,9 @@ def recent_429(minutes: int) -> str | None:
       looked like a live throttle and held the fleet. The cheap string test
       survives as a pre-filter; the decision is made on the top-level keys,
       which a quotation inside some other field cannot forge.
+
+    A fourth, 2026-11-09: **only this login's transcripts count** (see
+    `TRANSCRIPTS`), and the message names the login so a misattribution shows.
     """
     cutoff = time.time() - minutes * 60
     newest = None                                 # (epoch, resets_at or None)
@@ -213,10 +222,11 @@ def recent_429(minutes: int) -> str | None:
     age = int((time.time() - when) / 60)
     if resets is not None and resets <= time.time():
         return None                               # spent: the window refilled
+    who = f"on the {login_name(LOGIN)} login"
     if resets is None:
-        return (f"a real 429 was recorded {age} min ago, and it recorded no "
-                f"reset time -- holding for the full {minutes} min window")
-    return (f"a real 429 was recorded {age} min ago; the window it names "
+        return (f"a real 429 was recorded {age} min ago {who}, and it recorded "
+                f"no reset time -- holding for the full {minutes} min window")
+    return (f"a real 429 was recorded {age} min ago {who}; the window it names "
             f"resets in {human_reset(resets)}")
 
 
@@ -249,7 +259,7 @@ def measured_wave(used_frac: float, full_below: float, cap: int) -> int:
 
 
 def burn_window(hours: float) -> tuple[int, int, float] | None:
-    """Billable tokens across every transcript in the trailing window.
+    """Billable tokens across this login's transcripts in the trailing window.
 
     The percentages are the number this gate was designed around and they are
     unavailable on this machine by construction -- `rate_limits` reaches only a
