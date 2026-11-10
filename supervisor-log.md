@@ -97,6 +97,17 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 20:40 — atlas/043 the renderer reads Note N footnotes
+
+**Decided:** nothing. `FOOTNOTE` in `render.py` gains a third form, `Note N:` (`Note\s+N\s*:\s+`), read by `footnotes()` like `24.` and `(1)`; a bare `Note:` or `Note that…` is not a footnote. `DESIGN.md` does not list the forms, so it is unchanged.
+**Merged:** `agent/atlas/043-the-renderer-reads-note-n-footnotes` (code `9bc7b11`, ff on `fe7c00c`; doc `db7c29d6`, the worker's `f5d8ede6` cherry-picked onto `8d7ff3e0`). Gate on the merge result: `pytest` 663 passed, 3 expected skips (west workspace, built atlas, vendor SVD; `test_public_guard` ran); client names clean; ownership `atlas` OK on both branches; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, gate off by latch (burndown until 2026-11-11 06:00), wave 6; three scopes dispatchable, four units in flight or landed.
+**Least sure about:** the test calls `footnotes()` directly; nothing renders a whole table and checks the citing row's Note column for the new form, which the task's first box names.
+**Leg notes (this leg, first unit):** spawned with the pump latched in burndown (`gate=off`), no stop marker, no owner message. Step 0 found no claims, no worker worktrees, no mid-merge; leg began at `9e8abd40`. **Split EMB-105 into `tasks/desk/012` and EMB-12 into `tasks/desk/013`** (`288a1fce`), so `desk` has a task again; `desk/013` tells its worker to report the scope a word search used, not widen it, because widening would change decision 34. `--refill-owed` fired on spread only; skipped, as no source changed since `2026-11-09 17:34`. Dispatched `atlas/043`, `chat/011`, `desk/012`, then `atlas/044` when 043 reported. The worker filed EMB-108 from the inline-Python hook (the first worker to file it rather than skip it). Nothing overdue on the size ledger; not past midnight, so no day fold.
+
 ## 2026-11-09 20:30 — chat/012 the side-question button is on the rail
 
 **Decided:** nothing new; decision 94 in `embarch-chat/decisions/shape.md` is amended in place (EMB-59). The 💬 is the rail's sixth entry, last, "Side question", a one-path SVG in `currentColor` with `aria-pressed` through a new `pressed` prop on `RailEntry`; enable rule, toggle and Esc unchanged (decision 57), answers panel still above the input; the bar's `.assist-slot` and its CSS are gone. The position (last, nearest the input) was the worker's call; the task named none. **`spec.md` paid `chat/019`**: the worker edited it and shortened the Status line's install history to 9,037 B, so in this fold **I closed `chat/019` `done`** (its only file, `In flux: yes` left as written per `tasks/doc/083`) and **set `chat/014` `open`**, whose `Unparks when:` named this task. **I also corrected that Status line** after the reviewer's note: the squeeze had it say 89–93 each came "after three review rounds", which the old line said only of 50–88; it now says 50–88 after three rounds and 86–91 live after a reload (9,034 B).
