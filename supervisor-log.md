@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 20:06 — core/112 two full Core docs leave the reserve by verbatim split
+
+**Decided:** (1) **I unparked `core/112` on its due date, a day before it would have fallen overdue**, because the queue held only three scopes (`atlas`, `chat`, `desk`) and a fourth slot had nothing else to fill it. `In flux:` flipped to `no` for a verbatim split only, per `DOC-BUDGET.md`'s split-first rule and the `umbrella/084` precedent: decision 89 is still unverified against a moved probe, and nothing of it was squeezed. (2) **Fixed a red on `main`** (`f76b9305`): the previous fold retired `chat/017` after its gate ran, leaving `promptu/004`'s `Unparks when:` naming a task no longer in the queue, so `check-task-state.py` was red from `fa94400b`. (3) For the unit: `decisions/probes.md` keeps 9, 22, 23, 26, 61 (11,263 to 5,566 B); "Chip mapping" (8/34, 80, 89) moved word for word to `decisions/chip-mapping.md` (6,272 B); `spec.md` §4's module table moved to `interfaces/modules.md` (9,783 to 7,496 B). In this fold I corrected the worker's hand-estimated size cells in `decisions.md` and `interfaces/hardware.md`'s link text, which read `../decisions/probes.md` while pointing at the index.
+**Merged:** `agent/core/112-compact-core` (doc only: `901e51d0`, ff on `aae32208`; no code worktree). Gate on the merge result: `check-docs.py` 12/12, no pin `NOTE:`; ownership `core` OK. The task reads `done` and this fold retires it.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. `open.md`'s decision-89 bullet (a moved-probe run) is unchanged and still owed.
+**Budget:** PROCEED, gate off by latch (burndown until 2026-11-11 06:00), wave 6; four scopes in flight.
+**Least sure about:** whether unparking a debt on its due date rather than after it stretches the ledger rule; it took a slot nothing else could use, and the next leg after midnight no longer owes it a first unit.
+
 ## 2026-11-09 19:58 — chat/017 the chat gives Promptu's pass its context usage
 
 **Decided:** nothing new; decision 96 in `embarch-chat/decisions/promptu.md` is amended in place to name the context usage, `embarch-promptu` decision 41 and contract §7.10. `beginPromptu` passes the header meter's percentage as `contextUsage`; `prep` appends `--context-usage <n>` as a whole number clamped to 0–100, and nothing when the chat has not measured it (Start work into a new chat). This completes EMB-65 with `promptu/002`. **In this fold I set `chat/018` `open`**, as its `Unparks when:` named this task, and **rewrote `promptu/004`'s `Unparks when:` and `In flux:`** to drop the landed `chat/017` half, because `check-task-state.py` refuses a park naming a task no longer in the queue; it stays `blocked` on build step 4.
