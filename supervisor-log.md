@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-09 20:28 — desk/010 a Start work worktree links the clone's local files
+
+**Decided:** nothing new; decision 43 in `embarch-desk/decisions/sessions.md` is amended in place (EMB-18). Start work's clone path now calls a new `link_local_files` right after `set_auto_mode`: it symlinks the main clone's `embarch/`, `CLAUDE.local.md` and `.mcp.json` into the worktree when the clone has them, skips a name the worktree already has, and appends each name to the clone's shared `info/exclude` (no trailing slash; the append was factored out of `edit_permissions` into `exclude_from_git`). A suite start (`suite.rs`) is not linked, and decision 43 says so.
+**Merged:** `agent/desk/010-a-start-work-worktree-links-the-clones-local-files` (code `b47c12e`, ff on `5837ef5`; doc `b6730147`, the worker's `3710aa5b` cherry-picked onto `b67caf1e`). Gate on the merge result: `cargo build`, `cargo test` (196), `clippy --all-targets -D warnings` green; client names clean; ownership `desk` OK on both branches; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. Owed to a live desk: a real Start work on a clone holding an atlas and an `.mcp.json`, and the session in it loading both; the Windows symlink branch (`symlink_dir`/`symlink_file`) was neither compiled nor run here. Nothing installed; the running desk keeps the old behaviour until the owner rebuilds it.
+**Budget:** PROCEED, gate off by latch (burndown), wave 6.
+**Least sure about:** the exclude patterns are unanchored (`embarch`, not `/embarch`), so in the main clone and every worktree they also hide any new untracked file or folder of that name at any depth; the task asked for exactly this form, and nobody weighed the anchored one. A suite worktree still gets no links, which may be the next gap.
+
 ## 2026-11-09 20:24 — atlas/042 a kind override reaches a prepped document's doc.json
 
 **Decided:** nothing new. `_refresh_manifest` now calls a new `_sync_doc_json` after rewriting the manifest: any prepped document whose `doc.json` has the manifest record's sha256 and a different `kind` gets the manifest's kind, and the command prints `docs/<id>/doc.json: kind X -> Y`. That covers `missing --kind`, `--confirm reference-manual` and `--confirm-all`'s reference-manual path, which all go through `_refresh_manifest`. An unprepped document needs nothing: `doc prep` already reads the manifest's kind. `DESIGN.md` says so in its override paragraph and verb table.
