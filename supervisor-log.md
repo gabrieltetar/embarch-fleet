@@ -97,6 +97,16 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-10 02:16 — atlas/055 a verb declares a board mating
+
+**Decided:** nothing numbered; `DESIGN.md`'s `boards/system.json` paragraph and CLI table amended in place (EMB-26). New verb `embarch-atlas declare-interface <board>:<ref> <board>:<ref> (--rule R | --pin-map 1:6,2:5) [--prov engineer-declared|engineer-confirmed] [--note T]` (`declare()` in `interfaces.py`) writes one `interfaces` entry, leaving every other key alone; **an entry with the same id is replaced** (the worker's choice: re-declaring updates). It refuses a board with no netlist, a ref that is not a connector there, a rule outside the four, a pin-map contact the connector lacks, an odd-count connector with `row-swap`/`column-reverse`, both or neither of rule and pin map, and a non-engineer `prov` (exit 2). **Not done, the worker's pick the task allowed:** promoting an existing proposal by id; the `atlas-update` skill re-confirms with `--prov engineer-confirmed` instead. `atlas-translate-docs` step 4 and `atlas-update` step 3 name the verb and forbid hand edits. No `features.d` row (a verb on an existing capability).
+**Merged:** `agent/atlas/055-a-verb-declares-a-board-mating` (code `dcf8e16`, ff on `c302ffe`; doc `915f6ab9`, the worker's `abc2db40` cherry-picked onto `424e0f9c`). Gate on the merge result: `pytest -rs` 692 passed, 3 expected skips (real west workspace, built atlas, vendor SVD; `test_public_guard` ran); client names clean on both repos; ownership `atlas` OK on both branches; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. Owed to a real project: a mating declared through the verb on a two-board system, then `interfaces` and a cross-board query reading it.
+**Budget:** PROCEED, burndown until 2026-11-11 06:00, wave 6; 5-hour 38%, weekly 56%.
+**Least sure about:** the reviewer's two non-findings: re-declaring with the default `--prov` silently downgrades an `engineer-confirmed` entry of the same id, and a hand-written entry under a different id for the same pair sits beside the verb's, so `mated_pairs` emits both; neither is filed, and either is a one-line refusal if the owner wants it.
+
 ## 2026-11-10 02:14 — promptu/005 decision 39 still keeps the handoff chip
 
 **Decided:** nothing new; `embarch-promptu` decision 39 (the owner's, 2026-10-30, fork P9) **retired in place** for EMB-125: its heading now reads "Retired: the handoff card and its 'Fresh chat with this handoff' chip are gone", and an "Amended 2026-11-10 (EMB-66, EMB-125)" note in decision 40's form says the chat no longer offers a handoff card, so the chip and the handoff-request marker are gone (chat 36 and 97), and points to chat 103 for an agent's own handoff. The original sentence and the **Rejected** line stay as history; the number stands. The worker picked retire over amend, which the task allowed. `spec.md`, `open.md` and `interfaces.md` claim neither the chip nor the marker (checked by worker and reviewer); `docs/forks.md` P9 in the code repo stays as the dated fork record. Doc only.
