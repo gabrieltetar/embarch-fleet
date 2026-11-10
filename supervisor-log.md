@@ -97,6 +97,17 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-10 02:13 — chat/022 decision 103 stops naming a deleted function and chip
+
+**Decided:** nothing. `embarch-chat` decision 103's decision text is unchanged; its **As built** sentence now says the fresh session starts through `startChat` on the old chat's cwd, work item and mode, then takes its model, effort and Ultracode (what `handoffChat` in `src/extension.ts` does), where it said "`freshChat`'s start"; its **Rejected** "a new tab (36's chip does that)" now gives a reason that stands without the removed chip (the old panel would be left showing the ended chat). The chat half of EMB-125; the Promptu half is `promptu/005`. Doc only: no `embarch-chat` commit (nothing under `src/`, `webview/` or `test/` names `freshChat` any more, checked at dispatch).
+**Merged:** `agent/chat/022-decision-103-names-a-deleted-function-and-chip` (doc `3953b4c8`, the worker's `3d6c446b` cherry-picked onto `ed3d9e3a`; no code branch). Gate on the merge result: `check-docs.py` 12/12; client names clean; ownership `chat` OK.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, burndown until 2026-11-11 06:00, wave 6; 5-hour 35% to 38% (inside its reset grace), weekly 56%.
+**Least sure about:** the new rejection reason is the worker's own wording (the old text gave none); the reviewer checked it against `handoffChat` and calls it a rationale, not a new decision.
+**Leg notes (this leg, first unit):** spawned with the pump latched in burndown, no stop marker, no owner message; nothing to recover (no claims, no leg worktree; the local `agent/chat/018` branch is the fold's to prune). Leg began at `d25dee1d`. **Split EMB-125 into `promptu/005` and `chat/022`** (it names docs in two scopes), **EMB-123 into `atlas/056`, EMB-124 into `atlas/057`** (`f285ca92`), announced at `ts` `1794301835.560849`. `atlas/057` is `Hardware: verify-only` and its dispatch note requires the page-select write to sit behind an explicit opt-in, since the read tool declares itself read-only. Spread sweep skipped: no source changed since `2026-11-10 01:46`. Day fold and history name check: done by an earlier leg today. Size ledger: nothing overdue. Dispatched `atlas/055`, `promptu/005`, `chat/022` at 02:11.
+
 ## 2026-11-10 02:04 — chat/018 the bulb stops suggesting context handling
 
 **Decided:** nothing new; `embarch-chat` decisions 36 and 97 amended in place (EMB-66, the owner's call). The 💡's cards call asks Haiku for desk references only, and with no desk references it makes no call (the worker's addition: nothing else is left to judge). Removed with the cards: the handoff request (`handoffRequest`, `extractHandoff`, the fence), the "Fresh chat with this handoff" chip and `freshChat`, and the Promptu `handoff` origin, all of which only the handoff card reached (checked on `main`: `freshChat` was called from the chip alone). Kept: a typed `/compact` first line (`splitCompact`, `sendAfterCompact`), the header's meter and Compact button, and the agent's own handoff (103, `handoffChat`, untouched). `spec.md` went to 9,011 B, out of reserve; `features.d/chat-020-haiku-assistant.md` amended.
