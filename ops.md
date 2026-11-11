@@ -111,7 +111,7 @@ An empty queue is not idleness to fill. It is the one moment the fleet genuinely
 **Two triggers, because the owner should not have to ask.**
 
 - **A leg's refill finds nothing dispatchable**: post three proposals, alert with `scripts/fleet-alert.py` (a bare `@` notifies nobody), and **end the leg**. Do not pick one.
-- **The heartbeat finds the pump on, no leg alive, and an empty queue**: the listener spawns a leg anyway — refill may find something the queue does not have yet — and that leg dreams if refill also comes up empty. Rate-limited to one dream per **6 hours**, enforced by the listener refusing to spawn into an empty queue while a dream post sits in the 20 messages it just read. The channel is the watermark; there is no state file for this.
+- **The heartbeat finds the pump on, no leg alive, and an empty queue**: the listener spawns a leg anyway — refill may find something the queue does not have yet — and that leg dreams if refill also comes up empty. Rate-limited to one dream per **6 hours**, enforced by `scripts/fleet-read.py --leg-gate`, which the listener runs before every spawn, a leg's completion wake as well as a cron tick, and which refuses one into an empty queue while a dream post from the last 6 hours sits in the channel (`tasks/doc/096`: as prose, the gate was skipped on the completion wake). The channel is the watermark; there is no state file for this.
 
 **A dream post carries `crystal_ball` as well as `robot_face`, and that is what the gate reads.** The old rule looked for "a `robot_face` dream post", but every fleet message carries `robot_face`, leaving the gate unfalsifiable both ways. One extra reaction fixes that without a state file.
 

@@ -33,8 +33,9 @@ live all day — each tick costs a channel read and at most one spawn, so its
 context grows by a few hundred tokens an hour instead of by a batch.
 
 The one exception, because the heartbeat needs it: the listener may run the
-**dispatchable count** — `scripts/queue-status.py --no-supervisor --count`, one
-command — as a read-only predicate. **It does not read task files itself.** The
+**spawn predicate** — `scripts/fleet-read.py --leg-gate`, one command, which
+runs the dispatchable count `scripts/queue-status.py --no-supervisor --count`
+itself — as a read-only predicate. **It does not read task files itself.** The
 predicate is not "State is open": a claim held by a dead worker is recoverable
 work, and restating the rule in prose is exactly how this window spent five
 hours on 2026-09-03 believing the queue was empty. The script owns the
@@ -183,19 +184,19 @@ Four steps, in this order.
 > normal case when no reading is fresh), carries on.
 >
 > Then run, in
-> `{{DOC_REPO}}`, exactly:
-> `scripts/queue-status.py --no-supervisor --count`. **Pass `--no-supervisor`
-> because you just established it** — workers are a supervisor's own subagents,
-> so with none alive every claim is stale (`tasks/README.md`) and a claimed task
-> counts as dispatchable-with-recovery. **Do not count `State:` lines yourself.**
-> If it prints above zero, spawn the next leg. If it prints zero, spawn a leg
-> **only if** `fleet-read.py`'s `markers:` block says `crystal_ball` is either
-> absent or older than 6 hours. **`crystal_ball` is what marks a dream** — every
-> fleet post carries `robot_face`, so a gate reading `robot_face` cannot tell a
-> dream from an ordinary unit line and is unfalsifiable in both directions. The
-> script prints that marker's age for you; do not scan the messages by eye.
-> Refill may find something the queue does not have yet, and the leg dreams if
-> it does not.
+> `{{FLEET_REPO}}`, exactly:
+> `scripts/fleet-read.py --leg-gate`. **Exit `0` (SPAWN): spawn the next leg.
+> Exit `1` (HOLD): spawn nothing this tick**, and post nothing. Relay its one
+> line only if someone asked. It is the whole predicate, so **do not count
+> `State:` lines or read markers yourself**: it runs `queue-status.py
+> --no-supervisor --count`, true because you just established that no
+> supervisor is alive (every claim is then stale, `tasks/README.md`), and
+> spawns on any dispatchable task; with none, it spawns only when no
+> `crystal_ball` (the dream marker; every fleet post carries `robot_face`)
+> sits on a post from the last 6 hours, since refill may find something and
+> the leg dreams if it does not. **It was prose here until 2026-11-10**, and
+> the dream half held on a cron tick and was skipped on a leg's completion
+> wake three times of three (`tasks/doc/096`).
 >
 > **Spawning a leg** means one background `embarch-supervisor` agent, working
 > directory `{{DOC_REPO}}`, told: run one leg per
@@ -271,7 +272,9 @@ Three words, and keeping them apart is most of understanding this.
   size of workers in flight, lands each as it reports, and ends after **4 units**
   — or sooner on a stop, a budget HOLD, or a drained queue. Then it dies.
 - The **pump** is the latch. While `embarch/.fleet/pump` exists, a leg's death
-  wakes this window and the next leg is spawned with the previous one's
+  wakes this window, which runs STEP 2 exactly as a cron tick does
+  (`fleet-read.py --leg-gate` included, so a dream holds the relay), and the
+  next leg is spawned with the previous one's
   `{{FLEET_REPO}}/supervisor-log.md` entry as its handoff. That chain is the **relay**, and it
   is why a leg may be short-lived without the fleet being.
 

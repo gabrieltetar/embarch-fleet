@@ -28,13 +28,16 @@ Usage:
                                             announcement window)
   scripts/fleet-read.py --actionable-only   just the count and the ts's
   scripts/fleet-read.py --json              the raw verdict, for a script
+  scripts/fleet-read.py --leg-gate          may the listener spawn a leg? one
+                                            SPAWN/HOLD line; exit 0 spawn, 1 not
 Exit status: 0 read it (whether or not anything qualified) · 1 the call failed
-· 2 no bot token.
+· 2 no bot token. `--leg-gate` has its own: 0 spawn, 1 spawn nothing.
 """
 from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -49,6 +52,8 @@ FENCE_CLOSE = "<<<END UNTRUSTED TEXT>>>"
 # whether a crystal_ball has appeared recently, which used to mean scanning the
 # rendered messages by eye.
 MARKERS = ("crystal_ball", "robot_face")
+# How long a dream holds the relay when the queue is empty (ops.md §7).
+DREAM_HOLD_H = 6.0
 
 
 def when(ts: str) -> str:
@@ -73,6 +78,51 @@ def body(msg: dict) -> str:
     return text or "(empty)"
 
 
+def leg_gate() -> int:
+    """The listener's spawn predicate, as an exit code (tasks/doc/096).
+
+    A leg may start when the queue has dispatchable work, or when it has none and
+    no dream was posted in the last DREAM_HOLD_H hours: refill may find something,
+    and the leg dreams if it does not. As prose in STEP 2 the dream half held on a
+    cron tick and was skipped on a leg's completion wake, three times of three, each
+    costing one empty leg. Run after `ListAgents` shows no supervisor, which is
+    what makes `--no-supervisor` true. Exit 0 spawn, 1 spawn nothing.
+    """
+    qs = Path(__file__).resolve().parent / "queue-status.py"
+    r = subprocess.run([sys.executable, str(qs), "--no-supervisor", "--count"],
+                       cwd=CONF.doc_repo, capture_output=True, text=True)
+    try:
+        count = int(r.stdout.strip())
+    except ValueError:
+        print(f"HOLD -- queue-status.py gave no count (exit {r.returncode}): "
+              f"{(r.stderr or r.stdout).strip()[:200]}")
+        return 1
+    if count > 0:
+        print(f"SPAWN -- {count} dispatchable")
+        return 0
+
+    token = fs.read_token()
+    if token is None:
+        print(f"HOLD -- queue empty, and no bot token at {fs.TOKEN_FILE} to rule out a recent dream")
+        return 1
+    since = time.time() - DREAM_HOLD_H * 3600
+    h = fs.get(token, "conversations.history", channel=CONF.channel,
+               oldest=f"{since:.6f}", limit=200)
+    if not h.get("ok"):
+        print(f"HOLD -- queue empty, and the channel read failed: {fs.explain(h.get('error', ''), h)}")
+        return 1
+    dreams = [m.get("ts") for m in h.get("messages", [])
+              if "crystal_ball" in fs.reactions_of(m)]
+    if dreams:
+        newest = max(dreams, key=float)
+        print(f"HOLD -- queue empty, and a dream was posted {age(newest)} ago (ts {newest}); "
+              f"the relay waits {DREAM_HOLD_H:.0f} h or the owner's answer")
+        return 1
+    print(f"SPAWN -- queue empty, no dream in the last {DREAM_HOLD_H:.0f} h: the leg refills, "
+          "and dreams if refill finds nothing")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -81,7 +131,12 @@ def main() -> int:
     ap.add_argument("--actionable-only", action="store_true",
                     help="only the count and the ts's, no bodies")
     ap.add_argument("--json", action="store_true", help="machine output")
+    ap.add_argument("--leg-gate", action="store_true",
+                    help="may the listener spawn a leg now? exit 0 yes, 1 no")
     args = ap.parse_args()
+
+    if args.leg_gate:
+        return leg_gate()
 
     token = fs.read_token()
     if token is None:
