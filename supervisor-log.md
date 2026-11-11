@@ -97,6 +97,19 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-10 23:19 — api/127 build --each builds a range from each commit's own module
+
+**Not a leg.** Third and last of the three `api` units the owner-dispatched landing agent lands in order, after `api/126` below and on the same terms: run by a worker thread the owner's session dispatched directly on 2026-11-10, branched from 126's code branch, landed on the owner's instruction, no leg number.
+**Decided:** nothing by the lander. The worker's `embarch-api` decision 104 (`decisions/build.md`) lands as written: `build --each <base>..<tip>` builds every commit in every named variant from a detached `git clone --shared` kept inside the west workspace and passed as `-DEXTRA_ZEPHYR_MODULES`, never from the workspace's own module and never through a `git worktree` beside the repo; `--same-tree-as` allows only hex runs that are each commit's own id. 104 was free on `main`. The `build_each` MCP tool and `build --each` are recorded in the parity test as a documented asymmetry. `tasks/api/150` gained this unit's `open.md` bullet.
+**Merged:** `agent/api/127-build-each-commit` (code `d36be9e`, ff on `fca417c` after a clean rebase of its one commit off 126's old tip; doc `46bc4128`, ff on `c7cb8708`, 126's fold, after a rebase that dropped 108's and 126's commits as already applied and replayed the claim and the unit commit clean). Gate on the merge result, re-run by the lander in the code worktree: `cargo build`, `cargo test`, `cargo clippy --all-targets -- -D warnings` green on the first run; `embarch-ui`'s `origin/main` (`08f9a53`) `cargo check --all-targets` against this tree green, after a forced re-check of the two `embarch-api` crates. Ownership `api` OK on both branches, client names clean, `check-docs.py` 12/12 before and after the fold. Code pushed after the doc gate.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** one, toolchain rather than a board. Under `build --each`, a sysbuild version header and any commit id computed at CMake configure time go stale between commits: the tool removes `app_version.h` only at `<build>/zephyr/include/…`, so a sysbuild image's copy under `<build>/<app>/zephyr/…` keeps the first commit's id, and `--same-tree-as` has met one fixture workspace (a T2 module on Zephyr 4.4), never a sysbuild one. `open.md` names both.
+**Budget:** not read: no leg and no wave.
+**Least sure about:** only one real west workspace, a scratch fixture, has run `build --each`, so the override of a module named like the project's repository is untested on a manifest with several modules.
+
+---
+
 ## 2026-11-10 23:17 — api/126 build answers with a verdict and builds named variants
 
 **Not a leg.** Second of the three `api` units the owner-dispatched landing agent lands in order, after `api/108` below and on the same terms: run by a worker thread the owner's session dispatched directly on 2026-11-10, landed on the owner's instruction, no leg number.
