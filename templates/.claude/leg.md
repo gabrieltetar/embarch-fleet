@@ -708,7 +708,7 @@ path, and `atlas`'s is not a repo (below):
 | `embarch-core` | `embarch-study-designer`, `embarch-topology`, `embarch-smp` |
 | `embarch-ui` | `embarch-study-designer`, `embarch-api`, **`embarch-topology`** |
 | `embarch-umbrella` | `embarch-topology`, `embarch-study-designer`, `embarch-api` |
-| `embarch-outpost` | `embarch-core`, `embarch-ui` — `tests/cross_decoder.py`'s fixtures; it skips without them |
+| `embarch-outpost` | `embarch-core`, `embarch-ui` — `tests/cross_decoder.py`'s fixtures; `embarch-study-designer` — `tests/vocab_check.py` reads its `src/outpost.rs`. Each skips without its sibling and exits 0 |
 | `embarch-dev-bench` | `embarch-study-designer` — a west build only (`app/CMakeLists.txt`) |
 | `embarch-atlas` | `.atlas-local`, the public-name denylist |
 | `embarch-topology`, `embarch-study-designer`, `embarch-smp`, `embarch-desk`, `embarch-chat` | none |
