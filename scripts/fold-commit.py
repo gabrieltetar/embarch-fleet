@@ -76,11 +76,12 @@ ALLOWED = (
     "tasks/",         # its task file, closed
     "history/",       # build_changelog.py output
     "suite/",         # a suite-level doc a status.d fragment targeted
-    "embarch.md",
-    "embarch-decision-reversals.md",
     "reversals/",     # its DOC-COMPACTION split: the range files hold the rows
-    "embarch-glossary.md",
-)
+) + CONF.fleet_writable
+# Top-level docs come from fleet.toml's `fleet_writable`, the list
+# check-ownership.py --supervisor reads, so the two cannot disagree. A copy of
+# three names here refused `bootload-proposal.md`, which the supervisor may
+# write, and split a suite unit's fold into two commits (tasks/doc/095).
 # A split doc keeps its old file's rules and none of its old file's place in
 # this list (tasks/doc/073): `reversals/` was refused for a day while the
 # four-row index it was split from was accepted. A new split directory of a
