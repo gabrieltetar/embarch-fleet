@@ -97,6 +97,19 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-10 23:17 — api/126 build answers with a verdict and builds named variants
+
+**Not a leg.** Second of the three `api` units the owner-dispatched landing agent lands in order, after `api/108` below and on the same terms: run by a worker thread the owner's session dispatched directly on 2026-11-10, landed on the owner's instruction, no leg number.
+**Decided:** nothing by the lander. The worker's `embarch-api` decisions 102 (`decisions/log-capture.md`: `build` and `build_and_flash` answer with a verdict, and the whole log stays on disk as `embarch-build.log` in the build directory) and 103 (`decisions/build.md`: named build variants, each in its own directory, for both discovery kinds) land as written; 102 and 103 were free on `main`. Decision 24's note gains `schema_version` 2, because the default `build` answer dropped `stdout`/`stderr` (`verbose` keeps them); the lander's grep of the sibling repos found no reader of those fields or of `schema_version`. The worker filed `tasks/api/150-compact-api.md` (open, due 2026-11-24): its `open.md` bullet put that file 307 B into its size reserve; 150 was free on `main`.
+**Merged:** `agent/api/126-build-returns-a-verdict-and-takes-named-variants` (code `fca417c`, ff on `15cef80` after a clean rebase onto `api/108`; doc `fd0c6e96`, ff on `eae5b2a1`, 108's fold, after a rebase that dropped 108's three commits as already applied and replayed the claim and the unit commit clean). Gate on the merge result, re-run by the lander in the code worktree: `cargo build`, `cargo test`, `cargo clippy --all-targets -- -D warnings` green on the first run. `embarch-firmware-build` is path-depended on by `embarch-ui`, so the lander also ran `cargo check --all-targets` on `embarch-ui`'s `origin/main` (`08f9a53`) against this tree, from a fresh target directory: green. Ownership `api` OK on both branches, client names clean, `check-docs.py` 12/12 before and after the fold. Code pushed after the doc gate.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** two, both toolchain rather than a board. (1) Re-run the size comparison on the real field variant pair, which only the owner can do because it lives in a client workspace; the worker's replay used a substitute pair (Zephyr `hello_world` on `qemu_cortex_m3`, default and a logging variant), and `open.md` names the debt. (2) No real twister output or sysbuild log has been fed to the verdict parser yet: twister's per-scenario lines are fixture-tested only, and the one real test run was a `native_sim` ztest through `west build -t run`.
+**Budget:** not read: no leg and no wave.
+**Least sure about:** `schema_version` 2 breaks any `--json build` reader outside the suite's own repos, which the lander could not search.
+
+---
+
 ## 2026-11-10 23:11 — api/108 a timed-out build's Windows tree kill is verified on Windows
 
 **Not a leg.** This unit was run by a worker thread the owner's session dispatched directly on 2026-11-10, and landed by an owner-dispatched landing agent on the owner's instruction ("then land all branches"), first of three `api` units it lands in order (108, 126, 127); no supervisor or listener was running, so no leg number exists. The leg's merge gate and fold were followed as written.
