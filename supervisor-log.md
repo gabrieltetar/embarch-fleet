@@ -97,6 +97,17 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-10 23:11 — api/108 a timed-out build's Windows tree kill is verified on Windows
+
+**Not a leg.** This unit was run by a worker thread the owner's session dispatched directly on 2026-11-10, and landed by an owner-dispatched landing agent on the owner's instruction ("then land all branches"), first of three `api` units it lands in order (108, 126, 127); no supervisor or listener was running, so no leg number exists. The leg's merge gate and fold were followed as written.
+**Decided:** nothing by the lander, and no new decision number. The worker rewrote `embarch-api` decision 75 (`decisions/build.md`) to current truth: a timed-out build kills its whole process tree, a process group on unix and a Job Object on Windows, now verified by a native Windows run (a new `#![cfg(windows)]` test, a control with the job disabled that fails, and an end-to-end `build` that left no forked `ping.exe`). The `decisions.md` row and `spec/implementation.md` §3 say the same. `open.md` and `release.yml` were left alone, each with its reason in the retired task file.
+**Merged:** `agent/api/108-windows-tree-kill` (code `15cef80`, ff on `febdaf2`, no rebase needed; doc `6d3f24c6`, ff on `6c9fd490`, dev-bench/037's fold, after a clean rebase of the claim and two unit commits). Gate on the merge result, re-run by the lander in the code worktree: `cargo build` and `cargo clippy --all-targets -- -D warnings` green; the first `cargo test` was red on 2 of 19 tests in `tests/lease_client.rs` (request-count asserts in `a_required_lease_leaves_open_routes_alone_so_a_session_can_take_one` and `a_second_process_sends_the_token_from_the_environment_with_no_argument`), which this unit cannot reach: its one file is `#![cfg(windows)]` and compiles to nothing on Linux. `--test lease_client` alone then passed 19 of 19, and the whole gate re-run was green. Ownership `api` OK on both branches, client names clean, `check-docs.py` 12/12 before and after the fold. Code pushed after the doc gate.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needs a board. One verification debt: CI never runs the new Windows test, because the Windows job in `release.yml` only builds; the Windows tree kill stays verified by the worker's one manual run until that job runs `cargo test`.
+**Budget:** not read: no leg and no wave.
+**Least sure about:** the two `lease_client` failures are read as a flake on `main` from one red run and one green one; nothing measured how often they fail or why.
+
 ## 2026-11-10 23:06 — dev-bench/037 pd-bench is checked without a board
 
 **Not a leg.** Same as `dev-bench/036` below: a worker thread the owner's session dispatched directly on 2026-11-10, branched from 036 and landed after it by the same owner-dispatched landing agent; no leg number exists.
