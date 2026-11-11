@@ -97,6 +97,17 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-10 23:06 — dev-bench/037 pd-bench is checked without a board
+
+**Not a leg.** Same as `dev-bench/036` below: a worker thread the owner's session dispatched directly on 2026-11-10, branched from 036 and landed after it by the same owner-dispatched landing agent; no leg number exists.
+**Decided:** nothing by the lander. The worker's `embarch-dev-bench` decision 59 (`decisions/pd-bench.md`) lands as written: pd-bench is checked by a build-only twister run of both shields and a `native_sim` ztest of its pure logic, now in `pd-bench/src/pd_logic.{c,h}`, never by running its USB-C stack, because v4.4.2 has no TCPC emulator (`open.md` says so). 59 was free on `main`. The worker found the carried R3.2 patch's `usbc_pd.h` is not self-contained (`__packed` without `toolchain.h`); `pd_logic.h` works around it, and fixing the patch waits on the owner's which-copy-leads question from 036. One `Done when` box was left unticked in the retired task file, the fleet venv's twister requirements: the owner's session installed them, and the file's Twister section records it.
+**Merged:** `agent/dev-bench/037-pd-bench-build-gate` (code `50579d3`, ff on `e90bae7`; doc `f04ff0bd`, ff on `fb57a30e`, 036's fold, after a rebase that dropped 036's two commits as already applied and replayed 037's four clean). Gate on the merge result, re-run by the lander from the branch worktree's `workspaces/pd-bench/`: `west twister -T pd-bench -p nucleo_g0b1re` 2 of 2 built, 1 filtered (`pd_bench.logic`), 0 failed, no warnings; SNK1M1 FLASH 128,856 B, RAM 19,720 B; DRP1M1 FLASH 148,904 B, RAM 21,648 B; `CONFIG_USBC_TCPC_STM32_DMA=y` in both. `west twister -T pd-bench/tests/logic -p native_sim` 1 of 1 configuration, 13 of 13 test cases passed, no warnings. Ownership `dev-bench` OK on both branches, client names clean, `check-docs.py` 12/12 before and after the fold. Code pushed after the doc gate.
+**Blocked:** nothing.
+**Reviewer:** skipped (owner-dispatched landing outside a leg; the landing brief ran a reviewer only if leg.md needed one to land, and a reviewer gates no merge).
+**Hardware debts:** one, payable with 036's on the same board. Flash both shields and run `pd srccaps`, `pd max` and a refused Request: `main.c` now calls `pd_logic.c`, and its unchanged messages are the worker's claim, which the `native_sim` suite does not cover.
+**Budget:** not read: no leg and no wave.
+**Least sure about:** the 13 tests exercise `pd_logic.c` alone, so nothing off-hardware checks that `main.c` still maps each refusal code to the same text it printed before.
+
 ## 2026-11-10 23:04 — dev-bench/036 pd-bench builds from its own west workspace
 
 **Not a leg.** This unit was run by a worker thread the owner's session dispatched directly on 2026-11-10, and landed by an owner-dispatched landing agent on the owner's instruction ("then land all branches"); no supervisor or listener was running, so no leg number exists. The leg's merge gate and fold were followed as written.
