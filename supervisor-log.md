@@ -97,6 +97,19 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-11 22:44 — atlas/011 applicability, state and transition records of a standard
+
+**Not a leg.** Fifth of the six `atlas` units the owner-dispatched landing agent lands in order, after `atlas/004` below and on the same terms: run by a worker thread the owner's session dispatched directly on 2026-11-11, branched from 004, landed on the owner's instruction, no leg number.
+**Decided:** nothing by the lander, and no decision number. The worker's choices land as written and are listed in the retired task file: the check letters L and E; `table` an optional field and `as` an enum; `cond` keeps the unconditional cells; `standard-procedure/1` kept rather than bumped, since no standard section is frozen anywhere before this lands; the new lookups do not write the usage log. **Follow-up EMB-160, filed by the owner on 2026-11-11:** check L has no column-position check, so a level read from the wrong column of the right row still passes; an x-position test like check K's would close it.
+**Merged:** `agent/atlas/011-protocol-records` (code `ece94d6`, ff on `198a51f`, 004's code tip, no rebase needed; doc `0a2af463`, ff on `dab47b1e`, 004's fold, after a rebase that dropped the earlier units' commits as already applied and replayed 011's three clean). Gate on the merge result, re-run by the lander in the code worktree's own venv: `pytest -q` 806 passed, 3 skipped (the real-workspace, built-atlas and vendor-SVD skips), `test_public_guard` ran. Ownership `atlas` OK on both branches, client names clean, `check-docs.py` 12/12 before and after the fold: the `check-task-state.py` red recorded in 004's entry is cleared, because this merge replaces the parked task file with its `done` one. Code pushed after the doc gate.
+**Blocked:** nothing.
+**Reviewer:** skipped (owner-dispatched landing outside a leg; the landing brief dispatched no reviewer, and a reviewer gates no merge).
+**Hardware debts:** none.
+**Budget:** not read: no leg and no wave.
+**Least sure about:** no real specification has been distilled with the new applicability and state steps, so check L's blind spot (EMB-160) is the known gap, not necessarily the only one.
+
+---
+
 ## 2026-11-11 22:43 — atlas/004 check firmware configuration against a standard's requirements
 
 **Not a leg.** Fourth of the six `atlas` units the owner-dispatched landing agent lands in order, after `atlas/016` below and on the same terms: run by a worker thread the owner's session dispatched directly on 2026-11-11, branched from 016, landed on the owner's instruction, no leg number.
