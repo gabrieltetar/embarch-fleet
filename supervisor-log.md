@@ -97,6 +97,19 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-11 22:41 — atlas/001 bump the atlas when HEAD moves, without a session ritual
+
+**Not a leg.** Second of the six `atlas` units the owner-dispatched landing agent lands in order, after `atlas/003` below and on the same terms: run by a worker thread the owner's session dispatched directly on 2026-11-10, branched from 003, landed on the owner's instruction, no leg number.
+**Decided:** nothing by the lander. **The owner's word, 2026-11-10, given in his interactive session, allowed model invocation of the atlas skills that build or update an atlas:** `atlas-translate-docs`, `atlas-build` and `atlas-update` no longer carry `disable-model-invocation: true`, and he accepted that the flag is all-or-nothing, so a session may also start one on its own judgement. That word lands with the unit, in code `9c912da` and doc `3f2b9b20` (the task file's record of it), and DESIGN.md "The skills" says so; `changelog.d/atlas-skills-model-invoked.decided.md` carries it to history. The worker's choices land as written: `hook install` writes a marked block into four git hooks and starts a debounced, locked `update` detached; a west workspace off its manifest revisions stops a bump before building; `second-look queue --used` batches from the lookups' usage log, so the backlog is no longer manual only.
+**Merged:** `agent/atlas/001-bump-on-head` (code `9c912da`, ff on `718c4fe`, 003's code tip, no rebase needed; doc `9875b0b0`, ff on `6d874115`, 003's fold, after a rebase that dropped 003's two commits as already applied and replayed the claim and 001's three commits clean). Gate on the merge result, re-run by the lander in the code worktree's own venv: `pytest -q` 746 passed, 3 skipped (the real-workspace, built-atlas and vendor-SVD skips), `test_public_guard` ran. Ownership `atlas` OK on both branches, client names clean, `check-docs.py` 12/12 before and after the fold. Code pushed after the doc gate.
+**Blocked:** nothing.
+**Reviewer:** skipped (owner-dispatched landing outside a leg; the landing brief dispatched no reviewer, and a reviewer gates no merge).
+**Hardware debts:** none needs a board. One toolchain debt: no bump has run from a hook on a real west workspace, and a rebase of many commits is covered only by construction (the in-progress check reads `git rev-parse --git-path rebase-merge` and friends).
+**Budget:** not read: no leg and no wave.
+**Least sure about:** with the skills model-invocable, a session may start a bump nobody asked for, and nothing measured how often that happens or what it costs.
+
+---
+
 ## 2026-11-11 22:40 — atlas/003 config takes a list of names and a second build to compare
 
 **Not a leg.** This unit was run by a worker thread the owner's session dispatched directly on 2026-11-10, and landed by an owner-dispatched landing agent on the owner's instruction in his interactive session (2026-11-11, land all branches), first of six `atlas` units it lands in order (003, 001, 016, 004, 011, 002), each branched from the one before. No supervisor or listener was running, so no leg number exists. The leg's merge gate and fold were followed as written.
