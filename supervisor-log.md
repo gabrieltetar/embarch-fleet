@@ -97,6 +97,19 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-11 22:40 — atlas/003 config takes a list of names and a second build to compare
+
+**Not a leg.** This unit was run by a worker thread the owner's session dispatched directly on 2026-11-10, and landed by an owner-dispatched landing agent on the owner's instruction in his interactive session (2026-11-11, land all branches), first of six `atlas` units it lands in order (003, 001, 016, 004, 011, 002), each branched from the one before. No supervisor or listener was running, so no leg number exists. The leg's merge gate and fold were followed as written.
+**Decided:** nothing by the lander, and no decision number: the atlas keeps its contract in the code repo's DESIGN.md. The worker's choices land as written and are listed in the retired task file: in `config vs=`, absent, unset and `n` count as one value; `dt_node` takes `vs=` but no list, because commas occur inside compatibles; a devicetree comparison compares values, not where they were set, and stops naming the side that cannot load rather than falling back to a `zephyr.dts` text diff. The worker's question to the owner (cache the extraction after each engineer build, or let `dt_node vs=` fall back to text) has no answer yet and is recorded in that file; EMB-148, a replay harness, was filed separately.
+**Merged:** `agent/atlas/003-config-takes-a-list-and-a-second-build` (code `718c4fe`, ff on `f293d94`, no rebase needed; doc `c8b1e210`, ff on `adbabe34`, suite/037's fold, after a clean rebase of the claim and the unit commit). Gate on the merge result, re-run by the lander in the code worktree's own venv: `pytest -q` 738 passed, 3 skipped (the real-workspace, built-atlas and vendor-SVD skips), `test_public_guard` ran. Ownership `atlas` OK on both branches, client names clean, `check-docs.py` 12/12 before and after the fold. Code pushed after the doc gate.
+**Blocked:** nothing.
+**Reviewer:** skipped (owner-dispatched landing outside a leg; the landing brief dispatched no reviewer, and a reviewer gates no merge).
+**Hardware debts:** none needs a board. One toolchain debt: `dt_node vs=` has never run on a real pair of builds whose devicetrees differ, and the MCP tools ran in process, not through a Claude Code session.
+**Budget:** not read: no leg and no wave.
+**Least sure about:** 41 of the field workspace's 44 build dirs predate its Zephyr, so on most real builds `config` answers value and fragment only and `dt_node vs=` cannot answer at all until an extraction is cached.
+
+---
+
 ## 2026-11-11 22:33 — suite/037 GET /dev-bench/hello serves dev_bench_version
 
 **Not a leg.** An owner-dispatched suite unit: its work ran on 2026-11-10 and 2026-11-11 in threads the owner's session dispatched directly, and an owner-dispatched landing agent landed it on the owner's instruction (2026-11-10, "land all branches"; 2026-11-11, "land, then deploy Core"). No supervisor or listener was running, so no leg number exists. Protocol §8's sequenced cross-repo landing, the merge gate and the fold were followed as written; the landing agent deployed nothing.
