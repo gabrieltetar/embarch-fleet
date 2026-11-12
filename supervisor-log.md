@@ -97,6 +97,19 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-11 22:45 — atlas/002 look up a symbol or a state machine in the sources a build compiled
+
+**Not a leg.** Last of the six `atlas` units the owner-dispatched landing agent lands in order, after `atlas/011` below and on the same terms: run by a worker thread the owner's session dispatched directly on 2026-11-10 and 2026-11-11, rebased by that thread onto 011's branches in both repos, landed on the owner's instruction, no leg number.
+**Decided:** nothing by the lander. **The owner's word, given in his interactive session:** on 2026-11-10, chase the target with `code <symbol> vs=<build>` and a `match=` filter, then re-run the replay; on 2026-11-11, **accept the measured replay miss**: on the replayed version-bump review round, its 70 Zephyr calls became 72 with `code`, `states`, `vs=` and `match=`, against a target of 35 or fewer, because 58 of the 70 were git history, Kconfig, devicetree, manifest, patch or toolchain reads one build cannot answer, the round already paired grep and sed in one shell call, and a whole answer outweighs a `head -N` grep. The task closed `done` with that result recorded and its replay box unticked; the tools land as built. Doc commits `2077eba5` and `e068b439` record the two words. The worker's choices land as written and are in DESIGN.md: a lexer as the only extractor, headers from `.ninja_deps` with an `#include` scan as fallback, `CONFIG_*` conditions evaluated per query, two cache layers.
+**Merged:** `agent/atlas/002-code-lookup-over-the-build` (code `78fe5b4`, ff on `ece94d6`, 011's code tip, no rebase needed; doc `acd6742c`, ff on `3b19523f`, 011's fold, after a rebase that dropped the earlier units' commits as already applied and replayed 002's seven clean). Gate on the merge result, re-run by the lander in the code worktree's own venv: `pytest -q` 823 passed, 3 skipped (the real-workspace, built-atlas and vendor-SVD skips), `test_public_guard` ran. Ownership `atlas` OK on both branches, client names clean, `check-docs.py` 12/12 before and after the fold. Code pushed after the doc gate.
+**Blocked:** nothing.
+**Reviewer:** skipped (owner-dispatched landing outside a leg; the landing brief dispatched no reviewer, and a reviewer gates no merge).
+**Hardware debts:** none needs a board. One toolchain debt: the libclang and ctags paths never ran (neither is on this machine nor in the Zephyr SDK), and the `.ninja_deps` reader has met format 3 only by reading.
+**Budget:** not read: no leg and no wave.
+**Least sure about:** whether a round that reads whole files, such as the PD-patch review the worker could not replay, shows the gain this round did not; nothing has measured it.
+
+---
+
 ## 2026-11-11 22:44 — atlas/011 applicability, state and transition records of a standard
 
 **Not a leg.** Fifth of the six `atlas` units the owner-dispatched landing agent lands in order, after `atlas/004` below and on the same terms: run by a worker thread the owner's session dispatched directly on 2026-11-11, branched from 004, landed on the owner's instruction, no leg number.
