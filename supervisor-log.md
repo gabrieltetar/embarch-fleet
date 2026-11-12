@@ -97,6 +97,19 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-11 22:43 — atlas/004 check firmware configuration against a standard's requirements
+
+**Not a leg.** Fourth of the six `atlas` units the owner-dispatched landing agent lands in order, after `atlas/016` below and on the same terms: run by a worker thread the owner's session dispatched directly on 2026-11-11, branched from 016, landed on the owner's instruction, no leg number.
+**Decided:** nothing by the lander, and no decision number. The worker's choices land as written and are listed in the retired task file: a `dt` selector matches exactly and only okay nodes; several matches run a rule per node; a declared table is found by doc_id, else slug; a guard-skipped rule is folded as expected rather than a check row; every candidate's severity is `check`; no `CONFIG_X=y` shorthand. **Follow-up EMB-159, filed by the owner on 2026-11-11:** the USB PD PDO/APDO decode was written from memory of the public layout, with no specification in reach, and is unverified against the standard's PDO tables; the tests prove it self-consistent only. Check it once the standard is distilled in an atlas.
+**Merged:** `agent/atlas/004-config-vs-standard` (code `198a51f`, ff on `31e1857`, 016's code tip, no rebase needed; doc `e36b4143`, ff on `63bdab21`, 016's fold, after a rebase that dropped the earlier units' commits as already applied and replayed 004's three clean). Gate on the merge result, re-run by the lander in the code worktree's own venv: `pytest -q` 775 passed, 3 skipped (the real-workspace, built-atlas and vendor-SVD skips), `test_public_guard` ran. Ownership `atlas` OK on both branches, client names clean. `check-docs.py` 11/12 on the merge result and after the fold, the same red both times and not this unit's: `check-task-state.py` refuses `tasks/atlas/011`, still `blocked` on `main` with `Unparks when:` naming `tasks/atlas/016`, which 016's fold (`63bdab21`) retired. That red has been on `origin/main` since `63bdab21`: 016's entry below says 12/12 after the fold because the gate ran before `fold-commit.py` deleted the task file, which is the change that reddened it. 011's own branch carries its task file `done`, so its landing, next, clears it; the lander landed 004 on that basis rather than stop with 004's code already pushed. Code was pushed before the doc gate was read, a slip in the lander's script: the gate's red was the one above.
+**Blocked:** nothing.
+**Reviewer:** skipped (owner-dispatched landing outside a leg; the landing brief dispatched no reviewer, and a reviewer gates no merge).
+**Hardware debts:** none.
+**Budget:** not read: no leg and no wave.
+**Least sure about:** the PDO bit layout (EMB-159): a decode that is wrong in the same way as its tests would pass every check and report a compliant configuration as broken, or a broken one as compliant.
+
+---
+
 ## 2026-11-11 22:42 — atlas/016 the standard document kind, and a standard's sections picked from use
 
 **Not a leg.** Third of the six `atlas` units the owner-dispatched landing agent lands in order, after `atlas/001` below and on the same terms: run by a worker thread the owner's session dispatched directly on 2026-11-10, branched from 001, landed on the owner's instruction, no leg number.
