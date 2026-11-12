@@ -97,6 +97,19 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-11 22:42 — atlas/016 the standard document kind, and a standard's sections picked from use
+
+**Not a leg.** Third of the six `atlas` units the owner-dispatched landing agent lands in order, after `atlas/001` below and on the same terms: run by a worker thread the owner's session dispatched directly on 2026-11-10, branched from 001, landed on the owner's instruction, no leg number.
+**Decided:** nothing by the lander. **The owner's word, 2026-11-10, given in his interactive session: a worker may land the 2026-10-08 `standard` design in `embarch-atlas-wt` as written**, which stood in for the task's first box (his review) and unparked it. The design landed as written: code `e3a12bf` carries DESIGN.md "Standards and specifications", `standard-procedure.md` and the `atlas-translate-docs` and `atlas-use` SKILL.md changes, copied from that tree read only; two DESIGN.md hunks met text `main` had rewritten since and kept `main`'s wording around them, and the `atlas-translate-docs` frontmatter keeps 001's removal of `disable-model-invocation`. Doc `e3b2218f` records the word. The worker's choices land as written: check W on standards only; the card's section list as a generated block rather than model text; a hit on a section already asked for or distilled is not rolled into its parent by `--level`.
+**Merged:** `agent/atlas/016-standard-sections` (code `31e1857`, ff on `9c912da`, 001's code tip, no rebase needed; doc `cabe583a`, ff on `3007e601`, 001's fold, after a rebase that dropped 003's and 001's commits as already applied and replayed 016's three clean). Gate on the merge result, re-run by the lander in the code worktree's own venv: `pytest -q` 762 passed, 3 skipped (the real-workspace, built-atlas and vendor-SVD skips), `test_public_guard` ran. Ownership `atlas` OK on both branches, client names clean, `check-docs.py` 12/12 before and after the fold. Code pushed after the doc gate.
+**Blocked:** nothing.
+**Reviewer:** skipped (owner-dispatched landing outside a leg; the landing brief dispatched no reviewer, and a reviewer gates no merge).
+**Hardware debts:** none.
+**Budget:** not read: no leg and no wave.
+**Least sure about:** `inventory` has classified only synthetic PDFs as `standard`; a real 400-page specification has never been filed by it.
+
+---
+
 ## 2026-11-11 22:41 — atlas/001 bump the atlas when HEAD moves, without a session ritual
 
 **Not a leg.** Second of the six `atlas` units the owner-dispatched landing agent lands in order, after `atlas/003` below and on the same terms: run by a worker thread the owner's session dispatched directly on 2026-11-10, branched from 003, landed on the owner's instruction, no leg number.
