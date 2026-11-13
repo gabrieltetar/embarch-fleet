@@ -97,53 +97,56 @@ unit under **Merged** and **Blocked**:
 
 ---
 
-## 2026-11-12 20:03 — api/151 two lease_client tests fail once under load, then pass
+## 2026-11-13 13:26 — api/152 CLI tests fail when cargo test runs from outside the repo
 
-**Decided:** nothing numbered. EMB-155's cause (the worker's, and I read the diff): neither of the issue's two hypotheses. `cli_in_session()` in `tests/lease_client.rs` named its scratch directory from the pid and the clock's nanoseconds. Tests are threads of one process, so two that read the clock in the same tick shared one directory: the second `api.toml` overwrote the first, one CLI child talked to the other test's mock (3 requests in one test, `/status` 0 in the other), and the first to finish deleted the directory. The worker reproduced it with a temporary diagnostic (a child's `/lease` went to port 41769 while its own mock was on 43857). The fix names the directory from a static `AtomicUsize` counter, test-only. Load: 12 to 16 parallel copies of the test binary, 25 runs each, on 14 cores, beside a scratch-target `cargo build --release`: 5 failures in 810 runs before the fix, 0 in 700 after. **I accepted that for the "50 runs in a row" box**: it is parallel batches rather than one serial streak, and it is stronger evidence than the box asked for. **The worker filed EMB-169** (Fleet Ready, api, bug): five more test files use the same clock-named directory (`build_each`, `bench_exchange_cli`, `serial_log_truncation`, `build_verdict`, `signal_exchange_cli`).
-**Merged:** `agent/api/151-lease-client-tests-flake-under-load` (code `e4957c5`, ff on `ceae118`; doc `f022b24e`, ff on `5bb3d108` after a clean rebase). Gate on the merge result: `cargo build`, `cargo test` (401 passed, 0 failed), `cargo clippy --all-targets -- -D warnings` green; ownership `api` OK on both branches, client names clean, `check-docs.py` 12/12. Code pushed after the doc gate. I set the task's `State:` to `done` in the fold; the worker had left the claim line.
+**Decided:** nothing numbered. EMB-158's cause (the worker's; the reviewer and I read the diff): `EMBARCH_REQUIRE_LEASE=1`, which a listener under the suite exports, reached the spawned `embarch-api` binary in five subprocess tests. Inside the repo `.cargo/config.toml` forces it empty (decision 101); from the suite root that file is not read. Fix, test code only: a `support::api_command` helper calls `env_remove("EMBARCH_REQUIRE_LEASE")` on the spawned binary, and `bench_exchange_cli`, `dev_bench_hello_success`, `run_study_unreported_bench`, `serial_log_truncation` and `signal_exchange_cli` use it. Not the same bug as EMB-169 (`tasks/api/153`, clock-named scratch dirs): different cause, three files in common.
+**Merged:** `agent/api/152-cli-tests-fail-from-outside-the-repo` (code `af2ea2b`, ff on `e4957c5`; doc `8cbd3642`, cherry-picked onto `5914a007`). **Recovered, not dispatched by this leg:** the worker was the 2026-11-12 20:04 leg's, finished and pushed both branches at 20:15, and that leg died before landing it. Gate on the merge result, run with `EMBARCH_REQUIRE_LEASE=1` in my own environment (the failing condition): `cargo build`, `cargo test --no-fail-fast` (401 passed, 0 failed), `cargo clippy --all-targets -- -D warnings` green; ownership `api` OK on both branches, client names clean, `check-docs.py` 12/12. Code pushed after the doc gate.
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** none.
-**Budget:** PROCEED, wave 6; 5-hour 16% at the leg's start to 70% now (resets about 23:40), weekly 30% to 35%.
-**Least sure about:** whether EMB-169 and EMB-158 (`tasks/api/152`, CLI tests fail from the suite root) are one bug. Three of EMB-169's five files are among the twenty EMB-158 measured failing from the suite root, so the next leg should give both to one worker or read 152's cause first.
-**Leg close (next leg, read this first):** **4 of 4 units**, all workers, all reviewers clean: `chat/026`, `desk/028`, `ui/109`, `api/151`. Leg began at `1411a9a9` (fleet `42db4cd`), normal mode. **What you would not expect:** (1) the first fold also day-folded 2026-11-10 (52 units) and 2026-11-11 (7) and rolled 2026-11-07..09 into `log-archive/`; (2) two workers left `State:` as the claim line with every box ticked, and `fold-commit.py` refused until I set `done`, so read the state line before folding. **New decisions:** `embarch-desk` 85, `embarch-ui` 102. **Closed:** EMB-141, EMB-140, and EMB-155 at this fold's `finish`; EMB-73 moved to Done at the leg's start. **Filed:** EMB-169 (by the api worker, Fleet Ready, not yet split: split it at your `ready`). **Queue for the next leg:** worker tasks `atlas/063` (EMB-113), `atlas/064` (EMB-109), `api/152` (EMB-158; see above), `api/150` (compact api `open.md`, due 2026-11-24), `core/126` (compact core `open.md`, due 2026-11-25). Toolchain by a leg's own hands: `dev-bench/047` (EMB-147; the pd-bench west workspace is uninitialised, so its first `west update` is several GB). Bench: `api/059`, `dev-bench/038`, no probe attached at 19:30. Owner-only: `doc/098`. **Deploy debts owed by the owner:** the desk (decision 85, plus a plugin version bump) and the UI service (decision 102). No `suite` task, nothing deployed, no alert sent.
+**Budget:** PROCEED, wave 6; 5-hour 8%, weekly 38%.
+**Least sure about:** I did not re-run the suite from the suite root myself; my run proves the variable no longer reaches the binary from inside the repo with it exported, which is the mechanism, not the exact repro the task names.
+**Leg notes (this leg, first unit):** normal mode, pump latched 13:18:59 by the owner, no stop marker, nothing actionable in the channel. **Recovery:** the leg that started 2026-11-12 20:04 claimed `api/152`, `atlas/063`, `core/126` (split EMB-169 into `api/153` at `5acbaa19`), took a fleet stop at ~20:10 and released `core/126` (`ff933079`), landed `atlas/063`'s code (`3f3d77c` on `embarch-atlas` main) and died mid-fold with no log entry, its leg worktree holding the rebased 063 doc commit unpushed plus the changelog assembler's output. I reset that worktree to `origin/main` (both were re-derivable: the pushed doc branch carries the same patch) and land 063 as an ordinary unit. Leg began at `ff933079` (fleet `cb2b4df`). Fleet Ready empty; `finish` moved nothing. Size ledger: nothing overdue (doc/098 due 11-17, owner-only). Bench: Core reachable, neither role attached, `api/059` and `dev-bench/038` stay `open`. Day fold: 2026-11-12 folded by an `embarch-log-folder` agent, 2026-11-10 rolled to `log-archive/`. Client-name history scan: all 16 repos clean. Dispatched 13:22: `atlas/064` (already reported).
 
 ---
 
-## 2026-11-12 19:56 — ui/109 service install keeps the UI's config when the shell does not set EMBARCH_UI_CONFIG
+## 2026-11-12 — 4 units
 
-**Decided:** nothing suite-wide. New `embarch-ui` decision 102 (the worker's, in a new `decisions/ui-config.md`, because `launcher.md` had 22 B left and the subject is the config file's location): with `EMBARCH_UI_CONFIG` unset, `config::load()` reads `embarch-ui/config.toml` under `$XDG_CONFIG_HOME` (else `~/.config`; `%APPDATA%` on Windows) when that file exists, then falls back to decision 5's zero-config default; a set variable naming a missing file is still an error. The worker chose the default path over refusing the install. The unit is not given the resolved path, since the binary finds the file itself, so decision 101's carried-variable list is unchanged; `service install` now prints which config the unit will read, or that there is none. The stale comments in `firmware_build.rs` and `load()` are corrected. The task's third comment, a sample config's header, does not exist: no file in `embarch-ui`, `embarch-chat` or `embarch-umbrella` names `embarchUi.configPath` (my grep agrees).
-**Merged:** `agent/ui/109-service-install-keeps-the-ui-config` (code `b81ed12`, ff on `2e16164`; doc `7a2fb44e`, ff on `8284e316` after a clean rebase). Gate on the merge result: `cargo build`, `cargo test` (317 passed, 4 ignored), `cargo clippy --all-targets -- -D warnings` green; ownership `ui` OK on both branches, client names clean, `check-docs.py` 12/12. Code pushed after the doc gate.
+*Folded 2026-11-13 by the embarch-log-folder agent for the leg that recovered this day: per-unit narrative reasoning, gate detail and budget lines went; git holds them. SHAs, reviewer lines and debts are kept below.*
+
+**Carry forward (next leg, read this first):**
+- The leg that started 2026-11-12 20:04 was stopped or killed with no log entry; the 2026-11-13 leg recovers its two finished units.
+- **Leg close, 20:03 (4 of 4 units, all workers, all reviewers clean):** began at `1411a9a9` (fleet `42db4cd`), normal mode. Surprises: (1) the first fold also day-folded 2026-11-10 (52 units) and 2026-11-11 (7) and rolled 2026-11-07..09 into `log-archive/`; (2) two workers left `State:` as the claim line with every box ticked, and `fold-commit.py` refused until set to `done`, so read the state line before folding. New decisions: `embarch-desk` 85, `embarch-ui` 102. Closed: EMB-141, EMB-140, EMB-155 (at the fold's `finish`); EMB-73 moved to Done at the leg's start. Filed: EMB-169 (by the api worker, Fleet Ready, not yet split: split at `ready`; five test files use clock-named scratch dirs; may be one bug with EMB-158 / `tasks/api/152`, since three of its five files are among the twenty EMB-158 measured failing from the suite root, so give both to one worker or read 152's cause first). No `suite` task, nothing deployed, no alert sent.
+- **Queue for the next leg:** worker tasks `atlas/063` (EMB-113), `atlas/064` (EMB-109), `api/152` (EMB-158; see above), `api/150` (compact api `open.md`, due 2026-11-24), `core/126` (compact core `open.md`, due 2026-11-25). Toolchain by a leg's own hands: `dev-bench/047` (EMB-147; pd-bench west workspace uninitialised, first `west update` is several GB). Bench: `api/059`, `dev-bench/038`, no probe attached at 19:30. Owner-only: `doc/098`.
+- **Deploy debts owed by the owner:** the desk (decision 85, plus a plugin version bump) and the UI service (decision 102); details in the per-unit debt lines below.
+- Open risk: chat/026 moved decisions 101, 103, 105, 106 of `embarch-chat/decisions/sessions.md` to `decisions/logins.md`; an owner branch editing them would conflict.
+- Decisions made on the owner's behalf: ui/109 (decision 102) with `EMBARCH_UI_CONFIG` unset reads `embarch-ui/config.toml` under XDG/`~/.config` (`%APPDATA%` on Windows) if present, else zero-config default. desk/028 (decision 85): unknown line-body fields are a 400 on both line routes; new `DELETE /sessions/{sid}/line/{nid}` and MCP `desk_remove_line` (own, open-tile lines only), so a client behind in version now fails loudly.
+
+### api/151 two lease_client tests fail once under load, then pass
+Cause: scratch dir named from pid and clock nanoseconds collided between test threads; fixed with a static `AtomicUsize` counter (test-only). 0 failures in 700 runs after, 5 in 810 before.
+**Merged:** `agent/api/151-lease-client-tests-flake-under-load` (code `e4957c5`, ff on `ceae118`; doc `f022b24e`, ff on `5bb3d108`).
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+
+### ui/109 service install keeps the UI's config when the shell does not set EMBARCH_UI_CONFIG
+**Merged:** `agent/ui/109-service-install-keeps-the-ui-config` (code `b81ed12`, ff on `2e16164`; doc `7a2fb44e`, ff on `8284e316`).
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** none needs a board. One deploy debt for the owner: `cargo build` in the main `embarch-ui` checkout, then restart or reinstall the user service, with the config at `~/.config/embarch-ui/config.toml` (or `EMBARCH_UI_CONFIG` exported for the install), and confirm the tabs load. The Windows `%APPDATA%` branch is written and not run.
-**Budget:** PROCEED, wave 6; 5-hour 16%, weekly 30%.
-**Least sure about:** the fix only helps once a config file sits at the default path; a bench whose config lives elsewhere and reinstalls from a session shell still gets defaults, now with a printed line saying so rather than silence.
 
----
-
-## 2026-11-12 19:52 — desk/028 a line body the desk cannot honour is refused, and a session takes back its own line
-
-**Decided:** nothing suite-wide. New `embarch-desk` decision 85 (the worker's, `decisions/notes.md`; 85 was the next free number): a line body with a field the desk does not know is a 400 naming each field and writes nothing, on both `POST /sessions/{sid}/line` and `POST /tiles/{id}/line`. It collects unknown fields with `#[serde(flatten)]` and refuses in `LineBody::note`, rather than `deny_unknown_fields`, because axum's extractor would answer 422. New `DELETE /sessions/{sid}/line/{nid}` and MCP tool `desk_remove_line`: a session removes only a line it wrote itself (source `agent`, its own `session_id`), and only while the tile is open; another session's line is 403, an unknown id 404, a sent, folded or discarded tile 400 saying to add a correcting line. The worker grepped every caller read-only (chat's `client.ts`, ui's `desk.js` and `drive_desk.py`, the desk's own MCP tool): none sends an unknown field, so nothing was filed. The reviewer checked decision 78's rejected "session tool for the tile route" and found no conflict, since removal goes through the session route.
-**Merged:** `agent/desk/028-a-line-body-with-an-unknown-field-is-refused` (code `bf93853`, ff on `1997108`; doc `1cea2713`, ff on `1cd0bb45` after a clean rebase). Gate on the merge result: `cargo build`, `cargo test` (260 passed), `cargo clippy --all-targets -- -D warnings` green; ownership `desk` OK on both branches, client names clean, `check-docs.py` 12/12. Code pushed after the doc gate.
+### desk/028 a line body the desk cannot honour is refused, and a session takes back its own line
+**Merged:** `agent/desk/028-a-line-body-with-an-unknown-field-is-refused` (code `bf93853`, ff on `1997108`; doc `1cea2713`, ff on `1cd0bb45`).
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** none needs a board. One deploy debt for the owner: the installed desk still drops unknown fields and has no `desk_remove_line` until it is redeployed (and the plugin's version bumped, so sessions load the new tool). Then check that `POST /sessions/<sid>/line` with `{"text":"x","bogus":1}` answers 400 naming `bogus`, and that `desk_add_line` then `desk_remove_line` removes the line from the tile.
-**Budget:** PROCEED, wave 6; 5-hour 16%, weekly 30%.
-**Least sure about:** an older chat or plugin build that someday sends a field this desk lacks now fails loudly with a 400 instead of misfiling; that is the intent, but it turns a version skew that was silent into a visible error in whichever client is behind.
 
----
-
-## 2026-11-12 19:45 — chat/026 login and handoff decisions leave sessions.md by verbatim split
-
-**Decided:** nothing numbered. `embarch-chat/decisions/sessions.md` 12,745 → 6,673 B, from 457 B over its cap to clear of reserve: decisions 101, 103, 105 and 106 (a window's login and desk, the handoff to a fresh session, a due login's warm-up, one pick for every panel) moved whole to a new `decisions/logins.md`, and the group table in `decisions.md` gained its row. I diffed removed against added lines: only the new file's header block and one separator blank line differ. **Compaction-pass answer** (mine; the worker called it not applicable): yes. `spec.md` (8,947 B) was not touched and still says what the chat is, how it runs, its invariants, constants and non-goals; the split moved reasons, not current truth, and the four decisions are one index row away. **Fold extras:** `suite/features.md` gained one row the assembler had not yet built on `main`, the owner's EMB-161 login-pick fragment; the 2026-11-10 (52 units) and 2026-11-11 (7 units) log days were folded by two `embarch-log-folder` agents, and 2026-11-07..09 rolled into `log-archive/supervisor-log-2026-11-07-to-2026-11-09.md`.
-**Merged:** `agent/chat/026-compact-chat` (doc only: `d76e0412`, ff on the claim `45b9cb6e`; no code worktree). Gate on the merge result: `check-docs.py` 12/12; ownership `chat` OK.
+### chat/026 login and handoff decisions leave sessions.md by verbatim split
+`sessions.md` 12,745 to 6,673 B; `spec.md` untouched. Fold extras: `suite/features.md` gained the EMB-161 login-pick row; 2026-11-10 and 2026-11-11 were folded and 2026-11-07..09 rolled to `log-archive/supervisor-log-2026-11-07-to-2026-11-09.md`. Dispatched 19:35; seven issues split in `7866a9ab` (EMB-155, 158, 113, 109, 141, 140, 147); announced at `ts` `1794537223.969339`.
+**Merged:** `agent/chat/026-compact-chat` (doc only: `d76e0412`, ff on the claim `45b9cb6e`).
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** none.
-**Budget:** PROCEED, wave 6; 5-hour 16%, weekly 30%.
-**Least sure about:** whether the owner has a branch editing one of the four moved decisions; he landed 106 and 100's amendment in this file today, and a branch of his would now meet them in `logins.md`.
-**Leg notes (this leg, first unit):** normal mode, pump latched, no stop marker, no owner message, nothing to recover (no claims, no unit or leg worktrees; stale local `agent/*` branches in seven repos left for `fold-commit.py`). Leg began at `1411a9a9` (fleet `42db4cd`). Fleet Ready: seven issues split in `7866a9ab` and moved to Fleet Working: EMB-155 → `api/151`, EMB-158 → `api/152`, EMB-113 → `atlas/063`, EMB-109 → `atlas/064`, EMB-141 → `desk/028`, EMB-140 → `ui/109`, EMB-147 → `dev-bench/047` (`toolchain`, a leg's own hands; its pd-bench west workspace is not initialised, so the first `west update` is several GB). Announced at `ts` `1794537223.969339`. `finish` moved EMB-73 to Done. Refill not owed (9 dispatchable across 6 scopes). Size ledger: nothing overdue. Bench: Core reachable, no probe attached, neither role validates, so `api/059` and `dev-bench/038` stay `open`. Client-name history scan: all 16 repos clean. Dispatched 19:35: `desk/028`, `ui/109`, `api/151`, `chat/026`.
 
 ---
 
@@ -203,323 +206,4 @@ unit under **Merged** and **Blocked**:
 **Hardware debts:** none needs a board. One toolchain debt: the libclang and ctags paths never ran (neither is on this machine nor in the Zephyr SDK), and the `.ninja_deps` reader has met format 3 only by reading.
 
 ---
-## 2026-11-10 — 52 units
-
-_Folded 2026-11-12 by the log-folder agent for leg 011's first unit: per-unit Decided, gate, ownership and Least-sure narrative, budget lines and leg notes went to git; SHAs, reviewer lines and hardware debts kept verbatim._
-
-**Carry forward.** Pump ran in burndown until 2026-11-11 06:00, wave 6. Five units (api/108, 126, 127, dev-bench/036, 037) were run by owner-dispatched worker threads and landed by an owner-dispatched landing agent, no leg number; their reviewer line is `skipped`. api decisions 102, 103, 104 landed as written; decision 24's note gained `schema_version` 2 (a `--json build` reader outside the suite's repos would break; the lander could not search them). `tasks/api/150-compact-api.md` filed (open, due 2026-11-24). Real-board debts below need an attached bench board; the 05:11 dev-bench units found neither role attached.
-
-**Units.**
-
-### 2026-11-10 23:19 — api/127 build --each builds a range from each commit's own module
-**Merged:** `08f9a53` `46bc4128` `c7cb8708` `d36be9e` `fca417c`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** one, toolchain rather than a board. Under `build --each`, a sysbuild version header and any commit id computed at CMake configure time go stale between commits: the tool removes `app_version.h` only at `<build>/zephyr/include/…`, so a sysbuild image's copy under `<build>/<app>/zephyr/…` keeps the first commit's id, and `--same-tree-as` has met one fixture workspace (a T2 module on Zephyr 4.4), never a sysbuild one. `open.md` names both.
-
-### 2026-11-10 23:17 — api/126 build answers with a verdict and builds named variants
-**Merged:** `08f9a53` `15cef80` `eae5b2a1` `fca417c` `fd0c6e96`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** two, both toolchain rather than a board. (1) Re-run the size comparison on the real field variant pair, which only the owner can do because it lives in a client workspace; the worker's replay used a substitute pair (Zephyr `hello_world` on `qemu_cortex_m3`, default and a logging variant), and `open.md` names the debt. (2) No real twister output or sysbuild log has been fed to the verdict parser yet: twister's per-scenario lines are fixture-tested only, and the one real test run was a `native_sim` ztest through `west build -t run`.
-
-### 2026-11-10 23:11 — api/108 a timed-out build's Windows tree kill is verified on Windows
-**Merged:** `15cef80` `6c9fd490` `6d3f24c6` `febdaf2`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 23:06 — dev-bench/037 pd-bench is checked without a board
-**Merged:** `50579d3` `e90bae7` `f04ff0bd` `fb57a30e`
-**Blocked:** nothing.
-**Reviewer:** skipped (owner-dispatched landing outside a leg; the landing brief ran a reviewer only if leg.md needed one to land, and a reviewer gates no merge).
-**Hardware debts:** one, payable with 036's on the same board. Flash both shields and run `pd srccaps`, `pd max` and a refused Request: `main.c` now calls `pd_logic.c`, and its unchanged messages are the worker's claim, which the `native_sim` suite does not cover.
-
-### 2026-11-10 23:04 — dev-bench/036 pd-bench builds from its own west workspace
-**Merged:** `25c748ea` `668b743` `752b13c4` `e90bae7`
-**Blocked:** nothing.
-**Reviewer:** skipped (owner-dispatched landing outside a leg; the landing brief ran a reviewer only if leg.md needed one to land, and a reviewer gates no merge).
-**Hardware debts:** one. Flash pd-bench from this workspace onto a NUCLEO-G0B1RE with each shield: the patches' run-time fixes (DMA transmit, the late TXMSGDISC, RX overrun, VCONN `-ENOTSUP`, the DRD bit) are asserted from the patch headers and pd-bench's history, never measured from this workspace.
-
-### 2026-11-10 13:21 — chat/024 four input bullets leave the chat's spec.md by verbatim split
-**Merged:** `1794342092` `1d3a1b2b` `237a36fe` `7e275ff5`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 13:16 — chat/025 the host test expected a cards call decision 97 removed
-**Merged:** `192ee5ef` `1997108` `3e3c96b1` `56fcb0a5` `7003850` `9162e45` `93ede9b7`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 12:59 — promptu/004 the uninstalled build steps leave spec.md by verbatim split
-**Merged:** `5584d2aa` `62fe3cd5` `67fc2606` `6ef3e8f0` `f1b22701`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 12:58 — outpost/029 overflow and override decisions leave transport.md and manifest.md by verbatim split
-**Merged:** `428b0dd0` `843882b0` `e48351bb`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 12:57 — desk/027 three suite-desk paragraphs leave spec.md by verbatim split
-**Merged:** `12394e78` `1794340428` `192ee5ef` `2e6f5899` `4ddea194` `ab95a63c`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 06:45 — chat/023 an ended issue ends its chat
-**Merged:** `02c5ab99` `1fd8b63e` `5b39b89d` `89a8ae7c` `9162e45` `b1802d6` `b50281ca`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 06:33 — desk/026 the issue's folder goes once no window shows it
-**Merged:** `1997108` `7246a599` `901b8f5c` `9a32975`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 06:25 — desk/025 Done or Canceled tells the issue's window to end its chat
-**Merged:** `1794316615` `546d670b` `89a8ae7c` `8d91a804` `9a32975` `b229d45` `d39131db`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 06:08 — dev-bench/035 the protocols seal gates a study
-**Merged:** `263b33b6` `668b743` `8a57a032` `a6b597c` `f497b6e5`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** a study with a corrupted `protocols_crc` sent by a real Core to a bench board should come back as that log line and `StudyDone { completed: false }`; neither role was attached at 05:11.
-
-### 2026-11-10 06:04 — dev-bench/017 tx_scratch holds only what the bench sends
-**Merged:** `38e56904` `470bbc9` `6cd71164` `a6b597c`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** run one real study on a bench board (`nrf54l15dk` or the ESP32-C5) and confirm every message the bench sends still decodes at Core, a `StepResult` with GATT services included; neither role was attached at 05:11.
-
-### 2026-11-10 05:54 — suite/032 the FFI staticlib is retired: dev-bench links no Rust
-**Merged:** `1794312920` `470bbc9` `8f7e1f0` `b95955d6` `f3baaf48` `f6cca94`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** flash one bench board (`nrf54l15dk` or the ESP32-C5) and confirm Core's `Hello` gets `HelloAck` with schema 15 and `compatible: true`; neither role was attached at 05:11. The task's flash box is left unticked for this.
-
-### 2026-11-10 05:21 — dev-bench/046 the retired stream-capture GATT kind is refused and its path deleted
-**Merged:** `05d144c5` `1794312920` `3daa719` `6a5e7ec7` `8a57a032` `8f7e1f0` `ad5744cc` `d992392a`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 05:09 — outpost/027 three Kconfig values keep the promise their option exists for
-**Merged:** `26a92bc0` `28c3d76e` `6e07fc8` `9b95b94` `c64422b` `c91baaec`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** the blocking wait is measured on `native_sim` only (decision 28 says so); on a real DUT, a thread at a priority above the drain thread filling the ring with `OVERFLOW_BLOCK=y` should return with its records and no gap.
-
-### 2026-11-10 05:00 — dev-bench/045 the link-level wire enums take their values from the crate
-**Merged:** `3daa719` `6874b02c` `70929779` `759c402`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 04:52 — core/125 pre-flight refuses a one-shot monitor inside an open window
-**Merged:** `b6035a7` `c64422b` `c79b74b` `d4ab17a0` `f462d1fe`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** native Windows build of `embarch-core` not run (gate debt; one host-independent call and a test).
-
-### 2026-11-10 04:49 — study-designer/083 decision 41 leaves gatt.md by verbatim split
-**Merged:** `50a55434` `5a774c9f` `c91baaec` `cdbcf3b8`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 04:43 — dev-bench/010 crate limits and .eap wire enums are read from the crate at configure time
-**Merged:** `244b19f1` `759c402` `9f6b5ae9` `caca256` `f8144fff`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 04:36 — study-designer/082 a one-shot monitor inside an open window is refused when the study is built
-**Merged:** `6874b81` `a843f6af` `aa488fa3` `dea33acf`
-**Blocked:** nothing. **New debt filed by the worker:** `tasks/study-designer/083-compact-study-designer.md` (`In flux: no`, due 2026-11-24): decision 89 took `decisions/gatt.md` to 12,048 of 12,288 B and `interfaces/types.md` to 11,154 B, both in reserve.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 04:28 — dev-bench/042 an open monitor window survives the steps inside it
-**Merged:** `3acc3891` `caca256` `f2295f66` `fa5daf6`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** nothing ran against a DUT. Owed on the bench (DK plus a BLE peer): a one-shot monitor inside an open window (refused, window still capturing after); a `GattDiscover` and a `RunProtocol` inside an open window with the window's rows still labelled; a `RunProtocol` inside an unfiltered window completing instead of timing out, each frame one row; a `DataExchange` notify on a characteristic the window holds; `Hello` during a live `DataExchange` subscription.
-
-### 2026-11-10 04:18 — dev-bench/043 a monitor step fails when its subscriptions fail or the link drops
-**Merged:** `244b19f1` `5f9a4a5b` `a249ff5` `fa5daf6` `fdb0932f`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** nothing ran against a DUT, and no `native_sim` test reaches `ble_bridge_real.c`. Owed on the bench (DK plus a BLE peer): a CCC write the peer refuses; a notifying characteristic with no CCC; a disconnect during the subscribe walk; one inside an open window followed by its `Stop`; a `RunProtocol` source with no CCC; an unfiltered monitor against a peer with nothing that notifies.
-
-### 2026-11-10 04:00 — study-designer/081 the att_status doc comment names its per-kind meanings
-**Merged:** `14310512` `5c2f9a6` `5f9e118e` `a2b538b5` `b0ed2cbf`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 03:57 — dev-bench/044 the transcript keeps full-MTU notifications and records connects and disconnects
-**Merged:** `10889a74` `1d4949b3` `72659053` `9371510` `a249ff5` `b890718a` `d245f2cc`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** nothing ran against a DUT. Owed on the bench (DK plus a BLE peer): a notification of 211 to 244 B reaching the transcript tap; `Connected` and `Disconnected` rows with the reason in a real study's `gatt.csv`; the bond-clear disconnect as the transcript's last row, before its `StreamClose`.
-
-### 2026-11-10 03:44 — desk/024 decisions 38, 40 and 41 leave desks.md by verbatim split
-**Merged:** `32d80fd6` `40c6f27d` `6b5ff8e7`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 03:41 — desk/023 decisions 79 and 81 leave access-point.md by verbatim split
-**Merged:** `88d8d133` `a2b538b5` `c312b30f`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 03:36 — desk/022 the desk says when a repo has no embarch-api in its login
-**Merged:** `8559cf3` `b229d45` `cfa0cd1e` `d4df4a3e` `d80ccc9b` `e14a064f` `e7a4d76c`
-**Blocked:** nothing. **New debt filed by the worker:** `tasks/desk/024-compact-desk.md` (`In flux: no`), since decision 82 took `decisions/desks.md` to 90.1%.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 03:31 — desk/021 a desk tool reads an issue's images and files
-**Merged:** `4fa470a` `8559cf3` `8bff8a95` `c9222741` `fd69c972`
-**Blocked:** nothing. **New debt filed by the worker:** `tasks/desk/023-compact-desk-access-point-decisions.md` (`In flux: no`), since `decisions/access-point.md` is at 91.2% (1082 B left).
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 03:23 — desk/020 a Start work worktree builds its own Zephyr module
-**Merged:** `4fa470a` `4feae56a` `5fedab9a` `939f5363` `e02b8bc`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** verify-only, needs a real west workspace and a session (no board): Start work on a firmware-repo issue, `ZEPHYR_MODULES` present in the worktree's `settings.local.json`, a board-file edit in the worktree, `west build` from a session there reading the worktree's file. **Unverified and load-bearing:** that Claude Code applies a settings `env` to a session's shell commands; the tests use a stand-in `west` and are `cfg(unix)` only.
-
-### 2026-11-10 03:22 — atlas/062 the atlas follows the worktree a session runs in
-**Merged:** `1794305754` `1fd9f20b` `634a3b9a` `b2debcd4` `d8bc57f` `e14a064f` `e7a4d76c` `f293d94`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 03:07 — atlas/061 an atlas for a target with no Zephyr board yet
-**Merged:** `0cd81401` `51d97635` `5a5036ed` `7e7311bc` `a069f4cf` `d8bc57f` `dbeac7c`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 03:00 — desk/019 a desk tool lists a team's issues by state
-**Merged:** `02c08b78` `1b090552` `4119299d` `45d38e0` `e02b8bc`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 02:56 — atlas/060 unnamed pins get a recorded name and its source
-**Merged:** `088a56a1` `17af295` `17ea11e8` `26138cfb` `dbeac7c`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 02:54 — desk/018 desk_add_line can note another item
-**Merged:** `0cd81401` `1794304156` `223e6b21` `30749852` `45d38e0` `4b83b5e` `51d97635` `5dbd0ec2`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 02:43 — atlas/059 a pin record can state its package
-**Merged:** `17af295` `1f83ada2` `1ff05cff` `38a87fa` `5e281c7a` `75c49164`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 02:38 — atlas/058 part_card and mismatch_report answer before an atlas exists
-**Merged:** `38a87fa` `6eca094` `e91066b0` `f53565ea` `f8d6fca9`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 02:31 — atlas/057 a live read selects a register's bank first
-**Merged:** `1794302695` `1f83ada2` `354dbf6b` `3c9e7c96` `6eca094` `867da3b4` `f1c3bc4`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** `embarch-atlas live reg-read <label>.<REG>@<bank> --allow-bank-select` on a board with a paged I2C part whose `bus` record states `bank_select`: the value comes from that bank and the select register reads its old value afterwards. The Zephyr `i2c write_byte` argument order is from the worker's memory, not a board or the fake.
-
-### 2026-11-10 02:19 — atlas/056 atlas-use knows the no-atlas placeholder
-**Merged:** `18bdcea5` `d25dee1d` `dcf8e16` `e1c10a30` `f1c3bc4` `f285ca92`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 02:16 — atlas/055 a verb declares a board mating
-**Merged:** `424e0f9c` `915f6ab9` `abc2db40` `c302ffe` `dcf8e16`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 02:14 — promptu/005 decision 39 still keeps the handoff chip
-**Merged:** `20cde62c` `3953b4c8` `68f102d4`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 02:13 — chat/022 decision 103 stops naming a deleted function and chip
-**Merged:** `1794301835` `3953b4c8` `3d6c446b` `d25dee1d` `ed3d9e3a` `f285ca92`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 02:04 — chat/018 the bulb stops suggesting context handling
-**Merged:** `27d39662` `787c9cfb` `7a93e95` `83f27e2f` `88129529` `b1802d6` `c302ffe` `fe4a4e3f`
-**Blocked:** nothing.
-**Reviewer:** 1 finding — EMB-125
-**Hardware debts:** none.
-
-### 2026-11-10 01:55 — atlas/054 a register record can state its bank
-**Merged:** `1c71cca2` `370801a6` `a9f97f5f` `c302ffe` `ca710c5` `d6efe11`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** a live read of a banked register returns whichever page the part is on, because nothing selects the page (EMB-124); needs a board with a paged sensor to confirm. Owed to a real vendor file: check G on the paged sensor that showed 59 duplicate addresses.
-
-### 2026-11-10 01:50 — atlas/053 a variant record kind lists orderable parts
-**Merged:** `63142756` `6f6b3b97` `92c1d85b` `9b875c2` `ca710c5`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 01:46 — atlas/052 a session before the first atlas is told there is none
-**Merged:** `15ab2fa5` `1794300040` `724df3eb` `83f27e2f` `9b875c2` `f5c64d18` `f796611` `fe4a4e3f`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 01:34 — chat/015 the spec status line says what is installed
-**Merged:** `2b04ff5` `4be6006e` `6e15acf` `77ecf360` `78ea54b3` `7a93e95` `dc663c8b`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 01:32 — atlas/051 doc check reports a cite of a page outside the document
-**Merged:** `059f6796` `29a2d4e8` `6432aa52` `bfeae59` `f796611`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 01:28 — chat/020 two decisions put the notice and thumbnails under the input
-**Merged:** `1bee15af` `e5698bf7` `e8fa7f27`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 2026-11-10 01:26 — chat/021 six host tests fail against the local desk binary
-**Merged:** `208e3dc0` `424c3cf` `4b83b5e` `6e15acf` `9a88a836` `bf60fd1f` `dc663c8b` `e852ae8e`
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-*Days 2026-11-07 to 2026-11-09 rolled to [log-archive/supervisor-log-2026-11-07-to-2026-11-09.md](log-archive/supervisor-log-2026-11-07-to-2026-11-09.md).*
+*Days 2026-11-10 to 2026-11-10 rolled to [log-archive/supervisor-log-2026-11-10-to-2026-11-10.md](log-archive/supervisor-log-2026-11-10-to-2026-11-10.md).*
