@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-12 19:56 — ui/109 service install keeps the UI's config when the shell does not set EMBARCH_UI_CONFIG
+
+**Decided:** nothing suite-wide. New `embarch-ui` decision 102 (the worker's, in a new `decisions/ui-config.md`, because `launcher.md` had 22 B left and the subject is the config file's location): with `EMBARCH_UI_CONFIG` unset, `config::load()` reads `embarch-ui/config.toml` under `$XDG_CONFIG_HOME` (else `~/.config`; `%APPDATA%` on Windows) when that file exists, then falls back to decision 5's zero-config default; a set variable naming a missing file is still an error. The worker chose the default path over refusing the install. The unit is not given the resolved path, since the binary finds the file itself, so decision 101's carried-variable list is unchanged; `service install` now prints which config the unit will read, or that there is none. The stale comments in `firmware_build.rs` and `load()` are corrected. The task's third comment, a sample config's header, does not exist: no file in `embarch-ui`, `embarch-chat` or `embarch-umbrella` names `embarchUi.configPath` (my grep agrees).
+**Merged:** `agent/ui/109-service-install-keeps-the-ui-config` (code `b81ed12`, ff on `2e16164`; doc `7a2fb44e`, ff on `8284e316` after a clean rebase). Gate on the merge result: `cargo build`, `cargo test` (317 passed, 4 ignored), `cargo clippy --all-targets -- -D warnings` green; ownership `ui` OK on both branches, client names clean, `check-docs.py` 12/12. Code pushed after the doc gate.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needs a board. One deploy debt for the owner: `cargo build` in the main `embarch-ui` checkout, then restart or reinstall the user service, with the config at `~/.config/embarch-ui/config.toml` (or `EMBARCH_UI_CONFIG` exported for the install), and confirm the tabs load. The Windows `%APPDATA%` branch is written and not run.
+**Budget:** PROCEED, wave 6; 5-hour 16%, weekly 30%.
+**Least sure about:** the fix only helps once a config file sits at the default path; a bench whose config lives elsewhere and reinstalls from a session shell still gets defaults, now with a printed line saying so rather than silence.
+
+---
+
 ## 2026-11-12 19:52 — desk/028 a line body the desk cannot honour is refused, and a session takes back its own line
 
 **Decided:** nothing suite-wide. New `embarch-desk` decision 85 (the worker's, `decisions/notes.md`; 85 was the next free number): a line body with a field the desk does not know is a 400 naming each field and writes nothing, on both `POST /sessions/{sid}/line` and `POST /tiles/{id}/line`. It collects unknown fields with `#[serde(flatten)]` and refuses in `LineBody::note`, rather than `deny_unknown_fields`, because axum's extractor would answer 422. New `DELETE /sessions/{sid}/line/{nid}` and MCP tool `desk_remove_line`: a session removes only a line it wrote itself (source `agent`, its own `session_id`), and only while the tile is open; another session's line is 403, an unknown id 404, a sent, folded or discarded tile 400 saying to add a correcting line. The worker grepped every caller read-only (chat's `client.ts`, ui's `desk.js` and `drive_desk.py`, the desk's own MCP tool): none sends an unknown field, so nothing was filed. The reviewer checked decision 78's rejected "session tool for the tile route" and found no conflict, since removal goes through the session route.
