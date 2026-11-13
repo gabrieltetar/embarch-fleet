@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-13 13:51 — core/126 core's open.md split by mission
+
+**Decided:** nothing. A verbatim split, the worker's: the seven `## Never exercised` bullets (`POST /bootload`, the signal tap, decisions 35, 106, 89, 92, 93) moved to a new `embarch-core/open/never-exercised.md`, each Owner-run: and To verify: step with its bullet; `open.md` keeps one pointer bullet and decision 108's deploy bullet whole. `open.md` 4,314 to about 2,670 B, out of reserve. I diffed removed against added lines (nothing removed that was not re-added) and `collect-open-questions.py` still prints the new file.
+**Merged:** `agent/core/126-compact-core` (doc only: `cd20175e`, cherry-picked onto `1d2af482`). Gate on the merge result: ownership `core` OK, `check-docs.py` 12/12. No code repo touched, so no cargo gate.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none new; the moved bullets carry the existing ones unchanged.
+**Budget:** PROCEED, wave 6; 5-hour 40%, weekly 41%.
+**Least sure about:** nothing specific to this unit; with both compactions landed the only size debt left is the owner's `doc/098` (`DOC-CONVENTIONS.md`, due 2026-11-17).
+
+---
+
 ## 2026-11-13 13:50 — api/150 split api's open.md by mission
 
 **Decided:** nothing. A verbatim split, the worker's: seven verification-debt bullets (bootload, `bench_exchange`, `study_watch`, ledger, lease, build verdict, `build --each`) moved to a new `embarch-api/open/bench-verification.md`, links given a `../` prefix and nothing else; `open.md` keeps one pointer bullet, the `stack` and `patches` bullets (real-repo debts, not bench or toolchain ones) and the Settled-deferred section untouched. `open.md` 4,502 to 3,076 B, out of reserve. I diffed removed against added lines and `collect-open-questions.py` still prints all seven.
