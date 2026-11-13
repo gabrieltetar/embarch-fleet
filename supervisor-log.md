@@ -97,6 +97,19 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-13 13:50 — api/150 split api's open.md by mission
+
+**Decided:** nothing. A verbatim split, the worker's: seven verification-debt bullets (bootload, `bench_exchange`, `study_watch`, ledger, lease, build verdict, `build --each`) moved to a new `embarch-api/open/bench-verification.md`, links given a `../` prefix and nothing else; `open.md` keeps one pointer bullet, the `stack` and `patches` bullets (real-repo debts, not bench or toolchain ones) and the Settled-deferred section untouched. `open.md` 4,502 to 3,076 B, out of reserve. I diffed removed against added lines and `collect-open-questions.py` still prints all seven.
+**Merged:** `agent/api/150-compact-api` (doc only: `e1c6b57f`, ff on the claim `afd23f2b`). Gate on the merge result: ownership `api` OK, `check-docs.py` 12/12. No code repo touched, so no cargo gate.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none new; the moved bullets carry the existing ones unchanged.
+**Budget:** PROCEED, wave 6; 5-hour 40%, weekly 41%.
+**Least sure about:** the worker's answer to the compaction question says `spec.md` alone cannot say what is unproven on hardware, which is true by design; I did not read `spec.md` myself to judge the rest of that answer.
+**Leg notes (this leg, first unit):** normal mode, pump latched 13:18:59 by the owner, no stop marker, nothing actionable in the channel. Leg began at `90ffd7fa` (fleet `ed64e0f`); step 0 found nothing to recover (no leg worktree, no claims, no unit worktrees). Fleet Ready empty; `finish` moved nothing (EMB-147 still has `dev-bench/047` open). Size ledger: nothing overdue. Bench: Core reachable, neither role attached at 13:47, so `api/059` and `dev-bench/038` stay `open`. Refill owed on depth and spread: the only source change since the 13:38 sweep was `embarch-atlas/design.md`'s EMB-109 section, a recorded trade-off, so nothing filed. Spread sweep: nothing filed (2026-11-13 13:50). Dispatched 13:48: `api/150`, `core/126`, both doc-only worktrees with no code worktree; both reported inside a minute.
+
+---
+
 ## 2026-11-13 13:45 — api/153 test scratch directories named from a counter, not the clock
 
 **Decided:** nothing numbered. EMB-169, the worker's: a `support::unique_dir(tag)` helper beside 152's `api_command` in `tests/support/mod.rs` names a scratch directory from the pid plus a process-wide `AtomicUsize`. All ten clock-named files call it: the five the issue named and the five the task's grep added (`dev_bench_hello_success`, `json_surface`, `run_study_unreported_bench`, `smoke_harness`, `study_follow_cli`); every one named a directory, so none was left. `src/main.rs`'s unit-test tempdir, which cannot reach `tests/support`, got an inline counter. Left alone: dirs named from the pid plus a fixed tag (`patches_cli`, `stack_cli`, `core_client_http`, `src/ledger.rs`), which collide only if one tag repeats in a process. `lease_client.rs` keeps 151's own counter rather than the shared helper. Load: 50 runs per changed file (5 parallel batches of 10, 14 CPU burners on 14 cores, `EMBARCH_REQUIRE_LEASE=1` exported), 500 runs, 0 failures.
