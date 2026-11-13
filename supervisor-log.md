@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-12 19:52 — desk/028 a line body the desk cannot honour is refused, and a session takes back its own line
+
+**Decided:** nothing suite-wide. New `embarch-desk` decision 85 (the worker's, `decisions/notes.md`; 85 was the next free number): a line body with a field the desk does not know is a 400 naming each field and writes nothing, on both `POST /sessions/{sid}/line` and `POST /tiles/{id}/line`. It collects unknown fields with `#[serde(flatten)]` and refuses in `LineBody::note`, rather than `deny_unknown_fields`, because axum's extractor would answer 422. New `DELETE /sessions/{sid}/line/{nid}` and MCP tool `desk_remove_line`: a session removes only a line it wrote itself (source `agent`, its own `session_id`), and only while the tile is open; another session's line is 403, an unknown id 404, a sent, folded or discarded tile 400 saying to add a correcting line. The worker grepped every caller read-only (chat's `client.ts`, ui's `desk.js` and `drive_desk.py`, the desk's own MCP tool): none sends an unknown field, so nothing was filed. The reviewer checked decision 78's rejected "session tool for the tile route" and found no conflict, since removal goes through the session route.
+**Merged:** `agent/desk/028-a-line-body-with-an-unknown-field-is-refused` (code `bf93853`, ff on `1997108`; doc `1cea2713`, ff on `1cd0bb45` after a clean rebase). Gate on the merge result: `cargo build`, `cargo test` (260 passed), `cargo clippy --all-targets -- -D warnings` green; ownership `desk` OK on both branches, client names clean, `check-docs.py` 12/12. Code pushed after the doc gate.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needs a board. One deploy debt for the owner: the installed desk still drops unknown fields and has no `desk_remove_line` until it is redeployed (and the plugin's version bumped, so sessions load the new tool). Then check that `POST /sessions/<sid>/line` with `{"text":"x","bogus":1}` answers 400 naming `bogus`, and that `desk_add_line` then `desk_remove_line` removes the line from the tile.
+**Budget:** PROCEED, wave 6; 5-hour 16%, weekly 30%.
+**Least sure about:** an older chat or plugin build that someday sends a field this desk lacks now fails loudly with a 400 instead of misfiling; that is the intent, but it turns a version skew that was silent into a visible error in whichever client is behind.
+
+---
+
 ## 2026-11-12 19:45 — chat/026 login and handoff decisions leave sessions.md by verbatim split
 
 **Decided:** nothing numbered. `embarch-chat/decisions/sessions.md` 12,745 → 6,673 B, from 457 B over its cap to clear of reserve: decisions 101, 103, 105 and 106 (a window's login and desk, the handoff to a fresh session, a due login's warm-up, one pick for every panel) moved whole to a new `decisions/logins.md`, and the group table in `decisions.md` gained its row. I diffed removed against added lines: only the new file's header block and one separator blank line differ. **Compaction-pass answer** (mine; the worker called it not applicable): yes. `spec.md` (8,947 B) was not touched and still says what the chat is, how it runs, its invariants, constants and non-goals; the split moved reasons, not current truth, and the four decisions are one index row away. **Fold extras:** `suite/features.md` gained one row the assembler had not yet built on `main`, the owner's EMB-161 login-pick fragment; the 2026-11-10 (52 units) and 2026-11-11 (7 units) log days were folded by two `embarch-log-folder` agents, and 2026-11-07..09 rolled into `log-archive/supervisor-log-2026-11-07-to-2026-11-09.md`.
