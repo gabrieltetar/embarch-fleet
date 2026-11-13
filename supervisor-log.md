@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-13 13:40 — atlas/064 freeze leaves a cite of another document out of the citing document's pages
+
+**Decided:** nothing numbered (`embarch-atlas` keeps no `decisions.md`). EMB-109's design choice, the worker's, recorded in the code repo's `DESIGN.md` and a new `embarch-atlas/design.md` section: a page cite that names another document contributes its page to **no** frozen set, rather than to that document's. Filing it under the other document would need a second set of page hashes and a second `thaw-check` rule, since `thaw-check` reads only its own document's `pages/`. A unit citing only other documents rests on every page, as an uncited unit does. The cost, accepted: a change to the other document's page no longer thaws the unit. Code: the sibling-document lookup moved out of check M's nested `sibling()` into a module-level `check.find_sibling`, which `freeze.own_cited_pages()` now shares, so cites are not parsed a second way; `out_of_range` runs on own-document pages only.
+**Merged:** `agent/atlas/064-freeze-files-a-cross-document-cite-under-its-own-document` (code `d0c2f12`, ff on `3f3d77c`; doc `57d06376`, cherry-picked onto `893d0440`). Gate on the merge result in the unit's worktree with its own venv: `pytest -q` 826 passed, 3 skipped, `test_public_guard` ran; ownership `atlas` OK on both branches, client names clean, `check-docs.py` 12/12. Code pushed after the doc gate.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, wave 6; 5-hour 8%, weekly 38%.
+**Least sure about:** whether "none" is the choice the issue's author wanted; the task left it open and the worker's reason holds, but a unit resting on a changed page of another document now stays frozen with nothing saying so.
+
+---
+
 ## 2026-11-13 13:39 — atlas/063 check K holds a record to the group its cond names
 
 **Decided:** nothing numbered (`embarch-atlas` keeps no `decisions.md`; the change is in the code repo's `DESIGN.md`). EMB-113, the worker's: check K now picks a record's table group by the condition its `cond` names, so a record matching a side-by-side group headed by a different condition fails; a `cond` that names no group is reported (`K_cond: unmatched`, per record and per document) rather than passing.
