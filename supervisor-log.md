@@ -97,6 +97,19 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-13 13:39 — atlas/063 check K holds a record to the group its cond names
+
+**Decided:** nothing numbered (`embarch-atlas` keeps no `decisions.md`; the change is in the code repo's `DESIGN.md`). EMB-113, the worker's: check K now picks a record's table group by the condition its `cond` names, so a record matching a side-by-side group headed by a different condition fails; a `cond` that names no group is reported (`K_cond: unmatched`, per record and per document) rather than passing.
+**Merged:** `agent/atlas/063-check-k-holds-a-record-to-its-conditions-group` (code `3f3d77c`, ff on `78fe5b4`, **landed by the 2026-11-12 20:04 leg before it died**; doc `d31ba2ec`, cherry-picked onto `4eedc6ad`, changelog fragment and task file only). Gate on the merge result (atlas `main` = `3f3d77c`), in the unit's worktree with its own venv: `pytest -q` **824 passed, 1 failed, 3 skipped; the failing test passed alone on `--lf`**, and I lost its name to that rerun. The full suite on `atlas/064`'s branch, which is `3f3d77c` plus 064, then ran 826 passed, 0 failed, so I read it as a flake, not this unit's red. `test_public_guard` ran, not skipped. Ownership `atlas` OK on both branches, client names clean, `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, wave 6; 5-hour 8%, weekly 38%.
+**Least sure about:** the one flaky atlas test I could not name: if it recurs at another leg's gate, run `pytest -q -rf` the first time so the name survives.
+**Spread sweep:** sources changed since the `2026-11-09 17:34` marker, so I swept the diff since then rather than all of `open.md` (chat, core, dev-bench, api, study-designer, desk, atlas `design.md`, reversals). Every new item is owner-run (deploys, a phone check, a pick awaiting him), toolchain-gated (real twister or sysbuild output) or explicitly undriven (study-designer's `no_std` CI cell). Spread sweep: nothing filed (2026-11-13 13:38).
+
+---
+
 ## 2026-11-13 13:26 — api/152 CLI tests fail when cargo test runs from outside the repo
 
 **Decided:** nothing numbered. EMB-158's cause (the worker's; the reviewer and I read the diff): `EMBARCH_REQUIRE_LEASE=1`, which a listener under the suite exports, reached the spawned `embarch-api` binary in five subprocess tests. Inside the repo `.cargo/config.toml` forces it empty (decision 101); from the suite root that file is not read. Fix, test code only: a `support::api_command` helper calls `env_remove("EMBARCH_REQUIRE_LEASE")` on the spawned binary, and `bench_exchange_cli`, `dev_bench_hello_success`, `run_study_unreported_bench`, `serial_log_truncation` and `signal_exchange_cli` use it. Not the same bug as EMB-169 (`tasks/api/153`, clock-named scratch dirs): different cause, three files in common.
