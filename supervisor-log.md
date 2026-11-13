@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-13 13:57 — dev-bench/047 the carried R3.2 patch's usbc_pd.h includes zephyr/toolchain.h
+
+**Decided:** nothing numbered. **A toolchain unit, run by this leg with its own hands** (protocol §7), not dispatched. EMB-147: `usbc-pd-r32.patch` gained one hunk adding `#include <zephyr/toolchain.h>` after `<zephyr/types.h>` in `usbc_pd.h`; I edited the patch by hand rather than regenerating it, so the 13 later `usbc_pd.h` hunks' new-file starts moved by one, the post-image blob id became `273904975c1` (checked with `git hash-object` on the applied file), the diffstat moved by one, and part 16 of the patch message gained a bullet saying why. `patches.yml` carries the new `sha256sum`. `pd_logic.h` dropped its workaround include and comment. The other copy of the patch, outside the suite, is untouched (the owner's open question in `embarch-dev-bench/open.md`).
+**Merged:** `agent/dev-bench/047-usbc-pd-header-compiles-on-its-own` (code `0aaf5d6`, ff on `50579d3`, pushed to `embarch-dev-bench` main from the unit worktree; doc `dc24b67c`, task file and changelog fragment, committed in the leg worktree). Gate, in a fresh west workspace inside the unit worktree (`west init -l manifest`, `west update --path-cache` from the main checkout's `native_sim` workspace, Zephyr v4.4.2): **red first** — the old patch with the workaround removed failed `tests/logic` on `native_sim` with the four `conflicting types for '__packed'` errors; then `west patch apply` 6 applied, `west twister -T pd-bench/tests/logic -p native_sim` 13 of 13 passed, `west twister -T pd-bench -p nucleo_g0b1re` both shields built with 0 warnings. `git apply -v` offsets identical before and after the edit, none in `usbc_pd.h`. Ownership `dev-bench` OK on both halves, client names clean, `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none; both shield builds are build-only, as decision 59 has it.
+**Budget:** PROCEED, wave 6; 5-hour 52% at the unit's start to 74% now (resets about 16:20), weekly 41% to 43%.
+**Least sure about:** the unit worktree holds a 2.7 GB west workspace that goes when the worktree is removed, so the next pd-bench toolchain unit pays the clone again; `--path-cache` from the `native_sim` workspace made it a few minutes, which is the trick worth reusing.
+
+---
+
 ## 2026-11-13 13:51 — core/126 core's open.md split by mission
 
 **Decided:** nothing. A verbatim split, the worker's: the seven `## Never exercised` bullets (`POST /bootload`, the signal tap, decisions 35, 106, 89, 92, 93) moved to a new `embarch-core/open/never-exercised.md`, each Owner-run: and To verify: step with its bullet; `open.md` keeps one pointer bullet and decision 108's deploy bullet whole. `open.md` 4,314 to about 2,670 B, out of reserve. I diffed removed against added lines (nothing removed that was not re-added) and `collect-open-questions.py` still prints the new file.
