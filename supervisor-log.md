@@ -97,109 +97,95 @@ unit under **Merged** and **Blocked**:
 
 ---
 
-## 2026-11-13 14:02 — leg after dev-bench/047: no units, queue empty, spawned past a standing dream
+## 2026-11-14 11:20 — api/154 which tree a worktree session's build builds
 
-**Zero units.** A leg-level entry, not a unit entry, so it carries no `**Reviewer:**` line (no unit ran, and a `skipped` would be a false row in the tally). Nothing claimed, dispatched, landed or folded; `embarch-doc` `main` is exactly as the previous leg left it, `b69b1db2`.
-**Decided:** nothing numbered. Two judgement calls, both mine: (1) **no second dream.** Refill found nothing, which would normally mean a dream, but the previous leg posted one at 13:58:12 (`ts` `1794603492.409399`, `crystal_ball`) and the owner has not answered; a second would page him twice for the same three proposals. (2) **The depth sweep was a diff, not a re-read.** `--refill-owed` fired on depth and spread, so the `tasks/doc/081` skip did not strictly apply; but the only source commits since the 13:38 full sweep are `api/150` and `core/126` (verbatim splits the previous leg diffed line by line) and `atlas/064`'s `design.md` section (judged at 13:50), so a re-read would have read what 13:38 read. Nothing filed.
-**Merged:** nothing.
+**Decided:** nothing numbered. EMB-128 answered, the worker's, by a run: for a project configured on the main clone and a server started in a worktree, `west` runs in the config's `source_path` verbatim, the app path is `<source_path>/app/<app>`, `-d` is under the config's `build_dir_root`, and the plan sets only the project's `env` table over the server's inherited environment. So a worktree session builds **the main clone**; the working directory only finds the config. Bug **EMB-181** filed by the worker (Fleet Ready), fix not attempted. A test (`a_zephyr_build_runs_in_and_builds_the_configured_source_path_not_the_working_directory`, `resolve.rs`) pins today's behaviour and goes when EMB-181 lands. I posted the answer on EMB-128 as a `Finding` comment. **My own edit at the fold, on the reviewer's finding (EMB-182):** the worker's `spec.md` bullet stated the defect as a "never" invariant and the fragment filed it as decided; I reworded the bullet as a known defect that EMB-181's fix replaces, and the history line likewise, before the doc half reached `main`, so `main` never carried the invariant wording.
+**Merged:** `agent/api/154-which-tree-a-worktree-session-build-builds` (code `4707020`, ff on `d97985f`, test only in `crates/embarch-firmware-build`, which `embarch-ui` also consumes, but the change is inside `#[cfg(test)]`; doc `12670bf9`, cherry-picked onto `c80b45ee`, plus my reword in this fold). Gate on the merge result with `EMBARCH_REQUIRE_LEASE=1` exported: `cargo build`, `cargo test --no-fail-fast` 402 passed 0 failed, `cargo clippy --all-targets -- -D warnings` green; ownership `api` OK on both branches, client names clean, `check-docs.py` 12/12.
 **Blocked:** nothing.
-**Why this leg existed: EMB-175 (Backlog, `Scope: fleet`).** The listener spawned me at 13:59:06, 54 s after the dream and 27 s after the previous leg's `leg-end`. `fleet-read.py --leg-gate` runs `queue-status.py --no-supervisor --count` in the owner's checkout (`CONF.doc_repo`) without a fetch, and legs push from a detached worktree, so that checkout was still at `90ffd7fa`. Counted there, `api/150` and `core/126` (both landed by then) read as 2 dispatchable, and a non-zero count returns SPAWN before the dream check runs. I reproduced the 2 from `90ffd7fa`'s `tasks/`. Run by hand at 14:00, after my step 0 had pulled that checkout, the gate printed HOLD, which is why it looks fixed whenever anyone checks. Filed `--from audit` to Backlog on purpose: a Fleet Ready issue counts in the same gate, and a `Scope: fleet` one would have spawned another empty leg before `ready` moved it. Not mine to fix: `scripts/` is reserved.
-**Hardware debts:** none new. Bench `api/059` and `dev-bench/038` stay `open`: Core reachable, neither `dev-bench` nor `dut` attached at 14:01 (`fleet-hardware.py --refresh`).
-**Budget:** PROCEED, wave 6; 5-hour **74% at 13:59 to 86% at 14:02** (resets about 16:10), weekly 43% to 44%. The next spawn is likely to meet the 90% HOLD.
-**Least sure about:** whether the stale count explains all three of `tasks/doc/096`'s earlier post-dream spawns or only this one; I proved the mechanism for this spawn alone.
-**Leg close (next leg, read this first):** normal mode, pump latched 13:18:59, no stop marker, nothing actionable in the channel. Step 0 found nothing to recover. Fleet Ready empty, `finish` moved nothing. Size ledger: only owner-only `doc/098` (`DOC-CONVENTIONS.md`, due 2026-11-17). **Queue:** zero dispatchable; bench `api/059`, `dev-bench/038`; hw-gated `core/119`, `dev-bench/039`; four blocked. **The dream at 13:58:12 still stands** and is the fleet's open question to the owner. Until EMB-175 is fixed, any leg that lands the last open tasks and then dreams will be followed by one empty leg like this one. Remote branch `agent/ui/059-diff-new-lines-republish` is still on `embarch-doc`'s origin, older than this leg; I left it alone (pruning one the fold cannot prove is the owner's call). No `suite` task, nothing deployed, no alert sent.
+**Reviewer:** 1 finding — EMB-182
+**Hardware debts:** none.
+**Budget:** DEGRADED wave 2 at the leg's start (stale cache), then PROCEED wave 6 at 11:16; 5-hour 23%, weekly 47%.
+**Least sure about:** whether a worktree's `settings.local.json` `env` reaches the MCP server's process at all; the worker did not check it and it is the desk's side, so EMB-181's fix may need a desk half too.
+**Leg notes (this leg, first unit):** normal mode, pump latched 11:09:56 by the owner, no stop marker, nothing actionable in the channel; the 2026-11-13 13:58 dream got no reply. Leg began at `b69b1db2` (fleet `6df0c08`); step 0 found nothing to recover. Fleet Ready held EMB-128 at the first read and **EMB-148 and EMB-179 by the second, three minutes later**, so the owner moved them in while this leg ran; split into `api/154` (`8e4dd179`), `atlas/065` and `atlas/066` (`1b7b0aad`), all announced. Size ledger: only owner-only `doc/098`, due 2026-11-17. Bench: Core reachable, neither role attached at 11:11. Refill owed on depth and spread; the only source commit since the 2026-11-13 13:50 marker is `core/126`'s verbatim split, so no re-read. Spread sweep: nothing filed (2026-11-14 11:11). Day fold: 2026-11-13 folded by an `embarch-log-folder` agent, 2026-11-11 rolled to `log-archive/`. Client-name history scan: all 16 repos clean. Dispatched 11:12 `api/154`, 11:17 `atlas/065`.
 
 ---
 
-## 2026-11-13 13:57 — dev-bench/047 the carried R3.2 patch's usbc_pd.h includes zephyr/toolchain.h
+## 2026-11-13 — 8 units
 
-**Decided:** nothing numbered. **A toolchain unit, run by this leg with its own hands** (protocol §7), not dispatched. EMB-147: `usbc-pd-r32.patch` gained one hunk adding `#include <zephyr/toolchain.h>` after `<zephyr/types.h>` in `usbc_pd.h`; I edited the patch by hand rather than regenerating it, so the 13 later `usbc_pd.h` hunks' new-file starts moved by one, the post-image blob id became `273904975c1` (checked with `git hash-object` on the applied file), the diffstat moved by one, and part 16 of the patch message gained a bullet saying why. `patches.yml` carries the new `sha256sum`. `pd_logic.h` dropped its workaround include and comment. The other copy of the patch, outside the suite, is untouched (the owner's open question in `embarch-dev-bench/open.md`).
-**Merged:** `agent/dev-bench/047-usbc-pd-header-compiles-on-its-own` (code `0aaf5d6`, ff on `50579d3`, pushed to `embarch-dev-bench` main from the unit worktree; doc `dc24b67c`, task file and changelog fragment, committed in the leg worktree). Gate, in a fresh west workspace inside the unit worktree (`west init -l manifest`, `west update --path-cache` from the main checkout's `native_sim` workspace, Zephyr v4.4.2): **red first** — the old patch with the workaround removed failed `tests/logic` on `native_sim` with the four `conflicting types for '__packed'` errors; then `west patch apply` 6 applied, `west twister -T pd-bench/tests/logic -p native_sim` 13 of 13 passed, `west twister -T pd-bench -p nucleo_g0b1re` both shields built with 0 warnings. `git apply -v` offsets identical before and after the edit, none in `usbc_pd.h`. Ownership `dev-bench` OK on both halves, client names clean, `check-docs.py` 12/12.
+*Folded by an embarch-log-folder agent on 2026-11-14 (leg fold). Dropped: per-unit narrative reasoning, gate transcripts and worker-answer commentary; git holds them. Kept: every SHA, every Reviewer line, every hardware-debt line, and what the next leg cannot recover.*
+
+**Carry forward (read first):**
+- **Dream open:** posted 13:58:12 (`ts` `1794603492.409399`, `crystal_ball`), three proposals (plug in the bench for `api/059` and `dev-bench/038`; move EMB-160 and EMB-159 to Fleet Ready). Owner has not answered; the 6-hour dream gate holds until about 20:00. No second dream was posted by the 14:02 leg.
+- **EMB-175 (Backlog, `Scope: fleet`):** `fleet-read.py --leg-gate` counts the queue in the owner's `CONF.doc_repo` checkout without a fetch, and legs push from a detached worktree, so the checkout was stale (`90ffd7fa`) and read landed tasks as 2 dispatchable, returning SPAWN before the dream check. Until fixed, a leg that lands the last open tasks and then dreams is followed by one empty leg. Filed `--from audit` to Backlog deliberately (Fleet Ready counts in the same gate). Unproven whether it explains all three of `tasks/doc/096`'s earlier post-dream spawns.
+- **Unnamed flaky atlas test:** one atlas test failed once at `atlas/063`'s gate (824 passed, 1 failed) and passed alone; its name was lost. If it recurs, run `pytest -q -rf` the first time.
+- **Budget:** 5-hour window 8% at 13:22 to 86% at 14:02 (resets about 16:10), weekly 38% to 44%; the next spawn is likely to meet the 90% HOLD.
+- **Queue left:** zero dispatchable; bench `api/059`, `dev-bench/038` (no role attached at 14:01); hw-gated `core/119`, `dev-bench/039`; owner-only `doc/098` (`DOC-CONVENTIONS.md`, due 2026-11-17); four blocked. Both compactions (`api/150`, `core/126`) landed, so no size debt besides `doc/098`.
+- **Deploy debts owed by the owner, unchanged:** the desk (decision 85 plus a plugin version bump), the UI service (decision 102), Core per `embarch-dev-workflow.md` §4a.
+- **Open owner questions / leftovers:** the other copy of the R3.2 patch outside the suite is untouched (`embarch-dev-bench/open.md`); remote branch `agent/ui/059-diff-new-lines-republish` still on `embarch-doc`'s origin, left alone. Reusable trick: `west update --path-cache` from the main checkout's `native_sim` workspace makes a fresh pd-bench workspace a few minutes (2.7 GB per unit worktree).
+- **Recovery done:** the 2026-11-12 20:04 leg died mid-fold; I reset its leg worktree to `origin/main` and landed `api/152` and `atlas/063` as ordinary units (063's code `3f3d77c` was already on atlas main). Day fold of 2026-11-12 and roll of 2026-11-10 to `log-archive/` done at 13:26. Client-name history scan: all 16 repos clean.
+- **Decisions:** none numbered all day. `atlas/064` recorded a design choice in `embarch-atlas/design.md` (a cross-document page cite contributes to no frozen set; accepted cost: a change to the other document's page no longer thaws the unit). Fleet `cb2b4df` at the first leg, `ed64e0f` at the later two; no `suite` task, nothing deployed; the dream was the only alert sent.
+
+### 14:02 — leg after dev-bench/047: no units, queue empty, spawned past a standing dream
+Zero units; a leg-level entry, so no unit Reviewer line (no unit ran). `embarch-doc` `main` stayed at `b69b1db2`. Depth sweep was a diff, not a re-read (only `api/150`, `core/126`, `atlas/064` design section since 13:38); nothing filed.
+**Merged:** nothing.
+**Blocked:** nothing.
+**Hardware debts:** none new. Bench `api/059` and `dev-bench/038` stay `open`: Core reachable, neither `dev-bench` nor `dut` attached at 14:01 (`fleet-hardware.py --refresh`).
+**Least sure about:** whether EMB-175 explains all three earlier post-dream spawns.
+
+### 13:57 — dev-bench/047 the carried R3.2 patch's usbc_pd.h includes zephyr/toolchain.h
+EMB-147, toolchain unit run by the leg's own hands: `usbc-pd-r32.patch` gained one hunk adding `#include <zephyr/toolchain.h>`; patch edited by hand, post-image blob id `273904975c1`, `patches.yml` sha256sum updated, `pd_logic.h` workaround dropped. Red first, then 13 of 13 on `native_sim`, both shields built.
+**Merged:** `agent/dev-bench/047-usbc-pd-header-compiles-on-its-own` (code `0aaf5d6`, ff on `50579d3`; doc `dc24b67c`; later fold `b69b1db2`).
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** none; both shield builds are build-only, as decision 59 has it.
-**Budget:** PROCEED, wave 6; 5-hour 52% at the unit's start to 74% now (resets about 16:20), weekly 41% to 43%.
-**Least sure about:** the unit worktree holds a 2.7 GB west workspace that goes when the worktree is removed, so the next pd-bench toolchain unit pays the clone again; `--path-cache` from the `native_sim` workspace made it a few minutes, which is the trick worth reusing.
-**Leg close (next leg, read this first):** **3 units, ended early on an empty queue, with a dream.** `api/150` and `core/126` (worker units, doc-only compactions, both reviewers clean) and `dev-bench/047` (toolchain unit by my own hands). Leg began at `90ffd7fa` (fleet `ed64e0f`). **Dream posted 14:00, `ts` `1794603492.409399`, with `crystal_ball`:** (1) plug in the bench so a leg runs `api/059` and `dev-bench/038`; (2) move EMB-160 (atlas check L column-position test) to Fleet Ready; (3) move EMB-159 (verify atlas/004's PDO/APDO decode against the USB PD standard) to Fleet Ready. Nothing picked, nothing written into the queue; the 6-hour dream gate now holds until about 20:00 unless he answers or an issue reaches Fleet Ready. **What you would not expect:** I ran the toolchain unit rather than dreaming at two units, and the 5-hour window climbed from 40% to 74% across this leg (resets about 16:20), so a leg spawned soon may meet a HOLD. **Queue left:** zero dispatchable; bench `api/059`, `dev-bench/038` (neither role attached at 14:00); hw-gated `core/119`, `dev-bench/039`; owner-only `doc/098` (`DOC-CONVENTIONS.md`, due 2026-11-17, four days); four blocked. Closed: EMB-147. Size ledger: only `doc/098` left. **Deploy debts owed by the owner**, unchanged: the desk (decision 85 plus a plugin version bump), the UI service (decision 102), Core per `embarch-dev-workflow.md` §4a. No `suite` task, nothing deployed; the dream is the only alert sent.
 
----
-
-## 2026-11-13 13:51 — core/126 core's open.md split by mission
-
-**Decided:** nothing. A verbatim split, the worker's: the seven `## Never exercised` bullets (`POST /bootload`, the signal tap, decisions 35, 106, 89, 92, 93) moved to a new `embarch-core/open/never-exercised.md`, each Owner-run: and To verify: step with its bullet; `open.md` keeps one pointer bullet and decision 108's deploy bullet whole. `open.md` 4,314 to about 2,670 B, out of reserve. I diffed removed against added lines (nothing removed that was not re-added) and `collect-open-questions.py` still prints the new file.
-**Merged:** `agent/core/126-compact-core` (doc only: `cd20175e`, cherry-picked onto `1d2af482`). Gate on the merge result: ownership `core` OK, `check-docs.py` 12/12. No code repo touched, so no cargo gate.
+### 13:51 — core/126 core's open.md split by mission
+Verbatim split: seven `## Never exercised` bullets moved to `embarch-core/open/never-exercised.md`; `open.md` 4,314 to about 2,670 B.
+**Merged:** `agent/core/126-compact-core` (doc only: `cd20175e`, cherry-picked onto `1d2af482`).
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** none new; the moved bullets carry the existing ones unchanged.
-**Budget:** PROCEED, wave 6; 5-hour 40%, weekly 41%.
-**Least sure about:** nothing specific to this unit; with both compactions landed the only size debt left is the owner's `doc/098` (`DOC-CONVENTIONS.md`, due 2026-11-17).
 
----
-
-## 2026-11-13 13:50 — api/150 split api's open.md by mission
-
-**Decided:** nothing. A verbatim split, the worker's: seven verification-debt bullets (bootload, `bench_exchange`, `study_watch`, ledger, lease, build verdict, `build --each`) moved to a new `embarch-api/open/bench-verification.md`, links given a `../` prefix and nothing else; `open.md` keeps one pointer bullet, the `stack` and `patches` bullets (real-repo debts, not bench or toolchain ones) and the Settled-deferred section untouched. `open.md` 4,502 to 3,076 B, out of reserve. I diffed removed against added lines and `collect-open-questions.py` still prints all seven.
-**Merged:** `agent/api/150-compact-api` (doc only: `e1c6b57f`, ff on the claim `afd23f2b`). Gate on the merge result: ownership `api` OK, `check-docs.py` 12/12. No code repo touched, so no cargo gate.
+### 13:50 — api/150 split api's open.md by mission
+Verbatim split: seven verification-debt bullets moved to `embarch-api/open/bench-verification.md`; `open.md` 4,502 to 3,076 B.
+**Merged:** `agent/api/150-compact-api` (doc only: `e1c6b57f`, ff on the claim `afd23f2b`).
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** none new; the moved bullets carry the existing ones unchanged.
-**Budget:** PROCEED, wave 6; 5-hour 40%, weekly 41%.
-**Least sure about:** the worker's answer to the compaction question says `spec.md` alone cannot say what is unproven on hardware, which is true by design; I did not read `spec.md` myself to judge the rest of that answer.
-**Leg notes (this leg, first unit):** normal mode, pump latched 13:18:59 by the owner, no stop marker, nothing actionable in the channel. Leg began at `90ffd7fa` (fleet `ed64e0f`); step 0 found nothing to recover (no leg worktree, no claims, no unit worktrees). Fleet Ready empty; `finish` moved nothing (EMB-147 still has `dev-bench/047` open). Size ledger: nothing overdue. Bench: Core reachable, neither role attached at 13:47, so `api/059` and `dev-bench/038` stay `open`. Refill owed on depth and spread: the only source change since the 13:38 sweep was `embarch-atlas/design.md`'s EMB-109 section, a recorded trade-off, so nothing filed. Spread sweep: nothing filed (2026-11-13 13:50). Dispatched 13:48: `api/150`, `core/126`, both doc-only worktrees with no code worktree; both reported inside a minute.
+**Least sure about:** I did not read `spec.md` to judge the worker's compaction answer.
 
----
-
-## 2026-11-13 13:45 — api/153 test scratch directories named from a counter, not the clock
-
-**Decided:** nothing numbered. EMB-169, the worker's: a `support::unique_dir(tag)` helper beside 152's `api_command` in `tests/support/mod.rs` names a scratch directory from the pid plus a process-wide `AtomicUsize`. All ten clock-named files call it: the five the issue named and the five the task's grep added (`dev_bench_hello_success`, `json_surface`, `run_study_unreported_bench`, `smoke_harness`, `study_follow_cli`); every one named a directory, so none was left. `src/main.rs`'s unit-test tempdir, which cannot reach `tests/support`, got an inline counter. Left alone: dirs named from the pid plus a fixed tag (`patches_cli`, `stack_cli`, `core_client_http`, `src/ledger.rs`), which collide only if one tag repeats in a process. `lease_client.rs` keeps 151's own counter rather than the shared helper. Load: 50 runs per changed file (5 parallel batches of 10, 14 CPU burners on 14 cores, `EMBARCH_REQUIRE_LEASE=1` exported), 500 runs, 0 failures.
-**Merged:** `agent/api/153-test-scratch-dirs-named-from-the-clock` (code `d97985f`, ff on `af2ea2b`; doc `82c27cda`, cherry-picked onto `94d7a010`). Gate on the merge result with `EMBARCH_REQUIRE_LEASE=1` set: `cargo build`, `cargo test --no-fail-fast` (401 passed, 0 failed), `cargo clippy --all-targets -- -D warnings` green; ownership `api` OK on both branches, client names clean, `check-docs.py` 12/12. Code pushed after the doc gate.
+### 13:45 — api/153 test scratch directories named from a counter, not the clock
+EMB-169: `support::unique_dir(tag)` (pid plus `AtomicUsize`) used by ten clock-named test files; `src/main.rs` got an inline counter. 500 loaded runs, 0 failures; 401 passed on the merge result.
+**Merged:** `agent/api/153-test-scratch-dirs-named-from-the-clock` (code `d97985f`, ff on `af2ea2b`; doc `82c27cda`, cherry-picked onto `94d7a010`).
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** none.
-**Budget:** PROCEED, wave 6; 5-hour 8% at the leg's start to 40% now (resets about 16:10), weekly 38% to 41%.
-**Least sure about:** the `src/main.rs` counter had no load run of its own, only the normal `cargo test`.
-**Leg close (next leg, read this first):** **4 of 4 units**, all reviewers clean: `api/152` and `atlas/063` recovered from the 2026-11-12 20:04 leg (stopped at ~20:10, then died mid-fold with no entry), `atlas/064` and `api/153` dispatched here. Leg began at `ff933079` (fleet `cb2b4df`). **What you would not expect:** (1) that dead leg had already pushed `atlas/063`'s code to `embarch-atlas` main; only its doc half and fold were missing, and I reset its dirty leg worktree rather than finishing its fold in place; (2) one atlas test flaked once at 063's gate and I lost its name (see that entry); (3) the first fold day-folded 2026-11-12 and rolled 2026-11-10 into `log-archive/`. **New decisions:** none numbered; `embarch-atlas` `design.md` gained 064's freeze section. **Closed:** EMB-158, EMB-113, EMB-109, and EMB-169 at this fold's `finish`. **Queue for the next leg:** worker tasks `api/150` (compact api `open.md`, due 2026-11-24) and `core/126` (compact core `open.md`, due 2026-11-25), two scopes, so refill stays owed on spread; my spread sweep at 13:38 filed nothing, so a later leg skips it unless a source changes. Toolchain by a leg's own hands: `dev-bench/047` (EMB-147; pd-bench west workspace uninitialised, first `west update` several GB). Bench: `api/059`, `dev-bench/038`, neither role attached at 13:20. Owner-only: `doc/098` (`DOC-CONVENTIONS.md`, due 2026-11-17, four days). **Deploy debts owed by the owner**, unchanged: the desk (decision 85 plus a plugin version bump), the UI service (decision 102), and Core per `embarch-dev-workflow.md` §4a. No `suite` task, nothing deployed, no alert sent.
+**Least sure about:** the `src/main.rs` counter had no load run of its own.
 
----
-
-## 2026-11-13 13:40 — atlas/064 freeze leaves a cite of another document out of the citing document's pages
-
-**Decided:** nothing numbered (`embarch-atlas` keeps no `decisions.md`). EMB-109's design choice, the worker's, recorded in the code repo's `DESIGN.md` and a new `embarch-atlas/design.md` section: a page cite that names another document contributes its page to **no** frozen set, rather than to that document's. Filing it under the other document would need a second set of page hashes and a second `thaw-check` rule, since `thaw-check` reads only its own document's `pages/`. A unit citing only other documents rests on every page, as an uncited unit does. The cost, accepted: a change to the other document's page no longer thaws the unit. Code: the sibling-document lookup moved out of check M's nested `sibling()` into a module-level `check.find_sibling`, which `freeze.own_cited_pages()` now shares, so cites are not parsed a second way; `out_of_range` runs on own-document pages only.
-**Merged:** `agent/atlas/064-freeze-files-a-cross-document-cite-under-its-own-document` (code `d0c2f12`, ff on `3f3d77c`; doc `57d06376`, cherry-picked onto `893d0440`). Gate on the merge result in the unit's worktree with its own venv: `pytest -q` 826 passed, 3 skipped, `test_public_guard` ran; ownership `atlas` OK on both branches, client names clean, `check-docs.py` 12/12. Code pushed after the doc gate.
+### 13:40 — atlas/064 freeze leaves a cite of another document out of the citing document's pages
+EMB-109: a cross-document page cite contributes to no frozen set; `check.find_sibling` now shared with `freeze.own_cited_pages()`. `pytest -q` 826 passed, 3 skipped.
+**Merged:** `agent/atlas/064-freeze-files-a-cross-document-cite-under-its-own-document` (code `d0c2f12`, ff on `3f3d77c`; doc `57d06376`, cherry-picked onto `893d0440`).
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** none.
-**Budget:** PROCEED, wave 6; 5-hour 8%, weekly 38%.
-**Least sure about:** whether "none" is the choice the issue's author wanted; the task left it open and the worker's reason holds, but a unit resting on a changed page of another document now stays frozen with nothing saying so.
+**Least sure about:** whether "none" is what the issue's author wanted; a unit resting on a changed page of another document now stays frozen silently.
 
----
-
-## 2026-11-13 13:39 — atlas/063 check K holds a record to the group its cond names
-
-**Decided:** nothing numbered (`embarch-atlas` keeps no `decisions.md`; the change is in the code repo's `DESIGN.md`). EMB-113, the worker's: check K now picks a record's table group by the condition its `cond` names, so a record matching a side-by-side group headed by a different condition fails; a `cond` that names no group is reported (`K_cond: unmatched`, per record and per document) rather than passing.
-**Merged:** `agent/atlas/063-check-k-holds-a-record-to-its-conditions-group` (code `3f3d77c`, ff on `78fe5b4`, **landed by the 2026-11-12 20:04 leg before it died**; doc `d31ba2ec`, cherry-picked onto `4eedc6ad`, changelog fragment and task file only). Gate on the merge result (atlas `main` = `3f3d77c`), in the unit's worktree with its own venv: `pytest -q` **824 passed, 1 failed, 3 skipped; the failing test passed alone on `--lf`**, and I lost its name to that rerun. The full suite on `atlas/064`'s branch, which is `3f3d77c` plus 064, then ran 826 passed, 0 failed, so I read it as a flake, not this unit's red. `test_public_guard` ran, not skipped. Ownership `atlas` OK on both branches, client names clean, `check-docs.py` 12/12.
+### 13:39 — atlas/063 check K holds a record to the group its cond names
+EMB-113: check K picks a record's table group by the condition its `cond` names; an unmatched `cond` is reported (`K_cond: unmatched`). Gate: 824 passed, 1 failed (flake, name lost, see carry-forward). Spread sweep since the `2026-11-09 17:34` marker: nothing filed (13:38).
+**Merged:** `agent/atlas/063-check-k-holds-a-record-to-its-conditions-group` (code `3f3d77c`, ff on `78fe5b4`, landed by the 2026-11-12 20:04 leg before it died; doc `d31ba2ec`, cherry-picked onto `4eedc6ad`).
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** none.
-**Budget:** PROCEED, wave 6; 5-hour 8%, weekly 38%.
-**Least sure about:** the one flaky atlas test I could not name: if it recurs at another leg's gate, run `pytest -q -rf` the first time so the name survives.
-**Spread sweep:** sources changed since the `2026-11-09 17:34` marker, so I swept the diff since then rather than all of `open.md` (chat, core, dev-bench, api, study-designer, desk, atlas `design.md`, reversals). Every new item is owner-run (deploys, a phone check, a pick awaiting him), toolchain-gated (real twister or sysbuild output) or explicitly undriven (study-designer's `no_std` CI cell). Spread sweep: nothing filed (2026-11-13 13:38).
 
----
-
-## 2026-11-13 13:26 — api/152 CLI tests fail when cargo test runs from outside the repo
-
-**Decided:** nothing numbered. EMB-158's cause (the worker's; the reviewer and I read the diff): `EMBARCH_REQUIRE_LEASE=1`, which a listener under the suite exports, reached the spawned `embarch-api` binary in five subprocess tests. Inside the repo `.cargo/config.toml` forces it empty (decision 101); from the suite root that file is not read. Fix, test code only: a `support::api_command` helper calls `env_remove("EMBARCH_REQUIRE_LEASE")` on the spawned binary, and `bench_exchange_cli`, `dev_bench_hello_success`, `run_study_unreported_bench`, `serial_log_truncation` and `signal_exchange_cli` use it. Not the same bug as EMB-169 (`tasks/api/153`, clock-named scratch dirs): different cause, three files in common.
-**Merged:** `agent/api/152-cli-tests-fail-from-outside-the-repo` (code `af2ea2b`, ff on `e4957c5`; doc `8cbd3642`, cherry-picked onto `5914a007`). **Recovered, not dispatched by this leg:** the worker was the 2026-11-12 20:04 leg's, finished and pushed both branches at 20:15, and that leg died before landing it. Gate on the merge result, run with `EMBARCH_REQUIRE_LEASE=1` in my own environment (the failing condition): `cargo build`, `cargo test --no-fail-fast` (401 passed, 0 failed), `cargo clippy --all-targets -- -D warnings` green; ownership `api` OK on both branches, client names clean, `check-docs.py` 12/12. Code pushed after the doc gate.
+### 13:26 — api/152 CLI tests fail when cargo test runs from outside the repo
+EMB-158: `EMBARCH_REQUIRE_LEASE=1` leaked into five subprocess tests; `support::api_command` calls `env_remove` on it. Not the same bug as EMB-169. Gate run with the variable exported: 401 passed.
+**Merged:** `agent/api/152-cli-tests-fail-from-outside-the-repo` (code `af2ea2b`, ff on `e4957c5`; doc `8cbd3642`, cherry-picked onto `5914a007`). Recovered from the 2026-11-12 20:04 leg, which had pushed both branches; that leg's `core/126` split of EMB-169 went in at `5acbaa19` and `core/126` was released at `ff933079`. This leg began at `ff933079`.
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** none.
-**Budget:** PROCEED, wave 6; 5-hour 8%, weekly 38%.
-**Least sure about:** I did not re-run the suite from the suite root myself; my run proves the variable no longer reaches the binary from inside the repo with it exported, which is the mechanism, not the exact repro the task names.
-**Leg notes (this leg, first unit):** normal mode, pump latched 13:18:59 by the owner, no stop marker, nothing actionable in the channel. **Recovery:** the leg that started 2026-11-12 20:04 claimed `api/152`, `atlas/063`, `core/126` (split EMB-169 into `api/153` at `5acbaa19`), took a fleet stop at ~20:10 and released `core/126` (`ff933079`), landed `atlas/063`'s code (`3f3d77c` on `embarch-atlas` main) and died mid-fold with no log entry, its leg worktree holding the rebased 063 doc commit unpushed plus the changelog assembler's output. I reset that worktree to `origin/main` (both were re-derivable: the pushed doc branch carries the same patch) and land 063 as an ordinary unit. Leg began at `ff933079` (fleet `cb2b4df`). Fleet Ready empty; `finish` moved nothing. Size ledger: nothing overdue (doc/098 due 11-17, owner-only). Bench: Core reachable, neither role attached, `api/059` and `dev-bench/038` stay `open`. Day fold: 2026-11-12 folded by an `embarch-log-folder` agent, 2026-11-10 rolled to `log-archive/`. Client-name history scan: all 16 repos clean. Dispatched 13:22: `atlas/064` (already reported).
+**Least sure about:** I did not re-run from the suite root itself, only proved the variable no longer reaches the binary.
 
 ---
-
 ## 2026-11-12 — 4 units
 
 *Folded 2026-11-13 by the embarch-log-folder agent for the leg that recovered this day: per-unit narrative reasoning, gate detail and budget lines went; git holds them. SHAs, reviewer lines and debts are kept below.*
@@ -240,60 +226,4 @@ Cause: scratch dir named from pid and clock nanoseconds collided between test th
 
 ---
 
-## 2026-11-11 — 7 units
-
-*Folded by the embarch-log-folder agent on 2026-11-12 (leg's first unit after midnight): per-unit narrative, gate re-run detail and worker-choice lists dropped; git and the retired task files hold them. All SHAs, reviewer lines and debts kept.*
-
-**Not a leg.** All seven units were owner-dispatched: worker threads the owner's session started on 2026-11-10/11, landed by an owner-dispatched landing agent on his instruction, no supervisor or listener running, no leg number, budget not read. Order landed: suite/037, then six `atlas` units each branched from the one before (003, 001, 016, 004, 011, 002).
-
-**Carry forward**
-- **Deploy owed (suite/037):** Core must be installed per `embarch-dev-workflow.md` §4a, then the API rebuilt, by the owner's session. Until then `run_study` refuses every study that pins a bench version, the Study Designer shows the bench build as unavailable, and umbrella check 13 warns. The `embarch-core/open.md` bullet stays until the deploy closes it. Owner decided: when Core sends no `dev_bench_version`, a pinned-version study is always refused and `allow_version_mismatch` does not override it; only a bench requirement of `any` runs. Decisions landed: embarch-core 108, embarch-api 105, study-designer 74's open question closed. `tasks/core/126-compact-core.md` filed (open, due 2026-11-25).
-- **Owner decisions made on his behalf's record:** (a) 2026-11-10, a worker may land the 2026-10-08 `standard` design in `embarch-atlas-wt` as written (atlas/016; doc `e3b2218f`). (b) 2026-11-10, `atlas-translate-docs`, `atlas-build`, `atlas-update` lose `disable-model-invocation: true`, so a session may start a bump on its own judgement (atlas/001; code `9c912da`, doc `3f2b9b20`; `changelog.d/atlas-skills-model-invoked.decided.md`). (c) 2026-11-11, atlas/002's replay miss accepted (70 Zephyr calls became 72 against a target of 35 or fewer); tools land as built, task closed `done` with the replay box unticked (doc commits `2077eba5`, `e068b439`).
-- **Open follow-ups:** EMB-160 (atlas/011: check L has no column-position check; an x-position test like check K's would close it). EMB-159 (atlas/004: USB PD PDO/APDO decode written from memory, unverified against the standard; check once the standard is distilled). EMB-148 (replay harness). atlas/003's question to the owner (cache extraction after each engineer build, or let `dt_node vs=` fall back to text) is unanswered, recorded in the retired task file.
-- **Slip to avoid:** the lander pushed code before reading the doc gate (atlas/004). 016's 12/12 was read before `fold-commit.py` deleted the task file, which reddened `check-task-state.py` on `tasks/atlas/011`; 011's landing cleared it. Read the gate after the fold, not before.
-- **Least sure:** 41 of the field workspace's 44 build dirs predate its Zephyr, so `config` answers value and fragment only and `dt_node vs=` cannot answer until an extraction is cached; model-invocable atlas skills may start unrequested bumps, unmeasured; no real standard has been filed by `inventory`; absent-field paths in ui/umbrella were gated by tests only, never against the installed pre-108 Core; whether whole-file review rounds show the gain atlas/002's replay did not.
-
-### suite/037 GET /dev-bench/hello serves dev_bench_version (22:33)
-**Merged:** `agent/suite/037-rename-dev-bench-hellos-firmware-version-to-dev-bench-version-or-close-it`, each a fast-forward: core `c0d2a7e` (on `b6035a7`), api `ceae118` (on `d36be9e`), ui `2e16164` (on `08f9a53`), umbrella `47feb0f` (on `6ddb653`), doc `a68957f4` (on `25efa3f4`). Gate green: cargo build/test/clippy in core and api, ui and umbrella against api `ceae118`, native Windows release build of core at `c0d2a7e` (exit 0, 3 m 07 s) with siblings `embarch-study-designer` `f6cca94`, `embarch-topology` `b905523`, `embarch-smp` `4b23bc2` still `origin/main`. `check-ownership.py` not run (refuses `suite` by design). Changelog assembler rolled `history/core.md` 2026-09 into the archive at its size cap.
-**Blocked:** nothing.
-**Reviewer:** skipped (a 429 in the last window; owner-dispatched landing outside a leg).
-**Hardware debts:** one, a deploy rather than a board, and the owner's session runs it after this landing: Core installed per `embarch-dev-workflow.md` §4a, then the API rebuilt. Until then the installed Core serves `firmware_version`, so `run_study` refuses every study that pins a bench version, the Study Designer shows the bench's build as unavailable, and umbrella check 13 warns. The `embarch-core/open.md` bullet stays until that deploy closes it.
-
-### atlas/003 config takes a list of names and a second build to compare (22:40)
-**Merged:** `agent/atlas/003-config-takes-a-list-and-a-second-build` (code `718c4fe`, ff on `f293d94`; doc `c8b1e210`, ff on `adbabe34`, suite/037's fold). `pytest -q` 738 passed, 3 skipped; `check-docs.py` 12/12.
-**Blocked:** nothing.
-**Reviewer:** skipped (owner-dispatched landing outside a leg; the landing brief dispatched no reviewer, and a reviewer gates no merge).
-**Hardware debts:** none needs a board. One toolchain debt: `dt_node vs=` has never run on a real pair of builds whose devicetrees differ, and the MCP tools ran in process, not through a Claude Code session.
-
-### atlas/001 bump the atlas when HEAD moves, without a session ritual (22:41)
-**Merged:** `agent/atlas/001-bump-on-head` (code `9c912da`, ff on `718c4fe`; doc `9875b0b0`, ff on `6d874115`, 003's fold). `pytest -q` 746 passed, 3 skipped; `check-docs.py` 12/12.
-**Blocked:** nothing.
-**Reviewer:** skipped (owner-dispatched landing outside a leg; the landing brief dispatched no reviewer, and a reviewer gates no merge).
-**Hardware debts:** none needs a board. One toolchain debt: no bump has run from a hook on a real west workspace, and a rebase of many commits is covered only by construction (the in-progress check reads `git rev-parse --git-path rebase-merge` and friends).
-
-### atlas/016 the standard document kind, and a standard's sections picked from use (22:42)
-**Merged:** `agent/atlas/016-standard-sections` (code `31e1857`, ff on `9c912da`; doc `cabe583a`, ff on `3007e601`, 001's fold). Design landed as code `e3a12bf`, doc `e3b2218f`. `pytest -q` 762 passed, 3 skipped; `check-docs.py` 12/12.
-**Blocked:** nothing.
-**Reviewer:** skipped (owner-dispatched landing outside a leg; the landing brief dispatched no reviewer, and a reviewer gates no merge).
-**Hardware debts:** none.
-
-### atlas/004 check firmware configuration against a standard's requirements (22:43)
-**Merged:** `agent/atlas/004-config-vs-standard` (code `198a51f`, ff on `31e1857`; doc `e36b4143`, ff on `63bdab21`, 016's fold). `pytest -q` 775 passed, 3 skipped; `check-docs.py` 11/12, the red being `check-task-state.py` on `tasks/atlas/011` (see Carry forward), not this unit's.
-**Blocked:** nothing.
-**Reviewer:** skipped (owner-dispatched landing outside a leg; the landing brief dispatched no reviewer, and a reviewer gates no merge).
-**Hardware debts:** none.
-
-### atlas/011 applicability, state and transition records of a standard (22:44)
-**Merged:** `agent/atlas/011-protocol-records` (code `ece94d6`, ff on `198a51f`; doc `0a2af463`, ff on `dab47b1e`, 004's fold). `pytest -q` 806 passed, 3 skipped; `check-docs.py` 12/12, the `check-task-state.py` red cleared by this merge.
-**Blocked:** nothing.
-**Reviewer:** skipped (owner-dispatched landing outside a leg; the landing brief dispatched no reviewer, and a reviewer gates no merge).
-**Hardware debts:** none.
-
-### atlas/002 look up a symbol or a state machine in the sources a build compiled (22:45)
-**Merged:** `agent/atlas/002-code-lookup-over-the-build` (code `78fe5b4`, ff on `ece94d6`; doc `acd6742c`, ff on `3b19523f`, 011's fold). `pytest -q` 823 passed, 3 skipped; `check-docs.py` 12/12.
-**Blocked:** nothing.
-**Reviewer:** skipped (owner-dispatched landing outside a leg; the landing brief dispatched no reviewer, and a reviewer gates no merge).
-**Hardware debts:** none needs a board. One toolchain debt: the libclang and ctags paths never ran (neither is on this machine nor in the Zephyr SDK), and the `.ninja_deps` reader has met format 3 only by reading.
-
----
-*Days 2026-11-10 to 2026-11-10 rolled to [log-archive/supervisor-log-2026-11-10-to-2026-11-10.md](log-archive/supervisor-log-2026-11-10-to-2026-11-10.md).*
+*Days 2026-11-11 to 2026-11-11 rolled to [log-archive/supervisor-log-2026-11-11-to-2026-11-11.md](log-archive/supervisor-log-2026-11-11-to-2026-11-11.md).*
