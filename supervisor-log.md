@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-14 11:23 — atlas/065 schematic writes its extraction issues to a readable file
+
+**Decided:** nothing numbered (`embarch-atlas` keeps no `decisions.md`). EMB-179, the worker's: `embarch-atlas schematic` writes `boards/<label>/issues.md` beside `nets.md` and `parts.md` and prints its path; `MAP.md` names that path on each board's line. Issues are plain strings in `netlist.json`, so a new `smartpdf.classify_issue` derives kind, net and sheet from the text by pattern, page from the text or the sheet's page, `-` where a kind carries none, `other` for unmatched text, and the original text follows `|` on every line. The optional `q schematic-issues` lookup was not added. Recorded debt, not a contradiction (the reviewer checked): `MAP.md` names `issues.md` for a board extracted before this change, where the file appears only once `schematic` is re-run.
+**Merged:** `agent/atlas/065-schematic-writes-its-issues-to-a-readable-file` (code `ceb64ac`, ff on `d0c2f12`; doc `f293ce41`, cherry-picked onto `e9120d26`). Gate on the merge result in the unit's worktree with its own venv: `pytest -q -rf` 829 passed, 3 skipped, `test_public_guard` ran (checked alone); ownership `atlas` OK on both branches, client names clean, `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, wave 6; 5-hour 23%, weekly 47% at 11:16.
+**Least sure about:** the pattern-based `classify_issue`: an extractor message whose wording changes later falls to `other` silently rather than failing a test.
+
+---
+
 ## 2026-11-14 11:20 — api/154 which tree a worktree session's build builds
 
 **Decided:** nothing numbered. EMB-128 answered, the worker's, by a run: for a project configured on the main clone and a server started in a worktree, `west` runs in the config's `source_path` verbatim, the app path is `<source_path>/app/<app>`, `-d` is under the config's `build_dir_root`, and the plan sets only the project's `env` table over the server's inherited environment. So a worktree session builds **the main clone**; the working directory only finds the config. Bug **EMB-181** filed by the worker (Fleet Ready), fix not attempted. A test (`a_zephyr_build_runs_in_and_builds_the_configured_source_path_not_the_working_directory`, `resolve.rs`) pins today's behaviour and goes when EMB-181 lands. I posted the answer on EMB-128 as a `Finding` comment. **My own edit at the fold, on the reviewer's finding (EMB-182):** the worker's `spec.md` bullet stated the defect as a "never" invariant and the fragment filed it as decided; I reworded the bullet as a known defect that EMB-181's fix replaces, and the history line likewise, before the doc half reached `main`, so `main` never carried the invariant wording.
