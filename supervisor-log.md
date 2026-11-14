@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-14 11:31 — atlas/066 a replay harness for atlas lookups against recorded sessions
+
+**Decided:** nothing numbered (`embarch-atlas` keeps no `decisions.md`). EMB-148, the worker's: `scripts/replay.py` in `embarch-atlas`, a script and never a verb or MCP tool because it reads private transcripts. It scans a project's transcripts (subagents included) for two named patterns, `config-grep` (to `q config SYMS`) and `config-diff` (to `q config SYMS --vs`), and with `--atlas-dir`/`--build-dir` replays them, printing calls and characters before and after, numbers only; `--report` prints the `## Result` table. **A recorded command is never run:** it is parsed, and an argv is rebuilt from the parts with whitelisted flags and no shell, the `.config` path rebuilt from `--build-dir`/`--vs-dir`; pipes, redirects and substitutions do not match. The lookup runs in process against a `/tmp` copy of the atlas dir with `GIT_OPTIONAL_LOCKS=0`; a test proves the real atlas and build dirs are byte-identical after a replay. `--pinned` added; a failed replay counts as skipped, not dropped; the optional old-lookup comparison not built.
+**Merged:** `agent/atlas/066-a-replay-harness-for-atlas-lookups` (code `1e6a07b`, ff on `ceb64ac`; doc `7b25c952`, cherry-picked onto `51893a2d`). Gate on the merge result in the unit's worktree with its own venv: `pytest -q -rs` 836 passed, 3 skipped (real west workspace, real atlas, vendor SVD: env-gated), `test_public_guard` ran; ownership `atlas` OK on both branches, client names clean, `check-docs.py` 12/12. I read the two `subprocess.run` sites myself: `grep` and `diff` only.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. **Owed, owner-side:** the first real run, `scripts/replay.py --project <name> --atlas-dir <atlas> --build-dir <build> --report`; the parsers are deliberately narrow and may match fewer calls than atlas task 003's throwaway script did.
+**Budget:** PROCEED, wave 6; 5-hour 23%, weekly 47% at 11:21.
+**Least sure about:** whether `q config --build` writes into the build dir during a replay; the reviewer flagged that neither the code nor `DESIGN.md` says, and the byte-identical test may not cover that path.
+
+---
+
 ## 2026-11-14 11:23 — atlas/065 schematic writes its extraction issues to a readable file
 
 **Decided:** nothing numbered (`embarch-atlas` keeps no `decisions.md`). EMB-179, the worker's: `embarch-atlas schematic` writes `boards/<label>/issues.md` beside `nets.md` and `parts.md` and prints its path; `MAP.md` names that path on each board's line. Issues are plain strings in `netlist.json`, so a new `smartpdf.classify_issue` derives kind, net and sheet from the text by pattern, page from the text or the sheet's page, `-` where a kind carries none, `other` for unmatched text, and the original text follows `|` on every line. The optional `q schematic-issues` lookup was not added. Recorded debt, not a contradiction (the reviewer checked): `MAP.md` names `issues.md` for a board extracted before this change, where the file appears only once `schematic` is re-run.
