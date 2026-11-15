@@ -97,6 +97,21 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-14 23:58 — leg after the 17:46 dream: no units, queue empty, fourth dream posted with new proposals
+
+**Zero units.** A leg-level entry, so no `**Reviewer:**` line. Nothing claimed, dispatched, landed or folded; `embarch-doc` `main` stays at `86233fd0` (fleet `040da0e` before this entry). Spawned at 23:53, seven minutes after the 17:46 dream's 6-hour gate expired.
+**Decided:** nothing numbered. Two judgement calls. **(1) I re-read the sources in full rather than skipping on an empty `git log`**, because `--refill-owed` fired on depth, and leg.md's skip is written for a spread-only firing; all 162 questions, the roadmap and the reversals, with the same result as 11:38: everything left is hardware-gated, owner-only, an owner fork, trigger-gated or recorded as not-work. **(2) I dreamed with two new proposals instead of a fourth copy of the old three**, answering the previous leg's least-sure point. Posted 23:57 (`ts` `1794725821.199969`, `crystal_ball`, `--action`): (1) plug in the bench for `api/059` and `dev-bench/038`, kept because it is the only runnable work; (2) approve one read of Claude Code's hook documentation so a `promptu` unit can record the unmeasured parts of `embarch-promptu`'s hook contract §3.9 (`embarch-promptu/open.md` names a docs read as enough), a yes approving the web fetch; (3) the owner greps his real configs for `artifact_path_for_core`, and if none carries it one `api` unit refuses it by name (`embarch-api/open.md`, decision 64). The thread carries EMB-159, EMB-160, the `no_std` CI cell, the PD shields' connector kinds and `doc/098`'s due date.
+**Filed:** **EMB-183** (Backlog, `Scope: fleet`, `--from audit`): an unanswered dream re-pages every 6 hours over unchanged sources, against `ops.md` §7's "asks, once". A rule question, so the owner's; I changed nothing about how I dreamed beyond the proposals.
+**Merged:** nothing.
+**Blocked:** nothing.
+**Refill:** `--refill-owed` fired on depth and spread (0 dispatchable, 0 scopes, wave 6). No doc commit since 11:38. Spread sweep: nothing filed (2026-11-14 23:55). Fleet Ready empty; `finish` moved nothing; the 17:46 dream thread had no reply; channel had nothing actionable. Zero confirmed with `--root` against `ls tasks/*/`: nine files, all listed.
+**Hardware debts:** none new. Bench `api/059` and `dev-bench/038` stay `open`: Core reachable, neither `dev-bench` nor `dut` attached at 23:54 (`fleet-hardware.py --refresh`).
+**Budget:** PROCEED, wave 6; 5-hour 15% (resets about 02:00), weekly 56% (resets about 20:00 on 2026-11-15).
+**Least sure about:** proposal 2: whether a docs read is enough for the owner to call those contract points settled, or whether he will want each observed in a real session, which only he can run.
+**Leg close (next leg, read this first):** normal mode, pump latched 2026-11-14 11:09:56, no stop marker. Step 0 found nothing to recover (no claims, no unit worktrees, no leg worktree). Size ledger: only owner-only `doc/098` (`DOC-CONVENTIONS.md`, due 2026-11-17). **Queue:** zero dispatchable; bench `api/059`, `dev-bench/038`; hw-gated `core/119`, `dev-bench/039`; owner-only `doc/098`; four blocked. **The 23:57 dream is the open question**, and the 6-hour gate holds new spawns into an empty queue until about 05:57. **Day fold owed:** the first leg to run a unit on 2026-11-15 folds 2026-11-14 (four unit entries plus three leg-level ones, this included) and runs the client-name history scan. `check-ownership.py --supervisor` on the leg's diff: empty diff, OK. No `suite` task, nothing deployed; the dream was the only alert sent.
+
+---
+
 ## 2026-11-14 17:47 — leg after the 11:40 dream: no units, queue empty, third dream posted
 
 **Zero units.** A leg-level entry, so no `**Reviewer:**` line. Nothing claimed, dispatched, landed or folded; `embarch-doc` `main` stays at `86233fd0` (fleet `d9160f6` before this entry). Spawned at 17:43, three minutes after the 11:40 dream's 6-hour gate expired.
