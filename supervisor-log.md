@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-17 14:35 — promptu/007 rewrite-the-rough-prompt-and-log-the-original
+
+**Decided:** nothing numbered (burndown). Builds owner decision 42 (EMB-196): `promptu render` makes one rewrite call after the structured render and the rewrite is the draft; footer gains `rewritten=yes`; a brief, a run with no pattern, an offline run and `rewrite = "off"` are not rewritten; a failed call falls back to the verbatim render and records `rewrite_skipped` in the log. Log: `<state>/log/<run>.json`, never pruned (original, rendered, model, effort, `rewrite_ms`, `wait_ms`). Read-back verb for EMB-197: **`promptu original <run> [--json]`** (stdout the original as typed, exit 2 for no entry), contract §8.4 to §8.6 and `interfaces.md`. `promptu stats` prints p50/p95. Settings `rewrite_model` (default `sonnet`, as decision 9's pass), `rewrite_effort` (`low`), `rewrite_timeout_s` (30); the choice stays open in `open.md`. "Amended by 42" pointers added to decisions 13 and 14. At the fold I repointed `tasks/promptu/008`'s `Unparks when:` and an `open.md` line from the retiring task file to `open.md`.
+**Merged:** `agent/promptu/007-rewrite-the-rough-prompt-and-log-the-original` (code `946207b`, ff on `e8b58c7`; doc `9621d6f0`, cherry-picked onto `8a6f8d5b`). `cargo test` 121 passed (71, 18, 32), clippy green, client names clean, `check-docs.py` 12/12. desk/030's doc landed as `5c9e44c8` (fold `8a6f8d5b`), not the `1ce40c48` its entry names: the owner pushed `b671c249` and `fb0ac2eb` (doc/098, desk decision 87) mid-fold and the leg rebased.
+**Blocked:** nothing. The worker filed size debt `tasks/promptu/008-compact-promptu.md`, `blocked`, `In flux: yes` (`decisions/patterns.md` 11,138 of 12,288 B, due 2026-11-24); it unparks when the owner settles model and wait, or EMB-197 lands.
+**Reviewer:** no findings.
+**Hardware debts:** none. **Owed, owner-side:** ten real `/promptu` prompts, then `promptu stats`, to pick the rewrite model and the acceptable wait; the rewrite has only met a fake `claude`, and the plugin is not reinstalled. The weekly loop (step 4) is unbuilt, so "edits compared against the rewrite" is a contract (the log's `rendered`), not running code.
+**Budget:** PROCEED in burndown, 5-hour 63%, weekly 45% at leg start.
+**Least sure about:** whether a never-pruned per-run log holding every original prompt verbatim needs a retention rule; no decision covers it and the reviewer found none either.
+
+---
+
 ## 2026-11-17 14:31 — desk/030 compact-desk
 
 **Decided:** nothing. Verbatim move: `embarch-desk/spec.md` §5 ("What it deliberately does not do") to `embarch-desk/spec/non-goals.md`, with a one-line pointer; one link rewritten for the new depth (`decisions.md` to `../decisions.md`). At the fold I reworded the pointer's "no in-desk Linear writes" to the moved bullet's own words (comments, issue creation, PR review or merge), since the desk does write to Linear (decision 30's status moves and Send). Worker's answer to the human question: yes, `spec.md` alone still answers what someone needs today. `spec.md` 9,168 to about 8,700 B, out of reserve.
