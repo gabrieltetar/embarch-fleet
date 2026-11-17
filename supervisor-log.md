@@ -97,99 +97,67 @@ unit under **Merged** and **Blocked**:
 
 ---
 
-## 2026-11-14 23:58 — leg after the 17:46 dream: no units, queue empty, fourth dream posted with new proposals
+## 2026-11-17 14:17 — chat/027 compact-chat
 
-**Zero units.** A leg-level entry, so no `**Reviewer:**` line. Nothing claimed, dispatched, landed or folded; `embarch-doc` `main` stays at `86233fd0` (fleet `040da0e` before this entry). Spawned at 23:53, seven minutes after the 17:46 dream's 6-hour gate expired.
-**Decided:** nothing numbered. Two judgement calls. **(1) I re-read the sources in full rather than skipping on an empty `git log`**, because `--refill-owed` fired on depth, and leg.md's skip is written for a spread-only firing; all 162 questions, the roadmap and the reversals, with the same result as 11:38: everything left is hardware-gated, owner-only, an owner fork, trigger-gated or recorded as not-work. **(2) I dreamed with two new proposals instead of a fourth copy of the old three**, answering the previous leg's least-sure point. Posted 23:57 (`ts` `1794725821.199969`, `crystal_ball`, `--action`): (1) plug in the bench for `api/059` and `dev-bench/038`, kept because it is the only runnable work; (2) approve one read of Claude Code's hook documentation so a `promptu` unit can record the unmeasured parts of `embarch-promptu`'s hook contract §3.9 (`embarch-promptu/open.md` names a docs read as enough), a yes approving the web fetch; (3) the owner greps his real configs for `artifact_path_for_core`, and if none carries it one `api` unit refuses it by name (`embarch-api/open.md`, decision 64). The thread carries EMB-159, EMB-160, the `no_std` CI cell, the PD shields' connector kinds and `doc/098`'s due date.
-**Filed:** **EMB-183** (Backlog, `Scope: fleet`, `--from audit`): an unanswered dream re-pages every 6 hours over unchanged sources, against `ops.md` §7's "asks, once". A rule question, so the owner's; I changed nothing about how I dreamed beyond the proposals.
-**Merged:** nothing.
-**Blocked:** nothing.
-**Refill:** `--refill-owed` fired on depth and spread (0 dispatchable, 0 scopes, wave 6). No doc commit since 11:38. Spread sweep: nothing filed (2026-11-14 23:55). Fleet Ready empty; `finish` moved nothing; the 17:46 dream thread had no reply; channel had nothing actionable. Zero confirmed with `--root` against `ls tasks/*/`: nine files, all listed.
-**Hardware debts:** none new. Bench `api/059` and `dev-bench/038` stay `open`: Core reachable, neither `dev-bench` nor `dut` attached at 23:54 (`fleet-hardware.py --refresh`).
-**Budget:** PROCEED, wave 6; 5-hour 15% (resets about 02:00), weekly 56% (resets about 20:00 on 2026-11-15).
-**Least sure about:** proposal 2: whether a docs read is enough for the owner to call those contract points settled, or whether he will want each observed in a real session, which only he can run.
-**Leg close (next leg, read this first):** normal mode, pump latched 2026-11-14 11:09:56, no stop marker. Step 0 found nothing to recover (no claims, no unit worktrees, no leg worktree). Size ledger: only owner-only `doc/098` (`DOC-CONVENTIONS.md`, due 2026-11-17). **Queue:** zero dispatchable; bench `api/059`, `dev-bench/038`; hw-gated `core/119`, `dev-bench/039`; owner-only `doc/098`; four blocked. **The 23:57 dream is the open question**, and the 6-hour gate holds new spawns into an empty queue until about 05:57. **Day fold owed:** the first leg to run a unit on 2026-11-15 folds 2026-11-14 (four unit entries plus three leg-level ones, this included) and runs the client-name history scan. `check-ownership.py --supervisor` on the leg's diff: empty diff, OK. No `suite` task, nothing deployed; the dream was the only alert sent.
-
----
-
-## 2026-11-14 17:47 — leg after the 11:40 dream: no units, queue empty, third dream posted
-
-**Zero units.** A leg-level entry, so no `**Reviewer:**` line. Nothing claimed, dispatched, landed or folded; `embarch-doc` `main` stays at `86233fd0` (fleet `d9160f6` before this entry). Spawned at 17:43, three minutes after the 11:40 dream's 6-hour gate expired.
-**Decided:** nothing numbered. One judgement call: **I dreamed again**, the third unanswered ask in a row (2026-11-13 13:58, 2026-11-14 11:40, now). Posted 17:46 (`ts` `1794703571.384789`, `crystal_ball`, `--action`). Three proposals, narrowed from the two earlier dreams rather than invented: (1) plug in the bench for `api/059` and `dev-bench/038`; (2) move EMB-160 (atlas check L lacks a column-position test) to Fleet Ready; (3) keep or drop `embarch-study-designer`'s `no_std` CI cell (`embarch-study-designer/open.md`). The thread carries EMB-159, the UM2891/SNK1M1 web-lookup ask and `doc/098`'s due date.
-**Merged:** nothing.
-**Blocked:** nothing.
-**Refill:** `--refill-owed` fired on depth and spread (0 dispatchable, 0 scopes, wave 6). **Not re-read:** `git log --since='2026-11-14 11:38'` in the leg worktree lists no commit at all, so every source (`open.md`, `open/`, `design.md`, roadmap, reversals) is byte-identical to what the 11:38 full re-read of all 162 questions saw. Spread sweep: nothing filed (2026-11-14 17:45). Fleet Ready empty; `finish` moved nothing; the 11:40 dream thread had no reply; channel had nothing actionable.
-**Hardware debts:** none new. Bench `api/059` and `dev-bench/038` stay `open`: Core reachable, neither `dev-bench` nor `dut` attached at 17:45 (`fleet-hardware.py --refresh`).
-**Budget:** PROCEED, wave 6; 5-hour 11% (resets about 21:00), weekly 53%.
-**Least sure about:** whether a third identical-shaped page in 30 hours is still useful to the owner or has become noise; the protocol requires it, but three unanswered dreams may mean the refill sources have drifted from what he wants, per `ops.md` §7.
-**Leg close (next leg, read this first):** normal mode, pump latched 2026-11-14 11:09:56, no stop marker. Step 0 found nothing to recover (no claims, no unit worktrees, no leg worktree). Size ledger: only owner-only `doc/098` (`DOC-CONVENTIONS.md`, due 2026-11-17). **Queue:** zero dispatchable; bench `api/059`, `dev-bench/038`; hw-gated `core/119`, `dev-bench/039`; owner-only `doc/098`; four blocked. **The 17:46 dream is the open question**, and the 6-hour gate holds new spawns into an empty queue until about 23:46. `check-ownership.py --supervisor` on the leg's diff: empty diff, OK. No `suite` task, nothing deployed; the dream was the only alert sent.
-
----
-
-## 2026-11-14 11:41 — leg after api/155: no units, queue empty, dream posted
-
-**Zero units.** A leg-level entry, not a unit entry, so it carries no `**Reviewer:**` line (no unit ran, and a `skipped` would be a false row in the tally). Nothing claimed, dispatched, landed or folded; `embarch-doc` `main` is exactly as the previous leg left it, `86233fd0` (fleet `7ecf19c` before this entry).
-**Decided:** nothing numbered. One judgement call: **I dreamed.** The previous dream (2026-11-13 13:58) was past its 6 hours and unanswered, Fleet Ready was empty, and refill found nothing, so the listener's second trigger (pump on, no leg, empty queue) is what spawned this leg and a dream is what it owes. Posted 11:40 (`ts` `1794681603.529909`, `crystal_ball`, `--action`). Three proposals: (1) plug in the bench for `api/059` (dev-bench and DUT) and `dev-bench/038` (the NUCLEO-G0B1RE with the SNK1M1); (2) read UM2891 and the SNK1M1 manual and correct the two PD shields' power-connector kinds (`embarch-ui/open/bench.md`), a yes approving that web lookup; (3) decide whether `embarch-study-designer` keeps its `no_std` CI cell with no `no_std` consumer left (`embarch-study-designer/open.md`). The detail thread also carries yesterday's EMB-159/EMB-160 proposal and `doc/098`'s due date. **The detail says "queue at 11:45" and "attached at 11:40"; both readings were about 11:38.**
-**Merged:** nothing.
-**Blocked:** nothing.
-**Refill:** `--refill-owed` fired on depth and spread (0 dispatchable, 0 scopes, wave 6). **A real re-read this time, not a diff**: all 162 questions in `collect-open-questions.py`, the roadmap's Next and the reversals index (last changed 2026-11-11, row 117). The only source change since the 2026-11-13 13:38 full sweep is `atlas/066`'s `design.md` section, which describes the replay harness and opens no question. Everything left is hardware-gated, owner-only, waiting on an owner fork, trigger-gated, or recorded as not-work. Spread sweep: nothing filed (2026-11-14 11:38).
-**Hardware debts:** none new. Bench `api/059` and `dev-bench/038` stay `open`: Core reachable, neither `dev-bench` nor `dut` attached at 11:38 (`fleet-hardware.py --refresh`).
-**Budget:** PROCEED, wave 6; 5-hour **66% at 11:37** (resets about 16:00), weekly 50%. Up from 60% at the previous leg's close three minutes earlier.
-**Least sure about:** proposal 2's premise: I took the open bullet's word that neither manual has been read, and did not check whether `embarch-atlas` already holds either document.
-**Leg close (next leg, read this first):** normal mode, pump latched 2026-11-14 11:09:56, no stop marker, nothing actionable in the channel. Step 0 found nothing to recover (no claims, no unit worktrees; the remote branches `agent/api/155-*` in both repos and `agent/atlas/066-*` in `embarch-atlas` are the usual one-fold lag and were left for `fold-commit.py`; `agent/ui/059-diff-new-lines-republish` on `embarch-doc`'s origin, older, left alone). Fleet Ready empty; `finish` moved nothing. Size ledger: only owner-only `doc/098` (`DOC-CONVENTIONS.md`, due 2026-11-17). **Queue:** zero dispatchable; bench `api/059`, `dev-bench/038`; hw-gated `core/119`, `dev-bench/039`; owner-only `doc/098`; four blocked. **The 11:40 dream is the fleet's open question to the owner**, and the listener's 6-hour gate holds new spawns into an empty queue until about 17:40. `check-ownership.py --supervisor` on the leg's diff: empty diff, OK. No `suite` task, nothing deployed; the dream was the only alert sent.
-
----
-
-## 2026-11-14 11:33 — api/155 a worktree session's build builds that worktree, or refuses
-
-**Decided:** **`embarch-api` decision 106**, the worker's (normal mode, so a worker may number one): at startup, after the config loads, `src/worktree.rs` compares each project's `source_path` with the working directory by read-only `git rev-parse` (`--git-common-dir`, `--show-toplevel`); same repository, different working tree, and `source_path` moves to the same relative path under the worktree's root, with `build_dir_root` moved to `<build_dir_root>/worktree-<dir name>-<8 hex FNV-1a of the worktree path>` so a worktree build never writes or reuses the main clone's directory. **A worktree that lacks the path refuses at startup, naming both trees, and that stops the whole server** (all projects), accepted in the decision as loud over wrong. Not moved: absolute paths inside a static `build_command` or `env` values, and a `source_path` outside any git repo. Done in `embarch-api`'s own code, so `embarch-firmware-build`'s public API (which `embarch-ui` uses) is unchanged; the only crate edit deletes `api/154`'s pinning test, so I did not build `embarch-ui`. `spec.md`'s known-defect bullet (my reword at the `api/154` fold) is replaced by the rule. **Also closed: `tasks/api/156` (EMB-182)**, the `api/154` reviewer's finding, which I filed `done` at its split because I had already reworded the bullet in `api/154`'s fold; it is retired in this fold.
-**Merged:** `agent/api/155-a-worktree-session-build-builds-the-worktree` (code `54d4035`, ff on `4707020`; doc `1ddd14b6`, cherry-picked onto `0188da88`). Gate on the merge result with `EMBARCH_REQUIRE_LEASE=1` exported: `cargo build`, `cargo test --no-fail-fast` 404 passed 0 failed, `cargo clippy --all-targets -- -D warnings` green; ownership `api` OK on both branches, client names clean, `check-docs.py` 12/12.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none for a board. **Owed, owner-side:** a real build asked from a Start work worktree session, to see it take the worktree's tree and its own build directory; unit tests only so far. It depends on the MCP server's working directory being the worktree, which is `embarch-desk`'s side and was not assumed.
-**Budget:** PROCEED, wave 6; 5-hour **23% at 11:16 to 60% at 11:34**, weekly 47% to 50%.
-**Least sure about:** the reviewer noted the rebase runs for every CLI subcommand that loads a config, not only the MCP server, so any `embarch-api` command run from a worktree that lacks the project's path now refuses to start; consistent with the rule, but it is a wider blast radius than the decision's wording says.
-**Leg close (next leg, read this first):** **4 of 4 units, all from Fleet Ready**, landed in this order: `api/154` (EMB-128, investigation; reviewer 1 finding, EMB-182), `atlas/065` (EMB-179), `atlas/066` (EMB-148), `api/155` (EMB-181, the fix 154 found). Leg began at `b69b1db2` (fleet `6df0c08`); `check-ownership.py --supervisor` on the leg's diff OK. **What you would not expect:** (1) the owner moved EMB-148 and EMB-179 into Fleet Ready three minutes into this leg, and the leg's own units filed two more (EMB-181 by a worker, EMB-182 by a reviewer), so Fleet Ready was read four times; (2) I reworded a worker's `spec.md` bullet at the `api/154` fold on the reviewer's finding, and closed EMB-182's task `done` at its split rather than dispatching a worker to a sentence already fixed; (3) the 5-hour window climbed 23% to 60% in about twenty minutes, so the next leg may meet the 90% HOLD within two legs. **Closed:** EMB-128, EMB-179, EMB-148; EMB-181 and EMB-182 close at this fold's `finish`. **Queue left:** zero dispatchable; bench `api/059`, `dev-bench/038` (neither role attached at 11:11); hw-gated `core/119`, `dev-bench/039`; owner-only `doc/098` (`DOC-CONVENTIONS.md`, due 2026-11-17, three days); four blocked. No dream posted: this leg ended at its cap, not on an empty refill, and the last dream (2026-11-13 13:58) is past its 6 hours, so the next leg refills and dreams if nothing new arrives. **Owed by the owner:** the first real `scripts/replay.py` run (atlas/066), a real worktree-session build (api/155), and the deploy debts carried from earlier legs (the desk, decision 85 plus a plugin version bump; the UI service, decision 102; Core per `embarch-dev-workflow.md` §4a). No `suite` task, nothing deployed, no alert sent.
-
----
-
-## 2026-11-14 11:31 — atlas/066 a replay harness for atlas lookups against recorded sessions
-
-**Decided:** nothing numbered (`embarch-atlas` keeps no `decisions.md`). EMB-148, the worker's: `scripts/replay.py` in `embarch-atlas`, a script and never a verb or MCP tool because it reads private transcripts. It scans a project's transcripts (subagents included) for two named patterns, `config-grep` (to `q config SYMS`) and `config-diff` (to `q config SYMS --vs`), and with `--atlas-dir`/`--build-dir` replays them, printing calls and characters before and after, numbers only; `--report` prints the `## Result` table. **A recorded command is never run:** it is parsed, and an argv is rebuilt from the parts with whitelisted flags and no shell, the `.config` path rebuilt from `--build-dir`/`--vs-dir`; pipes, redirects and substitutions do not match. The lookup runs in process against a `/tmp` copy of the atlas dir with `GIT_OPTIONAL_LOCKS=0`; a test proves the real atlas and build dirs are byte-identical after a replay. `--pinned` added; a failed replay counts as skipped, not dropped; the optional old-lookup comparison not built.
-**Merged:** `agent/atlas/066-a-replay-harness-for-atlas-lookups` (code `1e6a07b`, ff on `ceb64ac`; doc `7b25c952`, cherry-picked onto `51893a2d`). Gate on the merge result in the unit's worktree with its own venv: `pytest -q -rs` 836 passed, 3 skipped (real west workspace, real atlas, vendor SVD: env-gated), `test_public_guard` ran; ownership `atlas` OK on both branches, client names clean, `check-docs.py` 12/12. I read the two `subprocess.run` sites myself: `grep` and `diff` only.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none. **Owed, owner-side:** the first real run, `scripts/replay.py --project <name> --atlas-dir <atlas> --build-dir <build> --report`; the parsers are deliberately narrow and may match fewer calls than atlas task 003's throwaway script did.
-**Budget:** PROCEED, wave 6; 5-hour 23%, weekly 47% at 11:21.
-**Least sure about:** whether `q config --build` writes into the build dir during a replay; the reviewer flagged that neither the code nor `DESIGN.md` says, and the byte-identical test may not cover that path.
-
----
-
-## 2026-11-14 11:23 — atlas/065 schematic writes its extraction issues to a readable file
-
-**Decided:** nothing numbered (`embarch-atlas` keeps no `decisions.md`). EMB-179, the worker's: `embarch-atlas schematic` writes `boards/<label>/issues.md` beside `nets.md` and `parts.md` and prints its path; `MAP.md` names that path on each board's line. Issues are plain strings in `netlist.json`, so a new `smartpdf.classify_issue` derives kind, net and sheet from the text by pattern, page from the text or the sheet's page, `-` where a kind carries none, `other` for unmatched text, and the original text follows `|` on every line. The optional `q schematic-issues` lookup was not added. Recorded debt, not a contradiction (the reviewer checked): `MAP.md` names `issues.md` for a board extracted before this change, where the file appears only once `schematic` is re-run.
-**Merged:** `agent/atlas/065-schematic-writes-its-issues-to-a-readable-file` (code `ceb64ac`, ff on `d0c2f12`; doc `f293ce41`, cherry-picked onto `e9120d26`). Gate on the merge result in the unit's worktree with its own venv: `pytest -q -rf` 829 passed, 3 skipped, `test_public_guard` ran (checked alone); ownership `atlas` OK on both branches, client names clean, `check-docs.py` 12/12.
+**Recovery, read first.** The 13:38 leg claimed and dispatched `chat/027`, `desk/029`, `promptu/006` and `atlas/067`, then was cut short by the harness at about 13:44: no `leg-end`, no entry, nothing landed. All four workers finished and pushed both branches. This leg waited out its lock (stale at 14:14, per `leg-start`'s rule), took it, and lands those four as its own four units; it dispatches nothing new. The 2026-11-14 day fold and the 2026-11-12 roll that leg's log-folder left uncommitted ride in this commit. Client-name history scan (`--suite --history`): all 16 repos clean. Those four dispatches predate this leg's `leg-start`, so this leg ticks no `leg-reported` for them.
+**Decided:** nothing. Verbatim moves only: decisions 94 and 54 to a new group file `embarch-chat/decisions/rail.md`; the desk-calls table to `interfaces/desk.md`; "Structural limits" to `open/limits.md`; the handoff bullet and three input invariants to `spec/handoff.md` and `spec/input.md`. Decision 109's lines untouched. Worker's answer to the human question: yes, `spec.md` alone still answers what someone needs today; the moved parts are one hop away behind pointers.
+**Merged:** `agent/chat/027-compact-chat` (doc only, `a5f8c1e3`, fast-forward over `d87f81a1`; no code branch). All four files out of reserve; `check-docs.py` 12/12 green.
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** none.
-**Budget:** PROCEED, wave 6; 5-hour 23%, weekly 47% at 11:16.
-**Least sure about:** the pattern-based `classify_issue`: an extractor message whose wording changes later falls to `other` silently rather than failing a test.
+**Budget:** PROCEED in burndown (until 2026-11-18 06:00), 5-hour 57%, weekly 45%, suggested wave 6; this leg runs no wave.
+**Least sure about:** whether a leg that waits out a dead predecessor's lock should also tick `leg-reported` for that predecessor's dispatches; `leg-start` resets the count, so I did not.
 
 ---
 
-## 2026-11-14 11:20 — api/154 which tree a worktree session's build builds
+## 2026-11-14 — 7 units (4 unit entries, 3 leg-level zero-unit entries)
 
-**Decided:** nothing numbered. EMB-128 answered, the worker's, by a run: for a project configured on the main clone and a server started in a worktree, `west` runs in the config's `source_path` verbatim, the app path is `<source_path>/app/<app>`, `-d` is under the config's `build_dir_root`, and the plan sets only the project's `env` table over the server's inherited environment. So a worktree session builds **the main clone**; the working directory only finds the config. Bug **EMB-181** filed by the worker (Fleet Ready), fix not attempted. A test (`a_zephyr_build_runs_in_and_builds_the_configured_source_path_not_the_working_directory`, `resolve.rs`) pins today's behaviour and goes when EMB-181 lands. I posted the answer on EMB-128 as a `Finding` comment. **My own edit at the fold, on the reviewer's finding (EMB-182):** the worker's `spec.md` bullet stated the defect as a "never" invariant and the fragment filed it as decided; I reworded the bullet as a known defect that EMB-181's fix replaces, and the history line likewise, before the doc half reached `main`, so `main` never carried the invariant wording.
-**Merged:** `agent/api/154-which-tree-a-worktree-session-build-builds` (code `4707020`, ff on `d97985f`, test only in `crates/embarch-firmware-build`, which `embarch-ui` also consumes, but the change is inside `#[cfg(test)]`; doc `12670bf9`, cherry-picked onto `c80b45ee`, plus my reword in this fold). Gate on the merge result with `EMBARCH_REQUIRE_LEASE=1` exported: `cargo build`, `cargo test --no-fail-fast` 402 passed 0 failed, `cargo clippy --all-targets -- -D warnings` green; ownership `api` OK on both branches, client names clean, `check-docs.py` 12/12.
+*Folded 2026-11-17 by an `embarch-log-folder` agent for the supervisor leg: per-unit narrative reasoning, gate-run detail, budget readings and leg-close boilerplate dropped; git holds them. Kept: every SHA, every Reviewer line, every Hardware debts line, the open dream asks with their `ts`, and what the next leg cannot recover.*
+
+**Open at end of day (carry forward):**
+- **Dream asks unanswered, three in a row** (2026-11-13 13:58, 11:40, 17:46, 23:57). The newest, **`ts` `1794725821.199969`** (`crystal_ball`, `--action`, posted 23:57): (1) plug in the bench for `api/059` and `dev-bench/038`; (2) approve one read of Claude Code's hook documentation so a `promptu` unit can record the unmeasured parts of `embarch-promptu`'s hook contract §3.9, a yes approving the web fetch; (3) owner greps his real configs for `artifact_path_for_core`, and if none carries it one `api` unit refuses it by name (`embarch-api/open.md`, decision 64). Thread also carries EMB-159, EMB-160, the `no_std` CI cell, the PD shields' connector kinds and `doc/098`'s due date.
+- Earlier asks this day, superseded by the 23:57 one: **`ts` `1794681603.529909`** (11:40: bench; read UM2891/SNK1M1 to correct the PD shields' connector kinds in `embarch-ui/open/bench.md`, a yes approving that web lookup; keep or drop `embarch-study-designer`'s `no_std` CI cell) and **`ts` `1794703571.384789`** (17:46: bench; move EMB-160 to Fleet Ready; the `no_std` cell). The 6-hour gate holds new spawns into an empty queue until about 05:57 on 2026-11-15.
+- **EMB-183** (Backlog, `Scope: fleet`, `--from audit`): an unanswered dream re-pages every 6 hours over unchanged sources, against `ops.md` §7's "asks, once". A rule question, the owner's; nothing changed about how dreams are made beyond the new proposals.
+- **Queue:** zero dispatchable; bench `api/059`, `dev-bench/038` (neither `dev-bench` nor `dut` attached through 23:54); hw-gated `core/119`, `dev-bench/039`; owner-only `doc/098` (`DOC-CONVENTIONS.md`, due 2026-11-17); four blocked. Refill sources re-read in full at 11:38 and 23:5x (all 162 questions, roadmap, reversals): everything left is hardware-gated, owner-only, an owner fork, trigger-gated or recorded as not-work. Spread sweeps filed nothing.
+- **Budget:** 5-hour window climbed 23% to 60% in about twenty minutes during the unit leg (66% at 11:37); weekly 56% (resets about 20:00 on 2026-11-15). Watch the 90% HOLD.
+- **Fold owed:** the first leg to run a unit on 2026-11-15 would have folded this day and run the client-name history scan.
+- **Owed by the owner:** first real `scripts/replay.py` run (atlas/066); a real worktree-session build (api/155); deploy debts from earlier legs (the desk, decision 85 plus a plugin version bump; the UI service, decision 102; Core per `embarch-dev-workflow.md` §4a).
+- **Decision made on the owner's behalf-ish:** `embarch-api` decision 106 (worker's): a worktree that lacks a project's `source_path` refuses startup for the whole server, loud over wrong; the reviewer noted it applies to every CLI subcommand that loads a config, a wider blast radius than the wording says.
+- Remote branches `agent/api/155-*` (both repos) and `agent/atlas/066-*` (`embarch-atlas`) were the usual one-fold lag; `agent/ui/059-diff-new-lines-republish` on `embarch-doc`'s origin, older, left alone.
+
+### Units (leg began at `b69b1db2`, fleet `6df0c08`; 4 of 4 from Fleet Ready; ownership OK)
+
+**api/154 (11:20), which tree a worktree session's build builds.** EMB-128 answered by a run: `west` runs in the config's `source_path` verbatim, so a worktree session builds the main clone. Bug EMB-181 filed by the worker. Reviewer finding EMB-182 (a "never" invariant worded in `spec.md`) fixed by my reword at the fold, before the doc half reached `main`; EMB-182's task `tasks/api/156` was filed `done` at its split and retired at the api/155 fold. Split commits: `api/154` `8e4dd179`; `atlas/065` and `atlas/066` `1b7b0aad`.
+**Merged:** `agent/api/154-which-tree-a-worktree-session-build-builds` (code `4707020`, ff on `d97985f`; doc `12670bf9`, cherry-picked onto `c80b45ee`, plus the reword). `cargo test` 402 passed.
 **Blocked:** nothing.
 **Reviewer:** 1 finding — EMB-182
 **Hardware debts:** none.
-**Budget:** DEGRADED wave 2 at the leg's start (stale cache), then PROCEED wave 6 at 11:16; 5-hour 23%, weekly 47%.
-**Least sure about:** whether a worktree's `settings.local.json` `env` reaches the MCP server's process at all; the worker did not check it and it is the desk's side, so EMB-181's fix may need a desk half too.
-**Leg notes (this leg, first unit):** normal mode, pump latched 11:09:56 by the owner, no stop marker, nothing actionable in the channel; the 2026-11-13 13:58 dream got no reply. Leg began at `b69b1db2` (fleet `6df0c08`); step 0 found nothing to recover. Fleet Ready held EMB-128 at the first read and **EMB-148 and EMB-179 by the second, three minutes later**, so the owner moved them in while this leg ran; split into `api/154` (`8e4dd179`), `atlas/065` and `atlas/066` (`1b7b0aad`), all announced. Size ledger: only owner-only `doc/098`, due 2026-11-17. Bench: Core reachable, neither role attached at 11:11. Refill owed on depth and spread; the only source commit since the 2026-11-13 13:50 marker is `core/126`'s verbatim split, so no re-read. Spread sweep: nothing filed (2026-11-14 11:11). Day fold: 2026-11-13 folded by an `embarch-log-folder` agent, 2026-11-11 rolled to `log-archive/`. Client-name history scan: all 16 repos clean. Dispatched 11:12 `api/154`, 11:17 `atlas/065`.
+**Least sure about:** whether a worktree's `settings.local.json` `env` reaches the MCP server process; desk side, so EMB-181's fix may need a desk half.
 
----
+**atlas/065 (11:23), schematic writes its extraction issues to a readable file.** EMB-179: `boards/<label>/issues.md`, named in `MAP.md`; `smartpdf.classify_issue` is pattern-based, so a reworded extractor message falls to `other` silently. A board extracted before the change gets the file only on re-run (recorded debt, not a contradiction).
+**Merged:** `agent/atlas/065-schematic-writes-its-issues-to-a-readable-file` (code `ceb64ac`, ff on `d0c2f12`; doc `f293ce41`, cherry-picked onto `e9120d26`). `pytest` 829 passed, 3 skipped.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
 
+**atlas/066 (11:31), a replay harness for atlas lookups against recorded sessions.** EMB-148: `scripts/replay.py`, script only because it reads private transcripts; a recorded command is parsed, never run (`grep` and `diff` only, read by me).
+**Merged:** `agent/atlas/066-a-replay-harness-for-atlas-lookups` (code `1e6a07b`, ff on `ceb64ac`; doc `7b25c952`, cherry-picked onto `51893a2d`). `pytest` 836 passed, 3 skipped (env-gated).
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. **Owed, owner-side:** the first real `scripts/replay.py --project <name> --atlas-dir <atlas> --build-dir <build> --report`; the parsers are narrow and may match fewer calls than atlas task 003's throwaway script.
+**Least sure about:** whether `q config --build` writes into the build dir during a replay; neither code nor `DESIGN.md` says and the byte-identical test may not cover it.
+
+**api/155 (11:33), a worktree session's build builds that worktree, or refuses.** EMB-181: decision 106 (above); `src/worktree.rs` rebases `source_path` and `build_dir_root` (`worktree-<dir>-<8 hex FNV-1a>`); `api/154`'s pinning test deleted; `embarch-ui` not built.
+**Merged:** `agent/api/155-a-worktree-session-build-builds-the-worktree` (code `54d4035`, ff on `4707020`; doc `1ddd14b6`, cherry-picked onto `0188da88`). `cargo test` 404 passed, clippy green.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none for a board. **Owed, owner-side:** a real build asked from a Start work worktree session, to see it take the worktree's tree and its own build directory; unit tests only so far. It depends on the MCP server's working directory being the worktree, which is `embarch-desk`'s side and was not assumed.
+
+### Leg-level entries (zero units, no Reviewer line by design)
+
+- **11:41**, after api/155: `embarch-doc` `main` `86233fd0` (fleet `7ecf19c`). Dreamed (`ts` `1794681603.529909`). Detail's "queue at 11:45" / "attached at 11:40" were both readings from about 11:38. **Merged:** nothing. **Blocked:** nothing. **Hardware debts:** none new; `api/059` and `dev-bench/038` stay open, neither role attached at 11:38.
+- **17:47**, third dream (`ts` `1794703571.384789`; fleet `d9160f6`): not re-read, no commit since 11:38. **Merged:** nothing. **Blocked:** nothing. **Hardware debts:** none new; benches unchanged at 17:45.
+- **23:58**, fourth dream (`ts` `1794725821.199969`; fleet `040da0e`): full re-read since `--refill-owed` fired on depth; `main` still `86233fd0`. Least sure: whether a docs read suffices for the owner to settle the hook contract points, or he wants each observed in a real session. **Merged:** nothing. **Blocked:** nothing. **Hardware debts:** none new; benches unchanged at 23:54.
 ## 2026-11-13 — 8 units
 
 *Folded by an embarch-log-folder agent on 2026-11-14 (leg fold). Dropped: per-unit narrative reasoning, gate transcripts and worker-answer commentary; git holds them. Kept: every SHA, every Reviewer line, every hardware-debt line, and what the next leg cannot recover.*
@@ -266,44 +234,4 @@ EMB-158: `EMBARCH_REQUIRE_LEASE=1` leaked into five subprocess tests; `support::
 **Least sure about:** I did not re-run from the suite root itself, only proved the variable no longer reaches the binary.
 
 ---
-## 2026-11-12 — 4 units
-
-*Folded 2026-11-13 by the embarch-log-folder agent for the leg that recovered this day: per-unit narrative reasoning, gate detail and budget lines went; git holds them. SHAs, reviewer lines and debts are kept below.*
-
-**Carry forward (next leg, read this first):**
-- The leg that started 2026-11-12 20:04 was stopped or killed with no log entry; the 2026-11-13 leg recovers its two finished units.
-- **Leg close, 20:03 (4 of 4 units, all workers, all reviewers clean):** began at `1411a9a9` (fleet `42db4cd`), normal mode. Surprises: (1) the first fold also day-folded 2026-11-10 (52 units) and 2026-11-11 (7) and rolled 2026-11-07..09 into `log-archive/`; (2) two workers left `State:` as the claim line with every box ticked, and `fold-commit.py` refused until set to `done`, so read the state line before folding. New decisions: `embarch-desk` 85, `embarch-ui` 102. Closed: EMB-141, EMB-140, EMB-155 (at the fold's `finish`); EMB-73 moved to Done at the leg's start. Filed: EMB-169 (by the api worker, Fleet Ready, not yet split: split at `ready`; five test files use clock-named scratch dirs; may be one bug with EMB-158 / `tasks/api/152`, since three of its five files are among the twenty EMB-158 measured failing from the suite root, so give both to one worker or read 152's cause first). No `suite` task, nothing deployed, no alert sent.
-- **Queue for the next leg:** worker tasks `atlas/063` (EMB-113), `atlas/064` (EMB-109), `api/152` (EMB-158; see above), `api/150` (compact api `open.md`, due 2026-11-24), `core/126` (compact core `open.md`, due 2026-11-25). Toolchain by a leg's own hands: `dev-bench/047` (EMB-147; pd-bench west workspace uninitialised, first `west update` is several GB). Bench: `api/059`, `dev-bench/038`, no probe attached at 19:30. Owner-only: `doc/098`.
-- **Deploy debts owed by the owner:** the desk (decision 85, plus a plugin version bump) and the UI service (decision 102); details in the per-unit debt lines below.
-- Open risk: chat/026 moved decisions 101, 103, 105, 106 of `embarch-chat/decisions/sessions.md` to `decisions/logins.md`; an owner branch editing them would conflict.
-- Decisions made on the owner's behalf: ui/109 (decision 102) with `EMBARCH_UI_CONFIG` unset reads `embarch-ui/config.toml` under XDG/`~/.config` (`%APPDATA%` on Windows) if present, else zero-config default. desk/028 (decision 85): unknown line-body fields are a 400 on both line routes; new `DELETE /sessions/{sid}/line/{nid}` and MCP `desk_remove_line` (own, open-tile lines only), so a client behind in version now fails loudly.
-
-### api/151 two lease_client tests fail once under load, then pass
-Cause: scratch dir named from pid and clock nanoseconds collided between test threads; fixed with a static `AtomicUsize` counter (test-only). 0 failures in 700 runs after, 5 in 810 before.
-**Merged:** `agent/api/151-lease-client-tests-flake-under-load` (code `e4957c5`, ff on `ceae118`; doc `f022b24e`, ff on `5bb3d108`).
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### ui/109 service install keeps the UI's config when the shell does not set EMBARCH_UI_CONFIG
-**Merged:** `agent/ui/109-service-install-keeps-the-ui-config` (code `b81ed12`, ff on `2e16164`; doc `7a2fb44e`, ff on `8284e316`).
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none needs a board. One deploy debt for the owner: `cargo build` in the main `embarch-ui` checkout, then restart or reinstall the user service, with the config at `~/.config/embarch-ui/config.toml` (or `EMBARCH_UI_CONFIG` exported for the install), and confirm the tabs load. The Windows `%APPDATA%` branch is written and not run.
-
-### desk/028 a line body the desk cannot honour is refused, and a session takes back its own line
-**Merged:** `agent/desk/028-a-line-body-with-an-unknown-field-is-refused` (code `bf93853`, ff on `1997108`; doc `1cea2713`, ff on `1cd0bb45`).
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none needs a board. One deploy debt for the owner: the installed desk still drops unknown fields and has no `desk_remove_line` until it is redeployed (and the plugin's version bumped, so sessions load the new tool). Then check that `POST /sessions/<sid>/line` with `{"text":"x","bogus":1}` answers 400 naming `bogus`, and that `desk_add_line` then `desk_remove_line` removes the line from the tile.
-
-### chat/026 login and handoff decisions leave sessions.md by verbatim split
-`sessions.md` 12,745 to 6,673 B; `spec.md` untouched. Fold extras: `suite/features.md` gained the EMB-161 login-pick row; 2026-11-10 and 2026-11-11 were folded and 2026-11-07..09 rolled to `log-archive/supervisor-log-2026-11-07-to-2026-11-09.md`. Dispatched 19:35; seven issues split in `7866a9ab` (EMB-155, 158, 113, 109, 141, 140, 147); announced at `ts` `1794537223.969339`.
-**Merged:** `agent/chat/026-compact-chat` (doc only: `d76e0412`, ff on the claim `45b9cb6e`).
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
----
-
-*Days 2026-11-11 to 2026-11-11 rolled to [log-archive/supervisor-log-2026-11-11-to-2026-11-11.md](log-archive/supervisor-log-2026-11-11-to-2026-11-11.md).*
+*Days 2026-11-12 to 2026-11-12 rolled to [log-archive/supervisor-log-2026-11-12-to-2026-11-12.md](log-archive/supervisor-log-2026-11-12-to-2026-11-12.md).*
