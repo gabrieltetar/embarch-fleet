@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-17 14:21 — atlas/067 worktree-sessions-find-the-main-clones-atlas
+
+**Decided:** nothing numbered. EMB-90, the issue's direction kept: `common.atlas_dir()` takes `--atlas-dir` first, the worktree's own `embarch/atlas` second, then the main clone's (`common.main_clone_atlas`: git common dir named `.git` and not the toplevel itself, folder exists); every CLI and MCP entry point and `build.resolve_atlas_dir`'s default use it. `skills/atlas-use/SKILL.md` gained an "In a git worktree" section and a wider trigger; `DESIGN.md` "How a session sees the atlas" gives the lookup order. Left as is: `CLAUDE.local.md`'s `@embarch/atlas/MAP.md` import still does not resolve in a worktree; the skill tells the session to read the main clone's MAP.
+**Merged:** `agent/atlas/067-worktree-sessions-find-the-main-clones-atlas` (code `c63849c`, ff on `ce0c899`; doc `a984cfb2`, cherry-picked onto `f4ae7c4a`). `pytest` 844 passed, 3 skipped (env-gated: real west workspace, built atlas, vendor SVD; `test_public_guard` ran), client names clean.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. **Owed, owner-side:** `install.py` copies skills into `~/.claude/skills/`, so sessions see the new `atlas-use` trigger only after a re-install from an updated checkout.
+**Budget:** PROCEED in burndown at start (5-hour 57%, weekly 45%) and end (5-hour 63%, weekly 45%); suggested wave 6. Leg close: 4 of 4 units, all the dead 13:38 leg's dispatches; nothing new dispatched or split. Fleet Ready holds 35 unsplit issues, so `queue-status.py` reads 36 dispatchable (those plus `tasks/desk/030`, size debt due 2026-11-24); no refill sweep ran, since the next leg has more to split than it can dispatch. `doc/098` (owner-only, `DOC-CONVENTIONS.md`) falls due today.
+**Least sure about:** whether the `@embarch/atlas/MAP.md` import failing silently in a worktree still leaves a session that never invokes the skill grepping PDFs; the fix reaches the skill and the CLI, not the import.
+
+---
+
 ## 2026-11-17 14:20 — promptu/006 count-tool-calls-and-result-characters-per-subagent
 
 **Decided:** nothing. EMB-149: `promptu calls <session> [--subagent <id>] [--class <name>] [--json]`, read-only, per thread (main and each subagent with its `meta.json` description) and per class (`git`, `build`, `config`, `source`, `other`), the class rules one table in `src/calls.rs` `classify`, pinned by a test; contract §12. No withheld decision.
