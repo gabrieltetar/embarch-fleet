@@ -77,6 +77,7 @@ class Desk:
         self.issues = {}
         self.calls = []
         self.next_id = 100
+        self.fail = {}  # route -> the HTTP status it answers with
         desk = self
 
         class Handler(BaseHTTPRequestHandler):
@@ -101,6 +102,8 @@ class Desk:
                 desk.calls.append((self.path, body))
                 if self.headers["Authorization"] != "Bearer tok":
                     return self.reply({"error": "token"}, 401)
+                if self.path in desk.fail:
+                    return self.reply({"error": "no such project"}, desk.fail[self.path])
                 if self.path == "/linear/search":
                     return self.reply({"issues": [i for i in desk.issues.values() if body["query"] in i["title"]]})
                 if self.path == "/linear/status":
@@ -269,6 +272,71 @@ class Fleet(unittest.TestCase):
         self.linear("ready")
         self.assertEqual(list(self.state.glob("*.json")), [])
         self.assertTrue(any(i["title"] == "Kept" and i["state"] == "Fleet Ready" for i in self.desk.issues.values()))
+
+    def test_a_refused_filing_exits_2_and_spools_nothing(self):
+        self.desk.fail["/drafts"] = 422
+        r = self.linear("file", "--from", "worker", "--project", "embarch-ui", "--title", "Kept", "--body", VALID)
+        self.assertEqual(r.returncode, 2, r.stdout)
+        self.assertIn("422", r.stderr)
+        self.assertEqual(list(self.state.glob("*.json")), [])
+
+    def test_a_502_still_spools(self):
+        self.desk.fail["/drafts"] = 502
+        r = self.linear("file", "--from", "worker", "--project", "embarch-ui", "--title", "Kept", "--body", VALID)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(len(list(self.state.glob("*.json"))), 1)
+
+    def test_a_spooled_entry_refused_at_flush_is_set_aside_once(self):
+        self.state.mkdir(parents=True)
+        (self.state / "20261101-000000-1-bad.json").write_text(json.dumps(
+            {"kind": "worker", "project": "embarch-ui", "title": "Bad", "body": VALID, "why": "down"}))
+        self.desk.fail["/drafts"] = 422
+        r = self.linear("ready")
+        self.assertIn("set aside", r.stderr)
+        self.assertEqual(list(self.state.glob("*.json")), [])
+        self.assertEqual(len(list((self.state / "refused").glob("*.json"))), 1)
+        tries = len(self.desk.said("/drafts"))
+        r = self.linear("ready")
+        self.assertNotIn("set aside", r.stderr)
+        self.assertEqual(len(self.desk.said("/drafts")), tries, "not retried")
+
+    def test_show_reads_an_issue_in_any_status_and_only_the_team(self):
+        self.desk.issue("EMB-2", "Backlog", title="Two")
+        r = self.linear("show", "emb-2")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("== EMB-2  Two  (Backlog", r.stdout)
+        self.assertIn("body of EMB-2", r.stdout)
+        r = self.linear("show", "CLIENT-3")
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("is not an issue in team", r.stderr)
+
+    def test_ready_brief_is_one_line_each_without_bodies(self):
+        self.desk.issue("EMB-1", "Fleet Ready", title="One")
+        self.desk.issues["EMB-1"]["description"] = FILED
+        r = self.linear("ready", "--brief")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        line = r.stdout.splitlines()[0]
+        self.assertTrue(line.startswith("EMB-1 "), line)
+        self.assertIn("bug", line)
+        self.assertIn("unsplit", line)
+        self.assertNotIn("## What happens", r.stdout)
+
+    def test_triage_and_mark_ready_keep_the_owners_issues_out(self):
+        self.desk.issue("EMB-1", "Backlog")
+        self.desk.issues["EMB-1"]["description"] = FILED
+        self.desk.issue("EMB-2", "Backlog")
+        self.desk.issues["EMB-2"]["description"] = FILED.replace("**Type:** bug", "**Type:** decision")
+        self.desk.issue("EMB-3", "Todo")
+        self.desk.issues["EMB-3"]["description"] = FILED
+        out = self.linear("triage").stdout
+        self.assertIn("[owner: `Type: decision` is the owner's call]", out)
+        self.assertNotIn("EMB-3", out)
+        r = self.linear("mark-ready", "EMB-1", "EMB-2", "EMB-3")
+        self.assertEqual(r.returncode, 1)
+        self.assertEqual(self.desk.issues["EMB-1"]["state"], "Fleet Ready")
+        self.assertEqual(self.desk.issues["EMB-2"]["state"], "Backlog")
+        self.assertEqual(self.desk.issues["EMB-3"]["state"], "Todo")
+        self.assertIn("EMB-3 left where it is: it is in Todo", r.stderr)
 
     def test_a_throwaway_files_into_its_own_team_with_no_project(self):
         r = self.linear("file", "--from", "throwaway", "--project", "embarch-ui", "--title", "Parse a map", "--body", THROWAWAY)

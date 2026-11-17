@@ -349,7 +349,10 @@ in a normal leg, and a wide wave is not a reason to do it less carefully.
 ## The leg
 
 **Read Fleet Ready at the top of every leg, before you count anything:**
-`scripts/fleet-linear.py ready`, then `scripts/fleet-linear.py finish`. They are a
+`scripts/fleet-linear.py ready --brief`, then `scripts/fleet-linear.py finish`.
+`--brief` is one line per issue (type, hardware, split state, title), so pick
+what this leg splits from it and read only those with `scripts/fleet-linear.py
+show <KEY>...`; plain `ready` prints every body, about 2 KB each. They are a
 few local calls, not the expensive half of refill, and `ready` is the only thing
 that ever takes an issue in. **It must not be gated on the count.**
 `queue-status.py` counts a Fleet Ready issue as dispatchable, so gating the read

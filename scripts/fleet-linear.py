@@ -13,8 +13,13 @@ work desk reads client workspaces, so a listener armed outside the suite would
 have read and written those. This script cannot: the port is `fleet.toml`'s, and
 every key it is handed must be in the configured team.
 
-    ready [--json]       flush the spool, then the Fleet Ready issues in full
+    ready [--json|--brief]
+                         flush the spool, then the Fleet Ready issues in full,
+                         or one line each with --brief
     list                 Fleet Ready issues as a JSON array, for queue-status.py
+    show KEY...          these issues in full, in any status
+    triage               the Backlog, one line each, saying which are the owner's
+    mark-ready KEY...    Backlog issues to Fleet Ready; refuses the owner's
     filed KEY PATH...    list task files on an issue, move it to Fleet Working
     send-back KEY --why  an issue that cannot be split: say why, back to Backlog
     finish               issues whose tasks have all closed: comment, move to Done
@@ -98,7 +103,17 @@ BROKEN = 4
 
 
 class DeskError(Exception):
-    """The desk is down, or it or Linear refused the call."""
+    """The desk is down, or it or Linear refused the call. `code` is the HTTP
+    status when the desk answered, None when it could not be reached."""
+
+    def __init__(self, message: str, code: int | None = None):
+        super().__init__(message)
+        self.code = code
+
+    @property
+    def refused(self) -> bool:
+        """A 4xx: the desk answered and said no, so retrying cannot help."""
+        return self.code is not None and 400 <= self.code < 500
 
 
 class Broken(Exception):
@@ -372,7 +387,7 @@ def call(s: dict, method: str, route: str, body: dict | None = None) -> dict:
         with urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT_S) as r:
             return json.loads(r.read() or b"{}")
     except urllib.error.HTTPError as e:
-        raise DeskError(f"{method} {route}: {e.code} {e.read().decode(errors='replace')[:400]}") from e
+        raise DeskError(f"{method} {route}: {e.code} {e.read().decode(errors='replace')[:400]}", e.code) from e
     except (urllib.error.URLError, TimeoutError, OSError, ValueError) as e:
         raise DeskError(f"{method} {route}: {e}") from e
 
@@ -547,7 +562,17 @@ def flush_spool(s: dict) -> None:
             path.unlink()
         except NamesClient as err:
             print(f"still spooled, as it names a client: {path} ({'; '.join(err.args)})", file=sys.stderr)
-        except (DeskError, ValueError, KeyError) as err:
+        except DeskError as err:
+            if not err.refused:
+                print(f"still spooled: {path} ({err})", file=sys.stderr)
+                continue
+            # Refused, not down: every later leg would retry it forever (EMB-70).
+            aside = d / "refused"
+            aside.mkdir(exist_ok=True)
+            path.replace(aside / path.name)
+            print(f"set aside, as the desk refused it and a retry cannot help: "
+                  f"{aside / path.name} ({err})", file=sys.stderr)
+        except (ValueError, KeyError) as err:
             print(f"still spooled: {path} ({err})", file=sys.stderr)
 
 
@@ -579,6 +604,11 @@ def cmd_ready(s: dict, args) -> int:
     if not full:
         print("no Fleet Ready issues")
         return 1
+    if args.brief:
+        for i in full:
+            print(brief_line(i, i["description"], i["tasks"]))
+        print(f"{len(full)} issue(s); `show KEY...` prints the ones you pick in full")
+        return 0
     for i in full:
         print(f"== {i['key']}  {i['title']}  (Project: {i['project']})")
         if i["tasks"]:
@@ -594,6 +624,65 @@ def cmd_list(s: dict, _args) -> int:
     print(json.dumps([{k: r.get(k) for k in ("key", "title", "project")}
                       for r in open_rows(s, s["ready"])]))
     return 0
+
+
+def brief_line(row: dict, description: str, tasks: list[str], why: list[str] | None = None) -> str:
+    """One issue on one line, for choosing a few out of thirty without reading
+    thirty bodies (EMB-104): key, project, Type, Hardware, split state, title."""
+    f = parse_body(description)[1]
+    project = str(row.get("project") or "-").removeprefix("embarch-")
+    split = f"split:{len(tasks)}" if tasks else "unsplit"
+    line = (f"{row['key']:8} {project:14} {f.get('Type', '?'):13} hw:{f.get('Hardware', '?'):11} "
+            f"{split:8} {row.get('title')}")
+    return line + (f"  [owner: {'; '.join(why)}]" if why else "")
+
+
+def cmd_show(s: dict, args) -> int:
+    keys = [check_key(s, k) for k in args.keys]
+    for key in keys:
+        i = call(s, "GET", f"/linear/issue/{quote(key)}")
+        print(f"== {key}  {i.get('title')}  ({i.get('state')}, Project: {i.get('project')})")
+        if i.get("url"):
+            print(i["url"])
+        print(i.get("description") or "(no description)")
+        for c in i.get("comments") or []:
+            if isinstance(c, dict):
+                lead = "   reply" if c.get("parent") else "   comment"
+                print(f"{lead} {c.get('id', '')} {str(c.get('at') or '')[:16]}: {c.get('body', '')}")
+            else:
+                print(f"   comment: {c}")
+        print()
+    return 0
+
+
+def cmd_triage(s: dict, _args) -> int:
+    """The Backlog, one line each, with why the owner holds an issue if he does,
+    for marking a batch ready in one pass."""
+    git("fetch", "-q", "origin")
+    rows, fleet = open_rows(s, s["backlog"]), fleet_scopes()
+    for r in sorted(rows, key=lambda r: (str(r.get("project")), r["key"])):
+        description = call(s, "GET", f"/linear/issue/{quote(r['key'])}").get("description") or ""
+        print(brief_line(r, description, tasks_on_main(r["key"]), owner_only(description, fleet)))
+    print(f"{len(rows)} issue(s) in {s['backlog']}")
+    return 0 if rows else 1
+
+
+def cmd_mark_ready(s: dict, args) -> int:
+    """Move Backlog issues to Fleet Ready, refusing any the fleet cannot take,
+    so `ready` never has to send one straight back."""
+    keys, fleet, refused = [check_key(s, k) for k in args.keys], fleet_scopes(), 0
+    for key in keys:
+        i = call(s, "GET", f"/linear/issue/{quote(key)}")
+        why = owner_only(i.get("description") or "", fleet)
+        if i.get("state") != s["backlog"]:
+            why = [f"it is in {i.get('state')}, not {s['backlog']}"] + why
+        if why:
+            refused += 1
+            print(f"{key} left where it is: {'; '.join(why)}", file=sys.stderr)
+            continue
+        move(s, key, s["ready"])
+        print(f"{key} in {s['ready']}")
+    return 1 if refused else 0
 
 
 def cmd_filed(s: dict, args) -> int:
@@ -647,6 +736,10 @@ def cmd_file(s: dict, args) -> int:
     try:
         print(create(s, args.kind, args.project, args.title, body))
     except DeskError as e:
+        if e.refused:
+            # The desk answered no (a Project that does not exist, say): a spool
+            # would retry it every leg and never clear (EMB-70).
+            raise
         print(f"desk unavailable ({e}); spooled for the next leg: "
               f"{spool(args.kind, args.project, args.title, body, str(e))}")
     return 0
@@ -736,9 +829,18 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
     p = sub.add_parser("ready")
-    p.add_argument("--json", action="store_true")
+    g = p.add_mutually_exclusive_group()
+    g.add_argument("--json", action="store_true")
+    g.add_argument("--brief", action="store_true", help="one line per issue, no bodies")
     p.set_defaults(fn=cmd_ready)
     sub.add_parser("list").set_defaults(fn=cmd_list)
+    p = sub.add_parser("show")
+    p.add_argument("keys", nargs="+")
+    p.set_defaults(fn=cmd_show)
+    sub.add_parser("triage").set_defaults(fn=cmd_triage)
+    p = sub.add_parser("mark-ready")
+    p.add_argument("keys", nargs="+")
+    p.set_defaults(fn=cmd_mark_ready)
     p = sub.add_parser("filed")
     p.add_argument("key")
     p.add_argument("paths", nargs="+")
