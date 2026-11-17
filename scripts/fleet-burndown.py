@@ -77,6 +77,20 @@ PUMP = CONF.state_dir / "pump"
 BD = CONF.get("burndown", {})
 
 
+def gate_hold() -> str | None:
+    """The usage gate's HOLD reason, as a leg's step 0 would read it now, or
+    None when it would proceed (or could not be asked)."""
+    r = subprocess.run([sys.executable, str(Path(__file__).resolve().parent / "usage-budget.py"),
+                        "--json"], capture_output=True, text=True, timeout=60)
+    try:
+        v = json.loads(r.stdout.strip().splitlines()[-1])
+    except (ValueError, IndexError):
+        return None
+    if v.get("verdict") != "HOLD":
+        return None
+    return v.get("reason") or "no reason given"
+
+
 def cfg(key, default):
     return BD.get(key, default)
 
@@ -354,7 +368,14 @@ def main() -> int:
             if args.no_gate:
                 print("  The usage gate is OFF (gate=off): no cap above is "
                       "enforced until the latch goes.")
-            print("  The pump is latched. A leg starts on the next tick.")
+            hold = gate_hold()
+            if hold:
+                # Armed into a live 429 HOLD, it once promised a leg on the next
+                # tick that the gate then held for three hours (EMB-102).
+                print(f"  The pump is latched, but the usage gate is in HOLD: {hold}")
+                print("  No leg starts until that lifts; the heartbeat spawns one then.")
+            else:
+                print("  The pump is latched. A leg starts on the next tick.")
         return rc
 
     if args.as_json:

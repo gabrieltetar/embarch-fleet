@@ -156,6 +156,57 @@ def recent_429(minutes: int) -> str | None:
     return hit["message"] if hit else None
 
 
+def list_429s(minutes: int, transcripts: str | None = None) -> list[dict]:
+    """Every 429 record in the window, spent ones included, each with its
+    file and session: what `recent_429_hit` decides from, and what
+    `--list-429` prints, so the listing and the verdict cannot disagree
+    (EMB-103). Parsing rules: `recent_429_hit` below."""
+    cutoff = time.time() - minutes * 60
+    out = []
+    for root, _dirs, files in os.walk(transcripts or TRANSCRIPTS):
+        for name in files:
+            if not name.endswith(".jsonl"):
+                continue
+            path = os.path.join(root, name)
+            try:
+                if os.path.getmtime(path) < cutoff:
+                    continue                      # cheap reject before reading
+                with open(path, encoding="utf-8", errors="replace") as f:
+                    for line in f:
+                        if "rate_limit" not in line:
+                            continue              # pre-filter only, see below
+                        try:
+                            rec = json.loads(line)
+                        except Exception:
+                            continue
+                        if not isinstance(rec, dict):
+                            continue
+                        if rec.get("error") != "rate_limit":
+                            continue
+                        if rec.get("apiErrorStatus") != 429:
+                            continue
+                        try:
+                            when = calendar.timegm(
+                                time.strptime(rec.get("timestamp", "")[:19],
+                                              "%Y-%m-%dT%H:%M:%S"))
+                        except Exception:
+                            continue
+                        if when < cutoff:
+                            continue
+                        quota = rec.get("quotaLimits")
+                        resets = quota.get("resetsAt") if isinstance(quota, dict) else None
+                        if not isinstance(resets, (int, float)):
+                            resets = None
+                        limit = quota.get("rateLimitType") if isinstance(quota, dict) else None
+                        if not isinstance(limit, str):
+                            limit = None
+                        out.append({"when": when, "resets_at": resets, "limit": limit, "path": path,
+                                    "session": rec.get("sessionId") or name[:-len(".jsonl")]})
+            except OSError:
+                continue
+    return out
+
+
 def recent_429_hit(minutes: int) -> dict | None:
     """An actual rate-limit error in any transcript within the window, unless
     the throttle it recorded has already expired: its sentence, when it
@@ -196,52 +247,11 @@ def recent_429_hit(minutes: int) -> dict | None:
     window and ends on the weekly one (burndown.md). Measured on a real
     rejection that day: `"rateLimitType": "five_hour"` beside `resetsAt`.
     """
-    cutoff = time.time() - minutes * 60
-    newest = None                                 # (epoch, resets_at or None, limit or None)
-    for root, _dirs, files in os.walk(TRANSCRIPTS):
-        for name in files:
-            if not name.endswith(".jsonl"):
-                continue
-            path = os.path.join(root, name)
-            try:
-                if os.path.getmtime(path) < cutoff:
-                    continue                      # cheap reject before reading
-                with open(path, encoding="utf-8", errors="replace") as f:
-                    for line in f:
-                        if "rate_limit" not in line:
-                            continue              # pre-filter only, see above
-                        try:
-                            rec = json.loads(line)
-                        except Exception:
-                            continue
-                        if not isinstance(rec, dict):
-                            continue
-                        if rec.get("error") != "rate_limit":
-                            continue
-                        if rec.get("apiErrorStatus") != 429:
-                            continue
-                        try:
-                            when = calendar.timegm(
-                                time.strptime(rec.get("timestamp", "")[:19],
-                                              "%Y-%m-%dT%H:%M:%S"))
-                        except Exception:
-                            continue
-                        if when < cutoff:
-                            continue
-                        quota = rec.get("quotaLimits")
-                        resets = quota.get("resetsAt") if isinstance(quota, dict) else None
-                        if not isinstance(resets, (int, float)):
-                            resets = None
-                        limit = quota.get("rateLimitType") if isinstance(quota, dict) else None
-                        if not isinstance(limit, str):
-                            limit = None
-                        if newest is None or when > newest[0]:
-                            newest = (when, resets, limit)
-            except OSError:
-                continue
-    if newest is None:
+    hits = list_429s(minutes)
+    if not hits:
         return None
-    when, resets, limit = newest
+    newest = max(hits, key=lambda h: h["when"])
+    when, resets, limit = newest["when"], newest["resets_at"], newest["limit"]
     age = int((time.time() - when) / 60)
     if resets is not None and resets <= time.time():
         return None                               # spent: the window refilled
@@ -457,7 +467,24 @@ def main() -> int:
                     help="force the [burndown] caps even with no live latch (testing)")
     ap.add_argument("--no-burndown", dest="burndown", action="store_false",
                     help="ignore a live burndown latch and answer with the normal caps")
+    ap.add_argument("--list-429", action="store_true",
+                    help="list every 429 record in the --check-429 window, one line each, and exit")
+    ap.add_argument("--login", metavar="DIR",
+                    help="with --list-429, read this Claude config folder's transcripts instead; "
+                         "the verdict always reads the armed login")
     args = ap.parse_args()
+
+    if args.list_429:
+        root = os.path.join(os.path.expanduser(args.login), "projects") if args.login else TRANSCRIPTS
+        hits = sorted(list_429s(args.check_429, root), key=lambda h: h["when"])
+        now = time.time()
+        for h in hits:
+            state = ("no reset recorded" if h["resets_at"] is None else
+                     "spent" if h["resets_at"] <= now else f"resets in {human_reset(h['resets_at'])}")
+            print(f"{time.strftime('%Y-%m-%d %H:%M', time.localtime(h['when']))}  "
+                  f"{h['limit'] or '-':10} {state:22} session {h['session']}  {h['path']}")
+        print(f"{len(hits)} 429 record(s) in the last {args.check_429} min under {root}")
+        return 0 if hits else 1
 
     # **Burndown is read from the latch, not passed in by the caller.** Every
     # site that asks this gate a question -- a leg's step 0, `fleet status`, a
