@@ -39,6 +39,27 @@ A refused tab is named in the log.
 # The same, as it reads once filed: `file` writes the filer, `rewrite` and `lint` need it.
 FILED = VALID.replace("**Hardware:** none", "**Hardware:** none\n**Filed by:** worker")
 
+# A throwaway-script report, as the owner's hook asks an agent to write one.
+THROWAWAY = """Agents keep writing a script to read the pin map, so it may want a verb :
+
+**Type:** gap
+**Scope:** ui
+**Hardware:** none
+
+## What is missing
+A command that prints the pin map as JSON.
+
+## Who needs it
+Any session that checks a pin.
+
+## Found while
+reading a map by hand for a pin check.
+
+## Done when
+
+- [ ] One command prints the map.
+"""
+
 
 def load_script():
     """fleet-linear.py's functions, for the checks that need no desk."""
@@ -87,7 +108,7 @@ class Desk:
                     return self.reply({"ok": True})
                 if self.path == "/drafts" and body["kind"] == "linear_issue":
                     desk.next_id += 1
-                    key = f"EMB-{desk.next_id}"
+                    key = f"{body['team_key']}-{desk.next_id}"
                     desk.issues[key] = {"key": key, "title": body["title"], "state": "Backlog", "project": body["project"]}
                     return self.reply({"status": "sent", "url": f"https://linear.app/x/issue/{key}/slug"})
                 self.reply({"status": "sent"})
@@ -248,6 +269,45 @@ class Fleet(unittest.TestCase):
         self.linear("ready")
         self.assertEqual(list(self.state.glob("*.json")), [])
         self.assertTrue(any(i["title"] == "Kept" and i["state"] == "Fleet Ready" for i in self.desk.issues.values()))
+
+    def test_a_throwaway_files_into_its_own_team_with_no_project(self):
+        r = self.linear("file", "--from", "throwaway", "--project", "embarch-ui", "--title", "Parse a map", "--body", THROWAWAY)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        sent = [b for p, b in self.desk.calls if p == "/drafts"][0]
+        self.assertEqual((sent["team_key"], sent["project"]), ("THR", None))
+        self.assertIn("**Filed by:** throwaway", sent["body"])
+        row = next(i for i in self.desk.issues.values() if i["title"] == "Parse a map")
+        self.assertTrue(row["key"].startswith("THR-"))
+        self.assertEqual(row["state"], "Backlog")
+
+    def test_a_throwaway_repeat_is_a_seen_again_comment(self):
+        self.desk.issue("THR-1", "Backlog", title="Parse a map", project=None)
+        r = self.linear("file", "--from", "throwaway", "--project", "embarch-ui", "--title", "Parse a map", "--body", THROWAWAY)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("THR-1 already open in Backlog; Seen again", r.stdout)
+        (sent,) = [b for p, b in self.desk.calls if p == "/drafts"]
+        self.assertEqual((sent["kind"], sent["issue_key"]), ("linear_comment", "THR-1"))
+        self.assertTrue(sent["body"].startswith("**Seen again** — "))
+        self.assertIn("reading a map by hand", sent["replies"][0])
+        self.assertEqual(len(self.desk.issues), 1)
+
+    def test_a_same_title_in_another_team_does_not_count(self):
+        self.desk.issue("EMB-1", "Backlog", title="Parse a map")
+        r = self.linear("file", "--from", "throwaway", "--project", "embarch-ui", "--title", "Parse a map", "--body", THROWAWAY)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertTrue(any(k.startswith("THR-") for k in self.desk.issues))
+        self.desk.issue("THR-9", "Backlog", title="Same")
+        out = self.linear("file", "--from", "worker", "--project", "embarch-ui", "--title", "Same", "--body", VALID).stdout
+        self.assertNotIn("THR-9", out)
+        self.assertTrue(any(i["title"] == "Same" and i["key"].startswith("EMB-") for i in self.desk.issues.values()))
+
+    def test_open_lists_the_kinds_team_only(self):
+        self.desk.issue("THR-1", "Backlog", title="Parse a map", project=None)
+        self.desk.issue("EMB-2", "Backlog", title="Not this")
+        out = self.linear("open", "--from", "throwaway").stdout
+        self.assertIn("THR-1  Parse a map  (Backlog)", out)
+        self.assertNotIn("EMB-2", out)
+        self.assertEqual(self.linear("open", "--from", "nobody").returncode, 2)
 
     def test_a_body_that_breaks_the_protocol_is_refused_and_nothing_sent(self):
         r = self.linear("file", "--from", "worker", "--project", "embarch-ui", "--title", "T", "--body", "x")

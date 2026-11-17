@@ -19,7 +19,8 @@ every key it is handed must be in the configured team.
     send-back KEY --why  an issue that cannot be split: say why, back to Backlog
     finish               issues whose tasks have all closed: comment, move to Done
     file --from KIND --project P --title T (--body B | --body-file F)
-                         a new issue; KIND sets its status
+                         a new issue; KIND sets its status, and its team
+    open --from KIND     the open issues in the team KIND files into, key and title
     rewrite KEY (--body B | --body-file F) [--title T]
                          replace an issue's description, its title too if given
     comment KEY --kind K (--body B | --body-file F) [--reply-to ID]
@@ -51,6 +52,15 @@ to `owner_ready`, the owner's own lane, instead of listing it to split.
 reviewer's finding goes straight to Fleet Ready, as those are small and found in
 passing. An audit finding or a withheld decision goes to Backlog, for the owner
 to mark.
+
+**A kind `file_team` names files into that team, not `team`** (owner's call,
+2026-11-16). `throwaway`, an agent's report that it wrote throwaway Python for a
+job a module could own, goes to the collector team the owner works by hand, so
+those reports stay out of the fleet's queue. Such a team takes no Linear Project,
+as the body's Scope names the repo, and the fleet's commands never read it. **A
+repeat there is counted, not refused:** filing the title of an issue already open
+in that team adds a **Seen again** comment to it instead, since how often a job
+recurs is what says it should become a module; `open` lists the titles to match.
 
 **A filing never fails its caller.** Writing an `inbox/` file could not fail, and
 a worker's final report goes astray often enough that it cannot be the fallback.
@@ -132,9 +142,9 @@ TYPES = {
 }
 FIELDS = ("Type", "Scope", "Hardware", "Filed by")
 HARDWARE = ("none", "verify-only", "bench", "toolchain", "required")
-FILERS = ("owner", "session", "worker", "reviewer", "audit", "decision")
+FILERS = ("owner", "session", "worker", "reviewer", "audit", "decision", "throwaway")
 KINDS = ("Split", "Sent back", "Closed", "Question", "Answer", "Progress", "Handoff",
-         "Blocked", "Changed", "Finding")
+         "Blocked", "Changed", "Finding", "Seen again")
 DONE_WHEN = "Done when"
 TITLE_MAX = 80
 SUMMARY_MAX = 400
@@ -375,14 +385,26 @@ def check_key(s: dict, key: str) -> str:
     return key
 
 
-def open_rows(s: dict, status: str) -> list[dict]:
-    """The team's open issues in one status."""
-    prefix = s["team"].upper() + "-"
+def team_of(s: dict, kind: str) -> str:
+    """The team a kind files into: its `file_team` entry, else the fleet's own."""
+    return str((s.get("file_team") or {}).get(kind, s["team"])).upper()
+
+
+def in_team(row: dict, team: str) -> bool:
+    return str(row.get("key", "")).upper().startswith(team.upper() + "-")
+
+
+def team_rows(s: dict, team: str) -> list[dict]:
+    """A team's open issues, in every status."""
     v = call(s, "GET", "/linear/open")
     if v.get("truncated"):
         print("fleet-linear: the desk's open-issue list was cut short", file=sys.stderr)
-    return [r for r in v.get("issues", [])
-            if str(r.get("key", "")).upper().startswith(prefix) and r.get("state") == status]
+    return [r for r in v.get("issues", []) if in_team(r, team)]
+
+
+def open_rows(s: dict, status: str) -> list[dict]:
+    """The team's open issues in one status."""
+    return [r for r in team_rows(s, s["team"]) if r.get("state") == status]
 
 
 def comment(s: dict, key: str, head: str, replies: list[str] | None = None,
@@ -460,22 +482,38 @@ def checked(s: dict, kind: str, project: str, title: str, body: str) -> str:
     return body
 
 
+def seen_again(s: dict, key: str, body: str) -> dict:
+    """A repeat of a collected issue, as a comment: what the new filing found it
+    while, else its summary, under a head saying the job came up again."""
+    summary, _, sections = parse_body(body)
+    found = next((text.strip() for name, text in sections if name == "Found while" and text.strip()), "")
+    detail = (found or summary)[:REPLY_MAX]
+    head, replies = thread("Seen again", "an agent needed this job again"
+                           + (f" :\n---\n{detail}" if detail else "."))
+    return comment(s, key, head, replies)
+
+
 def create(s: dict, kind: str, project: str, title: str, body: str) -> str:
     """Make the issue and put it in its status. Returns a line naming it."""
     status = s["file_status"].get(kind)
     if not status:
         raise ValueError(f"no file_status for {kind!r}; it has {sorted(s['file_status'])}")
+    team = team_of(s, kind)
     # Before the duplicate search sends the title, and before `file` can spool it:
     # a spooled issue is checked again when `ready` files it.
     refuse_names(title=title, body=body)
     for row in call(s, "POST", "/linear/search", {"query": title}).get("issues", []):
-        if row.get("title") == title and row.get("state") not in (s["done"], "Canceled"):
+        if row.get("title") == title and in_team(row, team) and row.get("state") not in (s["done"], "Canceled"):
+            if team != s["team"].upper():
+                sent = seen_again(s, row["key"], body)
+                return f"{row['key']} already open in {row.get('state')}; Seen again: {sent.get('url') or sent.get('status')}"
             return f"{row['key']} already open with this title, in {row.get('state')}"
     sent = draft(s, {
-        "kind": "linear_issue", "team_key": s["team"], "project": project, "title": title,
-        "body": body.rstrip()})
+        "kind": "linear_issue", "team_key": team, "title": title, "body": body.rstrip(),
+        # Only the fleet's team has a Project per repo; elsewhere Scope names it.
+        "project": project if team == s["team"].upper() else None})
     url = sent.get("url") or ""
-    m = re.search(rf"/({re.escape(s['team'].upper())}-\d+)", url)
+    m = re.search(rf"/({re.escape(team)}-\d+)", url)
     if not m:
         raise DeskError(f"the desk did not send it: {json.dumps(sent)[:300]}")
     move(s, m.group(1), status)
@@ -614,6 +652,15 @@ def cmd_file(s: dict, args) -> int:
     return 0
 
 
+def cmd_open(s: dict, args) -> int:
+    if args.kind not in s["file_status"]:
+        raise ValueError(f"no file_status for {args.kind!r}; it has {sorted(s['file_status'])}")
+    rows = team_rows(s, team_of(s, args.kind))
+    for r in rows:
+        print(f"{r['key']}  {r.get('title')}  ({r.get('state')})")
+    return 0 if rows else 1
+
+
 def cmd_rewrite(s: dict, args) -> int:
     key = check_key(s, args.key)
     git("fetch", "-q", "origin")
@@ -680,6 +727,7 @@ def cmd_template(s: dict, args) -> int:
         "scopes": sorted(scopes()),
         "done_when": DONE_WHEN,
         "file_status": s["file_status"],
+        "file_team": s.get("file_team") or {},
     }, indent=1))
     return 0
 
@@ -708,6 +756,9 @@ def main() -> int:
     g.add_argument("--body")
     g.add_argument("--body-file")
     p.set_defaults(fn=cmd_file)
+    p = sub.add_parser("open")
+    p.add_argument("--from", dest="kind", required=True)
+    p.set_defaults(fn=cmd_open)
     p = sub.add_parser("rewrite")
     p.add_argument("key")
     p.add_argument("--title")

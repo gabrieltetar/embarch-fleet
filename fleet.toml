@@ -74,6 +74,16 @@ audit = "Backlog"
 decision = "Backlog"
 owner = "Backlog"
 session = "Backlog"
+# An agent's report that it wrote throwaway Python for a job a module could own
+# (the owner's throwaway-python hook). The owner works these by hand, in their
+# own team, so they wait in its Backlog (owner's call, 2026-11-16).
+throwaway = "Backlog"
+
+[linear.file_team]
+# The team a kind files into when it is not `team`. Such a team is the owner's
+# alone: no Project per repo, a repeat counted as a Seen again comment, and no
+# fleet command reads it (scripts/fleet-linear.py).
+throwaway = "THR"
 
 [limits]
 # protocol.md §6: a leg is this many units, then it dies and hands off.
