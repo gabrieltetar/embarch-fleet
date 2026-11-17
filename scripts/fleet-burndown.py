@@ -36,10 +36,14 @@ refuses to start without a reading of the login under 300 s old (budget.md), and
 arming takes one itself rather than waiting for the cron.
 
 **What ends it.** The deadline, `fleet stop`, an empty queue, a hard fault, or a
-real 429 -- the owner's call, 2026-09-08: in burndown a 429 does not throttle,
-it stops the mode. `--clear` is how a leg says so; it reverts the latch to
-normal mode rather than deleting it, so the normal 90% gate is what decides
-whether anything runs next, and after a 429 at 97% that gate holds by itself.
+real 429 on the weekly window -- the owner's call, 2026-09-08: in burndown a 429
+does not throttle, it stops the mode. **A 429 on the 5-hour window that resets
+before the deadline only pauses it** (owner, 2026-11-16): the leg ends and the
+latch stays, usage-budget.py holds until the reset, and the heartbeat's first
+leg after it runs in burndown again (`usage-budget.py` `burndown_pauses`).
+`--clear` is how a leg ends it; it reverts the latch to normal mode rather than
+deleting it, so the normal 90% gate is what decides whether anything runs next,
+and after a 429 at 97% that gate holds by itself.
 
 Usage:
   scripts/fleet-burndown.py                      report (default)

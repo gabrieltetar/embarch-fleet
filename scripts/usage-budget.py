@@ -66,7 +66,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from fleetconf import CONF, login_dir, login_name, usage_cache_path  # noqa: E402
+from fleetconf import CONF, login_dir, login_name, parse_instant, usage_cache_path  # noqa: E402
 
 import argparse
 import calendar
@@ -151,8 +151,15 @@ def window(limits: dict, key: str):
 
 
 def recent_429(minutes: int) -> str | None:
+    """The newest live 429's sentence, or None: `recent_429_hit` below."""
+    hit = recent_429_hit(minutes)
+    return hit["message"] if hit else None
+
+
+def recent_429_hit(minutes: int) -> dict | None:
     """An actual rate-limit error in any transcript within the window, unless
-    the throttle it recorded has already expired.
+    the throttle it recorded has already expired: its sentence, when it
+    happened, when it resets and which limit it names.
 
     This is the signal the percentages were a proxy for. Claude Code records a
     throttled request with `"error":"rate_limit"`, `"apiErrorStatus":429` and a
@@ -183,9 +190,14 @@ def recent_429(minutes: int) -> str | None:
 
     A fourth, 2026-11-09: **only this login's transcripts count** (see
     `TRANSCRIPTS`), and the message names the login so a misattribution shows.
+
+    A fifth, 2026-11-16: **which limit it was**, `quotaLimits.rateLimitType`
+    (`five_hour`, `seven_day` ...), because a burndown pauses on the 5-hour
+    window and ends on the weekly one (burndown.md). Measured on a real
+    rejection that day: `"rateLimitType": "five_hour"` beside `resetsAt`.
     """
     cutoff = time.time() - minutes * 60
-    newest = None                                 # (epoch, resets_at or None)
+    newest = None                                 # (epoch, resets_at or None, limit or None)
     for root, _dirs, files in os.walk(TRANSCRIPTS):
         for name in files:
             if not name.endswith(".jsonl"):
@@ -220,22 +232,49 @@ def recent_429(minutes: int) -> str | None:
                         resets = quota.get("resetsAt") if isinstance(quota, dict) else None
                         if not isinstance(resets, (int, float)):
                             resets = None
+                        limit = quota.get("rateLimitType") if isinstance(quota, dict) else None
+                        if not isinstance(limit, str):
+                            limit = None
                         if newest is None or when > newest[0]:
-                            newest = (when, resets)
+                            newest = (when, resets, limit)
             except OSError:
                 continue
     if newest is None:
         return None
-    when, resets = newest
+    when, resets, limit = newest
     age = int((time.time() - when) / 60)
     if resets is not None and resets <= time.time():
         return None                               # spent: the window refilled
     who = f"on the {login_name(LOGIN)} login"
+    named = f" ({limit})" if limit else ""
     if resets is None:
-        return (f"a real 429 was recorded {age} min ago {who}, and it recorded "
-                f"no reset time -- holding for the full {minutes} min window")
-    return (f"a real 429 was recorded {age} min ago {who}; the window it names "
-            f"resets in {human_reset(resets)}")
+        message = (f"a real 429{named} was recorded {age} min ago {who}, and it "
+                   f"recorded no reset time -- holding for the full {minutes} min window")
+    else:
+        message = (f"a real 429{named} was recorded {age} min ago {who}; the "
+                   f"window it names resets in {human_reset(resets)}")
+    return {"message": message, "when": when, "resets_at": resets, "limit": limit}
+
+
+def burndown_pauses(hit: dict | None, latch: dict | None) -> bool:
+    """Whether a 429 in a burndown PAUSES the mode rather than ending it.
+
+    The owner's call of 2026-11-16, amending 2026-09-08's "a 429 ends it":
+    a 429 on the **5-hour** window that resets **before the burndown's
+    deadline** is a lockout on a clock with weekly allowance still behind it,
+    so the leg ends and the latch stays in burndown; this gate holds until
+    the reset (`recent_429_hit` stops reporting a spent 429), and the next leg
+    the heartbeat spawns runs in burndown again. A weekly or per-model 429, one
+    naming no limit, and one with no reset time all END it, as before: that is
+    the wall burndown was racing, and nothing on this side of the deadline
+    refills it. Mirrors embarch-chat decision 109's defaults: continue after the
+    5-hour limit, not after the weekly one.
+    """
+    if not hit or not latch:
+        return False
+    until = parse_instant(latch.get("until", ""))
+    resets = hit.get("resets_at")
+    return hit.get("limit") == "five_hour" and resets is not None and until is not None and resets < until
 
 
 def measured_wave(used_frac: float, full_below: float, cap: int) -> int:
@@ -458,8 +497,9 @@ def main() -> int:
         until = bd_latch.get("until", "?") if bd_latch else "forced by --burndown"
         return [f"BURNDOWN until {until} -- caps {args.seven_day_max:g}% weekly / "
                 f"{args.five_hour_max:g}% 5-hour, {cap} workers, no taper.",
-                "  A 429 does not throttle in this mode, it ENDS it: "
-                "scripts/fleet-burndown.py --clear --reason '429'."]
+                "  A 5-hour 429 that resets before the deadline PAUSES this mode: "
+                "end the leg and leave the latch, the next leg runs after the reset.",
+                "  Any other 429 ENDS it: scripts/fleet-burndown.py --clear --reason '429'."]
 
     if args.burn:
         b = burn_window(5.0)
@@ -500,7 +540,10 @@ def main() -> int:
                 print(f"  suggested wave: {workers} worker(s)")
         return 0
 
-    throttled = recent_429(args.check_429)
+    hit_429 = recent_429_hit(args.check_429)
+    throttled = hit_429["message"] if hit_429 else None
+    paused = burndown and burndown_pauses(hit_429, bd_latch)
+    pause_fields = {"pause_burndown_until": hit_429["resets_at"]} if paused else {}
 
     data, why = read_cache(args.cache, args.max_age)
     if why:
@@ -508,11 +551,15 @@ def main() -> int:
             if args.as_json:
                 print(json.dumps({"verdict": "HOLD", "reason": throttled,
                                   "workers": 0, "burndown": burndown,
-                                  "end_burndown": burndown}))
+                                  "end_burndown": bool(burndown and not paused),
+                                  **pause_fields}))
             else:
                 print(f"HOLD -- {throttled}")
                 for line in mode_lines():
                     print(line)
+                if paused:
+                    print(f"  PAUSED, not ended: the 5-hour window resets in "
+                          f"{human_reset(hit_429['resets_at'])}, before the deadline.")
             return 1
         feeder = check_feeder()
         burn = burn_window(5.0)
@@ -616,10 +663,12 @@ def main() -> int:
             "burndown_until": (bd_latch or {}).get("until") if burndown else None,
             "burndown_why_not": None if burndown else bd_why,
             "max_workers": cap,
-            # A 429 ends burndown rather than pausing it (owner, 2026-09-08),
-            # so the one caller that must act differently gets a field rather
-            # than a sentence to parse.
-            "end_burndown": bool(burndown and throttled),
+            # A 429 ends burndown (owner, 2026-09-08) unless it is a 5-hour one
+            # that resets before the deadline, which pauses it (owner,
+            # 2026-11-16, `burndown_pauses`). The one caller that must act
+            # differently gets fields rather than a sentence to parse.
+            "end_burndown": bool(burndown and throttled and not paused),
+            **pause_fields,
         }))
         return 1 if blocking else 0
 
@@ -644,6 +693,9 @@ def main() -> int:
     print(fmt("weekly", seven, seven_reset, args.seven_day_max))
     for b in blocking:
         print(f"  BLOCKING: {b}")
+    if paused:
+        print(f"  PAUSED, not ended: the 5-hour window resets in "
+              f"{human_reset(hit_429['resets_at'])}, before the deadline.")
     if args.suggest and not blocking:
         print(f"  suggested wave: {workers} worker(s)")
     return 1 if blocking else 0

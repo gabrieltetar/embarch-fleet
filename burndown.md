@@ -57,7 +57,16 @@ cache can be four minutes old with six workers in flight, and the one cost burnd
 must not pay is the *start* of the next week. It is started with `/fleet start
 burndown` in a window, or `/fleet start burndown until <when>` to stop short.
 
-**A 429 ends the mode rather than pausing it** (owner, 2026-09-08). Normally a
+**A 5-hour 429 pauses the mode; any other 429 ends it** (owner, 2026-11-16,
+amending 2026-09-08's "a 429 ends the mode rather than pausing it"). The 5-hour
+window is a lockout on a clock with the week still behind it: when it resets
+before the deadline, the leg lands what is in flight and ends, the latch stays
+in burndown, `usage-budget.py` holds until the reset, and the heartbeat's first
+leg after it runs in burndown again (`end_burndown` false,
+`pause_burndown_until` set). Ending on it threw away the rest of a week,
+since the ordinary gate tapers and stops at 90%. The rest of this paragraph is
+the weekly case, and a 429 with no reset time or one resetting past the
+deadline counts as weekly. Normally a
 429 is a throttle to wait out; in burndown the fleet is already at the wall and
 there is nothing to back off into. The leg lands what is in flight and runs
 `--clear`, which reverts the latch to `mode=normal` rather than deleting it — so

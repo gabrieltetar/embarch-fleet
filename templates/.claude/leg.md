@@ -160,10 +160,14 @@ in a normal leg, and a wide wave is not a reason to do it less carefully.
 
 **Four things end the mode, and three of them are yours to act on.**
 
-- **A real 429.** In a normal leg a 429 is a throttle you wait out. Here it is
-  the stop signal — the owner's call, 2026-09-08 — because burndown is already
-  running at the wall and there is nothing left to back off into. Land what is
-  in flight, then run
+- **A real 429 on the weekly window.** In a normal leg a 429 is a throttle you
+  wait out. Here it is the stop signal — the owner's call, 2026-09-08 — because
+  burndown is already running at the wall and there is nothing left to back off
+  into. **A 5-hour 429 that resets before the deadline is not**: it pauses the
+  mode (owner, 2026-11-16). `usage-budget.py --json` says which — `end_burndown`
+  false and `pause_burndown_until` set — so land what is in flight, end your leg
+  and leave the latch alone; the heartbeat's first leg after the reset runs in
+  burndown again. Otherwise land what is in flight, then run
   `scripts/fleet-burndown.py --clear --reason '429 at <time>'` and end your leg.
   That reverts the latch to normal mode rather than deleting it, so the pump
   survives and the ordinary 90% gate decides what happens next — which, at 97%
