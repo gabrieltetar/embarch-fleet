@@ -53,8 +53,9 @@ against it, landing three units the live leg had claimed and resetting its leg
 worktree under an uncommitted fold, because everything on disk reads the same
 for a live leg and a killed one (`tasks/doc/048`). The lock tells them apart by
 freshness. **`scripts/fleet-tick.py leg-end` is then your last command on every
-exit** — a normal end, a stop, a HOLD, a dream. A leg that forgets it idles the
-next one for up to 30 minutes.
+exit** — a normal end, a stop, a HOLD, a dream — and it refuses while a worker
+you dispatched has not reported ("Waiting on your workers" below). A leg that
+forgets it idles the next one for up to 30 minutes.
 
 0. **Refresh, then recover.** *Refresh first, and do not skip it because the
    session "already knows" the repo.* `git pull --rebase` every repo this leg may
