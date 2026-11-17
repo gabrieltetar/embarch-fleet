@@ -262,10 +262,14 @@ def verify(target: Path) -> int:
 def check(target: Path, diff: bool) -> int:
     """Does the instance match the framework working tree? Used by deploy.py."""
     stale = []
-    for path, content, _ in planned(target):
+    for path, content, is_exec in planned(target):
         rel = path.relative_to(target)
         current = path.read_text() if path.is_file() else None
         if current == content:
+            # A shim the command files call by bare path fails with "Permission
+            # denied" when its x bit is gone, though its text matches (EMB-101).
+            if is_exec and not os.access(path, os.X_OK):
+                stale.append(f"{rel} (not executable)")
             continue
         stale.append(rel)
         if diff:
@@ -290,8 +294,12 @@ def main() -> int:
     ap.add_argument("--check", action="store_true", help="verify against the framework, write nothing")
     ap.add_argument("--verify", action="store_true",
                     help="verify nothing generated was hand-edited since the last install")
-    ap.add_argument("--diff", action="store_true", help="with --check, show the diffs")
+    ap.add_argument("--diff", action="store_true", help="show the diffs; implies --check, so it writes nothing")
     args = ap.parse_args()
+    # Alone, --diff once fell through to a full install, and from a branch
+    # worktree it rewrote the main checkout's copies with that worktree's paths
+    # (EMB-145). Asking to see a diff is never asking to write.
+    args.check = args.check or args.diff
 
     target = Path(args.repo).resolve() if args.repo else CONF.doc_repo
     if not (target / ".git").exists():
@@ -306,10 +314,11 @@ def main() -> int:
     for path, content, is_exec in planned(target):
         rel = path.relative_to(target)
         current = path.read_text() if path.is_file() else None
-        if current == content:
+        if current == content and not (is_exec and not os.access(path, os.X_OK)):
             continue
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(content)
+        if current != content:
+            path.write_text(content)
         if is_exec:
             path.chmod(path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
         print(f"  wrote {rel}")

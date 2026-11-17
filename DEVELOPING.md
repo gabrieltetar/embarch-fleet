@@ -216,9 +216,10 @@ python3 scripts/fold-commit.py --check            # do the two repos agree
 python3 scripts/fleet-alert.py --dry-run "test"   # payload, sends nothing
 ```
 
-There is no test suite. Two gates run: `scripts/check-fleet-doc-size.py` caps
-*this* repo's docs as a ratchet before anything renders (nothing did until
+**Tests:** run `python3 scripts/test_<name>.py` for each script you touched
+(`test_fleet_linear.py` covers `queue-status.py` too), before `deploy.py`.
+Nothing runs them for you. Two gates do run: `scripts/check-fleet-doc-size.py`
+caps *this* repo's docs as a ratchet before anything renders (nothing did until
 2026-09-05, which is how `protocol.md` and `ops.md` reached 32 KB), and then the
-instance's `check-docs.py`, which
-`deploy.py` runs for you, and it catches the failure that actually recurs: a
-rendered file whose links no longer resolve.
+instance's `check-docs.py`, which `deploy.py` runs for you, and it catches the
+failure that actually recurs: a rendered file whose links no longer resolve.
