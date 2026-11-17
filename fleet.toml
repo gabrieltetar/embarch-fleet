@@ -372,4 +372,11 @@ fleet_writable = [
   "embarch-stream-pipeline-proposal.md",
   "embarch-token.md",
   "embarch-zephyr.md",
+  # Four more cross-repo designs awaiting acceptance, the same class: none holds
+  # a rule the fleet runs under. Classified 2026-11-17, when
+  # check-ownership.py --supervisor found them in neither list.
+  "embarch-atlas-planes-proposal.md",
+  "embarch-hil-evidence-proposal.md",
+  "embarch-hil-proposal.md",
+  "embarch-release-signing-proposal.md",
 ]
