@@ -128,6 +128,38 @@ def entry_shape_problems(body: str) -> list[str]:
     return out
 
 
+ENTRY_HEAD = re.compile(r"^## \d{4}-\d{2}-\d{2}", re.M)
+UNIT_HEAD = re.compile(r"^## \d{4}-\d{2}-\d{2} \d{2}:\d{2} — [a-z-]+/\d{3}\b")
+
+
+def prepend_entry(text: str) -> int:
+    """Put an entry above the newest one in supervisor-log.md, under the
+    shape section, refusing a unit entry that breaks `## Entry shape`. Every
+    fold did this by hand, and agents kept scripting it (EMB-154)."""
+    entry = text.strip()
+    if not ENTRY_HEAD.match(entry):
+        print("the entry must open with `## <yyyy-mm-dd HH:MM> — <scope>/<NNN> <slug>`",
+              file=sys.stderr)
+        return 1
+    if UNIT_HEAD.match(entry):
+        problems = entry_shape_problems(entry)
+        if problems:
+            print("nothing written; the entry breaks `## Entry shape`:", file=sys.stderr)
+            for p in problems:
+                print(f"  - {p}", file=sys.stderr)
+            return 1
+    log = LOG.read_text()
+    # The shape section's own `## <yyyy-mm-dd ...>` lines are placeholders
+    # inside a fence, so the first real heading is the first dated one.
+    m = ENTRY_HEAD.search(log)
+    if not m:
+        print(f"no dated entry in {LOG.name} to go above; add the first by hand", file=sys.stderr)
+        return 1
+    LOG.write_text(log[:m.start()] + entry + "\n\n---\n\n" + log[m.start():])
+    print(f"{LOG.name}: entry prepended ({entry.splitlines()[0][3:80]})")
+    return 0
+
+
 def git(repo: Path, *args: str, check: bool = True) -> str:
     r = subprocess.run(["git", "-C", str(repo), *args],
                        capture_output=True, text=True)
@@ -647,6 +679,9 @@ def main() -> int:
                     help="the instance checkout to stage in -- pass a leg's own "
                          "worktree; defaults to fleet.toml's doc_repo")
     ap.add_argument("--check", action="store_true", help="verify the two repos agree")
+    ap.add_argument("--prepend-entry", metavar="FILE",
+                    help="put this entry (a file, or - for stdin) above the log's newest; "
+                         "refuses one that breaks the entry shape")
     ap.add_argument("--dry-run", action="store_true", help="print, commit nothing")
     ap.add_argument("--no-prune-branches", action="store_true",
                     help="keep agent/* branches, pushed and local, already on origin/main")
@@ -654,6 +689,9 @@ def main() -> int:
 
     if args.check:
         return check()
+    if args.prepend_entry:
+        src = args.prepend_entry
+        return prepend_entry(sys.stdin.read() if src == "-" else Path(src).read_text())
     if not (args.unit and args.message and args.path):
         print("--unit, --message and at least one --path are required "
               "(or use --check)", file=sys.stderr)
@@ -882,7 +920,11 @@ def main() -> int:
     if resume:
         log_sha = resume
     else:
-        git(FLEET_REPO, "add", "--", "supervisor-log.md")
+        # A `fold-day.py --roll` before this fold leaves a new day file in
+        # log-archive/: it rides in the log's commit, or it sits untracked
+        # until someone notices (EMB-81).
+        archive = ["log-archive"] if (FLEET_REPO / "log-archive").is_dir() else []
+        git(FLEET_REPO, "add", "--", "supervisor-log.md", *archive)
         git(FLEET_REPO, "commit", "-m", f"Log {args.unit}: {args.message}")
         log_sha = head(FLEET_REPO)
     git(doc, "commit", "-m", f"{args.message}\n\nLog: embarch-fleet@{log_sha}")

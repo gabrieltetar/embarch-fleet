@@ -958,7 +958,9 @@ the choice cannot catch on its own.
 unit: consume its `status.d/` fragments into their target docs and delete them,
 run `python3 scripts/build_changelog.py --only '<this unit's fragment names>'`,
 run **`python3 scripts/build_features.py`**,
-**prepend that unit's entry to `{{FLEET_REPO}}/supervisor-log.md`**, run
+**prepend that unit's entry to `{{FLEET_REPO}}/supervisor-log.md` with
+`scripts/fold-commit.py --prepend-entry <file>`** (or `-` for stdin), which puts
+it above the newest entry and refuses one that breaks `## Entry shape`, run
 `python3 scripts/check-docs.py` once more, and commit all of that with
 **`scripts/fold-commit.py`**, which is the only way to land a fold now that the
 log lives in a different repo from the work.
