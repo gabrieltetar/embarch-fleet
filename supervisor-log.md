@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-17 14:31 — desk/030 compact-desk
+
+**Decided:** nothing. Verbatim move: `embarch-desk/spec.md` §5 ("What it deliberately does not do") to `embarch-desk/spec/non-goals.md`, with a one-line pointer; one link rewritten for the new depth (`decisions.md` to `../decisions.md`). At the fold I reworded the pointer's "no in-desk Linear writes" to the moved bullet's own words (comments, issue creation, PR review or merge), since the desk does write to Linear (decision 30's status moves and Send). Worker's answer to the human question: yes, `spec.md` alone still answers what someone needs today. `spec.md` 9,168 to about 8,700 B, out of reserve.
+**Merged:** `agent/desk/030-compact-desk` (doc only, `1ce40c48`, fast-forward over `b3028c0f`; no code branch). `check-docs.py` 12/12 green.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED in burndown (until 2026-11-18 06:00), 5-hour 63%, weekly 45%, suggested wave 6; 4 dispatched, one per unit. Leg began at `56d15c36` (fleet `de21520`); split commit `59649796` ( atlas/068 from EMB-198, promptu/007 from EMB-196, chat/028 from EMB-189) and four claim commits. Fleet Ready now 32 unsplit; EMB-197 waits for promptu/007's read-back verb.
+**Least sure about:** whether the worker's "byte-identical" box should have been ticked with a rewritten link; the reviewer read it as correct for a move one directory deeper.
+
+---
+
 ## 2026-11-17 14:21 — atlas/067 worktree-sessions-find-the-main-clones-atlas
 
 **Decided:** nothing numbered. EMB-90, the issue's direction kept: `common.atlas_dir()` takes `--atlas-dir` first, the worktree's own `embarch/atlas` second, then the main clone's (`common.main_clone_atlas`: git common dir named `.git` and not the toplevel itself, folder exists); every CLI and MCP entry point and `build.resolve_atlas_dir`'s default use it. `skills/atlas-use/SKILL.md` gained an "In a git worktree" section and a wider trigger; `DESIGN.md` "How a session sees the atlas" gives the lookup order. Left as is: `CLAUDE.local.md`'s `@embarch/atlas/MAP.md` import still does not resolve in a worktree; the skill tells the session to read the main clone's MAP.
