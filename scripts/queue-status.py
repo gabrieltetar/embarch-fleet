@@ -106,7 +106,11 @@ TASKS = "tasks"
 # runs those with its own hands, one at a time (protocol.md section 7), so
 # counting them here would size a wave against work no worker can take.
 DISPATCHABLE_HW = ("none", "verify-only")
-BENCH_HW = "bench"
+# `toolchain` is the supervisor's own hands too (tasks/README.md), so it is
+# listed with `bench` rather than as `hw-gated`. Until EMB-83 it fell through to
+# `hw-gated`, and legs dreamt three times over sixteen of them; a dev-bench task
+# that only needs a build is now `none`, and no repo needs `toolchain` today.
+BENCH_HW = ("bench", "toolchain")
 # The same for a scope: a `suite/` task is never dispatched to a worker -- the
 # supervisor runs it itself, after a 30-minute announcement window (protocol.md
 # section 8). Until `tasks/doc/043` it was counted in `dispatchable`: leg 085
@@ -275,7 +279,7 @@ def classify(tasks: list[dict], no_supervisor: bool, after_h: float,
             buckets["other"].append(t)
         elif t["owner"] == "required":
             buckets["owner_gated"].append(t)
-        elif t["hardware"] == BENCH_HW and t["state"] == "open":
+        elif t["hardware"] in BENCH_HW and t["state"] == "open":
             # Real work, but the supervisor's own hands -- so it is reported
             # separately and never added to `dispatchable`, which sizes a wave
             # of workers.

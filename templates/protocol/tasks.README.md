@@ -191,7 +191,7 @@ dispatchable, and it must leave a hardware-verification debt (§7). **`bench` �
 needs the bench, and the *supervisor* runs it itself, one at a time**; never
 dispatched to a worker (§7). **`toolchain` — host-side, but needing a toolchain
 no worktree can carry**; same hands, same serialization, and the paragraph below
-says which repos. `required` — cannot be started by the fleet at all; **not
+says which repos (none today). `required` — cannot be started by the fleet at all; **not
 dispatchable**, it waits for the owner's own session. A task nobody has
 classified is treated as `required`.
 
@@ -203,17 +203,25 @@ tasks are `required` for a *toolchain* reason (no `west` a worker can run), and
 promoting every `required` task to fleet work would have swept those in.
 
 **`toolchain` (2026-09-06) is the value those two wanted**, and it exists
-because the same word was doing a third job. It is exactly one repo, measured
-rather than assumed:
+because the same word was doing a third job. It was exactly one repo, measured
+rather than assumed, and since 2026-11-17 it is none:
 
-- **`embarch-dev-bench` needs it.** Its Zephyr tree lives *inside* the repo at
-  `workspaces/*/{zephyr,modules,.west}` and every one of those is gitignored, so
-  a worker's worktree contains `app/` and a `west.yml` and no Zephyr at all. A
-  `west` binary alone buys nothing: the worktree would need a multi-GB `west
-  update` of its own before it could build. In the **main checkout** the same
-  work takes about a minute — the `app/tests/serial_protocol` ztest suite builds
-  for `native_sim` and runs 57 tests — so this is undispatchable, not
-  unrunnable, which is the whole distinction.
+- **`embarch-dev-bench` needed it, and a worker now builds it** (EMB-83). Its
+  Zephyr tree lives *inside* the repo at `workspaces/*/{zephyr,modules,.west}`
+  and every one of those is gitignored, so a worker's worktree has `app/` and no
+  Zephyr. But `west build` run from the **main checkout's** workspace builds a
+  worktree's sources and only reads the workspace:
+  `cd {{FLEET_ROOT}}/embarch-dev-bench/workspaces/native_sim &&
+  {{FLEET_ROOT}}/.west-venv/bin/west build -b native_sim -d <scratch>
+  <worktree>/app/tests/serial_protocol` built the worktree's files in 14 s
+  (its `compile_commands.json` names the worktree's paths), and
+  `workspaces/espressif` configures the ESP32-C5 image the same way; `nordic`
+  built `nrf54l15dk/nrf54l15/cpuapp` so on 2026-11-07. Each worker passes its own `-d`, the
+  venv's `bin/` goes first on `PATH`, and the worktree needs
+  `embarch-study-designer` beside it (`.claude/leg.md`'s sibling table). So a
+  `dev-bench` task that only needs a build is **`none`**, and it names the
+  workspace, the board and the target. The dreams of 2026-10-28 and 11-06
+  idled over sixteen `toolchain` tasks this lane could have run.
 - **`embarch-outpost` does not.** It is a Zephyr *module*: `tests/run-all.sh`
   builds against an **external** `ZEPHYR_BASE` with `-DZEPHYR_EXTRA_MODULES`,
   so nothing about it needs a workspace inside the repo. Verified 2026-09-06 by
@@ -233,8 +241,9 @@ ztest suite sat red on `main` at 56 of 57 for two days — a fixture the
 client-name scrub had left stale — precisely because no actor was running it.
 It was found the day this value was added, by running it.
 
-Three things follow from `bench` and `toolchain` being the supervisor's own
-hands:
+A `toolchain` task, should one be needed again, is listed beside `bench` in
+`queue-status.py`'s supervisor-only bucket, never `hw-gated`. Three things
+follow from `bench` and `toolchain` being the supervisor's own hands:
 
 - **At most one runs at a time**, which needs no lock: exactly one supervisor
   exists, ever ({{FLEET_REL}}/protocol.md §6). There is one `hw_lock` and one

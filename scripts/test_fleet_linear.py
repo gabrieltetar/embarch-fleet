@@ -573,6 +573,16 @@ class Fleet(unittest.TestCase):
         r = self.run_script("queue-status.py", "--count", "--tasks-only", "--no-supervisor", "--root", str(self.doc))
         self.assertEqual(r.stdout.strip(), "0")
 
+    def test_queue_status_lists_a_toolchain_task_with_bench_not_hw_gated(self):
+        for n, hw in (("001-a.md", "toolchain"), ("002-b.md", "bench"), ("003-c.md", "none")):
+            (self.doc / "tasks" / "ui" / n).write_text(
+                f"# t\n\n**State:** open\n**Scope:** ui\n**Hardware:** {hw}\n")
+        v = json.loads(self.run_script("queue-status.py", "--json", "--tasks-only", "--no-supervisor",
+                                       "--root", str(self.doc)).stdout)
+        self.assertEqual(v["dispatchable"], 1)
+        self.assertEqual(sorted(Path(b["path"]).name for b in v["bench"]), ["001-a.md", "002-b.md"])
+        self.assertEqual(v["hardware_gated"], [])
+
     def test_queue_status_with_a_down_desk_says_so_and_still_counts_tasks(self):
         self.conf.write_text(re.sub(r"^desk_port = \d+$", "desk_port = 9", self.conf.read_text(), flags=re.M))
         r = self.run_script("queue-status.py", "--json", "--no-supervisor", "--root", str(self.doc))
