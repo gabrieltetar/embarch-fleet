@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-17 14:47 — chat/028 read-where-a-dead-session-stopped
+
+**Decided:** **reverted a landed unit on a confirmed reviewer contradiction**, per `gate.md`, and put the task back `open` for a re-land. The reviewer's finding (EMB-200, verified by me in `src/hostHooks.ts`): the new `last_session` MCP tool calls `lastSessionCall(cwd, chat.sessionId)` with no root, so it reads the extension host's login (`CLAUDE_CONFIG_DIR` or `~/.claude`), not the chat's own, against `embarch-chat` decision 101; a chat on a second login would read another account's transcripts. I weighed a forward fix (a few lines, the `root` parameter exists) and chose the revert because the code was already on `main` and the failure crosses logins. Nothing numbered otherwise (burndown); the first build's design is sound and recorded in the task's "Re-land, read first": MCP tool beside `handoff`, a CLI `node dist/last-session.js`, newest `*.jsonl` in the cwd's folder then the main clone's, never the caller's session (id, else a 30 s live-file rule). `tasks/chat/028` now carries `**Issue:** EMB-200` too, and EMB-200 is filed against it.
+**Merged:** nothing net. Code `97cf346` landed (ff on `61ceee2`) and was reverted by `3288cf6` on `embarch-chat` `main` (tree equal to `61ceee2`). Doc half `88f845e7` (cherry-picked as `d67da2d7` in the leg worktree, never pushed) dropped; it survives on `origin/agent/chat/028-read-where-a-dead-session-stopped` in `embarch-doc`. The first landing's gate was green: `npm test` 305 passed, 78 skipped, `test:webview` passed, `check-docs.py` 12/12.
+**Blocked:** `chat/028` left `open` (not `blocked`): re-dispatchable as is, `git revert 3288cf6` plus the login fix, per the task file.
+**Reviewer:** 1 finding — EMB-200
+**Hardware debts:** none.
+**Budget:** PROCEED in burndown at start (5-hour 63%, weekly 45%) and end (5-hour 87%, weekly 48%), suggested wave 6. Leg close: 4 of 4 units (desk/030, promptu/007, atlas/068 landed; chat/028 reverted). Fleet Ready holds 32 unsplit issues; on `main` `chat/028` is dispatchable, `promptu/008` blocked. EMB-197 (chat) waits behind `chat/028` in the same scope and will touch `decisions/promptu.md` (204 B left). The 5-hour window climbed 24 points this leg; at 97% the next leg pauses burndown until its reset.
+**Least sure about:** whether a revert was worth more than the forward fix; it costs the next leg a re-land for a bug that only bites a chat on a second login, and the owner may have preferred EMB-200 alone.
+
+---
+
 ## 2026-11-17 14:37 — atlas/068 a-shared-datasheet-library-and-a-copy-of-each-file-used
 
 **Decided:** nothing numbered (`embarch-atlas` keeps none; burndown). Builds the owner's 2026-11-17 decision in `DESIGN.md` "Where documents come from" (EMB-198): optional `[project] library` in `atlas.toml` (unset is byte-for-byte today's behaviour; a set folder that does not exist is an error); `src/embarch_atlas/library.py` scans it and admits a file to the manifest only when tied to a board part, the MCU role, a confirmation or a `[[boards]] pdf`, marked `library: true` (not the issue's `origin = "library"`, which already holds the Zone.Identifier host); `inventory/library-index.json` stops re-hashing; `doc prep`, `schematic` and `inventory` (for earlier-prepped docs) copy what they read to `<atlas>/files/<sha256>/<name>` and `doc.json` `path` names the copy; never a write into the library, never the network. One existing test changed to expect the copy. At the fold I added a "Left open" sentence to `embarch-doc/embarch-atlas/design.md` so the follow-ups outlive the retired task file.
