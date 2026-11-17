@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-17 14:37 — atlas/068 a-shared-datasheet-library-and-a-copy-of-each-file-used
+
+**Decided:** nothing numbered (`embarch-atlas` keeps none; burndown). Builds the owner's 2026-11-17 decision in `DESIGN.md` "Where documents come from" (EMB-198): optional `[project] library` in `atlas.toml` (unset is byte-for-byte today's behaviour; a set folder that does not exist is an error); `src/embarch_atlas/library.py` scans it and admits a file to the manifest only when tied to a board part, the MCU role, a confirmation or a `[[boards]] pdf`, marked `library: true` (not the issue's `origin = "library"`, which already holds the Zone.Identifier host); `inventory/library-index.json` stops re-hashing; `doc prep`, `schematic` and `inventory` (for earlier-prepped docs) copy what they read to `<atlas>/files/<sha256>/<name>` and `doc.json` `path` names the copy; never a write into the library, never the network. One existing test changed to expect the copy. At the fold I added a "Left open" sentence to `embarch-doc/embarch-atlas/design.md` so the follow-ups outlive the retired task file.
+**Merged:** `agent/atlas/068-a-shared-datasheet-library-and-a-copy-of-each-file-used` (code `90f70f2`, ff on `c63849c`; doc `3b7f50c7`, cherry-picked onto `899528ad`). `pytest` 856 passed, 3 skipped (env-gated; `test_public_guard` ran), client names clean, `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. **Left open:** no test drives the schematic ingest's copy or a library-only board PDF (no synthetic Smart PDF exists); a schematic's `source_file` still names the original; `join` and `build` do not refresh the manifest, so a library file is tied only at the next `inventory` or `missing`. **Owed, owner-side:** a first real run with a library set; skills reach sessions only after a re-install (`atlas-translate-docs` changed).
+**Budget:** PROCEED in burndown, 5-hour 63%, weekly 45% at leg start.
+**Least sure about:** whether `missing` re-running `inventory` whenever a library is set is cheap enough on a large library; the index is meant to make it so and only a synthetic test measures it.
+
+---
+
 ## 2026-11-17 14:35 — promptu/007 rewrite-the-rough-prompt-and-log-the-original
 
 **Decided:** nothing numbered (burndown). Builds owner decision 42 (EMB-196): `promptu render` makes one rewrite call after the structured render and the rewrite is the draft; footer gains `rewritten=yes`; a brief, a run with no pattern, an offline run and `rewrite = "off"` are not rewritten; a failed call falls back to the verbatim render and records `rewrite_skipped` in the log. Log: `<state>/log/<run>.json`, never pruned (original, rendered, model, effort, `rewrite_ms`, `wait_ms`). Read-back verb for EMB-197: **`promptu original <run> [--json]`** (stdout the original as typed, exit 2 for no entry), contract §8.4 to §8.6 and `interfaces.md`. `promptu stats` prints p50/p95. Settings `rewrite_model` (default `sonnet`, as decision 9's pass), `rewrite_effort` (`low`), `rewrite_timeout_s` (30); the choice stays open in `open.md`. "Amended by 42" pointers added to decisions 13 and 14. At the fold I repointed `tasks/promptu/008`'s `Unparks when:` and an `open.md` line from the retiring task file to `open.md`.
