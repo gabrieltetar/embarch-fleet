@@ -80,7 +80,8 @@ nothing.
    **exactly** the block below, and that block is the source of truth for the
    live job: if you change one, change the other in the same pass. They have
    drifted before, and a job armed with an older threshold looks entirely
-   healthy.
+   healthy. **Take the prompt from `scripts/fleet-armed.py --print
+   .claude/commands/fleet-watch.md`**; never copy it by hand.
 3. **Record what you just armed it with**: `scripts/fleet-armed.py --stamp
    .claude/commands/fleet-watch.md`, after the `CronCreate` so a failed arming
    leaves no stamp. This window's block has drifted before and *"a job armed

@@ -81,7 +81,9 @@ Four steps, in this order.
    off-minute schedule, not `*/10`, so this fleet's wake-ups do not land on the
    same instant as every other cron in the world. Its prompt must be **exactly**
    the block below, and that block is the source of truth: if you change the live
-   job, change the block in the same pass. They drifted once already.
+   job, change the block in the same pass. They drifted once already. **Take the
+   prompt from `scripts/fleet-armed.py --print .claude/commands/fleet.md`**, which
+   prints the block without its quote marks; never copy it by hand.
 3. **Record what you just armed it with**: `scripts/fleet-armed.py --stamp
    .claude/commands/fleet.md`. One command, and it is the only evidence anywhere
    of what the live job carries — the job keeps its prompt for life, so every

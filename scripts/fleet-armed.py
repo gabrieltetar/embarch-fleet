@@ -31,6 +31,7 @@ Stamping the listener also records the login it was armed under, from its own
 cron or a UI has no other way to learn which account the fleet is spending.
 
 Usage:
+  scripts/fleet-armed.py --print .claude/commands/fleet.md   the prompt to arm with
   scripts/fleet-armed.py --stamp .claude/commands/fleet.md
   scripts/fleet-armed.py --clear .claude/commands/fleet.md
   scripts/fleet-armed.py --check          every armed prompt, against the instance
@@ -78,6 +79,30 @@ def stamp(rel: str) -> int:
     return 0
 
 
+def dequote(block: str) -> str:
+    """The block as a cron prompt: each line without its `> ` (or bare `>`)."""
+    return "\n".join(ln[2:] if ln.startswith("> ") else ln[1:] for ln in block.splitlines())
+
+
+def requote(prompt: str) -> str:
+    return "\n".join(f"> {ln}" if ln else ">" for ln in prompt.splitlines())
+
+
+def print_prompt(rel: str) -> int:
+    """The prompt `CronCreate` takes, so arming copies nothing by hand and no
+    session writes a script against `cron_block` to read it (EMB-100, EMB-121).
+    Re-quoted, it is what `--stamp` records."""
+    block = _instance_block(rel)
+    if block is None:
+        print(f"cannot read {CONF.doc_repo / rel}", file=sys.stderr)
+        return 1
+    if not block:
+        print(f"{rel} has no `>` block -- no prompt to print", file=sys.stderr)
+        return 1
+    print(dequote(block))
+    return 0
+
+
 def clear(rel: str) -> int:
     p = armed_stamp(rel)
     existed = p.exists()
@@ -122,12 +147,16 @@ def check(verbose: bool) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     g = ap.add_mutually_exclusive_group(required=True)
+    g.add_argument("--print", metavar="REL", dest="print_rel",
+                   help="the prompt to arm with, the block without its quote marks")
     g.add_argument("--stamp", metavar="REL", help="record the block this window just armed")
     g.add_argument("--clear", metavar="REL", help="drop the record; belongs with disarming")
     g.add_argument("--check", action="store_true", help="every armed prompt, against the instance")
     ap.add_argument("--diff", action="store_true", help="with --check, show what differs")
     a = ap.parse_args()
 
+    if a.print_rel:
+        return print_prompt(a.print_rel)
     if a.stamp or a.clear:
         rel = a.stamp or a.clear
         if rel not in ARMED_PROMPTS:
