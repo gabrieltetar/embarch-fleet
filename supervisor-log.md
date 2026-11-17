@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-17 14:20 — promptu/006 count-tool-calls-and-result-characters-per-subagent
+
+**Decided:** nothing. EMB-149: `promptu calls <session> [--subagent <id>] [--class <name>] [--json]`, read-only, per thread (main and each subagent with its `meta.json` description) and per class (`git`, `build`, `config`, `source`, `other`), the class rules one table in `src/calls.rs` `classify`, pinned by a test; contract §12. No withheld decision.
+**Merged:** `agent/promptu/006-count-tool-calls-and-result-characters-per-subagent` (code `e8b58c7`, ff on `95f0d69`; doc `9fd7c031`, cherry-picked onto `2b01ca82`). `cargo test --all-targets` 115 passed (69, 18, 28), clippy green, client names clean.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. A comment in `src/main.rs` cites the new contract section as §9 where the heading is §12; a typo, left for the next promptu unit to touch that file.
+**Budget:** PROCEED in burndown, 5-hour 57%, weekly 45% at leg start.
+**Least sure about:** whether the worker reused `src/used.rs`'s transcript walker as the task asked; `src/calls.rs` is 300 new lines and I did not read it for that.
+
+---
+
 ## 2026-11-17 14:18 — desk/029 a-key-from-the-opening-prompt-must-name-a-real-issue
 
 **Decided:** nothing numbered (burndown). The worker found the premise half stale: `ensure_item` already refused a key with no card by a 404 (EMB-9); the card-exists path skips the lookup, correctly. Now `adopt_key` names the workspaces asked in the 404, Linear failing to answer stays a 502 that adopts nothing, and the skill, MCP instructions, two tool replies and the hook text say the desk checks. **Withheld decision filed: EMB-199** (Backlog, `Type: decision`): the unreachable-Linear and mixed-answer refusal. The reviewer's loose end, decision 7's sentence in `decisions/cockpit.md` that no longer describes the code, is a Finding comment on EMB-199.
