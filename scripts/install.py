@@ -80,7 +80,9 @@ SHIMMED = ("check-ownership.py", "queue-status.py", "usage-budget.py",
            # is: a tick and a leg invoke these as `scripts/...` from whichever
            # repo they are standing in, and on 2026-09-10 the first render after
            # the cutover left STEP 1 naming a file the instance did not have.
-           "fleet-read.py", "fleet-react.py", "fleet-slack-doctor.py")
+           "fleet-read.py", "fleet-react.py", "fleet-slack-doctor.py",
+           # A leg checks a command shape against the rules it runs under (EMB-114).
+           "permission-rules.py")
 
 PLACEHOLDER = re.compile(r"\{\{([A-Z_]+)\}\}")
 

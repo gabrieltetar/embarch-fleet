@@ -41,20 +41,32 @@ listener's does not. Arming deletes it (a closed window took its leg with it),
 exit wakes the listener, which would respawn a refused leg every minute until
 the lock went stale.
 
+**`leg-end` refuses while a dispatched worker has not reported** (EMB-107).
+A leg waits on its workers by ending its turn, and the harness hands that back
+as "stopped with background work still running". On 2026-11-09 two of four legs
+read that as their own end, and one ran `leg-end` with three workers live: the
+lock was gone, so a leg spawned then would have run step 0's recovery against
+live claims. So every `leg-dispatch` since the lock was taken needs a matching
+`leg-reported` -- ticked when a worker reports, landed or blocked, or is
+recovered per protocol.md §3 -- before `leg-end` releases anything.
+
 Usage:
     scripts/fleet-tick.py listener        the listener's STEP 3
     scripts/fleet-tick.py leg-start [--wait [S]]
                                           a leg's FIRST act: take the lock;
                                           exit 1 while another leg holds it
                                           (--wait polls up to S s, default 100)
-    scripts/fleet-tick.py leg-end         a leg's LAST act, whatever the exit
+    scripts/fleet-tick.py leg-end         a leg's LAST act, whatever the exit;
+                                          exit 1 while a dispatch has no report
     scripts/fleet-tick.py leg-step0       a leg, once step 0 is done
     scripts/fleet-tick.py leg-dispatch    a leg, right after spawning a worker
     scripts/fleet-tick.py leg-fold        a leg, once the fold commit lands
     scripts/fleet-tick.py leg-waiting     a leg, waiting on a live worker
+    scripts/fleet-tick.py leg-reported    a leg, once a worker has reported or
+                                          been recovered as dead
     scripts/fleet-tick.py --report        gaps between ticks, worst first
-Exit status: 0 recorded / reported, 1 another leg holds the lock,
-2 unknown label or the write failed.
+Exit status: 0 recorded / reported, 1 another leg holds the lock or (leg-end)
+a dispatched worker has not reported, 2 unknown label or the write failed.
 """
 from __future__ import annotations
 
@@ -67,7 +79,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fleetconf import CONF  # noqa: E402
 
 WHO = ("listener", "leg-start", "leg-end", "leg-step0", "leg-dispatch", "leg-fold",
-       "leg-waiting")
+       "leg-waiting", "leg-reported")
 
 # Under the watchdog's 50 minutes, so a leg taking over a crashed holder's lock
 # ticks before the watchdog calls the fleet wedged; over the ~25 minutes a live
@@ -134,7 +146,27 @@ def leg_start(wait_s: float) -> int:
     return record("leg-start")
 
 
+def unreported() -> int:
+    """Workers dispatched since the newest `leg-start` with no `leg-reported` yet."""
+    try:
+        lines = (CONF.state_dir / "tick.log").read_text().splitlines()
+    except OSError:
+        return 0
+    labels = [ln.partition(" ")[2] for ln in lines]
+    if "leg-start" in labels:
+        labels = labels[len(labels) - labels[::-1].index("leg-start"):]
+    return max(0, labels.count("leg-dispatch") - labels.count("leg-reported"))
+
+
 def leg_end() -> int:
+    n = unreported()
+    if n:
+        print(f"leg lock kept: {n} dispatched worker(s) have not reported.\n"
+              "Waiting on your workers is not the end of the leg, whatever the hand-back "
+              "says.\nLand or park each as it reports and tick `leg-reported` for it; a "
+              "worker silent\n~25 minutes is checked and recovered per .claude/leg.md, "
+              "then ticked the same.\nRun leg-end again once every dispatch has its report.")
+        return 1
     try:
         (CONF.state_dir / "leg").unlink(missing_ok=True)
     except OSError as exc:

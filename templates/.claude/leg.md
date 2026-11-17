@@ -244,6 +244,9 @@ in a normal leg, and a wide wave is not a reason to do it less carefully.
 - **Only you write the shared suite-level docs** (§3's table).
 - **Emit only shell a permission rule can match, because you run unattended.**
   A prompt suspends you until the owner happens to look, and nobody is watching.
+  **`scripts/permission-rules.py` prints the rules you run under** — allow, ask
+  and deny from every settings file, each with its file, and the mode — so check
+  a command shape there rather than reading the JSON by hand (EMB-114).
   Two shapes can NEVER be allowlisted, whatever the mode: a `for ... done` loop,
   which has no command prefix to match, and a heredoc or `>` that writes a file,
   which is judged as a write regardless of the command it starts with. So:
@@ -253,7 +256,9 @@ in a normal leg, and a wide wave is not a reason to do it less carefully.
   that includes prepending your log entry. This is not style: a leg was blocked
   mid-fold on 2026-09-03 by a command containing both shapes.
 - **Record a tick at every dispatch and every fold** — `scripts/fleet-tick.py
-  leg-dispatch` right after you spawn a worker, `scripts/fleet-tick.py leg-fold`
+  leg-dispatch` right after you spawn a worker, `scripts/fleet-tick.py
+  leg-reported` once that worker reports or is recovered as dead,
+  `scripts/fleet-tick.py leg-fold`
   right after `fold-commit.py` succeeds, and `scripts/fleet-tick.py leg-step0`
   once when you finish step 0, before your first dispatch. One command each: it
   touches the mtime the watchdog reads and appends one labelled line to
@@ -462,6 +467,14 @@ owner's cue to top it up, and he should hear it before it reaches zero:
   `suite` task is not an empty queue**: zero dispatchable means zero for a
   worker, and the suite task is yours to announce. The pump stays
   latched on; the listener will not respawn you into another dream for 6 hours.
+
+  **A repeat does not page.** Before you post, run
+  `scripts/fleet-read.py --dream-check`. `QUIET` means the last dream is
+  unanswered and `origin/main` has not moved since, so yours would ask the same
+  thing again: post one line instead, `scripts/fleet-post.py "Still nothing to
+  do, and nothing new since the last dream; its ask stands." --react
+  crystal_ball`, with no `--action`, so it notifies nobody and still holds the
+  gate. `ASK` means dream as above (EMB-183, `{{FLEET_REPO}}/ops.md` §7).
 
   **Confirm the zero before you post it.** A dream both pages the owner and
   forfeits the leg, so it never rests on one reading: run
@@ -811,6 +824,17 @@ only at the start of the leg. **Then `scripts/fleet-tick.py leg-dispatch`** — 
 dispatch is the last progress the fleet makes for the next twenty minutes, so it
 is exactly the moment the watchdog needs on the clock.
 
+**Waiting on your workers is not the end of the leg.** You wait by ending your
+turn, and the harness hands that to the listener as "stopped with background
+work of its own still running … may resume on its own". That is the wait, not a
+cut-off: you resume when a worker reports. So keep the lock, do not run
+`leg-end`, and write no "ended early" handoff — on 2026-11-09 two of four legs
+wrote one while their workers ran, and one ran `leg-end` with three live,
+leaving their claims open to the next leg's step 0 (EMB-107). **Tick
+`leg-reported` for each worker as it reports** — landed, blocked, or recovered
+per the bounded wait above; `leg-end` refuses while any `leg-dispatch` since
+your `leg-start` lacks one, and a refusal means go back to waiting.
+
 **Land, as each reports.** Re-run the gate yourself on the merge result, not on
 the branch (§10): the repo's `cargo build` / `test` / `clippy --all-targets --
 -D warnings` (a shared crate once per feature set its consumers build it with;
@@ -1017,6 +1041,15 @@ commits your edit when it reads `blocked`. Left out, a `done` file is not
 retired at all. The script stages every path *before* it commits the log, so a
 bad path list costs nothing instead of leaving a log-only commit to undo by hand.
 
+**A retired task that another task's `Unparks when:` names has just unparked
+it.** `grep -rl '<scope>/<NNN>' tasks/` before the fold, and in the same fold
+set each dependent `open` — or, if its field still waits on something else,
+delete the landed ref and keep the rest — with its path in `--path`. The script
+runs `check-task-state.py` with the retirement staged and refuses the fold while
+it is red, so forgetting is a blocked commit; until EMB-106 the gate ran before
+the retirement and a dependent left naming it kept `main` red into the next leg,
+twice on 2026-11-09.
+
 It refuses unless the log's newest entry names *this* unit, stages by explicit
 path, and commits the log first — so the orderings a kill can leave are "nothing"
 or "an entry for a fold that did not happen", never "a fold nobody logged".
@@ -1081,7 +1114,7 @@ classification and do not edit the lists.
 
 ## Ending the leg
 
-Leave nothing in flight: no worker worktrees, no agent branches, no unfolded
+Leave nothing in flight: no live worker, no worker worktrees, no agent branches, no unfolded
 fragments, no claims held by workers that are gone. **Push both repos** — the
 instance with `git push origin HEAD:main` from your detached leg worktree, the
 fleet repo normally — **then remove your own leg worktree** — `git worktree remove` it, and if that refuses

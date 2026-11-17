@@ -273,6 +273,34 @@ def stage_plan(doc: Path, paths: list[str]) -> tuple[list[str], list[str], list[
     return addable, to_delete, already, missing
 
 
+def red_after_retirement(doc: Path, retired: list[str]) -> str | None:
+    """Why this fold may not commit with these task files retired, or None.
+
+    EMB-106: a fold retired a task that another task's `Unparks when:` named.
+    The leg's gate had run before the retirement, so it was green, the push
+    landed, and `check-task-state.py` was red on `main` until the next leg
+    noticed -- twice in two legs on 2026-11-09. So the instance's own check
+    runs here, on the worktree with the retirement staged, and a red one is
+    refused before the log commit. Its own parser, not a copy of it: the
+    retired task is gone from the worktree, which is all its rule 7 needs.
+    """
+    script = doc / "scripts" / "check-task-state.py"
+    if not retired or not script.is_file():
+        return None
+    r = subprocess.run([sys.executable, str(script)], cwd=doc,
+                       capture_output=True, text=True)
+    if r.returncode == 0:
+        return None
+    return (f"check-task-state.py is red with this fold's {len(retired)} retired task "
+            f"file(s) staged, so nothing\nhas been committed, the log included:\n\n"
+            f"{(r.stdout + r.stderr).strip()}\n\n"
+            "A task whose `Unparks when:` names one this fold retires has just had "
+            "its condition met.\nIn this fold, set it `open` -- or, if its field "
+            "still waits on something else,\ndelete the landed ref and keep the "
+            "rest -- add its path with --path, and re-run.\nThe retirement stays "
+            "staged and the re-run picks it up.")
+
+
 def invoking_repo() -> Path | None:
     """The instance checkout the caller is standing in, worktree or not.
 
@@ -899,6 +927,11 @@ def main() -> int:
         # nothing the fold was not already discarding.
         if not stage("rm", "-q", "-f", "--", *to_delete):
             return 1
+    red = red_after_retirement(doc, [p for p in to_delete + already
+                                     if p.startswith("tasks/")])
+    if red:
+        print(red, file=sys.stderr)
+        return 1
     staged = git(doc, "diff", "--cached", "--name-only").strip()
     # A path that produced no change at all is worth a line. The count on its
     # own is not enough: leg 008 read "2 path(s)" for a three-path fold and had

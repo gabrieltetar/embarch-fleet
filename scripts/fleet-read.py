@@ -30,15 +30,21 @@ Usage:
   scripts/fleet-read.py --json              the raw verdict, for a script
   scripts/fleet-read.py --leg-gate          may the listener spawn a leg? one
                                             SPAWN/HOLD line; exit 0 spawn, 1 not
+  scripts/fleet-read.py --dream-check       may a leg's dream notify? one
+                                            ASK/QUIET line; exit 0 ask, 1 quiet
 Exit status: 0 read it (whether or not anything qualified) · 1 the call failed
-· 2 no bot token. `--leg-gate` has its own: 0 spawn, 1 spawn nothing.
+· 2 no bot token. `--leg-gate` has its own: 0 spawn, 1 spawn nothing;
+`--dream-check` too: 0 ask, 1 post the quiet repeat.
 """
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import subprocess
 import sys
+import tarfile
+import tempfile
 import time
 from pathlib import Path
 
@@ -78,6 +84,40 @@ def body(msg: dict) -> str:
     return text or "(empty)"
 
 
+def fetch_origin() -> bool:
+    """Move the instance checkout's `origin/main` ref, and nothing else."""
+    try:
+        return subprocess.run(["git", "-C", str(CONF.doc_repo), "fetch", "-q", "origin", "main"],
+                              capture_output=True, timeout=60).returncode == 0
+    except subprocess.TimeoutExpired:
+        return False
+
+
+def queue_on_origin(dest: Path) -> tuple[bool, str]:
+    """Extract `tasks/` as `origin/main` holds it into dest; (ok, what was read).
+
+    EMB-175: the count used to run in `CONF.doc_repo`, the owner's own checkout,
+    which no leg advances -- legs commit in a detached worktree and push
+    `HEAD:main`. So once a leg landed the last open tasks, the gate still
+    counted them and spawned straight past a dream posted a minute earlier
+    (2026-11-13, 27 s after the dream). The queue that decides a spawn is the
+    one on `origin/main`; the fetch only moves a remote-tracking ref, never the
+    owner's tree. A failed fetch falls back to the last-fetched ref and says so.
+    """
+    doc = str(CONF.doc_repo)
+    fetched = fetch_origin()
+    a = subprocess.run(["git", "-C", doc, "archive", "origin/main", "tasks"],
+                       capture_output=True)
+    if a.returncode:
+        return False, f"git archive origin/main failed: {a.stderr.decode(errors='replace').strip()[:160]}"
+    with tarfile.open(fileobj=io.BytesIO(a.stdout)) as tar:
+        tar.extractall(dest, filter="data")
+    sha = subprocess.run(["git", "-C", doc, "rev-parse", "--short", "origin/main"],
+                         capture_output=True, text=True).stdout.strip()
+    return True, (f"origin/main {sha}" if fetched
+                  else f"origin/main {sha} as last fetched -- the fetch failed")
+
+
 def leg_gate() -> int:
     """The listener's spawn predicate, as an exit code (tasks/doc/096).
 
@@ -89,8 +129,13 @@ def leg_gate() -> int:
     what makes `--no-supervisor` true. Exit 0 spawn, 1 spawn nothing.
     """
     qs = Path(__file__).resolve().parent / "queue-status.py"
-    r = subprocess.run([sys.executable, str(qs), "--no-supervisor", "--count"],
-                       cwd=CONF.doc_repo, capture_output=True, text=True)
+    with tempfile.TemporaryDirectory() as tmp:
+        ok, read = queue_on_origin(Path(tmp))
+        if not ok:
+            print(f"HOLD -- cannot read the queue on origin/main: {read}")
+            return 1
+        r = subprocess.run([sys.executable, str(qs), "--no-supervisor", "--count",
+                            "--root", tmp], capture_output=True, text=True)
     try:
         count = int(r.stdout.strip())
     except ValueError:
@@ -98,7 +143,7 @@ def leg_gate() -> int:
               f"{(r.stderr or r.stdout).strip()[:200]}")
         return 1
     if count > 0:
-        print(f"SPAWN -- {count} dispatchable")
+        print(f"SPAWN -- {count} dispatchable on {read}")
         return 0
 
     token = fs.read_token()
@@ -115,12 +160,67 @@ def leg_gate() -> int:
               if "crystal_ball" in fs.reactions_of(m)]
     if dreams:
         newest = max(dreams, key=float)
-        print(f"HOLD -- queue empty, and a dream was posted {age(newest)} ago (ts {newest}); "
+        print(f"HOLD -- queue empty on {read}, and a dream was posted {age(newest)} ago (ts {newest}); "
               f"the relay waits {DREAM_HOLD_H:.0f} h or the owner's answer")
         return 1
     print(f"SPAWN -- queue empty, no dream in the last {DREAM_HOLD_H:.0f} h: the leg refills, "
           "and dreams if refill finds nothing")
     return 0
+
+
+def dream_check() -> int:
+    """May this leg's dream notify? Exit 0 ask, 1 post the quiet repeat (EMB-183).
+
+    From 2026-11-13 to 11-15 the fleet paged four dreams, none answered, three
+    of them drawn from byte-identical sources: the 6-hour gate expired, a leg
+    refilled from the same docs, and dreamt the same proposals with `--action`.
+    A repeat says nothing new, and an ask that repeats unchanged trains the
+    reader to skip the one alert that means the fleet cannot proceed. So a dream
+    notifies only if the last one was answered, or something it could have been
+    drawn from changed since: any commit on the instance's `origin/main`, which
+    holds every refill source but Fleet Ready -- and a Fleet Ready issue is split
+    before a leg ever dreams. Any owner message after the dream, top level or in
+    its thread, is an answer. Anything this cannot read means ASK: a missed
+    repeat costs one notification, a missed ask costs the fleet its owner.
+    """
+    token = fs.read_token()
+    if token is None:
+        print(f"ASK -- no bot token at {fs.TOKEN_FILE} to find the last dream")
+        return 0
+    h = fs.get(token, "conversations.history", channel=CONF.channel, limit=200)
+    if not h.get("ok"):
+        print(f"ASK -- the channel read failed: {fs.explain(h.get('error', ''), h)}")
+        return 0
+    msgs = h.get("messages", [])
+    dreams = [m.get("ts") for m in msgs if "crystal_ball" in fs.reactions_of(m)]
+    if not dreams:
+        print("ASK -- no dream in the newest 200 messages")
+        return 0
+    dream = max(dreams, key=float)
+    said = [m for m in msgs if float(m.get("ts", 0)) > float(dream)
+            and m.get("user") == CONF.owner]
+    if not said:
+        r = fs.get(token, "conversations.replies", channel=CONF.channel, ts=dream, limit=200)
+        if not r.get("ok"):
+            print(f"ASK -- the dream's thread read failed: {fs.explain(r.get('error', ''), r)}")
+            return 0
+        said = [m for m in r.get("messages", [])[1:] if m.get("user") == CONF.owner]
+    if said:
+        print(f"ASK -- the owner has spoken since the dream {age(dream)} ago (ts {dream})")
+        return 0
+    if not fetch_origin():
+        print("ASK -- could not fetch origin/main to tell whether a source changed")
+        return 0
+    new = subprocess.run(["git", "-C", str(CONF.doc_repo), "log", "origin/main",
+                          f"--since=@{int(float(dream))}", "--format=%h"],
+                         capture_output=True, text=True).stdout.split()
+    if new:
+        print(f"ASK -- {len(new)} commit(s) on origin/main since the unanswered dream "
+              f"{age(dream)} ago (ts {dream})")
+        return 0
+    print(f"QUIET -- the dream {age(dream)} ago (ts {dream}) is unanswered and origin/main "
+          "has not moved since: post the quiet repeat, without --action")
+    return 1
 
 
 def main() -> int:
@@ -133,10 +233,14 @@ def main() -> int:
     ap.add_argument("--json", action="store_true", help="machine output")
     ap.add_argument("--leg-gate", action="store_true",
                     help="may the listener spawn a leg now? exit 0 yes, 1 no")
+    ap.add_argument("--dream-check", action="store_true",
+                    help="may a leg's dream notify? exit 0 ask, 1 post the quiet repeat")
     args = ap.parse_args()
 
     if args.leg_gate:
         return leg_gate()
+    if args.dream_check:
+        return dream_check()
 
     token = fs.read_token()
     if token is None:
