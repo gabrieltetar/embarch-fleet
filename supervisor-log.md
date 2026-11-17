@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-17 14:18 — desk/029 a-key-from-the-opening-prompt-must-name-a-real-issue
+
+**Decided:** nothing numbered (burndown). The worker found the premise half stale: `ensure_item` already refused a key with no card by a 404 (EMB-9); the card-exists path skips the lookup, correctly. Now `adopt_key` names the workspaces asked in the 404, Linear failing to answer stays a 502 that adopts nothing, and the skill, MCP instructions, two tool replies and the hook text say the desk checks. **Withheld decision filed: EMB-199** (Backlog, `Type: decision`): the unreachable-Linear and mixed-answer refusal. The reviewer's loose end, decision 7's sentence in `decisions/cockpit.md` that no longer describes the code, is a Finding comment on EMB-199.
+**Merged:** `agent/desk/029-a-key-from-the-opening-prompt-must-name-a-real-issue` (code `59691f7`, ff on `02f9f5a`; doc `af948af6`, cherry-picked onto `a765bb6a`). `cargo test` 264 passed, clippy green, client names clean. The worker filed size debt `tasks/desk/030-compact-desk.md` (`embarch-desk/spec.md` 9,168 of 10,240 B, due 2026-11-24, `open`).
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. **Owed, owner-side:** `plugin/skills/desk/SKILL.md` changed, so the installed plugin needs a `plugin.json` version bump and push before sessions see the new text; plus the desk's own redeploy for the server change.
+**Budget:** PROCEED in burndown, 5-hour 57%, weekly 45% at leg start.
+**Least sure about:** what a session does with the 502 during a Linear outage, retry or fall back to `untracked`; nothing in the tool text tells it which.
+
+---
+
 ## 2026-11-17 14:17 — chat/027 compact-chat
 
 **Recovery, read first.** The 13:38 leg claimed and dispatched `chat/027`, `desk/029`, `promptu/006` and `atlas/067`, then was cut short by the harness at about 13:44: no `leg-end`, no entry, nothing landed. All four workers finished and pushed both branches. This leg waited out its lock (stale at 14:14, per `leg-start`'s rule), took it, and lands those four as its own four units; it dispatches nothing new. The 2026-11-14 day fold and the 2026-11-12 roll that leg's log-folder left uncommitted ride in this commit. Client-name history scan (`--suite --history`): all 16 repos clean. Those four dispatches predate this leg's `leg-start`, so this leg ticks no `leg-reported` for them.
