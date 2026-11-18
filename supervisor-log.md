@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-18 16:37 — leg cut off with two workers in flight: atlas/085, desk/040
+
+**Leg-level entry, written because the harness ended this leg while two workers it dispatched were still running**, so no `**Reviewer:**` line. Lock taken 16:26; 2 of 4 units landed (`atlas/084`, `desk/039`, both re-lands from the 15:51 leg, entries below). Then I split Fleet Ready (`2d9e7169`: EMB-32 into `atlas/087`, EMB-33 into `atlas/088`, EMB-34 into `atlas/089` and `atlas/090`, all `filed`, announced at `1795044886.216409`), claimed `atlas/085` (`a4cb8ce3`) and `desk/040` (`2bb300d0`), created both units' worktrees under `.worktrees/` (atlas venv built, `check-dispatch.py --created` green on both) and dispatched at 16:35. **Next leg: the `.fleet/leg` lock is still mine and `leg-end` was not run (it would refuse), so wait it out, then recover these two by presence:** a pushed branch in both repos means the worker finished, so gate and land it; no branch and a dirty tree means commit the tree to its branch and resume or block per `ops.md` §3. Workers may have died with this leg.
+**Decided:** nothing. Refill skipped: `--refill-owed` fired spread-only, and the only source commits since the 11:16 spread sweep are this leg's own `atlas/084` `design.md` edits, in a scope already queued, so a sweep could add no spread.
+**Merged:** see `atlas/084` and `desk/039` below.
+**Blocked:** nothing.
+**Hardware debts:** none new; bench `api/059`, `dev-bench/038` untouched.
+**Budget:** PROCEED; 5-hour 49% at start, 69% at the 16:35 dispatch; weekly 11 to 12%.
+**Least sure about:** whether the workers outlive this hand-back; if they do, their completion lands nowhere that acts on it.
+
+---
+
 ## 2026-11-18 16:31 — desk/039 keep-a-pending-drafts-versions
 
 **Decided:** decision 88 amended by the worker, not a new number: a pending draft keeps a version history. Creation is version 1; every agent revision (`POST /drafts/{id}/revise`, `desk_revise_draft`) and every owner edit (`PATCH /drafts/{id}`) adds one with its author and time; a `PATCH` that changes nothing adds none. The history is capped at 50 and always keeps version 1. A draft stored before this unit reads with a synthesized history (the agent version, then the owner's body if it differs), tested. `GET /drafts/{id}` returns the versions and `desk_get_draft` diffs any two; with none named, `agent_body` and `owner_diff` answer as before. `github_replies` drafts are not versioned (one body per thread), which is `desk/040`'s ground. The second re-land of this leg; the cut-off leg's step-0 story is in `atlas/084`. `desk/040`'s `Unparks when:` (`039` lands) is now met, so this fold sets it `open`.
