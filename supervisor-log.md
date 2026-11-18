@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-17 18:18 — atlas/070 recover-rotated-module-pad-names-from-the-text-layer
+
+**Decided:** nothing numbered (`embarch-atlas` keeps none; burndown). EMB-89, the first of the three blank-module-pad issues. EMB-156 (schematic text search, `checks.md` flag) and EMB-188 (DT pin on an unresolved pad) stay in Fleet Ready, to be split on what this leaves. `smartpdf.recover_pad_names` runs after `pin_name_for` on still-unnamed pads of 3+-pin parts. A pad on a vertical anchor takes the rotated words in its number's x column, and a side pad takes the upright words on its row. Only words inside the symbol outline count, which is the popup rectangle or else the pad extent. Numbers, designators, values and other pads' numbers are never names. Exactly one candidate becomes the name, with `name_source: "text-layer"` in `netlist.json`, `NAME (text-layer)` in `pins.md`, and `pin_name_source` in `pin_trace`. A pad with zero or two candidates stays blank and is listed as `pad-name-unpaired` in `issues.md`. The worker read "the atlas report" as the ingest's issues, not `checks.md`. Tolerances: the existing `PIN_NAME_AXIS` (3.2 pt), plus a new `PAD_NUMBER_REACH` (20 pt), which is assumed, not measured. `DESIGN.md` records the step.
+**Merged:** `agent/atlas/070-recover-rotated-module-pad-names-from-the-text-layer` (code `e815f43`, ff on `39b34b5`; doc `fe56b8ea`, cherry-picked onto `dcd820c9`, the changelog fragment and the task file only). `pytest` 861 passed, 3 skipped (env-gated: real west workspace, built atlas, vendor SVD; `test_public_guard` ran), client names clean, ownership green on both branches, `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. **Left open:** a recovered name shows with no mark in the graph UI (`graph.py` node name), `nets.md` and `parts.md`. Overlay names (`llm-unverified` included) are equally unmarked there, and DESIGN.md names only `pin_trace` and `pins.md` as marked surfaces. This is not a contradiction, and it is a candidate follow-up. **Owed, owner-side:** a first run on a real module schematic. Only a synthetic PDF has exercised the pairing.
+**Budget:** PROCEED in burndown, 5-hour 39%, weekly 53%.
+**Least sure about:** `PAD_NUMBER_REACH` at 20 pt is a guess, and on a dense module a wrong pairing would print a confident port marked only by a suffix.
+
+---
+
 ## 2026-11-17 18:15 — dev-bench/048 check-and-refresh-patch-sums
 
 **Read first: this leg handed back early and kept running.** The leg that took the lock at 18:06 split EMB-197 into `tasks/chat/029` and EMB-89 into `tasks/atlas/070` (`fb235f51`), claimed those two plus `api/157` and `dev-bench/048` (`4c3034ed`, `4a1b08f1`, `d902e9d8`, `1afcf9a1`), and dispatched all four at 18:10. At 18:12 the harness forced its final report, which says "nothing landed, the next leg lands them". The session stayed alive and the worker reports kept arriving, so it went on landing under the same lock. Where this log and that report disagree, this log is right. The refill sweep was owed (2 dispatchable, 2 scopes) and was skipped: Fleet Ready held 27 unsplit issues, more than a leg can dispatch.
