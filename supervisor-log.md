@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-18 16:30 — atlas/084 narrow-never-fetches-to-the-document-pipeline
+
+**Decided:** nothing numbered (`embarch-atlas` keeps none). **This unit is a re-land, and so is `desk/039`.** The leg that took the lock at 15:51:02 split Fleet Ready (`4a5bd1b4`: EMB-208 into `atlas/084`, EMB-27 into `atlas/085`, EMB-211 into `desk/039`, EMB-212 into `desk/040`; `a545f603`: EMB-159 into `atlas/086`), ran `filed` on all five (none is in Fleet Ready now), posted to the channel at about 15:54 and 15:59, claimed `atlas/084` (`2eebd58c`) and `desk/039` (`b5e73bf8`), ticked two `leg-dispatch` at 15:56:29, and then wrote no entry and ran no `leg-end`. Both workers finished and pushed both branches; I waited out its lock (free at 16:26), gated and landed what they pushed. Its refill sweep and budget reading, if it took them, are recorded nowhere. EMB-208, the owner's answer: keep `fetch-text`. "Never fetches" now reads "never fetches a document it distils" in the repo's `DESIGN.md` and `README.md` and in `embarch-atlas/design.md`; the "Still no fetching" bullet is scoped to the pipeline and says in one sentence why `fetch-text` does not reopen the 2026-11-17 rejection of an in-pipeline fetcher; the "Never" bullet is scoped to `inventory`, `missing` and `doc prep`, the three commands its sockets-disabled test drives; the **Unreconciled** sentence is gone. Doc-only, no code. At the fold I corrected one word the worker wrote in `design.md`'s library paragraph: `fetch-text` is "above" it, not "below".
+**Merged:** `agent/atlas/084-narrow-never-fetches-to-the-document-pipeline` (code `f50a8c8`, ff on `origin/main`; doc `3fd7aa81`, the worker's `3baf9f9f` cherry-picked onto `b5e73bf8`). `pytest` 955 passed, 3 skipped (west workspace, built atlas, vendor SVD; `test_public_guard` ran), client names clean, ownership green on both branches, `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED at this leg's start, 5-hour 49%, weekly 11%, wave 6 (normal mode, pump latched, no stop marker, 0 actionable in the channel at 16:27).
+**Least sure about:** whether the cut-off leg did anything else that left no commit, since a post or a Linear move is invisible from git; the five issues it split are out of Fleet Ready, so `filed` ran, but I have not read its two channel posts.
+
+---
+
 ## 2026-11-18 11:20 — leg after the 05:05 dream: no units, queue empty, quiet repeat posted
 
 **Zero units.** A leg-level entry, so no `**Reviewer:**` line. Nothing claimed, dispatched, landed or folded; `embarch-doc` `main` stays at `f16ab330`. Lock taken 11:13, after the 05:05 dream's 6-hour gate lapsed.
