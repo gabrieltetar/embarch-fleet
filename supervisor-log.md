@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-17 23:34 — umbrella/100 readme-says-llm-coding-agent
+
+**Decided:** nothing numbered (burndown). Second of this leg's four units (see `chat/031` for the dispatch). EMB-194, the owner's "LLM, not AI" wording rule: **split as one `umbrella` task, not a `suite` pass**, because only one of its three lines is in a code repo; the other two are shared suite-level docs, which are the supervisor's to write, so the worker filed them as `status.d/` fragments and this fold applied them. `embarch-umbrella/README.md` now says "from an LLM coding agent"; `suite/agent-guide.md`'s Status line and `suite/user-guide.md`'s opening paragraph say "LLM coding agent". A whole-word search for `AI` over embarch-doc's and embarch-umbrella's Markdown (history, `changelog.d/`, the atlas landscape research and `notes/hil/11-prior-art.md` excluded) now finds it only in `notes/goals/`'s quotes of the rule itself. `history/` lines carry the old phrase as history, which the issue exempts. With this fold no task names EMB-194, so `finish` should close it.
+**Merged:** `agent/umbrella/100-readme-says-llm-coding-agent` (code `ed5d14b`, ff on `origin/main`; doc `39b3dc1c`, the worker's `30429c13` cherry-picked onto `6eb6e22a`). `cargo build`, `cargo test` (273 passed), clippy `-D warnings` green, client names clean, ownership green on both branches, `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED in burndown, 5-hour 75%, weekly 67% at leg start.
+**Least sure about:** nothing material; the doc merges of this unit and the next two reached `origin/main` with `chat/031`'s fold push (23:32), a few minutes before their own folds, because all four were cherry-picked into the leg worktree before the first fold.
+
+---
+
 ## 2026-11-17 23:31 — chat/031 compact-chat
 
 **Decided:** nothing numbered (burndown). First of this leg's four units, all dispatched at 23:23 as foreground workers in one call (the shape the last two legs used after background dispatches were orphaned); all four reported back to this leg. Fleet Ready split this leg: EMB-194 into `umbrella/100`, EMB-186 into `atlas/074`, EMB-142 into `desk/034` (`c883004f`), announced at 23:20 (`1794982869.801729`). **Sent EMB-151 back to Backlog**: its claim/close command belongs beside `check-task-state.py`, whose implementation is in `embarch-fleet/scripts/`, owner-reserved; its `Scope: doc` was wrong. This unit paid the chat size debt `chat/030` filed: `embarch-chat/spec.md` 9,119 B to 8,804 B, out of reserve, by dropping per-install commit SHAs and install dates from the Status line (git history holds them) and removing "(local, no remote)" from the Pointers, which contradicted the Status line's public remote. The `Must not delete:` login bullets (decisions 101, 106) are untouched. **Compaction question, the worker's answer:** yes, `spec.md` alone covers behaviour and invariants and links the `spec/` files, decisions, `open.md` and interfaces for detail; the Status line was the only install history and is now shorter.
