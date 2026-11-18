@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-17 23:14 — atlas/073 net-find-lists-nets-by-name-pattern
+
+**Decided:** nothing numbered (`embarch-atlas` keeps none; burndown). Third of this leg's four units (see `topology/070` for the dispatch). EMB-96: a new lookup, `embarch-atlas q net-find <pattern>` (`board=`, `offset`), with a read-only `net_find` MCP tool, lists every net whose name matches across all boards, one line per net, `<board>:<net>  <REF-PIN> ...`, sorted by board then net. The pattern is a case-insensitive substring, or a whole-name glob when it holds `*`, `?` or `[`. `nettrace.find` does the matching and `query.net_find` wraps it, with a `BUDGET` entry of 4000 like `net_trace`'s. An unknown board or no match gets a plain message. Every lookup count now says nineteen (`DESIGN.md` with the design reason, `README.md`, docstrings, the `MAP.md` tools line in `mapgen.py`, the atlas-use skill table, `embarch-doc/embarch-atlas/design.md`), and a test pins `len(TOOLS) == 19`. **Kept the worker's call on `features.d`:** no row, since no atlas lookup has its own and the atlas is the one `not-yet-020` row. Pins print bare (`U1-2`), the board being on the line, which is the key form `net_trace` takes after `<board>:`. With this fold no task names EMB-96, so `finish` should close it.
+**Merged:** `agent/atlas/073-net-find-lists-nets-by-name-pattern` (code `efc2c7f`, ff on `origin/main`; doc `1579353b`, the worker's `6b747081` cherry-picked onto `f9c948d7`). `pytest` 867 passed, 3 skipped (env-gated; `test_public_guard` ran), client names clean, ownership green on both branches, `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. **Owed, owner-side:** one `net-find` against a real atlas's boards; only the synthetic test netlists have exercised it.
+**Budget:** PROCEED in burndown, 5-hour 57%, weekly 66% at leg start.
+**Least sure about:** a pattern with no `*`, `?` or `[` is always a substring, so a net name containing a literal bracket cannot be matched alone; nobody asked for that, and nothing says so to a user.
+
+---
+
 ## 2026-11-17 23:13 — api/161 compact-api
 
 **Decided:** nothing numbered (burndown). Second of this leg's four units (see `topology/070` for the dispatch). Paid the api size debt `api/160` filed: `spec/implementation.md` §4 "Deployment and topology" moved verbatim into a new `embarch-api/spec/deployment.md` (1,893 B), and §4 keeps a one-line stub linking to it, so the heading, its anchor and the section numbering survive. `implementation.md` went from 9,168 B to 7,806 B, out of reserve. §7 and §8 are untouched, so both `Must not delete:` items (the constants table's `[assumed]` brackets, §8's `cosign verify-blob` command) stand. **Compaction question, the worker's answer:** yes, `spec.md` with the `spec/` files it links still answers how the API builds, deploys, secures and releases, each rule carrying its decision number; topology is one hop further away than before. The reviewer noted, as cosmetic, that `embarch-api/spec.md` still says §§3–7 moved to `implementation.md`; the stub there carries a reader on, so I left it.
