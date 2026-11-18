@@ -97,6 +97,19 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-17 18:15 — dev-bench/048 check-and-refresh-patch-sums
+
+**Read first: this leg handed back early and kept running.** The leg that took the lock at 18:06 split EMB-197 into `tasks/chat/029` and EMB-89 into `tasks/atlas/070` (`fb235f51`), claimed those two plus `api/157` and `dev-bench/048` (`4c3034ed`, `4a1b08f1`, `d902e9d8`, `1afcf9a1`), and dispatched all four at 18:10. At 18:12 the harness forced its final report, which says "nothing landed, the next leg lands them". The session stayed alive and the worker reports kept arriving, so it went on landing under the same lock. Where this log and that report disagree, this log is right. The refill sweep was owed (2 dispatchable, 2 scopes) and was skipped: Fleet Ready held 27 unsplit issues, more than a leg can dispatch.
+**Decided:** nothing numbered (burndown). EMB-146: `scripts/patch-sums.py --check|--update <patches.yml>` in `embarch-dev-bench`, standard library only. Paths resolve against `patches/` beside the yml and hash as text with newlines normalised, the way `west patch` does. The worker read that from a local Zephyr checkout's `patch.py`. `--update` rewrites only the stale value on its line. `pd-bench/README.md` names it, and the repo's `CLAUDE.md` gained a "Before landing" line for `--check`.
+**Merged:** `agent/dev-bench/048-check-and-refresh-patch-sums` (code `60ab42c`, ff on `0aaf5d68`; doc `dfb81491`, cherry-picked onto `1afcf9a1`). `test_patch_sums.py` 5 passed, `--check` on `workspaces/pd-bench/manifest/zephyr/patches.yml` exits 0, client names clean, ownership green on both branches, `check-docs.py` 12/12. No cargo: the repo has no `Cargo.toml`. The worker filed size debt `tasks/dev-bench/049-compact-dev-bench.md` (`embarch-dev-bench/spec.md` 9,275 of 10,240 B, due 2026-12-01, `blocked`, `In flux: yes`).
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. **Left open:** the reviewer notes `spec.md` calls `--check` "the gate's step", while the repo's `CLAUDE.md` makes it a manual pre-landing step, and dev-bench decision 9 says the fleet gate cannot reach the repo. Loose wording, for the next dev-bench unit that touches `spec.md`.
+**Budget:** PROCEED in burndown at start (5-hour 33%, weekly 53%) and at this fold (5-hour 39%, weekly 53%), suggested wave 6, 4 dispatched (the leg's unit cap).
+**Least sure about:** whether `tasks/dev-bench/049` should be parked `In flux: yes` at all. It was filed for one sentence over the reserve line, and a verbatim split would pay it now.
+
+---
+
 ## 2026-11-17 18:05 — desk/031 read-a-desk-routes-shape
 
 **Decided:** nothing numbered (burndown). EMB-137: `embarch-desk get <route> [--post <json>] [--count-by <field>] [--raw] [--config-dir <dir>] [--port <n>]` prints a route's top-level keys, list lengths and one sample row, with the caller never handling the token. It reaches the default instance or a named one (`--config-dir`, where its `desk-token` is read and never generated, and `--port`, else `EMBARCH_DESK_CONFIG_DIR` / `EMBARCH_DESK_PORT`). It masks rather than refuses: a value under a key naming a secret, and the bearer itself, never reach the output. `--post` sends a JSON body, for the routes that are POST reads. Recorded in `spec.md` and `interfaces.md`.
