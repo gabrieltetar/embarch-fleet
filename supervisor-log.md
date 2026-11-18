@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-17 22:50 — core/127 release-workflow-signs-every-archive
+
+**Decided:** nothing numbered (burndown). Second of this leg's four EMB-190 units (see `topology/069` for the split and why the workers ran in the foreground). Core's `release.yml`: the build matrix is now `contents: read` and uploads `archive-<target>` workflow artifacts; one `sign-and-publish` job in the file (`needs: build`, `environment: release`, `contents: write`, `id-token: write`) installs cosign v3.0.4 through `sigstore/cosign-installer@v4`, signs all four archives with `cosign sign-blob --bundle`, refuses a count other than four, and publishes asset and bundle together. `spec.md` §3 gained "Release assets" with the exact `cosign verify-blob` command. The worker amended the body of `decisions/platform.md`'s decision 1/2/7/17 with a note and added no decision; the reviewer read it as an amendment that keeps the 2026-09-08 correction. The worker left the task's `State:` line at `claimed`, with every box ticked; I set it `done` in this fold. The proposal's work table now names core's part as written.
+**Merged:** `agent/core/127-release-workflow-signs-every-archive` (code `d4c9564`, ff on `c0d2a7eb`; doc `737e204a`, the worker's `9e0917c1` cherry-picked onto `371ee24b`). `cargo build`, `cargo test` (391 and 2 passed), clippy `-D warnings` green, client names clean, ownership green on both branches, `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. **Owed, owner-side:** the native Windows build (a debt for any unit touching `embarch-core`, though this one changed no Rust); `actionlint` on `release.yml`; the first signed tag.
+**Budget:** PROCEED in burndown, 5-hour 35%, weekly 63% at leg start.
+**Least sure about:** `cosign-installer@v4` here against `@v3` in the other three repos. One of the two majors may not accept `cosign-release: v3.0.4`, and the first tag in that repo is where it shows.
+
+---
+
 ## 2026-11-17 22:49 — topology/069 release-workflow-signs-every-archive
 
 **Decided:** **split EMB-190 (the owner's, `Scope: suite`) into four single-repo tasks rather than one `suite` pass** (`dda025dd`): `umbrella/098`, `core/127`, `api/160` and this one, one per release workflow. My reasoning: none changes a wire type or a shared crate's Rust, each repo's `main` stands alone, and nothing runs until the owner pushes a tag, so §8's half-landed-change risk does not arise and no 30-minute window was owed. Announced at 22:36 (`1794980207.273419`). **Dispatched all four as foreground workers in one call, not background**, because today's 18:29 and 19:17 legs were both orphaned after a background dispatch (their workers' notifications went to the listener). All four reports came back to this leg. Otherwise nothing numbered (burndown). EMB-190, topology's part: the build matrix now only uploads workflow artifacts, and one `sign` job in `release.yml` (`needs: build`, `environment: release`, `id-token: write`) installs cosign v3.0.4 through `sigstore/cosign-installer@v3`, signs all four archives with `cosign sign-blob --bundle`, refuses a count other than four, and publishes each archive beside its `.sigstore.json`. `spec.md` gained "What a release carries" with the exact `cosign verify-blob` command. That section put `embarch-topology/spec.md` into reserve (10,079 of 10,240 B), so the worker filed `tasks/topology/070-compact-topology.md` (`open`, `In flux: no`). The proposal's work table now names topology's part as written.
