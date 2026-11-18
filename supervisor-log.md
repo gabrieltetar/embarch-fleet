@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-17 19:11 — atlas/071 checks-flag-module-pads-left-without-a-port
+
+**Decided:** nothing numbered (`embarch-atlas` keeps none; burndown). Second of this leg's four re-lands of the cut-off 18:29 leg's workers (see `api/158` below). EMB-188 and EMB-156's `checks.md` half: `mismatch.py` adds the check "MCU pads with a net have a pin name", class `pad-without-name` (part, pad, net), where a `text-layer` or overlay name counts as named. It also adds "DT pins resolve to a schematic pad", class `dt-pin-unresolved` (each DT node and property), which needs a build and is otherwise listed under Not run. Both reach `checks.md` and `mismatches.json`, and `DESIGN.md` records them beside `atlas/070`'s text-layer recovery. The new test runs EMB-188's shape, six named pads down one side of a synthetic module with upright names inside the outline, and all six come back `name_source: text-layer`. Rotated names on a side column, or names outside the outline, are untested, and on a real board of that shape the new flag is what reports it. The worker left the task's `State:` line at `claimed`, with every box ticked; I set it `done` in this fold. EMB-156's other half, schematic PDF page search, is `atlas/072`, `open` on `main`.
+**Merged:** `agent/atlas/071-checks-flag-module-pads-left-without-a-port` (code `56e1cee`, ff on `e815f43`; doc `78932c3d`, the worker's `139ce5e9` cherry-picked onto `5ce81ee3`, the changelog fragment and the task file only). `pytest` 863 passed, 3 skipped (env-gated: real west workspace, built atlas, vendor SVD; `test_public_guard` ran), client names clean, ownership green on both branches, `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. **Owed, owner-side:** a first atlas of a real module schematic, to see whether the two flags fire where they should.
+**Budget:** PROCEED in burndown, 5-hour 71%, weekly 57% at leg start.
+**Least sure about:** whether `pad-without-name` will be noisy on a real board: every netted pad on an MCU part with no name now becomes a mismatch, and only synthetic fixtures have measured the count.
+
+---
+
 ## 2026-11-17 19:10 — api/158 bundle-readme-commands-match-cores-decisions
 
 **Recovery, read first.** The leg that took the lock at 18:29 split EMB-202, EMB-188, EMB-156, EMB-187 and EMB-192 into `api/158`, `atlas/071`, `atlas/072`, `promptu/010` and `umbrella/097` (`bc796f1a`, with `filed` run: none of the five is in Fleet Ready), claimed four of them (`67d0fd27`, `49f75121`, `b6f52955`, `82d74a80`), dispatched four workers at 18:35 and was cut off with no entry and no `leg-end`. All four workers finished and pushed both branches, with clean trees. This leg waited out the lock (stale at 19:06) and re-lands those four as its own four units, gating each merge result itself; it dispatches nothing new. Those dispatches predate this leg's `leg-start`, so it ticks no `leg-reported` for them. `atlas/072` stays `open` on `main`.
