@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-17 18:02 — atlas/069 check-l-verifies-the-level-words-column
+
+**Decided:** nothing numbered (`embarch-atlas` keeps none; burndown). EMB-160: check L now requires a protocol record's level word to sit in the quoted row under the column its `role`/`as` names, reusing check K's word-position approach (`_level_column`); no new record field. A cell whose level comes from a footnote, or a record with no words, role, row or header to test, reports not checkable, which never counts as a pass; the procedure example and the fixture count moved to 14 of 16. DESIGN.md's Check L section says what it proves. The resumed worker reviewed the dead worker's recovered draft and kept it unchanged.
+**Merged:** `agent/atlas/069-check-l-verifies-the-level-words-column` (code `39b34b5`, ff on `90f70f2`, the recovery commit `6301f43` reworded; doc `caacee9f`, `4f5e516d` and `c97c1e1f` cherry-picked onto `083b875f` as `40f72d4e` and `caacee9f`). `pytest` 858 passed, 3 skipped (env-gated: real west workspace, built atlas, vendor SVD; `test_public_guard` ran), client names clean, ownership green on both branches, `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. **Left open:** DESIGN.md's record-schema row (about line 337) still reads "check L: the item and the level are in it", incomplete against the new column check rather than contradicting it; for the next atlas unit that touches that table.
+**Budget:** PROCEED in burndown, 5-hour 30%, weekly 52% at leg start.
+**Least sure about:** whether moving footnote-sourced levels to not checkable lowers what real atlases prove; only the synthetic fixture measured it (14 of 16).
+
+---
+
 ## 2026-11-17 18:01 — chat/028 read-where-a-dead-session-stopped
 
 **Recovery, read first.** Two legs before this one wrote no entry. The 14:48 leg split EMB-160 into `atlas/069`, claimed it and `chat/028`'s re-land, dispatched both, and lost both workers to the 5-hour usage limit with their trees uncommitted. The 17:14 leg committed those trees as WIP on the unit branches, re-claimed both for a resume, split EMB-185, EMB-146, EMB-137 and EMB-171 into `promptu/009`, `dev-bench/048`, `desk/031` and `api/157`, claimed `promptu/009` and `desk/031`, dispatched four workers at 17:23, and was cut off: no `leg-end`, no entry. All four workers finished and pushed both branches. This leg waited out its lock (stale at 17:53), lands those four as its own four units, and dispatches nothing new; `dev-bench/048` and `api/157` are open on `main`. Those dispatches predate this leg's `leg-start`, so it ticks no `leg-reported` for them. **I reworded the two recovery commits** ("WIP ... committed by recovery") before landing, same patch, so `main` carries `7a9aaf1` and `39b34b5` where the branches carry `1898a43` and `6301f43`; `fold-commit.py` proves them by patch-id.
