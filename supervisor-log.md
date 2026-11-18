@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-17 19:13 — promptu/010 shell-writes-to-a-memory-index-get-checked
+
+**Decided:** nothing numbered (burndown). Third of this leg's four re-lands of the cut-off 18:29 leg's workers (see `api/158` below). EMB-187: the plugin's PreToolUse hook now also matches `Bash`. When a command names a memory-folder `MEMORY.md` (resolved by `claude::memory_target`, `~/` and `$HOME/` expanded) and looks like a write, the hook adds a warning that names the Edit tool as the checked route. A write here means a redirect, `tee`/`mv`/`cp`/`sed`/`perl`/`truncate`/`install`/`dd`/`ed`, or `write`, `open(` or `fs.` in the text. It warns in every mode and never refuses; a read gets nothing. Recorded in `spec.md` and the code repo's `docs/contract.md` §3.3a. The heuristic cannot see a script that builds the index path at run time or never names it.
+**Merged:** `agent/promptu/010-shell-writes-to-a-memory-index-get-checked` (code `2a1750d`, ff on `20063c7`; doc `04e5dff2`, the worker's `22f46dcb` cherry-picked onto `b5201cec`). `cargo build`, `cargo test --all-targets` 127 passed (75, 20, 32), clippy `-D warnings` green, client names clean, ownership green on both branches, `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. **Left open:** the reviewer notes decision 5 (`decisions/memory.md`) still says the PreToolUse hook runs "on Write, Edit and MultiEdit". That is incomplete now, not contradicted, and `spec.md` and the contract say Bash too. It is for the next promptu unit that touches that file, after `promptu/008`'s compaction. **Owed, owner-side:** the new `Bash` matcher in `plugin/hooks/hooks.json` reaches a session only after the plugin is reinstalled, and no real session has run the hook on a Bash call yet. `tasks/promptu/008` stays `blocked` (`decisions/patterns.md` 11,138 of 12,288 B, due 2026-11-24); this unit did not touch that file.
+**Budget:** PROCEED in burndown, 5-hour 71%, weekly 57% at leg start.
+**Least sure about:** the hook now runs on every Bash call in every session with the plugin. The no-match path returns before any file read, but nothing has measured what an extra process per shell command costs a long session.
+
+---
+
 ## 2026-11-17 19:11 — atlas/071 checks-flag-module-pads-left-without-a-port
 
 **Decided:** nothing numbered (`embarch-atlas` keeps none; burndown). Second of this leg's four re-lands of the cut-off 18:29 leg's workers (see `api/158` below). EMB-188 and EMB-156's `checks.md` half: `mismatch.py` adds the check "MCU pads with a net have a pin name", class `pad-without-name` (part, pad, net), where a `text-layer` or overlay name counts as named. It also adds "DT pins resolve to a schematic pad", class `dt-pin-unresolved` (each DT node and property), which needs a build and is otherwise listed under Not run. Both reach `checks.md` and `mismatches.json`, and `DESIGN.md` records them beside `atlas/070`'s text-layer recovery. The new test runs EMB-188's shape, six named pads down one side of a synthetic module with upright names inside the outline, and all six come back `name_source: text-layer`. Rotated names on a side column, or names outside the outline, are untested, and on a real board of that shape the new flag is what reports it. The worker left the task's `State:` line at `claimed`, with every box ticked; I set it `done` in this fold. EMB-156's other half, schematic PDF page search, is `atlas/072`, `open` on `main`.
