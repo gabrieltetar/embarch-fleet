@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-17 18:03 — promptu/009 list-an-earlier-runs-questions-and-answers
+
+**Decided:** nothing numbered (burndown). EMB-185: `promptu prior <prompt-file> [--projects <dir>] [--json]`, read-only, lists each earlier session's `AskUserQuestion` questions, options and the owner's answers when that session's first user turn is the prompt (text equal after trimming; a footer-only file matches a first turn ending in that footer; the footer carries no run id, so the text decides). The same footer under other text is a near-match, counted and not listed; exit 2 for an unreadable file or folder. Contract §13, `spec.md` and `interfaces.md`.
+**Merged:** `agent/promptu/009-list-an-earlier-runs-questions-and-answers` (code `20063c7`, ff on `946207b`; doc `e566e70f`, cherry-picked onto `7b81f4eb`). `cargo build`, `cargo test --all-targets` 125 passed (74, 19, 32), clippy `-D warnings` green, client names clean, ownership green on both branches, `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. **Owed, owner-side:** the installed `promptu` binary and plugin see the verb only after a rebuild and reinstall. `tasks/promptu/008` stays `blocked` (`decisions/patterns.md` 1,150 B left, due 2026-11-24); this unit did not touch that file.
+**Budget:** PROCEED in burndown, 5-hour 30%, weekly 52% at leg start.
+**Least sure about:** whether text equality on the first user turn is too strict once the rewrite (decision 42) makes the typed prompt and the sent prompt differ; the rewrite's log keeps the original, and `prior` does not read it.
+
+---
+
 ## 2026-11-17 18:02 — atlas/069 check-l-verifies-the-level-words-column
 
 **Decided:** nothing numbered (`embarch-atlas` keeps none; burndown). EMB-160: check L now requires a protocol record's level word to sit in the quoted row under the column its `role`/`as` names, reusing check K's word-position approach (`_level_column`); no new record field. A cell whose level comes from a footnote, or a record with no words, role, row or header to test, reports not checkable, which never counts as a pass; the procedure example and the fixture count moved to 14 of 16. DESIGN.md's Check L section says what it proves. The resumed worker reviewed the dead worker's recovered draft and kept it unchanged.
