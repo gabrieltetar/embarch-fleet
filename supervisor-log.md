@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-17 22:21 — desk/033 a-desk-tool-returns-a-prs-review-threads
+
+**Decided:** nothing numbered (burndown). Third of this leg's four re-lands of the 19:17 leg's workers (see `atlas/072` below). EMB-176: a new MCP tool, `github_pr_threads`, over `POST /github/pr-threads`, returns a pull request's inline review threads grouped root-then-replies (author, time, path and line on each comment), the review bodies with their states, and a mark on each thread whose latest comment is not the PR author's. The reviewer also checked the 032 move word for word against 032's `Must not delete:` list and found it a pure split. `awaiting_only` narrows it to those. `github::pr_threads` pages 100 at a time with no cap, and a test covers a PR past 100 comments. **It also closes `tasks/desk/032`** (size debt, `blocked` on `In flux: yes`, due 2026-12-01): per `.claude/leg.md`'s rule that the actor making the flux compacts the file it writes into, the worker moved `embarch-desk/interfaces.md`'s "Connectors and CLI" section verbatim into a new `embarch-desk/interfaces/cli.md`, leaving the parent at 12,858 B and out of reserve. 032 is `done` with its `In flux: yes` left as written, and this fold retires both task files. `spec.md` and a new `features.d/desk-079-github-pr-threads.md` row name the tool; `suite/features.md` is reassembled.
+**Merged:** `agent/desk/033-a-desk-tool-returns-a-prs-review-threads` (code `6785411`, ff on `640cb0c`; doc `d2b80b48`, the worker's `9a8f00cc` cherry-picked onto `3ff120e5`). `cargo build`, `cargo test` 271 passed, clippy `-D warnings` green, client names clean, ownership green on both branches, `check-docs.py` 12/12, and `check-doc-size.py --pressure` lists no desk file.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. **Owed, owner-side:** a rebuild and redeploy of the desk, then one `github_pr_threads` call on a real PR: only synthetic JSON has exercised the grouping and paging, and no live GitHub call has run.
+**Budget:** PROCEED in burndown, 5-hour 8%, weekly 60% at leg start.
+**Least sure about:** a thread is marked awaiting when its last inline comment is not the PR author's (`src/threads.rs`), so one answered in a review body or resolved without a reply still reads as awaiting, and nothing tests either case.
+
+---
+
 ## 2026-11-17 22:19 — api/159 bundle-recover-line-states-only-what-core-decided
 
 **Decided:** nothing numbered (burndown). Second of this leg's four re-lands of the 19:17 leg's workers (see `atlas/072` below). EMB-203, the reviewer finding the `api/158` entry kept that unit despite: the bundle README's recover line no longer says Core's decisions "map" the vendor runner's `--erase` to the range erase. It now says decision 32 measured the vendor's own runner with `--erase`, on the same image, as the recovery; that the suite records no command line for it; and that the program command above is Core's own erase request, unconfirmed on a board, so it is not known to be that recovery. `tools-bundle.md` says the same, and a test fails if "map it to" or "run the program command above again" comes back. The reviewer read decisions 32 and 36 in full and found each claim in their text. The worker left the task's `State:` line at `claimed`, with every box ticked; I set it `done` in this fold. This settles the two-findings-in-a-row worry the `api/158` entry ended on: no revert of `3479afa`/`206a5584` is owed.
