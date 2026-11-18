@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-17 23:38 — atlas/074 atlas-use-shows-q-config-takes-several-symbols
+
+**Decided:** nothing numbered (`embarch-atlas` keeps none; burndown). Third of this leg's four units (see `chat/031` for the dispatch). EMB-186: no new verb. The worker confirmed against the code what `q config` already accepts: several symbols, space- or comma-separated (`symbol` is `nargs="*"`, `buildq.names_of` splits on commas and blanks), `*`, `?` and `[` patterns, and `--vs pinned` or `--vs <dir>` for differences only; `tests/test_buildq.py` already covers lists and patterns. The atlas-use skill's Kconfig row (`skills/atlas-use/SKILL.md`) now leads with `config <SYM> [<SYM> ...]`, shows `q config A B USB_*` and `q config A,B,USB_*`, and names `--vs pinned`; the generated `MAP.md` tools line (`mapgen.py`) says the same. No test pinned that line, and `README.md`, `DESIGN.md` and `embarch-doc/embarch-atlas/` never quoted the one-symbol form. With this fold no task names EMB-186, so `finish` should close it.
+**Merged:** `agent/atlas/074-atlas-use-shows-q-config-takes-several-symbols` (code `8a93e35`, ff on `origin/main`; doc `add1d065`, the worker's `d627b75c` cherry-picked onto `39b3dc1c`). `pytest` 867 passed, 3 skipped (env-gated; `test_public_guard` ran), client names clean, ownership green on both branches, `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED in burndown, 5-hour 75%, weekly 67% at leg start.
+**Least sure about:** nothing in this unit; the reviewer matched every form the skill now shows to `query.py`'s argparse.
+
+---
+
 ## 2026-11-17 23:34 — umbrella/100 readme-says-llm-coding-agent
 
 **Decided:** nothing numbered (burndown). Second of this leg's four units (see `chat/031` for the dispatch). EMB-194, the owner's "LLM, not AI" wording rule: **split as one `umbrella` task, not a `suite` pass**, because only one of its three lines is in a code repo; the other two are shared suite-level docs, which are the supervisor's to write, so the worker filed them as `status.d/` fragments and this fold applied them. `embarch-umbrella/README.md` now says "from an LLM coding agent"; `suite/agent-guide.md`'s Status line and `suite/user-guide.md`'s opening paragraph say "LLM coding agent". A whole-word search for `AI` over embarch-doc's and embarch-umbrella's Markdown (history, `changelog.d/`, the atlas landscape research and `notes/hil/11-prior-art.md` excluded) now finds it only in `notes/goals/`'s quotes of the rule itself. `history/` lines carry the old phrase as history, which the issue exempts. With this fold no task names EMB-194, so `finish` should close it.
