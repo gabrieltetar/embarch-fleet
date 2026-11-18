@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-17 18:05 — desk/031 read-a-desk-routes-shape
+
+**Decided:** nothing numbered (burndown). EMB-137: `embarch-desk get <route> [--post <json>] [--count-by <field>] [--raw] [--config-dir <dir>] [--port <n>]` prints a route's top-level keys, list lengths and one sample row, with the caller never handling the token. It reaches the default instance or a named one (`--config-dir`, where its `desk-token` is read and never generated, and `--port`, else `EMBARCH_DESK_CONFIG_DIR` / `EMBARCH_DESK_PORT`). It masks rather than refuses: a value under a key naming a secret, and the bearer itself, never reach the output. `--post` sends a JSON body, for the routes that are POST reads. Recorded in `spec.md` and `interfaces.md`.
+**Merged:** `agent/desk/031-read-a-desk-routes-shape` (code `640cb0c`, ff on `0a62c64`; doc `d2000b58`, cherry-picked onto `8d391395`). `cargo build`, `cargo test --all-targets` 268 passed, clippy `-D warnings` green, client names clean, ownership green on both branches, `check-docs.py` 12/12. The worker filed size debt `tasks/desk/032-compact-desk.md` (`embarch-desk/interfaces.md` 14,128 of 15,360 B, due 2026-12-01, `blocked`, `In flux: yes`).
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. **Owed, owner-side:** the deployed desk binary carries `get` only after a rebuild and redeploy.
+**Budget:** PROCEED in burndown at start (5-hour 30%, weekly 52%) and end (5-hour 33%, weekly 53%), suggested wave 6; this leg ran no wave. Leg close: 4 of 4 units, all the cut-off 17:14 leg's dispatches; nothing new split or dispatched, no refill sweep (29 dispatchable: `api/157`, `dev-bench/048` and 27 unsplit Fleet Ready issues). Bench `api/059` and `dev-bench/038` wait for an attended leg (burndown). The doc branch `agent/ui/059-diff-new-lines-republish` (2026-09-16) is still on `origin`, unprovable by the fold, so it is the owner's to delete or keep.
+**Least sure about:** `--post` lets a shell send a body to any route, mutating ones included, from a verb named and documented as a read; nothing in the code limits it to POST reads.
+
+---
+
 ## 2026-11-17 18:03 — promptu/009 list-an-earlier-runs-questions-and-answers
 
 **Decided:** nothing numbered (burndown). EMB-185: `promptu prior <prompt-file> [--projects <dir>] [--json]`, read-only, lists each earlier session's `AskUserQuestion` questions, options and the owner's answers when that session's first user turn is the prompt (text equal after trimming; a footer-only file matches a first turn ending in that footer; the footer carries no run id, so the text decides). The same footer under other text is a near-match, counted and not listed; exit 2 for an unreadable file or folder. Contract §13, `spec.md` and `interfaces.md`.
