@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-17 22:19 — api/159 bundle-recover-line-states-only-what-core-decided
+
+**Decided:** nothing numbered (burndown). Second of this leg's four re-lands of the 19:17 leg's workers (see `atlas/072` below). EMB-203, the reviewer finding the `api/158` entry kept that unit despite: the bundle README's recover line no longer says Core's decisions "map" the vendor runner's `--erase` to the range erase. It now says decision 32 measured the vendor's own runner with `--erase`, on the same image, as the recovery; that the suite records no command line for it; and that the program command above is Core's own erase request, unconfirmed on a board, so it is not known to be that recovery. `tools-bundle.md` says the same, and a test fails if "map it to" or "run the program command above again" comes back. The reviewer read decisions 32 and 36 in full and found each claim in their text. The worker left the task's `State:` line at `claimed`, with every box ticked; I set it `done` in this fold. This settles the two-findings-in-a-row worry the `api/158` entry ended on: no revert of `3479afa`/`206a5584` is owed.
+**Merged:** `agent/api/159-bundle-recover-line-states-only-what-core-decided` (code `0f6fb6c`, ff on `3479afa`; doc `4b424223`, the worker's `c39f7384` cherry-picked onto `76201b0d`). `cargo build`, `cargo test` green (228 passed across the default targets), clippy `-D warnings` green, client names clean, ownership green on both branches, `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none new. The `api/157` debt stands, and is now unblocked on the wording side: `embarch-api bundle` on a real nRF54L sysbuild directory, then flash its hex with the README's program command. **Owed, owner-side:** a rebuild and redeploy of `embarch-api` before any bench engineer sees the corrected README.
+**Budget:** PROCEED in burndown, 5-hour 8%, weekly 60% at leg start.
+**Least sure about:** whether a recover line that says "not known to be that recovery" helps a bench engineer with a bricked board at all; it is true, and it gives them no command to run.
+
+---
+
 ## 2026-11-17 22:18 — atlas/072 search-schematic-pdf-pages
 
 **Recovery, read first.** The leg that took the lock at 19:17 split EMB-203, EMB-176 and EMB-168 into `api/159`, `desk/033` and `chat/030` (`87a3112e`), claimed those three and `atlas/072` (`9e97eb10`, `aa05525c`, `28efac10`, `a93b940a`), dispatched four workers at 19:21 and was cut off with no entry and no `leg-end`. It owes this line: Spread sweep: nothing filed (2026-11-17 19:22). Its `fleet-hardware.py --refresh` exited 1, which does not matter in burndown (no bench units). The leg that took the lock at 19:51 started re-landing them and died on a 5-hour 429 with nothing landed: `origin/main` was still `a93b940a` when this leg started at 22:14. All four workers had pushed both branches with clean trees, each a fast-forward of its repo's `main`. This leg re-lands those four as its own four units, gating each merge result itself, and dispatches nothing new. Those dispatches predate this leg's `leg-start`, so it ticks no `leg-reported` for them.
