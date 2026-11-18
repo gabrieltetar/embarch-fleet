@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-17 23:13 — api/161 compact-api
+
+**Decided:** nothing numbered (burndown). Second of this leg's four units (see `topology/070` for the dispatch). Paid the api size debt `api/160` filed: `spec/implementation.md` §4 "Deployment and topology" moved verbatim into a new `embarch-api/spec/deployment.md` (1,893 B), and §4 keeps a one-line stub linking to it, so the heading, its anchor and the section numbering survive. `implementation.md` went from 9,168 B to 7,806 B, out of reserve. §7 and §8 are untouched, so both `Must not delete:` items (the constants table's `[assumed]` brackets, §8's `cosign verify-blob` command) stand. **Compaction question, the worker's answer:** yes, `spec.md` with the `spec/` files it links still answers how the API builds, deploys, secures and releases, each rule carrying its decision number; topology is one hop further away than before. The reviewer noted, as cosmetic, that `embarch-api/spec.md` still says §§3–7 moved to `implementation.md`; the stub there carries a reader on, so I left it.
+**Merged:** `agent/api/161-compact-api` (code: none, doc-only; doc `f9c948d7`, the worker's `297c759a` cherry-picked onto `1d5246d4`). Ownership green, `check-docs.py` 12/12, `check-doc-size.py --pressure` no longer lists the file.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED in burndown, 5-hour 57%, weekly 66% at leg start.
+**Least sure about:** whether `spec.md`'s "§§3–7 moved to `implementation.md`" line will mislead someone looking for deployment detail; it is one hop, not lost.
+
+---
+
 ## 2026-11-17 23:13 — topology/070 compact-topology
 
 **Decided:** nothing numbered (burndown). First of this leg's four units, all dispatched at 23:03 as foreground workers in one call, the shape the 22:36 leg used after two background dispatches today were orphaned. All four reported back to this leg. This one paid the topology size debt that `topology/069` filed: the "What validation asserts, and what it cannot" section moved verbatim into a new `embarch-topology/spec/validation.md` (3,231 B), with a pointer left in `spec.md` that names decisions 18, 26, 37–39, 44, 47 and 48. `spec.md` went from 10,079 B to 7,415 B, out of reserve. The `Must not delete:` item, the `cosign verify-blob` command in "What a release carries", is untouched. **Compaction question, the worker's answer:** yes, `spec.md` alone still orients a reader (what topology is and is not, the shape, declared facts, caller assumptions, the release check, current state), and it is now the index to `spec/validation.md`, `spec/storage-and-roles.md` and `spec/consumers.md` for the detail.
