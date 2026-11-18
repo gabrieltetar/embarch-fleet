@@ -97,6 +97,19 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-17 18:01 — chat/028 read-where-a-dead-session-stopped
+
+**Recovery, read first.** Two legs before this one wrote no entry. The 14:48 leg split EMB-160 into `atlas/069`, claimed it and `chat/028`'s re-land, dispatched both, and lost both workers to the 5-hour usage limit with their trees uncommitted. The 17:14 leg committed those trees as WIP on the unit branches, re-claimed both for a resume, split EMB-185, EMB-146, EMB-137 and EMB-171 into `promptu/009`, `dev-bench/048`, `desk/031` and `api/157`, claimed `promptu/009` and `desk/031`, dispatched four workers at 17:23, and was cut off: no `leg-end`, no entry. All four workers finished and pushed both branches. This leg waited out its lock (stale at 17:53), lands those four as its own four units, and dispatches nothing new; `dev-bench/048` and `api/157` are open on `main`. Those dispatches predate this leg's `leg-start`, so it ticks no `leg-reported` for them. **I reworded the two recovery commits** ("WIP ... committed by recovery") before landing, same patch, so `main` carries `7a9aaf1` and `39b34b5` where the branches carry `1898a43` and `6301f43`; `fold-commit.py` proves them by patch-id.
+**Decided:** nothing numbered (burndown). Re-land of the reverted build plus the EMB-200 fix: `Chat.projectsRoot` reads the chat's own env (`opts.env ?? chatEnv()`, decision 101) and `hostHooks` passes it to `lastSessionCall`; the CLI keeps `--config-dir`, else its own process login. `spec/handoff.md` names the login the read uses.
+**Merged:** `agent/chat/028-read-where-a-dead-session-stopped` (code `7a9aaf1`, ff on `3288cf6`, carrying `c55f218`, the revert of the revert; doc `78a723b3`, `88f845e7` and `e9b0e2a8` cherry-picked onto `ce5d34ba` as `1792667a` and `78a723b3`, the task-file conflict taken from the branch tip). `npm ci`, `build`, `typecheck` green, `npm test` 306 passed, 78 skipped, 0 failed (no hang this run; the worker's first run hung at `test/wire.test.mjs:838` and its re-run passed), `test:webview` passed, client names clean, ownership green on both branches, `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. **Owed, owner-side:** the extension reaches the owner's windows only after a rebuild and reinstall.
+**Budget:** PROCEED in burndown (until 2026-11-18 06:00), 5-hour 30%, weekly 52%, suggested wave 6; this leg runs no wave. Fleet Ready holds 27 unsplit issues; none split this leg.
+**Least sure about:** the new test passes `chat.projectsRoot` to `lastSessionCall` itself, so the `hostHooks` wiring, the line that was actually wrong, has no test of its own.
+
+---
+
 ## 2026-11-17 14:47 — chat/028 read-where-a-dead-session-stopped
 
 **Decided:** **reverted a landed unit on a confirmed reviewer contradiction**, per `gate.md`, and put the task back `open` for a re-land. The reviewer's finding (EMB-200, verified by me in `src/hostHooks.ts`): the new `last_session` MCP tool calls `lastSessionCall(cwd, chat.sessionId)` with no root, so it reads the extension host's login (`CLAUDE_CONFIG_DIR` or `~/.claude`), not the chat's own, against `embarch-chat` decision 101; a chat on a second login would read another account's transcripts. I weighed a forward fix (a few lines, the `root` parameter exists) and chose the revert because the code was already on `main` and the failure crosses logins. Nothing numbered otherwise (burndown); the first build's design is sound and recorded in the task's "Re-land, read first": MCP tool beside `handoff`, a CLI `node dist/last-session.js`, newest `*.jsonl` in the cwd's folder then the main clone's, never the caller's session (id, else a 30 s live-file rule). `tasks/chat/028` now carries `**Issue:** EMB-200` too, and EMB-200 is filed against it.
