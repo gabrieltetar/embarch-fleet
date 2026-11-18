@@ -50,6 +50,9 @@ right, and each rule is a failure that already happened:
   one or none. Carry those in the day's own words; line breaks do not matter.
   If you genuinely must reword one, `--allow-debt-edit` exists and the commit
   must say which and why.
+- **The newest `Spread sweep: nothing filed (<yyyy-mm-dd HH:MM>)` line**, when
+  the day has one, verbatim. The refill gate's spread-only skip reads its time
+  and has nowhere else to find it; the extract names the line to carry.
 
 **What you drop is the narrative reasoning** behind each accepted judgement —
 git holds it. What you keep beyond the ledger is what the *next leg* cannot

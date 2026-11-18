@@ -24,7 +24,9 @@ rather than by inspection afterwards.
 **The ledger is what makes the fold safe to trust.** Extraction records every
 SHA, every `**Reviewer:**` line and every `**Hardware debts:**` line in the day.
 `--apply` refuses a folded entry that lost a SHA, that carries fewer reviewer
-lines than the day had, or that dropped a debt line naming a board. §11 keeps
+lines than the day had, that dropped a debt line naming a board, or that dropped
+the day's newest `Spread sweep: nothing filed (...)` line, which the refill
+gate's spread-only skip reads. §11 keeps
 every SHA because under embarch-dev-workflow.md §6 there is no merge commit and
 no surviving branch name, so the SHA is a revert's only handle; and
 `grep '^\*\*Reviewer:' supervisor-log.md` is the tally that decides whether
@@ -134,6 +136,15 @@ DEBTS = re.compile(r"^\*\*Hardware debts:\*\*.*$", re.M)
 # rule it replaces guarded that by refusing every fold, which guards nothing.
 NOT_OWED = re.compile(r"^\*\*Hardware debts:\*\*\s*none\b", re.I)
 WS = re.compile(r"\s+")
+# The refill gate's spread-only skip (leg.md, `tasks/doc/081`) reads the time of
+# the NEWEST `Spread sweep: nothing filed (<yyyy-mm-dd HH:MM>)` line in this log
+# and skips the sweep when no source changed since. A fold that drops that line
+# leaves the skip nothing to read: the 2026-11-17 fold did, and the next day's
+# legs found the time only because one restated it in prose (EMB-209). So the
+# ledger carries the newest one, and only that one -- an older sweep's line is
+# history the skip never reads, and demanding every one back would refuse folds
+# for nothing.
+SPREAD = re.compile(r"Spread sweep: nothing filed \((\d{4}-\d{2}-\d{2} \d{2}:\d{2})\)")
 
 
 def owed(debt_lines: list[str]) -> list[str]:
@@ -185,7 +196,14 @@ def ledger_of(text: str) -> dict:
         "shas": sorted(set(SHA.findall(text))),
         "reviewer_lines": [l for l in text.splitlines() if l.startswith("**Reviewer:")],
         "debt_lines": DEBTS.findall(text),
+        "spread_sweep": newest_spread_sweep(text),
     }
+
+
+def newest_spread_sweep(text: str) -> str | None:
+    """The newest `Spread sweep: nothing filed (...)` phrase in `text`, or None."""
+    times = SPREAD.findall(text)
+    return f"Spread sweep: nothing filed ({max(times)})" if times else None
 
 
 def cmd_status(lines: list[str]) -> int:
@@ -240,6 +258,8 @@ def cmd_extract(lines: list[str], date: str, out: Path) -> int:
           f"{len(led['shas'])} SHA(s), {len(led['reviewer_lines'])} reviewer line(s), "
           f"{len(owed(led['debt_lines']))} of {len(led['debt_lines'])} hardware-debt "
           "line(s) actually owing something")
+    if led["spread_sweep"]:
+        print(f"carry verbatim, the refill skip reads it: `{led['spread_sweep']}`")
     print(f"\nWrite the folded entry to a NEW file, starting `## {date} — "
           f"{len(units)} units`,\nthen: scripts/fold-day.py {date} --apply <that file>")
     return 0
@@ -288,6 +308,11 @@ def cmd_apply(lines: list[str], date: str, src: Path, allow_debt_edit: bool) -> 
                         + "\n    A debt names a board nobody else knows is owed. Line breaks\n"
                           "    do not matter; the words do. Or pass --allow-debt-edit and say\n"
                           "    in the commit which line you reworded and why.")
+    # .get: a ledger extracted before the spread-sweep line was tracked has no key.
+    sweep = led.get("spread_sweep")
+    if sweep and sweep not in flat_folded:
+        problems.append(f"`{sweep}` dropped -- the refill gate's spread-only skip "
+                        "(leg.md) reads the newest one; carry it verbatim")
     if problems:
         print(f"REFUSED: the folded entry loses something the day carried.\n")
         for p in problems:
