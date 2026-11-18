@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-17 23:31 — chat/031 compact-chat
+
+**Decided:** nothing numbered (burndown). First of this leg's four units, all dispatched at 23:23 as foreground workers in one call (the shape the last two legs used after background dispatches were orphaned); all four reported back to this leg. Fleet Ready split this leg: EMB-194 into `umbrella/100`, EMB-186 into `atlas/074`, EMB-142 into `desk/034` (`c883004f`), announced at 23:20 (`1794982869.801729`). **Sent EMB-151 back to Backlog**: its claim/close command belongs beside `check-task-state.py`, whose implementation is in `embarch-fleet/scripts/`, owner-reserved; its `Scope: doc` was wrong. This unit paid the chat size debt `chat/030` filed: `embarch-chat/spec.md` 9,119 B to 8,804 B, out of reserve, by dropping per-install commit SHAs and install dates from the Status line (git history holds them) and removing "(local, no remote)" from the Pointers, which contradicted the Status line's public remote. The `Must not delete:` login bullets (decisions 101, 106) are untouched. **Compaction question, the worker's answer:** yes, `spec.md` alone covers behaviour and invariants and links the `spec/` files, decisions, `open.md` and interfaces for detail; the Status line was the only install history and is now shorter.
+**Merged:** `agent/chat/031-compact-chat` (code: none, doc-only; doc `6eb6e22a`, ff on `91e8a0ce`). Ownership green, `check-docs.py` 12/12, `check-doc-size.py --pressure` no longer lists the file.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED in burndown (until 2026-11-18 06:00) at leg start, 5-hour 75%, weekly 67%, suggested wave 6; 76% / 68% at dispatch. Spread-only refill gate skipped: the one source commit since the 19:22 `Spread sweep: nothing filed` line, `1579353b`, added a paragraph to `embarch-atlas/design.md` outside its "Open questions" section, so `collect-open-questions.py` reads what that sweep read.
+**Least sure about:** whether anyone used the per-install SHAs in the Status line as a quick lookup; the reviewer found no decision that requires them.
+
+---
+
 ## 2026-11-17 23:14 — chat/032 a-wire-probe-asks-the-live-claude-one-question
 
 **Decided:** nothing numbered (burndown). Last of this leg's four units (see `topology/070` for the dispatch). EMB-163: `tools/wire-probe.mjs` in `embarch-chat` spawns `claude` with the panel's own flags, taking `claudeArgs`, `chatEnv` and `DIALOG_KINDS` from the test build (`test-out/core.js`, built by `node build.mjs --tests`) rather than a copied list. Options: `--config-dir`, `--bin`, `--model`, `--cwd`, `--wait <ms>` and repeatable `--send <json>[@<delay-ms>]`. It writes `initialize`, then each send, and prints every stdout line whole as `<ms since spawn> <line>`. `--list <fixture>` prints one row per entry: direction, type, and subtype or request id. **Kept the worker's call** to write `initialize` itself instead of going through `ClaudeProcess`, which swallows `control_response` lines and so could not show the answer whole; the reviewer checked decisions 66 and 108 and found the probe changes nothing the panel declares. It noted, as wording only, that `interfaces/wire-probe.md` says the probe sends `initialize` "as the panel does" while the panel's also carries the hook and MCP declarations. The probe is described in a new `embarch-chat/interfaces/wire-probe.md` with a three-line pointer in `interfaces.md`; `spec.md` (in reserve, `chat/031`) is untouched. With this fold no task names EMB-163, so `finish` should close it.
