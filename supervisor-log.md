@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-18 16:31 — desk/039 keep-a-pending-drafts-versions
+
+**Decided:** decision 88 amended by the worker, not a new number: a pending draft keeps a version history. Creation is version 1; every agent revision (`POST /drafts/{id}/revise`, `desk_revise_draft`) and every owner edit (`PATCH /drafts/{id}`) adds one with its author and time; a `PATCH` that changes nothing adds none. The history is capped at 50 and always keeps version 1. A draft stored before this unit reads with a synthesized history (the agent version, then the owner's body if it differs), tested. `GET /drafts/{id}` returns the versions and `desk_get_draft` diffs any two; with none named, `agent_body` and `owner_diff` answer as before. `github_replies` drafts are not versioned (one body per thread), which is `desk/040`'s ground. The second re-land of this leg; the cut-off leg's step-0 story is in `atlas/084`. `desk/040`'s `Unparks when:` (`039` lands) is now met, so this fold sets it `open`.
+**Merged:** `agent/desk/039-keep-a-pending-drafts-versions` (code `0536138`, ff on `origin/main`; doc `5f556105`, the worker's `9e368315` cherry-picked onto `3fd7aa81`). `cargo build`, `test` (295 passed) and `clippy --all-targets -D warnings` green; client names clean; ownership green on both branches; `check-docs.py` 12/12. `spec.md` untouched, so `desk/038` stays as filed.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, 5-hour 49%, weekly 11%, wave 6 (unchanged since `atlas/084`).
+**Least sure about:** the cap of 50 is the worker's number with no stated basis; it is bounded, as the task asked, but nothing says 50 rather than 10 or 200.
+
+---
+
 ## 2026-11-18 16:30 — atlas/084 narrow-never-fetches-to-the-document-pipeline
 
 **Decided:** nothing numbered (`embarch-atlas` keeps none). **This unit is a re-land, and so is `desk/039`.** The leg that took the lock at 15:51:02 split Fleet Ready (`4a5bd1b4`: EMB-208 into `atlas/084`, EMB-27 into `atlas/085`, EMB-211 into `desk/039`, EMB-212 into `desk/040`; `a545f603`: EMB-159 into `atlas/086`), ran `filed` on all five (none is in Fleet Ready now), posted to the channel at about 15:54 and 15:59, claimed `atlas/084` (`2eebd58c`) and `desk/039` (`b5e73bf8`), ticked two `leg-dispatch` at 15:56:29, and then wrote no entry and ran no `leg-end`. Both workers finished and pushed both branches; I waited out its lock (free at 16:26), gated and landed what they pushed. Its refill sweep and budget reading, if it took them, are recorded nowhere. EMB-208, the owner's answer: keep `fetch-text`. "Never fetches" now reads "never fetches a document it distils" in the repo's `DESIGN.md` and `README.md` and in `embarch-atlas/design.md`; the "Still no fetching" bullet is scoped to the pipeline and says in one sentence why `fetch-text` does not reopen the 2026-11-17 rejection of an in-pipeline fetcher; the "Never" bullet is scoped to `inventory`, `missing` and `doc prep`, the three commands its sockets-disabled test drives; the **Unreconciled** sentence is gone. Doc-only, no code. At the fold I corrected one word the worker wrote in `design.md`'s library paragraph: `fetch-text` is "above" it, not "below".
