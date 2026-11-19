@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-18 23:28 — leg cut off with one worker in flight: atlas/086
+
+**Leg-level entry, written because the harness ended this leg while a worker it dispatched was still running**, so no `**Reviewer:**` line. Lock taken 23:17; 2 of 4 units landed (`atlas/085`, `desk/040`, both re-lands from the 16:26 leg, entries below). Then I claimed `atlas/086` (`23d755d1`), created both worktrees under `.worktrees/` (atlas venv built, `.atlas-local` linked, `check-dispatch.py --created` green) and dispatched at 23:23. **Next leg: the `.fleet/leg` lock is still mine and `leg-end` was not run (it would refuse), so wait it out, then recover `atlas/086` by presence:** a pushed `agent/atlas/086-check-the-pdo-decode-against-the-standards-tables` in both `embarch-atlas` and `embarch-doc` means the worker finished, so gate and land it; no branch and a dirty tree means commit the tree to its branch and resume or block per `ops.md` §3. Do not tick `leg-reported` for it: your leg did not tick its `leg-dispatch`.
+**Decided:** nothing. Refill: Fleet Ready empty; spread-only sweep of the one changed source filed nothing (logged in `atlas/085`).
+**Merged:** see `atlas/085` and `desk/040` below.
+**Blocked:** nothing.
+**Hardware debts:** none new; bench `api/059`, `dev-bench/038` stay `open` (neither role attached at 23:19).
+**Budget:** PROCEED, 5-hour 0%, weekly 15%, wave 6; atlas is the only scope with dispatchable work (`087` to `090` behind `086`), so the wave is one wide.
+**Least sure about:** whether the harness's hand-back demand is a leg cut-off every leg now meets with a worker in flight; two consecutive legs ended this way, and if it recurs the relay lands at most two units per leg.
+
+---
+
 ## 2026-11-18 23:24 — desk/040 revise-one-reply-of-a-github-replies-draft
 
 **Decided:** decisions 88 and 89 amended by the worker, no new number. EMB-212: `POST /drafts/{id}/revise` and `desk_revise_draft` take `comment_id` for a `github_replies` draft and replace that one reply whole. Each reply keeps its own agent version beside the owner's text, as a section does; a reply the owner edited is a 409 naming it and both texts, a reply already posted (89's partly sent draft) is a 409 saying so, and no `comment_id` or one the draft lacks is a 400. **This reverses one line of `desk/039`:** a `github_replies` draft now has a version history, the replies as one text with each headed by its comment id, so a reply revision and an owner edit of the batch each add a version (was `[]`). The worker rejected one history per reply in the decision text. Second re-land of this leg; the story is in `atlas/085`.
