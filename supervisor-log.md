@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-19 04:37 — suite/056 compact-suite
+
+**Decided:** run `suite/056` myself after its window: announced `1795086320.551719` at 04:05 (no `--action`), polled at every boundary, no reply by 04:35. Squeezed `embarch.md` from 23,314 to 22,735 B (out of reserve at 23,040): deploy chronology in the desk and chat status cells, promptu's process history, and the §5 CI bullet's retelling of a correction the decisions files still carry. Two stale facts corrected rather than cut: the fleet's status read "ten legs run" and §6 said the log has one entry per batch. Every §6 row kept, open questions unchanged. The commit quotes each deleted hunk and answers the human question: yes, `embarch.md` alone still says what the suite is and where each doc lives. **This leg ends after this unit and dreams:** zero dispatchable for a worker, bench `api/059` and `dev-bench/038` `open` with neither role attached (04:04), Fleet Ready empty, and no refill source changed since the 23:20 sweep.
+**Merged:** `suite/056` (doc `670c15cc`, on `origin/main`; no code repo).
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, 5-hour 0% at the leg's start, weekly 23%, wave 6; no worker in this unit.
+**Least sure about:** whether skipping the depth sweep was within the rule: the skip in `.claude/leg.md` names a spread-only firing, and I applied its reasoning (no source changed since a sweep that filed nothing) to a depth firing too.
+
+---
+
 ## 2026-11-19 04:10 — atlas/090 maxim-bit-column-register-map
 
 **Decided:** nothing numbered (`embarch-atlas` keeps none). **A recovery, and how the previous leg died is the thing to carry:** the leg that took the lock at 00:23 claimed this (`76a04e89`), spawned its worker in the background, ticked `leg-dispatch` at 00:30:31 and was cut off; the worker's last write was 00:30:27, so it died with its leg, and nothing ticked again until the listener at 04:01. That leg wrote no entry. Its code tree held 247 uncommitted lines (regparse tests green, no doc commit, nothing pushed), so I committed it as found to its branch (`d80aa9f`, pushed), removed both worktrees, reclaimed (`0a31d1d5`) and resumed onto the branch with a **foreground** worker, as the 00:22 leg did; it returned in 82 s, judged `d80aa9f` complete against every Done-when and added no code. EMB-34, second half: `Maxim` layout 3 reads a bit-column register map, one 8-bit register per row (address, POR state as reset, access); a field's position comes from the drawn cell rules and its width from `[m:n]`, a disagreement being a `conflict` `<REG>.<FIELD>.span`; with no rules drawn, position comes from the text centre. `DESIGN.md`: register width is per layout. Also parked `suite/056` (compact `embarch.md`), announced `1795086320.551719` at 04:05, window closes 04:35, recorded in the task file (`256cf62f`).
