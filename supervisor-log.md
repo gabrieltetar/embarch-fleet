@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-19 00:15 — atlas/088 read-ti-width-prefixed-binary-resets
+
+**Decided:** nothing numbered (`embarch-atlas` keeps none). Dispatched in the foreground like `atlas/087`, for the reason that entry gives; back in 3.2 minutes. EMB-33, the cause: the TI layout printed three forms the template did not know, so every reset was `None` and `_check_document` had nothing to compare, hence no `conflict`. The field-table cell `1b0` / `2b10` failed `RESET_TOK`'s `(?![\w])` lookahead after the `b`; the diagram token `R/W-1b0` (and `R-X`) matched nothing in `FIGTOK`; the heading `[Reset = 0x11]` fell through `_reset_spec` to a text note because `0x` hex was not a value. `HEAD`, `TABLE_HDR` and the capital `R` were already fine. Fix in `regparse.py`: `RESET_TOK`, `FIGTOK` and `_bits_value` read `<width>b<bits>`; `_heading_reset` and `_reset_spec` read `0x..`; `[Reset = X]` and `R-X` read as unknown, no reset and no conflict. A width-prefixed cell whose digit count disagrees with its width reads as unknown and writes a `conflict` `<REG>.<FIELD>.reset_width` from the field table; in a diagram it conflicts only where the table gives that field a value. Synthetic part `SYN880` (consistent, heading-vs-fields conflict, `[Reset = X]`, bad width). `DESIGN.md`'s `doc regparse` row names the cause and the form.
+**Merged:** `agent/atlas/088-read-ti-width-prefixed-binary-resets` (code `85ee2b9`, ff on `origin/main`; doc `503fc4a6`, the worker's `22f8ea03` cherry-picked onto `14960676`). `pytest` 964 passed, 3 skipped (west workspace, built atlas, vendor SVD; `test_public_guard` ran), client names clean, ownership green on both branches, `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none needing a board. Owner-side, in the task file: `doc regparse --template ti` on the real datasheet, to see its resets and its 3 conflicts, which this unit does not claim.
+**Budget:** PROCEED, 5-hour 61%, weekly 20%, wave 6 at the dispatch; one worker, atlas the only scope with work.
+**Least sure about:** the fixture was built from the issue's description of one register, so whether the real pages put the access-reset tokens on one line under the bit numbers, as `FIGTOK` assumes, is untested.
+
+---
+
 ## 2026-11-19 00:09 — atlas/087 read-a-nordic-style-reference-manual
 
 **Decided:** nothing numbered (`embarch-atlas` keeps none). **A leg-mechanics choice, and the next leg should know it:** I dispatched this worker in the foreground (the leg blocks on it) rather than in the background. The three legs before this one each dispatched in the background, ended their turn to wait, and were cut off, so each landed only its predecessor's re-lands. With atlas the only scope holding dispatchable work the wave is one wide, so blocking on the one worker costs no concurrency; it came back in 3.4 minutes and reported to this leg. EMB-32: `mcu rm-outline` drops a lone unnumbered level-1 root that has at least two level-2 children (`rm.unroot_toc`), so its level-2 entries become chapters and `outline.json` records the root as `root`; a numbered single root (an ST one-chapter outline) and two or more level-1 entries are left alone. A `...Registers` container whose numbered children carry bare upper-case names (`BARE_REG_RE`) flags them as register sections, and `vote.parse_nordic_fields` reads the `Bit number`, `ID` and `Reset` rows and the field table into the same register record the ST layout yields, uncovered bits as `Reserved`. `DESIGN.md` gains "Reference-manual layouts read"; `rm-procedure.md` and `embarch-doc/embarch-atlas/design.md` name no layouts, so both are unchanged. Fixtures synthetic, invented names.
