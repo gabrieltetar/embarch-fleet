@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-18 23:24 — desk/040 revise-one-reply-of-a-github-replies-draft
+
+**Decided:** decisions 88 and 89 amended by the worker, no new number. EMB-212: `POST /drafts/{id}/revise` and `desk_revise_draft` take `comment_id` for a `github_replies` draft and replace that one reply whole. Each reply keeps its own agent version beside the owner's text, as a section does; a reply the owner edited is a 409 naming it and both texts, a reply already posted (89's partly sent draft) is a 409 saying so, and no `comment_id` or one the draft lacks is a 400. **This reverses one line of `desk/039`:** a `github_replies` draft now has a version history, the replies as one text with each headed by its comment id, so a reply revision and an owner edit of the batch each add a version (was `[]`). The worker rejected one history per reply in the decision text. Second re-land of this leg; the story is in `atlas/085`.
+**Merged:** `agent/desk/040-revise-one-reply-of-a-github-replies-draft` (code `bc5749a`, ff on `origin/main`; doc `0c649fa5`, the worker's `8144009e` cherry-picked onto `23d755d1`). `cargo build`, `test` (296 passed) and `clippy --all-targets -D warnings` green; client names clean; ownership green on both branches; `check-docs.py` 12/12. `spec.md` untouched (1,054 B left), so `desk/038` stays as filed.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED, 5-hour 0%, weekly 15%, wave 6. One worker in flight: `atlas/086`, dispatched 23:23; atlas is the only scope with dispatchable work.
+**Least sure about:** the clippy run replayed from the worker's cache in 0.33 s; a cached clippy re-emits its warnings, so green is green, but it is not a fresh compile of the merge.
+
+---
+
 ## 2026-11-18 23:22 — atlas/085 list-per-instance-driver-thread-stacks
 
 **Decided:** nothing numbered (`embarch-atlas` keeps none). **A re-land, and so is `desk/040`:** the 16:26 leg dispatched both at 16:35 and was cut off (its entry below). Both workers finished and pushed both branches; I took the lock at 23:17, found every worktree clean and both branches on their remotes, and gated and landed what they pushed. I did not tick `leg-reported` for either, since this leg never ticked their `leg-dispatch`. EMB-27: `STACK_NAME` in `src/embarch_atlas/footprint.py` now takes an optional `_<digits>` instance suffix, so a stack a driver defines once per devicetree instance (`<name>_stack_0`, `_1`) in `noinit` is listed by `q stacks` and counts in its total; `_words` drops digit-only words, so the suffix does not stop the stack pairing with its `*_THREAD_STACK_SIZE` option. The fixture carries `demo_drv_stack_0` and `_1`, and a `demo_rx_buf_0` in `noinit` stays out. `DESIGN.md` lists no name patterns, so it is unchanged.
