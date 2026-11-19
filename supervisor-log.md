@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-18 23:22 — atlas/085 list-per-instance-driver-thread-stacks
+
+**Decided:** nothing numbered (`embarch-atlas` keeps none). **A re-land, and so is `desk/040`:** the 16:26 leg dispatched both at 16:35 and was cut off (its entry below). Both workers finished and pushed both branches; I took the lock at 23:17, found every worktree clean and both branches on their remotes, and gated and landed what they pushed. I did not tick `leg-reported` for either, since this leg never ticked their `leg-dispatch`. EMB-27: `STACK_NAME` in `src/embarch_atlas/footprint.py` now takes an optional `_<digits>` instance suffix, so a stack a driver defines once per devicetree instance (`<name>_stack_0`, `_1`) in `noinit` is listed by `q stacks` and counts in its total; `_words` drops digit-only words, so the suffix does not stop the stack pairing with its `*_THREAD_STACK_SIZE` option. The fixture carries `demo_drv_stack_0` and `_1`, and a `demo_rx_buf_0` in `noinit` stays out. `DESIGN.md` lists no name patterns, so it is unchanged.
+**Merged:** `agent/atlas/085-list-per-instance-driver-thread-stacks` (code `ba6366f`, ff on `origin/main`; doc `e319a16a`, the worker's `226aeca7` and `e319a16a`, ff on the leg worktree). `pytest` 956 passed, 3 skipped (west workspace, built atlas, vendor SVD; `test_public_guard` ran), client names clean, ownership green on both branches, `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. A rerun of `q stacks` on the owner's real build would confirm the two 0x400 B stacks now appear; the fixture only models them.
+**Budget:** PROCEED at this leg's start, 5-hour 0%, weekly 15%, wave 6 (normal mode, pump latched 23:17, no stop marker, 0 actionable in the channel at 23:19). Fleet Ready empty; `finish` moved nothing. Refill gate fired spread-only; the only source commits since the 11:16 spread sweep are `atlas/084`'s two `design.md` edits, which I read, and `collect-open-questions.py` still reads 165 questions across 20 docs. Spread sweep: nothing filed (2026-11-18 23:20). Bench `api/059`, `dev-bench/038` stay `open`: neither `dev-bench` nor `dut` attached at 23:19.
+**Least sure about:** whether a numeric suffix on some non-stack `noinit` symbol whose name ends in `stack` or `stacks` (a `*_stacks_2` pool) is now taken as a stack; the test guards a buffer, not that shape.
+
+---
+
 ## 2026-11-18 16:37 — leg cut off with two workers in flight: atlas/085, desk/040
 
 **Leg-level entry, written because the harness ended this leg while two workers it dispatched were still running**, so no `**Reviewer:**` line. Lock taken 16:26; 2 of 4 units landed (`atlas/084`, `desk/039`, both re-lands from the 15:51 leg, entries below). Then I split Fleet Ready (`2d9e7169`: EMB-32 into `atlas/087`, EMB-33 into `atlas/088`, EMB-34 into `atlas/089` and `atlas/090`, all `filed`, announced at `1795044886.216409`), claimed `atlas/085` (`a4cb8ce3`) and `desk/040` (`2bb300d0`), created both units' worktrees under `.worktrees/` (atlas venv built, `check-dispatch.py --created` green on both) and dispatched at 16:35. **Next leg: the `.fleet/leg` lock is still mine and `leg-end` was not run (it would refuse), so wait it out, then recover these two by presence:** a pushed branch in both repos means the worker finished, so gate and land it; no branch and a dirty tree means commit the tree to its branch and resume or block per `ops.md` §3. Workers may have died with this leg.
