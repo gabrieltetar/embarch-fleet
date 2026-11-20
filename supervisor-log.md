@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-20 16:07 — api/163 serve-the-hil-guide
+
+**Decided:** nothing suite-wide. A resume of the 14:25 leg's dead worker (see `study-designer/084`'s entry). The resumed worker found the as-found code sound but `cli.rs`'s subcommand-count tripwire red (58 to 59, and `tests/json_surface.rs` gained `["guide","hil"]`), and three comments citing decision 99 where 108 was meant. `embarch-api` decision 108: `embarch-api guide hil [live|study|test]` serves `guide/hil-guide.md`, a pinned copy compiled in with `include_str!` and dispatched before config or Core, so it needs no `embarch-doc`; a `build.rs` read of a sibling repo was rejected. A `skills/embarch-hil/SKILL.md` carries the "which mode" table and points at the command; installing it is owed by `embarch-umbrella`'s `embarch init` (in `open.md`). Every guide section is a skeleton until M1.13 writes `suite/hil-guide.md`. **This is the leg's last unit: the 15:58 `/fleet stop` ends it at three**, nothing dispatched after the stop.
+**Merged:** `agent/api/163-serve-the-hil-guide` (code `97577b6`, ff on `origin/main` from `0d93709`; doc as-found `00ff3328`, resume `ca885d91`, cherry-picked onto `5d4b8ab2`, the task file's state line resolved by hand to `done`). Re-gated on the merge result: `cargo build`, `cargo test`, `clippy --all-targets -- -D warnings` green; ownership green on both branches; client names clean; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED at the start, 5-hour 67%, weekly 17%, wave 6; ended by the stop, not the budget.
+**Least sure about:** the drift test between the pinned copy and `suite/hil-guide.md` is silent while that file does not exist, so today nothing would notice the two diverging; it starts checking only when M1.13 writes the suite guide, and only on a machine with `embarch-doc` beside `embarch-api`.
+
+---
+
 ## 2026-11-20 16:06 — core/128 agent-and-person-tokens
 
 **Decided:** nothing suite-wide. A resume of the 14:25 leg's dead worker (see `study-designer/084`'s entry for the recovery). The resumed worker found the as-found code built and clippy-clean but two route-sweep tests red: a test-only `/probe` router put a line starting `.route("` in `api.rs`, which the sweep's source scan counts as a registered route; it moved the probe onto one `Router::new().route(` line, and renamed the features fragment from `core-125-` to `core-128-`. `embarch-core` decision 109: Core writes an agent token (`EMBARCH_TOKEN`, else `token`) and a person token (`EMBARCH_PERSON_TOKEN`, else `person-token` beside it), either authenticates, and `auth_middleware` puts a `Scope` request extension on every request; nothing is refused by scope. Decision 93 gains a one-line pointer: the lease holder is not the scope. I folded its fragment into `embarch-token.md` §1, §2, §3 and §5 (two tokens, clients still resolve the agent's alone, no identity within a scope), and set `tasks/api/162` (core-client resolves both scopes) `open`, its `Unparks when:` naming this unit; `tasks/ui/111` still waits on `api/162`.
