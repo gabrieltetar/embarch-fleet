@@ -20,6 +20,8 @@ every key it is handed must be in the configured team.
     show KEY...          these issues in full, in any status
     triage               the Backlog, one line each, saying which are the owner's
     mark-ready KEY...    Backlog issues to Fleet Ready; refuses the owner's
+    block KEY --by KEY...
+                         record that each --by issue blocks KEY (a Linear relation)
     filed KEY PATH...    list task files on an issue, move it to Fleet Working
     send-back KEY --why  an issue that cannot be split: say why, back to Backlog
     finish               issues whose tasks have all closed: comment, move to Done
@@ -52,6 +54,16 @@ so: `Scope: fleet` (reserved to the owner), a Scope the fleet does not work (a
 clone with no embarch-doc directory, such as `private`), `Hardware: required`
 (the owner's hands) or `Type: decision` (the owner's call). `ready` comments why and moves it
 to `owner_ready`, the owner's own lane, instead of listing it to split.
+
+**A blocked issue waits in Fleet Ready** (owner's call, 2026-11-20). An issue
+with a Linear "blocked by" relation to one not yet Done is neither listed to
+split by `ready` nor counted by `list`, so a plan's units can all be marked
+ready at once and each is split only once what it needs has landed (Done is
+`finish`'s move, made when the blocker's last task closed). `ready` names it
+apart as waiting. **A blocker Canceled sends it to `owner_ready`** with a
+comment, since its premise may no longer hold. `block` records a relation
+through the desk; the owner can also set one in Linear. A split already on main
+is listed whatever its blockers say.
 
 **Where a new issue starts is `file_status` in `fleet.toml`.** A worker's or a
 reviewer's finding goes straight to Fleet Ready, as those are small and found in
@@ -578,11 +590,28 @@ def flush_spool(s: dict) -> None:
 
 # --- the commands -----------------------------------------------------------
 
+def blockers(s: dict, detail: dict) -> tuple[list[dict], list[dict]] | None:
+    """An issue's blockers not yet Done, and those Canceled, from the desk's
+    `blocked_by`; None when the desk answers without it (an older desk, or a
+    workspace it reads through Linear's MCP server)."""
+    rows = detail.get("blocked_by")
+    if rows is None:
+        return None
+    canceled = [b for b in rows if b.get("state") == "Canceled" or b.get("state_type") == "canceled"]
+    waiting = [b for b in rows if b not in canceled
+               and b.get("state") != s["done"] and b.get("state_type") != "completed"]
+    return waiting, canceled
+
+
+def named(rows: list[dict]) -> str:
+    return ", ".join(f"{b.get('key')} ({b.get('state')})" for b in rows)
+
+
 def cmd_ready(s: dict, args) -> int:
     git("fetch", "-q", "origin")
     flush_spool(s)
     rows = open_rows(s, s["ready"])
-    full, fleet = [], fleet_scopes()
+    full, waiting, blind, fleet = [], [], False, fleet_scopes()
     for r in rows:
         detail = call(s, "GET", f"/linear/issue/{quote(r['key'])}")
         description, tasks = detail.get("description") or "", tasks_on_main(r["key"])
@@ -595,19 +624,43 @@ def cmd_ready(s: dict, args) -> int:
             move(s, r["key"], lane)
             print(f"{r['key']} moved to {lane}: " + "; ".join(why), file=sys.stderr)
             continue
+        b = blockers(s, detail)
+        blind = blind or b is None
+        if b and not tasks:
+            pending, canceled = b
+            if canceled:
+                lane = s["owner_ready"]
+                comment(s, r["key"], *thread("Sent back", f"a blocker was canceled, so this is in {lane} for me to look at again :\n\n"
+                                                          + "\n".join(f"- {c.get('key')} is {c.get('state')}" for c in canceled)))
+                move(s, r["key"], lane)
+                print(f"{r['key']} moved to {lane}: blocker canceled: {named(canceled)}", file=sys.stderr)
+                continue
+            if pending:
+                waiting.append({"key": r["key"], "title": r["title"], "blocked_by": pending})
+                continue
         full.append({"key": r["key"], "title": r["title"], "project": r.get("project"),
                      "url": r.get("url"), "description": description,
                      "comments": detail.get("comments") or [], "tasks": tasks})
+    if blind:
+        print("the desk answered without blocked-by relations, so a blocked issue cannot be held: "
+              "update the desk", file=sys.stderr)
+    held = [f"WAITING, do not split: {w['key']}  {w['title']}  (blocked by {named(w['blocked_by'])})" for w in waiting]
     if args.json:
         print(json.dumps(full, indent=1))
+        for line in held:
+            print(line, file=sys.stderr)
         return 0 if full else 1
     if not full:
-        print("no Fleet Ready issues")
+        print("no Fleet Ready issues" + (f" to split; {len(waiting)} waiting on a blocker" if waiting else ""))
+        for line in held:
+            print(line)
         return 1
     if args.brief:
         for i in full:
             print(brief_line(i, i["description"], i["tasks"]))
         print(f"{len(full)} issue(s); `show KEY...` prints the ones you pick in full")
+        for line in held:
+            print(line)
         return 0
     for i in full:
         print(f"== {i['key']}  {i['title']}  (Project: {i['project']})")
@@ -617,12 +670,21 @@ def cmd_ready(s: dict, args) -> int:
         for c in i["comments"]:
             print(f"   comment: {c.get('body', c) if isinstance(c, dict) else c}")
         print()
+    for line in held:
+        print(line)
     return 0
 
 
 def cmd_list(s: dict, _args) -> int:
-    print(json.dumps([{k: r.get(k) for k in ("key", "title", "project")}
-                      for r in open_rows(s, s["ready"])]))
+    """Fleet Ready issues a leg can take, for queue-status.py: one waiting on an
+    unfinished blocker is left out, or it would count as work there is none of."""
+    out = []
+    for r in open_rows(s, s["ready"]):
+        b = blockers(s, call(s, "GET", f"/linear/issue/{quote(r['key'])}"))
+        if b and (b[0] or b[1]) and not tasks_on_main(r["key"]):
+            continue
+        out.append({k: r.get(k) for k in ("key", "title", "project")})
+    print(json.dumps(out))
     return 0
 
 
@@ -683,6 +745,14 @@ def cmd_mark_ready(s: dict, args) -> int:
         move(s, key, s["ready"])
         print(f"{key} in {s['ready']}")
     return 1 if refused else 0
+
+
+def cmd_block(s: dict, args) -> int:
+    """Record that each --by issue blocks KEY, so `ready` holds KEY until they are Done."""
+    key, by = check_key(s, args.key), [check_key(s, k) for k in args.by]
+    r = call(s, "POST", f"/linear/issue/{quote(key)}/blocked-by", {"by": by})
+    print(f"{key} blocked by {named(r.get('blocked_by') or []) or 'nothing'}")
+    return 0
 
 
 def cmd_filed(s: dict, args) -> int:
@@ -841,6 +911,10 @@ def main() -> int:
     p = sub.add_parser("mark-ready")
     p.add_argument("keys", nargs="+")
     p.set_defaults(fn=cmd_mark_ready)
+    p = sub.add_parser("block")
+    p.add_argument("key")
+    p.add_argument("--by", nargs="+", required=True)
+    p.set_defaults(fn=cmd_block)
     p = sub.add_parser("filed")
     p.add_argument("key")
     p.add_argument("paths", nargs="+")

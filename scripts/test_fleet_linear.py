@@ -106,6 +106,11 @@ class Desk:
                     return self.reply({"error": "no such project"}, desk.fail[self.path])
                 if self.path == "/linear/search":
                     return self.reply({"issues": [i for i in desk.issues.values() if body["query"] in i["title"]]})
+                if self.path.endswith("/blocked-by"):
+                    key = self.path.split("/")[-2]
+                    rows = desk.issues[key].setdefault("blocked_by", [])
+                    rows += [{"key": k, "state": desk.issues.get(k, {}).get("state", "Backlog")} for k in body["by"]]
+                    return self.reply({"key": key, "blocked_by": rows})
                 if self.path == "/linear/status":
                     desk.issues[body["key"]]["state"] = body["status"]
                     return self.reply({"ok": True})
@@ -551,6 +556,69 @@ class Fleet(unittest.TestCase):
         self.assertEqual(self.desk.issues["EMB-1"]["state"], "Todo")
         said = [b for p, b in self.desk.calls if p == "/drafts" and b.get("issue_key") == "EMB-1"]
         self.assertIn("`Scope: private` is a repo the fleet does not work", said[0]["body"])
+
+    def test_ready_holds_an_issue_until_every_blocker_is_done(self):
+        for key in ("EMB-1", "EMB-2", "EMB-3"):
+            self.desk.issue(key, "Fleet Ready")
+            self.desk.issues[key]["description"] = FILED
+        self.desk.issues["EMB-1"]["blocked_by"] = [{"key": "EMB-9", "state": "Fleet Working", "state_type": "started"},
+                                                {"key": "EMB-8", "state": "Done", "state_type": "completed"}]
+        self.desk.issues["EMB-2"]["blocked_by"] = [{"key": "EMB-8", "state": "Done", "state_type": "completed"}]
+        r = self.linear("ready", "--brief")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("WAITING, do not split: EMB-1", r.stdout)
+        self.assertIn("EMB-9 (Fleet Working)", r.stdout)
+        self.assertNotIn("EMB-8 (Done)", r.stdout, "a Done blocker is not named as holding it")
+        picked = [line.split()[0] for line in r.stdout.splitlines() if line.startswith("EMB-")]
+        self.assertEqual(picked, ["EMB-2", "EMB-3"])
+        self.assertEqual(self.desk.issues["EMB-1"]["state"], "Fleet Ready", "waiting is not a move")
+        listed = [i["key"] for i in json.loads(self.linear("list").stdout)]
+        self.assertEqual(listed, ["EMB-2", "EMB-3"], "queue-status must not count a waiting issue as work")
+
+    def test_ready_with_only_waiting_issues_exits_1_and_names_them(self):
+        self.desk.issue("EMB-1", "Fleet Ready")
+        self.desk.issues["EMB-1"]["description"] = FILED
+        self.desk.issues["EMB-1"]["blocked_by"] = [{"key": "EMB-9", "state": "Backlog", "state_type": "backlog"}]
+        r = self.linear("ready")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("1 waiting on a blocker", r.stdout)
+        self.assertIn("WAITING, do not split: EMB-1", r.stdout)
+
+    def test_ready_sends_an_issue_whose_blocker_was_canceled_to_the_owner(self):
+        self.desk.issue("EMB-1", "Fleet Ready")
+        self.desk.issues["EMB-1"]["description"] = FILED
+        self.desk.issues["EMB-1"]["blocked_by"] = [{"key": "EMB-9", "state": "Canceled", "state_type": "canceled"}]
+        self.linear("ready")
+        self.assertEqual(self.desk.issues["EMB-1"]["state"], "Todo")
+        said = [b for p, b in self.desk.calls if p == "/drafts" and b.get("issue_key") == "EMB-1"]
+        self.assertTrue(said[0]["body"].startswith("**Sent back** — a blocker was canceled"), said)
+        self.assertIn("EMB-9 is Canceled", said[0]["body"])
+
+    def test_ready_lists_a_split_issue_whatever_its_blockers_say(self):
+        self.desk.issue("EMB-1", "Fleet Ready")
+        self.desk.issues["EMB-1"]["description"] = FILED
+        self.desk.issues["EMB-1"]["blocked_by"] = [{"key": "EMB-9", "state": "Backlog", "state_type": "backlog"}]
+        self.task("001-a.md", "EMB-1")
+        self.commit("split")
+        r = self.linear("ready")
+        self.assertIn("== EMB-1", r.stdout)
+        self.assertIn("ALREADY SPLIT", r.stdout)
+
+    def test_ready_warns_when_the_desk_reads_no_relations(self):
+        self.desk.issue("EMB-1", "Fleet Ready")
+        self.desk.issues["EMB-1"]["description"] = FILED
+        r = self.linear("ready")
+        self.assertIn("== EMB-1", r.stdout)
+        self.assertIn("without blocked-by relations", r.stderr)
+
+    def test_block_records_the_blockers_through_the_desk(self):
+        self.desk.issue("EMB-1", "Backlog")
+        self.desk.issue("EMB-9", "Fleet Working")
+        r = self.linear("block", "EMB-1", "--by", "EMB-9")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(self.desk.said("/linear/issue/EMB-1/blocked-by", "by"), [["EMB-9"]])
+        self.assertIn("EMB-1 blocked by EMB-9 (Fleet Working)", r.stdout)
+        self.assertNotEqual(self.linear("block", "XYZ-1", "--by", "EMB-9").returncode, 0, "another team's key is refused")
 
     def test_ready_leaves_an_owner_only_issue_the_fleet_already_split(self):
         self.desk.issue("EMB-1", "Fleet Ready")
