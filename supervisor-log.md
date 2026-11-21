@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-21 12:41 — api/162 core-client-resolves-both-token-scopes
+
+**Decided:** nothing suite-wide. `embarch-api` decision 109 (`decisions/client-crate.md`): `embarch-core-client` gains `TokenScope { Agent, Person }`, `CoreClient::new_with_scope` and `CoreConfig::{person_token, person_token_env, resolve_token_for}`, all additions; a person client reads `person_token_env`, `person_token`, `EMBARCH_PERSON_TOKEN`, then `person-token` beside the agent's file (the same WSL2 `%ProgramData%` mapping), and **never falls back to the agent's token**. The MCP server and every CLI verb build their client through `agent_core_client`, and **no CLI flag selects the person scope**, so only library code (`ui/111`) reaches it. I folded the fact into `embarch-token.md` §2, replacing "Clients still resolve the agent's token alone", and set **`tasks/ui/111` `open`** (its `Unparks when:` named this unit), with a dispatch note naming the API it calls. The worker filed `tasks/api/165` (compact `decisions/client-crate.md` and `interfaces/config.md`, `In flux: per file`, due 2026-11-28), `open`.
+**Merged:** `agent/api/162-core-client-resolves-both-token-scopes` (code `c9f0c79`, ff on `origin/main` from `97577b6`; doc `b407e472`, the worker's `21f92513` cherry-picked onto `0eacb879`). Re-gated on the merge result: `cargo build`, `cargo test` and `clippy --workspace --all-targets -- -D warnings` green; **`embarch-ui` and `embarch-umbrella` built green against the branch's crate** (detached worktrees under `.worktrees/gate-162/` with `embarch-api` linked to the unit worktree, `cargo tree -i` confirming the path; removed after); ownership green on both branches; client names clean; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none. The WSL2 `person-token` path has not met a live Core.
+**Budget:** PROCEED, 5-hour 60%, weekly 41%, wave 6.
+**Least sure about:** the signed-challenge step before a client sends any token (Core decision 110's route) is in no task yet; EMB-238 covers only the build claims, and the challenge matters once an attested install writes a fingerprint, so it is unfiled on purpose but worth naming when M1.10 is split.
+
+---
+
 ## 2026-11-21 12:38 — study-designer/086 hil-verdict-rules
 
 **Decided:** nothing suite-wide. `embarch-study-designer` decisions 95 to 98 (`decisions/hil-verdicts.md`): `src/verdicts.rs` behind a new feature `verdicts = ["alloc"]`, beside `reducers`; five rules (`step_verdict`, `limit_verdict`, `acceptance_width`, `combine`, `requirement`) each at behaviour 1, pinned by `Rules::latest()` and refused by `Rules::pinned()` for a behaviour never shipped; it follows decision 93's contract rather than reusing the reducers' `Registry`, since the five signatures differ. **95 closes the gap `084`'s reviewer left on EMB-218**: an observation prompt that times out or is cancelled is `inconclusive`, reason `observation_unanswered`, amended into `hil-shapes.md` (no file carries the string yet, so no `schema` bump). 97 orders evidence defects before `calibration_expired` before the limit, so a truncated capture is `inconclusive` however far out its number; 98's width check is strict, a `relayed` test is listed apart and counted in nothing, and "N of M" counts `not_selected` in `m`. 97's edge handling and 98's readings are marked as assumed where `03` was open. **The unit also paid `tasks/study-designer/087`** per its dispatch note: `interfaces/hil-shapes.md` 11,205 to 9,994 of 12,288 B, its characterisation section moved verbatim to `interfaces/hil-characterisation.md`; I closed 087 `done` in this fold, `In flux: yes` left as written.
