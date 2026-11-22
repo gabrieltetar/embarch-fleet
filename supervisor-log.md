@@ -104,7 +104,7 @@ unit under **Merged** and **Blocked**:
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** none on a board. `publish` has met a mock Core only; the first real publish is M1.14's. The OCP T&V lines are not validated against the format's JSON Schema, and the `.csv` name assumed for an `OutpostTrace` tap's rendering is unconfirmed (a mismatch shows as a warning).
-**Budget:** PROCEED at dispatch (5-hour 54%, weekly 73%, wave 6).
+**Budget:** PROCEED at dispatch (5-hour 54%, weekly 73%, wave 6); **HOLD after this fold, 08:39: 5-hour 92%, weekly 76%, resetting about 13:00.** The leg ended there, two units of four, dispatching nothing more. The 5-hour reading went 0% at leg start, 37% after `core/135`, 54% at this dispatch, 92% at the fold; this leg ran one worker and two reviewers at a time, so most of that rise is probably other sessions on the same login, unmeasured. **Handoff:** `api/168` (open, the second half of EMB-225, carrying `api/169`'s `open.md` compaction) and `core/136` (open, EMB-241) are dispatchable in parallel, one per scope; EMB-226 (`verify`) waits in Fleet Ready until EMB-225 is Done, after `api/168`. Bench `api/059` and `dev-bench/038` stay `open`, neither board attached at the 08:02 refresh.
 **Least sure about:** I ran the consumers' `cargo build` only, not their tests or clippy, on the argument that the shared-crate change is purely additive; a consumer test that walks every `CoreClient` method would not have run.
 
 ---
