@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-22 03:22 — ui/112 the-study-designer-keeps-a-studys-measurements
+
+**Decided:** nothing suite-wide. `embarch-ui` decision 104 (`decisions/study-authoring.md`): the Study Designer keeps a study's `measurements` and does not author them (deferred, stated in 104). Load returns the file's array verbatim; Save, Run and Pre-flight send it back, and a new `apply_measurements`, beside `build_authored` rather than inside it because the declarations are host-only and sealed by neither CRC, puts it on the built study after `validate_measurements`; a refusal is a `400` prefixed `measurements: `, the file on disk untouched, and Run and Pre-flight refuse the same way. The browser holds the array opaque and lists the names in the build-options summary, cleared on a project switch. `features.d/ui-025` amended (decisions 29, 30, 104). **On the reviewer's note I corrected the unit's code comments**, which cited `ui` decision 31 (Live Study) where 104 is meant: `embarch-ui` `b1b1a24`, comments only, re-gated green. This closes the gap I filed this task for at `suite/057`.
+**Merged:** `agent/ui/112-the-study-designer-keeps-a-studys-measurements` (code `a9d7e95`, ff on `origin/main` from `279c33f`, then my `b1b1a24` on top; doc `fdfa45e8`, the worker's `24f6be14` cherry-picked onto `c9cf3216`). Re-gated on the merge result, and again after `b1b1a24`: `cargo build`, `cargo test` (320 passed, 4 ignored, plus 8), `clippy --all-targets -- -D warnings` green; ownership green on both branches; client names clean; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none on a board. The `app.js` change is exercised by no test and no browser drive, and no agent-written study has been opened and saved through the tab; the route test uses a hand-made `count` declaration over a GATT tap.
+**Budget:** PROCEED at dispatch, 5-hour 21%, weekly 62%, wave 6.
+**Least sure about:** the summary line sits inside the build-options area, so a person editing steps may never see that the study carries declarations they cannot edit here.
+
+---
+
 ## 2026-11-22 03:20 — api/165 compact-api
 
 **Decided:** nothing suite-wide. A verbatim split, no wording changed: `embarch-api/decisions/client-crate.md` 12,278 to 9,360 of 12,288 B, decisions 55 (one auth funnel) and 66 (the crate's home) moved to a new `decisions/client-crate-funnel.md` (3,470 B), index rows and the citations in `decisions/tests.md` and `spec/implementation.md` repointed; `interfaces/config.md` 11,368 to 7,945 B, the prose after the `[[projects]]` table (zephyr-west selection, `static` refusals, snippets, the build directory name, `target.json`) moved to a new `interfaces/config-selection.md` (4,175 B), with a pointer left and the `[core]` table and the `EMBARCH_PERSON_TOKEN` order kept in place. Decision 109 (no fallback to the agent's token, no CLI flag) stays in `client-crate.md` untouched. The worker's first split moved 62, 66 and 72 and broke `check-decision-refs.py`, because `history/api.md` and its archive cite 58, 62 and 72 at `client-crate.md` and a worker may not edit `history/`; it chose 55 and 66, which nothing in `history/` names. I closed the task `done` (the worker left it claimed). **Does `spec.md` alone answer what someone needs to work on `embarch-api` today?** Mostly: it says what the crate is, the mode switch, the Core boundary and every live invariant through the build claims, the ledger and the PDF render; it does not say that this repo hosts `embarch-core-client`, which `embarch-ui` and `embarch-umbrella` build against, nor its two token scopes, and a newcomer finds those only through `spec/implementation.md` and decision 109.
