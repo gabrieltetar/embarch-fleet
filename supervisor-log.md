@@ -97,138 +97,101 @@ unit under **Merged** and **Blocked**:
 
 ---
 
-## 2026-11-21 22:31 — suite/057 a-study-declares-its-derived-measurements
+## 2026-11-22 03:19 — core/132 measurements-at-a-studys-end
 
-**Decided:** **Suite-wide, by me, under the 17:10 announcement (`ts 1795306202.861479`; no reply in the thread, window closed 17:40, run at about 22:30): a host-type schema bump, `HOST_TYPE_SCHEMA_VERSION` 21 to 22, wire 15 unchanged.** `embarch-study-designer` decisions 99 and 100 (`decisions/hil-declarations.md`, `interfaces/hil-declarations.md`): `Study.measurements`, up to 32 `MeasurementDecl` (name, one of the eight built-in reducers, a tap by `id`, a struct field, a unit, a window of `percentile`/`from_marker`/`to_marker`, and the values the study declares for itself: `resolution`, `U` with `k`, `sample_rate_hz`), host-only, sealed by neither CRC, **always compiled** in `src/measures.rs` with the reducer names and units repeated and held equal to `reducers`' by a test under that feature. **The window carries no time bound** (a study is written before its run; Core sets them from the capture) and **a marker is a free name, unchecked**: what stamps one is Core's. `validate_measurements` refuses an empty or repeated name, an unknown reducer or tap, a window key not taken or lacking, a field or unit that does not fit the tap, a value reducer over a non-numeric tap, and a declared value that is not finite and above zero; it does not decide whether a study's `U` is honoured. **Nothing in it is skipped when empty**: my first draft skipped, and the crate's own postcard round trip refused it, because `Study` travels as postcard with no field names. `embarch-ui` needed no change (it builds `Study` only through the crate's builder); reading its save handler I found it **drops a study's declarations on save**, and filed `tasks/ui/112`. I set `tasks/core/132` `open` (its `Unparks when:` named this) with three items this left to it: calling `validate_measurements` at submission, the window's time bounds, and what a marker is. I amended `features.d/ui-025` (the tab authors every field but `measurements`).
-**Merged:** `agent/suite/057-a-study-declares-its-derived-measurements`, in §8's order: `embarch-study-designer` `d6230ad` (ff from `1238def`), then `embarch-core` `99a3e7c` (ff from `9a9d31a`) and `embarch-api` `2f7550d` (ff from `069e892`), each one `Study` literal in a test gaining the field, all pushed at 22:31; doc `9e5e5301` (my `e4de7d76` cherry-picked onto `af0b4e7e`). Gated before anything landed, in worktrees under `.worktrees/suite-057/` whose parent links `embarch-study-designer` to the branch: the crate under no features, `alloc`, `std`, `study-ui,gatt-extract,eap-parse`, `--no-default-features` with `reducers` and with `reducers,verdicts`, and `--all-features` build, all green; `embarch-core` (418 passed), `embarch-api` (`--workspace`), `embarch-ui` and `embarch-umbrella` build, test and clippy green against it; `dev-bench`'s `gen_crate_limits.py` reads the five new limits; ownership `--supervisor` and client names clean; `check-docs.py` 12/12.
+**Decided:** nothing suite-wide. `embarch-core` decisions 113 to 115 (`decisions/measurements.md`, `interfaces/measurements.md`): Core turns on the shared crate's `reducers` feature and, as a device study ends and before the record is sealed, computes every declared measurement over its own captures and writes `measurements.json`, so the file is a signed subject (decision 110 already named it); a run whose measurements cannot be written fails, as an unsignable one does. A study that declares none writes no file; a failed study and a host study compute nothing. `validate_measurements` now runs at submission beside `validate_record_checks`. **The three things `suite/057` left to this unit**: every point is on Core's receipt stamp (`core_rx_utc_ms`), never the record's `rx_utc_ms`; the window is the capture's span, first stamp to last; **a marker is the first whitespace-delimited word of a line in any `Text` tap**, stamped by the arrival row covering that line's first byte, its `u_ms` undeclared. `by`, `instrument` and `bench_image` come from the tap (`GattNotify` and a signal leaving role `dut` are the DUT's word, everything else `bench`, `bench_image: unverified`, `identity: null`); a study's declared resolution and `U` are honoured for DUT values only (`u_source: study`), bench values read `u_source: undeclared`. `rate_check` agrees within `0.05 + 2/(n-1)` of the declared rate, tagged **[assumed]**. `declared_by` carries a `study_value` entry with the submitting token's scope (`SealJob` gained `submitted_by`; `POST /study` takes the `Scope` extractor). Whole-number floats are written as integers for RFC 8785. The reviewer read decision 113's clock against the crate's decision 90 ("the clock of `rx_utc_ms`") and judged it a refinement, not a contradiction: in a study `rx_utc_ms` is dev-bench uptime, so only Core's stamp is epoch. `open.md` took its edit in spare bytes (269 B from the reserve line), so `core/133` stays parked. **Leg setup, to carry:** step 0 found no claim, no `agent/*` branch and no unit worktree in any repo, only the clean leg worktree the 22:33 leg (dead on a 5-hour 429) left, reused at `origin/main`; Fleet Ready had nothing to split (EMB-223, 225, 226 waiting on blockers); bench `api/059` and `dev-bench/038` stay `open` (neither `dev-bench` nor `dut` attached at the 03:02 refresh). The refill gate fired spread only (4 scopes, wave 6); **I skipped the sweep without a `nothing filed` marker to point at**: the newest is `2026-11-18 23:20`, but every source commit since it predates the 22:05 leg's sweep, which read them and filed `umbrella/102`, and none has moved since. Four workers went out as four foreground `Agent` calls in one message and all four reported to this leg (120 s to 500 s). This unit also commits the 2026-11-21 day fold, rolls 2026-11-19 into `log-archive/`, and ran `check-client-names.py --suite --history`: clean on all 16 repos.
+**Merged:** `agent/core/132-measurements-at-a-studys-end` (code `f16a35b`, ff on `origin/main` from `99a3e7c`; doc `b134f58f`, the worker's `71505591` cherry-picked onto `38b28a75`). Re-gated on the merge result: `cargo build`, `cargo test` (426 passed, 2 ignored, plus 2), `clippy --all-targets -- -D warnings` green; ownership green on both branches; client names clean; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** the native Windows build, unrun (a worktree cannot build natively). No real study's captures have been reduced: run a study with a `rate` and an `interval` over a bench console, then read `measurements.json` for the arrival granularity and the rate tolerance (recorded in `embarch-core/open/never-exercised.md`). A `study_value` scope from a person token has never been seen end to end.
+**Budget:** PROCEED, 5-hour 0% at the start and 21% at dispatch, weekly 62%, wave 6.
+**Least sure about:** the `rate_check` tolerance is a guess, and the reducer's `rate` is `n/T` over a first-to-last window, which reads high by one interval in `n-1`; the first real capture is the check, and nothing schedules it.
+
+---
+
+## 2026-11-21 — 11 units
+
+*Folded by the 2026-11-22 leg: per-unit narrative, gate lists and budget lines went; SHAs, reviewer lines and hardware debts kept, one line per unit. `git log` holds the reasoning.*
+
+**Carry forward:**
+- **Suite-wide, by the supervisor, under the 17:10 announcement (`ts 1795306202`; no reply, window closed 17:40): host-type schema bump, `HOST_TYPE_SCHEMA_VERSION` 21 to 22, wire 15 unchanged** (`suite/057`: `Study.measurements`, up to 32 `MeasurementDecl`, always compiled, nothing skipped when empty because `Study` travels as postcard). **A deploy, the owner's:** Core, `embarch-api` (restart the MCP server) and `embarch-ui` refuse each other across 21 and 22 until all three are rebuilt from `main`; `embarch-umbrella` `doctor` check 11 warns until it is too. The running MCP binary is stale from this commit on.
+- **Deploy order: Core first.** The next `embarch-ui` deploy does not start without a readable person token, which a Core from `core/128` on writes at first start. Core before UI.
+- Filed or opened this day: `tasks/ui/112` (the UI save handler drops a study's declarations), `tasks/core/132` open (calls `validate_measurements` at submission, window time bounds, what a marker is), `tasks/umbrella/102` open (an already-`init`ed repo gets no skill; the workaround deletes the engineer's config), `tasks/api/165` open (compact `client-crate.md`, `interfaces/config.md`, due 2026-11-28), `tasks/core/133` blocked (compact `open.md`), EMB-238 (now `api/166`, landed), EMB-239 (now `core/134`, landed). Owed and unfiled: `plot_ticks` into the shared crate (best with M1.11, which must call the Rust one); whether `run_host_study` takes an optional `project`; a missing-person-token banner in the UI.
+- `fold-commit.py` does not stage `notes/` (already recorded 2026-11-20); the `api/164` fold's `notes/hil/06` edit landed apart as `dc7b3757`.
+- Two decisions to remember: `embarch-core` decision 112, the first refusal by scope (the agent's token gets `403` discarding a failed, errored, inconclusive or published run's captures), proven so far only in Core's own tests; `POST /auth/challenge` takes no token and sits outside decision 42's route sweep. Signed-challenge step before a client sends any token (Core decision 110's route) is in no task; name it when M1.10 is split.
+- Spread sweep, carried verbatim for the refill skip: `Spread sweep: nothing filed (2026-11-18 23:20)`. A later sweep this day (17:32 and 22:14 units) read only `embarch-api/open.md`, `embarch-core/open.md` and `embarch-token.md` since it, and filed `umbrella/101`, then `umbrella/102`.
+- Recovery: the 17:01 leg died on a 5-hour 429 at about 17:38 before `fold-commit.py`; the 22:05 unit finished its dirty worktree. A leg that dies between merging code and folding docs leaves `history/` and `features.md` behind the shipped binary.
+- Workers: foreground `Agent` calls in one message run concurrently and each reports to its own leg (EMB-214's pattern); background calls (22:08) also reported to this leg.
+
+### Units
+
+**suite/057 a-study-declares-its-derived-measurements (22:31)**
+**Merged:** `agent/suite/057-a-study-declares-its-derived-measurements`, §8 order: `embarch-study-designer` `d6230ad` (ff from `1238def`), `embarch-core` `99a3e7c` (ff from `9a9d31a`), `embarch-api` `2f7550d` (ff from `069e892`); doc `9e5e5301` (`e4de7d76` cherry-picked onto `af0b4e7e`).
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** **a deploy, the owner's**: Core, `embarch-api` (restart the MCP server) and `embarch-ui` refuse each other across 21 and 22 until all three are rebuilt from the new `main`, and `embarch-umbrella`'s `doctor` check 11 warns until it is too. The running MCP binary is stale from this commit on. No board needed.
-**Budget:** PROCEED, 5-hour 26% at the second dispatch, weekly 54%.
-**Least sure about:** declaring the study's own values per measurement rather than per tap lets two declarations over one tap state different sample rates; Core (`core/132`) reports each `rate_check` on its own measurement, and nothing refuses the disagreement.
+**Least sure about:** declaring values per measurement rather than per tap lets two declarations over one tap state different sample rates; nothing refuses the disagreement (`core/132` reports each `rate_check` separately).
 
----
-
-## 2026-11-21 22:20 — api/166 send-build-claims-when-a-study-starts
-
-**Decided:** nothing suite-wide. `embarch-api` decision 111 (`decisions/build-claims.md`): `run_study`, from the CLI and the MCP tool, sends Core `build_commit` (`git rev-parse HEAD` of the project the ledger row resolves), `build_dirty` (tracked files differ from `HEAD`, untracked ignored) and, for a zephyr-west project only, `build_toolchain` (the first line of `west --version`: the build tool, not the compiler). A directory that is not a git work tree sends none, and a value that cannot be read is left unsent, never made up. `run_host_study` sends none, having no project; whether it should take an optional `project` is left open in decision 111, unfiled. The claim is the checkout's state, not proof of what the board runs (`--reflash none`). In the shared `embarch-core-client`: a new `BuildClaims` and `post_study_claiming` / `post_host_study_claiming`; `post_study` and `post_host_study` keep their signatures and send exactly what they did, and `StudyRunOptions` gains no field, because `embarch-ui` builds it as a struct literal. I read the crate diff before landing, as `gate.md` asks of a shared crate.
-**Merged:** `agent/api/166-send-build-claims-when-a-study-starts` (code `069e892`, ff on `origin/main` from `b2afdf5`; doc `9d20f924`, the worker's `e221d851` cherry-picked onto `1322a2eb`). Re-gated on the merge result: `cargo build`, `cargo test --workspace`, `clippy --workspace --all-targets -- -D warnings` green; **`embarch-ui` and `embarch-umbrella` built green against the branch's crate** (detached worktrees under `.worktrees/gate-166/` with `embarch-api` linked to the unit worktree, `cargo tree -i embarch-core-client` confirming the path; removed after); ownership green on both branches; client names clean; `check-docs.py` 12/12.
+**api/166 send-build-claims-when-a-study-starts (22:20)**
+**Merged:** `agent/api/166-send-build-claims-when-a-study-starts`, code `069e892` (ff from `b2afdf5`); doc `9d20f924` (`e221d851` cherry-picked onto `1322a2eb`). `embarch-api` decision 111; `build_dirty` ignores untracked files.
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** none on a board. The MCP `run_study` path is untested end to end (no harness drives the MCP subprocess; it shares `build_claims::for_project` with the CLI, which is tested against a mock Core), and nothing has sent a claim to a real Core.
-**Budget:** PROCEED at dispatch, 5-hour 26%, weekly 54%, wave 6.
-**Least sure about:** `build_dirty` ignores untracked files, so a build that compiled a new, uncommitted source file is claimed clean; that is the worker's reading of "dirty", and a signed record will carry it.
 
----
-
-## 2026-11-21 22:14 — core/134 retention-holds-when-the-run-log-cannot-be-read
-
-**Decided:** nothing suite-wide. `embarch-core` decision 111 amended in place (`decisions/run-log.md`): a run log that cannot be read, parsed or verified makes retention delete nothing, with an `error` line in Core's log, where it used to read as an empty protected set and sweep unpublished runs by count. `RunLog::unpublished_ids` and `run_log::protected_ids` now return `Result` and run the chain check, so a tampered but parseable log fails too; `GET /studies` on the same failure lists every study on disk with `keep: 0`. **Leg setup, to carry:** this leg split EMB-239 to this task (`1822a2eb` claim) and filed `tasks/umbrella/102` from `umbrella/101`'s finding (an already-`init`ed repo gets no skill, and the only workaround deletes the engineer's config), left `open` for the next leg. The refill gate fired on depth and spread; only `embarch-api/open.md`, `embarch-core/open.md` and `embarch-token.md` had changed since the 17:01 leg's sweep, and those three gave `umbrella/102` and nothing else. Workers went out as two background `Agent` calls at 22:08, and this one's report reached this leg.
-**Merged:** `agent/core/134-retention-holds-when-the-run-log-cannot-be-read` (code `9a9d31a`, ff on `origin/main` from `c3414e4`; doc `d4b39eaf`, the worker's `5fd3437b` cherry-picked onto `0daa1ff6`). Re-gated on the merge result: `cargo build`, `cargo test` (418 passed, 2 ignored, plus 2), `clippy --all-targets -- -D warnings` green; ownership green on both branches; client names clean; `check-docs.py` 12/12.
+**core/134 retention-holds-when-the-run-log-cannot-be-read (22:14)**
+**Merged:** `agent/core/134-retention-holds-when-the-run-log-cannot-be-read`, code `9a9d31a` (ff from `c3414e4`); doc `d4b39eaf` (`5fd3437b` cherry-picked onto `0daa1ff6`). Leg setup claim `1822a2eb`. `GET /studies` answers `keep: 0` on an unreadable log, the opposite of what retention does; the UI does not read `keep`.
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** the native Windows build, unrun (a worktree cannot build natively). No board needed. The `error` log line itself is not asserted by a test (no log-capture crate in `embarch-core`).
-**Budget:** PROCEED at dispatch, 5-hour 26%, weekly 54%, wave 6; two workers, since this leg's last unit is `suite/057` by hand.
-**Least sure about:** `GET /studies` answering `keep: 0` on an unreadable log is the worker's choice and reads to a client as "nothing is kept", the opposite of what retention now does; the UI does not read `keep` today, so nothing shows it yet.
 
----
-
-## 2026-11-21 22:05 — umbrella/101 init-installs-the-hil-skill
-
-**Decided:** nothing suite-wide. `embarch-umbrella` decision 59 (`decisions/integration.md`): `embarch init` installs `.claude/skills/embarch-hil/SKILL.md` from a copy pinned into `embarch-umbrella` (`src/skills/embarch-hil/SKILL.md`), excluded locally like the rest of `init`'s writes; a test fails, never skips, when the pin drifts from `../embarch-api/skills/embarch-hil/`; `--uninstall` removes it; `init --dry-run` is new and prints the plan. **This is a recovery fold**: the 17:01 leg merged the code to `origin/main`, cherry-picked the doc commit into its leg worktree and had consumed the changelog fragment, built `suite/features.md` and amended `embarch-api/open.md` when it died on a 5-hour 429 at about 17:38, before `fold-commit.py`. I found that worktree dirty with exactly that, re-gated, and finished it here rather than redoing it. I shortened the leg's `embarch-api/open.md` line (3,965 to 3,870 of 5,120 B), since it had pushed the file into reserve with no debt filed and the gate was red on it. **I closed `tasks/umbrella/099` `done`**: the worker moved `spec.md`'s marketplace paragraph verbatim to `spec/marketplace.md` (9,281 to 8,808 B) per its dispatch note, the release paragraph and its "not yet run on a tag" statement untouched; `In flux: yes` left as written. The worker's finding stands unfiled: a repo already `init`ed gets no skill (`init` exits on an existing config), and the open line now says to `init --uninstall` then `init`.
-**Merged:** `agent/umbrella/101-init-installs-the-hil-skill` (code `b3d0106`, ff on `origin/main` from `ed5d14b`, landed by the 17:01 leg; doc `7ca69785`, the worker's `305c0c0c` cherry-picked onto `2d8d5f1a`). Re-gated by this leg on `origin/main`: `cargo build`, `cargo test` (277 passed), `clippy --all-targets -- -D warnings` green; ownership green on both branches (code checked against `ed5d14b`); client names clean; `check-docs.py` 12/12.
+**umbrella/101 init-installs-the-hil-skill (22:05, recovery fold)**
+**Merged:** `agent/umbrella/101-init-installs-the-hil-skill`, code `b3d0106` (ff from `ed5d14b`, landed by the 17:01 leg); doc `7ca69785` (`305c0c0c` cherry-picked onto `2d8d5f1a`). `tasks/umbrella/099` closed `done`.
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** none on a board. The skill path `.claude/skills/<name>/SKILL.md` is `[assumed]` and has not been loaded in a live Claude Code session: run `embarch init` in a scratch repo and confirm the agent lists `embarch-hil`.
-**Budget:** PROCEED, 5-hour 0%, weekly 52%, wave 6.
-**Least sure about:** the code sat on public `main` for four hours with no doc fold behind it; nothing reads that state as wrong, so a leg that died one step earlier would have left `history/` and `features.md` silently behind the shipped binary.
 
----
-
-## 2026-11-21 17:37 — ui/111 ui-calls-core-with-the-person-token
-
-**Decided:** nothing suite-wide. `embarch-ui` decision 103 (`decisions/core-token.md`): `config::core_client` builds the UI's one `CoreClient` with `TokenScope::Person`, and **there is no fallback to the agent's token**. **The worker departed from the task's wording, and I accepted it**: the task asked for a missing person token to be reported where the UI reports Core unreachable; instead the UI stops at start with an error naming the token's sources, because every handler holds one `CoreClient` and none can be built without a token, and a banner would need an `Option<CoreClient>` through every handler. The reviewer read it against `embarch-ui` decision 26 (Core unreachable is a runtime state, not a config one) and `embarch-api` decision 109 (no person token is an error naming its sources) and found no contradiction. A banner is a follow-up if the owner wants one; unfiled. I amended `embarch-token.md` §2 (the UI is the person's client and does not start without its token) and `embarch-core/open.md`'s scope line, and set `tasks/api/165`'s `In flux:` to `no` for both files, since its only `yes` waited on this unit. **The api/164 fold's note edit landed apart as `dc7b3757`** (`notes/hil/06`, check 9's `path("…")`): `fold-commit.py` does not stage `notes/`, the gap the 2026-11-20 entry already recorded.
-**Merged:** `agent/ui/111-ui-calls-core-with-the-person-token` (code `279c33f`, ff on `origin/main` from `d824791`; doc `4cca5341`, the worker's `f38d3517` cherry-picked onto `dc6dabeb`). Re-gated on the merge result: `cargo build`, `cargo test` (319 passed, 4 ignored, plus 8), `clippy --all-targets -- -D warnings` green; ownership green on both branches; client names clean; `check-docs.py` 12/12.
+**ui/111 ui-calls-core-with-the-person-token (17:37)**
+**Merged:** `agent/ui/111-ui-calls-core-with-the-person-token`, code `279c33f` (ff from `d824791`); doc `4cca5341` (`f38d3517` cherry-picked onto `dc6dabeb`); note edit `dc7b3757`. No fallback to the agent's token; the UI stops at start naming the token's sources (worker's departure from the task, accepted).
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** none on a board. **A deploy ordering debt**: the next `embarch-ui` deploy does not start unless the UI can read a person token, which a Core from `core/128` on writes at its first start; deploy Core first. Not run against the installed `embarch-ui.service` or a real Core, and the missing-token test passes without checking the error on a machine that has a `person-token` file.
-**Budget:** PROCEED, 5-hour 22% at dispatch, weekly 44%, wave 6.
-**Least sure about:** whether the deployed Core on the owner's bench already writes `person-token`; if it predates `core/128`, the UI goes from working to not starting on its next deploy, and only the unit's journal says why.
 
----
-
-## 2026-11-21 17:35 — api/164 render-a-report-to-pdf-offline
-
-**Decided:** nothing suite-wide. `embarch-api` decision 110 (`decisions/report-pdf.md`, `interfaces/report-pdf.md`): Typst linked as a library (`typst`, `typst-pdf`, `typst-layout` 0.15.1, `typst-as-lib` 0.18.0) behind a cargo feature **`pdf`, on by default** because `publish` (M1.10) needs it; measured cold debug build 66 s to 147 s, release 71 s to 187 s, release binary 21.5 MB to 84.3 MB (for a binary that calls `render_report`; `main.rs` does not yet). lilaq 0.6.0 and its three imports (elembic 1.1.1, tiptoe 0.4.0, zero 0.6.1) vendored unedited from the registry tarballs, hashes and MIT licences in `typst-packages/PROVENANCE.md`; lilaq's `jitter` fails, its `suiji` import not vendored. A custom resolver serves only the embedded packages and the staging directory, so no registry is reachable; staging copies by content and refuses symlinks, hard links and escaping names; `ident` and `timestamp` set, and two processes gave identical bytes. EmbArch's own `@embarch/report` helper (`minmax-plot`, `plot-ticks`, `m`), with `plot_ticks` also in Rust and a test holding the two equal. **I folded its fragment** into `embarch-study-designer/interfaces/hil-pdf.md` (`plot_ticks` lives in embarch-api until it moves to the shared crate; the tick arithmetic is `f64`, so `(-0.3, 0.3)` gives step 0.1 where decimal arithmetic gives 0.2, and that case is a test) and `notes/hil/06-report-and-publish.md` check 9 (the helper takes `path("…")`, since a Typst package cannot read the project by a string, so M1.11's whitelist must admit `path()`). I accepted the float behaviour rather than sending it back: the tick texts are still built by integer arithmetic, only the compares are float, and the Typst helper's copy is held equal to the Rust `plot_ticks` by a test. On the reviewer's note I corrected my own fold wording (it had said "one function"; there are two copies held equal), amended `hil-pdf.md` step 6's "exact compare", and appended a dated amendment to `embarch-study-designer` decision 91. **`plot_ticks` moving into the shared crate is owed and unfiled**: it is a two-repo move (crate, then embarch-api's call), best taken with M1.11, which must call the Rust one.
-**Merged:** `agent/api/164-render-a-report-to-pdf-offline` (code `b2afdf5`, ff on `origin/main` from `c9f0c79`; doc `9fa11640`, the worker's `1676e029` cherry-picked onto `4567439a`). Re-gated on the merge result: `cargo build`, `cargo test`, `clippy --workspace --all-targets -- -D warnings` and `cargo check --no-default-features` green; `embarch-core-client` untouched, so `embarch-ui` and `embarch-umbrella` were not rebuilt for it; ownership green on both branches; client names clean (vendored text included); `check-docs.py` 12/12.
+**api/164 render-a-report-to-pdf-offline (17:35)**
+**Merged:** `agent/api/164-render-a-report-to-pdf-offline`, code `b2afdf5` (ff from `c9f0c79`); doc `9fa11640` (`1676e029` cherry-picked onto `4567439a`). Typst behind cargo feature `pdf`, default on; release binary 21.5 MB to 84.3 MB; `embarch-study-designer` decision 91 amended.
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** none.
-**Budget:** PROCEED, 5-hour 22% at dispatch, weekly 44%, wave 6.
-**Least sure about:** byte identity across machines is unmeasured, and `verify` (M1.11) rests on it; the first second machine to render the fixture is the check, and nothing schedules it.
+**Least sure about:** byte identity across machines unmeasured, and `verify` (M1.11) rests on it; nothing schedules a second-machine render.
 
----
-
-## 2026-11-21 17:32 — core/131 hash-chained-run-log
-
-**Decided:** **Leg setup, to carry:** this leg split EMB-221 to `core/131` (M1.6), EMB-238 to `api/166` (open), and **EMB-222 into two: `suite/057` and `core/132`.** A study cannot declare a derived measurement today (`Study` has no field for one), and adding one bumps `HOST_TYPE_SCHEMA_VERSION` and breaks the exhaustive `Study` literals in `embarch-core`, `embarch-api` and `embarch-ui` tests, so it is a §8 cross-repo pass, not a worker task. **`suite/057` was announced and parked at 17:10, `ts 1795306202.861479`, window closing 17:40**; `core/132` is `blocked` on it. A spread sweep (only `embarch-api/open.md`, `embarch-core/open.md` and `embarch-token.md` had changed since `Spread sweep: nothing filed (2026-11-18 23:20)`) filed `umbrella/101` from the api `open.md` line. Four workers went out as four foreground `Agent` calls in one message (EMB-214's pattern) and all four reported to this leg. Unit itself: `embarch-core` decisions 111 and 112 (`decisions/run-log.md`, `interfaces/run-log.md`): `run-log.jsonl` beside the token files, one `{entry, hash}` line per run chained by `prev`, entries `run` (carrying the hash of `record.dsse.json` and of every capture), `published` (a manifest hash) and `discarded`; a log that does not verify is never extended. Retention spares a run the log has not seen published or discarded, and `GET /studies` follows the same split. **Decision 112 is the first refusal by scope**: the agent's token gets `403` discarding a failed, errored, inconclusive or published run's captures. Four new lease-open routes (`GET /run-log`, `GET /study/{id}/log`, `POST /study/{id}/published`, `POST /study/{id}/discard`), swept. No schema bump. I folded its fragment into `embarch-token.md` §3, and **closed `tasks/core/130` `done`**: the worker moved `spec.md`'s deployment and release-assets text verbatim to `spec/deployment.md` (9,529 to 7,965 B). The worker filed `tasks/core/133` (compact `open.md`, 4,829 of 5,120 B), blocked, `In flux: yes`. From the reviewer's note I filed **EMB-239** (Fleet Ready, core): retention reads an unreadable log as "nothing protected" and would sweep unpublished captures.
-**Merged:** `agent/core/131-hash-chained-run-log` (code `c3414e4`, ff on `origin/main` from `4f5dcc4`; doc `13a86f36`, the worker's `a9ceacf8` cherry-picked onto `fbc0af1a`). Re-gated on the merge result: `cargo build`, `cargo test` (416 passed, 2 ignored, plus 2), `clippy --all-targets -- -D warnings` green; ownership green on both branches; client names clean; `check-docs.py` 12/12.
+**core/131 hash-chained-run-log (17:32)**
+**Merged:** `agent/core/131-hash-chained-run-log`, code `c3414e4` (ff from `4f5dcc4`); doc `13a86f36` (`a9ceacf8` cherry-picked onto `fbc0af1a`). `embarch-core` decisions 111 and 112; `tasks/core/130` closed `done`; `suite/057` announced at 17:10.
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** the native Windows build and the `icacls` lockdown on `run-log.jsonl`, unrun (a worktree cannot build natively). No board needed.
-**Budget:** PROCEED at the start, 5-hour 0%, weekly 44%, wave 6; 22% 5-hour at dispatch.
-**Least sure about:** the discard has never met a person's token from a real client (`ui/111` lands this leg, the CLI has no person scope), so decision 112's refusal is proven only in Core's own tests.
 
----
-
-## 2026-11-21 12:41 — api/162 core-client-resolves-both-token-scopes
-
-**Decided:** nothing suite-wide. `embarch-api` decision 109 (`decisions/client-crate.md`): `embarch-core-client` gains `TokenScope { Agent, Person }`, `CoreClient::new_with_scope` and `CoreConfig::{person_token, person_token_env, resolve_token_for}`, all additions; a person client reads `person_token_env`, `person_token`, `EMBARCH_PERSON_TOKEN`, then `person-token` beside the agent's file (the same WSL2 `%ProgramData%` mapping), and **never falls back to the agent's token**. The MCP server and every CLI verb build their client through `agent_core_client`, and **no CLI flag selects the person scope**, so only library code (`ui/111`) reaches it. I folded the fact into `embarch-token.md` §2, replacing "Clients still resolve the agent's token alone", and set **`tasks/ui/111` `open`** (its `Unparks when:` named this unit), with a dispatch note naming the API it calls. The worker filed `tasks/api/165` (compact `decisions/client-crate.md` and `interfaces/config.md`, `In flux: per file`, due 2026-11-28), `open`.
-**Merged:** `agent/api/162-core-client-resolves-both-token-scopes` (code `c9f0c79`, ff on `origin/main` from `97577b6`; doc `b407e472`, the worker's `21f92513` cherry-picked onto `0eacb879`). Re-gated on the merge result: `cargo build`, `cargo test` and `clippy --workspace --all-targets -- -D warnings` green; **`embarch-ui` and `embarch-umbrella` built green against the branch's crate** (detached worktrees under `.worktrees/gate-162/` with `embarch-api` linked to the unit worktree, `cargo tree -i` confirming the path; removed after); ownership green on both branches; client names clean; `check-docs.py` 12/12.
+**api/162 core-client-resolves-both-token-scopes (12:41)**
+**Merged:** `agent/api/162-core-client-resolves-both-token-scopes`, code `c9f0c79` (ff from `97577b6`); doc `b407e472` (`21f92513` cherry-picked onto `0eacb879`). `embarch-api` decision 109; no CLI flag selects the person scope.
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** none. The WSL2 `person-token` path has not met a live Core.
-**Budget:** PROCEED, 5-hour 60%, weekly 41%, wave 6.
-**Least sure about:** the signed-challenge step before a client sends any token (Core decision 110's route) is in no task yet; EMB-238 covers only the build claims, and the challenge matters once an attested install writes a fingerprint, so it is unfiled on purpose but worth naming when M1.10 is split.
 
----
-
-## 2026-11-21 12:38 — study-designer/086 hil-verdict-rules
-
-**Decided:** nothing suite-wide. `embarch-study-designer` decisions 95 to 98 (`decisions/hil-verdicts.md`): `src/verdicts.rs` behind a new feature `verdicts = ["alloc"]`, beside `reducers`; five rules (`step_verdict`, `limit_verdict`, `acceptance_width`, `combine`, `requirement`) each at behaviour 1, pinned by `Rules::latest()` and refused by `Rules::pinned()` for a behaviour never shipped; it follows decision 93's contract rather than reusing the reducers' `Registry`, since the five signatures differ. **95 closes the gap `084`'s reviewer left on EMB-218**: an observation prompt that times out or is cancelled is `inconclusive`, reason `observation_unanswered`, amended into `hil-shapes.md` (no file carries the string yet, so no `schema` bump). 97 orders evidence defects before `calibration_expired` before the limit, so a truncated capture is `inconclusive` however far out its number; 98's width check is strict, a `relayed` test is listed apart and counted in nothing, and "N of M" counts `not_selected` in `m`. 97's edge handling and 98's readings are marked as assumed where `03` was open. **The unit also paid `tasks/study-designer/087`** per its dispatch note: `interfaces/hil-shapes.md` 11,205 to 9,994 of 12,288 B, its characterisation section moved verbatim to `interfaces/hil-characterisation.md`; I closed 087 `done` in this fold, `In flux: yes` left as written.
-**Merged:** `agent/study-designer/086-hil-verdict-rules` (code `1238def`, ff on `origin/main` from `17332cf`; doc `5d512fb4`, ff on the leg worktree from `e559e851`). Re-gated on the merge result: build, test and `clippy --all-targets -- -D warnings` green under no features, `alloc`, `std`, `study-ui,gatt-extract,eap-parse`, and `--no-default-features` with `verdicts` and with `reducers,verdicts`; ownership green on both branches; client names clean; `check-docs.py` 12/12.
+**study-designer/086 hil-verdict-rules (12:38)**
+**Merged:** `agent/study-designer/086-hil-verdict-rules`, code `1238def` (ff from `17332cf`); doc `5d512fb4` (ff from `e559e851`). Decisions 95 to 98; `tasks/study-designer/087` paid and closed `done`. Decisions 97 and 98 meet real data first in the Test phase; a disagreeing reading costs a behaviour version.
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** none.
-**Budget:** PROCEED at the second pair's dispatch, 5-hour 60%, weekly 41%, wave 6; two units left in the leg, so two workers.
-**Least sure about:** M1.3 has no user in milestone 1, so decisions 97 and 98 will first meet real data in the Test phase; a reading there that disagrees with them costs a behaviour version, and nothing schedules that check.
 
----
-
-## 2026-11-21 12:27 — core/129 sign-study-run-records
-
-**Decided:** nothing suite-wide. `embarch-core` decision 110 (`decisions/signing.md`): an Ed25519 key (`ed25519-dalek` 2) in `signing-key` beside the token files, created on first start, `0600` on Linux and the `icacls` lockdown on Windows, a malformed key stopping Core; `record.dsse.json` per study run, a standard DSSE envelope over an in-toto Statement with predicate type `urn:embarch:predicate:study-run:v1`, its subjects the SHA-256 of every file the run has when it ends (so `measurements.json` joins once M1.7 writes it), `observed` kept apart from `claimed.build`; a run that cannot be signed ends `failed`, never `completed` unsigned. **`POST /auth/challenge` takes no token**, the one exception to "every route requires the token": it signs only `embarch-core-auth-v1`, Core's nonce and the caller's hex nonce, and is merged outside `build_router`'s swept lines, so decision 42's route sweep does not see it. A device study now writes `study.json` so it can be a subject. Build claims arrive as `build_*` query parameters nothing sends yet: I filed **EMB-238** (Fleet Ready, `api`). I folded its fragment into `embarch-token.md` §2 (the key beside the tokens) and added the challenge to §3's "every request carries the token"; on the reviewer's note I corrected `embarch-core/spec.md`'s sweep and scope-record clauses, which the unit had left stale. The worker filed `tasks/core/130` (compact `spec.md`, 9,458 of 10,240 B), blocked, `In flux: yes`.
-**Merged:** `agent/core/129-sign-study-run-records` (code `4f5dcc4`, ff on `origin/main` from `789cbfc`; doc `f85141d6`, the worker's `4ebfeb1e` cherry-picked onto `c75b26a2`). Re-gated on the merge result: `cargo build`, `cargo test` (405 passed, 2 ignored, plus 2), `clippy --all-targets -- -D warnings` green; ownership green on both branches; client names clean; `check-docs.py` 12/12.
+**core/129 sign-study-run-records (12:27)**
+**Merged:** `agent/core/129-sign-study-run-records`, code `4f5dcc4` (ff from `789cbfc`); doc `f85141d6` (`4ebfeb1e` cherry-picked onto `c75b26a2`). `embarch-core` decision 110, Ed25519 (`ed25519-dalek` 2); the declarations ledger is in memory, so a record after a Core restart vouches only from `witnessed_since_utc_ms` until M1.6's store persists it.
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** the native Windows build and the `icacls` lockdown on `signing-key`, unrun (a worktree cannot build natively); the task's closing note, now in `embarch-core/open.md`, says how to check both from the main checkout on Windows, and that a second start must reuse the key. No board needed.
-**Budget:** DEGRADED, measured wave 2.
-**Least sure about:** the declarations ledger that stamps each declaration's scope is in memory, so a record from a Core restarted after its enrolments vouches only from `witnessed_since_utc_ms`; M1.6's protected store is where it should persist, and nothing yet forces that unit to pick it up.
 
----
-
-## 2026-11-21 12:25 — study-designer/085 hil-reducers
-
-**Decided:** nothing suite-wide. **Leg setup, to carry:** this leg split the four HIL milestone-1 issues in Fleet Ready (`d7ae8e5b`): EMB-217 to `study-designer/085` (M1.2, reducers), EMB-218 to `study-designer/086` (M1.3, verdict rules), EMB-220 to `core/129` (M1.5, signing), EMB-224 to `api/164` (M1.9, PDF); refill then not owed (5 dispatchable, 3 scopes). Workers dispatched as two foreground `Agent` calls in one message, per EMB-214's finding: they ran concurrently and both reported to this leg (370 s and 584 s). Unit itself: `embarch-study-designer` decisions 92 to 94 (`decisions/hil-reducers.md`): the eight reducers in `src/reducers.rs` behind a new feature `reducers = ["alloc"]`, with a dependency-free square root so results match to the bit on every target; a `Registry` keeps every (name, behaviour) pair shipped, all at behaviour 1, and an unshipped one is `UnknownBehaviour`; inputs are standard uncertainties, `U = k·sqrt(instrument² + type_a²)`, `k` 2 by default. `embarch-core` and `embarch-api` are to turn `reducers` on (M1.7, M1.11); no existing consumer names it, so none changed. The worker filed `tasks/study-designer/087` (compact `interfaces/hil-shapes.md`, now 11,205 of 12,288 B), blocked, `In flux: yes`, `Unparks when:` naming `study-designer/086`. This unit also commits the 2026-11-20 day fold, rolls 2026-11-18 into `log-archive/`, and ran `check-client-names.py --suite --history`: clean on all 16 repos.
-**Merged:** `agent/study-designer/085-hil-reducers` (code `17332cf`, ff on `origin/main` from `f6cca94`; doc `ffe5c599`, ff on the leg worktree from `731d60a0`). Re-gated on the merge result: build, test and `clippy --all-targets -- -D warnings` green under no features, `alloc`, `std`, `study-ui,gatt-extract,eap-parse` and `--no-default-features --features reducers`; ownership green on both branches; client names clean; `check-docs.py` 12/12.
+**study-designer/085 hil-reducers (12:25)**
+**Merged:** `agent/study-designer/085-hil-reducers`, code `17332cf` (ff from `f6cca94`); doc `ffe5c599` (ff from `731d60a0`). Decisions 92 to 94; the percentile's type-A convention is unmeasured. Also committed the 2026-11-20 fold; `check-client-names.py --suite --history` clean on all 16 repos. Spread of the HIL M1 issues in Fleet Ready (`d7ae8e5b`).
 **Blocked:** nothing.
 **Reviewer:** no findings.
 **Hardware debts:** none. Bench `api/059` and `dev-bench/038` stay `open`: neither `dev-bench` nor `dut` attached at the 12:06 refresh.
-**Budget:** DEGRADED at the start (usage cache 20 h old), measured wave 2.
-**Least sure about:** the percentile's type-A term (half the one-sigma order-statistic spread) is the worker's convention, unmeasured against any reference; decision 94 records it, and changing it later costs a behaviour version, not a rewrite.
-
----
-
 ## 2026-11-20 — 3 units
 
 *Folded 2026-11-21 by the supervisor leg's embarch-log-folder: per-unit narrative reasoning, re-gate command lists and budget lines went (git holds them); SHAs, Reviewer lines, debts and the carry-forward items below stayed.*
@@ -267,57 +230,4 @@ unit under **Merged** and **Blocked**:
 
 ---
 
-## 2026-11-19 — 6 units
-
-*Folded by the 2026-11-20 leg's `embarch-log-folder`: per-unit "Decided" reasoning, test tallies and "Least sure about" narrative dropped (git holds them); SHAs, Reviewer lines, debts and carry-forward items kept.*
-
-**Carry forward:**
-- **Spread sweep skip line, verbatim:** `Spread sweep: nothing filed (2026-11-18 23:20)`. No source path had a commit since; the refill gate fired on depth and spread at 04:10 and was skipped.
-- **Background dispatch cuts a leg off.** The three legs before 00:02 dispatched workers in the background, ended their turn to wait, and were cut off (the 00:30 leg died mid-`atlas/090`, wrote no entry, left 247 uncommitted lines that were committed as found at `d80aa9f`). Foreground dispatch returned in about 3 minutes each (`087`, `088`, `089`, `090`). Filed **EMB-214** (Backlog, investigation); it names `.claude/leg.md` paragraphs, which are the owner's.
-- **Bench `api/059` and `dev-bench/038` stay `open`**: neither `dev-bench` nor `dut` attached at 23:56 or 04:04. Fleet Ready empty. Atlas was the only scope with work; none left after `090`.
-- **`suite/056` run by the supervisor** after its announcement window (`1795086320.551719`, 04:05, no `--action`, no reply by 04:35): `embarch.md` 23,314 to 22,735 B (reserve 23,040). Two stale facts corrected ("ten legs run", §6 "one entry per batch"). Possibly out of rule: the depth sweep was skipped by applying the spread-only skip's reasoning.
-- Mid-day: 2026-11-18 folded (17 units) and 2026-11-14 rolled into `log-archive/` by the 00:02 leg; `check-client-names.py --suite --history` clean on 15 repos.
-- Budget throughout: PROCEED, wave 6, 5-hour 0% to 79%, weekly 18% to 23%.
-
-**Owner-side debts (in the task files, none need a board):** `doc regparse --template maxim` on the real datasheets (layout 3 optical-sensor, and the one that read 0 registers; real tables wrap their headers and descriptions, so a summary-table row regex may report `no_summary_row`); `doc regparse --template ti` on the real datasheet; `mcu rm-outline` and `mcu vote` on the real nRF54L-series datasheet.
-
----
-
-### 04:37 — suite/056 compact-suite
-**Merged:** `suite/056` (doc `670c15cc`, on `origin/main`; no code repo).
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none.
-
-### 04:10 — atlas/090 maxim-bit-column-register-map (EMB-34, second half; recovery of the dead leg's worker)
-**Merged:** `agent/atlas/090-maxim-bit-column-register-map` (code `d80aa9f`, ff on `origin/main` from `124dc60`; doc `2bd99b5d`, the worker's `2bff3d8c` cherry-picked onto `256cf62f`). Dead leg's claim `76a04e89`, reclaimed `0a31d1d5`. Gates green.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none needing a board. Owner-side, in the task file: `doc regparse --template maxim` on the real optical-sensor datasheet; only synthetic PDFs have exercised layout 3. Bench `api/059`, `dev-bench/038` stay `open` (neither `dev-bench` nor `dut` attached at 04:04).
-
-### 00:22 — atlas/089 maxim-register-headings-with-a-hex-address (EMB-34, first half)
-**Merged:** `agent/atlas/089-maxim-register-headings-with-a-hex-address` (code `124dc60`, ff on `origin/main`; doc `c04d874b`, ff on the leg worktree). Gates green.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none needing a board. Owner-side, in the task file: `doc regparse --template maxim` on the real datasheet that read 0 registers; the synthetic table has one-line rows, while the real one wraps its `REGISTER NAME` header and its descriptions.
-
-### 00:15 — atlas/088 read-ti-width-prefixed-binary-resets (EMB-33)
-**Merged:** `agent/atlas/088-read-ti-width-prefixed-binary-resets` (code `85ee2b9`, ff on `origin/main`; doc `503fc4a6`, the worker's `22f8ea03` cherry-picked onto `14960676`). Gates green.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none needing a board. Owner-side, in the task file: `doc regparse --template ti` on the real datasheet, to see its resets and its 3 conflicts, which this unit does not claim.
-
-### 00:09 — atlas/087 read-a-nordic-style-reference-manual (EMB-32)
-**Merged:** `agent/atlas/087-read-a-nordic-style-reference-manual` (code `1948a8c`, ff on `origin/main`; doc `27a2efb5`, the worker's `19c8f474` cherry-picked onto `1439f6ea`). Gates green.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none needing a board. Owner-side, in the task file: one `mcu rm-outline` and one `mcu vote` run on the real nRF54L-series datasheet; the `ID` row's real column alignment, multi-letter field IDs and table rows unlike the issue's shape are unverified.
-
-### 00:02 — atlas/086 check-the-pdo-decode-against-the-standards-tables (EMB-159; third-leg re-land)
-**Merged:** `agent/atlas/086-check-the-pdo-decode-against-the-standards-tables` (code `69bf11f`, ff on `origin/main`; doc `2098422f`, the worker's `d0196cb2` cherry-picked onto `b74bfd51`). Gates green.
-**Blocked:** nothing.
-**Reviewer:** no findings.
-**Hardware debts:** none. Bench `api/059`, `dev-bench/038` stay `open`: neither `dev-bench` nor `dut` attached at the 23:56 refresh.
-
----
-*Days 2026-11-18 to 2026-11-18 rolled to [log-archive/supervisor-log-2026-11-18-to-2026-11-18.md](log-archive/supervisor-log-2026-11-18-to-2026-11-18.md).*
+*Days 2026-11-19 to 2026-11-19 rolled to [log-archive/supervisor-log-2026-11-19-to-2026-11-19.md](log-archive/supervisor-log-2026-11-19-to-2026-11-19.md).*
