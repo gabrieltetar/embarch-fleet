@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-21 22:20 — api/166 send-build-claims-when-a-study-starts
+
+**Decided:** nothing suite-wide. `embarch-api` decision 111 (`decisions/build-claims.md`): `run_study`, from the CLI and the MCP tool, sends Core `build_commit` (`git rev-parse HEAD` of the project the ledger row resolves), `build_dirty` (tracked files differ from `HEAD`, untracked ignored) and, for a zephyr-west project only, `build_toolchain` (the first line of `west --version`: the build tool, not the compiler). A directory that is not a git work tree sends none, and a value that cannot be read is left unsent, never made up. `run_host_study` sends none, having no project; whether it should take an optional `project` is left open in decision 111, unfiled. The claim is the checkout's state, not proof of what the board runs (`--reflash none`). In the shared `embarch-core-client`: a new `BuildClaims` and `post_study_claiming` / `post_host_study_claiming`; `post_study` and `post_host_study` keep their signatures and send exactly what they did, and `StudyRunOptions` gains no field, because `embarch-ui` builds it as a struct literal. I read the crate diff before landing, as `gate.md` asks of a shared crate.
+**Merged:** `agent/api/166-send-build-claims-when-a-study-starts` (code `069e892`, ff on `origin/main` from `b2afdf5`; doc `9d20f924`, the worker's `e221d851` cherry-picked onto `1322a2eb`). Re-gated on the merge result: `cargo build`, `cargo test --workspace`, `clippy --workspace --all-targets -- -D warnings` green; **`embarch-ui` and `embarch-umbrella` built green against the branch's crate** (detached worktrees under `.worktrees/gate-166/` with `embarch-api` linked to the unit worktree, `cargo tree -i embarch-core-client` confirming the path; removed after); ownership green on both branches; client names clean; `check-docs.py` 12/12.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none on a board. The MCP `run_study` path is untested end to end (no harness drives the MCP subprocess; it shares `build_claims::for_project` with the CLI, which is tested against a mock Core), and nothing has sent a claim to a real Core.
+**Budget:** PROCEED at dispatch, 5-hour 26%, weekly 54%, wave 6.
+**Least sure about:** `build_dirty` ignores untracked files, so a build that compiled a new, uncommitted source file is claimed clean; that is the worker's reading of "dirty", and a signed record will carry it.
+
+---
+
 ## 2026-11-21 22:14 — core/134 retention-holds-when-the-run-log-cannot-be-read
 
 **Decided:** nothing suite-wide. `embarch-core` decision 111 amended in place (`decisions/run-log.md`): a run log that cannot be read, parsed or verified makes retention delete nothing, with an `error` line in Core's log, where it used to read as an empty protected set and sweep unpublished runs by count. `RunLog::unpublished_ids` and `run_log::protected_ids` now return `Result` and run the chain check, so a tampered but parseable log fails too; `GET /studies` on the same failure lists every study on disk with `keep: 0`. **Leg setup, to carry:** this leg split EMB-239 to this task (`1822a2eb` claim) and filed `tasks/umbrella/102` from `umbrella/101`'s finding (an already-`init`ed repo gets no skill, and the only workaround deletes the engineer's config), left `open` for the next leg. The refill gate fired on depth and spread; only `embarch-api/open.md`, `embarch-core/open.md` and `embarch-token.md` had changed since the 17:01 leg's sweep, and those three gave `umbrella/102` and nothing else. Workers went out as two background `Agent` calls at 22:08, and this one's report reached this leg.
