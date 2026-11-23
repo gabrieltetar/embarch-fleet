@@ -96,7 +96,9 @@ those two now say. **If the honest state needs a qualifier, the qualifier goes
 after token zero** — that is what the rest of the line is for.
 
 - **claimed** — the claim line becomes
-  `**State:** claimed by agent/<scope>/<NNN-slug>, <yyyy-mm-dd HH:MM>`.
+  `**State:** claimed by agent/<scope>/<NNN-slug>, <yyyy-mm-dd HH:MM>`, which
+  `scripts/task-state.py claim <task>` writes; its `close` writes `done` and
+  `blocked` lines, `Unparks when:` included (EMB-151).
   **That prefix is parsed, and only that prefix**: the branch is the handle a
   recovery needs, and the time is the 4-hour backstop below. Anything after
   the time is prose — a window's `ts`, a note — and is welcome there (not a

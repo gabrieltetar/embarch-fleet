@@ -150,6 +150,8 @@ to one sub-project needs nobody's approval. Number it per `DOC-CONVENTIONS.md`
 5. A `status.d/` fragment for every suite-level fact your change made false.
 6. The task file's `Done when` boxes ticked, or an honest `## Blocked` section
    and, if you set `blocked`, the `**Unparks when:**` field the gate requires.
+   Write the state line with `scripts/task-state.py close <task> done --why '...'`
+   or `close <task> blocked --why '...' --unparks '...'`, never by hand (EMB-151).
 
 **Report red as red.** A branch that fails the gate and says so is worth more
 than one that passes because you stopped checking. The supervisor re-runs every

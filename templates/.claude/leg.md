@@ -591,7 +591,8 @@ which is what stops a double-dispatch and what tells the listener a leg is live.
 `**State:** claimed by agent/<scope>/<NNN-slug>, <yyyy-mm-dd HH:MM>` — the
 branch you are about to create and the wall clock. Anything you want to add —
 the unit it serves, a window's `ts` — goes *after* the time, where nothing reads
-it.
+it. `scripts/task-state.py claim <task> [--note '...']` writes exactly that, and
+drops a resumed park's `Unparks when:` in the same edit (EMB-151).
 Any other shape reads to `queue-status.py` as an abandoned claim with no branch,
 which advertises a live worker's task to the next leg as free to re-dispatch.
 Until 2026-09-18 half of all claims improvised a shape like
