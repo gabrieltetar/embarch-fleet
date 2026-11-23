@@ -147,6 +147,51 @@ class DreamCheck(Scratch):
         self.assertEqual(code, 0, out)
         self.assertIn("1 commit(s) on origin/main", out)
 
+    def log_the_fold(self, ts, subject):
+        """fold-commit.py's framework side: `Log <unit>: <instance subject>`,
+        its entry carrying the dream's ts."""
+        fleet = ROOT / "fleet"
+        (fleet / "supervisor-log.md").write_text(f"dreamt, ts `{ts}`\n")
+        git("add", "-A", cwd=fleet)
+        git("commit", "-qm", f"Log api/150: {subject}", cwd=fleet)
+
+    def own_fold(self):
+        fleet = ROOT / "fleet"
+        subprocess.run(["rm", "-rf", str(fleet)], check=True)
+        git("init", "-q", "-b", "main", str(fleet))
+        self.fr.FLEET_REPO = fleet
+
+    def test_the_posting_legs_own_fold_is_quiet(self):
+        self.own_fold()
+        ts = self.dream(hours_ago=0.01)
+        self.land_the_last_task()
+        self.log_the_fold(ts, "fold api/150")
+        code, out = self.check()
+        self.assertEqual(code, 1, out)
+        self.assertIn("own fold not counted (1)", out)
+
+    def test_a_commit_after_the_posting_legs_own_fold_asks(self):
+        self.own_fold()
+        ts = self.dream(hours_ago=0.01)
+        self.land_the_last_task()
+        self.log_the_fold(ts, "fold api/150")
+        leg = ROOT / "leg"
+        (leg / "open.md").write_text("a new open question\n")
+        git("add", "-A", cwd=leg)
+        git("commit", "-qm", "doc: open question", cwd=leg)
+        git("push", "-q", "origin", "HEAD:main", cwd=leg)
+        code, out = self.check()
+        self.assertEqual(code, 0, out)
+        self.assertIn("1 commit(s) on origin/main", out)
+
+    def test_a_fold_whose_log_names_another_dream_asks(self):
+        self.own_fold()
+        ts = self.dream(hours_ago=0.01)
+        self.land_the_last_task()
+        self.log_the_fold(f"{float(ts) - 9:.6f}", "fold api/150")
+        code, out = self.check()
+        self.assertEqual(code, 0, out)
+
     def test_an_owner_reply_in_the_thread_asks(self):
         ts = self.dream()
         self.replies = [{"ts": f"{float(ts) + 60:.6f}", "user": self.fr.CONF.owner,

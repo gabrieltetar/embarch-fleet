@@ -41,6 +41,7 @@ from __future__ import annotations
 import argparse
 import io
 import json
+import re
 import subprocess
 import sys
 import tarfile
@@ -58,6 +59,9 @@ FENCE_CLOSE = "<<<END UNTRUSTED TEXT>>>"
 # whether a crystal_ball has appeared recently, which used to mean scanning the
 # rendered messages by eye.
 MARKERS = ("crystal_ball", "robot_face")
+# The framework checkout fold-commit.py writes the log in, and its log subject.
+FLEET_REPO = Path(__file__).resolve().parent.parent
+LOG_SUBJECT = re.compile(r"^Log [a-z-]+/\d{3}: (.+)$")
 # How long a dream holds the relay when the queue is empty (ops.md §7).
 DREAM_HOLD_H = 6.0
 
@@ -177,8 +181,9 @@ def dream_check() -> int:
     A repeat says nothing new, and an ask that repeats unchanged trains the
     reader to skip the one alert that means the fleet cannot proceed. So a dream
     notifies only if the last one was answered, or something it could have been
-    drawn from changed since: any commit on the instance's `origin/main`, which
-    holds every refill source but Fleet Ready -- and a Fleet Ready issue is split
+    drawn from changed since: any commit on the instance's `origin/main` but the
+    posting leg's own fold (`own_folds`), as origin/main holds every refill
+    source but Fleet Ready -- and a Fleet Ready issue is split
     before a leg ever dreams. Any owner message after the dream, top level or in
     its thread, is an answer. Anything this cannot read means ASK: a missed
     repeat costs one notification, a missed ask costs the fleet its owner.
@@ -211,16 +216,35 @@ def dream_check() -> int:
     if not fetch_origin():
         print("ASK -- could not fetch origin/main to tell whether a source changed")
         return 0
-    new = subprocess.run(["git", "-C", str(CONF.doc_repo), "log", "origin/main",
-                          f"--since=@{int(float(dream))}", "--format=%h"],
-                         capture_output=True, text=True).stdout.split()
+    since = subprocess.run(["git", "-C", str(CONF.doc_repo), "log", "origin/main",
+                            f"--since=@{int(float(dream))}", "--format=%h %s"],
+                           capture_output=True, text=True).stdout.splitlines()
+    own = own_folds(dream)
+    new = [c for c in since if c.split(" ", 1)[-1] not in own]
+    mine = f"; the posting leg's own fold not counted ({len(since) - len(new)})" if len(new) < len(since) else ""
     if new:
         print(f"ASK -- {len(new)} commit(s) on origin/main since the unanswered dream "
-              f"{age(dream)} ago (ts {dream})")
+              f"{age(dream)} ago (ts {dream}){mine}")
         return 0
     print(f"QUIET -- the dream {age(dream)} ago (ts {dream}) is unanswered and origin/main "
-          "has not moved since: post the quiet repeat, without --action")
+          f"has not moved since{mine}: post the quiet repeat, without --action")
     return 1
+
+
+def own_folds(dream: str) -> set[str]:
+    """The instance fold subjects of the leg that posted this dream (EMB-210).
+
+    A leg that empties the queue with a fold dreams before that fold commits,
+    since the fold's log entry records the dream's ts; the fold then reaches
+    origin/main seconds after the post. The leg had that unit's work in hand
+    when it composed the ask, so its fold is not news, and counting it made
+    every dream after a last fold page again. fold-commit.py commits the log as
+    `Log <unit>: <the instance subject>`, so a log commit since the dream whose
+    diff carries its ts names the instance commit to leave out, exactly.
+    """
+    r = subprocess.run(["git", "-C", str(FLEET_REPO), "log", f"--since=@{int(float(dream))}",
+                        f"-S{dream}", "--format=%s"], capture_output=True, text=True)
+    return {m.group(1) for s in r.stdout.splitlines() if (m := LOG_SUBJECT.match(s))}
 
 
 def main() -> int:

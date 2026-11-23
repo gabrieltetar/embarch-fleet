@@ -471,7 +471,9 @@ owner's cue to top it up, and he should hear it before it reaches zero:
 
   **A repeat does not page.** Before you post, run
   `scripts/fleet-read.py --dream-check`. `QUIET` means the last dream is
-  unanswered and `origin/main` has not moved since, so yours would ask the same
+  unanswered and `origin/main` has not moved since, bar the fold of the leg
+  that posted it (its log entry carries the dream's ts, and that is how the
+  check knows it, EMB-210), so yours would ask the same
   thing again: post one line instead, `scripts/fleet-post.py "Still nothing to
   do, and nothing new since the last dream; its ask stands." --react
   crystal_ball`, with no `--action`, so it notifies nobody and still holds the
