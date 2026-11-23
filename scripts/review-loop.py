@@ -15,6 +15,7 @@ procedure that calls it.
 - **Delta rounds.** Round 1, and a final round if asked for, read the whole
   branch. Every other round's brief carries `git diff <last reviewed>..<tip>`,
   the functions its hunks sit in, and their call sites, and nothing else.
+  Prose files name no functions, so their hunks add none.
 - **One context pack per loop**, `context.md` beside the ledger: written once
   by the session, read by every reviewer, re-derived by none.
 - **A ledger instead of the handled list**, and a stop rule read off it.
@@ -44,6 +45,8 @@ counts, `decision`), and one row per finding (`id`, `round`, `reviewers`,
 already ingested this round is the same finding -- the reviewer is added to its
 row and the higher severity kept. Two distinct bugs three lines apart merge;
 the summary of the first is kept and the session sees both reviewers' prose.
+In prose (`.md`, `.rst`, ...) the summaries must match as well: a markdown
+line is a paragraph, and nearness merged five findings into one row (EMB-215).
 Across rounds nothing is merged: a delta round reads code the last one did not,
 and a rejected row is handed to the next brief so it is not re-reported.
 
@@ -81,6 +84,9 @@ from pathlib import Path
 SEVS = ("high", "medium", "low")
 FINDING = re.compile(r"^\s*FINDING\s+(high|medium|low)\s+(\S+):(\d+)\s+(.+?)\s*$", re.I)
 NEAR = 3            # lines: same path this close, same round -> one finding
+# Prose keeps a paragraph on one line, so nearness says nothing about sameness
+# there, and a hunk header's words are not function names (EMB-215).
+PROSE = {".md", ".markdown", ".mdx", ".rst", ".adoc", ".typ"}
 CALLERS_PER_FN = 8  # call sites listed per touched function in a delta brief
 
 
@@ -137,10 +143,13 @@ def touched(repo: Path, a: str, b: str) -> list[str]:
     """Function names from the hunk headers of a..b -- git's own funcname
     context, so no parser per language. Approximate by design: a reviewer reads
     beyond the brief to confirm a finding, never to find one."""
-    names = []
+    names, path = [], ""
     for line in git(repo, "diff", "-U0", f"{a}..{b}").splitlines():
+        if line.startswith("+++ "):
+            path = line[6:] if line.startswith("+++ b/") else ""
+            continue
         m = re.match(r"^@@ [^@]* @@ ?(.*)$", line)
-        if m and m.group(1):
+        if m and m.group(1) and not is_prose(path):
             ident = re.findall(r"([A-Za-z_][A-Za-z0-9_]*)\s*\(", m.group(1))
             if ident and ident[-1] not in names:
                 names.append(ident[-1])
@@ -195,6 +204,22 @@ def cmd_round(a) -> int:
     return 0
 
 
+def is_prose(path: str) -> bool:
+    return Path(path).suffix.lower() in PROSE
+
+
+def same_finding(f: dict, path: str, line: int, summary: str) -> bool:
+    """Near on the same path is the same finding in code; in prose the
+    summaries must match too, as one line there holds a whole paragraph."""
+    if f["path"] != path or abs(f["line"] - line) > NEAR:
+        return False
+    return not is_prose(path) or words(f["summary"]) == words(summary)
+
+
+def words(s: str) -> list[str]:
+    return re.sub(r"[^\w\s]", " ", s.lower()).split()
+
+
 def ingest(led: dict, reviewer: str, report: str) -> list[str]:
     rnd = led["rounds"][-1]["n"]
     touched_ids = []
@@ -203,8 +228,8 @@ def ingest(led: dict, reviewer: str, report: str) -> list[str]:
         if not m:
             continue
         sev, path, ln, summary = m.group(1).lower(), m.group(2), int(m.group(3)), m.group(4)
-        same = next((f for f in led["findings"] if f["round"] == rnd and f["path"] == path
-                     and abs(f["line"] - ln) <= NEAR), None)
+        same = next((f for f in led["findings"] if f["round"] == rnd
+                     and same_finding(f, path, ln, summary)), None)
         if same:
             if reviewer not in same["reviewers"]:
                 same["reviewers"].append(reviewer)
