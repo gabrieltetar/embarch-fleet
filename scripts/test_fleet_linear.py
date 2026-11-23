@@ -355,6 +355,27 @@ class Fleet(unittest.TestCase):
         self.assertIn("already Done", r.stderr)
         self.assertEqual(len([1 for p, _ in self.desk.calls if p == "/drafts"]), 1)
 
+    def test_a_sent_back_issue_is_named_and_not_marked_without_resend(self):
+        for key in ("EMB-1", "EMB-2"):
+            self.desk.issue(key, "Backlog")
+            self.desk.issues[key]["description"] = FILED
+        self.desk.issues["EMB-1"]["comments"] = [
+            {"body": "**Sent back** — the fleet could not split this", "at": "2026-11-18T12:05:00Z"},
+            {"body": "a reply under it", "at": "2026-11-19T09:00:00Z", "parent": "c1"}]
+        self.desk.issues["EMB-2"]["comments"] = [
+            {"body": "**Blocked** — waits on an export", "at": "2026-11-18T21:03:00Z"},
+            {"body": "**Answer** — here is the export", "at": "2026-11-20T10:00:00Z"}]
+        out = self.linear("triage").stdout
+        self.assertIn("[sent back 2026-11-18: read its comment before --resend]", out)
+        self.assertNotIn("blocked 2026-11-18", out)
+        r = self.linear("mark-ready", "EMB-1", "EMB-2")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("EMB-1 left where it is: sent back 2026-11-18", r.stderr)
+        self.assertEqual(self.desk.issues["EMB-1"]["state"], "Backlog")
+        self.assertEqual(self.desk.issues["EMB-2"]["state"], "Fleet Ready")
+        self.assertEqual(self.linear("mark-ready", "EMB-1", "--resend").returncode, 0)
+        self.assertEqual(self.desk.issues["EMB-1"]["state"], "Fleet Ready")
+
     def test_a_throwaway_files_into_its_own_team_with_no_project(self):
         r = self.linear("file", "--from", "throwaway", "--project", "embarch-ui", "--title", "Parse a map", "--body", THROWAWAY)
         self.assertEqual(r.returncode, 0, r.stderr)

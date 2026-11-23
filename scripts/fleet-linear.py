@@ -19,7 +19,10 @@ every key it is handed must be in the configured team.
     list                 Fleet Ready issues as a JSON array, for queue-status.py
     show KEY...          these issues in full, in any status
     triage               the Backlog, one line each, saying which are the owner's
-    mark-ready KEY...    Backlog issues to Fleet Ready; refuses the owner's
+                         and which a leg sent back or marked blocked
+    mark-ready KEY... [--resend]
+                         Backlog issues to Fleet Ready; refuses the owner's, and
+                         one whose newest comment sends it back, unless --resend
     block KEY --by KEY...
                          record that each --by issue blocks KEY (a Linear relation)
     filed KEY PATH...    list task files on an issue, move it to Fleet Working
@@ -689,6 +692,26 @@ def cmd_list(s: dict, _args) -> int:
     return 0
 
 
+HELD_KINDS = ("Sent back", "Blocked")
+
+
+def held_by(issue: dict) -> str | None:
+    """`sent back <date>` or `blocked <date>` when the issue's newest top-level
+    comment is one, else None (EMB-244). A leg says why it cannot take an issue
+    in that comment, and mark-ready read only the body, so a bulk mark on
+    2026-11-23 put four such issues back in Fleet Ready: one waiting on owner
+    decisions, two on an export only the owner can get, one already done. They
+    held the listener's spawn gate open with nothing a leg could take."""
+    tops = [c for c in issue.get("comments") or [] if isinstance(c, dict) and not c.get("parent")]
+    if not tops:
+        return None
+    newest = max(tops, key=lambda c: str(c.get("at") or ""))
+    m = HEAD_RE.match(str(newest.get("body") or ""))
+    if m and m.group(1) in HELD_KINDS:
+        return f"{m.group(1).lower()} {str(newest.get('at') or '')[:10]}".strip()
+    return None
+
+
 def brief_line(row: dict, description: str, tasks: list[str], why: list[str] | None = None) -> str:
     """One issue on one line, for choosing a few out of thirty without reading
     thirty bodies (EMB-104): key, project, Type, Hardware, split state, title."""
@@ -724,8 +747,11 @@ def cmd_triage(s: dict, _args) -> int:
     git("fetch", "-q", "origin")
     rows, fleet = open_rows(s, s["backlog"]), fleet_scopes()
     for r in sorted(rows, key=lambda r: (str(r.get("project")), r["key"])):
-        description = call(s, "GET", f"/linear/issue/{quote(r['key'])}").get("description") or ""
-        print(brief_line(r, description, tasks_on_main(r["key"]), owner_only(description, fleet)))
+        i = call(s, "GET", f"/linear/issue/{quote(r['key'])}")
+        description = i.get("description") or ""
+        line = brief_line(r, description, tasks_on_main(r["key"]), owner_only(description, fleet))
+        held = held_by(i)
+        print(line + (f"  [{held}: read its comment before --resend]" if held else ""))
     print(f"{len(rows)} issue(s) in {s['backlog']}")
     return 0 if rows else 1
 
@@ -739,6 +765,10 @@ def cmd_mark_ready(s: dict, args) -> int:
         why = owner_only(i.get("description") or "", fleet)
         if i.get("state") != s["backlog"]:
             why = [f"it is in {i.get('state')}, not {s['backlog']}"] + why
+        held = held_by(i)
+        if held and not args.resend:
+            why.append(f"{held}: its newest comment says why a leg cannot take it; "
+                       "--resend once that no longer holds")
         if why:
             refused += 1
             print(f"{key} left where it is: {'; '.join(why)}", file=sys.stderr)
@@ -926,6 +956,8 @@ def main() -> int:
     sub.add_parser("triage").set_defaults(fn=cmd_triage)
     p = sub.add_parser("mark-ready")
     p.add_argument("keys", nargs="+")
+    p.add_argument("--resend", action="store_true",
+                   help="mark it although its newest comment sent it back or blocked it")
     p.set_defaults(fn=cmd_mark_ready)
     p = sub.add_parser("block")
     p.add_argument("key")
