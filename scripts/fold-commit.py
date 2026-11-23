@@ -47,6 +47,8 @@ Usage:
   scripts/fold-commit.py --unit api/007 --message "Fold api/007: ..." \\
       --path embarch-api/spec.md --path changelog.d/api-foo.added.md
   scripts/fold-commit.py --check          verify the two repos agree
+  scripts/fold-commit.py --prune-landed   every repo's agent/* branches already
+                                          on origin/main, deleted (leg-end runs it)
   scripts/fold-commit.py ... --dry-run    print what would be staged
 Exit status: 0 committed / coherent, 1 refused, 2 misconfigured.
 """
@@ -601,7 +603,7 @@ def unfinished_units(doc: Path) -> set[tuple[str, str]]:
     return {u for u, live in out.items() if live}
 
 
-def prune_landed_branches(doc: Path, scope: str, dry: bool) -> None:
+def prune_landed_branches(doc: Path, scope: str | None, dry: bool, fetch: bool = False) -> None:
     """Delete `agent/*` branches, pushed and local, whose work is on `origin/main`.
 
     The fleet deleted a worker's worktrees and its local branches and never the
@@ -644,13 +646,28 @@ def prune_landed_branches(doc: Path, scope: str, dry: bool) -> None:
 
     Best-effort throughout: the fold is already committed when this runs, and a
     network failure must never turn a landed unit into a failed one.
+
+    **`scope=None` sweeps every repo under the suite root** (EMB-240), the set
+    `deploy.py` `refuse_if_live` reads, fetching each first. A fold reaches only
+    its own scope's code repo, and its own unit's branches never pass the keep
+    rule before the leg pushes, so a leg of four scopes left every unit's code
+    branch behind and a queued deploy deferred for 32 hours. `fleet-tick.py
+    leg-end`, the leg's last act after its last push, runs this sweep.
     """
-    repos = [doc]
-    code = CONF.root / f"embarch-{scope}"
+    if scope is None:
+        others = sorted(p for p in CONF.root.iterdir() if (p / ".git").exists())
+    else:
+        others = [CONF.root / f"embarch-{scope}"]
     # `doc` is usually a leg worktree, so the doc scope's `code` is the same
     # repository under another path -- one pass is enough.
-    if (code / ".git").exists() and common_git_dir(code) != common_git_dir(doc):
-        repos.append(code)
+    repos, seen = [doc], {common_git_dir(doc)}
+    for code in others:
+        if (code / ".git").exists() and (d := common_git_dir(code)) not in seen:
+            seen.add(d)
+            repos.append(code)
+    if fetch:
+        for repo in repos:
+            git(repo, "fetch", "-q", "origin", check=False)
     unfinished = unfinished_units(doc)
 
     def keep(branch: str) -> bool:
@@ -711,6 +728,8 @@ def main() -> int:
                     help="put this entry (a file, or - for stdin) above the log's newest; "
                          "refuses one that breaks the entry shape")
     ap.add_argument("--dry-run", action="store_true", help="print, commit nothing")
+    ap.add_argument("--prune-landed", action="store_true",
+                    help="no fold: delete every repo's agent/* branches already on origin/main")
     ap.add_argument("--no-prune-branches", action="store_true",
                     help="keep agent/* branches, pushed and local, already on origin/main")
     args = ap.parse_args()
@@ -720,6 +739,13 @@ def main() -> int:
     if args.prepend_entry:
         src = args.prepend_entry
         return prepend_entry(sys.stdin.read() if src == "-" else Path(src).read_text())
+    if args.prune_landed:
+        doc = Path(args.doc_repo).resolve() if args.doc_repo else CONF.doc_repo
+        if not (doc / ".git").exists():
+            print(f"not a git checkout: {doc}; nothing pruned", file=sys.stderr)
+            return 2
+        prune_landed_branches(doc, None, dry=args.dry_run, fetch=True)
+        return 0
     if not (args.unit and args.message and args.path):
         print("--unit, --message and at least one --path are required "
               "(or use --check)", file=sys.stderr)

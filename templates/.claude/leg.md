@@ -1126,7 +1126,10 @@ forcing it. An unpushed fold is the one thing the next leg cannot recover from
 a clean tree. Post a two-line close to
 `{{SLACK_CHANNEL_NAME}}` — units done, what is left dispatchable — then run
 `scripts/fleet-tick.py leg-end`, so the next leg does not wait on your lock, and
-exit. **Do not push a notification for an ordinary leg end**; the relay ends legs
+exit. `leg-end` first deletes every repo's `agent/*` branch that is on
+`origin/main` with its task retired, which your own folds could not, since your
+last units were still claimed until your push (EMB-240). A branch it keeps is
+not landed: name it in your final message, never delete it by hand. **Do not push a notification for an ordinary leg end**; the relay ends legs
 constantly.
 
 Your final message is read by the listener and relayed, so it carries: units run,

@@ -57,7 +57,8 @@ Usage:
                                           exit 1 while another leg holds it
                                           (--wait polls up to S s, default 100)
     scripts/fleet-tick.py leg-end         a leg's LAST act, whatever the exit;
-                                          exit 1 while a dispatch has no report
+                                          exit 1 while a dispatch has no report;
+                                          prunes landed agent/* branches first
     scripts/fleet-tick.py leg-step0       a leg, once step 0 is done
     scripts/fleet-tick.py leg-dispatch    a leg, right after spawning a worker
     scripts/fleet-tick.py leg-fold        a leg, once the fold commit lands
@@ -70,6 +71,7 @@ a dispatched worker has not reported, 2 unknown label or the write failed.
 """
 from __future__ import annotations
 
+import subprocess
 import sys
 import time
 from datetime import datetime
@@ -85,6 +87,9 @@ WHO = ("listener", "leg-start", "leg-end", "leg-step0", "leg-dispatch", "leg-fol
 # ticks before the watchdog calls the fleet wedged; over the ~25 minutes a live
 # leg may wait on a worker between `leg-waiting` ticks (.claude/leg.md).
 LOCK_LIVE_MIN = 30
+# A fetch and a prune over a dozen repos takes well under a minute; past five,
+# the network is the problem, and the lock must not wait on it.
+PRUNE_TIMEOUT_S = 300
 
 # ~6 weeks at a hundred lines a day. The trim rewrites to KEEP when the file
 # passes CAP rather than on every call, so the common path is one append. A
@@ -158,6 +163,25 @@ def unreported() -> int:
     return max(0, labels.count("leg-dispatch") - labels.count("leg-reported"))
 
 
+def prune_landed() -> None:
+    """Every repo's `agent/*` branches already on origin/main, deleted (EMB-240).
+
+    A fold prunes only its own scope's code repo, and never its own unit's
+    branches, which are still claimed until the leg pushes. So a leg's last
+    folds left a branch in each code repo, and `deploy.py` refused every
+    boundary on them. Here the push has happened. Best-effort and bounded: a
+    failed prune leaves branches for the next leg-end, never a held lock.
+    """
+    try:
+        r = subprocess.run([sys.executable, str(Path(__file__).resolve().parent / "fold-commit.py"),
+                            "--prune-landed"], capture_output=True, text=True, timeout=PRUNE_TIMEOUT_S)
+        out = (r.stdout + r.stderr).strip()
+    except subprocess.TimeoutExpired:
+        out = f"branch prune stopped after {PRUNE_TIMEOUT_S} s; the next leg-end tries again"
+    if out:
+        print(out)
+
+
 def leg_end() -> int:
     n = unreported()
     if n:
@@ -167,6 +191,7 @@ def leg_end() -> int:
               "worker silent\n~25 minutes is checked and recovered per .claude/leg.md, "
               "then ticked the same.\nRun leg-end again once every dispatch has its report.")
         return 1
+    prune_landed()
     try:
         (CONF.state_dir / "leg").unlink(missing_ok=True)
     except OSError as exc:
