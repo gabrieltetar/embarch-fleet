@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-23 13:21 — desk/041 missing-embarch-api-line-names-every-missing-piece
+
+**Decided:** nothing suite-wide. The worker extended `embarch-desk` decision 82 (`decisions/desks.md`) in place rather than filing a new one: `mcpreg.rs` `session_text` now lists the missing pieces in order (the register command, then `embarch init` in the repo's main clone, found by following a worktree's `.git` file, shown only when neither the main clone nor the folder has `embarch/embarch.toml` and the copied `--config` has no project with that `source_path`); says, when the copied `--config` belongs to another project and the repo has its own config, that the server still resolves the desk's repo through it; and ends by saying bench work goes through EmbArch only, so the session stops and asks the user rather than using `west flash`, `nrfutil`, `nrfjprog`, `JLinkExe`, `probe-rs` or `usbipd`. `folder_json` gains `init_in` and `own_config_used` when they apply (`interfaces.md`). `embarch-desk/spec.md` was not written, so it stays in reserve at 9,186 B and `tasks/desk/038` stays parked as it was. The new text reaches sessions only once the owner updates the installed desk. EMB-230's `finish` moves it to Done after this push.
+**Merged:** `agent/desk/041-missing-embarch-api-line-names-every-missing-piece` (code `08214ff`, ff from `25b6877`; doc `28142601`, the worker's `64e84faf` cherry-picked onto `e06d6845`). Re-gated on the merge result: `cargo build`, `test` (302 pass), `clippy --all-targets -D warnings` green; `check-docs.py` 12/12; ownership green on both branches; client names clean on the code repo.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED at this fold (5-hour 25%, weekly 23%, wave 6).
+**Least sure about:** the case the worker left alone: a folder whose login already has `embarch-api` registered but whose repo has no `embarch/embarch.toml` gets no line at all, so that session still meets `resolve`'s "run `embarch init`" error only when it first asks for a build; the issue asked only for the unregistered case.
+
+---
+
 ## 2026-11-23 13:20 — api/174 zephyr-west-scan-takes-cpu-clusters-from-the-soc
 
 **Decided:** nothing suite-wide. `embarch-api` decision 127 (`decisions/zephyr-scan.md`): when no variant of a SoC in `board.yml` names a CPU cluster, the zephyr-west scan reads that SoC's `cpuclusters` from a `soc.yml` and tries `<board>_<soc>_<cluster>.dts` (plus each named variant per cluster), each still passing the existing `.dts` check; a `board.yml` that names its clusters scans as before. It looks for `soc.yml` under `<source_path>/soc`, `<source_path>/zephyr/soc` and `<source_path>/../zephyr/soc`, six levels deep, taking any mapping with a `name` and `cpuclusters`; with none found, the drop message is today's plus "found no soc.yml defining soc <soc>". `interfaces/config-selection.md` gained one sentence. Two narrowings the decision states: a SoC defined by a module outside those three roots is not found, and a SoC that has clusters no longer offers the bare `<board>_<soc>.dts` target (Zephyr would not build it either). EMB-231's `finish` moves it to Done after this push.
