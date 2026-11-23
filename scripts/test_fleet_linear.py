@@ -343,6 +343,18 @@ class Fleet(unittest.TestCase):
         self.assertEqual(self.desk.issues["EMB-3"]["state"], "Todo")
         self.assertIn("EMB-3 left where it is: it is in Todo", r.stderr)
 
+    def test_close_comments_and_moves_to_done_once(self):
+        self.desk.issue("EMB-1", "Backlog")
+        r = self.linear("close", "EMB-1", "--why", "`fleet-linear.py show` landed in 6f210e8.")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(self.desk.issues["EMB-1"]["state"], "Done")
+        sent = [b for p, b in self.desk.calls if p == "/drafts"]
+        self.assertTrue(sent[0]["body"].startswith("**Closed** — "), sent)
+        r = self.linear("close", "EMB-1", "--why", "again")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("already Done", r.stderr)
+        self.assertEqual(len([1 for p, _ in self.desk.calls if p == "/drafts"]), 1)
+
     def test_a_throwaway_files_into_its_own_team_with_no_project(self):
         r = self.linear("file", "--from", "throwaway", "--project", "embarch-ui", "--title", "Parse a map", "--body", THROWAWAY)
         self.assertEqual(r.returncode, 0, r.stderr)

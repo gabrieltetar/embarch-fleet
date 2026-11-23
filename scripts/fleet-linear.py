@@ -24,6 +24,7 @@ every key it is handed must be in the configured team.
                          record that each --by issue blocks KEY (a Linear relation)
     filed KEY PATH...    list task files on an issue, move it to Fleet Working
     send-back KEY --why  an issue that cannot be split: say why, back to Backlog
+    close KEY --why      an issue already done outside a split: say where, to Done
     finish               issues whose tasks have all closed: comment, move to Done
     file --from KIND --project P --title T (--body B | --body-file F)
                          a new issue; KIND sets its status, and its team
@@ -774,6 +775,21 @@ def cmd_send_back(s: dict, args) -> int:
     return 0
 
 
+def cmd_close(s: dict, args) -> int:
+    """An issue done by the owner's own hand, or by a unit that never named it,
+    to Done with a comment saying where. `finish` only reaches an issue whose
+    split tasks closed, so these sat open with nothing left to do."""
+    key = check_key(s, args.key)
+    i = call(s, "GET", f"/linear/issue/{quote(key)}")
+    if i.get("state") in (s["done"], "Canceled"):
+        print(f"{key} left where it is: it is already {i.get('state')}", file=sys.stderr)
+        return 1
+    comment(s, key, *thread("Closed", args.why.strip()))
+    move(s, key, s["done"])
+    print(f"{key} moved to {s['done']}")
+    return 0
+
+
 def cmd_finish(s: dict, _args) -> int:
     git("fetch", "-q", "origin")
     moved = 0
@@ -923,6 +939,10 @@ def main() -> int:
     p.add_argument("key")
     p.add_argument("--why", required=True)
     p.set_defaults(fn=cmd_send_back)
+    p = sub.add_parser("close")
+    p.add_argument("key")
+    p.add_argument("--why", required=True)
+    p.set_defaults(fn=cmd_close)
     sub.add_parser("finish").set_defaults(fn=cmd_finish)
     p = sub.add_parser("file")
     p.add_argument("--from", dest="kind", required=True)
