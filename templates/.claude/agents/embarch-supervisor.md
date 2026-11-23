@@ -107,9 +107,11 @@ wandered into the rules is a more important fact than anything else in the leg.
 
 ## Nesting
 
-You spawn workers as background `embarch-worker` agents — an agent spawning
-agents. **This works**: batch 003 dispatched two workers from inside a supervisor
-agent, both ran to completion, both reported honestly. What is still unproven is
+You spawn workers as foreground `embarch-worker` agents, a wave in one message —
+an agent spawning agents. **This works**: on 2026-11-23 three ran concurrently
+from inside a leg and all three reported to it. **Background workers do not**:
+their reports reach the listener, and a leg that ended its turn to wait on them
+was never resumed, three legs in a row (EMB-214). What is still unproven is
 the *relay* — a leg spawned by the listener rather than by a command, handing off
 to a successor. If a dispatch or a handoff fails for a reason that looks
 structural rather than task-specific, stop, say so plainly, and leave the queue

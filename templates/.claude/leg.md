@@ -21,10 +21,11 @@ names neither means four units over the whole queue.
 
 ## What a leg is
 
-**A rolling wave, not a batch.** You keep the budget's wave size of workers in
-flight at all times, land each one's branches the moment it reports, fold and log
-that unit, and immediately start another task in the freed slot. There is no
-barrier where everything waits for everything. A **unit** is one task: one
+**Waves, each landed as it returns.** You dispatch the budget's wave size of
+workers together, land each one's branches as soon as the wave returns, fold and
+log that unit, and fill the freed slots with the next wave. The wave is a
+barrier, and that is measured, not chosen: a leg that waits on background workers
+is never resumed (EMB-214, "Dispatch" below). A **unit** is one task: one
 worker, gated by you independently, landed, folded, logged. You run **4 units and
 then you die** — that number is the whole reason you exist rather than a
 supervisor that pumps all night (`ops` §8.1). Ending early is correct on any of:
@@ -819,24 +820,32 @@ resume is then an ordinary dispatch onto that branch (`worktree add <path>
 `--allow-existing` until 2026-10-29; the auto-mode classifier refused it, and
 this route never needed it (`tasks/doc/040`).
 
-**Dispatch.** One background `embarch-worker` agent per task, launched without
-blocking on the previous one. Give each: its task file path, **both** worktree
-paths, its branch name, and the one-line reminder that it owns exactly one
-sub-project. Re-run `scripts/usage-budget.py` before refilling a slot — never
-only at the start of the leg. **Then `scripts/fleet-tick.py leg-dispatch`** — a
-dispatch is the last progress the fleet makes for the next twenty minutes, so it
-is exactly the moment the watchdog needs on the clock.
+**Dispatch.** A wave's workers go out as **foreground `embarch-worker` calls,
+all in one message** (`run_in_background: false`). Give each: its task file
+path, **both** worktree paths, its branch name, and the one-line reminder that it
+owns exactly one sub-project. Re-run `scripts/usage-budget.py` before each wave —
+never only at the start of the leg. **Just before that message, run
+`scripts/fleet-tick.py leg-dispatch` once per worker** — a dispatch is the last
+progress the fleet makes for the next twenty minutes, so it is exactly the
+moment the watchdog needs on the clock.
 
-**Waiting on your workers is not the end of the leg.** You wait by ending your
-turn, and the harness hands that to the listener as "stopped with background
-work of its own still running … may resume on its own". That is the wait, not a
-cut-off: you resume when a worker reports. So keep the lock, do not run
-`leg-end`, and write no "ended early" handoff — on 2026-11-09 two of four legs
-wrote one while their workers ran, and one ran `leg-end` with three live,
-leaving their claims open to the next leg's step 0 (EMB-107). **Tick
-`leg-reported` for each worker as it reports** — landed, blocked, or recovered
-per the bounded wait above; `leg-end` refuses while any `leg-dispatch` since
-your `leg-start` lacks one, and a refusal means go back to waiting.
+**Why foreground (EMB-214, measured).** A background worker's completion goes to
+the listener, not to you, and a leg that ends its turn to wait on one is not
+resumed: three legs in a row on 2026-11-18 stopped that way, each landing only
+its predecessor's leftovers by re-land. Foreground calls in one message run
+concurrently and each reports to you: on 2026-11-23 three (api, atlas, desk)
+claimed at 13:07 finished at 13:12, 13:12 and 13:15, and the message returned
+with the slowest. The cost is that barrier, a fast worker's slot idle until the
+slowest reports. Never dispatch in the background, and never end your turn
+with a worker in flight.
+
+**Waiting is the call itself, and it is not the end of the leg.** Keep the
+lock, and write no "ended early" handoff — on 2026-11-09 one leg ran `leg-end`
+with three workers live, leaving their claims open to the next leg's step 0
+(EMB-107). When the message returns, **tick `leg-reported` for each worker** —
+landed, blocked, or recovered by the presence rule above when its call came back
+with no report; `leg-end` refuses while any `leg-dispatch` since your
+`leg-start` lacks one.
 
 **Land, as each reports.** Re-run the gate yourself on the merge result, not on
 the branch (§10): the repo's `cargo build` / `test` / `clippy --all-targets --
