@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-23 13:57 — atlas/094 a-modules-pad-table-gives-unnamed-pads-their-port
+
+**Decided:** nothing suite-wide. The worker added no new record kind: a module datasheet's existing `pin` record gains an optional `port` (`schemas/record.schema.json`), the pad number staying in `pin` and the module's pad name in `name`, keyed to the module like any pin record (the document covering its MPN, `package` as usual). `build_pin_map`'s port order is now the symbol's pin name, then that `port` (`port_source` `module pad table`, printed `P1.03 (from module pad table)`), then the datasheet pin number, then `atlas/092`'s port-named net. **The symbol wins over a disagreeing pad table**: `pins.json` carries `port_conflict` and `pins.md` prints `P0.04 (pad table says P0.09)`; the worker's call, one line in `build_pin_map` to flip. A port is normalised (`P1.3` to `P1.03`); `port_why` names a `port` on the pad-table record as the remedy. **EMB-243 is met for the record and the join, not for translation**: the `atlas-translate-docs` skill was not told to emit `port`, so the field is filled by hand or as an `engineer-declared` record until it is. I filed that remainder as **EMB-245** (Fleet Ready, gap, atlas). In this fold I changed one word in `embarch-atlas/design.md` ("the datasheet's pin name" to "pin number", matching `DESIGN.md` and the code), which the reviewer noted as cosmetic. EMB-243 goes to Done at `finish` after this push.
+**Merged:** `agent/atlas/094-a-modules-pad-table-gives-unnamed-pads-their-port` (code `64d2c5b`, ff from `902f144`; doc `8f75e182`, ff from `a56d71f1`). Re-gated on the merge result: `.venv/bin/pytest -q` 978 passed, 3 skipped (real west workspace, built atlas, vendor SVD; `test_public_guard` ran); `check-docs.py` 12/12; ownership green on both branches; client names clean on the code repo.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none on a board. The pad-table source has met one synthetic module fixture; no real module datasheet has been translated with `port`.
+**Budget:** PROCEED at this fold (5-hour 43%, weekly 25%, wave 6).
+**Least sure about:** symbol-wins on a conflict: a module symbol drawn with a stale or copied pin name would keep the wrong port, flagged in `pins.md` but still printed first; nobody has decided which source an engineer trusts more on a module board.
+
+---
+
 ## 2026-11-23 13:52 — atlas/093 shell-commands-help-text-and-kernel-subcommands
 
 **Decided:** nothing suite-wide. Two causes, both read by the worker from Zephyr 4.4's own source (`shell.h`, `shell_utils.c`), no board image: the help pointer in 4.4 is `SHELL_HELP(description, usage)`, a `struct shell_cmd_help` whose first word is a magic number (the issue's garbage bytes are that word, little-endian), and `kernel`'s set is built by `SHELL_SUBCMD_SET_CREATE` plus `SHELL_SUBCMD_ADD`, a zero placeholder in `shell_subcmds` with the added entries laid after it, which `_walk` read as an empty set. In `shellcmds.py`, `_Image.help` decodes a plain string or the structured form and `_Image.text` gives "" for anything not printable ASCII, so help never prints bytes; a new `usage` field prints after the help; `_table` walks from just past the placeholder when the pointer is zero inside `shell_subcmds`, the old pointer-to-array form still read. `shell.json`'s `SCHEMA` goes from 1 to 2 so a cached record is recognisable; the reviewer checked that the old-record path in `query.py` reads `usage` with `.get`. `DESIGN.md` and `embarch-atlas/design.md` updated. EMB-234 goes to Done at `finish` after this push.
