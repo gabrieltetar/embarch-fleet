@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-24 02:08 — ui/114 compact-ui
+
+**Decided:** nothing, and no decision added or renumbered (burndown leg). A compaction, per file as the task's `In flux:` said. `embarch-ui/decisions/shell.md` 11,553 to 8,931 B: decisions 58 and 59 moved verbatim to a new `decisions/page-links.md`, a pointer stub keeping both numbers, and the `decisions.md` index row added. `embarch-ui/spec/tabs.md` 9,079 to 8,165 B: the "Tab folders" section moved verbatim to a new `spec/tab-folders.md`, a heading and link left, the one link into it (`decisions/tab-folders.md`) repointed; the Desk row untouched, as dispatched. Everything on the Must-not-delete list stayed in place. **The human question, in the worker's words, which I share:** can `spec.md` alone answer what someone needs to work on the Desk tab today? No. It is a router: it points at `spec/tabs.md` for the Desk row, decisions 56 and 57 hold the reasons, and the detail lives in `embarch-desk`'s docs. That is the intended shape for a multi-file sub-project, not a gap this pass could close by moving text.
+**Merged:** `agent/ui/114-compact-ui` (code: no commits, embarch-ui `main` stays `df42a52`; doc `96bc184d`, the worker's `03649426` cherry-picked onto `5d1ed1a7`). Re-gated: no code to build; `check-docs.py` 12/12; `check-doc-size.py --pressure` lists neither file; ownership green on both branches; client names clean on the code worktree.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED at dispatch (BURNDOWN, 5-hour 5%, weekly 51%, wave 6); PROCEED at this fold (5-hour 9%, weekly 51%).
+**Least sure about:** the repointed link in `decisions/tab-folders.md` still reads `../spec/tabs.md` as its text while pointing at `spec/tab-folders.md` (the reviewer's note); it resolves, but a reader sees the old file name.
+
+---
+
 ## 2026-11-24 02:08 — promptu/021 the-weekly-sheet-opens-with-decision-15s-numbers
 
 **Decided:** nothing suite-wide, and **no new decision** (burndown leg). Decision 15 (`decisions/learning.md`) amended in place: all five checks are on the sheet, in a fixed order (`friction_per_prompt`, `redirects_per_task`, `fills_kept`, `patterns_kept`, `questions_per_run`). The two friction checks carry a new `control` field, the same figure over the week's sessions with `promptu: false` (null when there are none). A check with no data is `value: null`, never zero or left out, and contract §10 now says so (it said "left out"). `sheet.md` opens with a read-only numbers block and the feel line, nulls shown as "no data"; `week apply` still parses only `- [x] lN` lines. **The worker's call, which I keep:** fork W22 (a), counting every redirect candidate because the drafter records no per-candidate judgement; (b), a keep or drop per candidate, is the alternative. **Paid in the unit, per my dispatch note:** `embarch-promptu/spec.md` out of reserve (9,147 to 7,710 B), its status paragraph moved verbatim to `embarch-promptu/spec/status.md` with four relative links adjusted for the new folder; I closed `promptu/022` `done` in this fold. No feature row (EMB-292).
