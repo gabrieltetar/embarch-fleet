@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-24 03:42 — doc/100 studies-guide-leads-with-the-signals-own-baud
+
+**Decided:** nothing suite-wide, and **no new decision** (burndown leg). `suite/studies-guide.md` §3 now says a DUT signal's line rate belongs on the signal (its `baud`), with `EMBARCH_SIGNAL_BAUD` only the fallback for a signal that declares none (default 1000000); §4 step 1 says a direct signal takes its `baud` and, since the Topology tab has no field for it, to use `embarch-api declare-signal ... --baud <rate>` or the `declare_signal` tool. The worker confirmed the code (`signal_baud_for` in Core's `stream_store.rs`, `--baud` on `declare-signal`, `baud` on the MCP tool) and delivered a `status.d` fragment, which I applied at this fold. **Where I departed from the fragment:** it proposed dropping the bench's `460800` sentence; I kept it, because it is the owner's stated link ceiling (the reviewer traced it to a measured link and reversals row 89), and dropped only the "two numbers in step by hand" sentence the per-signal field made stale. I also left the Topology tab out of the declare paths, since `embarch-ui/assets/app.js` sends no `baud`, and filed that gap as **EMB-396** (Backlog). My first wording pushed the guide 475 B into its size reserve; trimmed to 23,029 B, 11 B under the line, so no compaction debt was filed.
+**Merged:** `agent/doc/100-studies-guide-leads-with-the-signals-own-baud` (doc `e8eb2358`, the worker's `4d81b548` cherry-picked; no code repo). `check-docs.py` 12/12 on the merge and at this fold; ownership green.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED at dispatch (BURNDOWN, 5-hour 63%, weekly 57%, wave 6); PROCEED at this fold (5-hour 73%, weekly 58%).
+**Least sure about:** `suite/studies-guide.md` now sits 11 B under its reserve line, so the next edit to it will owe a compaction task.
+
+---
+
 ## 2026-11-24 03:41 — ui/115 four-routes-nothing-calls-are-deleted
 
 **Decided:** nothing suite-wide, and **no new decision** (burndown leg). `embarch-ui` loses four routes no page and no sibling repo calls: `POST /api/topology/roles/{role}/board`, `POST /api/topology/link`, `POST /api/topology/profiles/{slug}/apply` and `GET /api/study-designer/gatt/{study_id}`, with their handlers and the code only they used (`SetRoleBoardRequest`, `pin_combination`, `LinkRequest`, `RoleProposal.displaces`). `apply_role`, `apply_link` and `resolve_chip_or_refuse` stay. The apply-route test became `enrol_finds_the_chip_it_looked_up_and_refuses_a_board_nothing_answers_for`, keeping its `/api/enroll` assertions. Decisions 90 and 94 amended in place (`bench-live.md`, `bench-canvas.md`), pointers fixed in `saved-benches.md` and `board-row.md`, three rows dropped from `interfaces/topology.md`; no decision retired, so no reversal row. **The worker's call, which I keep:** the `open/bench.md` slugify bullet was narrowed, not closed, because the profile delete route stays and still slugifies its path. That also narrows the 02:36 dream's third proposal to the delete route. The caller search was by literal route path; the reviewer re-grepped and found none. Reviewer's side note, not filed: `decisions/topology-boards.md` line 53 still describes the old picker writing a board pin, which `pin_combination` implemented.
