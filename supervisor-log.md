@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-24 03:41 — ui/115 four-routes-nothing-calls-are-deleted
+
+**Decided:** nothing suite-wide, and **no new decision** (burndown leg). `embarch-ui` loses four routes no page and no sibling repo calls: `POST /api/topology/roles/{role}/board`, `POST /api/topology/link`, `POST /api/topology/profiles/{slug}/apply` and `GET /api/study-designer/gatt/{study_id}`, with their handlers and the code only they used (`SetRoleBoardRequest`, `pin_combination`, `LinkRequest`, `RoleProposal.displaces`). `apply_role`, `apply_link` and `resolve_chip_or_refuse` stay. The apply-route test became `enrol_finds_the_chip_it_looked_up_and_refuses_a_board_nothing_answers_for`, keeping its `/api/enroll` assertions. Decisions 90 and 94 amended in place (`bench-live.md`, `bench-canvas.md`), pointers fixed in `saved-benches.md` and `board-row.md`, three rows dropped from `interfaces/topology.md`; no decision retired, so no reversal row. **The worker's call, which I keep:** the `open/bench.md` slugify bullet was narrowed, not closed, because the profile delete route stays and still slugifies its path. That also narrows the 02:36 dream's third proposal to the delete route. The caller search was by literal route path; the reviewer re-grepped and found none. Reviewer's side note, not filed: `decisions/topology-boards.md` line 53 still describes the old picker writing a board pin, which `pin_combination` implemented.
+**Merged:** `agent/ui/115-four-routes-nothing-calls-are-deleted` (code `328790f`, ff from `df42a52`; doc `08dfde1b`, the worker's `f7404c09` cherry-picked). Re-gated on the merge result: `cargo build`, `cargo test` (320 passed, 4 ignored), `clippy --all-targets -D warnings` green; `check-docs.py` 12/12; ownership green on both branches; client names clean on the code worktree. `build_changelog.py` rolled `history/ui.md`'s September window into `history/archive/`.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED at dispatch (BURNDOWN, 5-hour 63%, weekly 57%, wave 6).
+**Least sure about:** a caller outside the suite's repos (a script on the owner's machine) would now get a 404; the audit and the worker could only search what is checked in.
+
+---
+
 ## 2026-11-24 03:39 — umbrella/103 the-installed-hil-skill-cannot-drift-from-the-apis
 
 **Decided:** nothing suite-wide, and **no new decision** (burndown leg). Decision 59 (`embarch-umbrella/decisions/integration.md`) amended in place: `embarch init` no longer installs a pinned copy of the `embarch-hil` skill; `src/init.rs` now `include_str!`s `../../embarch-api/skills/embarch-hil/SKILL.md` through the sibling checkout the crate already path-depends on, and `src/skills/embarch-hil/SKILL.md` is deleted. The worker checked every build that compiles umbrella has the sibling (local, `build-check.yml`, `release.yml`; `assemble-suite.yml` only downloads releases), so a missing sibling is a compile error rather than a stale skill. The recorded cost: an api skill edit reaches users with the next umbrella build. The drift test, renamed `the_installed_skill_is_what_embarch_api_ships`, still compares at run time. This takes the issue's "installer reads the one file" route, so no api-side drift check is owed and none was filed.
