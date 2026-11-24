@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-23 22:33 — chat/033 permissions-command-drops-instrument-exchange
+
+**Decided:** nothing suite-wide, and **no new decision** (burndown leg). Decision 39 (`decisions/library.md`) is amended in place: the permissions command carries the lists for both MCP servers. `plugin/commands/embarch-permissions.md` now writes exactly `suite/agent-guide.md` §1.1's lists. For `embarch-api` that is 37 tools in allow and 21 in ask, including the ten Live reads and lease calls moved to allow; `build_each`, `bundle`, `call_log` and `study_measurements` are in allow, and `publish` is in ask. A new `mcp__embarch-atlas__*` block puts 28 tools in allow and `reg_read_bank` and `reg_read_clear` in ask. `instrument_exchange` is named nowhere. Step 1 now checks the live tool list per server: a tool in neither of its server's lists goes to ask, and a server the session lacks gets no rules. The worker cross-checked the lists against `tools.rs` (58 tools plus the internal `call_tool`) and `mcp_server.py` (30) on `origin/main` and found no disagreement with the guide. The reviewer separately compared the sorted sets against §1.1 and found them identical. The unit closes EMB-287 and EMB-291 together (two `**Issue:**` lines on one task).
+**Merged:** `agent/chat/033-permissions-command-drops-instrument-exchange` (code `8101942`, ff from `22717b0`; doc `4003b6ec`, the worker's `51150f81` cherry-picked onto `9ea1c31c`). Re-gated on the merge result: `npm run build`, `typecheck`, `npm test` with `EMBARCH_DESK_BIN` from `desk-gate-bin.py` (desk built from `d0c0233c1198`), and `test:webview` all exit 0; `check-docs.py` 12/12 on the four merged doc branches; ownership green on both branches; client names clean on the code worktree.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED at dispatch (BURNDOWN, 5-hour 30%, weekly 43%, wave 6); PROCEED at this fold (BURNDOWN, 5-hour 38%, weekly 44%).
+**Least sure about:** the command is still a hand copy of §1.1, so the next guide change makes it stale again with nothing to flag it. No check compares the two.
+
+---
+
 ## 2026-11-23 22:32 — promptu/012 folder-name-decode-survives-a-crowded-temp-folder
 
 **Decided:** nothing suite-wide, and **no new decision** (burndown leg). No promptu doc stated the walk's bound, so `spec.md`, `decisions.md` and `open.md` are untouched. `descend` in `src/claude.rs` now works out in memory which children's encoded names fit the folder being decoded. It sorts only those, and charges the 2000-entry budget per fitting child, so non-matching siblings cost nothing. The ambiguity cases keep their behaviour. The decode test now uses a `Scratch` guard type that removes its folder on `Drop`, so a failed run no longer leaves a folder behind. A new test, `a_crowded_parent_does_not_hide_the_checkout`, puts 3,200 sibling folders beside the target. **This ends the `TMPDIR` workaround:** from this landing, every Promptu gate runs on the machine's own `/tmp` (4,644 entries at this gate), and later Promptu units need no `/var/tmp` override.
