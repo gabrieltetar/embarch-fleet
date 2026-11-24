@@ -58,7 +58,8 @@ Usage:
                                           (--wait polls up to S s, default 100)
     scripts/fleet-tick.py leg-end         a leg's LAST act, whatever the exit;
                                           exit 1 while a dispatch has no report;
-                                          prunes landed agent/* branches first
+                                          prunes landed agent/* branches and
+                                          archives week-old Done issues first
     scripts/fleet-tick.py leg-step0       a leg, once step 0 is done
     scripts/fleet-tick.py leg-dispatch    a leg, right after spawning a worker
     scripts/fleet-tick.py leg-fold        a leg, once the fold commit lands
@@ -90,6 +91,8 @@ LOCK_LIVE_MIN = 30
 # A fetch and a prune over a dozen repos takes well under a minute; past five,
 # the network is the problem, and the lock must not wait on it.
 PRUNE_TIMEOUT_S = 300
+# How long a Done or Canceled issue stays unarchived (`archive_done`).
+ARCHIVE_AFTER_DAYS = 7
 
 # ~6 weeks at a hundred lines a day. The trim rewrites to KEEP when the file
 # passes CAP rather than on every call, so the common path is one append. A
@@ -182,6 +185,25 @@ def prune_landed() -> None:
         print(out)
 
 
+def archive_done() -> None:
+    """The team's Done and Canceled issues untouched for 7 days, archived.
+
+    Linear's free plan caps unarchived issues, and the fleet files about thirty
+    a day: on 2026-11-23 the cap refused every filing until 235 were archived
+    by hand. A week's grace keeps a fresh Done linkable, since Linear refuses a
+    relation to an archived blocker. Best-effort and bounded like the prune.
+    """
+    try:
+        r = subprocess.run([sys.executable, str(Path(__file__).resolve().parent / "fleet-linear.py"),
+                            "archive-done", "--older-than", str(ARCHIVE_AFTER_DAYS)],
+                           capture_output=True, text=True, timeout=PRUNE_TIMEOUT_S)
+        out = (r.stdout + r.stderr).strip()
+    except subprocess.TimeoutExpired:
+        out = f"archive stopped after {PRUNE_TIMEOUT_S} s; the next leg-end tries again"
+    if out:
+        print(out.splitlines()[-1] if len(out.splitlines()) > 3 else out)
+
+
 def leg_end() -> int:
     n = unreported()
     if n:
@@ -192,6 +214,7 @@ def leg_end() -> int:
               "then ticked the same.\nRun leg-end again once every dispatch has its report.")
         return 1
     prune_landed()
+    archive_done()
     try:
         (CONF.state_dir / "leg").unlink(missing_ok=True)
     except OSError as exc:

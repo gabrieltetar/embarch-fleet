@@ -22,7 +22,11 @@ class LegEnd(unittest.TestCase):
         root = Path(self.tmp.name)
         toml = (HERE.parent / "fleet.toml").read_text()
         self.conf = root / "fleet.toml"
-        self.conf.write_text(re.sub(r'^root = ".*"$', f'root = "{root}"', toml, flags=re.M))
+        toml = re.sub(r'^root = ".*"$', f'root = "{root}"', toml, flags=re.M)
+        # leg-end archives Linear issues: never reach the real desk from a test.
+        toml = re.sub(r'^desk_port = .*$', 'desk_port = 9', toml, flags=re.M)
+        toml = re.sub(r'^desk_config_dir = .*$', f'desk_config_dir = "{root}/no-desk"', toml, flags=re.M)
+        self.conf.write_text(toml)
         self.state = Path(re.search(r'^state_dir = "(.*)"$', toml, re.M).group(1))
         self.state = root / self.state
 

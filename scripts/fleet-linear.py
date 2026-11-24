@@ -28,9 +28,10 @@ every key it is handed must be in the configured team.
     filed KEY PATH...    list task files on an issue, move it to Fleet Working
     send-back KEY --why  an issue that cannot be split: say why, back to Backlog
     close KEY --why      an issue already done outside a split: say where, to Done
-    archive-done [--dry-run]
+    archive-done [--dry-run] [--older-than DAYS]
                          archive the team's Done and Canceled issues, so they
-                         leave the active count Linear's free plan caps
+                         leave the active count Linear's free plan caps; with
+                         --older-than, only those untouched that many days
     finish               issues whose tasks have all closed: comment, move to Done
     file --from KIND --project P --title T (--body B | --body-file F)
                          a new issue; KIND sets its status, and its team
@@ -114,6 +115,7 @@ import re
 import subprocess
 import time
 import urllib.error
+from datetime import datetime
 import urllib.request
 from urllib.parse import quote
 
@@ -811,6 +813,17 @@ def cmd_send_back(s: dict, args) -> int:
 CANCELED = "Canceled"
 
 
+def touched_before(row: dict, cutoff: float) -> bool:
+    """Whether a listed issue's last update is older than `cutoff`. Unreadable
+    means no: an issue is archived only when it is provably quiet. A fresh Done
+    is kept because Linear refuses to link a new issue to an archived blocker."""
+    try:
+        when = datetime.fromisoformat(str(row.get("updated") or "").replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    return when.timestamp() < cutoff
+
+
 def cmd_archive_done(s: dict, args) -> int:
     """Archive the team's Done and Canceled issues. Linear's free plan caps the
     unarchived ones, and on 2026-11-23 the workspace hit the cap with most of
@@ -818,13 +831,17 @@ def cmd_archive_done(s: dict, args) -> int:
     archived issue still reads by key, so `show`, `finish` and the task files
     that name one keep working."""
     archived = failed = listed = 0
+    cutoff = time.time() - args.older_than * 86400
     for state in (s["done"], CANCELED):
         seen: set[str] = set()
         while True:
             page = call(s, "POST", "/linear/issues", {"team": s["team"], "state": state})
-            keys = [str(i.get("key")) for i in page.get("issues") or [] if i.get("key") not in seen]
-            for key in keys:
+            rows = [i for i in page.get("issues") or [] if i.get("key") not in seen]
+            keys = [str(i.get("key")) for i in rows]
+            for key, row in zip(keys, rows):
                 seen.add(key)
+                if args.older_than and not touched_before(row, cutoff):
+                    continue
                 listed += 1
                 if args.dry_run:
                     print(f"would archive {key} ({state})")
@@ -1016,6 +1033,8 @@ def main() -> int:
     sub.add_parser("finish").set_defaults(fn=cmd_finish)
     p = sub.add_parser("archive-done")
     p.add_argument("--dry-run", action="store_true", help="list what would be archived")
+    p.add_argument("--older-than", type=float, default=0, metavar="DAYS",
+                   help="only issues not updated for this many days (leg-end uses 7)")
     p.set_defaults(fn=cmd_archive_done)
     p = sub.add_parser("file")
     p.add_argument("--from", dest="kind", required=True)

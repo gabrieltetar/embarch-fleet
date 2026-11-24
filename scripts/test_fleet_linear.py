@@ -364,6 +364,19 @@ class Fleet(unittest.TestCase):
         self.assertTrue(self.desk.issues["EMB-2"].get("archived"))
         self.assertFalse(self.desk.issues["EMB-3"].get("archived"))
 
+    def test_archive_done_older_than_keeps_a_fresh_done(self):
+        self.desk.issue("EMB-1", "Done")
+        self.desk.issues["EMB-1"]["updated"] = "2026-01-01T00:00:00.000Z"
+        self.desk.issue("EMB-2", "Done")
+        self.desk.issues["EMB-2"]["updated"] = "2099-01-01T00:00:00.000Z"
+        self.desk.issue("EMB-3", "Done")
+        r = self.linear("archive-done", "--older-than", "7")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("1 issue(s) archived", r.stdout)
+        self.assertTrue(self.desk.issues["EMB-1"].get("archived"))
+        self.assertFalse(self.desk.issues["EMB-2"].get("archived"), "updated this week")
+        self.assertFalse(self.desk.issues["EMB-3"].get("archived"), "no readable date")
+
     def test_close_comments_and_moves_to_done_once(self):
         self.desk.issue("EMB-1", "Backlog")
         r = self.linear("close", "EMB-1", "--why", "`fleet-linear.py show` landed in 6f210e8.")

@@ -143,7 +143,11 @@ class PruneLanded(unittest.TestCase):
         self.root = Path(self.tmp.name)
         toml = (HERE.parent / "fleet.toml").read_text()
         conf = self.root / "fleet.toml"
-        conf.write_text(re.sub(r'^root = ".*"$', f'root = "{self.root}"', toml, flags=re.M))
+        toml = re.sub(r'^root = ".*"$', f'root = "{self.root}"', toml, flags=re.M)
+        # leg-end archives Linear issues: never reach the real desk from a test.
+        toml = re.sub(r'^desk_port = .*$', 'desk_port = 9', toml, flags=re.M)
+        toml = re.sub(r'^desk_config_dir = .*$', f'desk_config_dir = "{self.root}/no-desk"', toml, flags=re.M)
+        conf.write_text(toml)
         self.env = dict(os.environ, EMBARCH_FLEET_CONF=str(conf))
         self.doc = self.repo("embarch-doc", {"tasks/api/001-landed.md": "# t\n\n**State:** claimed\n",
                                              "tasks/api/002-live.md": "# t\n\n**State:** claimed\n"})

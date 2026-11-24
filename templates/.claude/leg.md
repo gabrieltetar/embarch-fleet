@@ -1139,7 +1139,10 @@ a clean tree. Post a two-line close to
 exit. `leg-end` first deletes every repo's `agent/*` branch that is on
 `origin/main` with its task retired, which your own folds could not, since your
 last units were still claimed until your push (EMB-240). A branch it keeps is
-not landed: name it in your final message, never delete it by hand. **Do not push a notification for an ordinary leg end**; the relay ends legs
+not landed: name it in your final message, never delete it by hand. It also
+archives the team's Done and Canceled issues untouched for 7 days, as Linear's
+free plan refuses every filing past its cap of unarchived issues; never archive
+one by hand. **Do not push a notification for an ordinary leg end**; the relay ends legs
 constantly.
 
 Your final message is read by the listener and relayed, so it carries: units run,
