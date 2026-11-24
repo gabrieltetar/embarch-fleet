@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-24 03:52 — core/149 the-core-readme-carries-no-counted-inventory
+
+**Decided:** nothing suite-wide, and **no new decision** (burndown leg). `embarch-core/README.md` no longer gives an endpoint count, a source layout, an endpoint table or the dev-bench detection prose; an "Interfaces" section links `embarch-doc/embarch-core/interfaces/` and `spec.md`. The reviewer confirmed every removed fact is still stated in the docs (`interfaces/hardware.md`, `interfaces.md`, decision 23 in `decisions/probes.md`). **Leg start, to carry:** step 0 recovered nothing (no claim, no unit worktree, no stop marker). **Linear is rate limited** (its own 2,500-requests-per-hour API cap, not a usage 429): `fleet-linear.py ready --brief` and `finish` both exit 2 on a 429 from Linear, so Fleet Ready could not be read and its 15 unsplit issues stay unsplit; `finish` for EMB-297 is owed to the next leg that reaches Linear. The refill gate fired on depth (2 dispatchable, 2 scopes, wave 6); the only source changed since `chat/036`'s 02:36 sweep is `ui/115`'s narrowing of one `open/bench.md` bullet, so no sweep. Wave 1 was `core/149` and `umbrella/104`, two foreground calls in one message, both reported to the leg. No day fold owed.
+**Merged:** `agent/core/149-the-core-readme-carries-no-counted-inventory` (code `1f9a629`, ff from `5255f67`; doc `fb6efd41`, the worker's `4190d0cf` cherry-picked onto `da42c84b`). Re-gated on the merge result: `cargo build`, `cargo test` (461 passed), `clippy --all-targets -D warnings` green; `check-docs.py` 12/12; ownership green on both branches; client names clean on the code worktree.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** the native Windows build of `embarch-core` (README-only change, so a formality).
+**Budget:** PROCEED at leg start and dispatch (BURNDOWN, 5-hour 74%, weekly 58%, wave 6), two dispatched for want of tasks; PROCEED at this fold (5-hour 76%, weekly 58%).
+**Least sure about:** whether Linear's hourly cap recovers before this leg's next wave; if it does not, the leg ends at two units rather than inventing work to fill the slots.
+
+---
+
 ## 2026-11-24 03:42 — doc/100 studies-guide-leads-with-the-signals-own-baud
 
 **Decided:** nothing suite-wide, and **no new decision** (burndown leg). `suite/studies-guide.md` §3 now says a DUT signal's line rate belongs on the signal (its `baud`), with `EMBARCH_SIGNAL_BAUD` only the fallback for a signal that declares none (default 1000000); §4 step 1 says a direct signal takes its `baud` and, since the Topology tab has no field for it, to use `embarch-api declare-signal ... --baud <rate>` or the `declare_signal` tool. The worker confirmed the code (`signal_baud_for` in Core's `stream_store.rs`, `--baud` on `declare-signal`, `baud` on the MCP tool) and delivered a `status.d` fragment, which I applied at this fold. **Where I departed from the fragment:** it proposed dropping the bench's `460800` sentence; I kept it, because it is the owner's stated link ceiling (the reviewer traced it to a measured link and reversals row 89), and dropped only the "two numbers in step by hand" sentence the per-signal field made stale. I also left the Topology tab out of the declare paths, since `embarch-ui/assets/app.js` sends no `baud`, and filed that gap as **EMB-396** (Backlog). My first wording pushed the guide 475 B into its size reserve; trimmed to 23,029 B, 11 B under the line, so no compaction debt was filed.
