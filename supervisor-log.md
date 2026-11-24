@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-24 03:52 — umbrella/104 the-umbrella-readme-carries-no-counted-inventory
+
+**Decided:** nothing suite-wide, and **no new decision** (burndown leg). `embarch-umbrella/README.md` loses its command table and the "command surface below is implemented" sentence; a prose paragraph says what `embarch` does and links `embarch-doc/embarch-umbrella/interfaces`, `suite/user-guide.md` and `embarch --help`, and the diagram's command line reads "embarch commands". The worker kept the three marketplace plugins named, as a pointer to `.claude-plugin/marketplace.json` rather than an inventory; the reviewer agreed (decision 58 relies on that marketplace). **Reviewer's side note, not filed:** the new paragraph says the commands are owned by the interface docs, but `embarch-umbrella/interfaces/` holds only `doctor-chain.md` and `verify-release.md`; the command surface lives in `spec.md`, which the README's status line still links, so nothing is lost. A one-line wording fix for whoever next edits that README. With `api/186` and `core/149` this closes all three of EMB-297's tasks; `finish` moves it to Done once Linear answers.
+**Merged:** `agent/umbrella/104-the-umbrella-readme-carries-no-counted-inventory` (code `4cc725f`, ff from `b2579bf`; doc `751ee6c4`, the worker's `b067f49d` cherry-picked onto `fb6efd41`). Re-gated on the merge result: `cargo build`, `cargo test` (280 passed), `clippy --all-targets -D warnings` green; `check-docs.py` 12/12; ownership green on both branches; client names clean on the code worktree.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED at dispatch (BURNDOWN, 5-hour 74%, weekly 58%, wave 6); PROCEED at this fold (5-hour 76%, weekly 58%).
+**Least sure about:** the README now points readers at an `interfaces/` folder that does not hold the command list, which is the kind of small inaccuracy a README rewrite was meant to remove.
+
+---
+
 ## 2026-11-24 03:52 — core/149 the-core-readme-carries-no-counted-inventory
 
 **Decided:** nothing suite-wide, and **no new decision** (burndown leg). `embarch-core/README.md` no longer gives an endpoint count, a source layout, an endpoint table or the dev-bench detection prose; an "Interfaces" section links `embarch-doc/embarch-core/interfaces/` and `spec.md`. The reviewer confirmed every removed fact is still stated in the docs (`interfaces/hardware.md`, `interfaces.md`, decision 23 in `decisions/probes.md`). **Leg start, to carry:** step 0 recovered nothing (no claim, no unit worktree, no stop marker). **Linear is rate limited** (its own 2,500-requests-per-hour API cap, not a usage 429): `fleet-linear.py ready --brief` and `finish` both exit 2 on a 429 from Linear, so Fleet Ready could not be read and its 15 unsplit issues stay unsplit; `finish` for EMB-297 is owed to the next leg that reaches Linear. The refill gate fired on depth (2 dispatchable, 2 scopes, wave 6); the only source changed since `chat/036`'s 02:36 sweep is `ui/115`'s narrowing of one `open/bench.md` bullet, so no sweep. Wave 1 was `core/149` and `umbrella/104`, two foreground calls in one message, both reported to the leg. No day fold owed.
