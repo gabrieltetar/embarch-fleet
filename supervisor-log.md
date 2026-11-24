@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-24 03:39 — umbrella/103 the-installed-hil-skill-cannot-drift-from-the-apis
+
+**Decided:** nothing suite-wide, and **no new decision** (burndown leg). Decision 59 (`embarch-umbrella/decisions/integration.md`) amended in place: `embarch init` no longer installs a pinned copy of the `embarch-hil` skill; `src/init.rs` now `include_str!`s `../../embarch-api/skills/embarch-hil/SKILL.md` through the sibling checkout the crate already path-depends on, and `src/skills/embarch-hil/SKILL.md` is deleted. The worker checked every build that compiles umbrella has the sibling (local, `build-check.yml`, `release.yml`; `assemble-suite.yml` only downloads releases), so a missing sibling is a compile error rather than a stale skill. The recorded cost: an api skill edit reaches users with the next umbrella build. The drift test, renamed `the_installed_skill_is_what_embarch_api_ships`, still compares at run time. This takes the issue's "installer reads the one file" route, so no api-side drift check is owed and none was filed.
+**Merged:** `agent/umbrella/103-the-installed-hil-skill-cannot-drift-from-the-apis` (code `b2579bf`, ff from `27f43a5`; doc `754b8acc`, the worker's `a6eac931` cherry-picked). Re-gated on the merge result: `cargo build`, `cargo test` (280 passed), `clippy --all-targets -D warnings` green; `check-docs.py` 12/12; ownership green on both branches; client names clean on the code worktree.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED at dispatch (BURNDOWN, 5-hour 63%, weekly 57%, wave 6).
+**Least sure about:** a worktree build of umbrella now embeds whatever the sibling link points at, which is the api's main checkout and its working tree, not the api's `origin/main`, so an uncommitted edit there would be compiled in.
+
+---
+
 ## 2026-11-24 03:37 — api/186 the-api-readme-carries-no-counted-inventory
 
 **Decided:** nothing suite-wide, and **no new decision** (burndown leg, re-armed by the owner at 03:05, weekly 56%). `embarch-api/README.md` no longer counts or lists tools or Core endpoints; it links `embarch-api/interfaces/tools.md`, `interfaces/config.md` and Core's docs, and its getting-started follows `suite/user-guide.md` (release archive, `embarch setup`, `embarch init`, config found by the upward search, `--config` or `EMBARCH_API_CONFIG` outside a repo). `config.example.toml` stays as an annotated example. **Leg start, to carry:** step 0 recovered nothing (no claim, no unit worktree, no stop marker; leftover `agent/atlas/097-*` and `agent/ui/059-*` remote branches are not landed and not mine). Fleet Ready held 19 issues from the 2026-11-23 suite audit; I split four: EMB-311 to `ui/115`, EMB-315 to `umbrella/103`, EMB-318 to `doc/100`, EMB-297 to `api/186` plus `core/149` and `umbrella/104` (open), at `245c7cbf`; announced ts `1795515529.865329`. 15 issues remain in Fleet Ready, unsplit. The refill gate fired spread-only (5 scopes, wave 6); the only source changed since the 00:23 spread line was `promptu/021`'s `open.md` edit, which `chat/036`'s 02:36 sweep had read, so I skipped the sweep. Wave 1 was all four units, four foreground calls in one message, all reported to the leg. No day fold owed (2026-11-23 was folded at 00:10).
