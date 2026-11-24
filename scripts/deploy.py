@@ -237,6 +237,51 @@ def fast_forward_target(target: Path) -> None:
           "before rendering.\n")
 
 
+def fast_forward_siblings(target: Path) -> list[str]:
+    """Bring each clean sibling clone level with origin before the gate reads it.
+
+    **The instance gate reads the sibling code clones' working trees**:
+    `check-tool-index.py` compares `embarch-api/interfaces/tools.md` with
+    `src/tools.rs` in `../embarch-api`. No leg advances those clones either, since
+    legs land through worktrees and push. On 2026-11-23 a deploy was refused
+    because `embarch-api`'s clone was two commits behind: the doc listed a tool
+    origin had added and the stale source lacked. The listener then held every
+    leg behind the latch until the owner fast-forwarded the clone (EMB-285).
+
+    So, with `fast_forward_target`'s reasoning and limits: a clone on `main`, with
+    no uncommitted tracked change and strictly behind `origin/main`, is
+    fast-forwarded. Anything else is left exactly as it is and returned by name,
+    so a red gate can say which clones it read stale. Ahead or diverged is the
+    owner's own work, and not stale.
+    """
+    stale = []
+    skip = {target.resolve(), FLEET_REPO.resolve()}
+    for repo in sorted(p for p in CONF.root.iterdir() if (p / ".git").is_dir()):
+        if repo.resolve() in skip:
+            continue
+        git(repo, "fetch", "-q", "origin", check=False)
+        remote = git(repo, "rev-parse", "-q", "--verify", "origin/main", check=False).strip()
+        local = git(repo, "rev-parse", "-q", "--verify", "HEAD", check=False).strip()
+        if not remote or not local or local == remote:
+            continue
+        if subprocess.run(["git", "-C", str(repo), "merge-base", "--is-ancestor", local, remote],
+                          capture_output=True).returncode != 0:
+            continue
+        behind = git(repo, "rev-list", "--count", f"{local}..{remote}", check=False).strip()
+        branch = git(repo, "rev-parse", "--abbrev-ref", "HEAD", check=False).strip()
+        dirty = git(repo, "status", "--porcelain", "--untracked-files=no", check=False).strip()
+        if branch == "main" and not dirty:
+            r = subprocess.run(["git", "-C", str(repo), "merge", "--ff-only", "-q", remote],
+                               capture_output=True, text=True)
+            if r.returncode == 0:
+                print(f"fast-forwarded {repo.name} main by {behind} commit(s) before the gate.")
+                continue
+        where = "detached" if branch in ("", "HEAD") else f"on {branch}"
+        stale.append(f"{repo.name} ({where}, {behind} commit(s) behind origin/main"
+                     + (", with uncommitted changes)" if dirty else ")"))
+    return stale
+
+
 # Paths in THIS repo that the fleet writes while it runs, and which are not
 # inputs to the render. A leg's fold commits `supervisor-log.md` here on every
 # unit -- the only path a leg ever touches in this repo -- and `fold-day.py
@@ -519,8 +564,13 @@ def main() -> int:
     # Before anything reads or writes the instance: this checkout is chronically
     # behind origin because legs push from worktrees, and BOTH the re-arm answer
     # and the commit base depend on it being current.
+    stale_siblings: list[str] = []
     if args.from_latch and not args.dry_run:
         fast_forward_target(target)
+        stale_siblings = fast_forward_siblings(target)
+        if stale_siblings:
+            print("note: the gate reads these clones as they stand, behind origin:\n  "
+                  + "\n  ".join(stale_siblings) + "\n")
 
     # Before install.py overwrites the installed copies, or there is nothing
     # left to compare them against.
@@ -617,6 +667,10 @@ def main() -> int:
         sys.stderr.write(gate.stderr)
         print("\nGATE RED. The instance is left rendered but uncommitted, so you can\n"
               "see what broke. Fix the template here, not the copy there.")
+        if stale_siblings:
+            print("\nIt read these clones behind origin, which alone can turn it red; bring\n"
+                  "each level with origin/main and the next boundary retries:\n  "
+                  + "\n  ".join(stale_siblings))
         return 1
 
     # EXACTLY the files this deploy generated, plus the stamp. A prefix filter
