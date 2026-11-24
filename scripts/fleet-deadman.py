@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Notice, from outside Claude, that the fleet can no longer run.
 
-Why this exists: every other liveness check in this repo is itself a Claude
-session. `/fleet-watch` reads `.fleet/tick` and alerts when it goes stale --
-but it runs on the same OAuth credential as the thing it watches, so **the one
-failure it cannot see is the one that logs the machine out.** On 2026-09-07
+Why this exists: every other liveness check in this repo was itself a Claude
+session. `/fleet-watch` read `.fleet/tick` and alerted when it went stale --
+but it ran on the same OAuth credential as the thing it watched, so **the one
+failure it could not see is the one that logs the machine out.** That window
+was retired on 2026-11-23, and this is now the fleet's only watchdog. On 2026-09-07
 that happened: all three windows died mid-leg at 02:06, the watchdog died with
 them, and the fleet sat down for seven hours until the owner opened a laptop.
 Two units were in flight; one had landed in `embarch-api` and not in
@@ -48,8 +49,8 @@ What it watches, and why each is separate:
                    nudge before rather than an alarm after.
 
 **It can alert and do nothing else.** It cannot start a leg, write a repo file,
-or delete the pump latch. `/fleet-watch` unlatches on a declared wedge; this
-does not, because a cron job that can stop the fleet is a cron job that stops
+or delete the pump latch. The retired `/fleet-watch` unlatched on a declared
+wedge; this does not, because a cron job that can stop the fleet is a cron job that stops
 the fleet at 3am for a reason nobody is awake to read.
 
 It also keeps `credential-history.tsv`: one line per credential change **and
@@ -91,9 +92,9 @@ PUMP = CONF.state_dir / "pump"
 HISTORY = CONF.state_dir / "credential-history.tsv"
 TICK = CONF.state_dir / "tick"
 
-# 50 minutes matches `/fleet-watch`: 35 was re-derived 2026-09-06 from a max gap
-# of 29.6 over six legs, and raised 2026-09-28 after a healthy single-unit
-# dispatch ran 38 (fleet-watch.md). One number, two watchers.
+# 50 minutes, the retired `/fleet-watch`'s number: 35 was re-derived 2026-09-06
+# from a max gap of 29.6 over six legs, and raised 2026-09-28 after a healthy
+# single-unit dispatch ran 38.
 STALE_MIN = 50
 # How far past `expiresAt` the file may sit before a missing refresh is real
 # rather than a clock skew or a slow renewal.

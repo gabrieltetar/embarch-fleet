@@ -51,16 +51,16 @@ doubt commit it to a branch, which is cheap and reversible.
 
 **Reporting is different on a phone, and the fleet is not you.** Every post goes through `scripts/fleet-post.py`, which posts as the app: **one plain sentence per unit**, the technical half — SHAs, paths, gate output — in `--detail`, a thread reply folded until you open it. **Only `--action` notifies**, and it names what you must do. Never paste passing output; a green `cargo test` is the word "green".
 
-**A watchdog window detects the one failure nothing else can.** The fleet cannot
-notice that it is wedged: a hung tick never returns to idle, so its own cron
-cannot fire and no `fleet stop` reaches it. A second window armed with
-`/fleet-watch` reads the mtime of one file, `.fleet/tick`, and alerts when it
-goes stale by **50 minutes**. **Its whole vocabulary points one way — stop, never
-start**: it cannot spawn, write a repo file, or launch a leg, and a declared
-wedge means an alert and deleting the pump latch. That asymmetry is why it does
-not weaken the kill switch: this section's rule bites only on what *takes away*
-the stop. Unlatching is not a graceful stop: whatever is running keeps running,
-and closing VS Code is still what ends it.
+**The watchdog is a cron job, not a window.** The fleet cannot notice that it is
+wedged: a hung tick never returns to idle, so its own cron cannot fire and no
+`fleet stop` reaches it. `scripts/fleet-deadman.py`, run by the owner's crontab
+every five minutes, reads the mtime of `.fleet/tick` and alerts when it goes
+stale by **50 minutes** while the pump is latched, a Claude process is alive and
+the budget would let the fleet run; it also catches a logout that takes every
+window down. **It alerts and never acts**: after a stall alert the owner stops the
+fleet. The `/fleet-watch` window, which also deleted the pump latch, was retired
+on 2026-11-23: the dead man covered its stall, it had not been armed since
+2026-10-29, and its unlatch once stopped a healthy fleet on a false alarm.
 
 **`tick` means the fleet made progress, not that the listener's cron fired** — the listener touches it each tick, **a leg at every dispatch and fold**. The listener-only reading went dark exactly when the fleet was busiest ([slack.md](slack.md) §2), so it fired on healthy legs; on 2026-09-06 it unlatched a live pump and capped the relay at one leg. The fix leaves the logic untouched (one mtime, stop-only) and *widens* it: a hung leg now trips it too. **50 min since 2026-09-28** (35 re-derived 2026-09-06, max gap 29.6 over six legs; a healthy 38-minute dispatch raised it). The accepted cost and the rejected `.fleet/leg` alternative are in that command file.
 

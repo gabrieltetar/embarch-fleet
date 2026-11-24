@@ -48,7 +48,7 @@ instance is behind. Two things already do, and neither is a gate — the
 | What the supervisor or worker agent does | `templates/.claude/agents/*.md` | a rendered copy |
 | The listener, its cron prompt, the Slack vocabulary | `templates/.claude/commands/fleet.md` | a rendered copy |
 | How a leg runs | `templates/.claude/leg.md` | a rendered copy |
-| The watchdog, its cron prompt, the staleness threshold | `templates/.claude/commands/fleet-watch.md` | a rendered copy |
+| The watchdog: the dead man's checks and the staleness threshold | `scripts/fleet-deadman.py` (the retired window's stub is `templates/.claude/commands/fleet-watch.md`) | nothing; the owner's crontab runs it |
 | The claim protocol, fragment rules | `templates/protocol/*.README.md` | `tasks/README.md`, etc. |
 | Ownership, queue state, budget, alerting, the fold | `scripts/*.py` | a shim — no re-render needed |
 | A path, channel, identity or limit | `fleet.toml` | **both**, see §3 |
@@ -80,7 +80,6 @@ Not all at once, and the differences have bitten before.
 | `.claude/commands/supervise.md` | the next `/supervise` **typed by the owner** — a leg never reads it |
 | `.claude/commands/fleet.md` — vocabulary | the next tick, which re-reads the file |
 | `.claude/commands/fleet.md` — **the cron block** | **only after re-arming** |
-| `.claude/commands/fleet-watch.md` — **the cron block** | **only after re-arming `/fleet-watch`** |
 
 Those last two rows are the ones to remember. Arming copies the heartbeat prompt
 into a cron job, so the live job keeps the wording it was created with however

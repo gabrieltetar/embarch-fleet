@@ -11,18 +11,16 @@ undecided. It leaves when there is no question left, not when code exists.
 
 ## A wedge is reported, never recovered
 
-`/fleet-watch` (2026-09-04) is a second window with no hands: the listener
-touches a `tick` file in the state directory at the end of every tick and the watchdog alerts
-when that mtime goes stale by 25 minutes. Five hours became about ten.
+The listener and every leg touch a `tick` file in the state directory, and
+`scripts/fleet-deadman.py`, a cron job outside Claude, alerts when its mtime goes
+stale by 50 minutes. Five hours of silence became under an hour. The `/fleet-watch`
+window (2026-09-04), which also deleted the pump latch on a wedge, was retired on
+2026-11-23 ([ops.md](ops.md) §3): the dead man covered the same stall, and the
+unlatch had stopped a healthy fleet once on a false alarm.
 
-**Narrowed 2026-09-04:** the watchdog may now delete the pump latch as well as
-alert. That is safe in a way a restart never could be — **stop, never start** —
-and §3's rule bites on actions that take a stop away, not on actions that are
-one. It means a wedge no longer ends with the fleet quietly resuming on its own.
-
-**What is still open.** Nothing *recovers* a wedged listener; unlatching only
-stops the next leg from being spawned, and whatever is already running keeps
-running until the window is closed. The watchdog cannot deliver a graceful
+**What is still open.** Nothing *recovers* a wedged listener, and since the
+retirement nothing unlatches it either: after the alert the owner stops the
+fleet, and whatever is running keeps running until the window is closed. The dead man cannot deliver a graceful
 `fleet stop` either, because a wedged listener relays nothing. And it cannot
 distinguish a hung tick from a closed window from a slept machine; all three
 want the same response, which is why it does not guess, but the alert is never

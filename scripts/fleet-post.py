@@ -57,8 +57,8 @@ Setup (the owner's, once -- same app as the webhook):
 Usage:
   scripts/fleet-post.py "leg 27 finished, 4 of 4 landed"
   scripts/fleet-post.py "leg 27 finished, 3 landed, 1 blocked" --detail "$(cat notes.md)"
-  scripts/fleet-post.py "the watchdog needs re-arming before the fleet restarts" \
-      --action "type /fleet-watch in a new window"
+  scripts/fleet-post.py "the listener needs re-arming before the fleet restarts" \
+      --action "type /fleet arm in the listener's window"
   scripts/fleet-post.py "..." --thread-ts <ts>          reply inside a thread
   scripts/fleet-post.py "..." --react crystal_ball      mark a dream post
                                                        (robot_face is automatic)

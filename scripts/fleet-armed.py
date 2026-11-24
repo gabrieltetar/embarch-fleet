@@ -4,7 +4,7 @@
 A `CronCreate` job keeps the prompt it was armed with for its whole life. Every
 other generated file in the instance is re-read by whatever uses it -- an agent
 definition on the next spawn, `fleet.md`'s vocabulary on the next tick -- so the
-cron blocks in `fleet.md` and `fleet-watch.md` are the only place where editing
+cron block in `fleet.md` is the only place where editing
 the file and deploying it changes nothing at all. The window has to be re-armed,
 by a person, in the window.
 
@@ -139,8 +139,7 @@ def check(verbose: bool) -> int:
                     lineterm="", n=1):
                 print("    " + ln)
     if worst:
-        print("\nRe-arm the window that owns it: `/fleet arm` for the listener,\n"
-              "`/fleet-watch` for the watchdog. Editing the file is not enough.")
+        print("\nRe-arm the listener's window with `/fleet arm`. Editing the file is not enough.")
     return worst
 
 

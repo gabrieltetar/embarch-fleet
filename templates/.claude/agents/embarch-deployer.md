@@ -54,8 +54,8 @@ the reason — and exit.
   notify him** (`{{FLEET_REPO}}/ops.md` §3): post it with `scripts/fleet-post.py`
   and an `--action` naming **the command file `deploy.py` itself named, and the
   window that arms it** — `.claude/commands/fleet.md` is the listener and
-  `/fleet arm`, `.claude/commands/fleet-watch.md` is the watchdog and
-  `/fleet-watch`, and a deploy can owe either, both, or neither. Take the file
+  `/fleet arm`, the one armed prompt since the watchdog window was retired
+  (2026-11-23), and a deploy owes it or not. Take the file
   from the script's output and read the window off it; **do not carry an example
   from this file into a post.** One did, on 2026-09-07: a refusal that landed
   nothing was reported as "re-arm the fleet (`/fleet-watch`)" when what had

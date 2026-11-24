@@ -72,8 +72,7 @@ Four steps, in this order.
    it because it is the last session's progress and not this one's** — left in
    place it reads as hours of silence, and on 2026-09-07 the watchdog deleted the
    pump 18 seconds after it was latched, capping the relay at one leg.
-   Absent is the honest state and both watchers already read it that way:
-   `/fleet-watch` step 2 measures the pump latch's age instead, and
+   Absent is the honest state and the watchdog reads it that way:
    `scripts/fleet-deadman.py` alerts only on a `tick` that exists.
 2. **Create the heartbeat**, after deleting any this window already holds
    (`CronList`), since two would double every tick: one recurring cron job on

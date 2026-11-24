@@ -271,7 +271,9 @@ if __name__ == "__main__":
 # hash of it: a human can read what the live job carries, and a stale one shows
 # up as a diff instead of two unequal hex strings.
 
-ARMED_PROMPTS = (".claude/commands/fleet.md", ".claude/commands/fleet-watch.md")
+# The watchdog window (`fleet-watch.md`) was retired 2026-11-23; the cron dead
+# man replaced it, so the listener is the one armed prompt.
+ARMED_PROMPTS = (".claude/commands/fleet.md",)
 
 
 def cron_block(text: str) -> str:
