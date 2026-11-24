@@ -28,6 +28,9 @@ every key it is handed must be in the configured team.
     filed KEY PATH...    list task files on an issue, move it to Fleet Working
     send-back KEY --why  an issue that cannot be split: say why, back to Backlog
     close KEY --why      an issue already done outside a split: say where, to Done
+    archive-done [--dry-run]
+                         archive the team's Done and Canceled issues, so they
+                         leave the active count Linear's free plan caps
     finish               issues whose tasks have all closed: comment, move to Done
     file --from KIND --project P --title T (--body B | --body-file F)
                          a new issue; KIND sets its status, and its team
@@ -805,6 +808,41 @@ def cmd_send_back(s: dict, args) -> int:
     return 0
 
 
+CANCELED = "Canceled"
+
+
+def cmd_archive_done(s: dict, args) -> int:
+    """Archive the team's Done and Canceled issues. Linear's free plan caps the
+    unarchived ones, and on 2026-11-23 the workspace hit the cap with most of
+    its issues Done: every filing was refused, the fleet's own included. An
+    archived issue still reads by key, so `show`, `finish` and the task files
+    that name one keep working."""
+    archived = failed = listed = 0
+    for state in (s["done"], CANCELED):
+        seen: set[str] = set()
+        while True:
+            page = call(s, "POST", "/linear/issues", {"team": s["team"], "state": state})
+            keys = [str(i.get("key")) for i in page.get("issues") or [] if i.get("key") not in seen]
+            for key in keys:
+                seen.add(key)
+                listed += 1
+                if args.dry_run:
+                    print(f"would archive {key} ({state})")
+                    continue
+                try:
+                    call(s, "POST", f"/linear/issue/{quote(key)}/archive", {})
+                    archived += 1
+                except DeskError as e:
+                    failed += 1
+                    print(f"{key} not archived: {e}", file=sys.stderr)
+            # Archived issues leave the list, so a capped list is read again.
+            if not keys or args.dry_run or not page.get("truncated"):
+                break
+    print(f"{listed if args.dry_run else archived} issue(s) "
+          f"{'to archive' if args.dry_run else 'archived'}" + (f", {failed} refused" if failed else ""))
+    return 1 if failed else 0
+
+
 def cmd_close(s: dict, args) -> int:
     """An issue done by the owner's own hand, or by a unit that never named it,
     to Done with a comment saying where. `finish` only reaches an issue whose
@@ -976,6 +1014,9 @@ def main() -> int:
     p.add_argument("--why", required=True)
     p.set_defaults(fn=cmd_close)
     sub.add_parser("finish").set_defaults(fn=cmd_finish)
+    p = sub.add_parser("archive-done")
+    p.add_argument("--dry-run", action="store_true", help="list what would be archived")
+    p.set_defaults(fn=cmd_archive_done)
     p = sub.add_parser("file")
     p.add_argument("--from", dest="kind", required=True)
     p.add_argument("--project", required=True, help="the clone's folder name, e.g. embarch-ui")

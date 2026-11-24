@@ -111,6 +111,12 @@ class Desk:
                     rows = desk.issues[key].setdefault("blocked_by", [])
                     rows += [{"key": k, "state": desk.issues.get(k, {}).get("state", "Backlog")} for k in body["by"]]
                     return self.reply({"key": key, "blocked_by": rows})
+                if self.path == "/linear/issues":
+                    return self.reply({"issues": [i for i in desk.issues.values() if i["state"] == body["state"]
+                                                   and not i.get("archived")], "truncated": False})
+                if self.path.endswith("/archive"):
+                    desk.issues[self.path.split("/")[-2]]["archived"] = True
+                    return self.reply({"archived": True})
                 if self.path == "/linear/status":
                     desk.issues[body["key"]]["state"] = body["status"]
                     return self.reply({"ok": True})
@@ -342,6 +348,21 @@ class Fleet(unittest.TestCase):
         self.assertEqual(self.desk.issues["EMB-2"]["state"], "Backlog")
         self.assertEqual(self.desk.issues["EMB-3"]["state"], "Todo")
         self.assertIn("EMB-3 left where it is: it is in Todo", r.stderr)
+
+    def test_archive_done_archives_done_and_canceled_only(self):
+        self.desk.issue("EMB-1", "Done")
+        self.desk.issue("EMB-2", "Canceled")
+        self.desk.issue("EMB-3", "Backlog")
+        r = self.linear("archive-done", "--dry-run")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("2 issue(s) to archive", r.stdout)
+        self.assertFalse(self.desk.issues["EMB-1"].get("archived"))
+        r = self.linear("archive-done")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("2 issue(s) archived", r.stdout)
+        self.assertTrue(self.desk.issues["EMB-1"].get("archived"))
+        self.assertTrue(self.desk.issues["EMB-2"].get("archived"))
+        self.assertFalse(self.desk.issues["EMB-3"].get("archived"))
 
     def test_close_comments_and_moves_to_done_once(self):
         self.desk.issue("EMB-1", "Backlog")
