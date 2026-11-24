@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-24 04:10 — umbrella/105 the-first-run-chip-hint-names-cores-chip-list
+
+**Decided:** nothing suite-wide, and **no new decision** (burndown leg). `embarch doctor`'s static chip fix line (`src/doctor.rs`) and the comment `embarch init` scaffolds into `embarch.toml` (`src/init.rs`) now say `embarch-core chip-list <soc-substring>` instead of `cargo install probe-rs-tools && probe-rs chip list | grep -i <your soc>`; no umbrella doc quoted either string, so `spec.md` is unchanged. The reviewer confirmed the shape against Core's `ChipList` (one optional case-insensitive filter) and that umbrella decision 28 puts `embarch-core` on PATH at `setup`, with the already-open-shell caveat decision 28 already states. **This is the leg's last unit; it ends at the cap of 4.** After it, `queue-status.py` holds no task-file work (EMB-297's three tasks and these two are done; `suite/058` is parked to 2026-12-01), so the next leg's work is Fleet Ready's 25 unsplit issues, if Linear answers.
+**Merged:** `agent/umbrella/105-the-first-run-chip-hint-names-cores-chip-list` (code `ea8fbf0`, ff from `4cc725f`; doc `285eb0de`, the worker's `dec917ec` cherry-picked onto `0bd1987e`). Re-gated on the merge result: `cargo build`, `cargo test` (280 passed), `clippy --all-targets -D warnings` green; `check-docs.py` 12/12; ownership green on both branches; client names clean on the code worktree.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED at dispatch (BURNDOWN, 5-hour 79%, weekly 58%, wave 6); PROCEED at this fold (5-hour 81%, weekly 59%).
+**Least sure about:** Linear's hourly cap: something spends about 2,500 requests an hour, the fleet's own per-issue `ready` reads among them, and the next leg may find Fleet Ready unreadable again; THR-32 asks for a wait flag on `ready`.
+
+---
+
 ## 2026-11-24 04:10 — topology/071 the-linking-process-sets-the-identity-stores-folder
 
 **Decided:** nothing suite-wide, and **no new decision** (burndown leg). `embarch-topology` gains `paths::set_data_dir(dir)` (re-exported as `hardware::set_data_dir`, `hardware` feature): the process that links the crate may set the identity store's folder once, before the first `data_dir()` read; a second set, or a set after first use, is refused saying which. Unset, every path is today's, and the CLI never calls it. Decision 23 (`decisions/storage.md`) amended in place to say so; `spec.md`'s "no override on the store path" now reads "from outside", since the folder is the linking process's choice. Nothing changes in Core yet: Core calling the setter is the HIL plan's attested-phase unit A.4. The worker checked Core's `decisions/auth.md`, which cites decision 23 for the default directory and its ACL, and it still holds. **Leg, to carry:** Linear answered again at 03:59 after a 5-minute wait inside the leg. I split three issues at `afe9024f`: EMB-310 to `umbrella/105`, EMB-320 to this task, and EMB-312 to `suite/058`, **parked `blocked` until 2026-12-01** (the removal date decisions 97 and 83 set; a cross-repo wire removal, so the leg that unparks it announces it first). Only EMB-310 reached Fleet Working: `filed` for EMB-320 and EMB-312 hit Linear's cap again, so the next leg's `ready` reports them `ALREADY SPLIT` and must re-run `filed` for each. Announced ts `1795518116.601709`. 25 Fleet Ready issues remain unsplit, plus about 20 waiting on blockers. I read the shared-crate diff before merging: one process-wide `Mutex<Setting>`, one test that sets it, and no other lib test reaches the global (checked by grep).
