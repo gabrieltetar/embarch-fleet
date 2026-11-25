@@ -118,6 +118,13 @@ BENCH_HW = ("bench", "toolchain")
 # and no worker could be given anything, and LOW QUEUE never printed.
 SUITE_SCOPE = "suite"
 
+# How long `fleet-linear.py list` may take. It makes one desk call per Fleet
+# Ready issue (EMB-442), so it grows with the queue: 18 takeable of about 70
+# took 38 s on 2026-11-24, past the 30 s this used to allow, and a timeout
+# reads as no Fleet Ready issues at all. Lower it again once `list` reads
+# blockers in a fixed number of calls.
+READY_TIMEOUT_S = 120
+
 STATE_RE = re.compile(r"^\*\*State:\*\*\s*(.+?)\s*$", re.M)
 # Markdown emphasis a field's value may legitimately carry. Stripped before the
 # value is read, by `field()` here and by `token()` in check-task-state.py.
@@ -243,7 +250,7 @@ def ready_issues() -> tuple[list[dict], str | None]:
     script = Path(__file__).resolve().parent / "fleet-linear.py"
     try:
         r = subprocess.run([sys.executable, str(script), "list"],
-                           capture_output=True, text=True, timeout=30)
+                           capture_output=True, text=True, timeout=READY_TIMEOUT_S)
     except (OSError, subprocess.TimeoutExpired) as e:
         return [], str(e)
     if r.returncode != 0:
