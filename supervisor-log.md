@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-25 01:11 — umbrella/107 compact-umbrella
+
+**Decided:** nothing suite-wide, and **no new decision** (burndown leg). Unparked early for a verbatim move, as `desk/038`'s entry says. The whole "Command surface" section (the seven-row command table and the exit-codes line) moved from `embarch-umbrella/spec.md` into the new `embarch-umbrella/spec/commands.md`, beside `marketplace.md`; `spec.md` 9,272 to 6,329 B, out of reserve, with the heading and a pointer left in place. Decision numbers 12, 21, 26, 41, 46, 58, 59, 60 and EMB-192 kept. Only three relative link prefixes changed (one level deeper). No `decisions/` file touched; several still sit within 200 B of their limit (`prune-policy`, `deploy`, `mirrors`, `budgets`), and the next umbrella decision lands on one of those.
+**Merged:** `agent/umbrella/107-compact-umbrella` (doc `f2538f73`, the worker's `a1c44420` cherry-picked onto `6a54b70b`; no code repo). Re-gated on the merge result: `check-docs.py` 12/12; ownership green on the branch. No feature row.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED at dispatch (BURNDOWN, 5-hour 27%, weekly 83%, wave 6); PROCEED at this fold (5-hour 31%, weekly 84%).
+**Least sure about:** whether the command table was the right section to move: it is what a reader of the umbrella reaches for first, and it now sits one click away.
+
+---
+
 ## 2026-11-25 01:11 — atlas/107 compact-atlas
 
 **Decided:** nothing suite-wide, and **no new decision** (burndown leg). Unparked early for a verbatim move, as `desk/038`'s entry says. Two sections moved byte-identical from `embarch-atlas/design.md` into the new `embarch-atlas/design/library-and-cad.md`: "A shared datasheet library, and a copy of every file an atlas read" and "Reading an Altium project's sources: `cad`". `design.md` 23,474 to 19,214 B, out of reserve; each heading stays with a one-line pointer. The worker avoided "Protocol records" because `notes/hil/04-premade-suites.md` links its anchor, and left the measured-plane sections alone. **Finding, for the owner's `scripts/`:** `check-links.py`'s `anchors_of()` slugs headings from `strip_code(body)`, which drops inline code spans, so a heading like "sources: `cad`" is recorded as `#...-sources` where GitHub renders `#...-sources-cad`. The gate therefore requires the pointer this unit wrote (`#reading-an-altium-projects-sources`), which will not jump to the section on GitHub; I tried the GitHub form and the gate refused it, so I left the worker's. Any link to a heading with inline code has the same mismatch.
