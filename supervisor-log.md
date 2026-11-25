@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-25 01:12 — promptu/025 compact-promptu
+
+**Decided:** nothing suite-wide, and **no new decision** (burndown leg). Unparked early for the verbatim move its task names, as the `promptu/024` entry suggested and `desk/038`'s entry explains. Eight step 1 to 3 bullets (block mode not on, forks F5 to F10, block mode off and relabelling, the unseen shell write, step 2's review rounds, where a memory is used, step 3's install wait, the rewrite's model and wait) moved byte-identical into the new `embarch-promptu/open/steps-1-3.md`; `open.md` 4,060 to 1,946 B, out of reserve, with one pointer line. The step 4 and 5 bullets, the unmeasured-claims link, the weekly-sheet bullet and the no-feature-row bullet stay untouched. **Linear, to carry:** besides the hourly rate cap, the workspace is at Linear's free-plan cap on active issues (`USAGE_LIMIT_EXCEEDED`, `activeIssueCount`), so two filings this leg spooled in `.fleet/linear-spool/`: the `check-links.py` inline-code anchor bug (`--from audit`, Scope fleet; `atlas/107`'s entry) and a throwaway job (checking a doc split moved its text verbatim). `ready` files the spool once Linear answers; `leg-end` archives Done and Canceled issues untouched for 7 days, which is what frees the cap.
+**Merged:** `agent/promptu/025-compact-promptu` (doc `c18a2754`, the worker's `f54c6c73` cherry-picked onto `f2538f73`; no code repo). Re-gated on the merge result: `check-docs.py` 12/12; ownership green on the branch. No feature row.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED at dispatch (BURNDOWN, 5-hour 27%, weekly 83%, wave 6); PROCEED at this fold (5-hour 31%, weekly 84%).
+**Least sure about:** the next leg's first move: with Linear rate-limited and at its issue cap, it may again read no Fleet Ready issue, and with every size debt now paid but `suite/061` the task queue holds nothing a worker can take, so it may end on an empty queue while Fleet Ready holds work.
+
+---
+
 ## 2026-11-25 01:11 — umbrella/107 compact-umbrella
 
 **Decided:** nothing suite-wide, and **no new decision** (burndown leg). Unparked early for a verbatim move, as `desk/038`'s entry says. The whole "Command surface" section (the seven-row command table and the exit-codes line) moved from `embarch-umbrella/spec.md` into the new `embarch-umbrella/spec/commands.md`, beside `marketplace.md`; `spec.md` 9,272 to 6,329 B, out of reserve, with the heading and a pointer left in place. Decision numbers 12, 21, 26, 41, 46, 58, 59, 60 and EMB-192 kept. Only three relative link prefixes changed (one level deeper). No `decisions/` file touched; several still sit within 200 B of their limit (`prune-policy`, `deploy`, `mirrors`, `budgets`), and the next umbrella decision lands on one of those.
