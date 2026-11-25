@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-25 15:34 — chat/045 the-compaction-test-stops-racing-and-holding-the-run
+
+**Decided:** nothing suite-wide. Re-landed from the 429'd leg (see `core/164`'s entry). Only `test/wire.test.mjs` changed: the "/compact waits behind a turn" test reads `sent()` inside the turn's own end event instead of after an `await`, which was the race (the CLI's `/compact` result is instant, so the held rest went out before the test resumed), and every compaction test disposes its chat in `t.after`, so a failure no longer holds the run to its timeout. The reviewer checked decision 36's claims are all still asserted. No new decision.
+**Merged:** `agent/chat/045-the-compaction-test-stops-racing-and-holding-the-run` (code `701a019`, ff from `1109bb0`; doc `40155087`, the worker's `2a51292b` cherry-picked). Re-gated on the merge result: `npm ci`, `build`, `typecheck`, `npm test` with `EMBARCH_DESK_BIN` from `desk-gate-bin.py` (green, exit 0, about 50 s, so the flake this unit fixes did not hit); `check-docs.py` 12/12; ownership green on both branches; client names clean on the code worktree. **`test:webview` was red and I landed anyway**: one check, "a long chat sticks to the bottom while a reply streams", failed three runs of three, at two different assertions. The branch touches no webview file and `test:webview` runs only `test/webview.e2e.mjs`, so `main` at `1109bb0` carries the same red; it passed in the gate that landed `1109bb0` at 13:40. Filed as **EMB-571** (Fleet Ready): the check reads the scroll position with no settle after a send.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED at leg start (5-hour 2%, weekly 19%, wave 6).
+**Least sure about:** landing past a red `test:webview`: it is the same red on `main` and unrelated to this diff, but if EMB-571 is a real scroll regression rather than a timing check, nothing explains why it passed at 13:40 and fails now.
+
+---
+
 ## 2026-11-25 15:33 — api/202 read-the-no-measurements-refusal-by-a-stable-code
 
 **Decided:** nothing suite-wide. Re-landed from the 429'd leg (see `core/164`'s entry). `embarch-core-client`'s `MeasurementsRefusal::NoMeasurements` is recognised by the `422` status alone, a body `code` of `"no_measurements"` (core decision 141) or none (an older Core) reading the same, never by Core's wording; the CLI help and the `study_measurements` tool description now say "a host study with no parse step". The shared client crate changed in a doc comment only, which I read before landing. No new decision; `interfaces/studies.md` updated.
