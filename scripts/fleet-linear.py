@@ -28,10 +28,13 @@ every key it is handed must be in the configured team.
     filed KEY PATH...    list task files on an issue, move it to Fleet Working
     send-back KEY --why  an issue that cannot be split: say why, back to Backlog
     close KEY --why      an issue already done outside a split: say where, to Done
-    archive-done [--dry-run] [--older-than DAYS]
+    archive-done [--dry-run] [--older-than DAYS] [--keep-recent N]
                          archive the team's Done and Canceled issues, so they
                          leave the active count Linear's free plan caps; with
-                         --older-than, only those untouched that many days
+                         --older-than, those untouched that many days and every
+                         one beyond the newest archive_keep_recent; with
+                         --keep-recent, all but the newest N. A filing the cap
+                         refuses makes room the same way and is tried again
     finish               issues whose tasks have all closed: comment, move to Done
     file --from KIND --project P --title T (--body B | --body-file F)
                          a new issue; KIND sets its status, and its team
@@ -568,33 +571,71 @@ def spool(kind: str, project: str, title: str, body: str, why: str) -> Path:
     return path
 
 
+def send_spooled(s: dict, path: Path) -> DeskError | None:
+    """File one spooled entry and remove it; the desk's error if it would not."""
+    e = json.loads(path.read_text())
+    body = e["body"]
+    # Spooled before LINEAR-PROTOCOL.md: filed as it was, its filer kept
+    # the old way, for `lint` to find and a `rewrite` to fix.
+    if "Filed by" not in parse_body(body)[1]:
+        body = f"{body.rstrip()}\n\nFiled by the fleet ({e['kind']})."
+    try:
+        print(f"from the spool: {create(s, e['kind'], e['project'], e['title'], body)}")
+    except DeskError as err:
+        return err
+    path.unlink()
+    return None
+
+
+def make_room(s: dict) -> int:
+    """Archive every Done and Canceled issue but the newest few, after Linear's
+    cap refused a filing. How many were archived."""
+    done, _ = archive_closed(s, 0, keep_recent(s))
+    print(f"Linear's issue cap refused a filing: {done} closed issue(s) archived to make room", file=sys.stderr)
+    return done
+
+
 def flush_spool(s: dict) -> None:
-    """File what a down desk left behind. A file that keeps failing stays, named."""
+    """File what a down desk left behind. A file that keeps failing stays, named.
+    When Linear's cap refuses one, room is made once and that one is tried again;
+    if the cap still refuses, the rest wait and the leg is told on stdout."""
     d = spool_dir()
+    capped: list[Path] = []
+    tried_room = False
     for path in sorted(d.glob("*.json")) if d.is_dir() else []:
+        if capped:
+            capped.append(path)
+            continue
         try:
-            e = json.loads(path.read_text())
-            body = e["body"]
-            # Spooled before LINEAR-PROTOCOL.md: filed as it was, its filer kept
-            # the old way, for `lint` to find and a `rewrite` to fix.
-            if "Filed by" not in parse_body(body)[1]:
-                body = f"{body.rstrip()}\n\nFiled by the fleet ({e['kind']})."
-            print(f"from the spool: {create(s, e['kind'], e['project'], e['title'], body)}")
-            path.unlink()
-        except NamesClient as err:
-            print(f"still spooled, as it names a client: {path} ({'; '.join(err.args)})", file=sys.stderr)
-        except DeskError as err:
-            if not err.refused:
-                print(f"still spooled: {path} ({err})", file=sys.stderr)
-                continue
-            # Refused, not down: every later leg would retry it forever (EMB-70).
-            aside = d / "refused"
-            aside.mkdir(exist_ok=True)
-            path.replace(aside / path.name)
-            print(f"set aside, as the desk refused it and a retry cannot help: "
-                  f"{aside / path.name} ({err})", file=sys.stderr)
-        except (ValueError, KeyError) as err:
+            err = send_spooled(s, path)
+            if err and cap_refused(err) and not tried_room:
+                tried_room = True
+                if make_room(s):
+                    err = send_spooled(s, path)
+        except NamesClient as names:
+            print(f"still spooled, as it names a client: {path} ({'; '.join(names.args)})", file=sys.stderr)
+            continue
+        except (ValueError, KeyError) as bad:
+            print(f"still spooled: {path} ({bad})", file=sys.stderr)
+            continue
+        if err is None:
+            continue
+        if cap_refused(err):
+            capped.append(path)
+            continue
+        if not err.refused:
             print(f"still spooled: {path} ({err})", file=sys.stderr)
+            continue
+        # Refused, not down: every later leg would retry it forever (EMB-70).
+        aside = d / "refused"
+        aside.mkdir(exist_ok=True)
+        path.replace(aside / path.name)
+        print(f"set aside, as the desk refused it and a retry cannot help: "
+              f"{aside / path.name} ({err})", file=sys.stderr)
+    if capped:
+        print(f"LINEAR CAP: Linear's cap on unarchived issues refused {len(capped)} spooled filing(s), "
+              f"and no closed issue beyond the newest {keep_recent(s)} was left to archive. They wait in "
+              f"{d}: archive by hand (archive-done) or raise the plan, and say so on the supervisor log.")
 
 
 # --- the commands -----------------------------------------------------------
@@ -811,6 +852,14 @@ def cmd_send_back(s: dict, args) -> int:
 
 
 CANCELED = "Canceled"
+# How many of the newest Done and Canceled issues `archive-done --older-than`
+# leaves unarchived whatever their age, unless fleet.toml's `[linear]
+# archive_keep_recent` says otherwise (EMB-558). The age alone kept every Done
+# of a young, busy workspace: on 2026-11-25 every Done issue was under three
+# days old, the cap filled, and Linear refused every filing for ten hours.
+KEEP_RECENT = 20
+# Linear's error code when the free plan's cap on unarchived issues is full.
+CAP_CODE = "USAGE_LIMIT_EXCEEDED"
 
 
 def touched_before(row: dict, cutoff: float) -> bool:
@@ -824,39 +873,77 @@ def touched_before(row: dict, cutoff: float) -> bool:
     return when.timestamp() < cutoff
 
 
-def cmd_archive_done(s: dict, args) -> int:
-    """Archive the team's Done and Canceled issues. Linear's free plan caps the
-    unarchived ones, and on 2026-11-23 the workspace hit the cap with most of
-    its issues Done: every filing was refused, the fleet's own included. An
-    archived issue still reads by key, so `show`, `finish` and the task files
-    that name one keep working."""
-    archived = failed = listed = 0
-    cutoff = time.time() - args.older_than * 86400
-    for state in (s["done"], CANCELED):
-        seen: set[str] = set()
-        while True:
+def updated_at(row: dict) -> float:
+    """A listed issue's last update as a timestamp. Unreadable counts as newest,
+    so an issue whose age cannot be read is the last one archived."""
+    try:
+        return datetime.fromisoformat(str(row.get("updated") or "").replace("Z", "+00:00")).timestamp()
+    except ValueError:
+        return float("inf")
+
+
+def keep_recent(s: dict) -> int:
+    """How many of the newest Done and Canceled issues stay unarchived (EMB-558)."""
+    return int(s.get("archive_keep_recent", KEEP_RECENT))
+
+
+def cap_refused(err: Exception) -> bool:
+    """Whether the desk passed on Linear's refusal for its cap on unarchived issues."""
+    return CAP_CODE in str(err)
+
+
+def archive_closed(s: dict, older_than: float, keep: int | None, dry_run: bool = False) -> tuple[int, int]:
+    """Archive the team's Done and Canceled issues: with neither an age nor a
+    count, every one; with an age, those untouched that many days; with a count,
+    all but the newest `keep`; with both, either. Returns how many were archived
+    (or would be, on a dry run) and how many the desk refused.
+
+    Linear's free plan caps the unarchived issues, and on 2026-11-23 the
+    workspace hit the cap with most of its issues Done: every filing was
+    refused, the fleet's own included. An archived issue still reads by key, so
+    `show`, `finish` and the task files that name one keep working."""
+    cutoff = time.time() - older_than * 86400
+    done = failed = 0
+    seen: set[str] = set()
+    kept: set[str] | None = None
+    while True:
+        rows: list[tuple[str, dict]] = []
+        truncated = False
+        for state in (s["done"], CANCELED):
             page = call(s, "POST", "/linear/issues", {"team": s["team"], "state": state})
-            rows = [i for i in page.get("issues") or [] if i.get("key") not in seen]
-            keys = [str(i.get("key")) for i in rows]
-            for key, row in zip(keys, rows):
-                seen.add(key)
-                if args.older_than and not touched_before(row, cutoff):
-                    continue
-                listed += 1
-                if args.dry_run:
-                    print(f"would archive {key} ({state})")
-                    continue
-                try:
-                    call(s, "POST", f"/linear/issue/{quote(key)}/archive", {})
-                    archived += 1
-                except DeskError as e:
-                    failed += 1
-                    print(f"{key} not archived: {e}", file=sys.stderr)
-            # Archived issues leave the list, so a capped list is read again.
-            if not keys or args.dry_run or not page.get("truncated"):
-                break
-    print(f"{listed if args.dry_run else archived} issue(s) "
-          f"{'to archive' if args.dry_run else 'archived'}" + (f", {failed} refused" if failed else ""))
+            truncated = truncated or bool(page.get("truncated"))
+            rows += [(state, r) for r in page.get("issues") or [] if str(r.get("key")) not in seen]
+        if kept is None:
+            # Each list comes newest first, so the first read holds the newest of all.
+            newest = sorted(rows, key=lambda sr: updated_at(sr[1]), reverse=True)
+            kept = {str(r.get("key")) for _, r in newest[:keep]} if keep is not None else set()
+        for state, row in rows:
+            key = str(row.get("key"))
+            seen.add(key)
+            old = bool(older_than) and touched_before(row, cutoff)
+            spare = keep is not None and key not in kept
+            if (older_than or keep is not None) and not (old or spare):
+                continue
+            if dry_run:
+                print(f"would archive {key} ({state})")
+                done += 1
+                continue
+            try:
+                call(s, "POST", f"/linear/issue/{quote(key)}/archive", {})
+                done += 1
+            except DeskError as e:
+                failed += 1
+                print(f"{key} not archived: {e}", file=sys.stderr)
+        # Archived issues leave the list, so a capped list is read again.
+        if not rows or dry_run or not truncated:
+            break
+    return done, failed
+
+
+def cmd_archive_done(s: dict, args) -> int:
+    keep = args.keep_recent if args.keep_recent is not None else (keep_recent(s) if args.older_than else None)
+    done, failed = archive_closed(s, args.older_than, keep, args.dry_run)
+    print(f"{done} issue(s) {'to archive' if args.dry_run else 'archived'}" + (f", {failed} refused" if failed else ""))
     return 1 if failed else 0
 
 
@@ -904,15 +991,29 @@ def body_arg(args) -> str:
 def cmd_file(s: dict, args) -> int:
     git("fetch", "-q", "origin")
     body = checked(s, args.kind, args.project, args.title, body_arg(args))
-    try:
-        print(create(s, args.kind, args.project, args.title, body))
-    except DeskError as e:
-        if e.refused:
-            # The desk answered no (a Project that does not exist, say): a spool
-            # would retry it every leg and never clear (EMB-70).
-            raise
-        print(f"desk unavailable ({e}); spooled for the next leg: "
-              f"{spool(args.kind, args.project, args.title, body, str(e))}")
+
+    def attempt() -> DeskError | None:
+        try:
+            print(create(s, args.kind, args.project, args.title, body))
+        except DeskError as e:
+            return e
+        return None
+
+    err = attempt()
+    if err and cap_refused(err) and make_room(s):
+        err = attempt()
+    if err is None:
+        return 0
+    if err.refused:
+        # The desk answered no (a Project that does not exist, say): a spool
+        # would retry it every leg and never clear (EMB-70).
+        raise err
+    where = spool(args.kind, args.project, args.title, body, str(err))
+    if cap_refused(err):
+        print(f"LINEAR CAP: Linear's cap on unarchived issues refused this filing, and no closed issue "
+              f"beyond the newest {keep_recent(s)} was left to archive; spooled for the next leg: {where}")
+    else:
+        print(f"desk unavailable ({err}); spooled for the next leg: {where}")
     return 0
 
 
@@ -1034,7 +1135,10 @@ def main() -> int:
     p = sub.add_parser("archive-done")
     p.add_argument("--dry-run", action="store_true", help="list what would be archived")
     p.add_argument("--older-than", type=float, default=0, metavar="DAYS",
-                   help="only issues not updated for this many days (leg-end uses 7)")
+                   help="issues not updated for this many days (leg-end uses 7), and with it every one "
+                        "beyond the newest archive_keep_recent (fleet.toml, default 20)")
+    p.add_argument("--keep-recent", type=int, default=None, metavar="N",
+                   help="keep only the newest N closed issues unarchived, whatever their age")
     p.set_defaults(fn=cmd_archive_done)
     p = sub.add_parser("file")
     p.add_argument("--from", dest="kind", required=True)

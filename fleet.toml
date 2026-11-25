@@ -61,6 +61,11 @@ backlog = "Backlog"
 # here (Scope fleet, Hardware required, Type decision), and Start work takes it
 # on to In Progress (embarch-doc LINEAR-PROTOCOL.md §6, owner's call 2026-11-05).
 owner_ready = "Todo"
+# How many of the newest Done and Canceled issues stay unarchived whatever their
+# age: leg-end archives the rest with those a week old, and a filing Linear's cap
+# refuses archives them before it is tried again. Twenty is under a day of the
+# fleet's closes, enough for a fresh Done to stay linkable as a blocker (EMB-558).
+archive_keep_recent = 20
 
 [linear.file_status]
 # Where a new issue from `fleet-linear.py file --from <kind>` starts. A finding made

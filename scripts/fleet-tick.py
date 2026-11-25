@@ -91,7 +91,8 @@ LOCK_LIVE_MIN = 30
 # A fetch and a prune over a dozen repos takes well under a minute; past five,
 # the network is the problem, and the lock must not wait on it.
 PRUNE_TIMEOUT_S = 300
-# How long a Done or Canceled issue stays unarchived (`archive_done`).
+# How long a Done or Canceled issue stays unarchived (`archive_done`), unless it
+# falls beyond the newest `archive_keep_recent` first.
 ARCHIVE_AFTER_DAYS = 7
 
 # ~6 weeks at a hundred lines a day. The trim rewrites to KEEP when the file
@@ -186,12 +187,15 @@ def prune_landed() -> None:
 
 
 def archive_done() -> None:
-    """The team's Done and Canceled issues untouched for 7 days, archived.
+    """The team's Done and Canceled issues untouched for 7 days, and every one
+    beyond the newest `archive_keep_recent` (fleet.toml), archived.
 
     Linear's free plan caps unarchived issues, and the fleet files about thirty
     a day: on 2026-11-23 the cap refused every filing until 235 were archived
-    by hand. A week's grace keeps a fresh Done linkable, since Linear refuses a
-    relation to an archived blocker. Best-effort and bounded like the prune.
+    by hand. A week's grace alone kept every Done of a young workspace, and on
+    2026-11-25 the cap refused filings for ten hours (EMB-558), so the newest
+    few stay linkable as blockers and the rest go whatever their age.
+    Best-effort and bounded like the prune.
     """
     try:
         r = subprocess.run([sys.executable, str(Path(__file__).resolve().parent / "fleet-linear.py"),

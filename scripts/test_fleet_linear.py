@@ -78,6 +78,8 @@ class Desk:
         self.calls = []
         self.next_id = 100
         self.fail = {}  # route -> the HTTP status it answers with
+        self.fail_text = {}  # route -> the error text a failing route answers with
+        self.fail_once = {}  # route -> (status, error text), answered once
         desk = self
 
         class Handler(BaseHTTPRequestHandler):
@@ -102,8 +104,11 @@ class Desk:
                 desk.calls.append((self.path, body))
                 if self.headers["Authorization"] != "Bearer tok":
                     return self.reply({"error": "token"}, 401)
+                if self.path in desk.fail_once:
+                    code, text = desk.fail_once.pop(self.path)
+                    return self.reply({"error": text}, code)
                 if self.path in desk.fail:
-                    return self.reply({"error": "no such project"}, desk.fail[self.path])
+                    return self.reply({"error": desk.fail_text.get(self.path, "no such project")}, desk.fail[self.path])
                 if self.path == "/linear/search":
                     return self.reply({"issues": [i for i in desk.issues.values() if body["query"] in i["title"]]})
                 if self.path.endswith("/blocked-by"):
@@ -376,6 +381,80 @@ class Fleet(unittest.TestCase):
         self.assertTrue(self.desk.issues["EMB-1"].get("archived"))
         self.assertFalse(self.desk.issues["EMB-2"].get("archived"), "updated this week")
         self.assertFalse(self.desk.issues["EMB-3"].get("archived"), "no readable date")
+
+    def keep(self, n):
+        """fleet.toml's archive_keep_recent, for this test."""
+        self.conf.write_text(re.sub(r"^archive_keep_recent = \d+$", f"archive_keep_recent = {n}",
+                                    self.conf.read_text(), flags=re.M))
+
+    def closed(self, *keys):
+        """Done issues updated in the future, newest first, so no age makes them old."""
+        for n, key in enumerate(keys):
+            self.desk.issue(key, "Done")
+            self.desk.issues[key]["updated"] = f"2099-01-{28 - n:02d}T00:00:00.000Z"
+
+    def test_archive_done_older_than_also_archives_beyond_the_newest_kept(self):
+        self.keep(1)
+        self.closed("EMB-1", "EMB-2", "EMB-3")
+        r = self.linear("archive-done", "--older-than", "7")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("2 issue(s) archived", r.stdout)
+        self.assertFalse(self.desk.issues["EMB-1"].get("archived"), "the newest is kept")
+        self.assertTrue(self.desk.issues["EMB-2"].get("archived"))
+        self.assertTrue(self.desk.issues["EMB-3"].get("archived"))
+
+    def test_archive_done_keep_recent_keeps_the_newest_n(self):
+        self.closed("EMB-1", "EMB-2", "EMB-3")
+        self.desk.issue("EMB-4", "Backlog")
+        r = self.linear("archive-done", "--keep-recent", "2")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("1 issue(s) archived", r.stdout)
+        self.assertEqual([k for k, i in self.desk.issues.items() if i.get("archived")], ["EMB-3"])
+
+    def test_a_cap_refusal_makes_room_and_files_again(self):
+        self.keep(1)
+        self.closed("EMB-1", "EMB-2", "EMB-3")
+        self.desk.fail_once["/drafts"] = (502, "linear (personal): USAGE_LIMIT_EXCEEDED")
+        r = self.linear("file", "--from", "worker", "--project", "embarch-ui", "--title", "Kept", "--body", VALID)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("cap refused a filing: 2 closed issue(s) archived", r.stderr)
+        self.assertTrue(any(i["title"] == "Kept" for i in self.desk.issues.values()))
+        self.assertFalse(self.desk.issues["EMB-1"].get("archived"))
+        self.assertEqual(list(self.state.glob("*.json")), [])
+
+    def test_a_cap_with_no_room_spools_and_says_so(self):
+        self.desk.fail["/drafts"] = 502
+        self.desk.fail_text["/drafts"] = "linear (personal): USAGE_LIMIT_EXCEEDED"
+        r = self.linear("file", "--from", "worker", "--project", "embarch-ui", "--title", "Kept", "--body", VALID)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("LINEAR CAP", r.stdout)
+        self.assertEqual(len(list(self.state.glob("*.json"))), 1)
+
+    def test_ready_makes_room_once_for_a_capped_spool(self):
+        self.keep(1)
+        self.closed("EMB-1", "EMB-2")
+        self.state.mkdir(parents=True)
+        for n in (1, 2):
+            (self.state / f"2026110{n}-000000-1-s{n}.json").write_text(json.dumps(
+                {"kind": "worker", "project": "embarch-ui", "title": f"Spooled {n}", "body": VALID, "why": "cap"}))
+        self.desk.fail_once["/drafts"] = (502, "USAGE_LIMIT_EXCEEDED")
+        r = self.linear("ready")
+        self.assertNotIn("LINEAR CAP", r.stdout)
+        self.assertEqual(list(self.state.glob("*.json")), [])
+        self.assertTrue(self.desk.issues["EMB-2"].get("archived"))
+
+    def test_ready_tells_the_leg_when_the_cap_still_refuses_the_spool(self):
+        self.state.mkdir(parents=True)
+        for n in (1, 2):
+            (self.state / f"2026110{n}-000000-1-s{n}.json").write_text(json.dumps(
+                {"kind": "worker", "project": "embarch-ui", "title": f"Spooled {n}", "body": VALID, "why": "cap"}))
+        self.desk.fail["/drafts"] = 502
+        self.desk.fail_text["/drafts"] = "USAGE_LIMIT_EXCEEDED"
+        r = self.linear("ready")
+        self.assertIn("LINEAR CAP", r.stdout)
+        self.assertIn("refused 2 spooled filing(s)", r.stdout)
+        self.assertEqual(len(list(self.state.glob("*.json"))), 2)
+        self.assertEqual(len(self.desk.said("/drafts")), 1, "the second waits untried")
 
     def test_close_comments_and_moves_to_done_once(self):
         self.desk.issue("EMB-1", "Backlog")
