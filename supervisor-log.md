@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-25 15:33 — api/202 read-the-no-measurements-refusal-by-a-stable-code
+
+**Decided:** nothing suite-wide. Re-landed from the 429'd leg (see `core/164`'s entry). `embarch-core-client`'s `MeasurementsRefusal::NoMeasurements` is recognised by the `422` status alone, a body `code` of `"no_measurements"` (core decision 141) or none (an older Core) reading the same, never by Core's wording; the CLI help and the `study_measurements` tool description now say "a host study with no parse step". The shared client crate changed in a doc comment only, which I read before landing. No new decision; `interfaces/studies.md` updated.
+**Merged:** `agent/api/202-read-the-no-measurements-refusal-by-a-stable-code` (code `7b45e83`, ff from `9214394`; doc `cefcc941`, the worker's `6b507571` cherry-picked). Re-gated on the merge result: `cargo build --workspace`, `clippy --workspace --all-targets -D warnings`, `cargo test --workspace --no-fail-fast`. As with `core/164`, my first test run was meant to be against `study-designer/099`'s crate and was silently against the old one (cargo did not rebuild the swapped path dependency); a forced rebuild against 099 failed four tests in `tests/test_propose_cli.rs`, which is why 099 was reverted. After the revert, a forced rebuild against `embarch-study-designer` at `1dfdae1`: green, 0 failed. `check-docs.py` 12/12; ownership green on both branches; client names clean on the code worktree.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none to a board; the refusal has met a mock Core only. Owed against a real Core once redeployed with `core/164`: `study-measurements` on a run with no file reads as no-measurements from the JSON body.
+**Budget:** PROCEED at leg start (5-hour 2%, weekly 19%, wave 6).
+**Least sure about:** whether a reader outside `embarch-api` (the UI's live-study view) matched Core's old plain-text `422`; nobody searched `embarch-ui` for it.
+
+---
+
 ## 2026-11-25 15:32 — core/164 the-measurements-route-serves-a-host-studys-file
 
 **Decided:** nothing suite-wide. Re-landed from the leg that claimed `chat/045`, `study-designer/099`, `api/202` and `core/164` at about 13:45 and died on a 429 (spend limit) before folding anything; all four workers had committed and pushed both branches (the presence rule: finished), so this leg gated and landed them and dispatched no worker. The unit: `GET /study/{id}/measurements`'s `422` is now JSON `{error, code: "no_measurements"}` (`NO_MEASUREMENTS_CODE` in `src/publish.rs`), its message says "a host study with no parse step" instead of implying a host study has none, and a host study's `measurements.json` is served from the same run directory as a device study's. **New core decision 141** in `decisions/measurements.md`; decision 121's refusal set unchanged; `open/unverified-and-moved.md`'s stale-wording line removed as resolved. `api/202` reads the refusal by status or code, so the two landed in either order.
