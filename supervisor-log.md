@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-25 12:00 — ui/122 a-running-study-has-a-cancel-button-in-the-ui
+
+**Decided:** nothing suite-wide. Re-landed from the leg killed at about 10:15 (its worker had pushed both branches). The live study's status card carries a Cancel button while Core's status for the open study is `running`, and only then; `POST /api/live/cancel` relays through `CoreClient::cancel_study` (`api/198`) with the one client's lease, passing Core's `404`/`409` text on. The page never paints `cancelled` itself: it says the stop was asked for and takes the end from the status frame (core decision 128). **New ui decision 109** in `decisions/live-study.md`, which that pushed into reserve (11,539 of 12,288 B), so the worker filed **`tasks/ui/123-compact-ui.md`** (`open`, `In flux: no`, due 2026-12-09, its `Must not delete:` naming decisions 60, 32 and 109's receipts). EMB-487 is now fully landed (`api/198` and this). **Reviewer's non-finding, not filed:** 109 lists `409` as possibly "lease held elsewhere", while core 128 puts the cancel route on the lease gate's exempt list, so that branch is defensive and harmless.
+**Merged:** `agent/ui/122-a-running-study-has-a-cancel-button-in-the-ui` (code `9e8f193`, ff from `508b1e6`; doc `6a967a4a`, the worker's `20bedac9` cherry-picked onto `68797785`). Re-gated on the merge result against `embarch-api` at `14ea8f3` (with `api/199`) and `embarch-study-designer` at `0caf76b`: `cargo build`, `clippy --all-targets -D warnings`, `cargo test --no-fail-fast` (352 passed, 4 ignored); `check-docs.py` 12/12; ownership green on both branches; client names clean on the code worktree. Feature row `features.d/ui-138-live-study-cancel.md` assembled into `suite/features.md` in this fold.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none to a board; the button has met a stub Core only, so one real cancel of a running study from the UI against a live Core is owed.
+**Budget:** PROCEED (5-hour 12% at leg start).
+**Least sure about:** the button's visibility follows the status frame's `running`, so a study that ends between a frame and the click gets Core's `409` text rather than a quiet no-op.
+
+---
+
 ## 2026-11-25 11:58 — core/162 a-test-run-opens-a-setup-window-between-benches
 
 **Decided:** nothing suite-wide. Re-landed from the leg killed at about 10:15 (its worker had pushed both branches). Before every bench but the first, `drive` calls `Env::setup`; `CoreEnv` publishes a `setup` prompt in the one slot under the run's id (`POST /study/{run_id}/prompt` answers it, `GET /test-runs/{id}` shows it as `waiting_prompt`), step `setup:<bench>`, carrying the bench's configuration and a `missing` list that stays empty until the smoke check (EMB-368) exists. While it waits, `AppState::setup_window` holds the run id and `lease_middleware` admits a `SETUP_ADMITTED` list (enrolment, role board, by-serial delete, bootload ports, dev-bench link, signals, instruments), every call entered in the run log as `test_run_setup_call` with its token's scope; everything else stays `409`. A decline or the 15-minute timeout (`SETUP_WAIT_MS`, chosen, not measured, and added to the run's deadline per bench) is an `error` on that bench and the run goes on; an agent's answer is accepted and recorded `relayed`. **New core decision 139** in new `decisions/test-run-setup.md`; 137's open line now points at it. I read `src/api.rs`'s middleware diff before landing. **Mine, in this fold, from the reviewer's note:** 139 said "either token is admitted whole"; I added that on a `--service` Core decision 132's person-only routes still refuse the agent `403`, because `person_middleware` is layered outside the lease layer, which is what the code does.
