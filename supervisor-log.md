@@ -97,6 +97,20 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-25 11:54 — api/199 the-core-client-calls-the-confirmation-routes
+
+**Decided:** nothing suite-wide. Re-landed from a killed leg: the leg that claimed `api/199`, `core/162`, `ui/122` and `chat/043` at 10:12 died with the Claude Code session at about 10:15 and folded nothing. Its `api`, `core` and `ui` workers had already pushed both branches (the presence rule: finished), so this leg gates and lands them; `chat/043`'s worker died mid-run with an uncommitted tree in both repos, which I committed to its branch as `chat: 0facb46`, `doc: 14bc0506` ("work in progress, recovered from a killed leg"), pushed, and removed the worktrees, for a resume dispatch later this leg. The unit itself: `CoreClient::pending_confirmations`, `confirmation_card(hash)` and `confirm(hash, nonce, surface)` over Core's three confirmation routes (core decision 133), each returning `serde_json::Value` (the previous leg's open question, settled by the worker as untyped), each mocked with the bearer header asserted and in the one-funnel sweep; no MCP tool or CLI verb, since a confirmation is the person's. Read before landing (shared crate): additive, through `send`, nothing renamed. No new decision. **Mine, in this fold:** `ui/121` unparked to `open`, its state line naming the three methods.
+**Merged:** `agent/api/199-the-core-client-calls-the-confirmation-routes` (code `14ea8f3`, ff from `9f3f9e2`; doc `bdaaf7d9`, the worker's `666c137f` cherry-picked onto `17af2b2b`). Re-gated on the merge result: `cargo build`, `clippy --all-targets -D warnings`, `cargo test --no-fail-fast` (574 passed, 0 failed); `check-docs.py` 12/12; ownership green on both branches; client names clean on the code worktree. Feature row `features.d/api-420-confirmation-client.md` assembled into `suite/features.md` in this fold.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none; the methods have met only a mock Core.
+**Budget:** PROCEED at leg start (5-hour 12%, weekly 9%, wave 6).
+**Least sure about:** whether `ui/121`'s card will want typed answers after all; the client returns `Value`, so the UI parses Core's JSON itself.
+
+**Leg start, to carry:** stale lock taken at 11:48; step 0 found the killed leg's four unit worktree pairs and no stop marker, no `status.d` fragment, leg worktree clean (reset to `origin/main` `17af2b2b`). Fleet Ready answered this time (24 splittable, 20 waiting on blockers); `finish` moved EMB-448 to Done. Refill gate fired on depth and spread (0 dispatchable while this leg holds the four claims). The owner's `047bb59d` settled the owed `notes/hil/06` pointer. Spool still 8 entries, all at Linear's free-plan issue cap.
+
+---
+
 ## 2026-11-25 10:07 — ui/121 the-ui-shows-a-card-on-which-the-engineer-confirms-a-test-input
 
 **Decided:** nothing suite-wide. **My split error, caught by the worker:** Core serves the three confirmation routes, but `embarch-core-client` has no method for any of them, and its one-funnel test forbids the UI from sending around it, so the card cannot be built in `ui` alone. The worker stopped, wrote nothing in `embarch-ui`, and left the design for the card in the task's `## Blocked` section (`/api/confirmations` listing each item with its card, `POST /api/confirmations` relaying `{hash, nonce, surface: "ui"}`, every agent string through `textContent`). Its Linear filing hit the free plan's issue cap and spooled, so **I wrote it as `tasks/api/199` (the client's `pending_confirmations`, `confirmation_card` and `confirm`, no MCP tool or CLI twin since a confirmation is never the agent's) and deleted that spool entry so it is not filed twice.** `ui/121` stays `blocked`, its `Unparks when:` now `api/199`, so `api/199`'s fold unparks it. EMB-383 stays in Fleet Working with `ui/121` listed; `api/199` carries no issue.
