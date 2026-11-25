@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-25 16:05 — api/203 the-core-client-carries-a-person-only-go
+
+**Decided:** nothing suite-wide. `embarch-core-client` gains `CoreClient::test_run_go(run_id, run_hash, nonce)`, posting `{run_id, run_hash, nonce}` to `/test-runs/{id}/go` through `send` with whichever bearer the client was built with; its doc comment says it is the person's, that Core answers `403` to the agent's token, and that no MCP tool or CLI verb may call it. `tests/run_test_cli.rs`'s go ban moves from the client crate to the agent's surfaces: it fails on a `/go` route or `test_run_go` in `src/tools.rs`, `src/cli.rs` or `src/hil_run.rs`. Api decision 135 amended in place ("no *agent* path calls the go"; the UI's go is `test_run_go`, `ui/124`). The shared crate's diff is additive, which I read before landing. In this fold: `ui/124` (the go card) unparked to `open`. **Reviewer's note, not filed:** `embarch-api/interfaces/tools-tests.md` still says of `run_test` that "no code path calls the go", true of that tool and less precise than 135.
+**Merged:** `agent/api/203-the-core-client-carries-a-person-only-go` (code `fc1a33b`, ff from `7b45e83`; doc `5965c768`, the worker's `b31493ac` cherry-picked). Re-gated on the merge result against `study-designer/101`'s crate after `cargo clean -p embarch-study-designer`: `cargo build --workspace`, `clippy --workspace --all-targets -D warnings`, `cargo test --workspace --no-fail-fast` (581 passed, 0 failed). The client's consumers built against it after `cargo clean -p embarch-core-client`: `embarch-umbrella` (with `umbrella/118`, 371 passed) and a gate-only `embarch-ui` worktree at `origin/main` (build, clippy, 355 passed). `check-docs.py` 12/12; ownership green on both branches; client names clean on the code worktree. No feature row (a client method, not a capability).
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none to a board; the method has met a mock Core only. Owed with `ui/124`: one go given from the UI against a real Core with a prepared run.
+**Budget:** PROCEED at leg start (5-hour 12%, weekly 20%, wave 6) and at the first fold (5-hour 24%, weekly 21%).
+**Least sure about:** the ban is a source grep over three files, so an agent surface added in a fourth file (a new module the MCP server or CLI calls) could reach `test_run_go` with nothing failing; Core's `403` to the agent's token is the real guard.
+
+---
+
 ## 2026-11-25 16:04 — study-designer/101 study-hash-lands-alone
 
 **Decided:** nothing suite-wide. The additive half of the reverted `study-designer/099`: `hil_test::study_hash(&HostStudy)` (the `definition_hash` of the study, SHA-256 of its canonical JSON) is back, and `check_test` refuses nothing new (the `StudyHashMismatch` rule and its test are gone; the fixtures' `refused`/`accepted` helpers set `study.hash = study_hash(..)`, harmless without the refusal). Decision 113 amended in place: the consumers still hash file bytes, and the refusal waits for `api/204`, `core/166` and `study-designer/100`. `decisions/hil-shapes.md` and `interfaces/hil-shapes.md` no longer say a hash is over the file's bytes as written. **The handoff's consumer re-test was done before landing, not after:** I pointed `embarch-api`'s, `embarch-core`'s, `embarch-umbrella`'s and a gate-only `embarch-ui` worktree's sibling links at this branch's worktree, ran `cargo clean -p embarch-study-designer` in each, and ran the full gate there (each together with its own unit of this leg): all green (see the other three entries; `embarch-ui` at `origin/main`: 355 passed). In this fold: `api/204` and `core/166` unparked to `open`.
