@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-26 13:55 — chat/047 the-long-chat-scroll-check-settles-before-it-reads
+
+**Decided:** nothing suite-wide. **The race was in the product, not the test**: the timeline's follow in `webview/chat/index.tsx` ran in a `useEffect`, which Preact runs after the next paint (up to about 100 ms late under load), so a read or a scroll event in that gap saw a grown timeline short of the bottom. It is now a `useLayoutEffect`; the test is unchanged. **New chat decision 118** in `decisions/timeline.md`. The worker's evidence: a one-check copy failed 16 of 25 runs under 24 busy loops before the fix, 0 of 25 after; the full check passed 20 of 20 under a lighter `cargo test` load; removing the scroll line made it fail at "at the bottom while it streams". **A second, unrelated webview flake is filed, EMB-574** (Fleet Ready, by the worker): "no cards request in 5000 ms" on the 💡 cards checks, 8 of the worker's 20 full runs. **I saw it on `main` as well** (1 of 3 runs at `701a019`, a different cards check) and said so on the issue, so it predates this change.
+**Merged:** `agent/chat/047-the-long-chat-scroll-check-settles-before-it-reads` (code `3587735`, ff from `701a019`; doc `adc0f48d`, the worker's `7dd99028` cherry-picked, rebased over the owner's `6f6fcbd8`). Re-gated on the merge result: `npm ci`, `build`, `typecheck`, `npm test` with `EMBARCH_DESK_BIN` from `desk-gate-bin.py` (428 passed, 0 failed, 3 skipped). **`test:webview` was red once in two runs and I landed anyway**: the run that failed did so on EMB-574's cards check ("hovering a card whose edit adds lines"), and the scroll check passed in both; `main` failed the same way once in three. `check-docs.py` 12/12; ownership green on both branches; client names clean on the code worktree.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** DEGRADED at leg start (cache 19 h old, wave 2); PROCEED at `study-designer/100`'s fold (5-hour 26%, weekly 24%, wave 6).
+**Least sure about:** this worker ran for about 90 minutes inside a foreground wave, and the leg can tick nothing while a foreground call is open, so the fleet's liveness tick went about 85 minutes without a write (dispatch 11:57, next tick 13:27); `deadman.log` shows no alert this time (I did not find out why), but a long worker in a foreground wave is a stall to the watchdog by construction.
+
+---
+
 ## 2026-11-26 13:54 — study-designer/100 check-test-refuses-a-study-that-does-not-match-its-hash
 
 **Decided:** nothing suite-wide. **The study-hash chain that `study-designer/099` started on 2026-11-25 is complete**: `hil_check::check_test` now refuses a host study that does not hash to its test's `study.hash` by `hil_test::study_hash`, as `Rule::StudyHashMismatch` on `study.hash`, naming the study file and both hashes. Only `7391457`'s `src/hil_check.rs` hunk was taken; its test was rewritten against `main`'s helpers (`tests/hil_checks.rs`). Decision 113 amended in place: the refusal is in force, and it waited for both consumers. `Rule` gained a variant, which I read before landing (the shared-crate rule): additive, behind `hil-test`. **The consumer re-test the handoff asked for was done before landing:** gate-only worktrees of `embarch-api` at `8f0ba84` and `embarch-core` at `ca34d61` at fresh target dirs, their `embarch-study-designer` link pointed at this branch's worktree (`StudyHashMismatch` present through the link), `cargo clean -p embarch-study-designer`, then `cargo test`: api 582 passed, core 596 passed, 0 failed in both. Links restored to the main checkout and the gate worktrees removed. `embarch-ui` and `embarch-umbrella` do not enable `hil-test`; the crate's own gate covered their feature sets.
