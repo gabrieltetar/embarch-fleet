@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-27 04:50 — desk/049 compact-desk-interfaces
+
+**Decided:** nothing suite-wide, no new decision. A verbatim split: four route-table rows (the Linear agent-tool routes, `blocked-by`, `/linear/open` and `/linear/issue/{key}/states`, and Promptu) moved byte for byte from `embarch-desk/interfaces.md` into a new `interfaces/linear-routes.md`, with one stub row in their place naming every moved route and linking the new file; `interfaces.md` 13,938 to about 11,100 B, out of reserve; `linear-routes.md` 3,811 B. I checked each removed line is present verbatim in the new file. Every `Must not delete:` item survives (the bearer and port contract, the client-copies sentence naming `desk_discovery.rs` and `rule.ts`), and the route table does after the fix below. **The human question, the worker's answer:** yes, `interfaces.md` keeps the bearer, the port and path rule and a row naming every route, and each Linear and Promptu route's parameters and returns are one link away. **Fixed in this fold, on the reviewer's finding:** the first moved row also carried `POST /harvest/entries`, which the stub row did not name, so the route table had lost that route's index entry; the stub now names it and says Linear and Harvest. EMB-599 closed after the push, since this fold is the fix.
+**Merged:** `agent/desk/049-compact-desk-interfaces` (doc only, `1f1b4000`, the worker's `091b3f56` cherry-picked onto `ec030d9b`; no code branch), plus my one-row fix in this fold. `check-docs.py` 12/12 on the merge result and again with the fix; ownership green; `check-doc-size.py --pressure` no longer lists `interfaces.md` (desk's only line is decision 56, 15 B over, untouched).
+**Blocked:** nothing.
+**Reviewer:** 1 finding — EMB-599
+**Hardware debts:** none.
+**Budget:** PROCEED at dispatch (5-hour 55%, weekly 50%, wave 6); PROCEED at the core/195 fold (5-hour 60%, weekly 51%).
+**Least sure about:** that the stub row is still a usable index: it is one long cell naming twenty routes, and a reader looking for one route's shape now has to follow a link, which is the trade every route-table split makes.
+
+---
+
 ## 2026-11-27 04:46 — core/195 the-test-run-record-carries-cores-mode
 
 **Decided:** nothing suite-wide. **At leg start, at `914b9040`:** no Fleet Ready issues; spread sweep skipped (the `git log` of every sweep source since the 02:58 sweep was empty); no boards attached (buffer refreshed at step 0), so `api/059` and `dev-bench/038` stay `open`; nothing overdue in the size ledger. One wave of four, one per scope: `api/226`, `core/195`, `desk/049`, `umbrella/129`. I made the `embarch-core` link in `.worktrees/embarch-api/` by hand for `api/226` (EMB-595's missing row). **Core decision 144 amended in place** (`decisions/test-run-record.md`; `interfaces/signing.md` row): a Test-run record's `predicate.observed` is `{core: {version}, mode, call_log}`, `mode` from `token_store::mode()` exactly as a Study record's (110); additive, no `schema` bump, and a verifier reading only `observed.call_log` still verifies it. `publish.rs` and `report-data.json` untouched. The existing cancelled-run seal test asserts `observed.mode`; service mode is not covered (the layout is process-global). **Unparked in this fold:** `api/227` set `open` (its parked branch is on both remotes; a resume is `worktree add` with no `-b`, then a rebase). EMB-332's order is now `api/227`, then `core/193`.
