@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-26 23:51 — api/218 compact-api
+
+**Decided:** nothing suite-wide. **Split at leg start, at `a1798eb0`:** EMB-328 into `tasks/core/182`, EMB-324 into `core/183`, EMB-327 into `core/184`, EMB-330 into `core/185` (all `filed`, Fleet Working); picks announced before any claim (ts `1795761780.530059`). Core 327 needs decision 130's port holder, which exists (`src/port_hold.rs`), so it is dispatchable. This unit paid the size debt: `embarch-api/spec.md` 9,066 to 8,609 B (line 9,039), out of reserve. Two settled clauses moved verbatim, each under a new heading saying so: the publish bullet's appendix and `-r2` republish sentence to `interfaces/publish.md`, the verify bullet's check list to `interfaces/verify.md` (spec now says "the list is in the interface file"). Every `Must not delete:` item survives. The worker's answer to the human question: yes, `spec.md` alone serves someone working on api today.
+**Merged:** `agent/api/218-compact-api` (code none, embarch-api untouched; doc `db3fad7c`, ff from `8595cfb3`). Re-gated on the merge result: `check-docs.py` 12/12; `check-doc-size.py --pressure` shows api no longer in reserve; ownership green on the doc branch (5 paths).
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED at leg start (5-hour 51%, weekly 39%, wave 6, capped at 4 units); PROCEED at dispatch (5-hour 53%, weekly 40%).
+**Least sure about:** the publish bullet still names "the appendix" but no longer says what it holds and has no explicit pointer to the moved section (the reviewer's note, not a contradiction); a reader finds it through the bullet's existing `interfaces/publish.md` link.
+
+---
+
 ## 2026-11-26 23:36 — chat/052 chat-records-the-vs-code-launchers-decisions
 
 **Decided:** nothing suite-wide. Split at `39559d93` (see `ui/128`'s entry): the first half of EMB-303. **New chat decision 123** (`decisions/launcher.md`, a new topic file, 4,060 B against the 4,096 B per-decision cap; index row): the VS Code launcher's behaviour, moved from `embarch-ui` decisions 3, 28 and 101 and restated in chat's voice. It carries 28 whole (the 400 ms loopback probe, tab activation through UI Automation, the four PowerShell and focus invariants, no browser named, the one-strategy registry, the exact `EmbArch` title, the accepted accessibility cost, the rejected alternatives); from 3 the thin-launcher stance and the rejected webview and TreeView; from 101 the status-bar states and "every click goes to `start()`". Left in ui: 3's old `vscode-extension/` packaging paragraphs, and 101's unit, its environment and the one-instance rule. Chat 29 and 102 (`decisions/shape.md`) now point at 123. `src/launcher/focus.ts` is comment-only: its header cites chat 123, and `focusScript`'s comment drops from 28 lines to 8, keeping the tab-name suffix stripping. **Unparked in this fold:** `tasks/ui/129` set `open`, its body now naming decision 123 and what 052 carried; it turns ui 28 into a pointer and fixes 3's first paragraph and 101's launcher part. The reviewer read 123 against 28 and found every invariant carried, with one narrowing that follows 101: 28's "spawn-then-infer as the backstop for a port race" became "nothing is spawned (102), so the backstop is the status bar".
