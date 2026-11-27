@@ -106,6 +106,7 @@ unit under **Merged** and **Blocked**:
 **Hardware debts:** none.
 **Budget:** PROCEED at dispatch (5-hour 82%, weekly 53%, wave 6); PROCEED at this fold (5-hour 82%, weekly 53%).
 **Least sure about:** that rule 58 is now stated in one file and applied in another: a future field Core adds lands in `client-crate-types.md` by theme, and only the header's sentence tells its author the rule lives next door.
+**Leg end, to carry:** the leg ended at three units on an empty queue, after this fold. `queue-status.py --root` on the leg worktree confirmed 0 dispatchable against the 14 task files `ls` showed, and the leg-start sweep (05:40) had found nothing to file. **Dream posted** (ts `1795783735.351089`, `crystal_ball`, `--action`; `--dream-check` said ASK, no dream in the newest 200 messages): (1) decide EMB-598, then one cross-repo pass moving the shared `StudyEvent` into the client crate; (2) plug in the nRF54L15 DK and the DUT for `api/059` (`dev-bench/038` needs the pd-bench board); (3) a person surface for Core's discard (decision 112; `embarch-core/open.md`), probably a seventh `embarch-api person` subcommand. Unanswered at leg end. `suite/058` unparks 2026-12-01 by itself.
 
 ---
 
