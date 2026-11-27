@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-27 03:44 — desk/046 the-desks-path-rule-names-its-two-client-copies
+
+**Decided:** nothing suite-wide, and no new desk decision. `embarch-desk/interfaces.md`'s HTTP section now says the address and token rule lives in `src/paths.rs` and is written three times, there and in two client copies (`embarch-core-client`'s `desk_discovery.rs`, api decision 151; `embarch-chat`'s `src/desk/rule.ts`, chat decision 124), and that a change moves all three in one pass. In code, doc comments on `config_dir`, `data_dir`, `port` and `desk_token` in `src/paths.rs` name both copies; no behaviour change. Decision 56 and `decisions/built.md` (in reserve under `desk/048`) untouched. **Size debt filed by the worker:** `tasks/desk/049-compact-desk-interfaces.md`, `open`, `In flux: no`, due 2026-12-11 (`interfaces.md` 13,938 of 15,360 B). **EMB-305 is complete with this fold** (`api/223`, `chat/053`, `ui/130`, `desk/046`).
+**Merged:** `agent/desk/046-the-desks-path-rule-names-its-two-client-copies` (code `7923ab6`, ff from `9faef72`; doc `f11b328d`, the worker's `a71cd3e8` cherry-picked onto `49502e8f`). Re-gated on the merge result: `cargo build --workspace`, `cargo test --workspace --no-fail-fast` (327 passed, 0 failed), `clippy --workspace --all-targets -D warnings` clean; `check-docs.py` 12/12; ownership green on both branches; client names clean on the code worktree.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED at dispatch (5-hour 30%, weekly 48%, wave 6).
+**Least sure about:** whether "change all three in one pass" can be honoured by the fleet at all, since the three copies sit in three repos and a worker owns one; it reads as a `suite` task or a three-task split whenever the rule next moves, and nothing in the desk's docs says which.
+
+---
+
 ## 2026-11-27 03:44 — core/190 service-start-and-stop-try-without-elevation-first
 
 **Decided:** nothing suite-wide. **New core decision 163** (`decisions/service-control.md`, a new topic file, index row; narrows decision 3's self-elevation for `start` and `stop`, and 157's "`start`, `stop` unchanged"): `service::start` and `stop` go through `service::control`, which calls the service manager as the current user; only a rights refusal logs one `debug!` line, calls `ensure_elevated_or_fallback` and retries, and an already-elevated process or any other error returns as today. `install`, `uninstall` and `install --service` still elevate first. The classifier is `is_rights_refusal(&io::Error, windows: bool)`, a pure function over the error text, because `service-manager` 0.11 wraps every failure as `io::Error` kind `Other` reading `Command failed with exit code N: msg`: Windows matches exit code 5 or "access is denied", systemd "interactive authentication required", "access denied" or "permission denied". The real `sc.exe` and `systemctl` texts are matched by reading, not constructed, and 163 says so; that `systemctl` with no terminal prints one of the three is marked `[assumed]`. launchd is not classified, so a refusal there reports as before. `platform.md`, `spec.md` and `open.md` untouched (all in reserve under `core/186`). EMB-342 has `umbrella/124`'s grant (landed earlier) and this; `finish` decides whether anything is left.
