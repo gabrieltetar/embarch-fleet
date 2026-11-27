@@ -97,6 +97,19 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-27 04:25 — core/186 compact-core
+
+**Decided:** nothing suite-wide, no new decision. A verbatim split: `embarch-core/decisions/platform.md`'s `## Locking` section (decisions 4, 14, 15) moved byte for byte into a new `decisions/locking.md`, with an index row in `decisions.md` (the platform row lost 4, 14, 15) and `decisions/lease.md`'s sibling link repointed; `platform.md` 11,555 to 8,265 B, `locking.md` 3,595 B. `spec.md` §5 rewritten as a shorter pointer to `interfaces/constants.md` keeping the path convention, 9,082 to 9,008 B: out of reserve, but by only 31 B. Every `Must not delete:` item survives (spec §3's 129, 156, 157; 106's `CreateService FAILED 1073` and `Environment` loss; 157's rejected alternatives and unverified-on-Windows note). **The human question, the worker's answer:** yes, `spec.md` alone says what Core is and is not, its invariants (auth and its one exception, `hw_lock` and the 500 ms `503`, the lease, the call log, fail-closed identity, the error contract), the deployment shape (two stores, `mode`, `keyid`, decision 157's install rule) and where the rest lives. **Edited in this fold:** `tasks/core/193`'s size line, which named `core/186`, now says `spec.md` sits 31 B under its reserve line.
+**Merged:** `agent/core/186-compact-core` (doc only, `c686d729`, the worker's `812c57d1` cherry-picked onto `0829cd04`; no code branch). `check-docs.py` 12/12 on the merge result; ownership green; `check-doc-size.py --pressure` no longer lists either file.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+Reviewer's residue, not a contradiction: `history/archive/core-2026-09--2026-09.md` (around line 101) still links decision 14 to `platform.md`; a frozen archive, left alone.
+**Hardware debts:** none.
+**Budget:** PROCEED at dispatch (5-hour 49%, weekly 50%, wave 6).
+**Least sure about:** `spec.md`'s 31 B margin: the next core unit that adds a line to it is back in reserve, and only `core/193`'s task file warns about it.
+
+---
+
 ## 2026-11-27 04:23 — ui/132 firmware-build-finds-embarch-toml-by-the-shared-rule
 
 **Decided:** nothing suite-wide. **At leg start, at `5c898c14`:** no Fleet Ready issues; spread sweep skipped (the `git log` of every sweep source since the 02:58 sweep was empty); no boards attached (buffer refreshed at step 0), so `api/059` and `dev-bench/038` stay `open`; nothing overdue in the size ledger. One wave of four, one per scope: `api/227`, `ui/132`, `core/186`, `desk/048`. **Picked `api/227` over `api/226` on purpose**: `core/193` waits on `api/227`, so landing it first would have let the next leg run `api/226` and `core/193` side by side in two scopes. **New ui decision 114** (`decisions/firmware-build.md`, index row; decision 38 points at it): `src/firmware_build.rs`'s `config_path(configured, repo)` calls `embarch_core_client::config_discovery::find_config_path`, `[build].config_path` as the explicit path and the open repo as the start directory; the ui's own order is gone. Three behaviour changes, all written into 114: the walk now reaches ancestors of the open repo (a repo below a directory holding `embarch/embarch.toml` used to read "no config"); an explicit path or variable naming a missing file is an error naming it, and the survey omits `config_path` (it was `available: false` either way); an empty `EMBARCH_API_CONFIG` reads as unset. Tests run on `find_config_path_with`, so they do not read the process environment. **EMB-306 is complete with this fold** (`api/224`, `umbrella/128`, `ui/132`).
