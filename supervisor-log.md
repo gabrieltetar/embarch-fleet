@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-27 02:37 — umbrella/125 doctor-reads-host-type-schema-version
+
+**Decided:** nothing suite-wide. **Umbrella decision in `decisions/schema-skew.md` amended in place** (its line naming Core's served key; a dated measurement of the old key further down left as written): `doctor`'s authenticated `/status` read takes `host_type_schema_version` first and falls back to `study_designer_schema_version`, and when a body carries both the new key wins, the same rule as `embarch-core-client` (api decision 150), so the suite's two readers agree. The `AuthedStatus` field, the check-11 message and the doc comments use the new name; a Core serving neither key gets a message naming both. One test covers old-only, new-only, both and neither. `open.md` (in reserve, 567 B left, parked under `umbrella/127`) untouched; `interfaces/doctor-chain.md` names neither key. **EMB-314 is complete with this fold** (`api/220`, `core/191`, `umbrella/125`); the old key's removal is core's `open.md` follow-up under decision 162.
+**Merged:** `agent/umbrella/125-doctor-reads-host-type-schema-version` (code `88e09ac`, ff from `271da7f`; doc `cede3928`, the worker's `460f062b` cherry-picked onto `c604ce31`). Re-gated on the merge result, built against `embarch-api` `a2ac963` (`api/221`'s core-client): `cargo build`, `cargo test` (438 passed), `clippy --all-targets -D warnings` clean; `check-docs.py` 12/12; ownership green on both branches; client names clean on the code worktree. I fast-forwarded the owner's clean `embarch-umbrella` checkout to `88e09ac`.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none on a board. Not run against a live Core: `embarch doctor` check 11 against a Core before and after `core/191`.
+**Budget:** PROCEED at dispatch (5-hour 7%, weekly 45%, wave 6).
+**Least sure about:** the two readers differ on one edge the reviewer found: with the new key present but null or not a number, `doctor` returns no version (its fallback fires only on an absent key) while core-client falls back to the old key; Core always serves a `u32`, so I left it, but a hand-written test body or a future Core bug would show it.
+
+---
+
 ## 2026-11-27 02:35 — core/191 status-serves-host-type-schema-version
 
 **Decided:** nothing suite-wide. **New core decision 162** (new topic file `decisions/status-schema-key.md`; index row): `GET /status` serves `host_type_schema_version` beside `study_designer_schema_version`, both from `embarch_study_designer::HOST_TYPE_SCHEMA_VERSION`, and a test pins the key set and the two values' equality. Additive; the old key stays until `embarch-core-client` (api decision 150, landed) and `embarch doctor` (`umbrella/125`, landing in this leg) both read the new one **and a released Core has served it**; the removal is a follow-up in `open.md`, not done. `interfaces/hardware.md`'s `/status` row names the new key with its wording trimmed (11,055 to 11,042 B, out of reserve); `open.md` 3,915 to 3,897 B; `spec.md` and `decisions/platform.md` untouched.
