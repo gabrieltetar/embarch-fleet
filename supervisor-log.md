@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-27 03:44 — core/190 service-start-and-stop-try-without-elevation-first
+
+**Decided:** nothing suite-wide. **New core decision 163** (`decisions/service-control.md`, a new topic file, index row; narrows decision 3's self-elevation for `start` and `stop`, and 157's "`start`, `stop` unchanged"): `service::start` and `stop` go through `service::control`, which calls the service manager as the current user; only a rights refusal logs one `debug!` line, calls `ensure_elevated_or_fallback` and retries, and an already-elevated process or any other error returns as today. `install`, `uninstall` and `install --service` still elevate first. The classifier is `is_rights_refusal(&io::Error, windows: bool)`, a pure function over the error text, because `service-manager` 0.11 wraps every failure as `io::Error` kind `Other` reading `Command failed with exit code N: msg`: Windows matches exit code 5 or "access is denied", systemd "interactive authentication required", "access denied" or "permission denied". The real `sc.exe` and `systemctl` texts are matched by reading, not constructed, and 163 says so; that `systemctl` with no terminal prints one of the three is marked `[assumed]`. launchd is not classified, so a refusal there reports as before. `platform.md`, `spec.md` and `open.md` untouched (all in reserve under `core/186`). EMB-342 has `umbrella/124`'s grant (landed earlier) and this; `finish` decides whether anything is left.
+**Merged:** `agent/core/190-service-start-and-stop-try-without-elevation-first` (code `c2ee2f5`, ff from `2db1406`; doc `49502e8f`, the worker's `3fa53278` cherry-picked onto `c6f13e33`). Re-gated on the merge result: `cargo build`, `cargo test --no-fail-fast` (674 passed, 0 failed), `clippy --all-targets -D warnings` clean; `check-docs.py` 12/12; ownership green on both branches; client names clean on the code worktree. I did not fast-forward the owner's `embarch-core` checkout; nothing waits on this.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** on Windows and on a systemd Linux, with and without `umbrella/124`'s grant: `embarch-core stop` then `start` gives no prompt with the grant and the usual prompt without it; the Linux refusal text needs confirming (written in the task's debt section, now retired, and in decision 163). The native Windows build of Core (the matcher's Windows branch is selected by `cfg!(windows)` and was never compiled for Windows). **Deploy debt:** the installed Core.
+**Budget:** PROCEED at dispatch (5-hour 30%, weekly 48%, wave 6).
+**Least sure about:** the systemd text match: a polkit refusal with no terminal is assumed, not observed, to print "Interactive authentication required", and if it prints something else the unelevated try fails and the user sees an error instead of the old prompt.
+
+---
+
 ## 2026-11-27 03:44 — ui/130 the-desk-proxy-takes-the-desks-address-from-core-client
 
 **Decided:** nothing suite-wide. **Ui decision 56 amended in place** (`decisions/shell.md`, one clause): the desk proxy takes the desk's address and token path from `embarch_core_client::desk_discovery` (api decision 151). In `src/desk.rs`, `DEFAULT_PORT`, the local `token_path()` and the `EMBARCH_DESK_PORT` parse are deleted; `desk_url()` is `desk_discovery::base_url()` plus the path, `desk_token()` reads `desk_discovery::token_path()`, mapped through `.ok()` so an unresolvable path still reads as "desk not running"; the `/view` test compares against `desk_discovery::port()`. The base URL is unchanged (`http://127.0.0.1:<port>`). The launcher unit's stripping of `EMBARCH_DESK_PORT` (`src/service.rs`) is untouched. EMB-305 is complete once `desk/046` folds, in this leg.
