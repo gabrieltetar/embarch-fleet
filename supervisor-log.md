@@ -97,6 +97,19 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-27 04:51 — umbrella/129 compact-umbrella
+
+**Decided:** nothing suite-wide, no new decision. A verbatim split: decision 52 (the deleted-doc guard test) moved byte for byte from `embarch-umbrella/decisions/reporting.md` into a new `decisions/doc-guard-test.md`, with an index row in `decisions.md` (the reporting row now lists 11, 37, 39, 46) and a one-line pointer in `reporting.md`'s header; `reporting.md` 11,424 to 9,928 B, out of reserve. I checked each removed line is present verbatim in the new file. Every `Must not delete:` item survives (decision 39's `detail` and `path` placements, the "resolved, not assumed" paragraph `umbrella/126` amended, the `[measured 2026-09-06 ...]` line). `open.md` untouched, still parked under `umbrella/127`. **The human question, the worker's answer:** yes; a verbatim split changes no `spec.md` and cuts nothing. **Fixed in this fold:** `history/umbrella.md`'s decision-52 link pointed at `reporting.md`, which turns `check-decision-refs.py` red once 52 moves; repointed at the index `decisions.md` (the same repair `desk/048`'s fold made; a worker cannot edit `history/`).
+**Merged:** `agent/umbrella/129-compact-umbrella` (doc only, `fac5f341`, the worker's `cc5c33d3` cherry-picked onto `b8257fab`; no code branch), plus the history link in this fold. `check-docs.py` red on the worker's branch alone (the history link), 12/12 on the merge result with the link repointed; ownership green; `check-doc-size.py --pressure` no longer lists `reporting.md`.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+Reviewer's residue, not a contradiction: `reporting.md`'s header still says "these three", stale before this unit; left alone.
+**Hardware debts:** none.
+**Budget:** PROCEED at dispatch (5-hour 55%, weekly 50%, wave 6); PROCEED at the core/195 fold (5-hour 60%, weekly 51%).
+**Least sure about:** whether moving one decision into a file of its own is the right grain: `doc-guard-test.md` holds a single entry, which keeps `reporting.md`'s mission clean but adds a file a reader of the index has to open for one test's rationale.
+
+---
+
 ## 2026-11-27 04:50 — desk/049 compact-desk-interfaces
 
 **Decided:** nothing suite-wide, no new decision. A verbatim split: four route-table rows (the Linear agent-tool routes, `blocked-by`, `/linear/open` and `/linear/issue/{key}/states`, and Promptu) moved byte for byte from `embarch-desk/interfaces.md` into a new `interfaces/linear-routes.md`, with one stub row in their place naming every moved route and linking the new file; `interfaces.md` 13,938 to about 11,100 B, out of reserve; `linear-routes.md` 3,811 B. I checked each removed line is present verbatim in the new file. Every `Must not delete:` item survives (the bearer and port contract, the client-copies sentence naming `desk_discovery.rs` and `rule.ts`), and the route table does after the fix below. **The human question, the worker's answer:** yes, `interfaces.md` keeps the bearer, the port and path rule and a row naming every route, and each Linear and Promptu route's parameters and returns are one link away. **Fixed in this fold, on the reviewer's finding:** the first moved row also carried `POST /harvest/entries`, which the stub row did not name, so the route table had lost that route's index entry; the stub now names it and says Linear and Harvest. EMB-599 closed after the push, since this fold is the fix.
