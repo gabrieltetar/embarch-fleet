@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-26 20:14 — core/176 discard-refuses-the-agent-on-a-study-a-published-test-run-rests-on
+
+**Decided:** nothing suite-wide. **Split this leg, at `28d227f9`:** EMB-582 into this task, EMB-581 into `core/177`, EMB-379 into `api/211`, EMB-335 into `api/212` (all `filed`, Fleet Working). **Fix-forward of the last leg's reviewer finding (EMB-582):** `RunLog::discard`'s agent branch now also finds the study's Test run through the existing `test_run_units()` and refuses `403` with decision 112's message when a `published` entry carries that `run_id`; the per-study `latest(study_id, "published")` check stays, and no second lookup path was added. **Core decision 149 amended in place** by one sentence: a study run of a published Test run counts as published for 112's discard; the discard row in `interfaces/run-log.md` says the same. No new decision; 111 not grown; `open.md` (reserve) untouched. One new test pins the three cases: agent refused on a published Test run's study (captures stay), person's discard succeeds, agent still discards a clean study of an unpublished Test run.
+**Merged:** `agent/core/176-discard-refuses-the-agent-on-a-study-a-published-test-run-rests-on` (code `5cd938b`, ff from `062b48d`; doc `1dd95525`, the worker's `948fff4c` cherry-picked). Re-gated on the merge result: `cargo build`, `cargo test --no-fail-fast` (619 passed, 2 ignored, 0 failed), `clippy --all-targets -D warnings` clean. `check-docs.py` 12/12; ownership green on both branches; client names clean on the code worktree. No feature row (a fix).
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none to a board. The native Windows build of Core. **Deploy debt:** the installed Core still lets the agent discard such a study until redeployed.
+**Budget:** PROCEED at leg start (5-hour 56%, weekly 32%, wave 6, capped at 4 units); PROCEED at this fold (5-hour 62%, weekly 32%).
+**Least sure about:** the lookup goes study to Test run through `test_run_units()`, so a study that belongs to two Test runs (if that can happen) is refused when either is published; the worker did not say whether it can.
+
+---
+
 ## 2026-11-26 19:50 — ui/126 compact-ui
 
 **Decided:** nothing suite-wide. **Size debt paid:** `embarch-ui/spec/tabs.md` 9,334 to 9,034 B, out of reserve (threshold 9,039; the task said 9,160, it had grown since). The worker cut the file's provenance paragraph to "Split from ../spec.md." and "no Slack bar since 2026-10-29;" from the Desk row (ui decision 63's tombstone already records it), not the Desk row's prose, which it judged all current; the Desk row is where the next compaction looks. Every tab row, every decision number it cites and the Confirm row's go card (111) survive. **The human question** (`DOC-COMPACTION-PASS.md`): the worker did not read `spec.md` whole and declined to answer for it; for the tabs, `tabs.md` carries per-tab behaviour and the decisions that bind it, read after `spec.md` for the overall picture. `ui/123`'s fold already recorded that `spec.md` alone does not carry the live-study view's main invariant; that stands, unfiled.
