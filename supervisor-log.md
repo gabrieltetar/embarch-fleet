@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-26 17:09 — chat/048 the-cards-checks-pass-under-load
+
+**Decided:** nothing suite-wide. **The 💡 cards flake (EMB-574) was the test, not the product**, by the worker's measurement, unlike `chat/047`'s: the page posts its `cards` request every time, 2 s after the draft moves, but `waitAssist` kept its 5 s deadline on the runner's clock between polls, so one slow driver reply under load ended the wait with no further poll. Evidence: 6 of 6 sampled failures still held the request on the page when asked afterwards. **New chat decision 120** (`decisions/assistant.md`): `waitAssist` is now one async script that polls the page's own posts against a deadline on the page's clock, 15 s. No product code changed. **The evidence is thinner than the task asked for, and the worker says so:** one burst of 11 failures in 20 runs at a 5 s page-clock deadline went unexplained (its logs were lost), which is why the deadline is 15 s rather than 5; the fix-removed failure is an injected 6 s runner stall, not a natural run (a natural loaded run with the fix removed failed 0 of 12 in later batches); no parallel `cargo test` was in the load. Before: 6 of 12 loaded runs red; after: 23 of 24 green, the one red a different flake, filed as **EMB-578** (the ghost-text "not before the pause" check). `npm test` hung once under the worker's busy loops in a wire test and was not looked into.
+**Merged:** `agent/chat/048-the-cards-checks-pass-under-load` (code `f54c3b8`, ff from `3f9a95f`; doc `e07a8173`, the worker's `4c7aa074` cherry-picked). Re-gated on the merge result on a lightly loaded machine: `npm ci`, `build`, `typecheck`, `npm test` with `EMBARCH_DESK_BIN` from `desk-gate-bin.py` (436 tests, 433 passed, 0 failed, 3 skipped), `test:webview` (all 163 checks passed). `check-docs.py` 12/12; ownership green on both branches; client names clean on the code worktree. No feature row.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED at leg start (5-hour 39%, weekly 25%, wave 6); PROCEED at this fold (5-hour 6%, weekly 27%).
+**Least sure about:** the unexplained 11-in-20 burst hit a deadline on the page's own clock, which a slow driver reply does not explain, so a product-side late post may still exist and the 15 s deadline would now hide it; this worker also ran about 150 minutes, so the wave's foreground barrier held the other three finished units idle for two hours.
+
+---
+
 ## 2026-11-26 17:07 — ui/125 the-ui-shows-which-core-it-is-talking-to
 
 **Decided:** nothing suite-wide. **New ui decision 112** (`decisions/core-identity.md`): one line under the top bar, so on every tab, built from the client's `attestation()` in the snapshot poll (`CoreIdentity::from_attestation`, `Snapshot.core_identity`): `Core: service|development, <16 hex>, matches the installed fingerprint|does not match|no attested install on this machine`; a mismatch and a failed challenge (what a Core too old to report one produces) are drawn as warnings; nothing is blocked. **The worker's own call, the limit to know:** `service` or `development` is derived from the client's match result, not read from Core's status `mode`, because `embarch-core-client`'s `StatusResponse` drops `mode` and `keyid`; a development Core whose key was recorded as the installed fingerprint would read `service`. The worker filed **EMB-576** (api, Fleet Ready) to add the fields; 112 says to switch when they land. The client caches its attestation per connection, so a Core swapped behind a running UI is not re-checked until the UI restarts (not written into 112). `spec/tabs.md` took one line and is now 906 B from its cap, still filed against `tasks/ui/126`.
