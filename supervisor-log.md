@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-26 23:54 — ui/129 ui-points-at-chats-launcher-decisions
+
+**Decided:** nothing suite-wide. The second half of EMB-303 (first half `chat/052`, chat decision 123). Ui decision 28 is now a one-line pointer to chat 123 (heading kept); decision 3's first paragraph says the launcher lives in `embarch-chat` (chat 29) and points at 123 for the thin-launcher stance, keeping ui's own `.vsix` and `reinstall.sh` packaging paragraphs; decision 101 keeps the unit, its environment and the one-instance rule, and cites chat 123 for the probe. `spec.md`, the `decisions.md` index row, `decisions/shape.md` and `launcher.md`'s status line follow. **Fixed by me at the fold, from the reviewer's two notes below its bar:** `launcher.md`'s status line dated the move 2026-11-05 (101's date); it now says 2026-11-26. And `embarch-ui/assets/index.html`'s comment beside the load-bearing `<title>EmbArch</title>` cited ui decision 28; it now cites chat decision 123, where the title constraint is stated (no ui doc states it any more). EMB-303 moves to Done once `finish` reads this fold.
+**Merged:** `agent/ui/129-ui-points-at-chats-launcher-decisions` (doc `971c32d6`, the worker's `1d5e74eb` rebased onto `db3fad7c`; code: the worker touched none, and my comment fix is code `db0562e` on embarch-ui main, ff from `7575d64`). Re-gated: `check-docs.py` 12/12 on the merge and again with the status-line fix; ownership green on the doc branch (6 paths); on the code fix `cargo build`, `cargo test --no-fail-fast` (358 passed, 4 ignored, 0 failed, plus three small binaries), `clippy --all-targets -D warnings` clean, client names clean.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED at leg start (5-hour 51%, weekly 39%, wave 6, capped at 4 units); PROCEED at dispatch (5-hour 53%, weekly 40%).
+**Least sure about:** ui 101 still states the status-bar states that chat 123 says it carried from 101; the reviewer read it as duplication that agrees, not a contradiction, and I left it.
+
+---
+
 ## 2026-11-26 23:51 — api/218 compact-api
 
 **Decided:** nothing suite-wide. **Split at leg start, at `a1798eb0`:** EMB-328 into `tasks/core/182`, EMB-324 into `core/183`, EMB-327 into `core/184`, EMB-330 into `core/185` (all `filed`, Fleet Working); picks announced before any claim (ts `1795761780.530059`). Core 327 needs decision 130's port holder, which exists (`src/port_hold.rs`), so it is dispatchable. This unit paid the size debt: `embarch-api/spec.md` 9,066 to 8,609 B (line 9,039), out of reserve. Two settled clauses moved verbatim, each under a new heading saying so: the publish bullet's appendix and `-r2` republish sentence to `interfaces/publish.md`, the verify bullet's check list to `interfaces/verify.md` (spec now says "the list is in the interface file"). Every `Must not delete:` item survives. The worker's answer to the human question: yes, `spec.md` alone serves someone working on api today.
