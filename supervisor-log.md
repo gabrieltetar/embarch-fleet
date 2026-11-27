@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-26 23:33 — ui/128 the-prompt-modal-takes-a-test-run-prompts-kind-from-the-event
+
+**Decided:** nothing suite-wide. **Split this leg, at `39559d93`:** EMB-591 into this task, EMB-589 into `api/219`, EMB-325 into `core/181`, EMB-303 into `chat/052` plus `tasks/ui/129` (blocked on `chat/052`; ui scope already had this unit in the wave, and 129 needs 052's decision number). All `filed`, Fleet Working; picks announced before any claim (ts `1795758923.312929`). **EMB-303 is not a `suite` task:** its doc work splits cleanly into a chat unit (write the decision) and a ui unit (leave a pointer), each inside one ownership row, so no announcement window was owed. **ui decision 113 amended in place** (`decisions/operator-prompt.md`): the modal takes a Test run prompt's kind from the event's `prompt_kind` (core 151, api 137) in the one `prompt` frame; the worker took the task's "drop" option and deleted `add_prompt_kind`, `apply_polled_kind` and the follow's per-prompt `tokio::spawn`, since a host study's or session's prompt has no kind to read and a Core older than 151 writes an event the client cannot parse, so the read could add nothing. An event without `prompt_kind` shows no kind line. No new decision number.
+**Merged:** `agent/ui/128-the-prompt-modal-takes-a-test-run-prompts-kind-from-the-event` (code `7575d64`, ff; doc `a5ab8480`, ff). Re-gated on the merge result: `cargo build`, `cargo test --no-fail-fast` (358 passed, 4 ignored, 0 failed, plus three small binaries), `clippy --all-targets -D warnings` clean. `check-docs.py` 12/12; ownership green on both branches; client names clean on the code worktree.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none to a board. The modal in a browser against a real Core's Test run prompt. **Deploy debt:** the installed ui.
+**Budget:** PROCEED at leg start (5-hour 39%, weekly 38%, wave 6, capped at 4 units); PROCEED at this fold (5-hour 48%, weekly 39%).
+**Least sure about:** the reviewer noted `embarch-core/decisions/host-prompt.md` (151's survey of event readers) still says `live_study.rs` fetches the kind with `add_prompt_kind`; it is a dated record rather than a contradiction, so I left it rather than edit Core's docs at a fold.
+
+---
+
 ## 2026-11-26 22:48 — suite/065 the-core-client-reads-a-prompt-events-kind
 
 **Decided:** **suite-level, on the owner's behalf, after a silent window:** `embarch-core-client`'s `StudyEvent::PromptPending` gains an optional `prompt_kind` (`PromptKind`, `#[serde(default, skip_serializing_if = "Option::is_none")]`), and `as_pending_prompt` and `prompt_pending` carry it both ways, so a Test run's event parsed by the client names its kind without the `GET /study/{id}` poll; a host study's or a session's event is byte for byte as before (a new test asserts it), and a Core older than core 151, writing two `kind` keys, is still refused as a duplicate field. **api decision 137 amended in place** (`decisions/client-crate.md`, 10,874 to 10,738 B: my first wording put the file 142 B into reserve, so I cut it rather than file a debt), naming the struct-literal break and its one caller. **embarch-ui decision 113's line** "the event carries no `kind` until EMB-577" was false since `core/172`; it now says the event carries it and the follow still reads it by poll. The UI's behaviour is unchanged, as the task allowed. The window: announced 21:22 by the previous leg (ts `1795753355.771419`), closed 21:52; polled at this leg's start and at each unit boundary, no reply; run as this leg's last unit. **Filed by me:** EMB-591 (ui, Fleet Ready): the modal takes the kind from the event and drops the extra study read.
