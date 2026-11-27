@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-27 04:26 — desk/048 compact-desk
+
+**Decided:** nothing suite-wide, no new decision. A verbatim split: decisions 27, 69 and 94 (the user service, its instances, the unit writer) moved byte for byte from `embarch-desk/decisions/built.md` into a new `decisions/service.md`, with an index row in `decisions.md` (`built.md` now lists 22 to 26, 28, 70 to 73, 75); `built.md` 11,873 to 9,001 B, out of reserve; `service.md` 3,333 B. Every `Must not delete:` item survives (27's rejected Windows service, hosting inside the UI and spool file; 94's rejected alternatives and WSL quoting rule; 69's instance rules). `interfaces.md` untouched (still `desk/049`'s debt). **The human question, the worker's answer:** yes, `decisions.md` routes the service, its instances and the unit writer to `service.md`, which says why a user service (27: the desk runs `claude -p` and resolves repo paths inside WSL) and how the unit is written (94: the shared `embarch-user-unit` crate, `%` doubled everywhere and `$` doubled in `ExecStart` only, the installing shell's `PATH` carried in). **Fixed in this fold:** `history/desk.md` line 28 linked decision 94 to `decisions/built.md`, which turned `check-decision-refs.py` red once 94 moved; repointed at the index `decisions.md`, as DOC-CONVENTIONS asks. The worker filed that as EMB-596; closed after the push, since this fold is the fix.
+**Merged:** `agent/desk/048-compact-desk` (doc only, `5e354385`, the worker's `dd1cfb61` cherry-picked onto `af644e49`; no code branch). `check-docs.py` red on the worker's branch alone (the history link), 12/12 on the merge result with the link repointed; ownership green; `check-doc-size.py --pressure` no longer lists `built.md`.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED at dispatch (5-hour 49%, weekly 50%, wave 6).
+**Least sure about:** whether every mission split will keep tripping on `history/` links to a topic file: a worker cannot edit `history/`, so each split that moves a decision a changelog entry cites will arrive red, and only the fold can repair it.
+
+---
+
 ## 2026-11-27 04:25 — core/186 compact-core
 
 **Decided:** nothing suite-wide, no new decision. A verbatim split: `embarch-core/decisions/platform.md`'s `## Locking` section (decisions 4, 14, 15) moved byte for byte into a new `decisions/locking.md`, with an index row in `decisions.md` (the platform row lost 4, 14, 15) and `decisions/lease.md`'s sibling link repointed; `platform.md` 11,555 to 8,265 B, `locking.md` 3,595 B. `spec.md` §5 rewritten as a shorter pointer to `interfaces/constants.md` keeping the path convention, 9,082 to 9,008 B: out of reserve, but by only 31 B. Every `Must not delete:` item survives (spec §3's 129, 156, 157; 106's `CreateService FAILED 1073` and `Environment` loss; 157's rejected alternatives and unverified-on-Windows note). **The human question, the worker's answer:** yes, `spec.md` alone says what Core is and is not, its invariants (auth and its one exception, `hw_lock` and the 500 ms `503`, the lease, the call log, fail-closed identity, the error contract), the deployment shape (two stores, `mode`, `keyid`, decision 157's install rule) and where the rest lives. **Edited in this fold:** `tasks/core/193`'s size line, which named `core/186`, now says `spec.md` sits 31 B under its reserve line.
