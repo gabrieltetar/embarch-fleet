@@ -97,6 +97,18 @@ unit under **Merged** and **Blocked**:
 
 ---
 
+## 2026-11-26 18:45 — chat/049 the-ghost-text-pause-check-passes-under-load
+
+**Decided:** nothing suite-wide. **The ghost-text "not before the pause" flake (EMB-578) was the test, not the product**, by the worker's measurement: the old check slept 150 ms on the runner's clock and then asserted no ghost post existed, and under load that sleep ran far past the page's 300 ms timer, so the post was already there; no run saw the page post before 300 ms. **New chat decision 121** (`decisions/assistant.md`, beside 120, the same page-clock mechanism): the webview stand-in stamps every post with `performance.now()` and records the page's last `input` event, and the check asserts the first ghost post comes at least 300 ms after the last keystroke, in one page-side call, its failure message carrying the measured gap. No product code changed. Evidence (ghost check alone, 24 busy loops, 8 runners x 5 rounds): old check 0 of 40 green; new 40 of 40; with the page's timer shortened to 100 ms (test-only, reverted) it fails 38 of 40, reporting 101 to 267 ms, so it still catches an early post. Its limit, written into 121: a page starved past 300 ms looks like a good pause (the 2 of 40 that passed at 100 ms).
+**Merged:** `agent/chat/049-the-ghost-text-pause-check-passes-under-load` (code `b7e37c8`, ff from `f54c3b8`; doc `0c058ca2`, the worker's `3b606437` cherry-picked). Re-gated on the merge result **while an `embarch-ui` `cargo test` and clippy ran beside it**: `npm ci`, `build`, `typecheck`, `npm test` with `EMBARCH_DESK_BIN` from `desk-gate-bin.py` (436 tests, 433 passed, 0 failed, 3 skipped), `test:webview` (all 163 checks passed). `check-docs.py` 12/12; ownership green on both branches; client names clean on the code worktree. No feature row.
+**Blocked:** nothing.
+**Reviewer:** no findings.
+**Hardware debts:** none.
+**Budget:** PROCEED at leg start (5-hour 23%, weekly 29%, wave 6); PROCEED at this fold (5-hour 32%, weekly 30%).
+**Least sure about:** `chat/048`'s unexplained 11-in-20 burst on a page-clock deadline did not recur in this worker's runs, so it is unexplained still, not fixed; and the worker reported about 21 minutes against `chat/048`'s 150, so bounding the hunt in the dispatch note may be worth repeating for the next flake unit.
+
+---
+
 ## 2026-11-26 18:43 — api/207 the-client-status-carries-cores-mode-and-keyid
 
 **Decided:** nothing suite-wide. **New api decision 139** (`decisions/client-crate.md`): the shared client's `StatusResponse` gains `mode` and `keyid` (core decision 129), each `Option<String>` with `#[serde(default)]`; `None` means a Core that predates them and reads as unknown, never `service`. No `skip_serializing_if`, so where `embarch-ui` re-serializes the status a `None` now emits `"mode":null` and `"keyid":null`, like the struct's other optional fields. Interface line in `interfaces/tools-lease.md`; `spec.md` untouched. **Shared crate, diff read before landing:** two additive `pub` fields and one test; no consumer builds `StatusResponse` by literal (the worker's grep and mine over `embarch-ui`, `embarch-umbrella`, `embarch-api`). **Worker filed EMB-580** (ui, Fleet Ready): the UI's Core identity line (ui decision 112) should read the reported `mode` instead of inferring it from the attestation match; `embarch-ui/src/snapshot.rs`'s comment that the client drops these fields is now stale and that issue covers it. **New size debt:** `tasks/api/209-compact-api.md`, `client-crate.md` at 11,808 of 12,288 B, `blocked`, In flux: yes (the client keeps gaining fields as Core's bodies grow), due 2026-12-26.
